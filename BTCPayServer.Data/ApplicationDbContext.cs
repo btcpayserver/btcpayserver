@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -61,6 +63,7 @@ namespace BTCPayServer.Data
         public DbSet<LightningAddressData> LightningAddresses { get; set; }
         public DbSet<PayoutProcessorData> PayoutProcessors { get; set; }
         public DbSet<FormData> Forms { get; set; }
+        public DbSet<PendingTransaction> PendingTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -106,7 +109,80 @@ namespace BTCPayServer.Data
             WebhookData.OnModelCreating(builder, Database);
             FormData.OnModelCreating(builder, Database);
             StoreRole.OnModelCreating(builder, Database);
+            PendingTransaction.OnModelCreating(builder, Database);
         }
     }
+
+
+    public class PendingTransaction: IHasBlob<PendingTransactionBlob>
+    {
+        public string TransactionId { get; set; }
+        public string CryptoCode { get; set; }
+        public string StoreId { get; set; }
+        public StoreData Store { get; set; }
+        public DateTimeOffset? Expiry { get; set; }
+        public PendingTransactionState State { get; set; }
+        public string[] OutpointsUsed { get; set; }
+
+        [NotMapped][Obsolete("Use Blob2 instead")]
+        public byte[] Blob { get; set; }
+
+        public string Blob2 { get; set; }
+        
+        
+        internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
+        {
+            builder.Entity<PendingTransaction>()
+                .HasOne(o => o.Store)
+                .WithMany(i => i.PendingTransactions)
+                .HasForeignKey(i => i.StoreId).OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<PendingTransaction>().HasKey(transaction => new {transaction.CryptoCode, transaction.TransactionId});
+
+            if (databaseFacade.IsNpgsql())
+            {
+                builder.Entity<PendingTransaction>()
+                    .Property(o => o.Blob2)
+                    .HasColumnType("JSONB"); 
+                builder.Entity<PendingTransaction>()
+                    .Property(o => o.OutpointsUsed)
+                    .HasColumnType("text[]");
+            }
+            else
+            {
+                builder.Entity<PendingTransaction>()
+                    .Property(e => e.OutpointsUsed)
+                    .HasConversion(
+                        v => string.Join(',', v),
+                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
+            }
+        }
+    }
+    public enum PendingTransactionState
+    {
+        Pending,
+        Cancelled,
+        Expired,
+        Invalidated,
+        Signed,
+        Broadcast
+    }
+
+    public class PendingTransactionBlob
+    {
+        public string PSBT { get; set; }
+        public List<CollectedSignature> CollectedSignatures { get; set; } = new();
+    }
+
+    public class CollectedSignature
+    {
+        public DateTimeOffset Timestamp { get; set; }
+        public string ReceivedPSBT { get; set; }
+        
+        
+    }
+
+
+ 
 
 }

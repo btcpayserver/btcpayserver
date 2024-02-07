@@ -50,6 +50,8 @@ namespace BTCPayServer.Data
         public IEnumerable<StoreRole> StoreRoles { get; set; }
         public bool Archived { get; set; }
 
+        public IEnumerable<PendingTransaction> PendingTransactions{ get; set; }
+
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<StoreData>()

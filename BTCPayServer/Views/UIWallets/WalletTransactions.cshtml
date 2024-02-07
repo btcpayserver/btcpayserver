@@ -4,6 +4,9 @@
 @using BTCPayServer.Components.WalletNav
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Html
+@using BTCPayServer.Services.Wallets
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model ListTransactionsViewModel
 
@@ -74,7 +77,7 @@
         
         const count = @Safe.Json(Model.Count);
         const skipInitial = @Safe.Json(Model.Skip);
-		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new { walletId, labelFilter, skip = Model.Skip, count = Model.Count, loadTransactions = true }));
+		const loadMoreUrl = @Safe.Json(Url.Action("WalletTransactions", new {walletId, labelFilter, skip = Model.Skip, count = Model.Count, loadTransactions = true}));
 		// The next time we load transactions, skip will become 0
         let skip = @Safe.Json(Model.Skip) - count;
         
@@ -173,57 +176,105 @@
 </div>
 <div style="clear:both"></div>
 
+@inject PendingTransactionService PendingTransactionService
+@{
+    var wId = WalletId.Parse(walletId);
+    var pendingTransactions = await PendingTransactionService.GetPendingTransactions(wId.CryptoCode, wId.StoreId);
+}
+@if (pendingTransactions.Any())
+{
+    <div class="table-responsive-md">
+        <table class="table table-hover ">
+            <thead>
+            <th>
+                Id
+            </th>
+            <th>
+                State
+            </th> 
+            <th>
+                Signature count
+            </th>
+
+            <th>
+                Actions
+            </th>
+            </thead>
+            @foreach (var pendingTransaction in pendingTransactions)
+            {
+                <tr>
+                    <td>
+                        @pendingTransaction.TransactionId
+                    </td>
+                    <td>
+                        @pendingTransaction.State
+                    </td>
+                    <td>
+                        @pendingTransaction.GetBlob().CollectedSignatures.Count
+                    </td>
+                    <td>
+                    <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">
+                        @(pendingTransaction.State == PendingTransactionState.Signed? "Broadcast" : "View")
+                    </a>-
+                        <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">Cancel</a>
+                </tr>
+            }
+        </table>
+    </div>
+}
+
+
 <div id="WalletTransactions" class="table-responsive-md">
     <table class="table table-hover mass-action">
         <thead class="mass-action-head">
-            <tr>
-                <th class="only-for-js mass-action-select-col">
-                    <input type="checkbox" class="form-check-input mass-action-select-all" />
-                </th>
-                <th class="date-col">
-                    <div class="d-flex align-items-center gap-1">
+        <tr>
+            <th class="only-for-js mass-action-select-col">
+                <input type="checkbox" class="form-check-input mass-action-select-all" />
+            </th>
+            <th class="date-col">
+                <div class="d-flex align-items-center gap-1">
                         <span text-translate="true">Date</span>
                         <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                             <vc:icon symbol="time" />
                         </button>
-                    </div>
-                </th>
+                </div>
+            </th>
                 <th text-translate="true" class="text-start">Label</th>
                 <th text-translate="true">Transaction</th>
                 <th text-translate="true" class="amount-col">Amount</th>
-                <th></th>
-            </tr>
+            <th></th>
+        </tr>
         </thead>
         <thead class="mass-action-actions">
-            <tr>
-                <th class="only-for-js mass-action-select-col">
-                    <input type="checkbox" class="form-check-input mass-action-select-all" />
-                </th>
-                <th colspan="5">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <div>
-                            <strong class="mass-action-selected-count">0</strong>
+        <tr>
+            <th class="only-for-js mass-action-select-col">
+                <input type="checkbox" class="form-check-input mass-action-select-all" />
+            </th>
+            <th colspan="5">
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                    <div>
+                        <strong class="mass-action-selected-count">0</strong>
                             <span text-translate="true">selected</span>
-                        </div>
-                        <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
-                            <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
+                    </div>
+                    <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
+                        <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
                                 <vc:icon symbol="actions-send" />
                                 <span text-translate="true">Bump fee</span>
-                            </button>
-                        </form>
-                    </div>
-                </th>
-            </tr>
+                        </button>
+                    </form>
+                </div>
+            </th>
+        </tr>
         </thead>
         <tbody id="WalletTransactionsList">
-            <partial name="_WalletTransactionsList" model="Model" />
+        <partial name="_WalletTransactionsList" model="Model" />
         </tbody>
     </table>
 </div>
 <noscript>
-    <vc:pager view-model="Model"/>
+    <vc:pager view-model="Model" />
 </noscript>
-    
+
 <div class="text-center only-for-js d-none" id="LoadingIndicator">
     <div class="spinner-border spinner-border-sm text-secondary ms-2" role="status">
         <span class="visually-hidden" text-translate="true">Loading...</span>

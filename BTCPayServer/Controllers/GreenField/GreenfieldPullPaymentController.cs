@@ -212,11 +212,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (pullPaymentId is null)
                 return PullPaymentNotFound();
-
+            this._logs.PayServer.LogInformation($"RegisterBoltcard: onExisting queryParam: {onExisting}");
+            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
             if (pp is null)
                 return PullPaymentNotFound();
             var issuerKey = await _settingsRepository.GetIssuerKey(_env);
+
             // LNURLW is used by deeplinks
             if (request?.LNURLW is not null)
             {
@@ -239,6 +241,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 request.UID = picc.Uid;
             }
 
+            this._logs.PayServer.LogInformation($"After");
+            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
             if (request?.UID is null || request.UID.Length != 7)
             {
                 ModelState.AddModelError(nameof(request.UID), "The UID is required and should be 7 bytes");

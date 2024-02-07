@@ -518,10 +518,6 @@ namespace BTCPayServer.Controllers.Greenfield
                         Outputs = outputs,
                         AlwaysIncludeNonWitnessUTXO = true,
                         InputSelection = request.SelectedInputs?.Any() is true,
-                        AllowFeeBump =
-                            !request.RBF.HasValue ? WalletSendModel.ThreeStateBool.Maybe :
-                            request.RBF.Value ? WalletSendModel.ThreeStateBool.Yes :
-                            WalletSendModel.ThreeStateBool.No,
                         FeeSatoshiPerByte = request.FeeRate?.SatoshiPerByte,
                         NoChange = request.NoChange
                     },

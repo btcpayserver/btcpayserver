@@ -436,8 +436,8 @@ namespace BTCPayServer.Hosting
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();
 
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
+            services.AddSingleton<INotificationHandler, NewUserRequiresApprovalNotification.Handler>();
             services.AddSingleton<INotificationHandler, PluginUpdateNotification.Handler>();
-
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
             services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();
@@ -551,6 +551,7 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<ByllsRateProvider>();
             services.AddRateProvider<BudaRateProvider>();
             services.AddRateProvider<BitbankRateProvider>();
+            services.AddRateProvider<BitnobRateProvider>();
             services.AddRateProvider<BitpayRateProvider>();
             services.AddRateProvider<RipioExchangeProvider>();
             services.AddRateProvider<CryptoMarketExchangeRateProvider>();

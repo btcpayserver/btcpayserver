@@ -1084,6 +1084,13 @@ namespace BTCPayServer.Controllers.Greenfield
                     new LockUserRequest { Locked = disabled }));
         }
 
+        public override async Task<bool> ApproveUser(string idOrEmail, bool approved, CancellationToken token = default)
+        {
+            return GetFromActionResult<bool>(
+                await GetController<GreenfieldUsersController>().ApproveUser(idOrEmail,
+                    new ApproveUserRequest { Approved = approved }));
+        }
+
         public override async Task<OnChainWalletTransactionData> PatchOnChainWalletTransaction(string storeId,
             string cryptoCode, string transactionId,
             PatchOnChainTransactionRequest request, bool force = false, CancellationToken token = default)

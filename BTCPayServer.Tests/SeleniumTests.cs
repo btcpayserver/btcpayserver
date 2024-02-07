@@ -483,6 +483,148 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanRequireApprovalForNewAccounts()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            
+            var settings = s.Server.PayTester.GetService<SettingsRepository>();
+            var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+            Assert.True(policies.EnableRegistration);
+            Assert.False(policies.RequiresUserApproval);
+            
+            // Register admin and adapt policies
+            s.RegisterNewUser(true);
+            var admin = s.AsTestAccount();
+            s.GoToHome();
+            s.GoToServer(ServerNavPages.Policies);
+            Assert.True(s.Driver.FindElement(By.Id("EnableRegistration")).Selected);
+            Assert.False(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            s.Driver.FindElement(By.Id("RequiresUserApproval")).Click();
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
+            Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            
+            // Check user create view has approval checkbox
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("CreateUser")).Click();
+            Assert.False(s.Driver.FindElement(By.Id("Approved")).Selected);
+            
+            // Ensure there is no unread notification yet
+            s.Driver.ElementDoesNotExist(By.Id("NotificationsBadge"));
+            s.Logout();
+
+            // Register user and try to log in
+            s.GoToRegister();
+            s.RegisterNewUser();
+            s.Driver.AssertNoError();
+            Assert.Contains("Account created. The new account requires approval by an admin before you can log in", s.FindAlertMessage().Text);
+            Assert.Contains("/login", s.Driver.Url);
+            
+            var unapproved = s.AsTestAccount();
+            s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            Assert.Contains("Your user account requires approval by an admin before you can log in", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning).Text);
+            Assert.Contains("/login", s.Driver.Url);
+            
+            // Login with admin
+            s.GoToLogin();
+            s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
+            s.GoToHome();
+            
+            // Check notification
+            TestUtils.Eventually(() => Assert.Equal("1", s.Driver.FindElement(By.Id("NotificationsBadge")).Text));
+            s.Driver.FindElement(By.Id("NotificationsHandle")).Click();
+            Assert.Matches($"New user {unapproved.RegisterDetails.Email} requires approval", s.Driver.FindElement(By.CssSelector("#NotificationsList .notification")).Text);
+            s.Driver.FindElement(By.Id("NotificationsMarkAllAsSeen")).Click();
+            
+            // Reset approval policy
+            s.GoToServer(ServerNavPages.Policies);
+            Assert.True(s.Driver.FindElement(By.Id("EnableRegistration")).Selected);
+            Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            s.Driver.FindElement(By.Id("RequiresUserApproval")).Click();
+            s.Driver.FindElement(By.Id("SaveButton")).Click();
+            Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
+            Assert.False(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
+            
+            // Check user create view does not have approval checkbox
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("CreateUser")).Click();
+            s.Driver.ElementDoesNotExist(By.Id("Approved"));
+            
+            s.Logout();
+            
+            // Still requires approval for user who registered before
+            s.GoToLogin();
+            s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            Assert.Contains("Your user account requires approval by an admin before you can log in", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Warning).Text);
+            Assert.Contains("/login", s.Driver.Url);
+            
+            // New user can register and gets in without approval
+            s.GoToRegister();
+            s.RegisterNewUser();
+            s.Driver.AssertNoError();
+            Assert.DoesNotContain("/login", s.Driver.Url);
+            var autoApproved = s.AsTestAccount();
+            s.CreateNewStore();
+            s.Logout();
+            
+            // Login with admin and check list
+            s.GoToLogin();
+            s.LogIn(admin.RegisterDetails.Email, admin.RegisterDetails.Password);
+            s.GoToHome();
+            
+            // No notification this time
+            s.Driver.ElementDoesNotExist(By.Id("NotificationsBadge"));
+            
+            // Check users list
+            s.GoToServer(ServerNavPages.Users);
+            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.True(rows.Count >= 3);
+            
+            // Check user which didn't require approval
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(autoApproved.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.Single(rows);
+            Assert.Contains(autoApproved.RegisterDetails.Email, rows.First().Text);
+            s.Driver.ElementDoesNotExist(By.CssSelector("#UsersList tr:first-child .user-approved"));
+            // Edit view does not contain approve toggle
+            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.ElementDoesNotExist(By.Id("Approved"));
+            
+            // Check user which still requires approval
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(unapproved.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.Single(rows);
+            Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
+            Assert.Contains("Pending Approval", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
+            // Approve user
+            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.FindElement(By.Id("Approved")).Click();
+            s.Driver.FindElement(By.Id("SaveUser")).Click();
+            Assert.Contains("User successfully updated", s.FindAlertMessage().Text);
+            // Check list again
+            s.GoToServer(ServerNavPages.Users);
+            Assert.Contains(unapproved.RegisterDetails.Email, s.Driver.FindElement(By.Id("SearchTerm")).GetAttribute("value"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            Assert.Single(rows);
+            Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
+            Assert.Contains("Active", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
+            
+            // Finally, login user that needed approval
+            s.Logout();
+            s.GoToLogin();
+            s.LogIn(unapproved.RegisterDetails.Email, unapproved.RegisterDetails.Password);
+            s.Driver.AssertNoError();
+            Assert.DoesNotContain("/login", s.Driver.Url);
+            s.CreateNewStore();
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseSSHService()
         {
             using var s = CreateSeleniumTester();
@@ -1227,34 +1369,33 @@ namespace BTCPayServer.Tests
             s.Driver.ExecuteJavaScript("document.getElementById('EndDate').value = ''");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
-            var appId = s.Driver.Url.Split('/')[4];
+            var editUrl = s.Driver.Url;
+            var appId = editUrl.Split('/')[4];
             
-            // CHeck public page
+            // Check public page
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
             var cfUrl = s.Driver.Url;
 
-            Assert.Equal("Currently active!",
-                s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
+            Assert.Equal("Currently active!", s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
 
             // Contribute
             s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
-            s.Driver.WaitUntilAvailable(By.Name("btcpay"));
-
-            var frameElement = s.Driver.FindElement(By.Name("btcpay"));
-            Assert.True(frameElement.Displayed);
-            var iframe = s.Driver.SwitchTo().Frame(frameElement);
-            iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
-
-            IWebElement closebutton = null;
             TestUtils.Eventually(() =>
             {
-                closebutton = iframe.FindElement(By.Id("close"));
-                Assert.True(closebutton.Displayed);
+                s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+
+                var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                Assert.True(frameElement.Displayed);
+                var iframe = s.Driver.SwitchTo().Frame(frameElement);
+                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+                
+                var closeButton = iframe.FindElement(By.Id("close"));
+                Assert.True(closeButton.Displayed);
+                closeButton.Click();
             });
-            closebutton.Click();
             s.Driver.AssertElementNotFound(By.Name("btcpay"));
             
             // Back to admin view
@@ -1278,6 +1419,56 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id($"App-{appId}")).Click();
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The app has been unarchived and will appear in the apps list by default again.", s.FindAlertMessage().Text);
+            
+            // Crowdfund with form
+            s.GoToUrl(editUrl);
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("test-without-perk@crowdfund.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true, 10);
+            var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("test-without-perk@crowdfund.com", s.Driver.PageSource);
+
+            // Crowdfund with perk
+            s.GoToUrl(editUrl);
+            s.Driver.ScrollTo(By.Id("btAddItem"));
+            s.Driver.FindElement(By.Id("btAddItem")).Click();
+            s.Driver.FindElement(By.Id("EditorTitle")).SendKeys("Perk 1");
+            s.Driver.FindElement(By.Id("EditorId")).SendKeys("Perk-1");
+            s.Driver.FindElement(By.Id("EditorAmount")).SendKeys("20");
+            s.Driver.FindElement(By.Id("ApplyItemChanges")).Click();
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.WaitForElement(By.Id("Perk-1")).Click();
+            s.Driver.WaitForElement(By.CssSelector("#Perk-1 button[type=\"submit\"]")).Submit();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("test-with-perk@crowdfund.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true, 20);
+            invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("test-with-perk@crowdfund.com", s.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]

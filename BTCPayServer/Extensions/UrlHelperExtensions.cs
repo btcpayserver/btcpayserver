@@ -29,6 +29,11 @@ namespace Microsoft.AspNetCore.Mvc
                 new { userId, code }, scheme, host, pathbase);
         }
 
+        public static string LoginLink(this LinkGenerator urlHelper, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(nameof(UIAccountController.Login), "UIAccount", null , scheme, host, pathbase);
+        }
+
         public static string ResetPasswordCallbackLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(

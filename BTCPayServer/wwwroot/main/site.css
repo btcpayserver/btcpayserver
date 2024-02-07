@@ -42,6 +42,11 @@
     margin-bottom: 0;
 }
 
+.no-marker > ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;

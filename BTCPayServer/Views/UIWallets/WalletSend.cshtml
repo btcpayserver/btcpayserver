@@ -271,20 +271,7 @@
                         <label asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-label"></label>
                     </div>
                 </div>    
-                @if (Model.SupportRBF)
-                {
-                    <div class="form-group">
-                        <label asp-for="AllowFeeBump" class="form-label"></label>
-                        <a href="https://docs.btcpayserver.org/Wallet/#rbf-replace-by-fee" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                        <select asp-for="AllowFeeBump" class="form-select w-auto">
-                            <option value="Maybe">Randomize for higher privacy</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                }
+                
                 @if (!string.IsNullOrEmpty(Model.PayJoinBIP21))
                 {
                     <div class="form-group">

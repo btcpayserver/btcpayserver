@@ -202,7 +202,8 @@ namespace BTCPayServer.Data
             { "JPY", "bitbank" },
             { "TRY", "btcturk" },
             { "UGX", "yadio"},
-            { "RSD", "bitpay"}
+            { "RSD", "bitpay"},
+            { "NGN", "bitnob"}
         };
 
         public string GetRecommendedExchange() =>

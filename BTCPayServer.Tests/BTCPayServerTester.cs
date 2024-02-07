@@ -245,6 +245,9 @@ namespace BTCPayServer.Tests
                 rateProvider.Providers.Add("kraken", kraken);
             }
 
+            // reset test server policies
+            var settings = GetService<SettingsRepository>();
+            await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = false });
 
             TestLogs.LogInformation("Waiting site is operational...");
             await WaitSiteIsOperational();

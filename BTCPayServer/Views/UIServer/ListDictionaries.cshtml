@@ -1,0 +1,36 @@
+@using BTCPayServer.Abstractions.Models
+@model ListDictionariesViewModel
+@{
+	ViewData.SetActivePage(ServerNavPages.Translations);
+}
+
+<div class="table-responsive">
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>Dictionary Name</th>
+				<th>Fallback</th>
+				<th>Source</th>
+				<th class="actions-col"></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var v in Model.Dictionaries)
+			{
+				<tr>
+					<td>@v.DictionaryName</td>
+					<td>@v.Fallback</td>
+					<td>@v.Source</td>
+					<td class="actions-col">
+						<div class="d-inline-flex align-items-center gap-3">
+							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName">Copy</a>
+							@if (v.Editable){
+								<a asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">Edit</a>
+							}
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+</div>

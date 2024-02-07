@@ -55,9 +55,9 @@ namespace BTCPayServer.Hosting
                     foreach (var file in Directory.GetFiles(DataDirectories.LangsDir))
                     {
                         var langName = Path.GetFileName(file);
-                        var dictionary = dictionaries.FirstOrDefault(d => d.LangName == langName);
+                        var dictionary = dictionaries.FirstOrDefault(d => d.DictionaryName == langName);
                         if (dictionary is null)
-                            dictionary = await LocalizerService.CreateDictionary(langName, "File");
+                            dictionary = await LocalizerService.CreateDictionary(langName, null, "File");
                         if (dictionary.Source != "File")
                         {
                             Logger.LogWarning($"Impossible to load language '{langName}', as it is already existing in the database, not initially imported by a File");

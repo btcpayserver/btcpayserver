@@ -143,10 +143,12 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     FormDataService.SetValues(form, formResponseJObject);
                     if (!FormDataService.Validate(form, ModelState))
                     {
-                        // someone tried to bypass validation
+                        //someone tried to bypass validation
                         return RedirectToAction(nameof(ViewCrowdfund), new { appId });
                     }
+
                 }
+
             }
 
             var store = await _appService.GetStore(app);
@@ -353,6 +355,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             viewModel.FormParameters = formParameters;
             return View("Views/UIForms/View", viewModel);
         }
+
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]

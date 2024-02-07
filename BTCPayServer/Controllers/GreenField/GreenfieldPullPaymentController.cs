@@ -241,8 +241,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 request.UID = picc.Uid;
             }
 
-            this._logs.PayServer.LogInformation($"After");
-            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
             if (request?.UID is null || request.UID.Length != 7)
             {
                 ModelState.AddModelError(nameof(request.UID), "The UID is required and should be 7 bytes");
@@ -261,14 +259,19 @@ namespace BTCPayServer.Controllers.Greenfield
                 _ => request.OnExisting
             };
 
+            this._logs.PayServer.LogInformation($"After");
+            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
+
             var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
+            this._logs.PayServer.LogInformation($"Version: " + version);
+
             var keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
 
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");
             boltcardUrl = Request.GetAbsoluteUri(boltcardUrl);
             boltcardUrl = Regex.Replace(boltcardUrl, "^https?://", "lnurlw://");
 
-            return Ok(new RegisterBoltcardResponse()
+            var resp = new RegisterBoltcardResponse()
             {
                 LNURLW = boltcardUrl,
                 Version = version,
@@ -277,7 +280,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 K2 = Encoders.Hex.EncodeData(keys.AuthenticationKey.ToBytes()).ToUpperInvariant(),
                 K3 = Encoders.Hex.EncodeData(keys.K3.ToBytes()).ToUpperInvariant(),
                 K4 = Encoders.Hex.EncodeData(keys.K4.ToBytes()).ToUpperInvariant(),
-            });
+            };
+            this._logs.PayServer.LogInformation($"Response");
+            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(resp)}");
+
+            return Ok(resp);
         }
 
         private string? ExtractP(string? url)

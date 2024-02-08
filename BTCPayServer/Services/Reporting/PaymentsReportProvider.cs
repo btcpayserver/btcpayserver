@@ -91,14 +91,14 @@ public class PaymentsReportProvider : ReportProvider
         var conn = ctx.Database.GetDbConnection();
         string[] fields =
         {
-                "i.\"Created\" created",
-                "i.\"Id\" invoice_id",
-                "i.\"OrderId\" order_id",
-                "p.\"Id\" payment_id",
-                "p.\"Type\" payment_type",
-                "i.\"Blob2\" invoice_blob",
-                "p.\"Blob2\" payment_blob",
-            };
+            "i.\"Created\" created",
+            "i.\"Id\" invoice_id",
+            "i.\"OrderId\" order_id",
+            "p.\"Id\" payment_id",
+            "p.\"Type\" payment_type",
+            "i.\"Blob2\" invoice_blob",
+            "p.\"Blob2\" payment_blob",
+        };
         string select = "SELECT " + String.Join(", ", fields) + " ";
         string body =
             "FROM \"Payments\" p " +

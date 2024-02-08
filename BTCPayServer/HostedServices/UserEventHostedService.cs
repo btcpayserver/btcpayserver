@@ -30,6 +30,7 @@ public class UserEventHostedService(
         Subscribe<UserRegisteredEvent>();
         Subscribe<UserInvitedEvent>();
         Subscribe<UserApprovedEvent>();
+        Subscribe<UserConfirmedEmailEvent>();
         Subscribe<UserPasswordResetRequestedEvent>();
     }
 
@@ -57,25 +58,19 @@ public class UserEventHostedService(
                 var requiresApproval = user.RequiresApproval && !user.Approved;
                 var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
 
-                // log registration info and send notification
+                // log registration info
                 var newUserInfo = $"New {type} {user.Email} {info}";
                 Logs.PayServer.LogInformation(newUserInfo);
 
-                emailSender = await emailSenderFactory.GetEmailSender();
-
-                if (requiresApproval)
+                // send notification if the user does not require email confirmation.
+                // inform admins only about qualified users and not annoy them with bot registrations. 
+                if (requiresApproval && !requiresEmailConfirmation)
                 {
-                    await notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
-
-                    var admins = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
-                    var approvalLink = generator.UserDetailsLink(user.Id, uri.Scheme, host, uri.PathAndQuery);
-                    foreach (var admin in admins)
-                    {
-                        emailSender.SendNewUserInfo(admin.GetMailboxAddress(), newUserInfo, approvalLink);
-                    }
+                    await NotifyAdminsAboutUserRequiringApproval(user, uri, newUserInfo);
                 }
 
                 // set callback result and send email to user
+                emailSender = await emailSenderFactory.GetEmailSender();
                 if (isInvite)
                 {
                     code = await userManager.GenerateInvitationTokenAsync(user);
@@ -105,19 +100,43 @@ public class UserEventHostedService(
                 code = await userManager.GeneratePasswordResetTokenAsync(user);
                 callbackUrl = generator.ResetPasswordLink(user.Id, code, uri.Scheme, host, uri.PathAndQuery);
                 pwResetEvent.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
-
+                Logs.PayServer.LogInformation("User {Email} requested a password reset", user.Email);
                 emailSender = await emailSenderFactory.GetEmailSender();
                 emailSender.SendResetPassword(user.GetMailboxAddress(), callbackUrl);
                 break;
 
             case UserApprovedEvent approvedEvent:
-                if (!approvedEvent.Approved) break;
+                user = approvedEvent.User;
+                if (!user.Approved) break;
                 uri = approvedEvent.RequestUri;
                 host = new HostString(uri.Host, uri.Port);
                 callbackUrl = generator.LoginLink(uri.Scheme, host, uri.PathAndQuery);
                 emailSender = await emailSenderFactory.GetEmailSender();
-                emailSender.SendApprovalConfirmation(approvedEvent.User.GetMailboxAddress(), callbackUrl);
+                emailSender.SendApprovalConfirmation(user.GetMailboxAddress(), callbackUrl);
                 break;
+
+            case UserConfirmedEmailEvent confirmedEvent:
+                user = confirmedEvent.User;
+                if (!user.EmailConfirmed || !user.RequiresApproval) break;
+                uri = confirmedEvent.RequestUri;
+                var confirmedUserInfo = $"User {user.Email} confirmed their email address";
+                Logs.PayServer.LogInformation(confirmedUserInfo);
+                await NotifyAdminsAboutUserRequiringApproval(user, uri, confirmedUserInfo);
+                break;
+        }
+    }
+
+    private async Task NotifyAdminsAboutUserRequiringApproval(ApplicationUser user, Uri uri, string newUserInfo)
+    {
+        await notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
+
+        var admins = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
+        var host = new HostString(uri.Host, uri.Port);
+        var approvalLink = generator.UserDetailsLink(user.Id, uri.Scheme, host, uri.PathAndQuery);
+        var emailSender = await emailSenderFactory.GetEmailSender();
+        foreach (var admin in admins)
+        {
+            emailSender.SendNewUserInfo(admin.GetMailboxAddress(), newUserInfo, approvalLink);
         }
     }
 }

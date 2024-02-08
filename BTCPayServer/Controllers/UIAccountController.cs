@@ -600,7 +600,6 @@ namespace BTCPayServer.Controllers
                         var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
                         settings.FirstRun = false;
                         await _SettingsRepository.UpdateSetting(settings);
-
                         await _SettingsRepository.FirstAdminRegistered(policies, _Options.UpdateUrl != null, _Options.DisableRegistration, Logs);
                         RegisteredAdmin = true;
                     }
@@ -672,24 +671,31 @@ namespace BTCPayServer.Controllers
             }
 
             var result = await _userManager.ConfirmEmailAsync(user, code);
-            if (!await _userManager.HasPasswordAsync(user))
+            if (result.Succeeded)
             {
+                _eventAggregator.Publish(new UserConfirmedEmailEvent
+                {
+                    User = user,
+                    RequestUri = Request.GetAbsoluteRootUri()
+                });
+
+                var hasPassword = await _userManager.HasPasswordAsync(user);
+                if (hasPassword)
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Success,
+                        Message = "Your email has been confirmed."
+                    });
+                    return RedirectToAction(nameof(Login), new { email = user.Email });
+                }
+
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Info,
                     Message = "Your email has been confirmed. Please set your password."
                 });
                 return await RedirectToSetPassword(user);
-            }
-
-            if (result.Succeeded)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Success,
-                    Message = "Your email has been confirmed."
-                });
-                return RedirectToAction(nameof(Login), new { email = user.Email });
             }
 
             return View("Error");

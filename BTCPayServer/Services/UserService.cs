@@ -119,12 +119,12 @@ namespace BTCPayServer.Services
             var succeeded = await userManager.UpdateAsync(user) is { Succeeded: true };
             if (succeeded)
             {
-                _logger.LogInformation("User {UserId} is now {Status}", user.Id, approved ? "approved" : "unapproved");
-                _eventAggregator.Publish(new UserApprovedEvent { User = user, Approved = approved, RequestUri = requestUri });
+                _logger.LogInformation("User {Email} is now {Status}", user.Email, approved ? "approved" : "unapproved");
+                _eventAggregator.Publish(new UserApprovedEvent { User = user, RequestUri = requestUri });
             }
             else
             {
-                _logger.LogError("Failed to {Action} user {UserId}", approved ? "approve" : "unapprove", user.Id);
+                _logger.LogError("Failed to {Action} user {Email}", approved ? "approve" : "unapprove", user.Email);
             }
 
             return succeeded;
@@ -147,11 +147,11 @@ namespace BTCPayServer.Services
             var res = await userManager.SetLockoutEndDateAsync(user, lockedOutDeadline);
             if (res.Succeeded)
             {
-                _logger.LogInformation($"User {user.Id} is now {(lockedOutDeadline is null ? "unlocked" : "locked")}");
+                _logger.LogInformation("User {Email} is now {Status}", user.Email, (lockedOutDeadline is null ? "unlocked" : "locked"));
             }
             else
             {
-                _logger.LogError($"Failed to set lockout for user {user.Id}");
+                _logger.LogError("Failed to set lockout for user {Email}", user.Email);
             }
 
             return res.Succeeded;
@@ -190,11 +190,11 @@ namespace BTCPayServer.Services
 
             if (res.Succeeded)
             {
-                _logger.LogInformation($"Successfully set admin status for user {user.Id}");
+                _logger.LogInformation("Successfully set admin status for user {Email}", user.Email);
             }
             else
             {
-                _logger.LogError($"Error setting admin status for user {user.Id}");
+                _logger.LogError("Error setting admin status for user {Email}", user.Email);
             }
 
             return res.Succeeded;
@@ -219,11 +219,11 @@ namespace BTCPayServer.Services
             var res = await userManager.DeleteAsync(user);
             if (res.Succeeded)
             {
-                _logger.LogInformation($"User {user.Id} was successfully deleted");
+                _logger.LogInformation("User {Email} was successfully deleted", user.Email);
             }
             else
             {
-                _logger.LogError($"Failed to delete user {user.Id}");
+                _logger.LogError("Failed to delete user {Email}", user.Email);
             }
         }
 

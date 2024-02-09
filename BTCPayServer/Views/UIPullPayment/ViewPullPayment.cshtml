@@ -202,7 +202,7 @@
             </p>
 			@if (Model.LnurlEndpoint is not null)
 			{
-				<p>
+				<p id="BoltcardActions" style="visibility:hidden">
 					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
 						Setup Boltcard
 					</a>
@@ -233,7 +233,7 @@
 				document.getElementById("ResetBoltcard").setAttribute('target', '_blank');
 				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(@Model.ResetDeepLink));
 			}
-
+			document.getElementById("BoltcardActions").style.visibility = "visible";
 
             window.qrApp = initQRShow({});
             delegate('click', 'button[page-qr]', event => {

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
@@ -125,7 +126,9 @@ namespace BTCPayServer.Security
 
             if (!string.IsNullOrEmpty(storeId))
             {
-                store = await _storeRepository.FindStore(storeId, userId);
+                store = isAdmin
+                    ? await _storeRepository.FindStore(storeId)
+                    : await _storeRepository.FindStore(storeId, userId);
             }
 
             if (Policies.IsServerPolicy(policy) && isAdmin)

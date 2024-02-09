@@ -33,6 +33,7 @@ using System.Threading;
 using BTCPayServer.Plugins.BoltcardFactory.ViewModels;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Models;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
 {
@@ -50,6 +51,7 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
         private readonly BTCPayServerEnvironment _env;
         private readonly PullPaymentHostedService _ppService;
         private readonly ApplicationDbContextFactory _dbContextFactory;
+        private readonly ILogger<UIBoltcardFactoryController> _logger;
 
         public UIBoltcardFactoryController(
             IEnumerable<IPayoutHandler> payoutHandlers,
@@ -61,7 +63,8 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
             SettingsRepository settingsRepository,
             BTCPayServerEnvironment env,
             PullPaymentHostedService ppService,
-            ApplicationDbContextFactory dbContextFactory)
+            ApplicationDbContextFactory dbContextFactory,
+            ILogger<UIBoltcardFactoryController> logger)
         {
             _payoutHandlers = payoutHandlers;
             _currencies = currencies;
@@ -73,6 +76,7 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
             _env = env;
             _ppService = ppService;
             _dbContextFactory = dbContextFactory;
+            _logger = logger;
         }
         public Data.StoreData CurrentStore => HttpContext.GetStoreData();
         private AppData GetCurrentApp() => HttpContext.GetAppData();
@@ -236,7 +240,6 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
             var app = await _appService.GetApp(appId, BoltcardFactoryPlugin.AppType);
             if (app is null)
                 return NotFound();
-            
             var issuerKey = await _settingsRepository.GetIssuerKey(_env);
 
             // LNURLW is used by deeplinks
@@ -244,17 +247,20 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
             {
                 if (request.UID is not null)
                 {
+                    _logger.LogInformation("You should pass either LNURLW or UID but not both");
                     ModelState.AddModelError(nameof(request.LNURLW), "You should pass either LNURLW or UID but not both");
                     return this.CreateValidationError(ModelState);
                 }
                 var p = ExtractP(request.LNURLW);
                 if (p is null)
                 {
+                    _logger.LogInformation("The LNURLW should contains a 'p=' parameter");
                     ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW should contains a 'p=' parameter");
                     return this.CreateValidationError(ModelState);
                 }
                 if (issuerKey.TryDecrypt(p) is not BoltcardPICCData picc)
                 {
+                    _logger.LogInformation("The LNURLW 'p=' parameter cannot be decrypted");
                     ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW 'p=' parameter cannot be decrypted");
                     return this.CreateValidationError(ModelState);
                 }
@@ -263,6 +269,7 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
 
             if (request?.UID is null || request.UID.Length != 7)
             {
+                _logger.LogInformation("The UID is required and should be 7 bytes");
                 ModelState.AddModelError(nameof(request.UID), "The UID is required and should be 7 bytes");
                 return this.CreateValidationError(ModelState);
             }
@@ -290,6 +297,7 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
             {
                 if (registration?.PullPaymentId is null)
                 {
+                    _logger.LogInformation("This card isn't registered");
                     ModelState.AddModelError(nameof(request.UID), "This card isn't registered");
                     return this.CreateValidationError(ModelState);
                 }

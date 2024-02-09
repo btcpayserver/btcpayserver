@@ -23,5 +23,7 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset? StartsAt { get; set; }
         public string[] PaymentMethods { get; set; }
         public bool AutoApproveClaims { get; set; }
+        public string EmbeddedCSS { get; set; }
+        public string CustomCSSLink { get; set; }
     }
 }

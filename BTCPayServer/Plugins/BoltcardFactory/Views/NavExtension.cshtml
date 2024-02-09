@@ -1,0 +1,37 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Plugins.BoltcardFactory
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Views.Apps
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Plugins.PointOfSale
+@using BTCPayServer.Services.Apps
+@inject AppService AppService;
+@model BTCPayServer.Components.MainNav.MainNavViewModel
+@{
+    var store = Context.GetStoreData();
+}
+
+@if (store != null)
+{
+	var appType = AppService.GetAppType(BoltcardFactoryPlugin.AppType)!;
+    <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
+        <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type" class="nav-link @ViewData.IsActivePage(AppsNavPages.Create, appType.Type)" id="@($"StoreNav-Create{appType.Type}")">
+            <vc:icon symbol="pointofsale" />
+            <span>@appType.Description</span>
+        </a>
+    </li>
+    @foreach (var app in Model.Apps.Where(app => app.AppType == appType.Type))
+    {
+        <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+			<a asp-area="" asp-controller="UIBoltcardFactory" asp-action="UpdateBoltcardFactory" asp-route-appId="@app.Id" class="nav-link @ViewData.IsActivePage(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+                <span>@app.AppName</span>
+            </a>
+        </li>
+        <li class="nav-item nav-item-sub" not-permission="@Policies.CanModifyStoreSettings">
+			<a asp-area="" asp-controller="UIBoltcardFactory" asp-action="ViewBoltcardFactory" asp-route-appId="@app.Id" class="nav-link">
+                <span>@app.AppName</span>
+            </a>
+        </li>
+    }
+}

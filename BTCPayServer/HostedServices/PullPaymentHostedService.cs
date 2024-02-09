@@ -108,6 +108,25 @@ namespace BTCPayServer.HostedServices
             }
         }
 
+        public Task<string> CreatePullPayment(string storeId, CreatePullPaymentRequest request)
+        {
+            return CreatePullPayment(new CreatePullPayment()
+            {
+                StartsAt = request.StartsAt,
+                ExpiresAt = request.ExpiresAt,
+                Period = request.Period,
+                BOLT11Expiration = request.BOLT11Expiration,
+                Name = request.Name,
+                Description = request.Description,
+                Amount = request.Amount,
+                Currency = request.Currency,
+                StoreId = storeId,
+                PaymentMethodIds = request.PaymentMethods.Select(p => PaymentMethodId.Parse(p)).ToArray(),
+                AutoApproveClaims = request.AutoApproveClaims,
+                EmbeddedCSS = request.EmbeddedCSS,
+                CustomCSSLink = request.CustomCSSLink
+            });
+        }
         public async Task<string> CreatePullPayment(CreatePullPayment create)
         {
             ArgumentNullException.ThrowIfNull(create);

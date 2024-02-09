@@ -1,0 +1,45 @@
+@model ViewBoltcardFactoryViewModel
+
+@{
+	ViewData["Title"] = "C";
+	Layout = "/Views/Shared/_LayoutWizard.cshtml";
+}
+
+<header class="text-center">
+	<h1>Program Boltcards</h1>
+	<p class="lead text-secondary mt-3" id="explanation">Using Boltcard NFC Programmer</p>
+</header>
+
+<div id="body" class="my-4">
+	<div id="actions" class="d-flex align-items-center justify-content-center" style="visibility:hidden">
+		<div class="d-flex gap-3 mt-3 mt-sm-0">
+			<a class="btn btn-primary" href="@Model.SetupDeepLink" target="_blank">Setup</a>
+			<a class="btn btn-danger" href="@Model.ResetDeepLink" target="_blank">Reset</a>
+		</div>
+	</div>
+	<div id="qr" class="d-flex align-items-center justify-content-center">
+		<div class="d-inline-flex flex-column" style="width:256px" style="visibility:hidden">
+			<div class="qr-container mb-2">
+				<vc:qr-code data="@Context.Request.GetAbsoluteRoot()" />
+			</div>
+		</div>
+		</di>
+	</div>
+</div>
+
+	<script>
+		document.addEventListener("DOMContentLoaded", () => {
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			if (isMobile) {
+				document.getElementById("actions").style.visibility = "visible";
+				document.getElementById("qr").style.visibility = "hidden";
+			}
+			else {
+				document.getElementById("actions").style.visibility = "hidden";
+				document.getElementById("qr").style.visibility = "visible";
+				document.getElementById("explanation").innerText = "Scan the QR code with your mobile device";
+			}
+		});
+	</script>
+
+

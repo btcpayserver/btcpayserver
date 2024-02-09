@@ -22,6 +22,12 @@
     <EmbeddedResource Remove="wwwroot\vendor\jquery-nice-select\**" />
     <None Remove="Build\**" />
     <None Remove="wwwroot\vendor\jquery-nice-select\**" />
+    <Content Update="Plugins\BoltcardFactory\Views\UpdateBoltcardFactory.cshtml">
+      <Pack>false</Pack>
+    </Content>
+    <Content Update="Plugins\BoltcardFactory\Views\ViewBoltcardFactory.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\UIStorePullPayments\NewPullPayment.cshtml">
       <Pack>false</Pack>
     </Content>

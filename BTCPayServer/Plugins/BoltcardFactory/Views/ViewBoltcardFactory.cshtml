@@ -20,7 +20,7 @@
 	<div id="qr" class="d-flex align-items-center justify-content-center">
 		<div class="d-inline-flex flex-column" style="width:256px" style="visibility:hidden">
 			<div class="qr-container mb-2">
-				<vc:qr-code data="@Context.Request.GetAbsoluteRoot()" />
+				<vc:qr-code data="@Context.Request.GetCurrentUrl()" />
 			</div>
 		</div>
 		</di>

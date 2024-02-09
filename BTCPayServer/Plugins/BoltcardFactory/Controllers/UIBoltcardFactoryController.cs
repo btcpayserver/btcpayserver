@@ -207,7 +207,7 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
         }
         [HttpGet("/apps/{appId}/boltcardfactory")]
         [DomainMappingConstraint(BoltcardFactoryPlugin.AppType)]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [AllowAnonymous]
         public async Task<IActionResult> ViewBoltcardFactory(string appId)
         {
             var vm = new ViewBoltcardFactoryViewModel();
@@ -233,8 +233,8 @@ namespace BTCPayServer.Plugins.BoltcardFactory.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> RegisterBoltcard(string appId, RegisterBoltcardRequest request, string? onExisting = null)
         {
-            var app = GetCurrentApp();
-            if (app?.AppType != BoltcardFactoryPlugin.AppType)
+            var app = await _appService.GetApp(appId, BoltcardFactoryPlugin.AppType);
+            if (app is null)
                 return NotFound();
             
             var issuerKey = await _settingsRepository.GetIssuerKey(_env);

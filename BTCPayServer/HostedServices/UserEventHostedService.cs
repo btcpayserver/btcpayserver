@@ -117,10 +117,11 @@ public class UserEventHostedService(
 
             case UserConfirmedEmailEvent confirmedEvent:
                 user = confirmedEvent.User;
-                if (!user.EmailConfirmed || !user.RequiresApproval) break;
+                if (!user.EmailConfirmed) break;
                 uri = confirmedEvent.RequestUri;
                 var confirmedUserInfo = $"User {user.Email} confirmed their email address";
                 Logs.PayServer.LogInformation(confirmedUserInfo);
+                if (!user.RequiresApproval || user.Approved) return;
                 await NotifyAdminsAboutUserRequiringApproval(user, uri, confirmedUserInfo);
                 break;
         }
@@ -128,6 +129,7 @@ public class UserEventHostedService(
 
     private async Task NotifyAdminsAboutUserRequiringApproval(ApplicationUser user, Uri uri, string newUserInfo)
     {
+        if (!user.RequiresApproval || user.Approved) return;
         await notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
 
         var admins = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);

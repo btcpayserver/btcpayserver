@@ -24,6 +24,7 @@ namespace BTCPayServer.Abstractions.Contracts
         public DateTimeOffset Created { get; set; }
         public string Body { get; set; }
         public string ActionLink { get; set; }
+        public string ActionText { get; set; } = "Details";
         public bool Seen { get; set; }
     }
 }

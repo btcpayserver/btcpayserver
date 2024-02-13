@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -86,6 +87,62 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction("ListPlugins");
         }
+        
+        [HttpPost("server/plugins/autoupdate")]
+        public async Task<IActionResult> ToggleAutoUpdate( string plugin, bool? autoUpdate)
+        {
+            
+            var dh = await _SettingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
+                     new PluginVersionCheckerDataHolder();
+            dh.AutoUpdatePlugins ??= new List<string>();
+            
+            autoUpdate??= !dh.AutoUpdatePlugins.Contains(plugin); 
+            if (autoUpdate is true)
+            {
+                dh.AutoUpdatePlugins.Add(plugin);
+            }
+            else
+            {
+                dh.AutoUpdatePlugins.Remove(plugin);
+            }
+
+            await _SettingsRepository.UpdateSetting(dh);
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Message = $"Auto update {(autoUpdate.Value ? "enabled" : "disabled")} for {plugin}.",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+
+            return RedirectToAction("ListPlugins");
+        }
+                [HttpPost("server/plugins/killswitch")]
+        public async Task<IActionResult> ToggleKillswitch( string plugin, bool? killswitch)
+        {
+            
+            var dh = await _SettingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
+                     new PluginVersionCheckerDataHolder();
+            dh.KillswitchPlugins ??= new List<string>();
+            
+            killswitch??= !dh.AutoUpdatePlugins.Contains(plugin); 
+            if (killswitch is true)
+            {
+                dh.KillswitchPlugins.Add(plugin);
+            }
+            else
+            {
+                dh.KillswitchPlugins.Remove(plugin);
+            }
+
+            await _SettingsRepository.UpdateSetting(dh);
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Message = $"Killswitch {(killswitch.Value ? "enabled" : "disabled")} for {plugin}.",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+
+            return RedirectToAction("ListPlugins");
+        }
+        
 
         [HttpPost("server/plugins/install")]
         public async Task<IActionResult> InstallPlugin(

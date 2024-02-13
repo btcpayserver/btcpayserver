@@ -20,6 +20,7 @@ namespace BTCPayServer.HostedServices
 {
     internal class PluginUpdateNotification : BaseNotification
     {
+        public bool UpdateDownloaded { get; }
         private const string TYPE = "pluginupdate";
 
         internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options) : NotificationHandler<PluginUpdateNotification>
@@ -30,7 +31,7 @@ namespace BTCPayServer.HostedServices
             {
                 get
                 {
-                    return new (string identifier, string name)[] {(TYPE, "Plugin update")};
+                    return [(TYPE, "Plugin update")];
                 }
             }
 
@@ -39,9 +40,23 @@ namespace BTCPayServer.HostedServices
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
                 vm.Body = $"New {notification.Name} plugin version {notification.Version} released!";
-                vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
-                    "UIServer",
-                    new {plugin = notification.PluginIdentifier}, options.RootPath);
+                if(notification.UpdateDownloaded)
+                    vm.Body += " Update has automatically been scheduled to be installed on the next restart.";
+                if (notification.UpdateDownloaded)
+                {   
+                    vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.Maintenance),
+                        "UIServer",
+                        new {command = "soft-restart"}, options.RootPath);
+                    vm.ActionText = "Restart now";
+                }
+                else
+                {
+                    
+                    vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
+                        "UIServer",
+                        new {plugin = notification.PluginIdentifier}, options.RootPath);
+                }
+                
             }
         }
 
@@ -49,8 +64,9 @@ namespace BTCPayServer.HostedServices
         {
         }
 
-        public PluginUpdateNotification(PluginService.AvailablePlugin plugin)
+        public PluginUpdateNotification(PluginService.AvailablePlugin plugin, bool updateDownloaded)
         {
+            UpdateDownloaded = updateDownloaded;
             Name = plugin.Name;
             PluginIdentifier = plugin.Identifier;
             Version = plugin.Version.ToString();
@@ -68,9 +84,11 @@ namespace BTCPayServer.HostedServices
     public class PluginVersionCheckerDataHolder
     {
         public Dictionary<string, Version> LastVersions { get; set; }
+        public List<string> AutoUpdatePlugins { get; set; }
+        public List<string> KillswitchPlugins { get; set; }
     }
 
-    public class PluginUpdateFetcher(SettingsRepository settingsRepository, NotificationSender notificationSender, PluginService pluginService)
+    public class PluginUpdateFetcher(SettingsRepository settingsRepository, NotificationSender notificationSender, PluginService pluginService, DataDirectories dataDirectories)
         : IPeriodicTask
     {
         public async Task Do(CancellationToken cancellationToken)
@@ -78,6 +96,7 @@ namespace BTCPayServer.HostedServices
             var dh = await settingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
                      new PluginVersionCheckerDataHolder();
             dh.LastVersions ??= new Dictionary<string, Version>();
+            dh.AutoUpdatePlugins ??= new List<string>();
             var disabledPlugins = pluginService.GetDisabledPlugins();
 
             var installedPlugins =
@@ -90,6 +109,10 @@ namespace BTCPayServer.HostedServices
                 .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.ContainsKey(pair.Name))
                 .ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
             var notify = new HashSet<string>();
+            
+            
+            
+            
             foreach (var pair in remotePluginsList)
             {
                 if (dh.LastVersions.TryGetValue(pair.Key, out var lastVersion) && lastVersion >= pair.Value)
@@ -105,14 +128,32 @@ namespace BTCPayServer.HostedServices
             }
 
             dh.LastVersions = remotePluginsList;
-
+            //check if any loaded plugin is in the remote list with exact version and is marked with Kill. If so, check if there is the plugin listed under AutoKillSwitch and if so, kill the plugin
+            foreach (var plugin in pluginService.LoadedPlugins)
+            {
+                var matched = remotePlugins.FirstOrDefault(p => p.Identifier == plugin.Identifier && p.Version == plugin.Version);
+                if(matched is {Kill: true} && dh.KillswitchPlugins.Contains(plugin.Identifier))
+                {
+                    PluginManager.DisablePlugin(dataDirectories.PluginDir, plugin.Identifier);
+                }
+            }
             foreach (string pluginUpdate in notify)
             {
                 var plugin = remotePlugins.First(p => p.Identifier == pluginUpdate);
-                await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
+                var update = false;
+                if (dh.AutoUpdatePlugins.Contains(plugin.Identifier))
+                {
+                    update = true;
+                    await pluginService.DownloadRemotePlugin(plugin.Identifier, plugin.Version.ToString());
+                    pluginService.UpdatePlugin(plugin.Identifier);
+                }
+                await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin, update));
             }
 
             await settingsRepository.UpdateSetting(dh);
+            
+           
+            
         }
     }
 }

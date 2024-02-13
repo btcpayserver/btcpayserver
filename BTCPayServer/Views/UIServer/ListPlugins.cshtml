@@ -1,7 +1,11 @@
 @using BTCPayServer.Configuration
+@using BTCPayServer.HostedServices
 @using BTCPayServer.Plugins
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel
 @inject BTCPayServerOptions BTCPayServerOptions
+@inject SettingsRepository SettingsRepository
 @inject PluginService PluginService
 @{
     Layout = "_Layout";
@@ -13,6 +17,8 @@
         .Where(plugin => !installed.ContainsKey(plugin.Identifier))
         .GroupBy(plugin => plugin.Identifier)
         .ToList();
+    var autoUpdate = (await SettingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>())?.AutoUpdatePlugins ?? new();
+    var killswitch = (await SettingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>())?.KillswitchPlugins ?? new();
     
     foreach (var availableAndNotInstalledItem in availableAndNotInstalledx)
     {
@@ -84,7 +90,7 @@
                             @plugin
                             @if (version != null)
                             {
-                                <span>({version})</span>
+                                <span>(@version)</span>
                             }
                         </span>
                         <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
@@ -287,6 +293,17 @@
                                 </form>
                             }
                         }
+
+                        <form asp-action="ToggleAutoUpdate" asp-route-plugin="@plugin.Identifier">
+                            <button type="submit" class="btn btn-outline-secondary">
+                                @(autoUpdate.Contains(plugin.Identifier) ? "Disable auto update" : "Enable auto update")
+                            </button>
+                        </form>   
+                        <form asp-action="ToggleKillswitch" asp-route-plugin="@plugin.Identifier">
+                            <button type="submit" class="btn btn-outline-secondary">
+                                @(killswitch.Contains(plugin.Identifier) ? "Disable killswitch" : "Enable killswitch")
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>

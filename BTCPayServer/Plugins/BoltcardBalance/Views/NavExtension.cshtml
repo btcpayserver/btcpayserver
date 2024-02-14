@@ -1,0 +1,14 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Plugins.BoltcardFactory
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Views.Apps
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+
+
+<li class="nav-item">
+	<a asp-area="" asp-controller="UIBoltcardBalance" asp-action="ScanCard" class="nav-link">
+		<vc:icon symbol="pay-button" />
+		<span>Boltcard Balance</span>
+	</a>
+</li>

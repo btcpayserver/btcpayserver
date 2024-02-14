@@ -1,0 +1,106 @@
+@{
+	ViewData["Title"] = "C";
+	Layout = "/Views/Shared/_LayoutWizard.cshtml";
+}
+
+<header class="text-center">
+	<h1>Consult balance</h1>
+	<p class="lead text-secondary mt-3" id="explanation">Scan your card for consulting the balance</p>
+</header>
+
+<div id="body" class="my-4">
+	<div id="actions" class="d-flex align-items-center justify-content-center">
+		<div class="d-flex gap-3 mt-3 mt-sm-0">
+			<a id="ask-permission-btn" class="btn btn-primary" href="#">Ask permission...</a>
+		</div>
+	</div>
+	<div id="qr" class="d-flex flex-column align-items-center justify-content-center">
+		<div class="d-inline-flex flex-column" style="width:256px">
+			<div class="qr-container mb-2">
+				<vc:qr-code data="@Context.Request.GetCurrentUrl()" />
+			</div>
+		</div>
+		<p class="text-secondary">NFC not supported in this device</p>
+	</div>
+	<div id="scanning-btn" class="d-flex align-items-center justify-content-center">
+		<div class="d-flex gap-3 mt-3 mt-sm-0">
+			<a id="scanning-btn-link" class="btn btn-primary"></a>
+		</div>
+	</div>
+</div>
+
+<script>
+	(function () {
+		var permissionGranted = false;
+		var ndef = null;
+		var abortController = null;
+		async function askPermissionNFC() {
+			if (!('NDEFReader' in window)) {
+				return;
+			}
+			try {
+				permissionGranted = navigator.permissions && (await navigator.permissions.query({ name: 'nfc' })).state === 'granted';
+			} catch (e) { }
+
+			if (permissionGranted) {
+				setState("WaitingForCard");
+				ndef = new NDEFReader();
+				abortController = new AbortController();
+				abortController.signal.onabort = () => setState("WaitingForCard");
+
+				await ndef.scan({ signal: abortController.signal })
+
+				ndef.onreading = async ({ message }) => {
+					const record = message.records[0]
+					const textDecoder = new TextDecoder('utf-8')
+					const decoded = textDecoder.decode(record.data)
+					console.log("Read: " + decoded);
+				};
+			}
+		}
+
+		function setState(state)
+		{
+			if (state === "NFCNotSupported")
+			{
+				document.getElementById("actions").classList.add("d-none");
+				document.getElementById("qr").classList.remove("d-none");
+				document.getElementById("scanning-btn").classList.add("d-none");
+			}
+			else if (state === "WaitingForPermission")
+			{
+
+				document.getElementById("actions").classList.remove("d-none");
+				document.getElementById("qr").classList.add("d-none");
+				document.getElementById("scanning-btn").classList.add("d-none");
+			}
+			else if (state === "WaitingForCard")
+			{
+				document.getElementById("actions").classList.add("d-none");
+				document.getElementById("qr").classList.add("d-none");
+				document.getElementById("scanning-btn").classList.remove("d-none");
+				document.getElementById("scanning-btn-link").innerText = "Please, present your card..."
+			}
+			else if (state == "Scanning")
+			{
+				document.getElementById("actions").classList.add("d-none");
+				document.getElementById("qr").classList.add("d-none");
+				document.getElementById("scanning-btn").classList.remove("d-none");
+				document.getElementById("scanning-btn-link").innerText = "Reading..."
+			}
+		}
+		document.addEventListener("DOMContentLoaded", () => {
+			var nfcSupported = 'NDEFReader' in window;
+			if (!nfcSupported) {
+				setState("NFCNotSupported");
+			}
+			else {
+				setState("WaitingForPermission");
+				askPermissionNFC();
+			}
+			delegate('click', "#ask-permission-btn", askPermissionNFC);
+		});
+	})();
+</script>
+
+

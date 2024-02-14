@@ -1,0 +1,55 @@
+@using BTCPayServer.Plugins.BoltcardBalance.ViewModels
+@using BTCPayServer.Services
+@inject DisplayFormatter DisplayFormatter
+
+@model BalanceViewModel
+
+@{
+	Layout = null;
+}
+
+<div class="col col-12 col-lg-12 mb-4">
+	<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+		<nav id="wizard-navbar">
+		<a href="#" id="CancelWizard" class="cancel">
+			<vc:icon symbol="close" />
+		</a>
+		</nav>
+		<div class="d-flex justify-content-center">
+			<div class="d-flex flex-column">
+				<dl class="mb-0 mt-md-4">
+					<div class="d-flex d-print-inline-block flex-column mb-4">
+						<dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
+					</div>
+				</dl>
+			</div>
+		</div>
+	</div>
+</div>
+
+@if (Model.Transactions.Any())
+{
+	<div class="col col-12 col-lg-12 mb-4">
+		<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded table-responsive">
+			<table class="table table-hover">
+				<thead>
+					<tr>
+						<th class="date-col">Date</th>
+						<th class="amount-col">Amount</th>
+					</tr>
+				</thead>
+				<tbody>
+					@foreach (var tx in Model.Transactions)
+					{
+						<tr>
+							<td class="date-col">@tx.Date.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</td>
+							<td class="amount-col">
+								<span data-sensitive class="text-@(tx.Positive ? "success" : "danger")">@DisplayFormatter.Currency(tx.Balance, Model.Currency, DisplayFormatter.CurrencyFormat.Code)</span>
+							</td>
+						</tr>
+					}
+				</tbody>
+			</table>
+		</div>
+	</div>
+}

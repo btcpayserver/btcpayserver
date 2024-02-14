@@ -1,6 +1,17 @@
 @{
-	ViewData["Title"] = "C";
+	ViewData["Title"] = "Boltcard Balances";
+	ViewData["ShowFooter"] = false;
 	Layout = "/Views/Shared/_LayoutWizard.cshtml";
+}
+
+@section PageHeadContent
+{
+<style>
+		.amount-col {
+		text-align: right;
+		white-space: nowrap;
+	}
+</style>
 }
 
 <header class="text-center">
@@ -9,12 +20,12 @@
 </header>
 
 <div id="body" class="my-4">
-	<div id="actions" class="d-flex align-items-center justify-content-center">
+	<div id="actions" class="d-flex align-items-center justify-content-center d-none">
 		<div class="d-flex gap-3 mt-3 mt-sm-0">
-			<a id="ask-permission-btn" class="btn btn-primary" href="#">Ask permission...</a>
+			<a id="start-scan-btn" class="btn btn-primary" href="#">Ask permission...</a>
 		</div>
 	</div>
-	<div id="qr" class="d-flex flex-column align-items-center justify-content-center">
+	<div id="qr" class="d-flex flex-column align-items-center justify-content-center d-none">
 		<div class="d-inline-flex flex-column" style="width:256px">
 			<div class="qr-container mb-2">
 				<vc:qr-code data="@Context.Request.GetCurrentUrl()" />
@@ -22,10 +33,13 @@
 		</div>
 		<p class="text-secondary">NFC not supported in this device</p>
 	</div>
-	<div id="scanning-btn" class="d-flex align-items-center justify-content-center">
+	<div id="scanning-btn" class="d-flex align-items-center justify-content-center d-none">
 		<div class="d-flex gap-3 mt-3 mt-sm-0">
-			<a id="scanning-btn-link" class="btn btn-primary"></a>
+			<a id="scanning-btn-link" class="action-button" style="font-size: 50px;" ></a>
 		</div>
+	</div>
+	<div id="balance" class="row">
+		<div id="balance-table"></div>
 	</div>
 </div>
 
@@ -34,71 +48,98 @@
 		var permissionGranted = false;
 		var ndef = null;
 		var abortController = null;
-		async function askPermissionNFC() {
+		function delay(ms) {
+			return new Promise(resolve => setTimeout(resolve, ms));
+		}
+		async function showBalance(lnurlw) {
+			setState("Submitting");
+			await delay(1000);
+			var url = window.location.href.replace("#", "");
+			url = url.split("?")[0] + "?" + lnurlw.split("?")[1];
+			// url = "https://testnet.demo.btcpayserver.org/boltcards/balance?p=...&c=..."
+
+			var xhttp = new XMLHttpRequest();
+			xhttp.onreadystatechange = function () {
+				if (this.readyState == 4 && this.status == 200 && this.responseText) {
+					document.getElementById("balance-table").innerHTML = this.responseText;
+					document.getElementById("CancelWizard").addEventListener("click", function (e) {
+						e.preventDefault();
+						setState("WaitingForCard");
+						document.getElementById("balance-table").innerHTML = "";
+					});
+					setState("ShowBalance");
+				}
+			};
+			xhttp.open('GET', url, true);
+			xhttp.send(new FormData());
+		}
+
+		async function startScan() {
 			if (!('NDEFReader' in window)) {
 				return;
 			}
-			try {
-				permissionGranted = navigator.permissions && (await navigator.permissions.query({ name: 'nfc' })).state === 'granted';
-			} catch (e) { }
+			ndef = new NDEFReader();
+			abortController = new AbortController();
+			abortController.signal.onabort = () => setState("WaitingForCard");
 
-			if (permissionGranted) {
-				setState("WaitingForCard");
-				ndef = new NDEFReader();
-				abortController = new AbortController();
-				abortController.signal.onabort = () => setState("WaitingForCard");
-
-				await ndef.scan({ signal: abortController.signal })
-
-				ndef.onreading = async ({ message }) => {
-					const record = message.records[0]
-					const textDecoder = new TextDecoder('utf-8')
-					const decoded = textDecoder.decode(record.data)
-					console.log("Read: " + decoded);
-				};
-			}
+			await ndef.scan({ signal: abortController.signal })
+			setState("WaitingForCard");
+			ndef.onreading = async ({ message }) => {
+				const record = message.records[0];
+				const textDecoder = new TextDecoder('utf-8');
+				const decoded = textDecoder.decode(record.data);
+				await showBalance(decoded);
+			};
 		}
 
 		function setState(state)
 		{
+			document.getElementById("actions").classList.add("d-none");
+			document.getElementById("qr").classList.add("d-none");
+			document.getElementById("scanning-btn").classList.add("d-none");
+			document.getElementById("balance").classList.add("d-none");
+
 			if (state === "NFCNotSupported")
 			{
-				document.getElementById("actions").classList.add("d-none");
 				document.getElementById("qr").classList.remove("d-none");
-				document.getElementById("scanning-btn").classList.add("d-none");
 			}
 			else if (state === "WaitingForPermission")
 			{
 
 				document.getElementById("actions").classList.remove("d-none");
-				document.getElementById("qr").classList.add("d-none");
-				document.getElementById("scanning-btn").classList.add("d-none");
 			}
 			else if (state === "WaitingForCard")
 			{
-				document.getElementById("actions").classList.add("d-none");
-				document.getElementById("qr").classList.add("d-none");
 				document.getElementById("scanning-btn").classList.remove("d-none");
-				document.getElementById("scanning-btn-link").innerText = "Please, present your card..."
+				document.getElementById("scanning-btn-link").innerHTML = "<i class=\"fa fa-wifi\"></i>";
 			}
-			else if (state == "Scanning")
+			else if (state == "Submitting")
 			{
-				document.getElementById("actions").classList.add("d-none");
-				document.getElementById("qr").classList.add("d-none");
 				document.getElementById("scanning-btn").classList.remove("d-none");
-				document.getElementById("scanning-btn-link").innerText = "Reading..."
+				document.getElementById("scanning-btn-link").innerHTML = "<i class=\"fa fa-spinner\"></i>"
+			}
+			else if (state == "ShowBalance") {
+				document.getElementById("scanning-btn").classList.remove("d-none");
+				document.getElementById("scanning-btn-link").innerHTML = "<i class=\"fa fa-wifi\"></i>";
+				document.getElementById("balance").classList.remove("d-none");
 			}
 		}
-		document.addEventListener("DOMContentLoaded", () => {
+		document.addEventListener("DOMContentLoaded", async () => {
 			var nfcSupported = 'NDEFReader' in window;
 			if (!nfcSupported) {
 				setState("NFCNotSupported");
 			}
 			else {
 				setState("WaitingForPermission");
-				askPermissionNFC();
+				var granted = (await navigator.permissions.query({ name: 'nfc' })).state === 'granted';
+				if (granted)
+				{
+					setState("WaitingForCard");
+					startScan();
+				}
 			}
-			delegate('click', "#ask-permission-btn", askPermissionNFC);
+			delegate('click', "#start-scan-btn", startScan);
+			// showBalance("lnurl://ewfw?p=test&c=test");
 		});
 	})();
 </script>

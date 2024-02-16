@@ -219,8 +219,10 @@
 
 #StoreSelectorMenu {
     min-width: 100%;
-    max-height: calc(100vh - var(--header-height));
-    overflow-y: scroll;
+    overflow-y: auto;
+    /* gradually try to set better but less supported values and units */
+    max-height: calc(100vh - var(--header-height) - var(--btcpay-space-xxl));
+    max-height: calc(100dvh - var(--header-height));
 }
 
 /* Logo */

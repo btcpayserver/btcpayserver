@@ -231,7 +231,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             var resetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery);
             var vm = new UpdateCrowdfundViewModel
             {
-                Title = settings.Title,
                 StoreId = app.StoreDataId,
                 StoreName = app.StoreData?.StoreName,
                 StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.TargetCurrency),
@@ -349,7 +348,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             app.Archived = vm.Archived;
             var newSettings = new CrowdfundSettings
             {
-                Title = vm.Title,
+                Title = vm.AppName,
                 Enabled = vm.Enabled,
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),

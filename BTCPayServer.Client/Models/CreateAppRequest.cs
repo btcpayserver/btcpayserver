@@ -21,7 +21,6 @@ namespace BTCPayServer.Client.Models
     public class CreatePointOfSaleAppRequest : CreateAppRequest
     {
         public string Currency { get; set; } = null;
-        public string Title { get; set; } = null;
         public string Description { get; set; } = null;
         public string Template { get; set; } = null;
         [JsonConverter(typeof(StringEnumConverter))]
@@ -55,7 +54,6 @@ namespace BTCPayServer.Client.Models
 
     public class CreateCrowdfundAppRequest : CreateAppRequest
     {
-        public string Title { get; set; } = null;
         public bool? Enabled { get; set; } = null;
         public bool? EnforceTargetAmount { get; set; } = null;
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]

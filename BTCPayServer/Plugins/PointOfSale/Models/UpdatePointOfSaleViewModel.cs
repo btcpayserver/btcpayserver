@@ -17,10 +17,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         [Display(Name = "App Name")]
         public string AppName { get; set; }
 
-        [Required]
-        [MaxLength(30)]
-        [Display(Name = "Display Title")]
-        public string Title { get; set; }
         [MaxLength(5)]
         public string Currency { get; set; }
         public string Template { get; set; }

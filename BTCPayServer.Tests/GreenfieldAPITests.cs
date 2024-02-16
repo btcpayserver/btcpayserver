@@ -291,14 +291,13 @@ namespace BTCPayServer.Tests
                 new CreatePointOfSaleAppRequest()
                 {
                     AppName = "test app from API",
-                    Currency = "JPY",
-                    Title = "test app title"
+                    Currency = "JPY"
                 }
             );
             Assert.Equal("test app from API", app.Name);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("PointOfSale", app.AppType);
-            Assert.Equal("test app title", app.Title);
+            Assert.Equal("test app from API", app.Title);
             Assert.False(app.Archived);
 
             // Make sure we return a 404 if we try to get an app that doesn't exist
@@ -323,7 +322,6 @@ namespace BTCPayServer.Tests
                 new CreatePointOfSaleAppRequest()
                 {
                     AppName = "new app name",
-                    Title = "new app title",
                     Archived = true
                 }
             );
@@ -335,7 +333,7 @@ namespace BTCPayServer.Tests
             // Test the POS-specific endpoint also
             var retrievedPosApp = await client.GetPosApp(app.Id);
             Assert.Equal("new app name", retrievedPosApp.Name);
-            Assert.Equal("new app title", retrievedPosApp.Title);
+            Assert.Equal("new app name", retrievedPosApp.Title);
             Assert.True(retrievedPosApp.Archived);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
@@ -459,10 +457,9 @@ namespace BTCPayServer.Tests
             // Test creating a crowdfund app
             var app = await client.CreateCrowdfundApp(
                 user.StoreId,
-                new CreateCrowdfundAppRequest()
+                new CreateCrowdfundAppRequest
                 {
-                    AppName = "test app from API",
-                    Title = "test app title"
+                    AppName = "test app from API"
                 }
             );
             Assert.Equal("test app from API", app.Name);

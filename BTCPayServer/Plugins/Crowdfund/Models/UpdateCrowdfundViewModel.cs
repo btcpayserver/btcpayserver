@@ -19,11 +19,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         [Display(Name = "App Name")]
         public string AppName { get; set; }
 
-        [Required]
-        [MaxLength(30)]
-        [Display(Name = "Display Title")]
-        public string Title { get; set; }
-
         public string Tagline { get; set; }
 
         [Required]
@@ -115,7 +110,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string AnimationColors { get; set; }
 
         // NOTE: Improve validation if needed
-        public bool ModelWithMinimumData => Description != null && Title != null && TargetCurrency != null;
+        public bool ModelWithMinimumData => Description != null && AppName != null && TargetCurrency != null;
 
         public bool Archived { get; set; }
     }

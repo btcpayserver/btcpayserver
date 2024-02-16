@@ -578,7 +578,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 StoreDefaultCurrency = await GetStoreDefaultCurrentIfEmpty(app.StoreDataId, settings.Currency),
                 Archived = app.Archived,
                 AppName = app.Name,
-                Title = settings.Title,
                 DefaultView = settings.DefaultView,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
@@ -668,7 +667,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             var settings = new PointOfSaleSettings
             {
-                Title = vm.Title,
+                Title = vm.AppName,
                 DefaultView = vm.DefaultView,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 ShowDiscount = vm.ShowDiscount,

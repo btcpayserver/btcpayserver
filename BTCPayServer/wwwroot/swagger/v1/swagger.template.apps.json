@@ -798,13 +798,8 @@
                 "properties": {
                     "appName": {
                         "type": "string",
-                        "description": "The name of the app (shown in admin UI)",
+                        "description": "The name of the app",
                         "nullable": false
-                    },
-                    "title": {
-                        "type": "string",
-                        "description": "The title of the app (shown to the user)",
-                        "nullable": true
                     },
                     "description": {
                         "type": "string",
@@ -917,15 +912,9 @@
                 "properties": {
                     "appName": {
                         "type": "string",
-                        "description": "The name of the app (shown in admin UI)",
+                        "description": "The name of the app",
                         "example": "Kukkstarter",
                         "nullable": false
-                    },
-                    "title": {
-                        "type": "string",
-                        "description": "The title of the app (shown to the user)",
-                        "example": "My crowdfund app",
-                        "nullable": true
                     },
                     "description": {
                         "type": "string",

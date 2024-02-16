@@ -638,7 +638,7 @@ namespace BTCPayServer.Tests
                 apps.HttpContext.SetAppData(appData);
                 pos.HttpContext.SetAppData(appData);
                 var vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-                vmpos.Title = "hello";
+                vmpos.AppName = "hello";
                 vmpos.Currency = "CAD";
                 vmpos.ButtonText = "{0} Purchase";
                 vmpos.CustomButtonText = "Nicolas Sexy Hair";
@@ -657,7 +657,7 @@ donation:
                 vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
                 Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-                Assert.Equal("hello", vmpos.Title);
+                Assert.Equal("hello", vmpos.AppName);
 
                 var publicApps = user.GetController<UIPointOfSaleController>();
                 var vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
@@ -711,7 +711,7 @@ donation:
                 {
                     TestLogs.LogInformation($"Testing for {test.Code}");
                     vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-                    vmpos.Title = "hello";
+                    vmpos.AppName = "hello";
                     vmpos.Currency = test.Item1;
                     vmpos.ButtonText = "{0} Purchase";
                     vmpos.CustomButtonText = "Nicolas Sexy Hair";
@@ -745,7 +745,7 @@ donation:
 
                 //test inventory related features
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-                vmpos.Title = "hello";
+                vmpos.AppName = "hello";
                 vmpos.Currency = "BTC";
                 vmpos.Template = @"
 inventoryitem:
@@ -799,7 +799,7 @@ noninventoryitem:
 
                 //test payment methods option
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-                vmpos.Title = "hello";
+                vmpos.AppName = "hello";
                 vmpos.Currency = "BTC";
                 vmpos.Template = @"
 btconly:

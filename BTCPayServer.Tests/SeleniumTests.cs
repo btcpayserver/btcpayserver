@@ -1153,9 +1153,10 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
+            var appName = "PoS" + Guid.NewGuid();
             s.CreateNewStore();
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
+            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
@@ -1179,7 +1180,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(windows[1]);
 
             var posBaseUrl = s.Driver.Url.Replace("/cart", "");
-            Assert.True(s.Driver.PageSource.Contains("Tea shop"), "Unable to create PoS");
+            Assert.True(s.Driver.PageSource.Contains($">{appName}</h1>"), "Unable to create PoS");
             Assert.True(s.Driver.PageSource.Contains("Cart"), "PoS not showing correct default view");
             Assert.True(s.Driver.PageSource.Contains("Take my money"), "PoS not showing correct default view");
             Assert.Equal(6, s.Driver.FindElements(By.CssSelector(".posItem.posItem--displayed")).Count);
@@ -1208,11 +1209,11 @@ namespace BTCPayServer.Tests
             // Make sure after login, we are not redirected to the PoS
             s.Logout();
             s.LogIn(userId);
-            Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
+            Assert.DoesNotContain($">{appName}</h1>", s.Driver.PageSource);
             var prevUrl = s.Driver.Url;
             // We are only if explicitly going to /
             s.GoToUrl("/");
-            Assert.Contains("Tea shop", s.Driver.PageSource);
+            Assert.Contains(appName, s.Driver.PageSource);
             // Check redirect to canonical url
             s.GoToUrl(posBaseUrl);
             Assert.Equal("/", new Uri(s.Driver.Url, UriKind.Absolute).AbsolutePath);
@@ -1234,10 +1235,10 @@ namespace BTCPayServer.Tests
             // Make sure after login, we are not redirected to the PoS
             s.Logout();
             s.LogIn(userId);
-            Assert.DoesNotContain("Tea shop", s.Driver.PageSource);
+            Assert.DoesNotContain($">{appName}</h1>", s.Driver.PageSource);
             // We are only if explicitly going to /
             s.GoToUrl("/");
-            Assert.Contains("Tea shop", s.Driver.PageSource);
+            Assert.Contains($">{appName}</h1>", s.Driver.PageSource);
             // Check redirect to canonical url
             s.GoToUrl(posBaseUrl);
             Assert.Equal("/", new Uri(s.Driver.Url, UriKind.Absolute).AbsolutePath);
@@ -1270,12 +1271,12 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.AddDerivationScheme();
 
+            var appName = "CF" + Guid.NewGuid();
             s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
+            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
-            s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
             s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
             s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
             s.Driver.FindElement(By.Id("TargetCurrency")).SendKeys("EUR");
@@ -1294,32 +1295,32 @@ namespace BTCPayServer.Tests
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             var appId = s.Driver.Url.Split('/')[4];
             
-            // CHeck public page
+            // Check public page
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
             var cfUrl = s.Driver.Url;
 
+            Assert.True(s.Driver.PageSource.Contains(appName), "Missing title");
             Assert.Equal("Currently active!",
                 s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
 
             // Contribute
             s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
-            s.Driver.WaitUntilAvailable(By.Name("btcpay"));
-
-            var frameElement = s.Driver.FindElement(By.Name("btcpay"));
-            Assert.True(frameElement.Displayed);
-            var iframe = s.Driver.SwitchTo().Frame(frameElement);
-            iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
-
-            IWebElement closebutton = null;
             TestUtils.Eventually(() =>
             {
-                closebutton = iframe.FindElement(By.Id("close"));
+                s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+
+                var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                Assert.True(frameElement.Displayed);
+                var iframe = s.Driver.SwitchTo().Frame(frameElement);
+                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+
+                var closebutton = iframe.FindElement(By.Id("close"));
                 Assert.True(closebutton.Displayed);
+                closebutton.Click();
             });
-            closebutton.Click();
             s.Driver.AssertElementNotFound(By.Name("btcpay"));
             
             // Back to admin view

@@ -44,8 +44,6 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
 
             //return View($"{BoltcardBalancePlugin.ViewsDirectory}/BalanceView.cshtml", new BalanceViewModel()
             //{
-            //    Amount = 10000m,
-            //    AmountCollected = 500m,
             //    AmountDue = 10000m,
             //    Currency = "SATS",
             //    Transactions = [new() { Date = DateTimeOffset.UtcNow, Balance = -3.0m }, new() { Date = DateTimeOffset.UtcNow, Balance = -5.0m }]
@@ -59,8 +57,13 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
             var registration = await _dbContextFactory.GetBoltcardRegistration(issuerKey, boltData, true);
             if (registration is null)
                 return NotFound();
+            return await GetBalanceView(registration.PullPaymentId);
+        }
+        [NonAction]
+        public async Task<IActionResult> GetBalanceView(string ppId)
+        {
             using var ctx = _dbContextFactory.CreateContext();
-            var pp = await ctx.PullPayments.FindAsync(registration.PullPaymentId);
+            var pp = await ctx.PullPayments.FindAsync(ppId);
             if (pp is null)
                 return NotFound();
             var blob = pp.GetBlob();
@@ -92,6 +95,12 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
                     Status = payout.Entity.State
                 });
             }
+            vm.Transactions.Add(new BalanceViewModel.Transaction()
+            {
+                Date = pp.StartDate,
+                Balance = blob.Limit,
+                Status = PayoutState.Completed
+            });
 
             return View($"{BoltcardBalancePlugin.ViewsDirectory}/BalanceView.cshtml", vm);
         }

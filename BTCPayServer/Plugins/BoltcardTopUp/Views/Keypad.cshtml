@@ -1,0 +1,48 @@
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+@{
+    Layout = "PointOfSale/Public/_Layout";
+	Csp.UnsafeEval();
+}
+@section PageHeadContent {
+    <link href="~/pos/keypad.css" asp-append-version="true" rel="stylesheet" />
+}
+@section PageFootContent {
+    <script>var srvModel = @Safe.Json(Model);</script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/pos/common.js" asp-append-version="true"></script>
+    <script src="~/pos/keypad.js" asp-append-version="true"></script>
+}
+<div id="PosKeypad" class="public-page-wrap">
+    <partial name="_StatusMessage" />
+	<partial name="_StoreHeader" model="(Model.Title, null as StoreBrandingViewModel)" />
+
+    <form id="app" method="post"
+          asp-route-storeId="@Model.StoreId"
+          asp-antiforgery="true" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
+        <input type="hidden" name="posdata" v-model="posdata" id="posdata">
+        <input type="hidden" name="amount" v-model="totalNumeric">
+		<input type="hidden" name="currency" v-model="currencyCode">
+        <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
+            <div class="fw-semibold text-muted" id="Currency">{{currencyCode}}</div>
+            <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(total, false) }}</div>
+            <div class="text-muted text-center mt-2" id="Calculation">{{ calculation }}</div>
+        </div>
+        <div class="keypad">
+            <button v-for="k in keys" :key="k" :disabled="k === '+' && mode !== 'amounts'" v-on:click.prevent="keyPressed(k)" v-on:dblclick.prevent="doubleClick(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">{{ k }}</button>
+        </div>
+        <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading" id="pay-button">
+            <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <template v-else>Top-Up Card</template>
+        </button>
+    </form>
+
+
+    <footer class="store-footer">
+        <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+            Powered by <partial name="_StoreFooterLogo" />
+        </a>
+    </footer>
+</div>

@@ -11,9 +11,12 @@
 <div class="col col-12 col-lg-12 mb-4">
 	<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
 		<nav id="wizard-navbar">
+		@if (this.ViewData["NoCancelWizard"] is not true)
+		{
 		<a href="#" id="CancelWizard" class="cancel">
 			<vc:icon symbol="close" />
 		</a>
+		}
 		</nav>
 		<div class="d-flex justify-content-center">
 			<div class="d-flex flex-column">

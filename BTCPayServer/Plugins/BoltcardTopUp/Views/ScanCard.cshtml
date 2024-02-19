@@ -1,5 +1,5 @@
 @{
-	ViewData["Title"] = "Boltcard Balances";
+	ViewData["Title"] = "Boltcard TopUps";
 	ViewData["ShowFooter"] = false;
 	Layout = "/Views/Shared/_LayoutWizard.cshtml";
 }
@@ -15,8 +15,8 @@
 }
 
 <header class="text-center">
-	<h1>Consult balance</h1>
-	<p class="lead text-secondary mt-3" id="explanation">Scan your card for consulting the balance</p>
+	<h1>Boltcard Top-Up</h1>
+	<p class="lead text-secondary mt-3" id="explanation">Scan your card to top it up</p>
 </header>
 
 <div id="body" class="my-4">
@@ -26,7 +26,7 @@
 		</div>
 	</div>
 	<div id="qr" class="d-flex flex-column align-items-center justify-content-center d-none">
-		<div class="d-inline-flex flex-column" style="width:256px">
+		<div class="d-inline-flex flex-column">
 			<div class="qr-container mb-2">
 				<vc:qr-code data="@Context.Request.GetCurrentUrl()" />
 			</div>
@@ -48,6 +48,8 @@
 		var permissionGranted = false;
 		var ndef = null;
 		var abortController = null;
+		var scanned = false;
+
 		function delay(ms) {
 			return new Promise(resolve => setTimeout(resolve, ms));
 		}
@@ -55,28 +57,24 @@
 			setState("Submitting");
 			await delay(1000);
 			var url = window.location.href.replace("#", "");
-			url = url.split("?")[0] + "?" + lnurlw.split("?")[1];
+			url = url.split("?")[0] + "?" + lnurlw.split("?")[1] + "&" + url.split("?")[1];
 			// url = "https://testnet.demo.btcpayserver.org/boltcards/balance?p=...&c=..."
 
+			scanned = true;
 			var xhttp = new XMLHttpRequest();
 			xhttp.onreadystatechange = function () {
 				if (this.readyState == 4 && this.status == 200 && this.responseText) {
 					document.getElementById("balance-table").innerHTML = this.responseText;
-					document.getElementById("CancelWizard").addEventListener("click", function (e) {
-						e.preventDefault();
-						setState("WaitingForCard");
-						document.getElementById("balance-table").innerHTML = "";
-					});
 					setState("ShowBalance");
 				}
 				else {
+					scanned = false;
 					setState("WaitingForCard");
 				}
 			};
-			xhttp.open('GET', url, true);
+			xhttp.open('POST', url, true);
 			xhttp.send(new FormData());
 		}
-
 		async function startScan() {
 			if (!('NDEFReader' in window)) {
 				return;
@@ -122,8 +120,9 @@
 				document.getElementById("scanning-btn-link").innerHTML = "<i class=\"fa fa-spinner\"></i>"
 			}
 			else if (state == "ShowBalance") {
+				document.getElementById("explanation").classList.add("d-none");
 				document.getElementById("scanning-btn").classList.remove("d-none");
-				document.getElementById("scanning-btn-link").innerHTML = "<i class=\"fa fa-wifi\"></i>";
+				document.getElementById("scanning-btn-link").innerHTML = "<i class=\"fa fa-bitcoin\"></i>";
 				document.getElementById("balance").classList.remove("d-none");
 			}
 		}
@@ -131,6 +130,7 @@
 			var nfcSupported = 'NDEFReader' in window;
 			if (!nfcSupported) {
 				setState("NFCNotSupported");
+				//setState("ShowBalance");
 			}
 			else {
 				setState("WaitingForPermission");
@@ -142,7 +142,7 @@
 				}
 			}
 			delegate('click', "#start-scan-btn", startScan);
-			// showBalance("lnurl://ewfw?p=test&c=test");
+			//showBalance("lnurl://ewfw?p=test&c=test");
 		});
 	})();
 </script>

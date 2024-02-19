@@ -31,6 +31,9 @@
     <Content Update="Plugins\BoltcardFactory\Views\ViewBoltcardFactory.cshtml">
       <Pack>$(IncludeRazorContentInPack)</Pack>
     </Content>
+    <Content Update="Plugins\BoltcardTopUp\Views\ScanCard.cshtml">
+      <Pack>$(IncludeRazorContentInPack)</Pack>
+    </Content>
     <Content Update="Views\UIStorePullPayments\NewPullPayment.cshtml">
       <Pack>false</Pack>
     </Content>

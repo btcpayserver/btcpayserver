@@ -2,8 +2,8 @@
 @using BTCPayServer.Abstractions.Contracts
 @model (string Title, StoreBrandingViewModel StoreBranding)
 @{
-    var logoUrl = !string.IsNullOrEmpty(Model.StoreBranding.LogoFileId)
-        ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.StoreBranding.LogoFileId)
+    var logoUrl = !string.IsNullOrEmpty(Model.StoreBranding?.LogoFileId)
+        ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.StoreBranding?.LogoFileId)
         : null;
 }
 <header class="store-header" v-pre>

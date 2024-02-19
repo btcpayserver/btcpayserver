@@ -1,0 +1,18 @@
+@using BTCPayServer.Client
+@using BTCPayServer.Plugins.BoltcardFactory
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Views.Apps
+@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer
+
+@{
+	var storeId = Context.GetStoreData().Id;
+}
+
+<li class="nav-item">
+	<a asp-area="" asp-controller="UIBoltcardTopUp" asp-action="Keypad" asp-route-storeId="@storeId" class="nav-link">
+		<vc:icon symbol="pay-button" />
+		<span>Boltcard Top-Up</span>
+	</a>
+</li>

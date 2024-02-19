@@ -7,12 +7,14 @@
 @using BTCPayServer
 
 @{
-	var storeId = Context.GetStoreData().Id;
+	var storeId = Context.GetStoreData()?.Id;
 }
-
-<li class="nav-item">
-	<a asp-area="" asp-controller="UIBoltcardTopUp" asp-action="Keypad" asp-route-storeId="@storeId" class="nav-link">
-		<vc:icon symbol="pay-button" />
-		<span>Boltcard Top-Up</span>
-	</a>
-</li>
+@if (storeId != null)
+{
+	<li class="nav-item">
+		<a asp-area="" asp-controller="UIBoltcardTopUp" asp-action="Keypad" asp-route-storeId="@storeId" class="nav-link">
+			<vc:icon symbol="pay-button" />
+			<span>Boltcard Top-Up</span>
+		</a>
+	</li>
+}

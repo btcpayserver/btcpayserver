@@ -18,6 +18,7 @@ using NBitcoin;
 using NBitcoin.RPC;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
+using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 

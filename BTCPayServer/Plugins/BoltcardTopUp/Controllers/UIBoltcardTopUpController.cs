@@ -184,7 +184,7 @@ namespace BTCPayServer.Plugins.BoltcardTopUp.Controllers
             {
                 Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20)),
                 Date = DateTimeOffset.UtcNow,
-                State = PayoutState.AwaitingApproval,
+                State = PayoutState.Completed,
                 PullPaymentDataId = registration.PullPaymentId,
                 PaymentMethodId = new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToString(),
                 Destination = null,

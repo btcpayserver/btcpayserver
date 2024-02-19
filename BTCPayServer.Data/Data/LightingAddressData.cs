@@ -43,7 +43,7 @@ public class LightningAddressDataBlob
     public decimal? Max { get; set; }
 
     public JObject InvoiceMetadata { get; set; }
-    
+    public string PullPaymentId { get; set; }
     [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
     
 }

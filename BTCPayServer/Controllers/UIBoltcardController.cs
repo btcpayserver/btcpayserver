@@ -14,11 +14,20 @@ using System.Threading;
 using System;
 using NBitcoin.DataEncoders;
 using System.Text.Json.Serialization;
+using BTCPayServer.HostedServices;
+using BTCPayServer.Services.Stores;
+using System.Collections.Generic;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Lightning;
+using System.Reflection.Metadata;
 
 namespace BTCPayServer.Controllers;
 
 public class UIBoltcardController : Controller
 {
+    private readonly PullPaymentHostedService _ppService;
+    private readonly StoreRepository _storeRepository;
+
     public class BoltcardSettings
     {
         [JsonConverter(typeof(NBitcoin.JsonConverters.HexJsonConverter))]
@@ -28,11 +37,15 @@ public class UIBoltcardController : Controller
         UILNURLController lnUrlController,
         SettingsRepository settingsRepository,
         ApplicationDbContextFactory contextFactory,
+        PullPaymentHostedService ppService,
+        StoreRepository storeRepository,
         BTCPayServerEnvironment env)
     {
         LNURLController = lnUrlController;
         SettingsRepository = settingsRepository;
         ContextFactory = contextFactory;
+        _ppService = ppService;
+        _storeRepository = storeRepository;
         Env = env;
     }
 
@@ -41,6 +54,50 @@ public class UIBoltcardController : Controller
     public ApplicationDbContextFactory ContextFactory { get; }
     public BTCPayServerEnvironment Env { get; }
 
+    [AllowAnonymous]
+    [HttpGet("~/boltcard/pay")]
+    public async Task<IActionResult> GetPayRequest([FromQuery] string? p, [FromQuery] long? amount = null)
+    {
+        var issuerKey = await SettingsRepository.GetIssuerKey(Env);
+        var piccData = issuerKey.TryDecrypt(p);
+        if (piccData is null)
+            return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Invalid PICCData" });
+
+        piccData = new BoltcardPICCData(piccData.Uid, int.MaxValue - 10); // do not check the counter
+        var registration = await ContextFactory.GetBoltcardRegistration(issuerKey, piccData, false);
+        var pp = await _ppService.GetPullPayment(registration!.PullPaymentId, false);
+        var store = await _storeRepository.FindStore(pp.StoreId);
+        var payRequest = new LNURLPayRequest
+        {
+            Tag = "payRequest",
+            MinSendable = LightMoney.Satoshis(1.0m),
+            MaxSendable = LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC),
+            Callback = new Uri(GetPayLink(p, Request.Scheme), UriKind.Absolute),
+            CommentAllowed = 0
+        };
+        if (amount is null)
+            return Ok(payRequest);
+
+        var cryptoCode = "BTC";
+        LNURLController.ControllerContext.HttpContext = HttpContext;
+        var result = await LNURLController.GetLNURLRequest(
+               cryptoCode,
+               store,
+               store.GetStoreBlob(),
+               new CreateInvoiceRequest()
+               {
+                   Currency = "BTC",
+                   Amount = LightMoney.FromUnit(amount.Value, LightMoneyUnit.MilliSatoshi).ToUnit(LightMoneyUnit.BTC)
+               },
+               payRequest,
+               null,
+               [PullPaymentHostedService.GetInternalTag(pp.Id)]);
+        if (result is not OkObjectResult ok || ok.Value is not LNURLPayRequest payRequest2)
+            return result;
+        payRequest = payRequest2;
+        var invoiceId = payRequest.Callback.AbsoluteUri.Split('/').Last();
+        return await LNURLController.GetLNURLForInvoice(invoiceId, cryptoCode, amount.Value, null);
+    }
     [AllowAnonymous]
     [HttpGet("~/boltcard")]
     public async Task<IActionResult> GetWithdrawRequest([FromQuery] string? p, [FromQuery] string? c, [FromQuery] string? pr, [FromQuery] string? k1, CancellationToken cancellationToken)
@@ -65,6 +122,16 @@ public class UIBoltcardController : Controller
         if (!cardKey.CheckSunMac(c, piccData))
             return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Replayed or expired query" });
         LNURLController.ControllerContext.HttpContext = HttpContext;
-        return await LNURLController.GetLNURLForPullPayment("BTC", registration.PullPaymentId, pr, $"{p}-{c}", cancellationToken);
+        var res = await LNURLController.GetLNURLForPullPayment("BTC", registration.PullPaymentId, pr, $"{p}-{c}", cancellationToken);
+        if (res is not OkObjectResult ok || ok.Value is not LNURLWithdrawRequest withdrawRequest)
+            return res;
+        var paylink = GetPayLink(p, "lnurlp");
+        withdrawRequest.PayLink = new Uri(paylink, UriKind.Absolute);
+        return res;
+    }
+
+    private string GetPayLink(string? p, string scheme)
+    {
+        return Url.Action(nameof(GetPayRequest), "UIBoltcard", new { p }, scheme)!;
     }
 }

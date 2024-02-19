@@ -276,7 +276,8 @@ namespace BTCPayServer.Controllers
                 Destination = destination,
                 PullPaymentId = pullPaymentId,
                 Value = vm.ClaimedAmount,
-                PaymentMethodId = paymentMethodId
+                PaymentMethodId = paymentMethodId,
+                StoreId = pp.StoreId
             });
 
             if (result.Result != ClaimRequest.ClaimResult.Ok)

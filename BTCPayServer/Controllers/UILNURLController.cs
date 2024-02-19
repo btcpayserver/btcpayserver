@@ -26,6 +26,7 @@ using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using LNURL;
@@ -436,6 +437,13 @@ namespace BTCPayServer
             var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
             if (store is null)
                 return NotFound("Unknown username");
+            List<string> additionalTags = new List<string>();
+            if (blob?.PullPaymentId is not null)
+            {
+                var pp = await _pullPaymentHostedService.GetPullPayment(blob.PullPaymentId, false);
+                if (pp != null)
+                    additionalTags.Add(PullPaymentHostedService.GetInternalTag(blob.PullPaymentId));
+            }
             var result = await GetLNURLRequest(
                cryptoCode,
                store,
@@ -453,7 +461,7 @@ namespace BTCPayServer
                new Dictionary<string, string>
                {
                    { "text/identifier", $"{username}@{Request.Host}" }
-               });
+               }, additionalTags);
             if (result is not OkObjectResult ok || ok.Value is not LNURLPayRequest payRequest)
                 return result;
             var invoiceId = payRequest.Callback.AbsoluteUri.Split('/').Last();
@@ -495,7 +503,7 @@ namespace BTCPayServer
                 });
         }
 
-        private async Task<IActionResult> GetLNURLRequest(
+        internal async Task<IActionResult> GetLNURLRequest(
             string cryptoCode,
             Data.StoreData store,
             Data.StoreBlob blob,

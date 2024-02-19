@@ -487,6 +487,7 @@ namespace BTCPayServer.Services
 
         public static WalletObjectData NewWalletObjectData(WalletObjectId id, JObject? data = null)
         {
+
             return new WalletObjectData()
             {
                 WalletId = id.WalletId.ToString(),

@@ -125,15 +125,10 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/maintenance")]
         public IActionResult Maintenance()
         {
-            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
-
             var vm = new MaintenanceViewModel
             {
                 CanUseSSH = _sshState.CanUseSSH,
-                DNSDomain = Request.Host.Host,
-                AllowSearchEngines = _policiesSettings.AllowSearchEngines,
-                CheckForNewVersions = _policiesSettings.CheckForNewVersions,
-                EnableExperimentalFeatures = _policiesSettings.Experimental
+                DNSDomain = Request.Host.Host
             };
 
             if (!vm.CanUseSSH)
@@ -147,7 +142,6 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/maintenance")]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
-            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             vm.CanUseSSH = _sshState.CanUseSSH;
             if (command != "soft-restart" && !vm.CanUseSSH)
             {
@@ -210,19 +204,6 @@ namespace BTCPayServer.Controllers
                 builder.Path = null;
                 builder.Query = null;
                 TempData[WellKnownTempData.SuccessMessage] = $"Domain name changing... the server will restart, please use \"{builder.Uri.AbsoluteUri}\" (this page won't reload automatically)";
-            }
-            else if (command == "save")
-            {
-                if (vm.AllowSearchEngines != _policiesSettings.AllowSearchEngines ||
-                    vm.CheckForNewVersions != _policiesSettings.CheckForNewVersions ||
-                    vm.EnableExperimentalFeatures != _policiesSettings.Experimental)
-                {
-                    _policiesSettings.AllowSearchEngines = vm.AllowSearchEngines;
-                    _policiesSettings.CheckForNewVersions = vm.CheckForNewVersions;
-                    _policiesSettings.Experimental = vm.EnableExperimentalFeatures;
-                    await _SettingsRepository.UpdateSetting(_policiesSettings);
-                    TempData[WellKnownTempData.SuccessMessage] = "Settings successfully updated.";
-                }
             }
             else if (command == "update")
             {
@@ -324,6 +305,7 @@ namespace BTCPayServer.Controllers
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
         {
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
             return View(_policiesSettings);
         }
@@ -331,6 +313,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
         {
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
 
             if (command == "add-domain")

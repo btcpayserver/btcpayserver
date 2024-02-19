@@ -30,7 +30,7 @@
     <div class="col-xl-10 col-xxl-constrain">
         <form method="post" class="d-flex flex-column">
             <div class="form-group mb-5">
-                <h4 class="mb-3">Registration Settings</h4>
+                <h4 class="mb-3">Registration</h4>
                 <div class="d-flex gap-3">
                     <input asp-for="EnableRegistration" type="checkbox" class="btcpay-toggle" />
                     <div>
@@ -84,8 +84,8 @@
                 </div>
             </div>
             
-            <div class="form-group mb-5">
-                <h4 class="mb-3">User Settings</h4>
+            <div class="mb-5">
+                <h4 class="mb-3">Users</h4>
                 <div class="d-flex my-3">
                     <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
@@ -127,6 +127,42 @@
                 </div>
             </div>
 
+            <div class="mb-5">
+                <h4 class="mb-3">Server</h4>
+                <div class="d-flex my-3">
+                    <input asp-for="AllowSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
+                    <div>
+                        <label asp-for="AllowSearchEngines" class="form-label mb-0"></label>
+                        <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info" />
+                        </a>
+                        <span asp-validation-for="AllowSearchEngines" class="text-danger"></span>
+                    </div>
+                </div>
+                @if (ViewBag.UpdateUrlPresent)
+                {
+                    <div class="d-flex my-3">
+                        <input asp-for="CheckForNewVersions" type="checkbox" class="btcpay-toggle me-3"/>
+                        <div>
+                            <label asp-for="CheckForNewVersions" class="form-label mb-0"></label>
+                            <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
+                        </div>
+                    </div>
+                }
+                <div class="d-flex align-items-center my-3">
+                    <input asp-for="Experimental" type="checkbox" class="btcpay-toggle me-3" />
+                    <div>
+                        <label asp-for="Experimental" class="form-label mb-0"></label>
+                        <div class="text-muted">
+                            Will allow you to use the custodian account feature.
+                            <a href="https://blog.btcpayserver.org/btcpay-server-1-9-0/#-exchange-integration-via-plugins-" target="_blank" rel="noreferrer noopener">
+                                <vc:icon symbol="info" />
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <h4 class="mb-3">Plugins</h4>
             <div class="form-group">
                 <label asp-for="PluginSource" class="form-label"></label>
@@ -144,7 +180,7 @@
                 <button id="SaveButton" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
             </div>
 
-            <h4 class="mt-5">Customization Settings</h4>
+            <h4 class="mt-5">Customization</h4>
             <div class="form-group mb-5">
                 <label asp-for="RootAppId" class="form-label"></label>
                 <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select"></select>

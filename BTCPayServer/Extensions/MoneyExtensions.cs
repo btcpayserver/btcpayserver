@@ -12,6 +12,8 @@ namespace BTCPayServer
         {
             switch (m)
             {
+                case null:
+                    return 0m;
                 case Money money:
                     return money.ToDecimal(MoneyUnit.BTC);
                 case MoneyBag mb:

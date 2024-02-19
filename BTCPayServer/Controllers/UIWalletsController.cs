@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBXplorer;
@@ -47,6 +48,8 @@ namespace BTCPayServer.Controllers
     [Route("wallets")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
+    //16mb psbts
+    [RequestFormLimits(ValueLengthLimit = FormReader.DefaultValueLengthLimit * 4)]
     public partial class UIWalletsController : Controller
     {
         private StoreRepository Repository { get; }

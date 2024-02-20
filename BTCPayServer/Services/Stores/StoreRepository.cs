@@ -41,23 +41,40 @@ namespace BTCPayServer.Services.Stores
             if (storeId == null)
                 return null;
             await using var ctx = _ContextFactory.CreateContext();
-            return await ctx
-                .UserStore
-                .Include(store => store.StoreData.UserStores)
-                .ThenInclude(store => store.StoreRole)
-                .Select(us => us.StoreData).FirstOrDefaultAsync();
+            var result = await ctx.FindAsync<StoreData>(storeId).ConfigureAwait(false);
+            return result;
         }
 
-        public async Task<StoreData?> FindStore(string storeId, string userId)
+        public async Task<StoreData?> FindStore(string storeId, string userId, bool isAdmin = false)
         {
             ArgumentNullException.ThrowIfNull(userId);
             await using var ctx = _ContextFactory.CreateContext();
-            return await ctx
+            var store = await ctx
                 .UserStore
-                .Where(us => us.ApplicationUserId == userId && us.StoreDataId == storeId)
+                .Where(us => (us.ApplicationUserId == userId || isAdmin) && us.StoreDataId == storeId)
                 .Include(store => store.StoreData.UserStores)
                 .ThenInclude(store => store.StoreRole)
                 .Select(us => us.StoreData).FirstOrDefaultAsync();
+            
+            // Grant admins guest access to foreign stores
+            if (store != null && isAdmin && store.UserStores.All(us => us.ApplicationUserId != userId))
+            {
+                var guestRole = await ctx.StoreRoles.FindAsync(StoreRoleId.Guest.Id);
+                if (guestRole != null)
+                {
+                    store.UserStores = [
+                        new UserStore
+                        {
+                            ApplicationUserId = userId,
+                            StoreDataId = store.Id,
+                            StoreData = store,
+                            StoreRoleId = guestRole.Id,
+                            StoreRole = guestRole
+                        }
+                    ];
+                }
+            }
+            return store;
         }
 #nullable disable
         public class StoreUser

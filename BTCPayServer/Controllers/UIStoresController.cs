@@ -145,11 +145,12 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Forbid();
             
-            var store = await _Repo.FindStore(storeId, userId);
+            var store = await _Repo.FindStore(storeId, userId, User.IsInRole(Roles.ServerAdmin));
             if (store is null)
             {
                 return Forbid();
             }
+            HttpContext.SetStoreData(store);
             if (store.GetPermissionSet(userId).Contains(Policies.CanModifyStoreSettings, storeId))
             {
                 return RedirectToAction("Dashboard", new { storeId });
@@ -158,7 +159,6 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
             }
-            HttpContext.SetStoreData(store);
             return View();
         }
 

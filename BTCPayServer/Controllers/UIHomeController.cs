@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers
                 if (storeId != null)
                 {
                     // verify store exists and redirect to it
-                    var store = await _storeRepository.FindStore(storeId, userId);
+                    var store = await _storeRepository.FindStore(storeId, userId, User.IsInRole(Roles.ServerAdmin));
                     if (store != null)
                     {
                         return RedirectToStore(userId, store);

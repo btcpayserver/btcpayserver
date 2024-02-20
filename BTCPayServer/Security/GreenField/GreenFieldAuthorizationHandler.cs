@@ -78,6 +78,8 @@ namespace BTCPayServer.Security.Greenfield
             bool success = false;
             var policy = requirement.Policy;
             var requiredUnscoped = false;
+            var user = await _userManager.GetUserAsync(context.User);
+            var isAdmin = user != null && await _userManager.IsInRoleAsync(user, Roles.ServerAdmin);
             if (policy.EndsWith(':'))
             {
                 policy = policy.Substring(0, policy.Length - 1);
@@ -95,7 +97,7 @@ namespace BTCPayServer.Security.Greenfield
                         {
                             if (string.IsNullOrEmpty(userid))
                                 break;
-                            var store = await _storeRepository.FindStore(storeId, userid);
+                            var store = await _storeRepository.FindStore(storeId, userid, isAdmin);
                             if (store == null)
                                 break;
                             if (!store.HasPermission(userid, policy))
@@ -122,10 +124,9 @@ namespace BTCPayServer.Security.Greenfield
                 case { } when Policies.IsServerPolicy(policy):
                     if (context.HasPermission(Permission.Create(policy)))
                     {
-                        var user = await _userManager.GetUserAsync(context.User);
                         if (user == null)
                             break;
-                        if (!await _userManager.IsInRoleAsync(user, Roles.ServerAdmin))
+                        if (!isAdmin)
                             break;
                         success = true;
                     }

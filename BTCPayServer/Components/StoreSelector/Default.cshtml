@@ -67,8 +67,10 @@ else
                     <li><hr class="dropdown-divider"></li>
                     <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Index)" id="StoreSelectorArchived">@Model.ArchivedCount Archived Store@(Model.ArchivedCount == 1 ? "" : "s")</a></li>
                 }
+                @*
                 <li permission="@Policies.CanModifyServerSettings"><hr class="dropdown-divider"></li>
                 <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.IsActivePage(ServerNavPages.Stores)" id="StoreSelectorAdminStores">Admin Store Overview</a></li>
+                *@
             </ul>
         </div>
     </div>

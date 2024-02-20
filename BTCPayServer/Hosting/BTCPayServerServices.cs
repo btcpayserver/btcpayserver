@@ -703,6 +703,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
         private static void AddBtcPayServerAuthenticationSchemes(this IServiceCollection services)
         {
             services.AddAuthentication()
+                .AddBearerAuthentication()
                 .AddBitpayAuthentication()
                 .AddAPIKeyAuthentication();
         }

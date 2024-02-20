@@ -11,6 +11,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
@@ -67,7 +68,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         _subscription = _eventAggregator.SubscribeAsync<PayoutEvent>(OnPayoutEvent);
         return new[] { CreateLoopTask(Act) };
     }
-    
+
 
     public override Task StopAsync(CancellationToken cancellationToken)
     {
@@ -77,7 +78,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
 
     private Task OnPayoutEvent(PayoutEvent arg)
     {
-        if (arg.Type == PayoutEvent.PayoutEventType.Approved && 
+        if (arg.Type == PayoutEvent.PayoutEventType.Approved &&
             PayoutProcessorSettings.StoreId == arg.Payout.StoreDataId &&
             arg.Payout.GetPaymentMethodId() == PaymentMethodId &&
             GetBlob(PayoutProcessorSettings).ProcessNewPayoutsInstantly)
@@ -99,25 +100,35 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         var blob = GetBlob(PayoutProcessorSettings);
         if (paymentMethod is not null)
         {
-            await using var context = _applicationDbContextFactory.CreateContext();
-            var payouts = await PullPaymentHostedService.GetPayouts(
-                new PullPaymentHostedService.PayoutQuery()
-                {
-                    States = new[] { PayoutState.AwaitingPayment },
-                    PaymentMethods = new[] { PayoutProcessorSettings.PaymentMethod },
-                    Stores = new[] {PayoutProcessorSettings.StoreId}
-                }, context, CancellationToken);
-
-            await _pluginHookService.ApplyAction("before-automated-payout-processing",
-                new BeforePayoutActionData(store, PayoutProcessorSettings, payouts));
-            if (payouts.Any())
+            List<PayoutData> payouts;
+retry:
+            await using (var context = _applicationDbContextFactory.CreateContext())
             {
-                Logs.PayServer.LogInformation(
-                    $"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
-                await Process(paymentMethod, payouts);
+                payouts = await PullPaymentHostedService.GetPayouts(
+                    new PullPaymentHostedService.PayoutQuery()
+                    {
+                        States = new[] { PayoutState.AwaitingPayment },
+                        PaymentMethods = new[] { PayoutProcessorSettings.PaymentMethod },
+                        Stores = new[] { PayoutProcessorSettings.StoreId }
+                    }, context, CancellationToken);
 
-                await context.SaveChangesAsync();
-                
+                await _pluginHookService.ApplyAction("before-automated-payout-processing",
+                    new BeforePayoutActionData(store, PayoutProcessorSettings, payouts));
+                if (payouts.Any())
+                {
+                    Logs.PayServer.LogInformation(
+                        $"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
+                    await Process(paymentMethod, payouts);
+
+                    try
+                    {
+                        await context.SaveChangesAsync();
+                    }
+                    catch (DbUpdateConcurrencyException)
+                    {
+                        goto retry;
+                    }
+                }
                 foreach (var payoutData in payouts.Where(payoutData => payoutData.State != PayoutState.AwaitingPayment))
                 {
                     _eventAggregator.Publish(new PayoutEvent(null, payoutData));

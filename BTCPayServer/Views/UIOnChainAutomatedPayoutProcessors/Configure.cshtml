@@ -18,8 +18,8 @@
             <div asp-validation-summary="All"></div>
         }
         <form method="post">
-            <div class="form-check">
-                <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="form-check-input" />
+            <div class="d-flex my-2">
+                <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="btcpay-toggle me-2" style="transform: scale(0.8);" />
                 <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label">Process approved payouts instantly</label>
                 <span asp-validation-for="ProcessNewPayoutsInstantly" class="text-danger"></span>
             </div>

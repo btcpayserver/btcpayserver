@@ -188,9 +188,11 @@
                     </p>
                     <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
                 </div>
-                <div class="form-check my-1">
-                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
-                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                <div>
+                    <div class="d-flex">
+                        <input asp-for="ShowRecommendedFee" type="checkbox" class="btcpay-toggle me-2" style="transform: scale(0.8);" />
+                        <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                    </div>
                     <div class="form-text">Fee will be shown for BTC and LTC onchain payments only.</div>
                 </div>
                 <div class="form-group mt-2">

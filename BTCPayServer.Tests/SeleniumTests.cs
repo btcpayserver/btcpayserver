@@ -501,19 +501,19 @@ namespace BTCPayServer.Tests
             
             // Check users list
             s.GoToServer(ServerNavPages.Users);
-            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.True(rows.Count >= 3);
             
             // Check user which didn't require approval
             s.Driver.FindElement(By.Id("SearchTerm")).Clear();
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(autoApproved.RegisterDetails.Email);
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
-            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.Single(rows);
             Assert.Contains(autoApproved.RegisterDetails.Email, rows.First().Text);
-            s.Driver.ElementDoesNotExist(By.CssSelector("#UsersList tr:first-child .user-approved"));
+            s.Driver.ElementDoesNotExist(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-approved"));
             // Edit view does not contain approve toggle
-            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-edit")).Click();
             s.Driver.ElementDoesNotExist(By.Id("Approved"));
             
             // Check user which still requires approval
@@ -521,22 +521,22 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SearchTerm")).Clear();
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(unapproved.RegisterDetails.Email);
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
-            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.Single(rows);
             Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
-            Assert.Contains("Pending Approval", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
+            Assert.Contains("Pending Approval", s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-status")).Text);
             // Approve user
-            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-edit")).Click();
             s.Driver.FindElement(By.Id("Approved")).Click();
             s.Driver.FindElement(By.Id("SaveUser")).Click();
             Assert.Contains("User successfully updated", s.FindAlertMessage().Text);
             // Check list again
             s.GoToServer(ServerNavPages.Users);
             Assert.Contains(unapproved.RegisterDetails.Email, s.Driver.FindElement(By.Id("SearchTerm")).GetAttribute("value"));
-            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.Single(rows);
             Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
-            Assert.Contains("Active", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
+            Assert.Contains("Active", s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-status")).Text);
             
             // Finally, login user that needed approval
             s.Logout();

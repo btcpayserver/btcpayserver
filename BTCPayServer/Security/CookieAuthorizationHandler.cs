@@ -168,14 +168,15 @@ namespace BTCPayServer.Security
                 {
                     if (store != null)
                     {
-                        _httpContext.SetStoreData(store);
+                        if (_httpContext.GetStoreData()?.Id != store.Id)
+                            _httpContext.SetStoreData(store);
 
                         // cache associated entities if present
-                        if (app != null)
+                        if (app != null && _httpContext.GetAppData()?.Id != app.Id)
                             _httpContext.SetAppData(app);
-                        if (invoice != null)
+                        if (invoice != null && _httpContext.GetInvoiceData()?.Id != invoice.Id)
                             _httpContext.SetInvoiceData(invoice);
-                        if (paymentRequest != null)
+                        if (paymentRequest != null && _httpContext.GetPaymentRequestData()?.Id != paymentRequest.Id)
                             _httpContext.SetPaymentRequestData(paymentRequest);
                     }
                 }

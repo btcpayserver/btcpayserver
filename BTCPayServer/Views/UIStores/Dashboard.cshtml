@@ -13,11 +13,8 @@
     var store = ViewContext.HttpContext.GetStoreData();
 }
 
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
-
-<div class="d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-</div>
 
 @if (Model.IsSetUp)
 {

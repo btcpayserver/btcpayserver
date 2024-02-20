@@ -1,13 +1,14 @@
 ﻿@model CreateTokenViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", Context.GetStoreData()?.Id);
-    ViewBag.HidePublicKey = ViewBag.HidePublicKey ?? false;
-    ViewBag.ShowStores = ViewBag.ShowStores ?? false;
+    ViewBag.HidePublicKey ??= false;
+    ViewBag.ShowStores ??= false;
 }
+
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <h3 class="mb-4">@ViewData["Title"]</h3>
         <form method="post">
             <div class="form-group">
                 <label asp-for="Label" class="form-label"></label>

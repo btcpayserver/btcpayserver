@@ -1,16 +1,15 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Services
 @model LightningViewModel
-@{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UILightning/_Nav";
-    ViewData.SetActivePage(StoreNavPages.Lightning, $"{Model.CryptoCode} Lightning", Context.GetStoreData().Id);
-}
-
 @inject LightningClientFactoryService LightningClientFactoryService
 @inject BTCPayNetworkProvider NetworkProvider
+@{
+    ViewData.SetActivePage(StoreNavPages.Lightning, $"{Model.CryptoCode} Lightning", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+}
+
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="mb-5">
-    <h3 class="mb-3">@ViewData["Title"]</h3>
     <div class="mb-3">
         <span class="me-3" id="NodeType">@Model.LightningNodeType Node</span>
 

@@ -5,8 +5,6 @@
 @model MoneroLikePaymentMethodViewModel
 
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(Model.CryptoCode, $"{Model.CryptoCode} Settings", Model.CryptoCode);
 }
 

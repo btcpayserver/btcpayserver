@@ -3,15 +3,14 @@
 @inject LightningClientFactoryService LightningClientFactoryService
 @inject BTCPayNetworkProvider NetworkProvider
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UILightning/_Nav";
-    ViewData.SetActivePage(StoreNavPages.LightningSettings, $"{Model.CryptoCode} Lightning Settings", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.LightningSettings, $"{Model.CryptoCode} Lightning Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <div class="mb-5">
-            <h3 class="mb-3">@ViewData["Title"]</h3>
             <div class="text-break mb-3">
                 <span class="me-3" id="NodeType">@Model.LightningNodeType Node</span>
                 @if (Model.LightningNodeType != LightningNodeType.Internal)

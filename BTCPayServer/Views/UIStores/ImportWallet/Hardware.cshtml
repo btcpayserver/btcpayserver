@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Connect your hardware wallet", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Connect your hardware wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {

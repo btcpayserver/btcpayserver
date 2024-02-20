@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter your extended public key", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter your extended public key", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {

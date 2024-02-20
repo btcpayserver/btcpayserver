@@ -2,7 +2,7 @@
 @model WalletSetupViewModel
 @{
 	Layout = "_LayoutWalletSetup";
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Scan QR code", Context.GetStoreData().Id);
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Scan QR code", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 	Csp.UnsafeEval();
 }
 

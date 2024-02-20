@@ -136,7 +136,9 @@ namespace BTCPayServer.Controllers
                         StoreName = s.StoreName,
                         Archived = s.Archived,
                         Users = s.UserStores
-                    }).ToList()
+                    })
+                    .OrderBy(s => !s.Archived)
+                    .ToList()
             };
             return View(vm);
         }

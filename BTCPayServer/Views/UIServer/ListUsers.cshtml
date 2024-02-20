@@ -104,15 +104,19 @@
                 </td>
             </tr>
             <tr id="@detailsId" class="user-details-row collapse">
-                <td colspan="5" class="border-top-0">
+                <td colspan="6" class="border-top-0">
                     @if (user.Stores.Any())
                     {
-                        <ul class="mb-0">
+                        <ul class="mb-0 p-0">
                             @foreach (var store in user.Stores)
                             {
-                                <li>
+                                <li class="py-1 d-flex gap-2">
                                     <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@store.StoreData.Id">@store.StoreData.StoreName</a>
-                                    <span>(@store.StoreRoleId)</span>
+                                    <span class="badge bg-light">@store.StoreRoleId</span>
+                                    @if (store.StoreData.Archived)
+                                    {
+                                        <span class="badge bg-info">archived</span>
+                                    }
                                 </li>
                             }
                         </ul>

@@ -47,12 +47,16 @@
                     <td colspan="5" class="border-top-0">
                         @if (store.Users.Any())
                         {
-                            <ul class="mb-0">
+                            <ul class="mb-0 p-0">
                                 @foreach (var user in store.Users)
                                 {
-                                    <li>
+                                    <li class="py-1 d-flex gap-2">
                                         <a asp-controller="UIServer" asp-action="User" asp-route-userId="@user.ApplicationUser.Id">@user.ApplicationUser.Email</a>
-                                        <span>(@user.StoreRoleId)</span>
+                                        <span class="badge bg-light">@user.StoreRoleId</span>
+                                        @if (store.Archived)
+                                        {
+                                            <span class="badge bg-info">archived</span>
+                                        }
                                     </li>
                                 }
                             </ul>

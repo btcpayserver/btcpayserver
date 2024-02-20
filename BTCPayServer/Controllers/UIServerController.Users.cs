@@ -66,7 +66,7 @@ namespace BTCPayServer.Controllers
                     Created = u.Created,
                     Roles = u.UserRoles.Select(role => role.RoleId),
                     Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
-                    Stores = u.UserStores
+                    Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                 })
                 .ToListAsync();
 

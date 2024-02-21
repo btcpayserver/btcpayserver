@@ -1153,12 +1153,15 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
+            var appName = "PoS" + Guid.NewGuid();
             s.CreateNewStore();
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
+            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-
+            Assert.Equal(appName, s.Driver.FindElement(By.Id("Title")).GetAttribute("value"));
+            s.Driver.FindElement(By.Id("Title")).Clear();
+            s.Driver.FindElement(By.Id("Title")).SendKeys("Tea shop");
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1)")).Click();
             s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
@@ -1270,11 +1273,13 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.AddDerivationScheme();
 
+            var appName = "CF" + Guid.NewGuid();
             s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
+            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-
+            Assert.Equal(appName, s.Driver.FindElement(By.Id("Title")).GetAttribute("value"));
+            s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
             s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
             s.Driver.FindElement(By.Id("TargetCurrency")).Clear();

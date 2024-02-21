@@ -239,7 +239,7 @@ namespace BTCPayServer.Plugins.Crowdfund
 
         public override Task SetDefaultSettings(AppData appData, string defaultCurrency)
         {
-            var emptyCrowdfund = new CrowdfundSettings { TargetCurrency = defaultCurrency };
+            var emptyCrowdfund = new CrowdfundSettings { Title = appData.Name, TargetCurrency = defaultCurrency };
             appData.SetSettings(emptyCrowdfund);
             return Task.CompletedTask;
         }

@@ -57,10 +57,10 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
             var registration = await _dbContextFactory.GetBoltcardRegistration(issuerKey, boltData, true);
             if (registration is null)
                 return NotFound();
-            return await GetBalanceView(registration.PullPaymentId);
+            return await GetBalanceView(registration.PullPaymentId, p);
         }
         [NonAction]
-        public async Task<IActionResult> GetBalanceView(string ppId)
+        public async Task<IActionResult> GetBalanceView(string ppId, string p)
         {
             using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(ppId);
@@ -84,7 +84,8 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
             var vm = new BalanceViewModel()
             {
                 Currency = blob.Currency,
-                AmountDue = blob.Limit - totalPaid
+                AmountDue = blob.Limit - totalPaid,
+                LNUrlPay = Url.Action(nameof(UIBoltcardController.GetPayRequest), "UIBoltcard", new { p }, "lnurlp")
             };
             foreach (var payout in payouts)
             {

@@ -11,20 +11,29 @@
 <div class="col col-12 col-lg-12 mb-4">
 	<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
 		<nav id="wizard-navbar">
-		@if (this.ViewData["NoCancelWizard"] is not true)
-		{
-		<a href="#" id="CancelWizard" class="cancel mt-4">
-			<vc:icon symbol="close" />
-		</a>
-		}
+			@if (this.ViewData["NoCancelWizard"] is not true)
+			{
+				<button type="button" class="btn btn-secondary only-for-js mt-4" id="lnurlwithdraw-button">
+					<span class="fa fa-qrcode fa-2x" title="Deposit"></span>
+				</button>
+				<a href="#" id="CancelWizard" class="cancel mt-4">
+					<vc:icon symbol="close" />
+				</a>
+			}
 		</nav>
 		<div class="d-flex justify-content-center">
-			<div class="d-flex flex-column">
+			<div class="d-flex flex-column justify-content-center align-items-center">
 				<dl class="mb-0 mt-md-4">
 					<div class="d-flex d-print-inline-block flex-column mb-4">
 						<dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
 					</div>
 				</dl>
+				<div class="lnurl-pay d-none">
+					<vc:qr-code data="@Model.LNUrlPay" />
+				</div>
+				<div class="lnurl-pay d-flex gap-3 mt-3 mt-sm-0 d-none">
+					<a class="btn btn-primary" target="_blank" href="@Model.LNUrlPay">Deposit from Wallet...</a>
+				</div>
 			</div>
 		</div>
 	</div>

@@ -201,7 +201,7 @@ namespace BTCPayServer.Plugins.BoltcardTopUp.Controllers
             await ctx.Payouts.AddAsync(payout);
             await ctx.SaveChangesAsync();
             _boltcardBalanceController.ViewData["NoCancelWizard"] = true;
-            return await _boltcardBalanceController.GetBalanceView(registration.PullPaymentId);
+            return await _boltcardBalanceController.GetBalanceView(registration.PullPaymentId, p);
         }
      }
 }

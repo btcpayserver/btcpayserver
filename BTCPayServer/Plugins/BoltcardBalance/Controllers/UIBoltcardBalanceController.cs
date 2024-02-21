@@ -80,11 +80,13 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
 
             var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();
 
-
+            var bech32LNUrl = new Uri(Url.Action(nameof(UIBoltcardController.GetPayRequest), "UIBoltcard", new { p }, Request.Scheme), UriKind.Absolute);
+            bech32LNUrl = LNURL.LNURL.EncodeUri(bech32LNUrl, "payRequest", true);
             var vm = new BalanceViewModel()
             {
                 Currency = blob.Currency,
                 AmountDue = blob.Limit - totalPaid,
+                LNUrlBech32 = bech32LNUrl.AbsoluteUri,
                 LNUrlPay = Url.Action(nameof(UIBoltcardController.GetPayRequest), "UIBoltcard", new { p }, "lnurlp")
             };
             foreach (var payout in payouts)

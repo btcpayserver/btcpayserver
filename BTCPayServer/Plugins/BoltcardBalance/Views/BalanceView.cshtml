@@ -28,11 +28,17 @@
 						<dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
 					</div>
 				</dl>
-				<div class="lnurl-pay d-none">
+@* 				<div class="lnurl-pay d-none">
 					<vc:qr-code data="@Model.LNUrlPay" />
 				</div>
 				<div class="lnurl-pay d-flex gap-3 mt-3 mt-sm-0 d-none">
-					<a class="btn btn-primary" target="_blank" href="@Model.LNUrlPay">Deposit from Wallet...</a>
+					<a class="btn btn-primary" target="_blank" href="@Model.LNUrlPay">Deposit from Wallet... (LNURLPay)</a>
+				</div> *@
+				<div class="lnurl-pay d-none">
+					<vc:qr-code data="@Model.LNUrlBech32" />
+				</div>
+				<div class="lnurl-pay d-flex gap-3 mt-3 mt-sm-0 d-none">
+					<a class="btn btn-primary" target="_blank" href="@Model.LNUrlBech32">Deposit from Wallet...</a>
 				</div>
 			</div>
 		</div>

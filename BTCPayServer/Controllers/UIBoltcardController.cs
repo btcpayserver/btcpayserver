@@ -67,6 +67,9 @@ public class UIBoltcardController : Controller
         var registration = await ContextFactory.GetBoltcardRegistration(issuerKey, piccData, false);
         var pp = await _ppService.GetPullPayment(registration!.PullPaymentId, false);
         var store = await _storeRepository.FindStore(pp.StoreId);
+
+        var lnUrlMetadata = new Dictionary<string, string>();
+        lnUrlMetadata.Add("text/plain", "Boltcard Top-Up");
         var payRequest = new LNURLPayRequest
         {
             Tag = "payRequest",
@@ -75,6 +78,7 @@ public class UIBoltcardController : Controller
             Callback = new Uri(GetPayLink(p, Request.Scheme), UriKind.Absolute),
             CommentAllowed = 0
         };
+        payRequest.Metadata = Newtonsoft.Json.JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
         if (amount is null)
             return Ok(payRequest);
 
@@ -100,7 +104,7 @@ public class UIBoltcardController : Controller
                    Amount = invoiceAmount
                },
                payRequest,
-               null,
+               lnUrlMetadata,
                [PullPaymentHostedService.GetInternalTag(pp.Id)]);
         if (result is not OkObjectResult ok || ok.Value is not LNURLPayRequest payRequest2)
             return result;

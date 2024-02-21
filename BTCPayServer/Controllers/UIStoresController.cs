@@ -342,7 +342,7 @@ namespace BTCPayServer.Controllers
                     pairs.Add(currencyPair);
                 }
 
-                var fetchs = _RateFactory.FetchRates(pairs.ToHashSet(), rules, cancellationToken);
+                var fetchs = _RateFactory.FetchRates(pairs.ToHashSet(), rules,  model.StoreId, cancellationToken);
                 var testResults = new List<RatesViewModel.TestResultViewModel>();
                 foreach (var fetch in fetchs)
                 {

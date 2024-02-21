@@ -340,7 +340,7 @@ retry:
             Assert.True(RateRules.TryParse("X_X=kraken(X_BTC) * kraken(BTC_X)", out var rule));
             foreach (var pair in new[] { "DOGE_USD", "DOGE_CAD", "DASH_CAD", "DASH_USD", "DASH_EUR" })
             {
-                var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule, default).GetAwaiter().GetResult();
+                var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule, null, default).GetAwaiter().GetResult();
                 Assert.NotNull(result.BidAsk);
                 Assert.Empty(result.Errors);
             }
@@ -359,7 +359,7 @@ retry:
                 b.DefaultCurrency = k.Key;
                 var rules = b.GetDefaultRateRules(provider);
                 var pairs = new[] { CurrencyPair.Parse($"BTC_{k.Key}") }.ToHashSet();
-                var result = fetcher.FetchRates(pairs, rules, default);
+                var result = fetcher.FetchRates(pairs, rules, null, default);
                 foreach ((CurrencyPair key, Task<RateResult> value) in result)
                 {
                     TestLogs.LogInformation($"Testing {key} when default currency is {k.Key}");
@@ -404,7 +404,7 @@ retry:
             }
 
             var rules = new StoreBlob().GetDefaultRateRules(provider);
-            var result = fetcher.FetchRates(pairs, rules, cts.Token);
+            var result = fetcher.FetchRates(pairs, rules, null, cts.Token);
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
                 var rateResult = await value;

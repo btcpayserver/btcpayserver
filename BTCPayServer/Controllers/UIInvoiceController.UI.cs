@@ -360,7 +360,7 @@ namespace BTCPayServer.Controllers
                         model.RateThenText = _displayFormatter.Currency(model.CryptoAmountThen, paymentMethodId.CryptoCode);
                         rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
                         rateResult = await _RateProvider.FetchRate(
-                            new CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency), rules,
+                            new CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency), rules, store.Id,
                             cancellationToken);
                         //TODO: What if fetching rate failed?
                         if (rateResult.BidAsk is null)
@@ -469,7 +469,7 @@ namespace BTCPayServer.Controllers
 
                             rules = store.GetStoreBlob().GetRateRules(_NetworkProvider);
                             rateResult = await _RateProvider.FetchRate(
-                                new CurrencyPair(paymentMethodId.CryptoCode, model.CustomCurrency), rules,
+                                new CurrencyPair(paymentMethodId.CryptoCode, model.CustomCurrency), rules, store.Id,
                                 cancellationToken);
 
                             //TODO: What if fetching rate failed?

@@ -15,7 +15,6 @@ namespace BTCPayServer.Services.Rates
 {
     public class RateProviderFactory
     {
-        
         class WrapperRateProvider : IRateProvider
         {
             public RateSourceInfo RateSourceInfo => _inner.RateSourceInfo;
@@ -91,8 +90,6 @@ namespace BTCPayServer.Services.Rates
                     AvailableRateProviders.Add(coingecko.RateSourceInfo);
                 }
             }
-
-          
             AvailableRateProviders.AddRange(_dynamicProviders.Select(provider => provider.RateSourceInfo));
             AvailableRateProviders.Sort((a, b) => StringComparer.Ordinal.Compare(a.DisplayName, b.DisplayName));
         }

@@ -4,11 +4,14 @@
 @using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.Apps
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Forms
+@inject FormDataService FormDataService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
 	Csp.UnsafeEval();
+    var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
 @section PageHeadContent {
@@ -200,6 +203,13 @@
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
+            </div>
+            
+            <h3 class="mt-5 mb-4">Checkout</h3>
+            <div class="form-group">
+                <label asp-for="FormId" class="form-label"></label>
+                <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
 
             <h3 class="mt-5 mb-2">Additional Options</h3>

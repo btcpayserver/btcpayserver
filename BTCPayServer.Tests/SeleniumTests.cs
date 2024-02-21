@@ -97,7 +97,7 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            
+
             s.Driver.FindElement(By.CssSelector("button[type='submit']")).Click();
 
             Assert.Contains("Enter your email", s.Driver.PageSource);
@@ -108,7 +108,7 @@ namespace BTCPayServer.Tests
             var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-            
+
             s.GoToInvoice(invoiceId);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
 
@@ -123,10 +123,10 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
             var editUrl = s.Driver.Url;
-            
+
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            
+
             s.Driver.FindElement(By.CssSelector("[data-test='form-button']")).Click();
             Assert.Contains("Enter your email", s.Driver.PageSource);
 
@@ -135,7 +135,7 @@ namespace BTCPayServer.Tests
             invoiceId = s.Driver.Url.Split('/').Last();
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-            
+
             s.Driver.Navigate().GoToUrl(editUrl);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
             var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
@@ -147,13 +147,13 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 1");
             s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
-            
+
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
             s.Driver.WaitForElement(By.Id("CodeTabPane"));
-            
+
             var config = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
             Assert.Contains("buyerEmail", config);
-            
+
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
             s.Driver.FindElement(By.Name("FormConfig"))
                 .SendKeys(config.Replace("Enter your email", "CustomFormInputTest"));
@@ -179,10 +179,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 2");
             s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
-            
+
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
             s.Driver.WaitForElement(By.Id("CodeTabPane"));
-            
+
             s.Driver.SetCheckbox(By.Name("Public"), true);
 
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
@@ -1292,34 +1292,33 @@ namespace BTCPayServer.Tests
             s.Driver.ExecuteJavaScript("document.getElementById('EndDate').value = ''");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
-            var appId = s.Driver.Url.Split('/')[4];
+            var editUrl = s.Driver.Url;
+            var appId = editUrl.Split('/')[4];
             
-            // CHeck public page
+            // Check public page
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
             var cfUrl = s.Driver.Url;
 
-            Assert.Equal("Currently active!",
-                s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
+            Assert.Equal("Currently active!", s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
 
             // Contribute
             s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
-            s.Driver.WaitUntilAvailable(By.Name("btcpay"));
-
-            var frameElement = s.Driver.FindElement(By.Name("btcpay"));
-            Assert.True(frameElement.Displayed);
-            var iframe = s.Driver.SwitchTo().Frame(frameElement);
-            iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
-
-            IWebElement closebutton = null;
             TestUtils.Eventually(() =>
             {
-                closebutton = iframe.FindElement(By.Id("close"));
-                Assert.True(closebutton.Displayed);
+                s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+
+                var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                Assert.True(frameElement.Displayed);
+                var iframe = s.Driver.SwitchTo().Frame(frameElement);
+                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+                
+                var closeButton = iframe.FindElement(By.Id("close"));
+                Assert.True(closeButton.Displayed);
+                closeButton.Click();
             });
-            closebutton.Click();
             s.Driver.AssertElementNotFound(By.Name("btcpay"));
             
             // Back to admin view
@@ -1343,6 +1342,56 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id($"App-{appId}")).Click();
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The app has been unarchived and will appear in the apps list by default again.", s.FindAlertMessage().Text);
+            
+            // Crowdfund with form
+            s.GoToUrl(editUrl);
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("test-without-perk@crowdfund.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true, 10);
+            var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("test-without-perk@crowdfund.com", s.Driver.PageSource);
+
+            // Crowdfund with perk
+            s.GoToUrl(editUrl);
+            s.Driver.ScrollTo(By.Id("btAddItem"));
+            s.Driver.FindElement(By.Id("btAddItem")).Click();
+            s.Driver.FindElement(By.Id("EditorTitle")).SendKeys("Perk 1");
+            s.Driver.FindElement(By.Id("EditorId")).SendKeys("Perk-1");
+            s.Driver.FindElement(By.Id("EditorAmount")).SendKeys("20");
+            s.Driver.FindElement(By.Id("ApplyItemChanges")).Click();
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.WaitForElement(By.Id("Perk-1")).Click();
+            s.Driver.WaitForElement(By.CssSelector("#Perk-1 button[type=\"submit\"]")).Submit();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("test-with-perk@crowdfund.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true, 20);
+            invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("test-with-perk@crowdfund.com", s.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]

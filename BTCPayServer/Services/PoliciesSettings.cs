@@ -8,15 +8,15 @@ namespace BTCPayServer.Services
 {
     public class PoliciesSettings
     {
-        [Display(Name = "Require a confirmation email for registering")]
+        [Display(Name = "Email confirmation required")]
         public bool RequiresConfirmedEmail { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [Display(Name = "Disable new user registration on the server")]
+        [Display(Name = "Disable public user registration")]
         public bool LockSubscription { get; set; }
         
         [JsonIgnore]
-        [Display(Name = "Enable new user registration on the server")]
+        [Display(Name = "Enable public user registration")]
         public bool EnableRegistration
         {
             get => !LockSubscription;
@@ -24,37 +24,41 @@ namespace BTCPayServer.Services
         }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        [Display(Name = "Require new users to be approved by an admin after registration")]
+        [Display(Name = "Admin must approve new users")]
         public bool RequiresUserApproval { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Discourage search engines from indexing this site")]
         public bool DiscourageSearchEngines { get; set; }
-        [Display(Name = "Allow non-admins to use the internal lightning node in their stores")]
+        
+        [JsonIgnore]
+        [Display(Name = "Search engines can index this site")]
+        public bool AllowSearchEngines
+        {
+            get => !DiscourageSearchEngines;
+            set { DiscourageSearchEngines = !value; }
+        }
+
+        [Display(Name = "Non-admins can use the Internal Lightning Node for their Store")]
         public bool AllowLightningInternalNodeForAll { get; set; }
-        [Display(Name = "Allow non-admins to create hot wallets for their stores")]
+
+        [Display(Name = "Non-admins can create Hot Wallets for their Store")]
         public bool AllowHotWalletForAll { get; set; }
-        [Display(Name = "Allow non-admins to import hot wallets for their stores")]
+
+        [Display(Name = "Non-admins can import Hot Wallets for their Store")]
         public bool AllowHotWalletRPCImportForAll { get; set; }
+
         [Display(Name = "Check releases on GitHub and notify when new BTCPay Server version is available")]
         public bool CheckForNewVersions { get; set; }
-        [Display(Name = "Disable notifications from automatically showing (no websockets)")]
-        public bool DisableInstantNotifications { get; set; }
+
         [Display(Name = "Disable stores from using the server's email settings as backup")]
         public bool DisableStoresToUseServerEmailSettings { get; set; }
-        [JsonIgnore]
-        [Display(Name = "Allow stores to use the server's SMTP email settings as a default")]
-        public bool EnableStoresToUseServerEmailSettings
-        {
-            get => !DisableStoresToUseServerEmailSettings;
-            set { DisableStoresToUseServerEmailSettings = !value; }
-        }
         
-        [Display(Name = "Disable non-admins access to the user creation API endpoint")]
+        [Display(Name = "Non-admins cannot access the User Creation API Endpoint")]
         public bool DisableNonAdminCreateUserApi { get; set; }
         
         [JsonIgnore]
-        [Display(Name = "Non-admins can access the user creation API endpoint")]
+        [Display(Name = "Non-admins can access the User Creation API Endpoint")]
         public bool EnableNonAdminCreateUserApi
         {
             get => !DisableNonAdminCreateUserApi;
@@ -65,6 +69,7 @@ namespace BTCPayServer.Services
         [UriAttribute]
         [Display(Name = "Plugin server")]
         public string PluginSource { get; set; }
+
         [Display(Name = "Show plugins in pre-release")]
         public bool PluginPreReleases { get; set; }
 

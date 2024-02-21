@@ -1997,6 +1997,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePullPaymentsViaUI()
         {
             using var s = CreateSeleniumTester();
+            s.Server.DeleteStore = false;
             s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -2308,6 +2309,22 @@ namespace BTCPayServer.Tests
 
             // Simulate a boltcard
             {
+                // LNURL Withdraw support check with BTC denomination
+                s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+                s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+                s.Driver.FindElement(By.Id("Name")).SendKeys("TopUpTest");
+                s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), true);
+                s.Driver.FindElement(By.Id("Amount")).Clear();
+                s.Driver.FindElement(By.Id("Amount")).SendKeys("100000");
+                s.Driver.FindElement(By.Id("Currency")).Clear();
+                s.Driver.FindElement(By.Id("Currency")).SendKeys("SATS" + Keys.Enter);
+                s.FindAlertMessage();
+                s.Driver.FindElement(By.LinkText("View")).Click();
+                s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+
+                s.Driver.FindElement(By.CssSelector("#lnurlwithdraw-button")).Click();
+                s.Driver.WaitForElement(By.Id("qr-code-data-input"));
+                lnurl = new Uri(LNURL.LNURL.Parse(s.Driver.FindElement(By.Id("qr-code-data-input")).GetAttribute("value"), out _).ToString().Replace("https", "http"));
                 var db = s.Server.PayTester.GetService<ApplicationDbContextFactory>();
                 var ppid = lnurl.AbsoluteUri.Split("/").Last();
                 var issuerKey = new IssuerKey(SettingsRepositoryExtensions.FixedKey());
@@ -2329,6 +2346,8 @@ namespace BTCPayServer.Tests
                 var payReq = (LNURLPayRequest)await LNURL.LNURL.FetchInformation(info.PayLink, s.Server.PayTester.HttpClient);
                 var callback = await payReq.SendRequest(LightMoney.Satoshis(100), Network.RegTest, s.Server.PayTester.HttpClient);
                 Assert.NotNull(callback.Pr);
+                var pr = BOLT11PaymentRequest.Parse(callback.Pr, Network.RegTest);
+                Assert.Equal(LightMoney.Satoshis(100), pr.MinimumAmount);
                 var res = await s.Server.CustomerLightningD.Pay(callback.Pr);
                 Assert.Equal(PayResult.Ok, res.Result);
                 var ppService = s.Server.PayTester.GetService<PullPaymentHostedService>();

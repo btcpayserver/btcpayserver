@@ -79,6 +79,16 @@ public class UIBoltcardController : Controller
             return Ok(payRequest);
 
         var cryptoCode = "BTC";
+
+        var currency = "BTC";
+        var invoiceAmount = LightMoney.FromUnit(amount.Value, LightMoneyUnit.MilliSatoshi).ToUnit(LightMoneyUnit.BTC);
+
+        if (pp.GetBlob().Currency == "SATS")
+        {
+            currency = "SATS";
+            invoiceAmount = LightMoney.FromUnit(amount.Value, LightMoneyUnit.MilliSatoshi).ToUnit(LightMoneyUnit.Satoshi);
+        }
+
         LNURLController.ControllerContext.HttpContext = HttpContext;
         var result = await LNURLController.GetLNURLRequest(
                cryptoCode,
@@ -86,8 +96,8 @@ public class UIBoltcardController : Controller
                store.GetStoreBlob(),
                new CreateInvoiceRequest()
                {
-                   Currency = "BTC",
-                   Amount = LightMoney.FromUnit(amount.Value, LightMoneyUnit.MilliSatoshi).ToUnit(LightMoneyUnit.BTC)
+                   Currency = currency,
+                   Amount = invoiceAmount
                },
                payRequest,
                null,

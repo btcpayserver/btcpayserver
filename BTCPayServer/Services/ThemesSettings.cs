@@ -1,5 +1,4 @@
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services;
@@ -27,15 +26,7 @@ public class ThemeSettings
     [Display(Name = "Custom Theme CSS URL")]
     public string CustomThemeCssUri { get; set; }
 
-    [Display(Name = "Custom Theme File")]
-    [JsonIgnore]
-    public IFormFile CustomThemeFile { get; set; }
-
     public string CustomThemeFileId { get; set; }
-
-    [Display(Name = "Logo")]
-    [JsonIgnore]
-    public IFormFile LogoFile { get; set; }
 
     public string LogoFileId { get; set; }
 

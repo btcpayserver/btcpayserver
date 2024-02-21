@@ -41,9 +41,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 if (!this.active || this.loading){
                     return;
                 }
-
-                var formUrl = e.target["FormUrl"].value;
-                if (formUrl != '') {
+                const formUrl = this.$root.srvModel.formUrl;
+                if (formUrl) {
                     location.href = formUrl + "?amount=" + this.amount + "&choiceKey=" + this.perk.id;
                     return;
                 } else {

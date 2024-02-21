@@ -306,7 +306,6 @@
             </div>
             <form v-on:submit="onContributeFormSubmit" class="mb-0">
                 <input type="hidden" :value="perk.id" id="choiceKey" />
-                <input type="hidden" value="@Model.FormUrl" id="FormUrl" />
                 <img v-if="perk.image && perk.image != 'null'" class="card-img-top" :src="perk.image" />
                 <div class="card-body">
                     <div class="card-title d-flex justify-content-between" :class="{ 'mb-0': !perk.description }">

@@ -1,0 +1,19 @@
+@using BTCPayServer.Abstractions.Models
+@model CreateDictionaryViewModel
+@{
+	ViewData.SetActivePage(ServerNavPages.Translations);
+}
+
+<div class="row">
+	<div class="col-xl-8 col-xxl-constrain">
+		<form method="post" class="d-flex flex-column">
+			<div class="form-group">
+				<label asp-for="Name" class="form-label"></label>
+				<input asp-for="Name" class="form-control" />
+				<span asp-validation-for="Name" class="text-danger"></span>
+			</div>
+			<input asp-for="Fallback" type="hidden" />
+			<button id="SaveButton" type="submit" class="btn btn-primary" name="command" value="Save">Create new dictionary</button>
+		</form>
+	</div>
+</div>

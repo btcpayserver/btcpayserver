@@ -1,6 +1,14 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Data;
+using BTCPayServer.Hosting;
 using BTCPayServer.Services;
-using BTCPayServer.Tests.Logging;
+using Dapper;
+using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -12,6 +20,99 @@ namespace BTCPayServer.Tests
         public const int TestTimeout = TestUtils.TestTimeout;
         public LanguageServiceTests(ITestOutputHelper helper) : base(helper)
         {
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanTranslateLoginPage()
+        {
+            using var tester = CreateSeleniumTester(newDb: true);
+            tester.Server.ActivateLangs();
+            await tester.StartAsync();
+            await tester.Server.PayTester.RestartStartupTask<LoadTranslationsStartupTask>();
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUpdateTranslationsInDatabase()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var factory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            var db = factory.CreateContext().Database.GetDbConnection();
+
+            TestLogs.LogInformation("French fallback to english");
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('English', NULL, NULL), ('French', 'English', NULL)");
+
+            Task translations_update(string dictId, (string Sentence, string Translation)[] translations)
+            {
+                return LocalizerService.translations_update(db, dictId, translations.Select(c => KeyValuePair.Create(c.Sentence, c.Translation)));
+            }
+            async Task AssertTranslations(string dictionary, (string Sentence, string Expected)[] expectations)
+            {
+                var all = await db.QueryAsync<(string sentence, string translation)>($"SELECT sentence, translation from translations WHERE dict_id='{dictionary}'");
+                foreach (var expectation in expectations)
+                {
+                    if (expectation.Expected is not null)
+                        Assert.Equal(expectation.Expected, all.Single(a => a.sentence == expectation.Sentence).translation);
+                    else
+                        Assert.DoesNotContain(all, a => a.sentence == expectation.Sentence);
+                }
+            }
+
+            await translations_update("English",
+                [
+                    ("Hello", "Hello"),
+                    ("Goodbye", "Goodbye"),
+                    ("Good afternoon", "Good afternoon")
+                ]);
+            await translations_update("French",
+                [
+                    ("Hello", "Salut"),
+                    ("Good afternoon", "Bonne aprem")
+                ]);
+
+            TestLogs.LogInformation("French should override Hello and Good afternoon, but not Goodbye");
+            await AssertTranslations("French",
+                [("Hello", "Salut"),
+                ("Good afternoon", "Bonne aprem"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+            await AssertTranslations("English",
+                [("Hello", "Hello"),
+                ("Good afternoon", "Good afternoon"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+
+            TestLogs.LogInformation("Can use fallback by setting null to a sentence");
+            await translations_update("French",
+                [
+                    ("Hello", null)
+                ]);
+            await AssertTranslations("French",
+                [("Hello", "Hello"),
+                ("Good afternoon", "Bonne aprem"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+
+            TestLogs.LogInformation("Can use fallback by setting same as fallback to a sentence");
+            await translations_update("French",
+                [
+                    ("Good afternoon", "Good afternoon")
+                ]);
+            await AssertTranslations("French",
+                [("Hello", "Hello"),
+                ("Good afternoon", "Good afternoon"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+
+            await translations_update("English", [("Hello", null as string)]);
+            await AssertTranslations("French",
+                [("Hello", null),
+                ("Good afternoon", "Good afternoon"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='English'");
         }
 
         [Fact(Timeout = TestTimeout)]

@@ -15,6 +15,7 @@ namespace BTCPayServer.Services.Rates
 {
     public class RateProviderFactory
     {
+        
         class WrapperRateProvider : IRateProvider
         {
             public RateSourceInfo RateSourceInfo => _inner.RateSourceInfo;
@@ -50,9 +51,10 @@ namespace BTCPayServer.Services.Rates
             public ExchangeException Exception { get; internal set; }
             public string Exchange { get; internal set; }
         }
-        public RateProviderFactory(IHttpClientFactory httpClientFactory, IEnumerable<IRateProvider> rateProviders)
+        public RateProviderFactory(IHttpClientFactory httpClientFactory,IEnumerable<IRateProvider> rateProviders, IEnumerable<IDynamicRateProvider> dynamicProviders)
         {
             _httpClientFactory = httpClientFactory;
+            _dynamicProviders = dynamicProviders;
             foreach (var prov in rateProviders)
             {
                 Providers.Add(prov.RateSourceInfo.Id, prov);
@@ -60,6 +62,7 @@ namespace BTCPayServer.Services.Rates
             InitExchanges();
         }
         private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IEnumerable<IDynamicRateProvider> _dynamicProviders;
         public Dictionary<string, IRateProvider> Providers { get; } = new Dictionary<string, IRateProvider>();
         void InitExchanges()
         {
@@ -88,15 +91,25 @@ namespace BTCPayServer.Services.Rates
                     AvailableRateProviders.Add(coingecko.RateSourceInfo);
                 }
             }
+
+          
+            AvailableRateProviders.AddRange(_dynamicProviders.Select(provider => provider.RateSourceInfo));
             AvailableRateProviders.Sort((a, b) => StringComparer.Ordinal.Compare(a.DisplayName, b.DisplayName));
         }
 
         public List<RateSourceInfo> AvailableRateProviders { get; } = new List<RateSourceInfo>();
 
-        public async Task<QueryRateResult> QueryRates(string exchangeName, CancellationToken cancellationToken)
+        public async Task<QueryRateResult> QueryRates(string exchangeName,string context = null, CancellationToken cancellationToken = default)
         {
-            Providers.TryGetValue(exchangeName, out var directProvider);
-            directProvider = directProvider ?? NullRateProvider.Instance;
+            if (!Providers.TryGetValue(exchangeName, out var directProvider))
+            {
+               var dynamicProvider =  _dynamicProviders.FirstOrDefault(provider => provider.RateSourceInfo.Id.Equals(exchangeName, StringComparison.InvariantCultureIgnoreCase));
+               if (dynamicProvider != null)
+               {
+                   directProvider = await dynamicProvider.GetRateProvider(context, cancellationToken);
+               }
+            }
+            directProvider ??= NullRateProvider.Instance;
 
             var wrapper = new WrapperRateProvider(directProvider);
             var value = await wrapper.GetRatesAsync(cancellationToken);

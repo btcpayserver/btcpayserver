@@ -124,7 +124,7 @@ public partial class UIStoresController
                 pairs.Add(currencyPair);
             }
 
-            var fetchs = _rateFactory.FetchRates(pairs.ToHashSet(), rules, cancellationToken);
+            var fetchs = _rateFactory.FetchRates(pairs.ToHashSet(), rules, storeId, cancellationToken);
             var testResults = new List<RatesViewModel.TestResultViewModel>();
             foreach (var fetch in fetchs)
             {

@@ -1,3 +1,4 @@
+using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 
 namespace BTCPayServer.Security;
@@ -6,8 +7,7 @@ public static class IdentityBuilderExtension
 {
     public static IdentityBuilder AddInvitationTokenProvider(this IdentityBuilder builder)
     {
-        var userType = builder.UserType;
-        var provider = typeof(InvitationTokenProvider<>).MakeGenericType(userType);
+        var provider = typeof(InvitationTokenProvider<>).MakeGenericType(typeof(ApplicationUser));
         return builder.AddTokenProvider(InvitationTokenProviderOptions.ProviderName, provider);
     }
 }

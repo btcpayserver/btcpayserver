@@ -3876,8 +3876,9 @@ namespace BTCPayServer.Tests
             Assert.True( settings.ProcessNewPayoutsInstantly);
 
             var pluginHookService = tester.PayTester.GetService<IPluginHookService>();
-            var beforeHookTcs = new TaskCompletionSource();
-            var afterHookTcs = new TaskCompletionSource();
+            var beforeHookTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            var afterHookTcs = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+            TestLogs.LogInformation("Adding hook...");
             pluginHookService.ActionInvoked += (sender, tuple) =>
             {
                 switch (tuple.hook)
@@ -3908,7 +3909,9 @@ namespace BTCPayServer.Tests
                 PaymentMethod = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
+            TestLogs.LogInformation("Waiting before hook...");
             await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            TestLogs.LogInformation("Waiting before after...");
             await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
             payouts = await adminClient.GetStorePayouts(admin.StoreId);
             try

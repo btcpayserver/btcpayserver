@@ -371,7 +371,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 return;
 
             var userId = _userManager.GetUserId(User);
-            var store = await _storeRepository.FindStore(storeId, userId, User.IsInRole(Roles.ServerAdmin));
+            var store = await _storeRepository.FindStore(storeId, userId);
             if (store != null)
             {
                 HttpContext.SetStoreData(store);

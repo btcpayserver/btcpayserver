@@ -145,7 +145,7 @@ namespace BTCPayServer.Controllers
             if (string.IsNullOrEmpty(userId))
                 return Forbid();
             
-            var store = await _Repo.FindStore(storeId, userId, User.IsInRole(Roles.ServerAdmin));
+            var store = await _Repo.FindStore(storeId, userId);
             if (store is null)
             {
                 return Forbid();

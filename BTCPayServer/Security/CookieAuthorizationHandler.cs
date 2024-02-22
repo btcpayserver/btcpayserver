@@ -129,7 +129,7 @@ namespace BTCPayServer.Security
                 var cachedStore = _httpContext.GetStoreData();
                 store = cachedStore?.Id == storeId
                     ? cachedStore
-                    : await _storeRepository.FindStore(storeId, userId, isAdmin);
+                    : await _storeRepository.FindStore(storeId, userId);
             }
 
             if (Policies.IsServerPolicy(policy) && isAdmin)

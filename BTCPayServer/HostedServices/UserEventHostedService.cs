@@ -28,7 +28,6 @@ public class UserEventHostedService(
     protected override void SubscribeToEvents()
     {
         Subscribe<UserRegisteredEvent>();
-        Subscribe<UserInvitedEvent>();
         Subscribe<UserApprovedEvent>();
         Subscribe<UserConfirmedEmailEvent>();
         Subscribe<UserPasswordResetRequestedEvent>();
@@ -44,17 +43,15 @@ public class UserEventHostedService(
         IEmailSender emailSender;
         switch (evt)
         {
-            case UserInvitedEvent:
-            case UserRegisteredEvent:
-                var ev = (UserRegisteredEvent)evt;
+            case UserRegisteredEvent ev:
                 user = ev.User;
                 uri = ev.RequestUri;
                 host = new HostString(uri.Host, uri.Port);
 
                 // can be either a self-registration or by invite from another user
-                var isInvite = evt is UserInvitedEvent;
+                var isInvite = ev.Kind == UserRegisteredEventKind.Invite;
                 var type = ev.Admin ? "admin" : "user";
-                var info = isInvite ? $"invited by {((UserInvitedEvent)ev).InvitedByUser.Email}" : "registered";
+                var info = isInvite ? ev.InvitedByUser != null ? $"invited by {ev.InvitedByUser.Email}" : "invited" : "registered";
                 var requiresApproval = user.RequiresApproval && !user.Approved;
                 var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
 

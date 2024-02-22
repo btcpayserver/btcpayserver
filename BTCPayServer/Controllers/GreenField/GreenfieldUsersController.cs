@@ -236,9 +236,17 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var userEvent = currentUser is null
-                ? new UserRegisteredEvent { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = isNewAdmin }
-                : new UserInvitedEvent { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = isNewAdmin, InvitedByUser = currentUser };
+            var userEvent = new UserRegisteredEvent
+            {
+                RequestUri = Request.GetAbsoluteRootUri(),
+                Admin = isNewAdmin,
+                User = user
+            };
+            if (currentUser is not null)
+            {
+                userEvent.Kind = UserRegisteredEventKind.Invite;
+                userEvent.InvitedByUser = currentUser;
+            };
             _eventAggregator.Publish(userEvent);
 
             var model = await FromModel(user);

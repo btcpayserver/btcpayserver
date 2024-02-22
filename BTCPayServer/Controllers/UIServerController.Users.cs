@@ -182,8 +182,9 @@ namespace BTCPayServer.Controllers
                     var tcs = new TaskCompletionSource<Uri>();
                     var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
 
-                    _eventAggregator.Publish(new UserInvitedEvent
+                    _eventAggregator.Publish(new UserRegisteredEvent
                     {
+                        Kind = UserRegisteredEventKind.Invite,
                         RequestUri = Request.GetAbsoluteRootUri(),
                         User = user,
                         InvitedByUser = currentUser,

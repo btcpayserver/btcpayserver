@@ -8,12 +8,14 @@ public class UserRegisteredEvent
 {
     public ApplicationUser User { get; set; }
     public bool Admin { get; set; }
+    public UserRegisteredEventKind Kind { get; set; } = UserRegisteredEventKind.Registration;
     public Uri RequestUri { get; set; }
-
+    public ApplicationUser InvitedByUser { get; set; }
     public TaskCompletionSource<Uri> CallbackUrlGenerated;
 }
 
-public class UserInvitedEvent : UserRegisteredEvent
+public enum UserRegisteredEventKind
 {
-    public ApplicationUser InvitedByUser { get; set; }
+    Registration,
+    Invite
 }

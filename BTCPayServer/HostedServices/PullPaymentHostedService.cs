@@ -432,7 +432,7 @@ namespace BTCPayServer.HostedServices
             {
                 CryptoAmount = -cryptoAmount,
                 Amount = -topUp.InvoiceEntity.PaidAmount.Net,
-                Destination = null,
+                Destination = topUp.InvoiceEntity.Id,
                 Metadata = new JObject(),
             };
             payout.SetBlob(payoutBlob, _jsonSerializerSettings);

@@ -471,7 +471,7 @@
                                     "derivationScheme": {
                                         "type": "string",
                                         "description": "The derivation scheme",
-                                        "example": "xpub..."
+                                        "examples": ["xpub..."]
                                     }
                                 }
                             }
@@ -527,8 +527,7 @@
                         "properties": {
                             "mnemonic": {
                                 "type": "string",
-                                "description": "The mnemonic used to generate the wallet",
-                                "nullable": false
+                                "description": "The mnemonic used to generate the wallet"
                             }
                         }
                     }
@@ -541,7 +540,7 @@
                     "derivationScheme": {
                         "type": "string",
                         "description": "The derivation scheme",
-                        "example": "xpub..."
+                        "examples": ["xpub..."]
                     },
                     "label": {
                         "type": "string",
@@ -550,7 +549,7 @@
                     "accountKeyPath": {
                         "type": "string",
                         "description": "The wallet fingerprint followed by the keypath to derive the account key used for signing operation or creating PSBTs",
-                        "example": "abcd82a1/84'/0'/0'"
+                        "examples": ["abcd82a1/84'/0'/0'"]
                     }
                 }
             },

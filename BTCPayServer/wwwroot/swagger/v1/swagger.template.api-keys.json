@@ -195,14 +195,12 @@
                                 "additionalProperties": false,
                                 "properties": {
                                     "label": {
-                                        "type": "string",
-                                        "description": "The label of the new API Key",
-                                        "nullable": true
+                                        "type": ["string", "null"],
+                                        "description": "The label of the new API Key"
                                     },
                                     "permissions": {
-                                        "type": "array",
+                                        "type": ["array", "null"],
                                         "description": "The permissions granted to this API Key (See API Key Authentication)",
-                                        "nullable": true,
                                         "items": {
                                             "type": "string"
                                         }
@@ -278,14 +276,12 @@
                                 "additionalProperties": false,
                                 "properties": {
                                     "label": {
-                                        "type": "string",
-                                        "description": "The label of the new API Key",
-                                        "nullable": true
+                                        "type": ["string", "null"],
+                                        "description": "The label of the new API Key"
                                     },
                                     "permissions": {
-                                        "type": "array",
+                                        "type": ["array", "null"],
                                         "description": "The permissions granted to this API Key (See API Key Authentication)",
-                                        "nullable": true,
                                         "items": {
                                             "type": "string"
                                         }
@@ -312,22 +308,24 @@
                 "properties": {
                     "apiKey": {
                         "type": "string",
-                        "description":  "The API Key to use for API Key Authentication",
-                        "nullable": false
+                        "description":  "The API Key to use for API Key Authentication"
                     },
                     "label": {
                         "type": "string",
-                        "description": "The label given by the user to this API Key",
-                        "nullable": false
+                        "description": "The label given by the user to this API Key"
                     },
                     "permissions": {
                         "type": "array",
                         "description": "The permissions associated to this API Key (can be scoped to a specific store)",
-                        "nullable": false,
                         "items": {
                             "type": "string"
                         },
-                        "example": [ "btcpay.server.canmanageusers", "btcpay.server.canmanageusers:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP" ]
+                        "examples": [
+                            [
+                                "btcpay.server.canmanageusers",
+                                "btcpay.server.canmanageusers:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP"
+                            ]
+                        ]
                     }
                 }
             }

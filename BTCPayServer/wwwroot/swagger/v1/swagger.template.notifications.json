@@ -13,8 +13,7 @@
                         "required": false,
                         "description": "filter by seen notifications",
                         "schema": {
-                            "type": "string",
-                            "nullable": true
+                            "type": ["string", "null"]
                         }
                     },
                     {
@@ -23,8 +22,7 @@
                         "required": false,
                         "description": "Number of records to skip",
                         "schema": {
-                            "nullable": true,
-                            "type": "number"
+                            "type": ["number", "null"]
                         }
                     },
                     {
@@ -33,8 +31,7 @@
                         "required": false,
                         "description": "Number of records returned in response",
                         "schema": {
-                            "nullable": true,
-                            "type": "number"
+                            "type": ["number", "null"]
                         }
                     }
                 ],
@@ -212,8 +209,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "seen": {
-                        "type": "boolean",
-                        "nullable": true,
+                        "type": ["boolean", "null"],
                         "description": "Sets the notification as seen/unseen. If left null, sets it to the opposite value"
                     }
                 }
@@ -240,9 +236,8 @@
                         "description": "The html body of the notifications"
                     },
                     "link": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "format": "uri",
-                        "nullable": true,
                         "description": "The link of the notification"
                     },
                     "createdTime": {

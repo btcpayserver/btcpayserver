@@ -16,8 +16,7 @@
                         "style": "form",
                         "explode": true,
                         "schema": {
-                            "type": "array",
-                            "nullable": true,
+                            "type": ["array", "null"],
                             "items": {
                                 "type": "string"
                             }
@@ -29,8 +28,7 @@
                         "description": "The name of your application",
                         "in": "query",
                         "schema": {
-                            "type": "string",
-                            "nullable": true
+                            "type": ["string", "null"]
                         },
                         "x-position": 2
                     },
@@ -39,9 +37,8 @@
                         "description": "If permissions are specified, and strict is set to false, it will allow the user to reject some of permissions the application is requesting.",
                         "in": "query",
                         "schema": {
-                            "type": "boolean",
-                            "default": true,
-                            "nullable": true
+                            "type": ["boolean", "null"],
+                            "default": true
                         },
                         "x-position": 3
                     },
@@ -50,9 +47,8 @@
                         "description": "If the application is requesting the CanModifyStoreSettings permission and selectiveStores is set to true, this allows the user to only grant permissions to selected stores under the user's control.",
                         "in": "query",
                         "schema": {
-                            "type": "boolean",
-                            "default": false,
-                            "nullable": true
+                            "type": ["boolean", "null"],
+                            "default": false
                         },
                         "x-position": 4
                     },
@@ -61,9 +57,8 @@
                         "description": "The url to redirect to after the user consents, with the query parameters appended to it: permissions, user-id, api-key. If not specified, user is redirected to their API Key list.",
                         "in": "query",
                         "schema": {
-                            "type": "string",
-                            "format": "url",
-                            "nullable": true
+                            "type": ["string", "null"],
+                            "format": "url"
                         },
                         "x-position": 5
                     },
@@ -72,8 +67,7 @@
                         "description": "If specified, BTCPay Server will check if there is an existing API key associated with the user that also has this application identifier, redirect host AND the permissions required match(takes selectiveStores and strict into account). `applicationIdentifier` is ignored if redirect is not specified.",
                         "in": "query",
                         "schema": {
-                            "type": "string",
-                            "nullable": true
+                            "type": ["string", "null"]
                         },
                         "x-position": 6
                     }

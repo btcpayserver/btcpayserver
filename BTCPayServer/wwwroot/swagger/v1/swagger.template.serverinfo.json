@@ -118,8 +118,7 @@
                 }
             },
             "ApplicationServerInfoNodeStatusData": {
-                "type": "object",
-                "nullable": true,
+                "type": ["object", "null"],
                 "description": "Detailed sync status of the internal full node",
                 "properties": {
                     "headers": {
@@ -146,7 +145,7 @@
                     "cryptoCode": {
                         "type": "string",
                         "description": "The CryptoCode of the crypto currency (eg. BTC)",
-                        "example": "BTC"
+                        "examples": ["BTC"]
                     },
                     "nodeInformation": {
                         "$ref": "#/components/schemas/ApplicationServerInfoNodeStatusData"
@@ -156,15 +155,13 @@
                         "description": "The height of the chain of header of the internal indexer"
                     },
                     "syncHeight": {
-                        "type": "number",
+                        "type": ["number", "null"],
                         "format": "integer",
-                        "nullable": true,
                         "description": "The height of the latest indexed block of the internal indexer"
                     },
                     "available": {
                         "type": "boolean",
-                        "description": "True if the full node and the indexer are fully synchronized",
-                        "nullable": false
+                        "description": "True if the full node and the indexer are fully synchronized"
                     }
                 }
             }

@@ -231,18 +231,15 @@
                         "description": "The username of the lightning address"
                     },
                     "currencyCode": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The currency to generate the invoices for this lightning address in. Leave null lto use the store default."
                     },
                     "min": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The minimum amount in sats this ln address allows"
                     },
                     "max": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The maximum amount in sats this ln address allows"
                     }
                 }

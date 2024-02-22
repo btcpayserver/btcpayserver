@@ -724,8 +724,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "transactionHash": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The transaction id"
                     },
                     "comment": {
@@ -738,23 +737,20 @@
                         "description": "The amount the wallet balance changed with this transaction"
                     },
                     "blockHash": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The hash of the block that confirmed this transaction. Null if still unconfirmed."
                     },
                     "blockHeight": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The height of the block that confirmed this transaction. Null if still unconfirmed."
                     },
                     "confirmations": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The number of confirmations for this transaction"
                     },
                     "timestamp": {
                         "description": "The time of the transaction",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [{"$ref": "#/components/schemas/UnixTimestamp"}]
                     },
                     "status": {
                         "allOf": [
@@ -832,9 +828,8 @@
                         "description": "A wallet address or a BIP21 payment link"
                     },
                     "amount": {
-                        "type": "string",
+                        "type": ["string", "null"],
                         "format": "decimal",
-                        "nullable": true,
                         "description": "The amount to send. If `destination` is a BIP21 link, the amount must be the same or null."
                     },
                     "subtractFromAmount": {
@@ -848,7 +843,6 @@
                 "additionalProperties": false,
                 "properties": {
                     "destinations": {
-                        "nullable": false,
                         "description": "What and where to send money",
                         "type": "array",
                         "items": {
@@ -861,38 +855,32 @@
                         "description": "Transaction fee."
                     },
                     "proceedWithPayjoin": {
-                        "type": "boolean",
+                        "type": ["boolean", "null"],
                         "default": true,
-                        "nullable": true,
                         "description": "Whether to attempt to do a BIP78 payjoin if one of the destinations is a BIP21 with payjoin enabled"
                     },
                     "proceedWithBroadcast": {
-                        "type": "boolean",
+                        "type": ["boolean", "null"],
                         "default": true,
-                        "nullable": true,
                         "description": "Whether to broadcast the transaction after creating it or to simply return the transaction in hex format."
                     },
                     "noChange": {
-                        "type": "boolean",
+                        "type": ["boolean", "null"],
                         "default": false,
-                        "nullable": true,
                         "description": "Whether to send all the spent coins to the destinations (THIS CAN COST YOU SIGNIFICANT AMOUNTS OF MONEY, LEAVE FALSE UNLESS YOU KNOW WHAT YOU ARE DOING)."
                     },
                     "rbf": {
-                        "type": "boolean",
-                        "nullable": true,
+                        "type": ["boolean", "null"],
                         "description": "Whether to enable RBF for the transaction. Leave blank to have it random (beneficial to privacy)"
                     },
                     "excludeUnconfirmed": {
-                        "type": "boolean",
+                        "type": ["boolean", "null"],
                         "default": false,
-                        "nullable": true,
                         "description": "Whether to exclude unconfirmed UTXOs from the transaction."
                     },
                     "selectedInputs": {
-                        "nullable": true,
                         "description": "Restrict the creation of the transactions from the outpoints provided ONLY (coin selection)",
-                        "type": "array",
+                        "type": ["array", "null"],
                         "items": {
                             "type": "string"
                         }
@@ -904,15 +892,13 @@
                 "additionalProperties": false,
                 "properties": {
                     "comment": {
-                        "nullable": true,
-                        "type": "string",
+                        "type": ["string", "null"],
                         "description": "Transaction comment"
                     },
                     "labels": {
-                        "nullable": true,
                         "deprecated": true,
                         "description": "Transaction labels",
-                        "type": "array",
+                        "type": ["array", "null"],
                         "items": {
                             "type": "string"
                         }

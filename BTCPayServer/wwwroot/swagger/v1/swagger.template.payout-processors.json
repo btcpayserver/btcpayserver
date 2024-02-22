@@ -562,9 +562,8 @@
                         "type": "string"
                     },
                     "paymentMethods": {
-                        "nullable": true,
                         "description": "Supported, payment methods by this processor",
-                        "type": "array",
+                        "type": ["array", "null"],
                         "items": {
                             "type": "string"
                         }
@@ -585,8 +584,7 @@
                     },
                     "cancelPayoutAfterFailures": {
                         "description": "How many failures should the processor tolerate before cancelling the payout",
-                        "type": "number",
-                        "nullable": true
+                        "type": ["number", "null"]
                     },
                     "processNewPayoutsInstantly": {
                         "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
@@ -612,13 +610,11 @@
                     },
                     "cancelPayoutAfterFailures": {
                         "description": "How many failures should the processor tolerate before cancelling the payout",
-                        "type": "number",
-                        "nullable": true
+                        "type": ["number", "null"]
                     },
                     "processNewPayoutsInstantly": {
                         "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
-                        "type": "boolean",
-                        "default": false
+                        "type": "boolean"
                     }
                 }
             },
@@ -627,9 +623,8 @@
                 "additionalProperties": false,
                 "properties": {
                     "feeTargetBlock": {
-                        "type": "number",
-                        "description": "How many blocks should the fee rate calculation target to confirm in. Set to 1 if not provided",
-                        "nullable": true
+                        "type": ["number", "null"],
+                        "description": "How many blocks should the fee rate calculation target to confirm in. Set to 1 if not provided"
                     },
                     "intervalSeconds": {
                         "description": "How often should the processor run",
@@ -644,7 +639,7 @@
                         "format": "decimal",
                         "minimum": 0,
                         "description": "Only process payouts when this payout sum is reached.",
-                        "example": "0.1"
+                        "examples": ["0.1"]
                     },
                     "processNewPayoutsInstantly": {
                         "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",
@@ -677,7 +672,7 @@
                         "format": "decimal",
                         "minimum": 0,
                         "description": "Only process payouts when this payout sum is reached.",
-                        "example": "0.1"
+                        "examples": ["0.1"]
                     },
                     "processNewPayoutsInstantly": {
                         "description": "Skip the interval when ane eligible payout has been approved (or created with pre-approval)",

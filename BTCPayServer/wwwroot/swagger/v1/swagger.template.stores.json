@@ -311,14 +311,12 @@
                     "id": {
                         "description": "The role's Id (Same as role if the role is created at server level, if the role is created at the store level the format is `STOREID::ROLE`)",
                         "type": "string",
-                        "nullable": false,
-                        "example": "Owner"
+                        "examples": ["Owner"]
                     },
                     "role": {
                         "description": "The role's name",
                         "type": "string",
-                        "nullable": false,
-                        "example": "Owner"
+                        "examples": ["Owner"]
                     },
                     "permissions": {
                         "description": "The permissions attached to this role",
@@ -326,17 +324,19 @@
                         "items": {
                             "type": "string"
                         },
-                        "example": [
-                            "btcpay.store.canmodifystoresettings",
-                            "btcpay.store.cantradecustodianaccount",
-                            "btcpay.store.canwithdrawfromcustodianaccount",
-                            "btcpay.store.candeposittocustodianaccount"
+                        "examples": [
+                            [
+                                "btcpay.store.canmodifystoresettings",
+                                "btcpay.store.cantradecustodianaccount",
+                                "btcpay.store.canwithdrawfromcustodianaccount",
+                                "btcpay.store.candeposittocustodianaccount"
+                            ]
                         ]
                     },
                     "isServerRole": {
                         "description": "Whether this role is at the scope of the store or scope of the server",
                         "type": "boolean",
-                        "example": true
+                        "examples": [true]
                     }
                 }
             },
@@ -356,8 +356,7 @@
                         "properties": {
                             "id": {
                                 "type": "string",
-                                "description": "The id of the store",
-                                "nullable": false
+                                "description": "The id of the store"
                             }
                         }
                     }
@@ -371,14 +370,13 @@
                             {
                                 "$ref": "#/components/schemas/PaymentMethodId"
                             }
-                        ],
-                        "nullable": false
+                        ]
                     },
                     "currencyCode": {
                         "type": "string",
                         "description": "The currency",
                         "default": "USD",
-                        "example": "USD"
+                        "examples": ["USD"]
                     },
                     "amount": {
                         "type": "string",
@@ -403,14 +401,12 @@
                         "description": "The name of the store"
                     },
                     "website": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The absolute url of the store",
                         "format": "url"
                     },
                     "supportUrl": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The support URI of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`. Can be any valid URI, such as a website, email, and nostr.",
                         "format": "uri"
                     },
@@ -418,7 +414,7 @@
                         "type": "string",
                         "description": "The default currency of the store",
                         "default": "USD",
-                        "example": "USD"
+                        "examples": ["USD"]
                     },
                     "invoiceExpiration": {
                         "default": 900,
@@ -445,8 +441,7 @@
                         "$ref": "#/components/schemas/SpeedPolicy"
                     },
                     "lightningDescriptionTemplate": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The BOLT11 description of the lightning invoice in the checkout. You can use placeholders '{StoreName}', '{ItemDescription}' and '{OrderId}'."
                     },
                     "paymentTolerance": {
@@ -476,7 +471,7 @@
                         "$ref": "#/components/schemas/CheckoutType"
                     },
                     "receipt": {
-                        "nullable": true,
+                        "type": ["object", "null"],
                         "description": "Additional settings to customize the public receipt",
                         "allOf": [
                             {
@@ -520,18 +515,15 @@
                         "description": "The default language to use in the checkout page. (The different translations available are listed [here](https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer/wwwroot/locales)"
                     },
                     "customLogo": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "URL to a logo to include in the checkout page."
                     },
                     "customCSS": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "URL to a CSS stylesheet to include in the checkout page"
                     },
                     "htmlTitle": {
-                        "type": "string",
-                        "nullable": true,
+                        "type": ["string", "null"],
                         "description": "The HTML title of the checkout page (when you over the tab in your browser)"
                     },
                     "networkFeeMode": {
@@ -576,8 +568,7 @@
                         "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "paymentMethodCriteria": {
-                        "type": "array",
-                        "nullable": true,
+                        "type": ["array", "null"],
                         "items": {
                             "$ref": "#/components/schemas/PaymentMethodCriteriaData"
                         },

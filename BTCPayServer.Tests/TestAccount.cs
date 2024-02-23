@@ -452,9 +452,9 @@ namespace BTCPayServer.Tests
         {
             private Client.Models.StoreWebhookData _wh;
             private FakeServer _server;
-            private readonly List<WebhookInvoiceEvent> _webhookEvents;
+            private readonly List<StoreWebhookEvent> _webhookEvents;
             private CancellationTokenSource _cts;
-            public WebhookListener(Client.Models.StoreWebhookData wh, FakeServer server, List<WebhookInvoiceEvent> webhookEvents)
+            public WebhookListener(Client.Models.StoreWebhookData wh, FakeServer server, List<StoreWebhookEvent> webhookEvents)
             {
                 _wh = wh;
                 _server = server;
@@ -472,7 +472,7 @@ namespace BTCPayServer.Tests
                     var callback = Encoding.UTF8.GetString(bytes);
                     lock (_webhookEvents)
                     {
-                        _webhookEvents.Add(JsonConvert.DeserializeObject<WebhookInvoiceEvent>(callback));
+                        _webhookEvents.Add(JsonConvert.DeserializeObject<DummyStoreWebhookEvent>(callback));
                     }
                     req.Response.StatusCode = 200;
                     _server.Done();
@@ -485,8 +485,13 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public List<WebhookInvoiceEvent> WebhookEvents { get; set; } = new List<WebhookInvoiceEvent>();
-        public TEvent AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
+        public class DummyStoreWebhookEvent : StoreWebhookEvent
+        {
+            
+        }
+
+        public List<StoreWebhookEvent> WebhookEvents { get; set; } = new List<StoreWebhookEvent>();
+        public async Task<TEvent> AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
         {
             int retry = 0;
 retry:
@@ -510,7 +515,7 @@ retry:
             }
             if (retry < 3)
             {
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
                 retry++;
                 goto retry;
             }

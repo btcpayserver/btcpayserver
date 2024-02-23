@@ -168,6 +168,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Status = Client.Models.PaymentRequestData.PaymentRequestStatus.Pending,
                 Created = DateTimeOffset.UtcNow
             };
+            request.FormResponse = null;
+            request.StoreId = storeId;
             pr.SetBlob(request);
             pr = await _paymentRequestRepository.CreateOrUpdatePaymentRequest(pr);
             return Ok(FromModel(pr));
@@ -196,6 +198,9 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var updatedPr = pr.First();
+            var blob = updatedPr.GetBlob();
+            request.FormResponse = blob.FormResponse;
+            request.StoreId = storeId;
             updatedPr.SetBlob(request);
 
             return Ok(FromModel(await _paymentRequestRepository.CreateOrUpdatePaymentRequest(updatedPr)));

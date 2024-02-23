@@ -1144,7 +1144,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/stores/{storeId}/invoices/create")]
         [HttpGet("invoices/create")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanCreateInvoice)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
         {
@@ -1154,7 +1154,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
 
-            var store = await _StoreRepository.FindStore(model.StoreId, GetUserId());
+            var store = await _StoreRepository.FindStore(model.StoreId);
             if (store == null)
                 return NotFound();
             

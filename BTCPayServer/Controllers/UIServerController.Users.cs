@@ -52,6 +52,8 @@ namespace BTCPayServer.Controllers
             model.Roles = roleManager.Roles.ToDictionary(role => role.Id, role => role.Name);
             model.Users = await usersQuery
                 .Include(user => user.UserRoles)
+                .Include(user => user.UserStores)
+                .ThenInclude(data => data.StoreData)
                 .Skip(model.Skip)
                 .Take(model.Count)
                 .Select(u => new UsersViewModel.UserViewModel
@@ -63,7 +65,8 @@ namespace BTCPayServer.Controllers
                     Approved = u.RequiresApproval ? u.Approved : null,
                     Created = u.Created,
                     Roles = u.UserRoles.Select(role => role.RoleId),
-                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime
+                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
+                    Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                 })
                 .ToListAsync();
 

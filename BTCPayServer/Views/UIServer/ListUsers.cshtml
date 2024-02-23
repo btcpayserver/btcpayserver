@@ -19,7 +19,6 @@
     const string sortByDesc = "Sort by descending...";
     const string sortByAsc = "Sort by ascending...";
 }
-
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h3 class="mb-0">@ViewData["Title"]</h3>
     <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">
@@ -46,9 +45,11 @@
                     <span class="fa @(sortIconClass)"></span>
                 </a>
             </th>
+            <th>Stores</th>
             <th>Created</th>
             <th>Status</th>
             <th class="actions-col"></th>
+            <th></th>
         </tr>
         </thead>
         <tbody id="UsersList">
@@ -61,14 +62,18 @@
                 { EmailConfirmed: false } => ("Pending Email Verification", "warning"),
                 _ => ("Active", "success")
             };
-            <tr>
-                <td class="d-flex align-items-center gap-2">
-                    <span class="user-email">@user.Email</span>
-                    @foreach (var role in user.Roles)
-                    {
-                        <span class="badge bg-info">@Model.Roles[role]</span>
-                    }
+            var detailsId = $"user_details_{user.Id}";
+            <tr id="user_@user.Id" class="user-overview-row mass-action-row">
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="user-email">@user.Email</span>
+                        @foreach (var role in user.Roles)
+                        {
+                            <span class="badge bg-info">@Model.Roles[role]</span>
+                        }
+                    </div>
                 </td>
+                <td>@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
                    <span class="user-status badge bg-@status.Item2">@status.Item1</span>
@@ -89,6 +94,37 @@
                         <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
                         <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
                     </div>
+                </td>
+                <td class="text-end">
+                    <div class="d-inline-flex align-items-center gap-2">
+                        <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr id="@detailsId" class="user-details-row collapse">
+                <td colspan="6" class="border-top-0">
+                    @if (user.Stores.Any())
+                    {
+                        <ul class="mb-0 p-0">
+                            @foreach (var store in user.Stores)
+                            {
+                                <li class="py-1 d-flex gap-2">
+                                    <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@store.StoreData.Id">@store.StoreData.StoreName</a>
+                                    <span class="badge bg-light">@store.StoreRoleId</span>
+                                    @if (store.StoreData.Archived)
+                                    {
+                                        <span class="badge bg-info">archived</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span class="text-secondary">No stores</span> 
+                    }
                 </td>
             </tr>
         }

@@ -20,6 +20,7 @@ using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -120,6 +121,26 @@ namespace BTCPayServer.Controllers
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
+        }
+
+        [HttpGet("server/stores")]
+        public async Task<IActionResult> ListStores()
+        {
+            var stores = await _StoreRepository.GetStores();
+            var vm = new ListStoresViewModel
+            {
+                Stores = stores
+                    .Select(s => new ListStoresViewModel.StoreViewModel
+                    {
+                        StoreId = s.Id,
+                        StoreName = s.StoreName,
+                        Archived = s.Archived,
+                        Users = s.UserStores
+                    })
+                    .OrderBy(s => !s.Archived)
+                    .ToList()
+            };
+            return View(vm);
         }
 
         [HttpGet("server/maintenance")]

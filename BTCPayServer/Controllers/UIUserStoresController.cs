@@ -35,7 +35,7 @@ namespace BTCPayServer.Controllers
             _rateFactory = rateFactory;
         }
 
-        [HttpGet()]
+        [HttpGet]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public async Task<IActionResult> ListStores(bool archived = false)
         {

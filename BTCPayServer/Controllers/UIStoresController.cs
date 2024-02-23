@@ -150,6 +150,7 @@ namespace BTCPayServer.Controllers
             {
                 return Forbid();
             }
+            HttpContext.SetStoreData(store);
             if (store.GetPermissionSet(userId).Contains(Policies.CanModifyStoreSettings, storeId))
             {
                 return RedirectToAction("Dashboard", new { storeId });
@@ -158,7 +159,6 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
             }
-            HttpContext.SetStoreData(store);
             return View();
         }
 

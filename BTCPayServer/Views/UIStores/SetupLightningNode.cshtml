@@ -4,18 +4,6 @@
     ViewData.SetActivePage(StoreNavPages.LightningSettings, "Connect to a Lightning node", Context.GetStoreData().Id);
 }
 
-<header class="text-center">
-    <h1>@ViewData["Title"]</h1>
-    <div class="d-flex mt-4 mb-5">
-        <vc:icon symbol="warning"/>
-        <p class="text-secondary text-start mb-0">
-            Please understand that the Lightning Network is still under active development and considered experimental.
-            Before you proceed, take time to familiarize yourself with the risks.
-            <a href="https://docs.btcpayserver.org/LightningNetwork/" target="_blank" rel="noreferrer noopener">More information</a>
-        </p>
-    </div>
-</header>
-
 @section PageHeadContent {
     <style>
         header .icon-warning {

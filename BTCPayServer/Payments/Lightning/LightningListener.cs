@@ -504,17 +504,19 @@ namespace BTCPayServer.Payments.Lightning
         async Task Listen(CancellationToken cancellation)
         {
             Uri? uri = null;
+            string? logUrl = null;
             try
             {
                 var lightningClient = _lightningClientFactory.Create(ConnectionString, _network);
                 uri = lightningClient.GetServerUri();
-                Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Start listening {uri}");
+                logUrl = string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : uri.ToString().Replace(uri.UserInfo, "***");
+                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Start listening {Uri}", _network.CryptoCode, logUrl);
                 using var session = await lightningClient.Listen(cancellation);
                 // Just in case the payment arrived after our last poll but before we listened.
                 await PollAllListenedInvoices(cancellation);
                 if (_ErrorAlreadyLogged)
                 {
-                    Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Could reconnect successfully to {uri}");
+                    Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Could reconnect successfully to {Uri}", _network.CryptoCode, logUrl);
                 }
                 _ErrorAlreadyLogged = false;
                 while (!_ListenedInvoices.IsEmpty)
@@ -532,7 +534,7 @@ namespace BTCPayServer.Payments.Lightning
                         {
                             if (await AddPayment(notification, listenedInvoice.InvoiceId, listenedInvoice.PaymentMethod.GetId().PaymentType))
                             {
-                                Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Payment detected via notification ({listenedInvoice.InvoiceId})");
+                                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Payment detected via notification ({InvoiceId})", _network.CryptoCode, listenedInvoice.InvoiceId);
                             }
                             _ListenedInvoices.TryRemove(notification.Id, out var _);
                         }
@@ -543,16 +545,15 @@ namespace BTCPayServer.Payments.Lightning
                     }
                 }
             }
-            
             catch (Exception ex) when (!cancellation.IsCancellationRequested && !_ErrorAlreadyLogged)
             {
                 _ErrorAlreadyLogged = true;
-                Logs.PayServer.LogError(ex, $"{_network.CryptoCode} (Lightning): Error while contacting {uri}");
-                Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): Stop listening {uri}");
+                Logs.PayServer.LogError(ex, "{CryptoCode} (Lightning): Error while contacting {Uri}", _network.CryptoCode, logUrl);
+                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Stop listening {Uri}", _network.CryptoCode, logUrl);
             }
             catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
             if (_ListenedInvoices.IsEmpty)
-                Logs.PayServer.LogInformation($"{_network.CryptoCode} (Lightning): No more invoice to listen on {uri}, releasing the connection.");
+                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): No more invoice to listen on {Uri}, releasing the connection", _network.CryptoCode, logUrl);
         }
 
         public DateTimeOffset? LastFullPoll { get; set; }

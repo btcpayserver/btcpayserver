@@ -39,7 +39,6 @@ namespace BTCPayServer.Tests
             var supportUrl = "https://support.satoshisteaks.com/{InvoiceId}/";
             s.GoToStore();
             s.Driver.FindElement(By.Id("StoreWebsite")).SendKeys(storeUrl);
-            s.Driver.FindElement(By.Id("StoreSupportUrl")).SendKeys(supportUrl);
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
@@ -47,6 +46,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForAndClick(By.Id("Presets"));
             s.Driver.WaitForAndClick(By.Id("Presets_InStore"));
             Assert.True(s.Driver.SetCheckbox(By.Id("ShowPayInWalletButton"), true));
+            s.Driver.FindElement(By.Id("SupportUrl")).SendKeys(supportUrl);
             s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
@@ -130,9 +130,12 @@ namespace BTCPayServer.Tests
             expirySeconds.SendKeys("3");
             s.Driver.FindElement(By.Id("Expire")).Click();
 
-            var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
-            Assert.Contains("This invoice will expire in", paymentInfo.Text);
-            Assert.DoesNotContain("Please send", paymentInfo.Text);
+            TestUtils.Eventually(() =>
+            {
+                var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.Contains("This invoice will expire in", paymentInfo.Text);
+                Assert.DoesNotContain("Please send", paymentInfo.Text);
+            });
             TestUtils.Eventually(() =>
             {
                 var expiredSection = s.Driver.FindElement(By.Id("unpaid"));
@@ -140,7 +143,6 @@ namespace BTCPayServer.Tests
                 Assert.Contains("Invoice Expired", expiredSection.Text);
                 Assert.Contains("resubmit a payment", expiredSection.Text);
                 Assert.DoesNotContain("This invoice expired with partial payment", expiredSection.Text);
-                
             });
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("ContactLink")));
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
@@ -164,9 +166,12 @@ namespace BTCPayServer.Tests
             expirySeconds.SendKeys("3");
             s.Driver.FindElement(By.Id("Expire")).Click();
 
-            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
-            Assert.Contains("The invoice hasn't been paid in full.", paymentInfo.Text);
-            Assert.Contains("Please send", paymentInfo.Text);
+            TestUtils.Eventually(() =>
+            {
+                var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.Contains("The invoice hasn't been paid in full.", paymentInfo.Text);
+                Assert.Contains("Please send", paymentInfo.Text);
+            });
             TestUtils.Eventually(() =>
             {
                 var expiredSection = s.Driver.FindElement(By.Id("unpaid"));
@@ -210,7 +215,7 @@ namespace BTCPayServer.Tests
             {
                 s.Driver.FindElement(By.Id("FakePayment")).Click();
                 s.Driver.FindElement(By.Id("mine-block")).Click();
-                paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
                 Assert.Contains("The invoice hasn't been paid in full", paymentInfo.Text);
                 Assert.Contains("Please send", paymentInfo.Text);
             });
@@ -359,11 +364,13 @@ namespace BTCPayServer.Tests
             expirySeconds.Clear();
             expirySeconds.SendKeys("5");
             s.Driver.FindElement(By.Id("Expire")).Click();
-
-            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
-            Assert.Contains("This invoice will expire in", paymentInfo.Text);
-            Assert.Contains("00:0", paymentInfo.Text);
-            Assert.DoesNotContain("Please send", paymentInfo.Text);
+            TestUtils.Eventually(() =>
+            {
+                var paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.Contains("This invoice will expire in", paymentInfo.Text);
+                Assert.Contains("00:0", paymentInfo.Text);
+                Assert.DoesNotContain("Please send", paymentInfo.Text);
+            });
 
             // Configure countdown timer
             s.GoToHome();
@@ -379,7 +386,7 @@ namespace BTCPayServer.Tests
 
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
-            paymentInfo = s.Driver.FindElement(By.Id("PaymentInfo"));
+            var paymentInfo = s.Driver.FindElement(By.Id("PaymentInfo"));
             Assert.False(paymentInfo.Displayed);
             Assert.DoesNotContain("This invoice will expire in", paymentInfo.Text);
 
@@ -387,11 +394,13 @@ namespace BTCPayServer.Tests
             expirySeconds.Clear();
             expirySeconds.SendKeys("599");
             s.Driver.FindElement(By.Id("Expire")).Click();
-
-            paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
-            Assert.True(paymentInfo.Displayed);
-            Assert.Contains("This invoice will expire in", paymentInfo.Text);
-            Assert.Contains("09:5", paymentInfo.Text);
+            TestUtils.Eventually(() =>
+            {
+                paymentInfo = s.Driver.WaitForElement(By.Id("PaymentInfo"));
+                Assert.True(paymentInfo.Displayed);
+                Assert.Contains("This invoice will expire in", paymentInfo.Text);
+                Assert.Contains("09:5", paymentInfo.Text);
+            });
 
             // Disable LNURL again
             s.GoToHome();
@@ -457,13 +466,12 @@ namespace BTCPayServer.Tests
                     .GetPaymentMethodDetails().GetPaymentDestination(), Network.RegTest),
                 new Money(0.001m, MoneyUnit.BTC));
 
-            IWebElement closebutton = null;
             TestUtils.Eventually(() =>
             {
-                closebutton = iframe.FindElement(By.Id("close"));
-                Assert.True(closebutton.Displayed);
+                var closeButton = iframe.FindElement(By.Id("close"));
+                Assert.True(closeButton.Displayed);
+                closeButton.Click();
             });
-            closebutton.Click();
             s.Driver.AssertElementNotFound(By.Name("btcpay"));
             Assert.Equal(s.Driver.Url,
                 new Uri(s.ServerUri, $"tests/index.html?invoice={invoiceId}").ToString());

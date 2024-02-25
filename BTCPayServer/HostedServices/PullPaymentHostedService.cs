@@ -517,7 +517,7 @@ namespace BTCPayServer.HostedServices
                 }
                 payout.State = req.Request.State;
                 await ctx.SaveChangesAsync();
-                _eventAggregator.Publish(new PayoutEvent(null, payout));
+                _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
                 req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.Ok);
             }
             catch (Exception ex)
@@ -739,7 +739,7 @@ namespace BTCPayServer.HostedServices
                 foreach (var keyValuePair in result.Where(pair => pair.Value == MarkPayoutRequest.PayoutPaidResult.Ok))
                 {
                     var payout = payouts.First(p => p.Id == keyValuePair.Key);
-                    _eventAggregator.Publish(new PayoutEvent(null, payout));
+                    _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
                 }
                 cancel.Completion.TrySetResult(result);
             }
@@ -959,7 +959,7 @@ namespace BTCPayServer.HostedServices
         public JObject Metadata { get; set; }
     }
 
-    public record PayoutEvent(PayoutEvent.PayoutEventType? Type, PayoutData Payout)
+    public record PayoutEvent(PayoutEvent.PayoutEventType Type, PayoutData Payout)
     {
         public enum PayoutEventType
         {

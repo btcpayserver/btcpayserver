@@ -1,11 +1,10 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BTCPayServer.Models.ServerViewModels
+namespace BTCPayServer.Models.ServerViewModels;
+
+public class MaintenanceViewModel
 {
-    public class MaintenanceViewModel
-    {
-        [Display(Name = "Change domain")]
-        public string DNSDomain { get; set; }
-        public bool CanUseSSH { get; internal set; }
-    }
+    [Display(Name = "Domain name")]
+    public string DNSDomain { get; set; }
+    public bool CanUseSSH { get; internal set; }
 }

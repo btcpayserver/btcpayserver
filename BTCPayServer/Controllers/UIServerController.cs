@@ -20,6 +20,7 @@ using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
@@ -122,21 +123,44 @@ namespace BTCPayServer.Controllers
             _transactionLinkProviders = transactionLinkProviders;
         }
 
-        [Route("server/maintenance")]
-        public IActionResult Maintenance()
+        [HttpGet("server/stores")]
+        public async Task<IActionResult> ListStores()
         {
-            MaintenanceViewModel vm = new MaintenanceViewModel();
-            vm.CanUseSSH = _sshState.CanUseSSH;
-            if (!vm.CanUseSSH)
-                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
-            vm.DNSDomain = this.Request.Host.Host;
-            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
-                vm.DNSDomain = null;
+            var stores = await _StoreRepository.GetStores();
+            var vm = new ListStoresViewModel
+            {
+                Stores = stores
+                    .Select(s => new ListStoresViewModel.StoreViewModel
+                    {
+                        StoreId = s.Id,
+                        StoreName = s.StoreName,
+                        Archived = s.Archived,
+                        Users = s.UserStores
+                    })
+                    .OrderBy(s => !s.Archived)
+                    .ToList()
+            };
             return View(vm);
         }
 
-        [Route("server/maintenance")]
-        [HttpPost]
+        [HttpGet("server/maintenance")]
+        public IActionResult Maintenance()
+        {
+            var vm = new MaintenanceViewModel
+            {
+                CanUseSSH = _sshState.CanUseSSH,
+                DNSDomain = Request.Host.Host
+            };
+
+            if (!vm.CanUseSSH)
+                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
+            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
+                vm.DNSDomain = null;
+
+            return View(vm);
+        }
+
+        [HttpPost("server/maintenance")]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
             vm.CanUseSSH = _sshState.CanUseSSH;
@@ -147,6 +171,7 @@ namespace BTCPayServer.Controllers
             }
             if (!ModelState.IsValid)
                 return View(vm);
+            
             if (command == "changedomain")
             {
                 if (string.IsNullOrWhiteSpace(vm.DNSDomain))
@@ -302,8 +327,8 @@ namespace BTCPayServer.Controllers
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
         {
-            ViewBag.AppsList = await GetAppSelectList();
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
+            ViewBag.AppsList = await GetAppSelectList();
             return View(_policiesSettings);
         }
 
@@ -992,155 +1017,183 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Services));
         }
 
-        [HttpGet("server/theme")]
-        public async Task<IActionResult> Theme()
+        [HttpGet("server/branding")]
+        public async Task<IActionResult> Branding()
         {
-            var data = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-            return View(data);
+            var server = await _SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+            var theme = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+            
+            var vm = new BrandingViewModel
+            {
+                ServerName = server.ServerName,
+                ContactUrl = server.ContactUrl,
+                CustomTheme = theme.CustomTheme,
+                CustomThemeExtension = theme.CustomThemeExtension,
+                CustomThemeCssUri = theme.CustomThemeCssUri,
+                CustomThemeFileId = theme.CustomThemeFileId,
+                LogoFileId = theme.LogoFileId
+            };
+            return View(vm);
         }
 
-        [HttpPost("server/theme")]
-        public async Task<IActionResult> Theme(
-            ThemeSettings model,
+        [HttpPost("server/branding")]
+        public async Task<IActionResult> Branding(
+            BrandingViewModel vm,
             [FromForm] bool RemoveLogoFile,
             [FromForm] bool RemoveCustomThemeFile)
         {
             var settingsChanged = false;
-            var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+            var server = await _SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+            var theme = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
 
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
 
-            if (model.CustomThemeFile != null)
+            vm.LogoFileId = theme.LogoFileId;
+            vm.CustomThemeFileId = theme.CustomThemeFileId;
+            
+            if (server.ServerName != vm.ServerName || server.ContactUrl != vm.ContactUrl)
             {
-                if (model.CustomThemeFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
+                server.ServerName = vm.ServerName;
+                server.ContactUrl = vm.ContactUrl;
+                settingsChanged = true;
+                await _SettingsRepository.UpdateSetting(server);
+            }
+
+            if (vm.CustomThemeFile != null)
+            {
+                if (vm.CustomThemeFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
                 {
                     // delete existing file
-                    if (!string.IsNullOrEmpty(settings.CustomThemeFileId))
+                    if (!string.IsNullOrEmpty(theme.CustomThemeFileId))
                     {
-                        await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
+                        await _fileService.RemoveFile(theme.CustomThemeFileId, userId);
                     }
 
                     // add new file
                     try
                     {
-                        var storedFile = await _fileService.AddFile(model.CustomThemeFile, userId);
-                        settings.CustomThemeFileId = storedFile.Id;
+                        var storedFile = await _fileService.AddFile(vm.CustomThemeFile, userId);
+                        vm.CustomThemeFileId = theme.CustomThemeFileId = storedFile.Id;
                         settingsChanged = true;
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(settings.CustomThemeFile), $"Could not save theme file: {e.Message}");
+                        ModelState.AddModelError(nameof(vm.CustomThemeFile), $"Could not save theme file: {e.Message}");
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
+                    ModelState.AddModelError(nameof(vm.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
                 }
             }
-            else if (RemoveCustomThemeFile && !string.IsNullOrEmpty(settings.CustomThemeFileId))
+            else if (RemoveCustomThemeFile && !string.IsNullOrEmpty(theme.CustomThemeFileId))
             {
-                await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
-                settings.CustomThemeFileId = null;
+                await _fileService.RemoveFile(theme.CustomThemeFileId, userId);
+                vm.CustomThemeFileId = theme.CustomThemeFileId = null;
                 settingsChanged = true;
             }
 
-            if (model.LogoFile != null)
+            if (vm.LogoFile != null)
             {
-                if (model.LogoFile.Length > 1_000_000)
+                if (vm.LogoFile.Length > 1_000_000)
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file should be less than 1MB");
+                    ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file should be less than 1MB");
                 }
-                else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                else if (!vm.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                    ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file needs to be an image");
                 }
                 else
                 {
-                    var formFile = await model.LogoFile.Bufferize();
+                    var formFile = await vm.LogoFile.Bufferize();
                     if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                     {
-                        ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                        ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file needs to be an image");
                     }
                     else
                     {
-                        model.LogoFile = formFile;
+                        vm.LogoFile = formFile;
                         // delete existing file
-                        if (!string.IsNullOrEmpty(settings.LogoFileId))
+                        if (!string.IsNullOrEmpty(theme.LogoFileId))
                         {
-                            await _fileService.RemoveFile(settings.LogoFileId, userId);
+                            await _fileService.RemoveFile(theme.LogoFileId, userId);
                         }
                         // add new file
                         try
                         {
-                            var storedFile = await _fileService.AddFile(model.LogoFile, userId);
-                            settings.LogoFileId = storedFile.Id;
+                            var storedFile = await _fileService.AddFile(vm.LogoFile, userId);
+                            vm.LogoFileId = theme.LogoFileId = storedFile.Id;
                             settingsChanged = true;
                         }
                         catch (Exception e)
                         {
-                            ModelState.AddModelError(nameof(settings.LogoFile), $"Could not save logo: {e.Message}");
+                            ModelState.AddModelError(nameof(vm.LogoFile), $"Could not save logo: {e.Message}");
                         }
                     }
                 }
             }
-            else if (RemoveLogoFile && !string.IsNullOrEmpty(settings.LogoFileId))
+            else if (RemoveLogoFile && !string.IsNullOrEmpty(theme.LogoFileId))
             {
-                await _fileService.RemoveFile(settings.LogoFileId, userId);
-                settings.LogoFileId = null;
+                await _fileService.RemoveFile(theme.LogoFileId, userId);
+                vm.LogoFileId = theme.LogoFileId = null;
                 settingsChanged = true;
             }
 
-            if (model.CustomTheme && !string.IsNullOrEmpty(model.CustomThemeCssUri) && !Uri.IsWellFormedUriString(model.CustomThemeCssUri, UriKind.RelativeOrAbsolute))
+            if (vm.CustomTheme && !string.IsNullOrEmpty(vm.CustomThemeCssUri) && !Uri.IsWellFormedUriString(vm.CustomThemeCssUri, UriKind.RelativeOrAbsolute))
             {
-                ModelState.AddModelError(nameof(settings.CustomThemeCssUri), "Please provide a non-empty theme URI");
+                ModelState.AddModelError(nameof(theme.CustomThemeCssUri), "Please provide a non-empty theme URI");
             }
-            else if (settings.CustomThemeCssUri != model.CustomThemeCssUri)
+            else if (theme.CustomThemeCssUri != vm.CustomThemeCssUri)
             {
-                settings.CustomThemeCssUri = model.CustomThemeCssUri;
+                theme.CustomThemeCssUri = vm.CustomThemeCssUri;
                 settingsChanged = true;
             }
 
-            if (settings.CustomThemeExtension != model.CustomThemeExtension)
+            if (theme.CustomThemeExtension != vm.CustomThemeExtension)
             {
                 // Require a custom theme to be defined in that case
-                if (string.IsNullOrEmpty(model.CustomThemeCssUri) && string.IsNullOrEmpty(settings.CustomThemeFileId))
+                if (string.IsNullOrEmpty(vm.CustomThemeCssUri) && string.IsNullOrEmpty(theme.CustomThemeFileId))
                 {
-                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "Please provide a custom theme");
+                    ModelState.AddModelError(nameof(vm.CustomThemeFile), "Please provide a custom theme");
                 }
                 else
                 {
-                    settings.CustomThemeExtension = model.CustomThemeExtension;
+                    theme.CustomThemeExtension = vm.CustomThemeExtension;
                     settingsChanged = true;
                 }
             }
 
-            if (settings.CustomTheme != model.CustomTheme)
+            if (theme.CustomTheme != vm.CustomTheme)
             {
-                settings.CustomTheme = model.CustomTheme;
+                theme.CustomTheme = vm.CustomTheme;
                 settingsChanged = true;
             }
 
             if (settingsChanged)
             {
-                await _SettingsRepository.UpdateSetting(settings);
-                TempData[WellKnownTempData.SuccessMessage] = "Theme settings updated successfully";
+                await _SettingsRepository.UpdateSetting(theme);
+                TempData[WellKnownTempData.SuccessMessage] = "Settings updated successfully";
             }
 
-            return View(settings);
+            return View(vm);
         }
 
         [Route("server/emails")]
         public async Task<IActionResult> Emails()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
-            return View(new EmailsViewModel(data));
+            var email = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            var vm = new ServerEmailsViewModel(email)
+            {
+                EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings
+            };
+            return View(vm);
         }
 
         [Route("server/emails")]
         [HttpPost]
-        public async Task<IActionResult> Emails(EmailsViewModel model, string command)
+        public async Task<IActionResult> Emails(ServerEmailsViewModel model, string command)
         {
             if (command == "Test")
             {
@@ -1170,6 +1223,13 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
+
+            if (_policiesSettings.DisableStoresToUseServerEmailSettings == model.EnableStoresToUseServerEmailSettings)
+            {
+                _policiesSettings.DisableStoresToUseServerEmailSettings = !model.EnableStoresToUseServerEmailSettings;
+                await _SettingsRepository.UpdateSetting(_policiesSettings);
+            }
+
             if (command == "ResetPassword")
             {
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
@@ -1178,22 +1238,22 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(Emails));
             }
-            else // if (command == "Save")
+            
+            // save
+            if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
-                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
-                {
-                    ModelState.AddModelError("Settings.From", "Invalid email");
-                    return View(model);
-                }
-                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                if (new EmailsViewModel(oldSettings).PasswordSet)
-                {
-                    model.Settings.Password = oldSettings.Password;
-                }
-                await _SettingsRepository.UpdateSetting(model.Settings);
-                TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
-                return RedirectToAction(nameof(Emails));
+                ModelState.AddModelError("Settings.From", "Invalid email");
+                return View(model);
             }
+            var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            if (new EmailsViewModel(oldSettings).PasswordSet)
+            {
+                model.Settings.Password = oldSettings.Password;
+            }
+            
+            await _SettingsRepository.UpdateSetting(model.Settings);
+            TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
+            return RedirectToAction(nameof(Emails));
         }
 
         [Route("server/logs/{file?}")]

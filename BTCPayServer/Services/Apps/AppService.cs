@@ -45,7 +45,6 @@ namespace BTCPayServer.Services.Apps
         readonly CurrencyNameTable _Currencies;
         private readonly DisplayFormatter _displayFormatter;
         private readonly StoreRepository _storeRepository;
-        private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
 
         public AppService(
@@ -54,15 +53,13 @@ namespace BTCPayServer.Services.Apps
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencies,
             DisplayFormatter displayFormatter,
-            StoreRepository storeRepository,
-            HtmlSanitizer htmlSanitizer)
+            StoreRepository storeRepository)
         {
             _appTypes = apps.ToDictionary(a => a.Type, a => a);
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
             _storeRepository = storeRepository;
-            _HtmlSanitizer = htmlSanitizer;
             _displayFormatter = displayFormatter;
         }
 #nullable enable

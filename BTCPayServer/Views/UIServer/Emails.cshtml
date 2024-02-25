@@ -1,10 +1,26 @@
-﻿@model EmailsViewModel
+﻿@model ServerEmailsViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Emails, "Emails");
 }
 
 <h3 class="mb-4">Email Server</h3>
-<partial name="EmailsBody" model="Model" />
+<form method="post" autocomplete="off">
+    <div class="form-group" style="margin:1rem 0 2rem">
+        <div class="d-flex align-items-center">
+            <input asp-for="EnableStoresToUseServerEmailSettings" type="checkbox" class="btcpay-toggle me-3"/>
+            <div>
+                <label asp-for="EnableStoresToUseServerEmailSettings" class="form-label mb-0"></label>
+                <div class="text-muted">
+                    This can be overridden at the Store level.
+                    <a href="https://docs.btcpayserver.org/Notifications/#server-emails" target="_blank" rel="noreferrer noopener">
+                        <vc:icon symbol="info" />
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <partial name="EmailsBody" model="Model" />
+</form>
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

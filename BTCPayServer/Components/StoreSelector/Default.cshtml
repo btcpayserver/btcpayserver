@@ -2,6 +2,7 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Components.MainLogo
 @using BTCPayServer.Services
+@using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
 @inject BTCPayServerEnvironment Env
 @inject IFileService FileService
@@ -53,7 +54,7 @@ else
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
+                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected && ViewData.IsActivePage(ServerNavPages.Stores) != "active" ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                     </li>
                 }
                 @if (Model.Options.Any())
@@ -66,6 +67,10 @@ else
                     <li><hr class="dropdown-divider"></li>
                     <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Index)" id="StoreSelectorArchived">@Model.ArchivedCount Archived Store@(Model.ArchivedCount == 1 ? "" : "s")</a></li>
                 }
+                @*
+                <li permission="@Policies.CanModifyServerSettings"><hr class="dropdown-divider"></li>
+                <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.IsActivePage(ServerNavPages.Stores)" id="StoreSelectorAdminStores">Admin Store Overview</a></li>
+                *@
             </ul>
         </div>
     </div>

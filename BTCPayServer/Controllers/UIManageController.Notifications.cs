@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
                 new List<string>();
             var notifications = notificationHandlers.SelectMany(handler => handler.Meta.Select(tuple =>
                     new SelectListItem(tuple.name, tuple.identifier,
-                        disabledNotifications.Contains(tuple.identifier, StringComparer.InvariantCultureIgnoreCase))))
+                        !disabledNotifications.Contains(tuple.identifier, StringComparer.InvariantCultureIgnoreCase))))
                 .ToList();
 
             return View(new NotificationSettingsViewModel { DisabledNotifications = notifications });
@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers
             }
             else if (command == "update")
             {
-                var disabled = vm.DisabledNotifications.Where(item => item.Selected).Select(item => item.Value)
+                var disabled = vm.DisabledNotifications.Where(item => !item.Selected).Select(item => item.Value)
                     .ToArray();
                 user.DisabledNotifications = disabled.Any()
                     ? string.Join(';', disabled) + ";"

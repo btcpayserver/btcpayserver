@@ -94,8 +94,11 @@
                     <span class="fa fa-plus"></span> Add another destination
                 </button>
             </div>
-            <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace" autofocus autocomplete="off" />
-            <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
+            <div class="input-group">
+                <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace flex-grow-1" autofocus autocomplete="off" />
+                <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-qrcode"></i></button>
+            </div>
+
         </div>
         <div class="form-group">
             <div class="d-flex align-items-center justify-content-between">
@@ -288,7 +291,6 @@
         <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary">Schedule transaction</button>
         <a class="btn btn-secondary" asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl" id="PSBT">PSBT</a>
         <button type="button" id="bip21parse" class="btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
-        <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
     </div>
 
 <vc:ui-extension-point location="onchain-wallet-send" model="@Model"/>

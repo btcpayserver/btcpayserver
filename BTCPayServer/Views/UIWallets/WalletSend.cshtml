@@ -96,8 +96,12 @@
             </div>
             <div class="input-group">
                 <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace flex-grow-1" autofocus autocomplete="off" />
-                <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-qrcode"></i></button>
+                <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera">
+                    <vc:icon symbol="scan-qr" />
+                </button>
             </div>
+
+            <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
 
         </div>
         <div class="form-group">

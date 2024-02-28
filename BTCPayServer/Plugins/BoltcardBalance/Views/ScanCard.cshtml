@@ -20,7 +20,11 @@
 </header>
 
 <div id="body" class="my-4">
-	<div id="actions" class="d-flex align-items-center justify-content-center d-none">
+    <div id="error" class="d-flex align-items-center justify-content-center d-none">
+       
+		<p class="text-danger"></p>
+    </div>
+    <div id="actions" class="d-flex align-items-center justify-content-center d-none">
 		<div class="d-flex gap-3 mt-3 mt-sm-0">
 			<a id="start-scan-btn" class="btn btn-primary" href="#">Ask permission...</a>
 		</div>
@@ -48,66 +52,83 @@
 		var permissionGranted = false;
 		var ndef = null;
 		var abortController = null;
+        
+        function handleError(e){
+            document.querySelector("#error p").innerHTML = e.message;
+            document.getElementById("error").classList.remove("d-none");
+        }
+        
 		function delay(ms) {
 			return new Promise(resolve => setTimeout(resolve, ms));
 		}
 		async function showBalance(lnurlw) {
-			setState("Submitting");
-			await delay(1000);
-			var url = window.location.href.replace("#", "");
-			url = url.split("?")[0] + "?" + lnurlw.split("?")[1];
-			// url = "https://testnet.demo.btcpayserver.org/boltcards/balance?p=...&c=..."
-
-			var xhttp = new XMLHttpRequest();
-			xhttp.onreadystatechange = function () {
-				if (this.readyState == 4 && this.status == 200 && this.responseText) {
-					document.getElementById("balance-table").innerHTML = this.responseText;
-					document.getElementById("CancelWizard").addEventListener("click", function (e) {
-						e.preventDefault();
-						setState("WaitingForCard");
-						document.getElementById("balance-table").innerHTML = "";
-					});
-
-					document.getElementById("lnurlwithdraw-button").addEventListener("click", function (e) {
-						var el = document.getElementsByClassName("lnurl-pay");
-						for (var i = 0; i < el.length; i++) {
-							if (el[i].classList.contains("d-none"))
-								el[i].classList.remove("d-none");
-							else
-								el[i].classList.add("d-none");
-						}
-					});
-
-					setState("ShowBalance");
-				}
-				else {
-					setState("WaitingForCard");
-				}
-			};
-			xhttp.open('GET', url, true);
-			xhttp.send(new FormData());
+            try {
+                setState("Submitting");
+                await delay(1000);
+                var url = window.location.href.replace("#", "");
+                url = url.split("?")[0] + "?" + lnurlw.split("?")[1];
+                // url = "https://testnet.demo.btcpayserver.org/boltcards/balance?p=...&c=..."
+    
+                var xhttp = new XMLHttpRequest();
+                xhttp.onreadystatechange = function () {
+                    if (this.readyState == 4 && this.status == 200 && this.responseText) {
+                        document.getElementById("balance-table").innerHTML = this.responseText;
+                        document.getElementById("CancelWizard").addEventListener("click", function (e) {
+                            e.preventDefault();
+                            setState("WaitingForCard");
+                            document.getElementById("balance-table").innerHTML = "";
+                        });
+    
+                        document.getElementById("lnurlwithdraw-button").addEventListener("click", function (e) {
+                            var el = document.getElementsByClassName("lnurl-pay");
+                            for (var i = 0; i < el.length; i++) {
+                                if (el[i].classList.contains("d-none"))
+                                    el[i].classList.remove("d-none");
+                                else
+                                    el[i].classList.add("d-none");
+                            }
+                        });
+    
+                        setState("ShowBalance");
+                    }
+                    else {
+                        setState("WaitingForCard");
+                    }
+                };
+                xhttp.open('GET', url, true);
+                xhttp.send(new FormData());
+             }catch (e) {
+                handleError(e);
+             }
 		}
 
 		async function startScan() {
-			if (!('NDEFReader' in window)) {
-				return;
-			}
-			ndef = new NDEFReader();
-			abortController = new AbortController();
-			abortController.signal.onabort = () => setState("WaitingForCard");
-
-			await ndef.scan({ signal: abortController.signal })
-			setState("WaitingForCard");
-			ndef.onreading = async ({ message }) => {
-				const record = message.records[0];
-				const textDecoder = new TextDecoder('utf-8');
-				const decoded = textDecoder.decode(record.data);
-				await showBalance(decoded);
-			};
+            try {
+                if (!('NDEFReader' in window)) {
+                	return;
+                }
+                ndef = new NDEFReader();
+                abortController = new AbortController();
+                abortController.signal.onabort = () => setState("WaitingForCard");
+    
+                await ndef.scan({ signal: abortController.signal })
+                setState("WaitingForCard");
+                ndef.onreading = async ({ message }) => {
+                    const record = message.records[0];
+                    const textDecoder = new TextDecoder('utf-8');
+                    const decoded = textDecoder.decode(record.data);
+                    await showBalance(decoded);
+                }; 
+            }
+            catch (e) {
+                handleError(e);
+            }
 		}
 
 		function setState(state)
 		{
+            document.querySelector("#error p").innerHTML = "";
+            document.getElementById("error").classList.add("d-none");
 			document.getElementById("actions").classList.add("d-none");
 			document.getElementById("qr").classList.add("d-none");
 			document.getElementById("scanning-btn").classList.add("d-none");
@@ -139,23 +160,27 @@
 			}
 		}
 		document.addEventListener("DOMContentLoaded", async () => {
-			var nfcSupported = 'NDEFReader' in window;
-			if (!nfcSupported) {
-				setState("NFCNotSupported");
-			}
-			else {
-				setState("WaitingForPermission");
-				var granted = (await navigator.permissions.query({ name: 'nfc' })).state === 'granted';
-				if (granted)
-				{
-					setState("WaitingForCard");
-					startScan();
-				}
-			}
-			delegate('click', "#start-scan-btn", startScan);
+            try {
+              
+                var nfcSupported = 'NDEFReader' in window;
+                if (!nfcSupported) {
+                    setState("NFCNotSupported");
+                }
+                else {
+                    setState("WaitingForPermission");
+                    var granted = (await navigator.permissions.query({ name: 'nfc' })).state === 'granted';
+                    if (granted)
+                    {
+                        setState("WaitingForCard");
+                        startScan();
+                    }
+                }
+                delegate('click', "#start-scan-btn", startScan);
+            }
+            catch (e) {
+                handleError(e);
+            }
 			//showBalance("lnurl://ewfw?p=test&c=test");
 		});
 	})();
 </script>
-
-

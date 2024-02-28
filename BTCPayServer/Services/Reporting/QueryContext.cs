@@ -1,20 +1,19 @@
 #nullable  enable
 using System;
 using System.Collections.Generic;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Reporting
 {
     public record QueryContext
     {
-        public QueryContext(string storeId, DateTimeOffset from, DateTimeOffset to)
+        public QueryContext(string storeId, JObject query)
         {
             StoreId = storeId;
-            From = from;
-            To = to;
+            Query = query;
         }
         public string StoreId { get; }
-        public DateTimeOffset From { get; }
-        public DateTimeOffset To { get; }
+        public JObject Query { get; }
         public ViewDefinition? ViewDefinition { get; set; }
 
         public IList<object?> AddData()

@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using System.Linq;
 using System.Threading;
+using BTCPayServer.Forms;
 
 namespace BTCPayServer.Controllers.GreenField;
 
@@ -22,10 +23,13 @@ namespace BTCPayServer.Controllers.GreenField;
 [EnableCors(CorsPolicies.All)]
 public class GreenfieldReportsController : Controller
 {
+    private readonly FormDataService _formDataService;
+
     public GreenfieldReportsController(
         ApplicationDbContextFactory dbContextFactory,
-        ReportService reportService)
+        ReportService reportService, FormDataService formDataService)
     {
+        _formDataService = formDataService;
         DBContextFactory = dbContextFactory;
         ReportService = reportService;
     }
@@ -39,26 +43,34 @@ public class GreenfieldReportsController : Controller
     {
         vm ??= new StoreReportRequest();
         vm.ViewName ??= "Payments";
-        vm.TimePeriod ??= new TimePeriod();
-        vm.TimePeriod.To ??= DateTime.UtcNow;
-        vm.TimePeriod.From ??= vm.TimePeriod.To.Value.AddMonths(-1);
-        var from = vm.TimePeriod.From.Value;
-        var to = vm.TimePeriod.To.Value;
+        
+        
+        // vm.TimePeriod ??= new TimePeriod();
+        // vm.TimePeriod.To ??= DateTime.UtcNow;
+        // vm.TimePeriod.From ??= vm.TimePeriod.To.Value.AddMonths(-1);
+        // var from = vm.TimePeriod.From.Value;
+        // var to = vm.TimePeriod.To.Value;
 
         if (ReportService.ReportProviders.TryGetValue(vm.ViewName, out var report))
         {
             if (!report.IsAvailable())
                 return this.CreateAPIError(503, "view-unavailable", $"This view is unavailable at this moment");
 
-            var ctx = new Services.Reporting.QueryContext(storeId, from, to);
+
+            var form = report.GetForm();
+            _formDataService.SetValues(form, vm.Query);
+            if (!_formDataService.Validate(form, ModelState))
+            {
+                return this.CreateValidationError(ModelState);
+            }
+            
+            var ctx = new Services.Reporting.QueryContext(storeId, _formDataService.GetValues(form));
             await report.Query(ctx, cancellationToken);
             var result = new StoreReportResponse
             {
                 Fields = ctx.ViewDefinition?.Fields ?? new List<StoreReportResponse.Field>(),
                 Charts = ctx.ViewDefinition?.Charts ?? new List<ChartDefinition>(),
                 Data = ctx.Data.Select(d => new JArray(d)).ToList(),
-                From = from,
-                To = to
             };
             return Json(result);
         }

@@ -88,6 +88,7 @@ public class PaymentsReportProvider : ReportProvider
     {
         queryContext.ViewDefinition = CreateViewDefinition();
         await using var ctx = DbContextFactory.CreateContext();
+        var dates = GetFromTo(queryContext.Query);
         var conn = ctx.Database.GetDbConnection();
         string[] fields =
         {
@@ -110,8 +111,8 @@ public class PaymentsReportProvider : ReportProvider
             parameters: new
             {
                 storeId = queryContext.StoreId,
-                from = queryContext.From,
-                to = queryContext.To
+                from = dates.To?? DateTimeOffset.MinValue,
+                to = dates.To?? DateTimeOffset.MaxValue
             },
             cancellationToken: cancellation);
         var rows = await conn.QueryAsync(command);

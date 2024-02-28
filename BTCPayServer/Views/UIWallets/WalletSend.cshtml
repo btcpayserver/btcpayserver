@@ -32,6 +32,7 @@
 {
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
     <style>
+        .btn .icon-scan-qr { --btn-icon-size: 1.1875rem; }
         .crypto-fee-link { padding-left: 1rem; padding-right: 1rem; }
         .btn-group > .crypto-fee-link:last-of-type {
             border-top-right-radius: .2rem  !important;
@@ -49,7 +50,6 @@
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
     <script src="~/js/wallet/wallet-camera-scanner.js" asp-append-version="true"></script>
     <script src="~/js/wallet/WalletSend.js" asp-append-version="true"></script>
-
 }
 
 <partial name="CameraScanner"/>
@@ -94,7 +94,12 @@
                     <span class="fa fa-plus"></span> Add another destination
                 </button>
             </div>
-            <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace" autofocus autocomplete="off" />
+            <div class="input-group">
+                <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace flex-grow-1" autofocus autocomplete="off" />
+                <button type="button" id="scanqrcode" class="btn btn-secondary px-3 only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera">
+                    <vc:icon symbol="scan-qr" />
+                </button>
+            </div>
             <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
         </div>
         <div class="form-group">
@@ -287,8 +292,7 @@
         <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
         <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary">Schedule transaction</button>
         <a class="btn btn-secondary" asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl" id="PSBT">PSBT</a>
-        <button type="button" id="bip21parse" class="btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
-        <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
+        <button type="button" id="bip21parse" class="btn btn-secondary px-3" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
     </div>
 
 <vc:ui-extension-point location="onchain-wallet-send" model="@Model"/>

@@ -600,7 +600,6 @@ namespace BTCPayServer.Controllers
                         var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
                         settings.FirstRun = false;
                         await _SettingsRepository.UpdateSetting(settings);
-
                         await _SettingsRepository.FirstAdminRegistered(policies, _Options.UpdateUrl != null, _Options.DisableRegistration, Logs);
                         RegisteredAdmin = true;
                     }
@@ -614,15 +613,17 @@ namespace BTCPayServer.Controllers
                     RegisteredUserId = user.Id;
 
                     TempData[WellKnownTempData.SuccessMessage] = "Account created.";
-                    if (policies.RequiresConfirmedEmail)
+                    var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
+                    var requiresUserApproval = policies.RequiresUserApproval && !user.Approved;
+                    if (requiresConfirmedEmail)
                     {
                         TempData[WellKnownTempData.SuccessMessage] += " Please confirm your email.";
                     }
-                    if (policies.RequiresUserApproval)
+                    if (requiresUserApproval)
                     {
                         TempData[WellKnownTempData.SuccessMessage] += " The new account requires approval by an admin before you can log in.";
                     }
-                    if (policies.RequiresConfirmedEmail || policies.RequiresUserApproval)
+                    if (requiresConfirmedEmail || requiresUserApproval)
                     {
                         return RedirectToAction(nameof(Login));
                     }
@@ -670,25 +671,31 @@ namespace BTCPayServer.Controllers
             }
 
             var result = await _userManager.ConfirmEmailAsync(user, code);
-            if (!await _userManager.HasPasswordAsync(user))
+            if (result.Succeeded)
             {
+                _eventAggregator.Publish(new UserConfirmedEmailEvent
+                {
+                    User = user,
+                    RequestUri = Request.GetAbsoluteRootUri()
+                });
+
+                var hasPassword = await _userManager.HasPasswordAsync(user);
+                if (hasPassword)
+                {
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Success,
+                        Message = "Your email has been confirmed."
+                    });
+                    return RedirectToAction(nameof(Login), new { email = user.Email });
+                }
 
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Info,
-                    Message = "Your email has been confirmed but you still need to set your password."
+                    Message = "Your email has been confirmed. Please set your password."
                 });
-                return RedirectToAction("SetPassword", new { email = user.Email, code = await _userManager.GeneratePasswordResetTokenAsync(user) });
-            }
-
-            if (result.Succeeded)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Success,
-                    Message = "Your email has been confirmed."
-                });
-                return RedirectToAction("Login", new { email = user.Email });
+                return await RedirectToSetPassword(user);
             }
 
             return View("Error");
@@ -743,14 +750,20 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException("A code must be supplied for password reset.");
             }
 
+            var user = string.IsNullOrEmpty(userId) ? null : await _userManager.FindByIdAsync(userId);
+            var hasPassword = user != null && await _userManager.HasPasswordAsync(user);
             if (!string.IsNullOrEmpty(userId))
             {
-                var user = await _userManager.FindByIdAsync(userId);
                 email = user?.Email;
             }
 
-            var model = new SetPasswordViewModel { Code = code, Email = email, EmailSetInternally = !string.IsNullOrEmpty(email) };
-            return View(model);
+            return View(new SetPasswordViewModel
+            {
+                Code = code,
+                Email = email,
+                EmailSetInternally = !string.IsNullOrEmpty(email),
+                HasPassword = hasPassword
+            });
         }
 
         [HttpPost("/login/set-password")]
@@ -762,6 +775,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(model);
             }
+            
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (!UserService.TryCanLogin(user, out _))
             {
@@ -781,7 +795,62 @@ namespace BTCPayServer.Controllers
             }
 
             AddErrors(result);
+            model.HasPassword = await _userManager.HasPasswordAsync(user);
             return View(model);
+        }
+
+        [AllowAnonymous]
+        [HttpGet("/invite/{userId}/{code}")]
+        public async Task<IActionResult> AcceptInvite(string userId, string code)
+        {
+            if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(code))
+            {
+                return NotFound();
+            }
+
+            var user = await _userManager.FindByInvitationTokenAsync(userId, Uri.UnescapeDataString(code));
+            if (user == null)
+            {
+                return NotFound();
+            }
+            
+            var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
+            var requiresSetPassword = !await _userManager.HasPasswordAsync(user);
+            
+            if (requiresEmailConfirmation)
+            {
+                return await RedirectToConfirmEmail(user);
+            }
+            if (requiresSetPassword)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Info,
+                    Message = "Invitation accepted. Please set your password."
+                });
+                return await RedirectToSetPassword(user);
+            }
+
+            // Inform user that a password has been set on account creation
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = StatusMessageModel.StatusSeverity.Info,
+                Message = "Your password has been set by the user who invited you."
+            });
+
+            return RedirectToAction(nameof(Login), new { email = user.Email });
+        }
+        
+        private async Task<IActionResult> RedirectToConfirmEmail(ApplicationUser user)
+        {
+            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            return RedirectToAction(nameof(ConfirmEmail), new { userId = user.Id, code });
+        }
+
+        private async Task<IActionResult> RedirectToSetPassword(ApplicationUser user)
+        {
+            var code = await _userManager.GeneratePasswordResetTokenAsync(user);
+            return RedirectToAction(nameof(SetPassword), new { userId = user.Id, email = user.Email, code });
         }
 
         #region Helpers

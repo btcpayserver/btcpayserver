@@ -91,6 +91,10 @@
     
                         setState("ShowBalance");
                     }
+                    else if(this.readyState == 4 && this.status == 404) {
+                        setState("WaitingForCard");
+                        handleError(new Error("Card not initialized"));
+                    }
                     else {
                         setState("WaitingForCard");
                     }

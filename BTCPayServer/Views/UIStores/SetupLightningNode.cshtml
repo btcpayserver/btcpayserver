@@ -27,10 +27,10 @@
 
 <form method="post" class="mt-n2 text-center">
     <div id="LightningNodeTypeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-3" role="tablist">
-        <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" data-bs-toggle="pill" data-bs-target="#InternalSetup" role="tab" aria-controls="InternalSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Internal ? "true" : "false")" disabled="@(!Model.CanUseInternalNode)">
+        <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" data-bs-toggle="pill" data-bs-target="#InternalSetup" role="tab" aria-controls="InternalSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Internal ? "true" : "false")" class="@(Model.LightningNodeType == LightningNodeType.Internal ? "active" : "")" disabled="@(!Model.CanUseInternalNode)">
         <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
         
-        <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill" data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")">
+        <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill" data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")" class="@(Model.LightningNodeType == LightningNodeType.Custom ? "active" : "")">
         <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
 
         <vc:ui-extension-point location="ln-payment-method-setup-tabhead" model="@Model"/>

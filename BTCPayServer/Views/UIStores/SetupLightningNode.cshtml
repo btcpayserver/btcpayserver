@@ -6,13 +6,6 @@
 
 @section PageHeadContent {
     <style>
-        header .icon-warning {
-            flex: 0 0 24px;
-            height: 24px;
-            align-self: center;
-            margin-right: 2rem;
-            color: var(--btcpay-warning);
-        }
         #save { min-width: 7rem; }
         #LightningNodeTypeTabs ul {
             list-style: none;
@@ -29,6 +22,8 @@
         }
     </style>
 }
+
+<h1 class="text-center mb-5">@ViewData["Title"]</h1>
 
 <form method="post" class="mt-n2 text-center">
     <div id="LightningNodeTypeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-3" role="tablist">

@@ -107,10 +107,10 @@ namespace BTCPayServer.Data
             //PayjoinLock.OnModelCreating(builder);
             PaymentRequestData.OnModelCreating(builder, Database);
             PaymentData.OnModelCreating(builder, Database);
-            PayoutData.OnModelCreating(builder);
+            PayoutData.OnModelCreating(builder, Database);
             PendingInvoiceData.OnModelCreating(builder);
             //PlannedTransaction.OnModelCreating(builder);
-            PullPaymentData.OnModelCreating(builder);
+            PullPaymentData.OnModelCreating(builder, Database);
             RefundData.OnModelCreating(builder);
             SettingData.OnModelCreating(builder, Database);
             StoreSettingData.OnModelCreating(builder, Database);

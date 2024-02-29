@@ -3,8 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
+using System.Text;
 using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NBitcoin;
 
 namespace BTCPayServer.Data
@@ -24,16 +27,33 @@ namespace BTCPayServer.Data
         public DateTimeOffset? EndDate { get; set; }
         public bool Archived { get; set; }
         public List<PayoutData> Payouts { get; set; }
-        public byte[] Blob { get; set; }
+        public string Blob { get; set; }
 
 
-        internal static void OnModelCreating(ModelBuilder builder)
+        internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<PullPaymentData>()
                 .HasIndex(o => o.StoreId);
             builder.Entity<PullPaymentData>()
-                .HasOne(o => o.StoreData)
+            .HasOne(o => o.StoreData)
                 .WithMany(o => o.PullPayments).OnDelete(DeleteBehavior.Cascade);
+
+            if (databaseFacade.IsNpgsql())
+            {
+                builder.Entity<PullPaymentData>()
+                    .Property(o => o.Blob)
+                    .HasColumnType("JSONB");
+            }
+            else if (databaseFacade.IsMySql())
+            {
+                builder.Entity<PullPaymentData>()
+                    .Property(o => o.Blob)
+                    .HasConversion(new ValueConverter<string, byte[]>
+                    (
+                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
+                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
+                    ));
+            }
         }
 
         public (DateTimeOffset Start, DateTimeOffset? End)? GetPeriod(DateTimeOffset now)

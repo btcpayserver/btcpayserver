@@ -128,6 +128,7 @@
                     const record = message.records[0];
 					if (message.records.length === 0)
 					{
+                        setState("WaitingForCard");
 						handleError(new Error("Card is blank"));
 						return;
 					}

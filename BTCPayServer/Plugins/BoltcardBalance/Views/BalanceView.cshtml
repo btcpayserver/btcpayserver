@@ -1,73 +1,106 @@
 @using BTCPayServer.Plugins.BoltcardBalance.ViewModels
 @using BTCPayServer.Services
+@using Newtonsoft.Json.Linq
+@using BTCPayServer.Components.QRCode
+@using NBitcoin.DataEncoders
 @inject DisplayFormatter DisplayFormatter
 
 @model BalanceViewModel
 
 @{
-	Layout = null;
+    Layout = null;
 }
 
 <div class="col col-12 col-lg-12 mb-4">
-	<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-		<nav id="wizard-navbar">
-			@if (this.ViewData["NoCancelWizard"] is not true)
-			{
-				<button type="button" class="btn btn-secondary only-for-js mt-4" id="lnurlwithdraw-button">
-					<span class="fa fa-qrcode fa-2x" title="Deposit"></span>
-				</button>
-				<a href="#" id="CancelWizard" class="cancel mt-4">
-					<vc:icon symbol="close" />
-				</a>
-			}
-		</nav>
-		<div class="d-flex justify-content-center">
-			<div class="d-flex flex-column justify-content-center align-items-center">
-				<dl class="mb-0 mt-md-4">
-					<div class="d-flex d-print-inline-block flex-column mb-4">
-						<dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
-					</div>
-				</dl>
-@* 				<div class="lnurl-pay d-none">
+    <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+        <nav id="wizard-navbar">
+            @if (this.ViewData["NoCancelWizard"] is not true)
+            {
+                <button type="button" class="btn btn-secondary only-for-js mt-4" id="lnurlwithdraw-button">
+                    <span class="fa fa-qrcode fa-2x" title="Deposit"></span>
+                </button>
+                <a href="#" id="CancelWizard" class="cancel mt-4">
+                    <vc:icon symbol="close" />
+                </a>
+            }
+        </nav>
+        <div class="d-flex justify-content-center">
+            <div class="d-flex flex-column justify-content-center align-items-center">
+                <dl class="mb-0 mt-md-4">
+                    <div class="d-flex d-print-inline-block flex-column mb-4">
+                        <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
+                    </div>
+                </dl>
+                @* 				<div class="lnurl-pay d-none">
 					<vc:qr-code data="@Model.LNUrlPay" />
 				</div>
 				<div class="lnurl-pay d-flex gap-3 mt-3 mt-sm-0 d-none">
 					<a class="btn btn-primary" target="_blank" href="@Model.LNUrlPay">Deposit from Wallet... (LNURLPay)</a>
 				</div> *@
-				<div class="lnurl-pay d-none">
-					<vc:qr-code data="@Model.LNUrlBech32" />
-				</div>
-				<div class="lnurl-pay d-flex gap-3 mt-3 mt-sm-0 d-none">
-					<a class="btn btn-primary" target="_blank" href="@Model.LNUrlBech32">Deposit from Wallet...</a>
-				</div>
-			</div>
-		</div>
-	</div>
+                <div class="lnurl-pay d-none">
+                    <vc:qr-code data="@Model.LNUrlBech32" />
+                </div>
+                <div class="lnurl-pay d-flex gap-3 mt-3 mt-sm-0 d-none">
+                    <a class="btn btn-primary" target="_blank" href="@Model.LNUrlBech32">Deposit from Wallet...</a>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>
 
 @if (Model.Transactions.Any())
 {
-	<div class="col col-12 col-lg-12 mb-4">
-		<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded table-responsive">
-			<table class="table table-hover">
-				<thead>
-					<tr>
-						<th class="date-col">Date</th>
-						<th class="amount-col">Amount</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var tx in Model.Transactions)
-					{
-						<tr>
-							<td class="date-col">@tx.Date.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</td>
-							<td class="amount-col">
-								<span data-sensitive class="text-@(tx.Positive ? "success" : "danger")">@DisplayFormatter.Currency(tx.Balance, Model.Currency, DisplayFormatter.CurrencyFormat.Code)</span>
-							</td>
-						</tr>
-					}
-				</tbody>
-			</table>
-		</div>
-	</div>
+    <div class="col col-12 col-lg-12 mb-4">
+        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded table-responsive">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th class="date-col">Date</th>
+                    <th class="amount-col">Amount</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var tx in Model.Transactions)
+                {
+                    <tr>
+                        <td class="date-col">@tx.Date.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</td>
+                        <td class="amount-col">
+                            <span data-sensitive class="text-@(tx.Positive ? "success" : "danger")">@DisplayFormatter.Currency(tx.Balance, Model.Currency, DisplayFormatter.CurrencyFormat.Code)</span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+}
+
+
+@if (Model.Keys is not null && Model.AmountDue <= 0)
+{
+    var wipeContent = JObject.FromObject(new
+    {
+        version = 1,
+        action = "wipe",
+        K0 = Encoders.Hex.EncodeData(Model.Keys.AppMasterKey.ToBytes()).ToUpperInvariant(),
+        K1 = Encoders.Hex.EncodeData(Model.Keys.EncryptionKey.ToBytes()).ToUpperInvariant(),
+        K2 = Encoders.Hex.EncodeData(Model.Keys.AuthenticationKey.ToBytes()).ToUpperInvariant(),
+        K3 = Encoders.Hex.EncodeData(Model.Keys.K3.ToBytes()).ToUpperInvariant(),
+        K4 = Encoders.Hex.EncodeData(Model.Keys.K4.ToBytes()).ToUpperInvariant(),
+    }).ToString();
+    <h5 class="mb-3 mt-5">Wipe Bolt Card</h5>
+    <div class="payment-box mx-0">
+        <div class="qr-container" data-clipboard="@wipeContent">
+            @await Component.InvokeAsync("QRCode", new {data = wipeContent})
+        </div>
+        <div class="input-group mt-3">
+            <div class="form-floating">
+                <input id="Bolt-Wipe-Json" class="form-control-plaintext" readonly="readonly" value="@wipeContent">
+                <label for="Bolt-Wipe-Json">Bolt Card Wipe JSON</label>
+            </div>
+            <button type="button" class="btn btn-link" data-clipboard-target="#Bolt-Wipe-Json">
+                @await Component.InvokeAsync("Icon", new {symbol = "copy"})
+            </button>
+        </div>
+    </div>
 }

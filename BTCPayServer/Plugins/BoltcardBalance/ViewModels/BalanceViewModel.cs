@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
+using BTCPayServer.NTag424;
 
 namespace BTCPayServer.Plugins.BoltcardBalance.ViewModels
 {
@@ -19,5 +20,6 @@ namespace BTCPayServer.Plugins.BoltcardBalance.ViewModels
         public string LNUrlBech32 { get; set; }
         public string LNUrlPay { get; set; }
 
+        public BoltcardKeys? Keys { get; set; }
     }
 }

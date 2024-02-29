@@ -7,6 +7,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.NTag424;
 using BTCPayServer.Plugins.BoltcardBalance.ViewModels;
 using BTCPayServer.Plugins.BoltcardFactory;
 using BTCPayServer.Services;
@@ -57,10 +58,14 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
             var registration = await _dbContextFactory.GetBoltcardRegistration(issuerKey, boltData, true);
             if (registration is null)
                 return NotFound();
-            return await GetBalanceView(registration.PullPaymentId, p);
+            
+            var keys = issuerKey.CreatePullPaymentCardKey(registration.UId, registration.Version, registration.PullPaymentId).DeriveBoltcardKeys(issuerKey);
+
+            var result = await GetBalanceView(registration.PullPaymentId, p, keys);
+            return result;
         }
         [NonAction]
-        public async Task<IActionResult> GetBalanceView(string ppId, string p)
+        public async Task<IActionResult> GetBalanceView(string ppId, string p, BoltcardKeys keys)
         {
             using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(ppId);
@@ -105,6 +110,7 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
                 Status = PayoutState.Completed
             });
 
+            vm.Keys = keys;
             return View($"{BoltcardBalancePlugin.ViewsDirectory}/BalanceView.cshtml", vm);
         }
     }

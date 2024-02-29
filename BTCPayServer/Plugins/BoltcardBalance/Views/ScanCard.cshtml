@@ -99,7 +99,7 @@
                     }
                     else if(this.readyState == 4 && this.status == 404) {
                         setState("WaitingForCard");
-						handleError(new Error("This card is initialized, but not by us"));
+						handleError(new Error("Initialized, but NOT by Bitcoin Atlantis"));
                     }
                     else {
                         setState("WaitingForCard");
@@ -128,7 +128,7 @@
                     const record = message.records[0];
 					if (message.records.length === 0)
 					{
-						handleError(new Error("This card hasn't been initialized"));
+						handleError(new Error("Card is blank"));
 						return;
 					}
                     const textDecoder = new TextDecoder('utf-8');

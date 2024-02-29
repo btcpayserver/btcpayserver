@@ -731,10 +731,9 @@ input:checked + label.btcpay-list-select-item {
 .store-logo {
     --logo-size: 3rem;
     --logo-bg: transparent;
-    --logo-radius: 50%;
+    --logo-radius: 0;
 
-    width: var(--logo-size);
-    height: var(--logo-size);
+    max-height: var(--logo-size);
     background: var(--logo-bg);
     border-radius: var(--logo-radius);
 }

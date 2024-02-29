@@ -184,8 +184,8 @@
 
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    max-width: 1.5rem;
+    max-height: 1.5rem;
     /* Fixes seemingly delayed icon animation */
     -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }
@@ -193,10 +193,6 @@
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon.icon-store {
     margin-right: var(--btcpay-space-s);
-}
-
-#StoreSelectorToggle .logo {
-    border-radius: 50%;
 }
 
 #StoreSelectorToggle .icon.icon-caret-down {

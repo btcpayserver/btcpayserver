@@ -54,8 +54,14 @@
 		var abortController = null;
         
         function handleError(e){
-            document.querySelector("#error p").innerHTML = e.message;
-            document.getElementById("error").classList.remove("d-none");
+			if (e) {
+				document.querySelector("#error p").innerHTML = e.message;
+				document.getElementById("error").classList.remove("d-none");
+			}
+			else
+			{
+				document.getElementById("error").classList.add("d-none");
+			}
         }
         
 		function delay(ms) {
@@ -64,13 +70,13 @@
 		async function showBalance(lnurlw) {
             try {
                 setState("Submitting");
-                await delay(1000);
+                var uiDelay = delay(1000);
                 var url = window.location.href.replace("#", "");
                 url = url.split("?")[0] + "?" + lnurlw.split("?")[1];
                 // url = "https://testnet.demo.btcpayserver.org/boltcards/balance?p=...&c=..."
     
                 var xhttp = new XMLHttpRequest();
-                xhttp.onreadystatechange = function () {
+                xhttp.onreadystatechange = async function () {
                     if (this.readyState == 4 && this.status == 200 && this.responseText) {
                         document.getElementById("balance-table").innerHTML = this.responseText;
                         document.getElementById("CancelWizard").addEventListener("click", function (e) {
@@ -88,12 +94,12 @@
                                     el[i].classList.add("d-none");
                             }
                         });
-    
+						await uiDelay;
                         setState("ShowBalance");
                     }
                     else if(this.readyState == 4 && this.status == 404) {
                         setState("WaitingForCard");
-                        handleError(new Error("Card not initialized"));
+						handleError(new Error("This card is initialized, but not by us"));
                     }
                     else {
                         setState("WaitingForCard");
@@ -118,7 +124,13 @@
                 await ndef.scan({ signal: abortController.signal })
                 setState("WaitingForCard");
                 ndef.onreading = async ({ message }) => {
+					handleError(null);
                     const record = message.records[0];
+					if (message.records.length === 0)
+					{
+						handleError(new Error("This card hasn't been initialized"));
+						return;
+					}
                     const textDecoder = new TextDecoder('utf-8');
                     const decoded = textDecoder.decode(record.data);
                     await showBalance(decoded);

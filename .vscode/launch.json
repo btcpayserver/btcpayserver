@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/BTCPayServer/bin/Debug/net6.0/BTCPayServer.dll",
+            "program": "${workspaceFolder}/BTCPayServer/bin/Debug/net8.0/BTCPayServer.dll",
             "args": [],
             "cwd": "${workspaceFolder}/BTCPayServer",
             "stopAtEntry": false,

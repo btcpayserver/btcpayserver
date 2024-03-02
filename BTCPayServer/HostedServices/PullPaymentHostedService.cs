@@ -352,7 +352,7 @@ namespace BTCPayServer.HostedServices
 
         private void TopUpInvoice(InvoiceEvent evt)
         {
-            if (evt.EventCode == InvoiceEventCode.Completed)
+            if (evt.EventCode == InvoiceEventCode.Completed || evt.EventCode == InvoiceEventCode.MarkedCompleted)
             {
                 foreach (var pullPaymentId in evt.Invoice.GetInternalTags("PULLPAY#"))
                 {

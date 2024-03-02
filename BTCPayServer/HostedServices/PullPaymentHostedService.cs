@@ -426,12 +426,19 @@ namespace BTCPayServer.HostedServices
                 StoreDataId = pp.StoreId
             };
             var rate = topUp.InvoiceEntity.Rates["BTC"];
-            var cryptoAmount = Math.Round(topUp.InvoiceEntity.PaidAmount.Net / rate, 11);
+
+            var paidAmount = topUp.InvoiceEntity.PaidAmount.Net;
+            if (paidAmount == 0.0m)
+                // If marked as complete, the paid amount is not set.
+                // HOWEVER THIS FIX ONLY WORK IF THE INVOICE IS IN BTC REMOVE THIS HACK AFTER CONFERENCE
+                paidAmount = topUp.InvoiceEntity.Price;
+
+            var cryptoAmount = Math.Round(paidAmount / rate, 11);
 
             var payoutBlob = new PayoutBlob()
             {
                 CryptoAmount = -cryptoAmount,
-                Amount = -topUp.InvoiceEntity.PaidAmount.Net,
+                Amount = -paidAmount,
                 Destination = topUp.InvoiceEntity.Id,
                 Metadata = new JObject(),
             };

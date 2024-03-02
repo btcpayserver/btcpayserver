@@ -59,6 +59,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
                 AccountIndex = supportedPaymentMethod.AccountIndex,
                 AddressIndex = address.AddressIndex,
                 DepositAddress = address.Address,
+                InvoiceSettledConfirmationThreshold = supportedPaymentMethod.InvoiceSettledConfirmationThreshold,
                 Activated = true
             };
 

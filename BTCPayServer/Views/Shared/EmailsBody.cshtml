@@ -67,7 +67,7 @@
                 <div class="pt-3 pb-1">
                     <div class="form-group">
                         <div class="d-flex">
-                            <input asp-for="Settings.DisableCertificateCheck" type="checkbox" class="btcpay-toggle me-2" style="transform: scale(0.8);" />
+                            <input asp-for="Settings.DisableCertificateCheck" type="checkbox" class="btcpay-toggle me-2" v-bind:checked="!Settings.DisableCertificateCheck" />
                             <label asp-for="Settings.DisableCertificateCheck" class="form-check-label">TLS certificate security checks</label>
                         </div>
                     </div>
@@ -94,6 +94,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+
         delegate('click', '#quick-fill .dropdown-menu a', function (e) {
             e.preventDefault();
             

@@ -25,7 +25,7 @@
                                 var item = Model.DisabledNotifications[index];
                                 <li class="list-group-item d-flex">
                                     <input type="hidden" asp-for="DisabledNotifications[index].Value" />
-                                    <input type="checkbox" asp-for="DisabledNotifications[index].Selected" class="btcpay-toggle me-2" style="transform: scale(0.8);" />
+                                    <input type="checkbox" asp-for="DisabledNotifications[index].Selected" class="btcpay-toggle me-2" />
                                     <label class="mb-0 cursor-pointer" asp-for="DisabledNotifications[index].Selected">
                                         @item.Text
                                     </label>

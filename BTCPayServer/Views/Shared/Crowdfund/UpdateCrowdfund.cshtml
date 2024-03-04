@@ -79,7 +79,7 @@
                 <div class="d-flex align-items-center">
                     <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
-                        <label asp-for="Enabled" class="form-label mb-0"></label>
+                        <label asp-for="Enabled" class="form-check-label"></label>
                         <span asp-validation-for="Enabled" class="text-danger"></span>
                         <div class="text-muted">The crowdfund will be visible to anyone.</div>
                     </div>
@@ -145,7 +145,7 @@
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
                     <div>
-                        <label asp-for="IsRecurring" class="form-label mb-0">Recurring Goal</label>
+                        <label asp-for="IsRecurring" class="form-check-label">Recurring Goal</label>
                         <span asp-validation-for="IsRecurring" class="text-danger"></span>
                         <div class="text-muted">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
                     </div>
@@ -178,29 +178,29 @@
         <div class="col-xl-8 col-xxl-constrain">
             <h3 class="mt-5 mb-4">Contributions</h3>
             <div class="d-flex mb-3">
-                <input asp-for="SortPerksByPopularity" type="checkbox" class="btcpay-toggle me-2" />
+                <input asp-for="SortPerksByPopularity" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
                 <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
             </div>
             <div class="d-flex mb-3">
-                <input asp-for="DisplayPerksRanking" type="checkbox" class="btcpay-toggle me-2" />
+                <input asp-for="DisplayPerksRanking" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="DisplayPerksRanking" class="form-check-label"></label>
                 <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
             </div>
             <div class="d-flex mb-3">
-                <input asp-for="DisplayPerksValue" type="checkbox" class="btcpay-toggle me-2" />
+                <input asp-for="DisplayPerksValue" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="DisplayPerksValue" class="form-check-label"></label>
                 <span asp-validation-for="DisplayPerksValue" class="text-danger"></span>
             </div>
             <div class="d-flex mb-3">
-                <input asp-for="EnforceTargetAmount" type="checkbox" class="btcpay-toggle me-2" />
+                <input asp-for="EnforceTargetAmount" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
             
             <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
             <div class="d-flex">
-                <input asp-for="UseAllStoreInvoices" type="checkbox" class="btcpay-toggle me-2" />
+                <input asp-for="UseAllStoreInvoices" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
@@ -227,7 +227,7 @@
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
                                         <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
-                                        <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
+                                        <label asp-for="SoundsEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -253,7 +253,7 @@
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
                                         <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
-                                        <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
+                                        <label asp-for="AnimationsEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -279,7 +279,7 @@
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
                                         <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
-                                        <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
+                                        <label asp-for="DisqusEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
                                     </div>
                                 </div>

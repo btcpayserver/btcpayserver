@@ -50,7 +50,7 @@
                                 }
                                 <input asp-for="RequiresConfirmedEmail" type="checkbox" class="btcpay-toggle me-3" disabled="@(isEmailConfigured ? null : "disabled")" />
                                 <div>
-                                    <label asp-for="RequiresConfirmedEmail" class="form-label mb-0"></label>
+                                    <label asp-for="RequiresConfirmedEmail" class="form-check-label"></label>
                                     <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-allow-registration-on-my-btcpay-server" target="_blank" rel="noreferrer noopener">
                                         <vc:icon symbol="info" />
                                     </a>
@@ -64,14 +64,14 @@
                             <div class="d-flex my-3">
                                 <input asp-for="RequiresUserApproval" type="checkbox" class="btcpay-toggle me-3"/>
                                 <div>
-                                    <label asp-for="RequiresUserApproval" class="form-label mb-0"></label>
+                                    <label asp-for="RequiresUserApproval" class="form-check-label"></label>
                                     <span asp-validation-for="RequiresUserApproval" class="text-danger"></span>
                                 </div>
                             </div>
                             <div class="d-flex my-3">
                                 <input asp-for="EnableNonAdminCreateUserApi" type="checkbox" class="btcpay-toggle me-3"/>
                                 <div>
-                                    <label asp-for="EnableNonAdminCreateUserApi" class="form-label mb-0"></label>
+                                    <label asp-for="EnableNonAdminCreateUserApi" class="form-check-label"></label>
                                     <span asp-validation-for="EnableNonAdminCreateUserApi" class="text-danger"></span>
                                     <div class="info-note mt-2 text-warning" role="alert">
                                         <vc:icon symbol="warning" />
@@ -89,7 +89,7 @@
                 <div class="d-flex my-3">
                     <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
-                        <label asp-for="AllowLightningInternalNodeForAll" class="form-label mb-0"></label>
+                        <label asp-for="AllowLightningInternalNodeForAll" class="form-check-label"></label>
                         <a href="https://docs.btcpayserver.org/FAQ/LightningNetwork/#how-many-users-can-use-lightning-network-in-btcpay" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -103,7 +103,7 @@
                 <div class="d-flex my-3">
                     <input asp-for="AllowHotWalletForAll" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
-                        <label asp-for="AllowHotWalletForAll" class="form-label mb-0"></label>
+                        <label asp-for="AllowHotWalletForAll" class="form-check-label"></label>
                         <a href="https://docs.btcpayserver.org/CreateWallet/#requirements-to-create-wallets" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -117,7 +117,7 @@
                 <div class="d-flex my-3">
                     <input asp-for="AllowHotWalletRPCImportForAll" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
-                        <label asp-for="AllowHotWalletRPCImportForAll" class="form-label mb-0"></label>
+                        <label asp-for="AllowHotWalletRPCImportForAll" class="form-check-label"></label>
                         <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
                         <div class="info-note mt-2 text-warning" role="alert">
                             <vc:icon symbol="warning"/>
@@ -132,7 +132,7 @@
                 <div class="d-flex my-3">
                     <input asp-for="AllowSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
-                        <label asp-for="AllowSearchEngines" class="form-label mb-0"></label>
+                        <label asp-for="AllowSearchEngines" class="form-check-label"></label>
                         <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-hide-my-btcpay-server-from-search-engines" target="_blank" rel="noreferrer noopener">
                             <vc:icon symbol="info" />
                         </a>
@@ -144,7 +144,7 @@
                     <div class="d-flex my-3">
                         <input asp-for="CheckForNewVersions" type="checkbox" class="btcpay-toggle me-3"/>
                         <div>
-                            <label asp-for="CheckForNewVersions" class="form-label mb-0"></label>
+                            <label asp-for="CheckForNewVersions" class="form-check-label"></label>
                             <span asp-validation-for="CheckForNewVersions" class="text-danger"></span>
                         </div>
                     </div>
@@ -152,7 +152,7 @@
                 <div class="d-flex align-items-center my-3">
                     <input asp-for="Experimental" type="checkbox" class="btcpay-toggle me-3" />
                     <div>
-                        <label asp-for="Experimental" class="form-label mb-0"></label>
+                        <label asp-for="Experimental" class="form-check-label"></label>
                         <div class="text-muted">
                             Will allow you to use the custodian account feature.
                             <a href="https://blog.btcpayserver.org/btcpay-server-1-9-0/#-exchange-integration-via-plugins-" target="_blank" rel="noreferrer noopener">
@@ -171,7 +171,7 @@
             </div>
             <div class="d-flex mt-n2">
                 <input asp-for="PluginPreReleases" type="checkbox" class="btcpay-toggle me-3"/>
-                <label asp-for="PluginPreReleases" class="form-label mb-0"></label>
+                <label asp-for="PluginPreReleases" class="form-check-label"></label>
             </div>
 
             @* To handle the multiple submit buttons on this page: Give this button

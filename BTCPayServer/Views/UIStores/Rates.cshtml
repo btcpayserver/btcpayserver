@@ -142,7 +142,7 @@ X_X = kraken(X_X);</code></pre>
             <div class="form-group">
                 <label class="d-flex align-items-center">
                     <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
-                    <div class="">
+                    <div>
                         <span>Advanced rate rule scripting</span>
                         <div class="form-text">
                             @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")

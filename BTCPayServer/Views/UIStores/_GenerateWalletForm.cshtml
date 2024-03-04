@@ -57,7 +57,7 @@
             <label class="d-flex align-items-center">
                 <input type="checkbox" asp-for="SavePrivateKeys" class="btcpay-toggle me-3" />
                 <div>
-                    <label asp-for="SavePrivateKeys">Is hot wallet</label>
+                    <label asp-for="SavePrivateKeys" class="form-check-label">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
                     <p class="text-muted pt-2 mb-0">
                         If checked, each private key associated with an address generated will be stored as metadata
@@ -124,7 +124,7 @@
                         <label class="d-flex align-items-center">
                             <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3"/>
                             <div>
-                                <label asp-for="ImportKeysToRPC">Import keys to RPC</label>
+                                <label asp-for="ImportKeysToRPC" class="form-check-label">Import keys to RPC</label>
                                 <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                                 <p class="text-muted pt-2 mb-0">
                                     Each address generated will be imported into the node wallet and you can view your balance through the node.

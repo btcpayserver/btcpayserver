@@ -1,19 +1,23 @@
+@using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Stores
 @using LNURL
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @inject StoreRepository StoreRepository
+@inject PaymentMethodHandlerDictionary Handlers
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @inject DisplayFormatter DisplayFormatter
 @{
-    var store = await StoreRepository.FindStore(Model.StoreId);
-    Layout = "PointOfSale/Public/_Layout";
-    Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
-    var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
-    var supported = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
-    if (supported != null && !store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
+	var store = await StoreRepository.FindStore(Model.StoreId);
+	Layout = "PointOfSale/Public/_Layout";
+	Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
+	var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
+	var pmi = PaymentTypes.LNURL.GetPaymentMethodId(cryptoCode);
+	var supported = store.GetPaymentMethodConfig<LNURLPaymentMethodConfig>(pmi, Handlers);
+	if (supported is not null && !store.GetEnabledPaymentIds().Contains(pmi))
     {
         supported = null;
     }
@@ -111,7 +115,7 @@ else
                             {
                                 var lnurlEndpoint = new Uri(Url.Action("GetLNURLForApp", "UILNURL", new
                                 {
-                                    cryptoCode = supported.CryptoCode,
+									cryptoCode = cryptoCode,
                                     appid = Model.AppId,
                                     ItemCode = item.Id
                                 }, Context.Request.Scheme, Context.Request.Host.ToString()));

@@ -21,14 +21,14 @@
             gap: var(--btcpay-space-xl) var(--btcpay-space-xxl);
         }
 
-        .invoice-information > div {
-            max-width: 540px;
-        }
+            .invoice-information > div {
+                max-width: 540px;
+            }
 
-        .invoice-information > div table th {
-            width: 200px;
-            font-weight: var(--btcpay-font-weight-semibold);
-        }
+                .invoice-information > div table th {
+                    width: 200px;
+                    font-weight: var(--btcpay-font-weight-semibold);
+                }
     </style>
 }
 
@@ -258,7 +258,7 @@
                     <th>State</th>
                     <td>
                         <vc:invoice-status invoice-id="@Model.Id" state="Model.State" payments="Model.Payments"
-                           is-archived="Model.Archived" has-refund="Model.HasRefund" />
+                                           is-archived="Model.Archived" has-refund="Model.HasRefund" />
                     </td>
                 </tr>
                 <tr>
@@ -281,15 +281,6 @@
                     <th>Total Amount Due</th>
                     <td><span data-sensitive>@Model.Fiat</span></td>
                 </tr>
-                @if (!string.IsNullOrEmpty(Model.RefundEmail))
-                {
-                    <tr>
-                        <th>Refund Email</th>
-                        <td>
-                            <a href="mailto:@Model.RefundEmail">@Model.RefundEmail</a>
-                        </td>
-                    </tr>
-                }
                 @if (!string.IsNullOrEmpty(Model.NotificationUrl))
                 {
                     <tr>
@@ -458,155 +449,160 @@
         </div>
     </div>
     <div class="row">
-    <div class="col-xxl-constrain">
-    <h3 class="mb-3">Invoice Summary</h3>
-    <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
+        <div class="col-xxl-constrain">
+            <h3 class="mb-3">Invoice Summary</h3>
+            <partial name="ListInvoicesPaymentsPartial" model="(Model, true)" />
 
-    @if (Model.Deliveries.Any())
-    {
-        <section class="mt-4 d-print-none">
-            <h3 class="mb-3">Webhooks</h3>
-            <div class="table-responsive-xl">
-                <table class="table table-hover mb-5">
-                    <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th>ID</th>
-                            <th>Type</th>
-                            <th>Url</th>
-                            <th>Date</th>
-                            <th class="text-end">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var delivery in Model.Deliveries)
-                        {
-                            <tr>
-                                <form asp-action="RedeliverWebhook"
-                                      asp-route-storeId="@Model.StoreId"
-                                      asp-route-invoiceId="@Model.Id"
-                                      asp-route-deliveryId="@delivery.Id"
-                                      method="post">
-                                <td>
-                                    <span>
-                                            @if (delivery.Success)
-                                            {
-                                            <span class="fa fa-check text-success" title="Success"></span>
-                                            }
-                                            else
-                                            {
-                                            <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
-                                            }
-                                    </span>
-                                </td>
-                                <td>
-                                    @if (!delivery.Pruned)
-                                    {
-                                    <span>
-                                        <a asp-action="WebhookDelivery"
-                                            asp-route-invoiceId="@Model.Id"
-                                            asp-route-deliveryId="@delivery.Id"
-                                            class="delivery-content"
-                                            target="_blank">
-                                                @delivery.Id
-                                        </a>
-                                    </span>
-                                    }
-                                </td>
-                                <td>
-                                    <span>@delivery.Type</span>
-                                </td>
-                                <td>
-                                    <span class="text-break" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
-                                        <span style="max-width: 250px;">@delivery.PayloadUrl</span>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span>
-                                            @delivery.Time.ToBrowserDate()
-                                    </span>
-                                </td>
-                                <td class="text-end">
-                                    @if (!delivery.Pruned) {
-                                    <button id="#redeliver-@delivery.Id"
-                                            type="submit"
-                                            class="btn btn-link p-0 redeliver">
-                                        Redeliver
-                                    </button>
-                                    }
-                                </td>
-                                </form>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-    }
-    @if ((Model.Refunds?.Count ?? 0) > 0)
-    {
-        <section class="mt-4">
-            <h3 class="mb-3">Refunds</h3>
-            <div class="table-responsive-xl">
-                <table class="table table-hover mb-5">
-                    <thead>
-                        <tr>
-                            <th>Pull Payment</th>
-                            <th>Amount</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var refund in Model.Refunds)
-                        {
-                            var blob = refund.PullPaymentData.GetBlob();
-                            <tr>
-
-                                <td>
-                                    <span>
-                                        <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
-                                           asp-route-pullPaymentId="@refund.PullPaymentDataId"
-                                           class="delivery-content"
-                                           target="_blank">
-                                            @refund.PullPaymentData.Id
-                                        </a>
-                                    </span>
-                                </td>
-                                <td>
-                                    <span>@blob.Limit @blob.Currency</span>
-                                </td>
-                                <td>
-                                    <span>@refund.PullPaymentData.StartDate.ToBrowserDate()</span>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    }
-    <section class="mt-5 d-print-none">
-        <h3 class="mb-0">Events</h3>
-        <table class="table table-hover mt-3 mb-4">
-            <thead>
-            <tr>
-                <th>Date</th>
-                <th>Message</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var evt in Model.Events)
+            @if (Model.Deliveries.Any())
             {
-                var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
-                <tr>
-                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
-                    <td class="@cssClass">@evt.Message</td>
-                </tr>
+                <section class="mt-4 d-print-none">
+                    <h3 class="mb-3">Webhooks</h3>
+                    <div class="table-responsive-xl">
+                        <table class="table table-hover mb-5">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>ID</th>
+                                    <th>Type</th>
+                                    <th>Url</th>
+                                    <th>Date</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var delivery in Model.Deliveries)
+                                {
+                                    <tr>
+                                        <form asp-action="RedeliverWebhook"
+                                              asp-route-storeId="@Model.StoreId"
+                                              asp-route-invoiceId="@Model.Id"
+                                              asp-route-deliveryId="@delivery.Id"
+                                              method="post">
+                                        <td>
+                                            <span>
+                                                    @if (delivery.Success)
+                                                    {
+                                                    <span class="fa fa-check text-success" title="Success"></span>
+                                                    }
+                                                    else
+                                                    {
+                                                    <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                                    }
+                                            </span>
+                                        </td>
+                                        <td>
+                                                @if (!delivery.Pruned)
+                                                {
+                                                <span>
+                                                    <a asp-action="WebhookDelivery"
+                                                       asp-route-invoiceId="@Model.Id"
+                                                       asp-route-deliveryId="@delivery.Id"
+                                                       class="delivery-content"
+                                                       target="_blank">
+                                                            @delivery.Id
+                                                    </a>
+                                                </span>
+                                                }
+                                        </td>
+                                        <td>
+                                            <span>@delivery.Type</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-break" data-bs-toggle="tooltip" title="@delivery.PayloadUrl" style="cursor: pointer;">
+                                                <span style="max-width: 250px;">@delivery.PayloadUrl</span>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span>
+                                                    @delivery.Time.ToBrowserDate()
+                                            </span>
+                                        </td>
+                                        <td class="text-end">
+                                                @if (!delivery.Pruned)
+                                                {
+                                                <button id="#redeliver-@delivery.Id"
+                                                        type="submit"
+                                                        class="btn btn-link p-0 redeliver">
+                                                    Redeliver
+                                                </button>
+                                                }
+                                        </td>
+                                        </form>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
             }
-            </tbody>
-        </table>
-    </section>
-    </div>
+            @if ((Model.Refunds?.Count ?? 0) > 0)
+            {
+                <section class="mt-4">
+                    <h3 class="mb-3">Refunds</h3>
+                    <div class="table-responsive-xl">
+                        <table class="table table-hover mb-5">
+                            <thead>
+                                <tr>
+                                    <th>Pull Payment</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var refund in Model.Refunds)
+                                {
+                                    var blob = refund.PullPaymentData.GetBlob();
+                                    <tr>
+
+                                        <td>
+                                            <span>
+                                                <a asp-action="ViewPullPayment" asp-controller="UIPullPayment"
+                                                   asp-route-pullPaymentId="@refund.PullPaymentDataId"
+                                                   class="delivery-content"
+                                                   target="_blank">
+                                                    @refund.PullPaymentData.Id
+                                                </a>
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span>@blob.Limit @blob.Currency</span>
+                                        </td>
+                                        <td>
+                                            <span>@refund.PullPaymentData.StartDate.ToBrowserDate()</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            }
+
+            @if (Model.Events is { Count: > 0 })
+            {
+                <section class="mt-5 d-print-none">
+                    <h3 class="mb-0">Events</h3>
+                    <table class="table table-hover mt-3 mb-4">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var evt in Model.Events)
+                            {
+                                var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
+                                <tr>
+                                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
+                                    <td class="@cssClass">@evt.Message</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </section>
+            }
+        </div>
     </div>
 </div>

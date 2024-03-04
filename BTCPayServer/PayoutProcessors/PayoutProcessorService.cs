@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Payments;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -48,14 +49,14 @@ public class PayoutProcessorService : EventHostedServiceBase
         {
             
         }
-        public PayoutProcessorQuery(string storeId, string paymentMethod)
+        public PayoutProcessorQuery(string storeId, PaymentMethodId paymentMethodId)
         {
             Stores = new[] { storeId };
-            PaymentMethods = new[] { paymentMethod };
+            PaymentMethods = new[] { paymentMethodId };
         }
         public string[] Stores { get; set; }
         public string[] Processors { get; set; }
-        public string[] PaymentMethods { get; set; }
+        public PaymentMethodId[] PaymentMethods { get; set; }
     }
 
     public async Task<List<PayoutProcessorData>> GetProcessors(PayoutProcessorQuery query)
@@ -73,7 +74,8 @@ public class PayoutProcessorService : EventHostedServiceBase
         }
         if (query.PaymentMethods is not null)
         {
-            queryable = queryable.Where(data => query.PaymentMethods.Contains(data.PaymentMethod));
+            var paymentMethods = query.PaymentMethods.Select(d => d.ToString()).Distinct().ToArray();
+            queryable = queryable.Where(data => paymentMethods.Contains(data.PaymentMethod));
         }
 
         return await queryable.ToListAsync();

@@ -26,14 +26,14 @@ namespace BTCPayServer.JsonConverters
             return result;
         }
 
-        private DateTimeOffset UnixTimeToDateTime(ulong value)
+        static DateTimeOffset UnixTimeToDateTime(ulong value)
         {
             var v = (long)value;
             if (v < 0)
                 throw new FormatException("Invalid datetime (less than 1/1/1970)");
             return unixRef + TimeSpan.FromMilliseconds(v);
         }
-        private long DateTimeToUnixTime(in DateTime time)
+        static long DateTimeToUnixTime(in DateTime time)
         {
             var date = ((DateTimeOffset)time).ToUniversalTime();
             long v = (long)(date - unixRef).TotalMilliseconds;

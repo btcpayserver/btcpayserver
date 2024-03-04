@@ -139,13 +139,9 @@ app = new Vue({
                     if(!combinedStats[keys[i]]){
                     continue;
                 }
-                var paymentMethodId = keys[i].split("_");
-                var value = combinedStats[keys[i]].toFixed(this.srvModel.currencyDataPayments[paymentMethodId[0]].divisibility);
-                    var newItem = {key:keys[i], value: value, label: paymentMethodId[0]};
-
-                    if(paymentMethodId.length > 1 && paymentMethodId[1].endsWith("LightningLike")){
-                    newItem.lightning = true;
-                }
+                var value = combinedStats[keys[i]].percent.toFixed(2) + '%';
+                    var newItem = {key:keys[i], value: value, label: combinedStats[keys[i]].label};
+                newItem.lightning = combinedStats[keys[i]].isLightning;
                 result.push(newItem);
             }
 
@@ -279,8 +275,8 @@ app = new Vue({
                 duration: 10000
             });
         });
-        eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
-            var onChain = type.toLowerCase() !== "lightninglike";
+        eventAggregator.$on("payment-received", function (amount, currency, prettyPMI, pmi) {
+            var onChain = pmi.endsWith("-CHAIN");
             if (self.sound) {
                 playRandomSound();
             }
@@ -289,13 +285,13 @@ app = new Vue({
             }
             amount = parseFloat(amount).noExponents();
             if (onChain) {
-                Vue.toasted.show('New payment of ' + amount + " " + cryptoCode + " " + (onChain ? "On Chain" : "LN "), {
+                Vue.toasted.show('New payment of ' + amount + " " + currency + " " + prettyPMI, {
                     iconPack: "fontawesome",
                     icon: "plus",
                     duration: 10000
                 });
             } else {
-                Vue.toasted.show('New payment of ' + amount + " " + cryptoCode + " " + (onChain ? "On Chain" : "LN "), {
+                Vue.toasted.show('New payment of ' + amount + " " + cryptoCode + " " + prettyPMI, {
                     iconPack: "fontawesome",
                     icon: "bolt",
                     duration: 10000

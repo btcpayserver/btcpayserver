@@ -162,9 +162,9 @@ namespace BTCPayServer.Tests
             s.AddLightningNode();
             s.AddDerivationScheme();
 
-            var invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
+            var invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC-LN");
             s.GoToInvoiceCheckout(invoiceId);
-            Assert.Equal("Bitcoin (Lightning)", s.Driver.FindElement(By.ClassName("payment__currencies")).Text);
+            Assert.Equal("Lightning", s.Driver.FindElement(By.ClassName("payment__currencies")).Text);
             s.Driver.Quit();
         }
 
@@ -210,8 +210,8 @@ namespace BTCPayServer.Tests
                 Assert.True(s.Driver.FindElement(By.Name("btcpay")).Displayed);
             });
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
-                    .GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike))
-                    .GetPaymentMethodDetails().GetPaymentDestination(), Network.RegTest),
+                    .GetPaymentPrompt(PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
+                    .Destination, Network.RegTest),
                 new Money(0.001m, MoneyUnit.BTC));
 
             IWebElement closebutton = null;

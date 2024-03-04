@@ -82,7 +82,7 @@
                             <tr>
                                 <td class="border-0 ps-0 align-middle">
                                     <input type="hidden" asp-for="PaymentMethodCriteria[index].PaymentMethod" />
-                                    @PaymentMethodId.Parse(criteria.PaymentMethod).ToPrettyString()
+                                    @PaymentMethodId.Parse(criteria.PaymentMethod).ToString()
                                 </td>
                                 <td class="border-0">
                                     <select asp-for="PaymentMethodCriteria[index].Type" class="form-select"

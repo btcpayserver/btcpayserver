@@ -90,7 +90,7 @@
 @if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
 {
     Stores = new[] { storeId },
-    PaymentMethods = new[] { Model.PaymentMethodId }
+    PaymentMethods = new[] { PaymentMethodId.Parse(Model.PaymentMethodId) }
 })).Any())
 {
     <div class="alert alert-info mb-5" role="alert" permission="@Policies.CanModifyStoreSettings">
@@ -115,7 +115,7 @@
                        class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">
-                        @state.ToPrettyString()
+                        @state.ToString()
                         @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
                         {
                             <span class="badge rounded-pill fw-semibold pe-0">@count</span>

@@ -9,6 +9,8 @@ using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Services;
@@ -19,6 +21,7 @@ using Ganss.Xss;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using static BTCPayServer.Plugins.Crowdfund.Models.ViewCrowdfundViewModel.CrowdfundInfo;
 
 namespace BTCPayServer.Plugins.Crowdfund
 {
@@ -45,12 +48,14 @@ namespace BTCPayServer.Plugins.Crowdfund
         private readonly DisplayFormatter _displayFormatter;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly InvoiceRepository _invoiceRepository;
+        private readonly PrettyNameProvider _prettyNameProvider;
         public const string AppType = "Crowdfund";
 
         public CrowdfundAppType(
             LinkGenerator linkGenerator,
             IOptions<BTCPayServerOptions> options,
             InvoiceRepository invoiceRepository,
+            PrettyNameProvider prettyNameProvider,
             DisplayFormatter displayFormatter,
             CurrencyNameTable currencyNameTable)
         {
@@ -60,6 +65,7 @@ namespace BTCPayServer.Plugins.Crowdfund
             _displayFormatter = displayFormatter;
             _currencyNameTable = currencyNameTable;
             _invoiceRepository = invoiceRepository;
+            _prettyNameProvider = prettyNameProvider;
         }
 
         public override Task<string> ConfigureLink(AppData app)
@@ -71,14 +77,14 @@ namespace BTCPayServer.Plugins.Crowdfund
         public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
-            var items = AppService.Parse( cfS.PerksTemplate);
+            var items = AppService.Parse(cfS.PerksTemplate);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
         public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
-            var perks = AppService.Parse( settings.PerksTemplate);
+            var perks = AppService.Parse(settings.PerksTemplate);
             var perkCount = paidInvoices
                 .Where(entity => entity.Currency.Equals(settings.TargetCurrency, StringComparison.OrdinalIgnoreCase) &&
                                  // we need the item code to know which perk it is and group by that
@@ -159,7 +165,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                         entities.Sum(entity => entity.PaidAmount.Net));
             }
 
-            var perks = AppService.Parse( settings.PerksTemplate, false);
+            var perks = AppService.Parse(settings.PerksTemplate, false);
             if (settings.SortPerksByPopularity)
             {
                 var ordered = perkCount.OrderByDescending(pair => pair.Value);
@@ -214,24 +220,38 @@ namespace BTCPayServer.Plugins.Crowdfund
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
                 CurrencyData = _currencyNameTable.GetCurrencyData(settings.TargetCurrency, true),
-                CurrencyDataPayments = currentPayments.Select(pair => pair.Key)
-                    .Concat(pendingPayments.Select(pair => pair.Key))
-                    .Select(id => _currencyNameTable.GetCurrencyData(id.CryptoCode, true)).DistinctBy(data => data.Code)
-                    .ToDictionary(data => data.Code, data => data),
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo
                 {
                     TotalContributors = paidInvoices.Length,
                     ProgressPercentage = (currentPayments.TotalCurrency / settings.TargetAmount) * 100,
                     PendingProgressPercentage = (pendingPayments.TotalCurrency / settings.TargetAmount) * 100,
                     LastUpdated = DateTime.UtcNow,
-                    PaymentStats = currentPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
-                    PendingPaymentStats = pendingPayments.ToDictionary(c => c.Key.ToString(), c => c.Value.Value),
+                    PaymentStats = GetPaymentStats(currentPayments),
+                    PendingPaymentStats = GetPaymentStats(pendingPayments),
                     LastResetDate = lastResetDate,
                     NextResetDate = nextResetDate,
                     CurrentPendingAmount = pendingPayments.TotalCurrency,
                     CurrentAmount = currentPayments.TotalCurrency
                 }
             };
+        }
+
+        private Dictionary<string, PaymentStat> GetPaymentStats(InvoiceStatistics stats)
+        {
+            var r = new Dictionary<string, PaymentStat>();
+            var total = stats.Select(s => s.Value.CurrencyValue).Sum();
+            foreach (var kv in stats)
+            {
+                var pmi = PaymentMethodId.Parse(kv.Key);
+                r.TryAdd(kv.Key, new PaymentStat()
+                {
+                    Label = _prettyNameProvider.PrettyName(pmi),
+                    Percent = (kv.Value.CurrencyValue / total) * 100.0m,
+                    // Note that the LNURL will have the same LN
+                    IsLightning = pmi == PaymentTypes.LN.GetPaymentMethodId(kv.Key)
+                });
+            }
+            return r;
         }
 
         public override Task SetDefaultSettings(AppData appData, string defaultCurrency)

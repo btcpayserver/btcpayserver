@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -23,11 +24,13 @@ using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -42,6 +45,50 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        /// <summary>
+        /// Outputs a serializer which will serialize default and null members.
+        /// This is useful for discovering the API.
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        public static JsonSerializer ForAPI(this JsonSerializer settings)
+        {
+            var clone = new JsonSerializer()
+            {
+                CheckAdditionalContent = settings.CheckAdditionalContent,
+                ConstructorHandling = settings.ConstructorHandling,
+                ContractResolver = settings.ContractResolver,
+                Culture = settings.Culture,
+                DateFormatHandling = settings.DateFormatHandling,
+                DateFormatString = settings.DateFormatString,
+                DateParseHandling = settings.DateParseHandling,
+                DateTimeZoneHandling = settings.DateTimeZoneHandling,
+                DefaultValueHandling = settings.DefaultValueHandling,
+                EqualityComparer = settings.EqualityComparer,
+                FloatFormatHandling = settings.FloatFormatHandling,
+                FloatParseHandling = settings.FloatParseHandling,
+                Formatting = settings.Formatting,
+                MaxDepth = settings.MaxDepth,
+                MetadataPropertyHandling = settings.MetadataPropertyHandling,
+                Context = settings.Context,
+                MissingMemberHandling = settings.MissingMemberHandling,
+                NullValueHandling = settings.NullValueHandling,
+                ObjectCreationHandling = settings.ObjectCreationHandling,
+                PreserveReferencesHandling = settings.PreserveReferencesHandling,
+                ReferenceLoopHandling = settings.ReferenceLoopHandling,
+                StringEscapeHandling = settings.StringEscapeHandling,
+                TraceWriter = settings.TraceWriter,
+                TypeNameAssemblyFormatHandling = settings.TypeNameAssemblyFormatHandling,
+                SerializationBinder = settings.SerializationBinder,
+                TypeNameHandling = settings.TypeNameHandling,
+                ReferenceResolver = settings.ReferenceResolver
+            };
+            foreach (var conv in settings.Converters)
+                clone.Converters.Add(conv);
+            clone.NullValueHandling = NullValueHandling.Include;
+            clone.DefaultValueHandling = DefaultValueHandling.Include;
+            return clone;
+        }
         public static DerivationSchemeParser GetDerivationSchemeParser(this BTCPayNetwork network)
         {
             return new DerivationSchemeParser(network);
@@ -257,11 +304,6 @@ namespace BTCPayServer
             return services;
         }
 
-        public static PaymentMethodId GetpaymentMethodId(this InvoiceCryptoInfo info)
-        {
-            return new PaymentMethodId(info.CryptoCode, PaymentTypes.Parse(info.PaymentType));
-        }
-
         public static async Task CloseSocket(this WebSocket webSocket)
         {
             try
@@ -277,12 +319,11 @@ namespace BTCPayServer
             finally { try { webSocket.Dispose(); } catch { } }
         }
 
-        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice, bool accountedOnly)
+        public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice, BitcoinLikePaymentHandler handler, bool accountedOnly)
         {
             return invoice.GetPayments(accountedOnly)
-                .Where(p => p.GetPaymentMethodId()?.PaymentType == PaymentTypes.BTCLike)
-                .Select(p => (BitcoinLikePaymentData)p.GetCryptoPaymentData())
-                .Where(data => data != null);
+                .Where(p => p.PaymentMethodId == handler.PaymentMethodId)
+                .Select(p => handler.ParsePaymentDetails(p.Details));
         }
 
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
@@ -352,7 +393,82 @@ namespace BTCPayServer
             }
             return false;
         }
+#nullable enable
+        public static LNURLPayPaymentHandler GetLNURLHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
+        {
+            return handlers.GetLNURLHandler(network.CryptoCode);
+        }
+        public static LNURLPayPaymentHandler GetLNURLHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
+        {
+            var pmi = PaymentTypes.LNURL.GetPaymentMethodId(cryptoCode);
+            var h = (LNURLPayPaymentHandler)handlers[pmi];
+            return h;
+        }
+        public static LightningLikePaymentHandler GetLightningHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
+        {
+            return handlers.GetLightningHandler(network.CryptoCode);
+        }
+        public static LightningLikePaymentHandler GetLightningHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
+        {
+            var pmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+            var h = (LightningLikePaymentHandler)handlers[pmi];
+            return h;
+        }
 
+        public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
+        {
+            return handlers.TryGetBitcoinHandler(network.CryptoCode);
+        }
+        public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
+        {
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+            if (handlers.TryGetValue(pmi, out var h) && h is BitcoinLikePaymentHandler b)
+                return b;
+            return null;
+        }
+        public static BitcoinLikePaymentHandler GetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
+        {
+            return handlers.GetBitcoinHandler(network.CryptoCode);
+        }
+        public static BitcoinLikePaymentHandler GetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
+        {
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+            var h = (BitcoinLikePaymentHandler)handlers[pmi];
+            return h;
+        }
+        public static BTCPayNetwork? TryGetNetwork(this PaymentMethodHandlerDictionary handlers, PaymentMethodId paymentMethodId)
+        {
+            if (paymentMethodId is not null &&
+                handlers.TryGetValue(paymentMethodId, out var value) &&
+                value is IHasNetwork { Network: var n })
+            {
+                return n;
+            }
+            return null;
+        }
+        public static BTCPayNetwork GetNetwork(this PaymentMethodHandlerDictionary handlers, PaymentMethodId paymentMethodId)
+        {
+            return TryGetNetwork(handlers, paymentMethodId) ?? throw new KeyNotFoundException($"Network for {paymentMethodId} is not found");
+        }
+        public static LightningPaymentMethodConfig? GetLightningConfig(this PaymentMethodHandlerDictionary handlers, Data.StoreData store, BTCPayNetwork network)
+        {
+            var config = store.GetPaymentMethodConfig(PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode));
+            if (config is null)
+                return null;
+            return handlers.GetLightningHandler(network).ParsePaymentMethodConfig(config);
+        }
+        public static DerivationStrategyBase? GetDerivationStrategy(this PaymentMethodHandlerDictionary handlers, InvoiceEntity invoice, BTCPayNetworkBase network)
+        {
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+            if (!handlers.TryGetValue(pmi, out var handler))
+                return null;
+            var prompt = invoice.GetPaymentPrompt(pmi);
+            if (prompt?.Details is null)
+                return null;
+            var details = (BitcoinPaymentPromptDetails)handler.ParsePaymentPromptDetails(prompt.Details);
+            return details.AccountDerivation;
+        }
+#nullable restore
         public static bool IsOnion(this Uri uri)
         {
             if (uri == null || !uri.IsAbsoluteUri)

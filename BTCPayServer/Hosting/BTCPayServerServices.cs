@@ -68,6 +68,10 @@ using Newtonsoft.Json;
 using Serilog;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
+using BTCPayServer.Payments.LNURLPay;
+using System.Collections.Generic;
+
+
 
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero;
@@ -107,16 +111,11 @@ namespace BTCPayServer.Hosting
                 httpClient.BaseAddress = r;
             });
 
+            services.AddSingleton<PrettyNameProvider>();
             services.AddSingleton<Logs>(logs);
             services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
 
             services.AddPayJoinServices();
-#if ALTCOINS
-            if (configuration.SupportChain("xmr"))
-                services.AddMoneroLike();
-            if (configuration.SupportChain("yec") || configuration.SupportChain("zec"))
-                services.AddZcashLike();
-#endif
             services.AddScoped<IScopeProvider, ScopeProvider>();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
@@ -157,6 +156,8 @@ namespace BTCPayServer.Hosting
             //
 
             AddOnchainWalletParsers(services);
+            services.AddSingleton<IUIExtension>(new UIExtension("Bitcoin/ViewBitcoinLikePaymentData", "store-invoices-payments"));
+            services.AddSingleton<IUIExtension>(new UIExtension("Lightning/ViewLightningLikePaymentData", "store-invoices-payments"));
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
@@ -389,26 +390,30 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<LightningLikePayoutHandler>());
             services.AddSingleton<LightningLikePayoutHandler>();
 
+            services.AddSingleton<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(o => 
+            o.GetRequiredService<IEnumerable<IPaymentMethodBitpayAPIExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
+            services.AddSingleton<Dictionary<PaymentMethodId, IPaymentLinkExtension>>(o =>
+o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
+            services.AddSingleton<Dictionary<PaymentMethodId, IPaymentModelExtension>>(o =>
+            o.GetRequiredService<IEnumerable<IPaymentModelExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
+
             services.AddHttpClient(LightningLikePayoutHandler.LightningLikePayoutHandlerOnionNamedClient)
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
 
-            services.AddSingleton<BitcoinLikePaymentHandler>();
-            services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<BitcoinLikePaymentHandler>());
+
             services.AddSingleton<IHostedService, NBXplorerListener>();
 
-            services.AddSingleton<LightningLikePaymentHandler>();
-            services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LightningLikePaymentHandler>());
-            services.AddSingleton<LNURLPayPaymentHandler>();
-            services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetService<LNURLPayPaymentHandler>());
+
             services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressNav",
                 "store-integrations-nav"));
             services.AddSingleton<IHostedService, LightningListener>();
             services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
-
+            services.AddSingleton<PaymentMethodViewProvider>();
+            
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
 
@@ -554,6 +559,9 @@ namespace BTCPayServer.Hosting
             services.AddRateProvider<BtcTurkRateProvider>();
             services.AddRateProvider<FreeCurrencyRatesRateProvider>();
 
+            services.AddSingleton<InvoiceBlobMigratorHostedService>();
+            services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());
+
             // Broken
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));
 
@@ -572,9 +580,59 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<BTCPayNetworkBase>(network);
             return services;
         }
-        public static void AddTransactionLinkProvider(this IServiceCollection services, PaymentMethodId paymentMethodId, TransactionLinkProvider provider)
+        public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetwork network)
         {
-            services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(paymentMethodId, provider));
+            // BTC
+            {
+                var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+                services.AddSingleton<BTCPayNetworkBase>(network);
+                services.AddSingleton<IPaymentMethodHandler>(provider =>
+                (BitcoinLikePaymentHandler)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinLikePaymentHandler), new object[] { network, pmi }));
+                services.AddSingleton<IPaymentLinkExtension>(provider =>
+(IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentLinkExtension), new object[] { network, pmi }));
+                services.AddSingleton<IPaymentModelExtension>(provider =>
+    (BitcoinPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentModelExtension), new object[] { network, pmi }));
+                services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
+(IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodBitpayAPIExtension), new object[] { pmi }));
+                services.AddSingleton<IPaymentMethodViewExtension>(provider =>
+(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodViewExtension), new object[] { pmi }));
+            }
+            if (network.NBitcoinNetwork.Consensus.SupportSegwit && network.SupportLightning)
+            {
+                // LN
+                {
+                    var pmi = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
+                    services.AddSingleton<IPaymentMethodHandler>(provider =>
+                    (LightningLikePaymentHandler)ActivatorUtilities.CreateInstance(provider, typeof(LightningLikePaymentHandler), new object[] { network, pmi }));
+                    services.AddSingleton<IPaymentLinkExtension>(provider =>
+(IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentLinkExtension), new object[] { network, pmi }));
+                    services.AddSingleton<IPaymentModelExtension>(provider =>
+                    (IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentModelExtension), new object[] { network, pmi }));
+                    services.AddSingleton<IPaymentMethodViewExtension>(provider =>
+(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentMethodViewExtension), new object[] { pmi }));
+                    services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
+(IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentMethodBitpayAPIExtension), new object[] { pmi }));
+                }
+                // LNURL
+                {
+                    var pmi = PaymentTypes.LNURL.GetPaymentMethodId(network.CryptoCode);
+                    services.AddSingleton<IPaymentMethodHandler>(provider =>
+    (LNURLPayPaymentHandler)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPayPaymentHandler), new object[] { network, pmi }));
+                    services.AddSingleton<IPaymentLinkExtension>(provider =>
+                    (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPayPaymentLinkExtension), new object[] { network, pmi }));
+                    services.AddSingleton<IPaymentModelExtension>(provider =>
+(IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPayPaymentModelExtension), new object[] { network, pmi }));
+                    services.AddSingleton<IPaymentMethodViewExtension>(provider =>
+(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPaymentMethodViewExtension), new object[] { pmi }));
+                    services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
+(IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPayPaymentMethodBitpayAPIExtension), new object[] { pmi }));
+                }
+            }
+            return services;
+        }
+        public static void AddTransactionLinkProvider(this IServiceCollection services, string cryptoCode, TransactionLinkProvider provider)
+        {
+            services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(cryptoCode, provider));
         }
         public static void AddRateProviderExchangeSharp<T>(this IServiceCollection services, RateSourceInfo rateInfo) where T : ExchangeAPI
         {

@@ -247,6 +247,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("TEXT");
 
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Archived")
                         .HasColumnType("INTEGER");
 
@@ -257,6 +260,9 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<DateTimeOffset>("Created")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("CustomerEmail")
@@ -505,13 +511,25 @@ namespace BTCPayServer.Migrations
                     b.Property<bool>("Accounted")
                         .HasColumnType("INTEGER");
 
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("TEXT");
+
                     b.Property<byte[]>("Blob")
                         .HasColumnType("BLOB");
 
                     b.Property<string>("Blob2")
                         .HasColumnType("TEXT");
 
+                    b.Property<DateTimeOffset?>("Created")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("InvoiceDataId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Status")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Type")

@@ -130,6 +130,11 @@ namespace BTCPayServer
         {
             return transactionInformationSet;
         }
+
+        public string GetTrackedDestination(Script scriptPubKey)
+        {
+            return scriptPubKey.Hash.ToString() + "#" + CryptoCode.ToUpperInvariant();
+        }
     }
 
     public abstract class BTCPayNetworkBase

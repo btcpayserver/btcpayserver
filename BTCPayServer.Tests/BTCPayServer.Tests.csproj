@@ -20,6 +20,14 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="TestData\OldInvoices.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="TestData\OldInvoices.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
     <PackageReference Include="Selenium.Support" Version="4.1.1" />

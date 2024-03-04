@@ -51,8 +51,11 @@
                                         <div class="payment-box">
                                             <div class="qr-container">
                                                 <vc:qr-code data="@value" />
-                                                <img src="@Model.CryptoImage" alt="@Model.CryptoCode" class="qr-icon" />
-                                            </div>
+												@if (Model.CryptoImage is not null)
+												{
+													<img src="@Model.CryptoImage" alt="@Model.CryptoCode" class="qr-icon" />
+												}
+											</div>
                                             <div class="input-group mt-3">
                                                 <div class="form-floating">
                                                     <vc:truncate-center text="@value" padding="15" elastic="true" classes="form-control-plaintext" />

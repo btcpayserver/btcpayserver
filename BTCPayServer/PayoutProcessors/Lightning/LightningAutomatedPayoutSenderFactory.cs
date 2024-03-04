@@ -43,7 +43,7 @@ public class LightningAutomatedPayoutSenderFactory : IPayoutProcessorFactory
         return _btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>()
             .Where(network => network.SupportLightning)
             .Select(network =>
-                new PaymentMethodId(network.CryptoCode, LightningPaymentType.Instance));
+                PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode));
     }
 
     public Task<IHostedService> ConstructProcessor(PayoutProcessorData settings)

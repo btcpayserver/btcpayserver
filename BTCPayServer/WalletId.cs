@@ -33,7 +33,7 @@ namespace BTCPayServer
 
         public PaymentMethodId GetPaymentMethodId()
         {
-            return new PaymentMethodId(CryptoCode, PaymentTypes.BTCLike);
+            return PaymentTypes.CHAIN.GetPaymentMethodId(CryptoCode);
         }
        
         public static WalletId Parse(string id)

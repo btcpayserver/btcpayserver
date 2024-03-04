@@ -213,20 +213,23 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                 GetViewModels(
                 InvoiceEntity invoice,
                 DisplayFormatter displayFormatter,
-                TransactionLinkProviders txLinkProvider)
+                TransactionLinkProviders txLinkProvider,
+                PaymentMethodHandlerDictionary handlers)
             {
                 return invoice
                 .GetPayments(true)
                 .Select(paymentEntity =>
                 {
-                    var paymentData = paymentEntity.GetCryptoPaymentData();
-                    var paymentMethodId = paymentEntity.GetPaymentMethodId();
-                    if (paymentData is null || paymentMethodId is null)
+                    var paymentMethodId = paymentEntity.PaymentMethodId;
+                    if (paymentMethodId is null)
                     {
                         return null;
                     }
-                    string txId = paymentData.GetPaymentId();
-                    string link = txLinkProvider.GetTransactionLink(paymentMethodId, txId);
+                    string txId = paymentEntity.Id;
+
+                    // TODO: Move that in an extension
+                    var cryptoCode = handlers.TryGetNetwork(paymentMethodId)?.CryptoCode;
+                    string link = cryptoCode is null ? null : txLinkProvider.GetTransactionLink(cryptoCode, txId);
 
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
                     {
@@ -236,12 +239,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                         AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
                         PaidFormatted = displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                         RateFormatted = displayFormatter.Currency(paymentEntity.Rate, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                        PaymentMethod = paymentMethodId.ToPrettyString(),
+                        PaymentMethod = paymentMethodId.ToString(),
                         Link = link,
                         Id = txId,
-                        Destination = paymentData.GetDestination(),
-                        PaymentProof = paymentData.GetPaymentProof(),
-                        PaymentType = paymentData.GetPaymentType()
+                        Destination = paymentEntity.Destination,
+                        //PaymentProof = paymentData.GetPaymentProof()
                     };
                 })
                 .Where(payment => payment != null)
@@ -258,7 +260,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public string Id { get; set; }
             public string Destination { get; set; }
             public string PaymentProof { get; set; }
-            public PaymentType PaymentType { get; set; }
         }
     }
 }

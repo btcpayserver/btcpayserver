@@ -1,9 +1,8 @@
+@using BTCPayServer.Payments
+@inject PaymentMethodViewProvider paymentMethodViewProvider
 @model (InvoiceDetailsModel Invoice, bool ShowAddress)
 @{
     var invoice = Model.Invoice;
-    var grouped = invoice.Payments
-        .GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType)
-        .Where(entities => entities.Key != null);
 }
 
 @if (invoice.Overpaid)
@@ -88,17 +87,14 @@
                         }
                     </td>
                 </tr>
-                var details = payment.PaymentMethodRaw.GetPaymentMethodDetails();
-                var name = details.GetAdditionalDataPartialName();
-                if (!string.IsNullOrEmpty(name))
+				var vvm = paymentMethodViewProvider.TryGetViewViewModel(payment.PaymentMethodRaw, "AdditionalPaymentMethodDetails");;
+				if (vvm != null)
                 {
-                    <partial name="@name" model="@details" />
+                    <partial name="@((string)vvm.View)" model="@vvm.ViewModel" />
                 }
             }
         </tbody>
     </table>
 </div>
-@foreach (var paymentGroup in grouped)
-{
-    <partial name="@paymentGroup.Key.InvoiceViewPaymentPartialName" model="@paymentGroup.ToList()" />
-}
+
+<vc:ui-extension-point location="store-invoices-payments" model="@invoice.Payments" />

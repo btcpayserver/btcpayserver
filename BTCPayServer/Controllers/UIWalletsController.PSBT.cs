@@ -79,7 +79,7 @@ namespace BTCPayServer.Controllers
             // we just assume that it is 20 blocks
             var assumedFeeRate = await fr.GetFeeRateAsync(20);
 
-            var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(NetworkProvider, network.CryptoCode))?.AccountDerivation;
+            var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(_handlers, network.CryptoCode))?.AccountDerivation;
             if (derivationScheme is null)
                 return NotFound();
 

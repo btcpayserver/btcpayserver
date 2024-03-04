@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
@@ -22,7 +23,7 @@ namespace BTCPayServer.Services.Wallets
         private readonly EventAggregator _eventAggregator;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly StoreRepository _storeRepository;
         private readonly WalletRepository _walletRepository;
 
@@ -30,13 +31,13 @@ namespace BTCPayServer.Services.Wallets
             new ConcurrentDictionary<WalletId, KeyPathInformation>();
 
         public WalletReceiveService(EventAggregator eventAggregator, ExplorerClientProvider explorerClientProvider,
-            BTCPayWalletProvider btcPayWalletProvider, BTCPayNetworkProvider btcPayNetworkProvider,
+            BTCPayWalletProvider btcPayWalletProvider, PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository, WalletRepository walletRepository)
         {
             _eventAggregator = eventAggregator;
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _handlers = handlers;
             _storeRepository = storeRepository;
             _walletRepository = walletRepository;
         }
@@ -70,7 +71,7 @@ namespace BTCPayServer.Services.Wallets
 
             var wallet = _btcPayWalletProvider.GetWallet(walletId.CryptoCode);
             var store = await _storeRepository.FindStore(walletId.StoreId);
-            var derivationScheme = store?.GetDerivationSchemeSettings(_btcPayNetworkProvider, walletId.CryptoCode);
+            var derivationScheme = store?.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
             if (wallet is null || derivationScheme is null)
             {
                 return null;

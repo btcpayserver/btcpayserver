@@ -14,9 +14,11 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Custodian;
 using BTCPayServer.Services.Custodian.Client;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -50,14 +52,17 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly CustodianAccountRepository _custodianAccountRepository;
         private readonly IEnumerable<ICustodian> _custodianRegistry;
         private readonly IAuthorizationService _authorizationService;
+        private readonly PaymentMethodHandlerDictionary _handlers;
 
         public GreenfieldCustodianAccountController(CustodianAccountRepository custodianAccountRepository,
             IEnumerable<ICustodian> custodianRegistry,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            PaymentMethodHandlerDictionary handlers)
         {
             _custodianAccountRepository = custodianAccountRepository;
             _custodianRegistry = custodianRegistry;
             _authorizationService = authorizationService;
+            _handlers = handlers;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/custodian-accounts")]
@@ -346,13 +351,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
-                if (pm == null)
+                if (!TryGetNetwork(request.PaymentMethod, out var network))
                 {
                     return this.CreateAPIError(400, "unsupported-payment-method",
                         $"Unsupported payment method.");
                 }
-                var asset = pm.CryptoCode;
+                var asset = network.CryptoCode;
                 decimal qty;
                 try
                 {
@@ -374,6 +378,17 @@ namespace BTCPayServer.Controllers.Greenfield
                 $"Withdrawals are not supported for \"{custodian.Name}\".");
         }
 
+        private bool TryGetNetwork(string paymentMethod, out BTCPayNetworkBase network)
+        {
+            if (PaymentMethodId.TryParse(paymentMethod, out var pm) && _handlers.TryGetNetwork(pm) is BTCPayNetwork n)
+            {
+                network = n;
+                return true;
+            }
+            network = null;
+            return false;
+        }
+
         [HttpPost("~/api/v1/stores/{storeId}/custodian-accounts/{accountId}/withdrawals")]
         [Authorize(Policy = Policies.CanWithdrawFromCustodianAccounts,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -385,13 +400,12 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (custodian is ICanWithdraw withdrawableCustodian)
             {
-                var pm = PaymentMethodId.TryParse(request.PaymentMethod);
-                if (pm == null)
+                if (!TryGetNetwork(request.PaymentMethod, out var network))
                 {
                     return this.CreateAPIError(400, "unsupported-payment-method",
                         $"Unsupported payment method.");
                 }
-                var asset = pm.CryptoCode;
+                var asset = network.CryptoCode;
                 decimal qty;
                 try
                 {

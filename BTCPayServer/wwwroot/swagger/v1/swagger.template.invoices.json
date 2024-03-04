@@ -1291,12 +1291,12 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethod": {
+                    "paymentMethodId": {
                         "$ref": "#/components/schemas/PaymentMethodId"
                     },
-                    "cryptoCode": {
+                    "currency": {
                         "type": "string",
-                        "description": "Crypto code of the payment method (e.g., \"BTC\" or \"LTC\")",
+                        "description": "The currency of the payment method (e.g., \"BTC\" or \"LTC\")",
                         "example": "BTC"
                     },
                     "destination": {
@@ -1334,10 +1334,10 @@
                         "format": "decimal",
                         "description": "The invoice amount, converted to this payment method's currency"
                     },
-                    "networkFee": {
+                    "paymentMethodFee": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The added merchant fee to pay for network costs of this payment method."
+                        "description": "The added merchant fee to pay for additional costs incurred by this payment method."
                     },
                     "payments": {
                         "type": "array",

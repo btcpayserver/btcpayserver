@@ -20,6 +20,7 @@ namespace BTCPayServer.PaymentRequest
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly CurrencyNameTable _currencies;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly DisplayFormatter _displayFormatter;
 
@@ -29,12 +30,14 @@ namespace BTCPayServer.PaymentRequest
             InvoiceRepository invoiceRepository,
             DisplayFormatter displayFormatter,
             CurrencyNameTable currencies,
+            PaymentMethodHandlerDictionary handlers,
             TransactionLinkProviders transactionLinkProviders)
         {
             _paymentRequestRepository = paymentRequestRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
             _currencies = currencies;
+            _handlers = handlers;
             _transactionLinkProviders = transactionLinkProviders;
             _displayFormatter = displayFormatter;
         }
@@ -118,7 +121,7 @@ namespace BTCPayServer.PaymentRequest
                 Invoices = new ViewPaymentRequestViewModel.InvoiceList(invoices.Select(entity =>
                 {
                     var state = entity.GetInvoiceState();
-                    var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(entity, _displayFormatter, _transactionLinkProviders);
+                    var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(entity, _displayFormatter, _transactionLinkProviders, _handlers);
 
                     if (state.Status == InvoiceStatusLegacy.Invalid ||
                         state.Status == InvoiceStatusLegacy.Expired && !payments.Any())

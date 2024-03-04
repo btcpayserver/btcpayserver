@@ -316,12 +316,9 @@
     {
         <partial name="Checkout-Cheating" model="@Model" />
     }
-    @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary
-        .Select(handler => handler.GetCheckoutUISettings())
-        .Where(settings => settings != null)
-        .DistinctBy(pm => pm.ExtensionPartial))
+	@foreach (var extensionPartial in Model.ExtensionPartials)
     {
-        <partial name="@paymentMethodHandler.ExtensionPartial-v2" model="@Model"/>
+		<partial name="@extensionPartial-v2" model="@Model" />
     }
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-v2-end", model = Model })

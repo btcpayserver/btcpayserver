@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Invoices;
 using Dapper;
 
 namespace BTCPayServer.Services.Wallets;
@@ -17,14 +18,14 @@ public enum WalletHistogramType
 
 public class WalletHistogramService
 {
-    private readonly BTCPayNetworkProvider _networkProvider;
+    private readonly PaymentMethodHandlerDictionary _handlers;
     private readonly NBXplorerConnectionFactory _connectionFactory;
 
     public WalletHistogramService(
-        BTCPayNetworkProvider networkProvider,
+        PaymentMethodHandlerDictionary handlers,
         NBXplorerConnectionFactory connectionFactory)
     {
-        _networkProvider = networkProvider;
+        _handlers = handlers;
         _connectionFactory = connectionFactory;
     }
 
@@ -33,10 +34,11 @@ public class WalletHistogramService
         // https://github.com/dgarage/NBXplorer/blob/master/docs/Postgres-Schema.md
         if (_connectionFactory.Available)
         {
-            var derivationSettings = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
+            var derivationSettings = store.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
             if (derivationSettings != null)
             {
-                var wallet_id = derivationSettings.GetNBXWalletId();
+                var network = _handlers.GetBitcoinHandler(walletId.CryptoCode);
+                var wallet_id = derivationSettings.GetNBXWalletId(network.Network.NBitcoinNetwork);
                 await using var conn = await _connectionFactory.OpenConnection();
 
                 var code = walletId.CryptoCode;

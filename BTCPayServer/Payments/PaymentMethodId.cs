@@ -3,6 +3,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
+using BTCPayServer.Services.Altcoins.Monero.Payments;
+using BTCPayServer.Services.Altcoins.Zcash.Payments;
 
 namespace BTCPayServer.Payments
 {
@@ -16,25 +18,32 @@ namespace BTCPayServer.Payments
         {
             ArgumentNullException.ThrowIfNull(others);
             return others.FirstOrDefault(f => f == this) ??
-                   others.FirstOrDefault(f => f.CryptoCode == CryptoCode);
+                   others.FirstOrDefault(f => f._CryptoCode == _CryptoCode);
+        }
+
+        public PaymentMethodId(string cryptoCode, string paymentType):
+            this(cryptoCode, PaymentTypes.Parse(paymentType))
+        {
         }
         public PaymentMethodId(string cryptoCode, PaymentType paymentType)
         {
             ArgumentNullException.ThrowIfNull(cryptoCode);
             ArgumentNullException.ThrowIfNull(paymentType);
             PaymentType = paymentType;
-            CryptoCode = cryptoCode.ToUpperInvariant();
+            _CryptoCode = cryptoCode.ToUpperInvariant();
         }
 
+        static PaymentMethodId _BTCOnChain = new PaymentMethodId("BTC", PaymentTypes.BTCLike);
         public bool IsBTCOnChain
         {
             get
             {
-                return CryptoCode == "BTC" && PaymentType == PaymentTypes.BTCLike;
+                return _BTCOnChain == this;
             }
         }
 
-        public string CryptoCode { get; private set; }
+        string _CryptoCode;
+        public string CryptoCode => _CryptoCode;
         public PaymentType PaymentType { get; private set; }
 
 
@@ -67,29 +76,12 @@ namespace BTCPayServer.Payments
 
         public override string ToString()
         {
-            //BTCLike case is special because it is in legacy mode.
-            return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
-        }
-        /// <summary>
-        /// A string we can expose to Greenfield API, not subjected to internal legacy
-        /// </summary>
-        /// <returns></returns>
-        public string ToStringNormalized()
-        {
-            if (PaymentType == PaymentTypes.BTCLike)
-                return CryptoCode;
-#if ALTCOINS
-            if (CryptoCode == "XMR" && PaymentType == PaymentTypes.MoneroLike)
-                return CryptoCode;
-            if ((CryptoCode == "YEC" || CryptoCode == "ZEC") && PaymentType == PaymentTypes.ZcashLike)
-                return CryptoCode;
-#endif
-            return $"{CryptoCode}-{PaymentType.ToStringNormalized()}";
+            return $"{_CryptoCode}-{PaymentType}";
         }
 
         public string ToPrettyString()
         {
-            return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
+            return $"{_CryptoCode} ({PaymentType.ToPrettyString()})";
         }
         static char[] Separators = new[] { '_', '-' };
         public static PaymentMethodId? TryParse(string? str)
@@ -107,15 +99,27 @@ namespace BTCPayServer.Payments
             PaymentType type = PaymentTypes.BTCLike;
 #if ALTCOINS
             if (parts[0].ToUpperInvariant() == "XMR")
-                type = PaymentTypes.MoneroLike;
+                type = MoneroPaymentType.Instance;
             if (parts[0].ToUpperInvariant() == "ZEC")
-                type = PaymentTypes.ZcashLike;
+                type = ZcashPaymentType.Instance;
 #endif
             if (parts.Length == 2)
             {
+                if (parts[1] is "LightningLike" or "LightningNetwork" or "OffChain")
+                    parts[1] = "LN";
+                else if (parts[1] is "BitcoinLike" or "OnChain" or "BTCLike" or "On-Chain")
+                    parts[1] = "CHAIN";
+                else if (parts[1] == "LNURLPAY")
+                    parts[1] = "LNURL";
+                else if (parts[1] == "MoneroLike")
+                    parts[1] = "CHAIN";
+                else if (parts[1] == "ZcashLike")
+                    parts[1] = "CHAIN";
                 if (!PaymentTypes.TryParse(parts[1], out type))
                     return false;
             }
+            if (parts.Length == 1)
+                type = PaymentTypes.BTCLike;
             paymentMethodId = new PaymentMethodId(parts[0], type);
             return true;
         }

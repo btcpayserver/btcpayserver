@@ -8,6 +8,7 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,6 +26,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
     private readonly StoreRepository _storeRepository;
     private readonly IOptions<LightningNetworkOptions> _options;
     private readonly BTCPayNetworkProvider _networkProvider;
+    private readonly PaymentMethodHandlerDictionary _handlers;
     public static int SecondsDelay = 60 * 10;
 
     public LightningPendingPayoutListener(
@@ -35,6 +37,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
         StoreRepository storeRepository,
         IOptions<LightningNetworkOptions> options,
         BTCPayNetworkProvider networkProvider,
+        PaymentMethodHandlerDictionary handlers,
         ILogger<LightningPendingPayoutListener> logger) : base(logger)
     {
         _lightningClientFactoryService = lightningClientFactoryService;
@@ -45,6 +48,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
         _options = options;
 
         _networkProvider = networkProvider;
+        _handlers = handlers;
     }
 
     private async Task Act()
@@ -83,9 +87,10 @@ public class LightningPendingPayoutListener : BaseAsyncService
                          data.PaymentMethodId))
             {
                 var pmi = PaymentMethodId.Parse(payoutByStoreByPaymentMethod.Key);
-                var pm = store.GetSupportedPaymentMethods(_networkProvider)
-                    .OfType<LightningSupportedPaymentMethod>()
-                    .FirstOrDefault(method => method.PaymentId == pmi);
+                var pm = store.GetPaymentMethodConfigs(_handlers)
+                    .Where(c => c.Value is LightningPaymentMethodConfig && c.Key == pmi)
+                    .Select(c => (LightningPaymentMethodConfig)c.Value)
+                    .FirstOrDefault();
                 if (pm is null)
                 {
                     continue;

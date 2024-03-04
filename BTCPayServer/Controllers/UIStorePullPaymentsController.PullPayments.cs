@@ -386,7 +386,7 @@ namespace BTCPayServer.Controllers
                 case "pay":
                     {
                         if (handler is { })
-                            return await handler?.InitiatePayment(paymentMethodId, payoutIds);
+                            return await handler.InitiatePayment(paymentMethodId, payoutIds);
                         TempData.SetStatusMessageModel(new StatusMessageModel()
                         {
                             Message = "Paying via this payment method is not supported",

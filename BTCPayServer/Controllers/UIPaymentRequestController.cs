@@ -121,7 +121,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!store.AnyPaymentMethodAvailable(_networkProvider))
+            if (!store.AnyPaymentMethodAvailable())
             {
                 return NoPaymentMethodResult(storeId);
             }
@@ -156,7 +156,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!store.AnyPaymentMethodAvailable(_networkProvider))
+            if (!store.AnyPaymentMethodAvailable())
             {
                 return NoPaymentMethodResult(store.Id);
             }

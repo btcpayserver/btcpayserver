@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer
 {
@@ -36,21 +38,10 @@ namespace BTCPayServer
             return permissionSet.Contains(permission, storeId);
         }
         
-        public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, BTCPayNetworkProvider networkProvider, string cryptoCode)
+        public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, PaymentMethodHandlerDictionary handlers, string cryptoCode)
         {
-            var paymentMethod = store
-                .GetSupportedPaymentMethods(networkProvider)
-                .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == cryptoCode);
-            return paymentMethod;
-        }
-        public static IEnumerable<DerivationSchemeSettings> GetDerivationSchemeSettings(this StoreData store, BTCPayNetworkProvider networkProvider)
-        {
-            var paymentMethod = store
-                .GetSupportedPaymentMethods(networkProvider)
-                .OfType<DerivationSchemeSettings>()
-                .Where(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike);
-            return paymentMethod;
+            var pmi = new PaymentMethodId(cryptoCode, Payments.PaymentTypes.BTCLike);
+            return store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
         }
     }
 }

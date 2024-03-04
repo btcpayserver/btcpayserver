@@ -6,6 +6,8 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -41,60 +43,61 @@ namespace BTCPayServer.Controllers
             var btcpayNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
             var network = btcpayNetwork.NBitcoinNetwork;
             var paymentMethodId = new[] { store.GetDefaultPaymentId() }
-                .Concat(store.GetEnabledPaymentIds(_NetworkProvider))
+                .Concat(store.GetEnabledPaymentIds())
                 .FirstOrDefault(p => p?.ToString() == request.PaymentMethodId);
 
             try
             {
-                var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
-                var destination = paymentMethod?.GetPaymentMethodDetails().GetPaymentDestination();
+                var paymentMethod = invoice.GetPaymentPrompt(paymentMethodId);
+                var details = _handlers.ParsePaymentPromptDetails(paymentMethod);
+                var destination = paymentMethod?.Destination;
 
-                switch (paymentMethod?.GetId().PaymentType)
+                if (details is BitcoinPaymentPromptDetails)
                 {
-                    case BitcoinPaymentType:
-                        var address = BitcoinAddress.Create(destination, network);
-                        var txid = (await cheater.CashCow.SendToAddressAsync(address, amount)).ToString();
+                    var address = BitcoinAddress.Create(destination, network);
+                    var txid = (await cheater.CashCow.SendToAddressAsync(address, amount)).ToString();
 
+                    return Ok(new
+                    {
+                        Txid = txid,
+                        AmountRemaining = paymentMethod.Calculate().Due - amount.ToDecimal(MoneyUnit.BTC),
+                        SuccessMessage = $"Created transaction {txid}"
+                    });
+                }
+                else if (details is LigthningPaymentPromptDetails)
+                {
+                    // requires the channels to be set up using the BTCPayServer.Tests/docker-lightning-channel-setup.sh script
+                    var lnClient = lightningClientFactoryService.Create(
+                        Environment.GetEnvironmentVariable("BTCPAY_BTCEXTERNALLNDREST"),
+                        btcpayNetwork);
+
+                    var lnAmount = new LightMoney(amount.Satoshi, LightMoneyUnit.Satoshi);
+                    var response = await lnClient.Pay(destination, new PayInvoiceParams { Amount = lnAmount });
+
+                    if (response.Result == PayResult.Ok)
+                    {
+                        var bolt11 = BOLT11PaymentRequest.Parse(destination, network);
+                        var paymentHash = bolt11.PaymentHash?.ToString();
+                        var paid = response.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC);
                         return Ok(new
                         {
-                            Txid = txid,
-                            AmountRemaining = paymentMethod.Calculate().Due - amount.ToDecimal(MoneyUnit.BTC),
-                            SuccessMessage = $"Created transaction {txid}"
+                            Txid = paymentHash,
+                            AmountRemaining = paymentMethod.Calculate().TotalDue - paid,
+                            SuccessMessage = $"Sent payment {paymentHash}"
                         });
-
-                    case LightningPaymentType:
-                        // requires the channels to be set up using the BTCPayServer.Tests/docker-lightning-channel-setup.sh script
-                        var lnClient = lightningClientFactoryService.Create(
-                            Environment.GetEnvironmentVariable("BTCPAY_BTCEXTERNALLNDREST"),
-                            btcpayNetwork);
-
-                        var lnAmount = new LightMoney(amount.Satoshi, LightMoneyUnit.Satoshi);
-                        var response = await lnClient.Pay(destination, new PayInvoiceParams { Amount = lnAmount });
-
-                        if (response.Result == PayResult.Ok)
-                        {
-                            var bolt11 = BOLT11PaymentRequest.Parse(destination, network);
-                            var paymentHash = bolt11.PaymentHash?.ToString();
-                            var paid = response.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC);
-                            return Ok(new
-                            {
-                                Txid = paymentHash,
-                                AmountRemaining = paymentMethod.Calculate().TotalDue - paid,
-                                SuccessMessage = $"Sent payment {paymentHash}"
-                            });
-                        }
-                        return UnprocessableEntity(new
-                        {
-                            ErrorMessage = response.ErrorDetail
-                        });
-
-                    default:
-                        return UnprocessableEntity(new
-                        {
-                            ErrorMessage = $"Payment method {paymentMethodId} is not supported"
-                        });
+                    }
+                    return UnprocessableEntity(new
+                    {
+                        ErrorMessage = response.ErrorDetail
+                    });
                 }
-
+                else
+                {
+                    return UnprocessableEntity(new
+                    {
+                        ErrorMessage = $"Payment method {paymentMethodId} is not supported"
+                    });
+                }
             }
             catch (Exception e)
             {

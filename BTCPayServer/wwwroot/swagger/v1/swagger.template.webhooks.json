@@ -779,7 +779,7 @@
                                 "description": "Whether this payment has been sent after expiration of the invoice",
                                 "nullable": false
                             },
-                            "paymentMethod": {
+                            "paymentMethodId": {
                                 "allOf": [
                                     {
                                         "$ref": "#/components/schemas/PaymentMethodId"

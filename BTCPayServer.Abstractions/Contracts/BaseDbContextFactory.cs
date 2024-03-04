@@ -1,5 +1,4 @@
 using System;
-using System.Data.Common;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;

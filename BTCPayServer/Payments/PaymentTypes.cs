@@ -19,7 +19,7 @@ namespace BTCPayServer.Payments
         {
             BTCLike, LightningLike, LNURLPay,
 #if ALTCOINS
-            MoneroLike, ZcashLike,
+            MoneroPaymentType.Instance, ZcashPaymentType.Instance,
 #endif
         };
         /// <summary>
@@ -34,18 +34,6 @@ namespace BTCPayServer.Payments
         /// Lightning payment
         /// </summary>
         public static LNURLPayPaymentType LNURLPay => LNURLPayPaymentType.Instance;
-
-#if ALTCOINS
-        /// <summary>
-        /// Monero payment
-        /// </summary>
-        public static MoneroPaymentType MoneroLike => MoneroPaymentType.Instance;
-        /// <summary>
-        /// Zcash payment
-        /// </summary>
-        public static ZcashPaymentType ZcashLike => ZcashPaymentType.Instance;
-#endif
-
         public static bool TryParse(string paymentType, out PaymentType type)
         {
             type = _paymentTypes.FirstOrDefault(type1 => type1.IsPaymentType(paymentType));
@@ -77,17 +65,9 @@ namespace BTCPayServer.Payments
         }
 
         public abstract string GetId();
-        public virtual string GetBadge() => null;
         public abstract CryptoPaymentData DeserializePaymentData(BTCPayNetworkBase network, string str);
         public abstract string SerializePaymentData(BTCPayNetworkBase network, CryptoPaymentData paymentData);
-        public abstract IPaymentMethodDetails DeserializePaymentMethodDetails(BTCPayNetworkBase network, string str);
-        public abstract string SerializePaymentMethodDetails(BTCPayNetworkBase network, IPaymentMethodDetails details);
-        public abstract ISupportedPaymentMethod DeserializeSupportedPaymentMethod(BTCPayNetworkBase network, JToken value);
-        public abstract string GetPaymentLink(BTCPayNetworkBase network, InvoiceEntity invoice, IPaymentMethodDetails paymentMethodDetails,
-            decimal cryptoInfoDue, string serverUri);
         public abstract string InvoiceViewPaymentPartialName { get; }
-
-        public abstract object GetGreenfieldData(ISupportedPaymentMethod supportedPaymentMethod, bool canModifyStore);
 
         public virtual bool IsPaymentType(string paymentType)
         {
@@ -105,8 +85,5 @@ namespace BTCPayServer.Payments
                 paymentType,
                 StringComparer.InvariantCultureIgnoreCase);
         }
-
-        public abstract void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, Services.Invoices.InvoiceCryptoInfo invoiceCryptoInfo,
-            string serverUrl);
     }
 }

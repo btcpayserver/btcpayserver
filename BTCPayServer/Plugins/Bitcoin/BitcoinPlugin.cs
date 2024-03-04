@@ -47,7 +47,7 @@ namespace BTCPayServer.Plugins.Bitcoin
             }.SetDefaultElectrumMapping(chainName);
            
             applicationBuilder.AddBTCPayNetwork(network);
-            applicationBuilder.AddTransactionLinkProvider(onChain, defaultTransactionLinkProvider);
+            applicationBuilder.AddTransactionLinkProvider(network.CryptoCode, defaultTransactionLinkProvider);
         }
     }
 }

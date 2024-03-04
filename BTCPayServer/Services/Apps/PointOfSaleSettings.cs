@@ -87,6 +87,7 @@ namespace BTCPayServer.Services.Apps
         public string Template { get; set; }
         public bool EnableShoppingCart { get; set; }
         public PosViewType DefaultView { get; set; }
+        public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
         public bool ShowSearch { get; set; } = true;

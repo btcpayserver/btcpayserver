@@ -101,6 +101,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 StoreBranding = storeBranding,
                 Step = step.ToString(CultureInfo.InvariantCulture),
                 ViewType = (PosViewType)viewType,
+                ShowItems = settings.ShowItems,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
                 ShowSearch = settings.ShowSearch,
@@ -580,6 +581,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AppName = app.Name,
                 Title = settings.Title,
                 DefaultView = settings.DefaultView,
+                ShowItems = settings.ShowItems,
                 ShowCustomAmount = settings.ShowCustomAmount,
                 ShowDiscount = settings.ShowDiscount,
                 ShowSearch = settings.ShowSearch,
@@ -670,6 +672,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 Title = vm.Title,
                 DefaultView = vm.DefaultView,
+                ShowItems = vm.ShowItems,
                 ShowCustomAmount = vm.ShowCustomAmount,
                 ShowDiscount = vm.ShowDiscount,
                 ShowSearch = vm.ShowSearch,

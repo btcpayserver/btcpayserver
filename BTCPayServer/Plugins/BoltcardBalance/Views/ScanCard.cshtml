@@ -63,6 +63,22 @@
 				document.getElementById("error").classList.add("d-none");
 			}
         }
+		function toggleDetails(className)
+		{
+			var el = document.getElementsByClassName("boltcard-details");
+			for (var i = 0; i < el.length; i++) {
+				if (el[i].classList.contains(className)) {
+					if (el[i].classList.contains("d-none"))
+						el[i].classList.remove("d-none");
+					else
+						el[i].classList.add("d-none");
+				}
+				else
+				{
+					el[i].classList.add("d-none");
+				}
+			}
+		}
         
 		function delay(ms) {
 			return new Promise(resolve => setTimeout(resolve, ms));
@@ -86,14 +102,11 @@
                         });
     
                         document.getElementById("lnurlwithdraw-button").addEventListener("click", function (e) {
-                            var el = document.getElementsByClassName("lnurl-pay");
-                            for (var i = 0; i < el.length; i++) {
-                                if (el[i].classList.contains("d-none"))
-                                    el[i].classList.remove("d-none");
-                                else
-                                    el[i].classList.add("d-none");
-                            }
+							toggleDetails('lnurl-pay');
                         });
+						document.getElementById("reset-button").addEventListener("click", function (e) {
+							toggleDetails('boltcard-reset');
+						});
 						await uiDelay;
                         setState("ShowBalance");
                     }
@@ -197,7 +210,7 @@
             catch (e) {
                 handleError(e);
             }
-			//showBalance("lnurl://ewfw?p=test&c=test");
+			// showBalance("lnurl://ewfw?p=test&c=test");
 		});
 	})();
 </script>

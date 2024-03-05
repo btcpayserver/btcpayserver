@@ -5,8 +5,10 @@ using System.Threading.Tasks;
 using AngleSharp.Dom;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Models;
 using BTCPayServer.Plugins.BoltcardBalance.ViewModels;
 using BTCPayServer.Plugins.BoltcardFactory;
 using BTCPayServer.Services;
@@ -87,7 +89,8 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
                 Currency = blob.Currency,
                 AmountDue = blob.Limit - totalPaid,
                 LNUrlBech32 = bech32LNUrl.AbsoluteUri,
-                LNUrlPay = Url.Action(nameof(UIBoltcardController.GetPayRequest), "UIBoltcard", new { p }, "lnurlp")
+                LNUrlPay = Url.Action(nameof(UIBoltcardController.GetPayRequest), "UIBoltcard", new { p }, "lnurlp"),
+                BoltcardKeysResetLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(pp.Id, OnExistingBehavior.KeepVersion)}"
             };
             foreach (var payout in payouts)
             {
@@ -106,6 +109,18 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
             });
 
             return View($"{BoltcardBalancePlugin.ViewsDirectory}/BalanceView.cshtml", vm);
+        }
+
+        private string GetBoltcardDeeplinkUrl(string ppId, OnExistingBehavior onExisting)
+        {
+            var registerUrl = Url.Action(nameof(GreenfieldPullPaymentController.RegisterBoltcard), "GreenfieldPullPayment",
+                            new
+                            {
+                                pullPaymentId = ppId,
+                                onExisting = onExisting.ToString()
+                            }, Request.Scheme, Request.Host.ToString());
+            registerUrl = Uri.EscapeDataString(registerUrl);
+            return registerUrl;
         }
     }
 }

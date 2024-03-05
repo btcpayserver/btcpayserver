@@ -4,37 +4,43 @@
     position: relative;
 }
 
-#RecentTransactionsToggle {
+button[data-bs-toggle] {
     position: absolute;
-    top: var(--btcpay-space-l);
-    left: var(--btcpay-space-m);
+    top: 1.75rem;
     z-index: 1;
 }
 
-#RecentTransactionsToggle .icon {
-    --btn-icon-size: 2.25em;
+button[data-bs-toggle] .icon {
+    --btn-icon-size: 1.75em;
 }
-#RecentTransactionsRefresh[disabled] .icon {
-    animation: 1.25s linear infinite spinner-border;
+#ItemsListToggle {
+    right: var(--btcpay-space-m);
 }
-#RecentTransactions .list-group {
-    margin: calc(var(--btcpay-modal-padding) * -1);
-    width: calc(100% + var(--btcpay-modal-padding) * 2);
-}
-
-#RecentTransactions .list-group-item {
-    background-color: transparent;
+#RecentTransactionsToggle {
+    left: var(--btcpay-space-m);
 }
 
-#RecentTransactions .list-group .badge-container {
-    flex: 0 0 5.125rem;
-    text-align: right;
-}
 
 @media (max-width: 359px) {
     #RecentTransactions .list-group .badge-container {
         flex-grow: 1;
     }
+}
+
+#PosItems {
+    --image-size: 3rem;
+}
+
+#PosItems .img img {
+    width: var(--image-size);
+    height: var(--image-size);
+}
+
+#PosItems .img img {
+    max-width: var(--image-size);
+    max-height: var(--image-size);
+    object-fit: scale-down;
+    border-radius: var(--btcpay-border-radius);
 }
 
 /* modes */

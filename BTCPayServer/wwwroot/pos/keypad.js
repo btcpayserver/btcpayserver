@@ -10,9 +10,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 defaultFontSize: displayFontSize,
                 keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+'],
                 amounts: [null],
-                recentTransactions: [],
-                recentTransactionsLoading: false,
-                dateFormatter: new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' })
+                persistState: false
             }
         },
         computed: {
@@ -120,35 +118,11 @@ document.addEventListener("DOMContentLoaded",function () {
                     // clear completely
                     this.clear();
                 }
-            },
-            closeModal() {
-                bootstrap.Modal.getInstance(this.$refs.RecentTransactions).hide();
-            },
-            displayDate(val) {
-                const date = new Date(val);
-                return this.dateFormatter.format(date);
-            },
-            async loadRecentTransactions() {
-                this.recentTransactionsLoading = true;
-                const { url } = this.$refs.RecentTransactions.dataset;
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        this.recentTransactions = await response.json();
-                    }
-                } catch (error) {
-                    console.error(error);
-                } finally {
-                    this.recentTransactionsLoading = false;
-                }
             }
         },
         created() {
             // We need to unset state in case user clicks the browser back button
             window.addEventListener('pagehide', () => { this.payButtonLoading = false })
-        },
-        mounted() {
-            this.$refs.RecentTransactions.addEventListener('show.bs.modal', this.loadRecentTransactions);
         }
     });
 });

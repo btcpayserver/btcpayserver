@@ -49,6 +49,7 @@ const posCommon = {
             displayCategory: '*',
             searchTerm: null,
             cart: [],
+            amounts: [null],
             recentTransactions: [],
             recentTransactionsLoading: false,
             dateFormatter: new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' }),
@@ -57,13 +58,14 @@ const posCommon = {
     computed: {
         amountNumeric () {
             const { divisibility } = this.currencyInfo
-            const cart = parseFloat(this.cart.reduce((res, item) => res + (item.price||0) * item.count, 0).toFixed(divisibility))
-            const value = parseFloat(this.amount) + cart
+            const cart = this.cart.reduce((res, item) => res + (item.price || 0) * item.count, 0).toFixed(divisibility)
+            const value = parseFloat(this.amount || 0) + parseFloat(cart)
             return isNaN(value) ? 0.0 : parseFloat(value.toFixed(divisibility))
         },
         posdata () {
             const data = { subTotal: this.amountNumeric, total: this.totalNumeric }
             if (this.cart) data.cart = this.cart
+            if (this.amounts) data.amounts = this.amounts.map(val => parseFloat(val || '0'))
             if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
             if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
             if (this.tipNumeric > 0) data.tip = this.tipNumeric
@@ -131,6 +133,9 @@ const posCommon = {
                 }
             },
             deep: true
+        },
+        amounts (values) {
+            this.amount = values.reduce((total, current) => total + parseFloat(current || '0'), 0);
         }
     },
     methods: {
@@ -240,8 +245,10 @@ const posCommon = {
                 this.removeFromCart(itemInCart.id);
             }
         },
-        clearCart() {
+        clear() {
             this.cart = [];
+            this.amounts = [null];
+            this.tip = this.discount = this.tipPercent = this.discountPercent = null;
         },
         forEachItem(callback) {
             if (this.$refs.posItems) {

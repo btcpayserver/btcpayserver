@@ -217,9 +217,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 title = settings.Title;
                 // if cart IS enabled and we detect posdata that matches the cart system's, check inventory for the items
                 price = amount;
-                if (currentView == PosViewType.Cart && AppService.TryParsePosCartItems(jposData, out cartItems))
+                if (AppService.TryParsePosCartItems(jposData, out cartItems))
                 {
-                    price = 0.0m;
+                    price = jposData.TryGetValue("amounts", out var amounts) && amounts is JArray { Count: > 0 } amountsArray
+                        ? amountsArray.Values<decimal>().Sum()
+                        : 0.0m;
                     choices = AppService.Parse(settings.Template, false);
                     foreach (var cartItem in cartItems)
                     {
@@ -379,6 +381,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     var ident = selectedChoice.Title ?? selectedChoice.Id;
                                     var key = selectedChoice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
                                     cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
+                                }
+
+                                if (jposData.TryGetValue("amounts", out var amounts) && amounts is JArray { Count: > 0 } amountsArray)
+                                {
+                                    for (var i = 0; i < amountsArray.Count; i++)
+                                    {
+                                        cartData.Add($"Manual entry {i+1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                                    }
                                 }
                                 receiptData.Add("Cart", cartData);
                             }

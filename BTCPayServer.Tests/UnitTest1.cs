@@ -2986,7 +2986,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanCreateReports()
         {
-            using var tester = CreateServerTester();
+            using var tester = CreateServerTester(newDb: true);
             tester.ActivateLightning();
             tester.DeleteStore = false;
             await tester.StartAsync();
@@ -3084,6 +3084,13 @@ namespace BTCPayServer.Tests
                 .ToDictionary(d => d.Key, r => r.Sum(d => d[countIndex].Value<int>()));
             Assert.Equal(8, itemsCount["green-tea"]);
             Assert.Equal(1, itemsCount["black-tea"]);
+
+            await acc.ImportOldInvoices();
+            var date2018 = new DateTimeOffset(2018, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            report = await GetReport(acc, new() { ViewName = "Payments", TimePeriod = new TimePeriod() { From = date2018, To = date2018 + TimeSpan.FromDays(365) } });
+            var invoiceIdIndex = report.GetIndex("InvoiceId");
+            var oldPaymentsCount = report.Data.Count(d => d[invoiceIdIndex].Value<string>() == "Q7RqoHLngK9svM4MgRyi9y");
+            Assert.Equal(8, oldPaymentsCount); // 10 payments, but 2 unaccounted
         }
 
         private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)

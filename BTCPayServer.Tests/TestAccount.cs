@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -25,6 +27,7 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Operations;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;
@@ -32,6 +35,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Npgsql;
 using Xunit;
 using Xunit.Sdk;
 
@@ -646,6 +650,34 @@ retry:
             await ctx.SaveChangesAsync();
             LNAddress = lnAddrUser;
             return lnAddrUser;
+        }
+
+        public async Task ImportOldInvoices(string storeId = null)
+        {
+            storeId ??= StoreId;
+            var oldInvoices = File.ReadAllLines(TestUtils.GetTestDataFullPath("OldInvoices.csv"));
+            var oldPayments = File.ReadAllLines(TestUtils.GetTestDataFullPath("OldPayments.csv"));
+            var dbContext = this.parent.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+            var db = (NpgsqlConnection)dbContext.Database.GetDbConnection();
+            await db.OpenAsync();
+            using (var writer = db.BeginTextImport("COPY \"Invoices\" (\"Id\",\"Blob\",\"Created\",\"CustomerEmail\",\"ExceptionStatus\",\"ItemCode\",\"OrderId\",\"Status\",\"StoreDataId\",\"Archived\",\"Blob2\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            {
+                foreach (var invoice in oldInvoices)
+                {
+                    var localInvoice = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
+                    await writer.WriteLineAsync(localInvoice);
+                }
+                await writer.FlushAsync();
+            }
+            using (var writer = db.BeginTextImport("COPY \"Payments\" (\"Id\",\"Blob\",\"InvoiceDataId\",\"Accounted\",\"Blob2\",\"Type\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            {
+                foreach (var invoice in oldPayments)
+                {
+                    var localPayment = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
+                    await writer.WriteLineAsync(localPayment);
+                }
+                await writer.FlushAsync();
+            }
         }
     }
 }

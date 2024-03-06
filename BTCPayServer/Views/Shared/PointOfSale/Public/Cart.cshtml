@@ -1,6 +1,9 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.TagHelpers
 @inject DisplayFormatter DisplayFormatter
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
@@ -36,6 +39,9 @@
                     <button id="CartToggle" class="cart-toggle-btn" type="button" v-on:click="toggleCart" aria-controls="cart" :disabled="cartCount === 0">
                         <vc:icon symbol="pos-cart" />
                         <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
+                    </button>
+                    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
+                        <vc:icon symbol="invoice-2 "/>
                     </button>
                 </div>
                 @if (Model.ShowSearch)
@@ -250,4 +256,5 @@
             </div>
         </div>
     </aside>
+    <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
 </div>

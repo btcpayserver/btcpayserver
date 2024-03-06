@@ -15,8 +15,10 @@
     }
 }
 <form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
-    <input type="hidden" name="posdata" v-model="posdata" id="posdata">
-    <input type="hidden" name="amount" v-model="totalNumeric">
+    <input type="hidden" name="amount" :value="totalNumeric">
+    <input type="hidden" name="tip" :value="tipNumeric">
+    <input type="hidden" name="discount" :value="discountPercentNumeric">
+    <input type="hidden" name="posdata" :value="posdata">
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted" id="Currency">{{currencyCode}}</div>
         <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(total, false) }}</div>

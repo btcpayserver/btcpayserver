@@ -36,7 +36,7 @@
 			</div>
 		</div>
         <p class="text-secondary">NFC not supported in this device</p>
-        <p class="text-secondary">Please use Chrome on Android, or extract the NFC value from the card (using an NFC reader app) and input below</p>
+        <p class="text-secondary">Please use Chrome on Android, or a lightning wallet that supports Bolt cards, or extract the NFC value from the card (using an NFC reader app) and input below</p>
         <div class="input-group">
             <input type="text" class="form-control" id="nfc-manual-value" placeholder="lnurlw:..." />
             <button class="btn btn-secondary" id="nfc-manual-submit">Extract</button>
@@ -107,9 +107,6 @@
                             document.getElementById("balance-table").innerHTML = "";
                         });
     
-                        document.getElementById("lnurlwithdraw-button").addEventListener("click", function (e) {
-							toggleDetails('lnurl-pay');
-                        });
 						document.getElementById("reset-button").addEventListener("click", function (e) {
 							toggleDetails('boltcard-reset');
 						});

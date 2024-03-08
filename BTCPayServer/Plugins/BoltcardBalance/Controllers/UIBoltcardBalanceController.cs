@@ -90,7 +90,8 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
                 AmountDue = blob.Limit - totalPaid,
                 LNUrlBech32 = bech32LNUrl.AbsoluteUri,
                 LNUrlPay = Url.Action(nameof(UIBoltcardController.GetPayRequest), "UIBoltcard", new { p }, "lnurlp"),
-                BoltcardKeysResetLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(pp.Id, OnExistingBehavior.KeepVersion)}"
+                BoltcardKeysResetLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(pp.Id, OnExistingBehavior.KeepVersion)}",
+                PullPaymentLink = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId = pp.Id }, Request.Scheme, Request.Host.ToString())
             };
             foreach (var payout in payouts)
             {

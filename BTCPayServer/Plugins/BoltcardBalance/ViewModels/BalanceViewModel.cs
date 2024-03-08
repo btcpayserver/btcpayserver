@@ -18,6 +18,7 @@ namespace BTCPayServer.Plugins.BoltcardBalance.ViewModels
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
         public string LNUrlBech32 { get; set; }
         public string BoltcardKeysResetLink { get; set; }
+        public string PullPaymentLink { get; set; }
         public string LNUrlPay { get; set; }
 
     }

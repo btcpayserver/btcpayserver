@@ -13,16 +13,12 @@
 		<nav id="wizard-navbar">
 			@if (this.ViewData["NoCancelWizard"] is not true)
 			{
-			
-                <button type="button" class="btn btn-outline-danger only-for-js mt-4" id="reset-button">
-                    <span>Reset Boltcard</span>
-                </button>
-                @if (Model.AmountDue > 0)
-                {
-                    <div class="boltcard-reset boltcard-details d-flex gap-3 mt-3 mt-sm-0 d-none">
-                        <a class="btn btn-outline-primary" href="@Model.PullPaymentLink">Sweep remaining balance</a>
-                    </div>
-                }
+				<button type="button" class="btn btn-secondary only-for-js mt-4" id="lnurlwithdraw-button">
+					<span class="fa fa-qrcode fa-2x" title="Deposit"></span>
+				</button>
+				<button type="button" class="btn btn-outline-danger only-for-js mt-4" id="reset-button">
+					<span>Reset Boltcard</span>
+				</button>
 				<a href="#" id="CancelWizard" class="cancel mt-4">
 					<vc:icon symbol="close" />
 				</a>
@@ -35,15 +31,14 @@
 						<dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
 					</div>
 				</dl>
-                @if (Model.AmountDue > 0)
-                {
-                    <div class="boltcard-reset boltcard-details d-flex gap-3 mt-3 mt-sm-0 d-none">
-                        <a class="btn btn-outline-primary" href="@Model.PullPaymentLink">Sweep remaining balance</a>
-                    </div>
-                }
-              
-                <div class="boltcard-reset boltcard-details d-flex gap-3 mt-3 mt-sm-0 d-none">
+				<div class="lnurl-pay boltcard-details d-none">
+					<vc:qr-code data="@Model.LNUrlBech32" />
+				</div>
+				<div class="boltcard-reset boltcard-details d-flex gap-3 mt-3 mt-sm-0 d-none">
 					<a class="btn btn-outline-danger" target="_blank" href="@Model.BoltcardKeysResetLink">Reset Boltcard from app</a>
+				</div>
+				<div class="lnurl-pay boltcard-details d-flex gap-3 mt-3 mt-sm-0 d-none">
+					<a class="btn btn-primary" target="_blank" href="@Model.LNUrlBech32">Deposit from Wallet...</a>
 				</div>
 			</div>
 		</div>

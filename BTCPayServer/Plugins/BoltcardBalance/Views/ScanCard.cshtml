@@ -35,7 +35,12 @@
 				<vc:qr-code data="@Context.Request.GetCurrentUrl()" />
 			</div>
 		</div>
-		<p class="text-secondary">NFC not supported in this device</p>
+        <p class="text-secondary">NFC not supported in this device</p>
+        <p class="text-secondary">Please use Chrome on Android, or extract the NFC value from the card (using an NFC reader app) and input below</p>
+        <div class="input-group">
+            <input type="text" class="form-control" id="nfc-manual-value" placeholder="lnurlw:..." />
+            <button class="btn btn-secondary" id="nfc-manual-submit">Extract</button>
+        </div>
 	</div>
 	<div id="scanning-btn" class="d-flex align-items-center justify-content-center d-none">
 		<div class="d-flex gap-3 mt-3 mt-sm-0">
@@ -85,6 +90,7 @@
 		}
 		async function showBalance(lnurlw) {
             try {
+                const initState = (!('NDEFReader' in window)) ? "NFCNotSupported" : "WaitingForCard";
                 setState("Submitting");
                 var uiDelay = delay(1000);
                 var url = window.location.href.replace("#", "");
@@ -97,7 +103,7 @@
                         document.getElementById("balance-table").innerHTML = this.responseText;
                         document.getElementById("CancelWizard").addEventListener("click", function (e) {
                             e.preventDefault();
-                            setState("WaitingForCard");
+                            setState(initState);
                             document.getElementById("balance-table").innerHTML = "";
                         });
     
@@ -111,11 +117,11 @@
                         setState("ShowBalance");
                     }
                     else if(this.readyState == 4 && this.status == 404) {
-                        setState("WaitingForCard");
+                        setState(initState);
 						handleError(new Error("Initialized, but NOT by Bitcoin Atlantis"));
                     }
                     else {
-                        setState("WaitingForCard");
+                        setState(initState);
                     }
                 };
                 xhttp.open('GET', url, true);
@@ -206,6 +212,12 @@
                     }
                 }
                 delegate('click', "#start-scan-btn", startScan);
+                delegate('click', "#nfc-manual-submit", async function () {
+                    var value = document.getElementById("nfc-manual-value").value;
+                    if (value) {
+                        await showBalance(value);
+                    }
+                });
             }
             catch (e) {
                 handleError(e);

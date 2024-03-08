@@ -213,6 +213,7 @@
                     var value = document.getElementById("nfc-manual-value").value;
                     if (value) {
                         await showBalance(value);
+                        document.querySelector(".boltcard-reset").classList.add("d-none");
                     }
                 });
             }

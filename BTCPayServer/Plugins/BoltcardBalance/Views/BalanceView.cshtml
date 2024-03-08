@@ -5,21 +5,19 @@
 @model BalanceViewModel
 
 @{
-	Layout = null;
+    Layout = null;
 }
 
 <div class="col col-12 col-lg-12 mb-4">
-	<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-		<nav id="wizard-navbar">
-			@if (this.ViewData["NoCancelWizard"] is not true)
-			{
-			
-               
-				<a href="#" id="CancelWizard" class="cancel mt-4">
-					<vc:icon symbol="close" />
-				</a>
-			}
-		</nav>
+    <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
+        <nav id="wizard-navbar">
+            @if (this.ViewData["NoCancelWizard"] is not true)
+            {
+                <a href="#" id="CancelWizard" class="cancel mt-4">
+                    <vc:icon symbol="close" />
+                </a>
+            }
+        </nav>
         <div class="d-flex justify-content-center">
             <div class="d-flex flex-column justify-content-center align-items-center">
                 <dl class="mb-0 mt-md-4">
@@ -27,56 +25,48 @@
                         <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
                     </div>
                 </dl>
-                @if (Model.AmountDue > 0)
-                {
-                    <div class="boltcard-reset boltcard-details d-flex gap-3 mt-3 mt-sm-0 d-none">
-                        <a class="btn btn-outline-primary" href="@Model.PullPaymentLink">Sweep remaining balance</a>
-                    </div>
-                }
-              
-                <div class="boltcard-reset boltcard-details d-flex gap-3 mt-3 mt-sm-0 d-none nfc-supported">
-                    <a class="btn btn-outline-danger" target="_blank" href="@Model.BoltcardKeysResetLink">Reset Boltcard from app</a>
-                    <p class="text-secondary">Requires installing the <a href="https://play.google.com/store/apps/details?id=com.lightningnfcapp&hl=en&gl=US">Bolt Card NFC Card Creator app</a></p>
-                </div>
+
             </div>
         </div>
 
-        <div class="d-flex justify-content-center gap-2 mt-4">
-            <button type="button" class="btn btn-outline-danger only-for-js  nfc-supported boltcard-reset" id="reset-button">
-                <span>Reset Boltcard</span>
-            </button>
+        <div class="d-flex justify-content-center">
             @if (Model.AmountDue > 0)
             {
                 <a class="btn btn-outline-primary" href="@Model.PullPaymentLink">Sweep remaining balance</a>
             }
+
+            <div class="boltcard-reset boltcard-details mt-3 mt-sm-0 nfc-supported w-100  text-center">
+                <a class="btn btn-outline-danger" href="@Model.BoltcardKeysResetLink">Reset Boltcard</a>
+                <p class="text-secondary mt-2">Requires installing the <a href="https://play.google.com/store/apps/details?id=com.lightningnfcapp&hl=en&gl=US">Bolt Card NFC Card Creator app</a></p>
+            </div>
         </div>
-        
+
     </div>
 </div>
 
 @if (Model.Transactions.Any())
 {
-	<div class="col col-12 col-lg-12 mb-4">
-		<div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded table-responsive">
-			<table class="table table-hover">
-				<thead>
-					<tr>
-						<th class="date-col">Date</th>
-						<th class="amount-col">Amount</th>
-					</tr>
-				</thead>
-				<tbody>
-					@foreach (var tx in Model.Transactions)
-					{
-						<tr>
-							<td class="date-col">@tx.Date.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</td>
-							<td class="amount-col">
-								<span data-sensitive class="text-@(tx.Positive ? "success" : "danger")">@DisplayFormatter.Currency(tx.Balance, Model.Currency, DisplayFormatter.CurrencyFormat.Code)</span>
-							</td>
-						</tr>
-					}
-				</tbody>
-			</table>
-		</div>
-	</div>
+    <div class="col col-12 col-lg-12 mb-4">
+        <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded table-responsive">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th class="date-col">Date</th>
+                    <th class="amount-col">Amount</th>
+                </tr>
+                </thead>
+                <tbody>
+                @foreach (var tx in Model.Transactions)
+                {
+                    <tr>
+                        <td class="date-col">@tx.Date.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative)</td>
+                        <td class="amount-col">
+                            <span data-sensitive class="text-@(tx.Positive ? "success" : "danger")">@DisplayFormatter.Currency(tx.Balance, Model.Currency, DisplayFormatter.CurrencyFormat.Code)</span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }

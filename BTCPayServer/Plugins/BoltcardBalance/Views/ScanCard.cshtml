@@ -107,9 +107,6 @@
                             document.getElementById("balance-table").innerHTML = "";
                         });
     
-						document.getElementById("reset-button").addEventListener("click", function (e) {
-							toggleDetails('boltcard-reset');
-						});
 						await uiDelay;
                         setState("ShowBalance");
                     }
@@ -170,7 +167,7 @@
 			if (state === "NFCNotSupported")
 			{
 				document.getElementById("qr").classList.remove("d-none");
-                document.querySelector(".nfc-supported").forEach(el => {
+                document.querySelectorAll(".nfc-supported").forEach(el => {
                     el.classList.add("d-none");
                 });
 			}

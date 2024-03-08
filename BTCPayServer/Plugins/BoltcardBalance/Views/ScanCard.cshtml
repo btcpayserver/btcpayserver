@@ -170,6 +170,9 @@
 			if (state === "NFCNotSupported")
 			{
 				document.getElementById("qr").classList.remove("d-none");
+                document.querySelector(".nfc-supported").foreach(el => {
+                    el.classList.add("d-none");
+                });
 			}
 			else if (state === "WaitingForPermission")
 			{

@@ -98,13 +98,13 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
                 BoltcardKeysResetLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(pp.Id, OnExistingBehavior.KeepVersion)}",
                 WipeData = JObject.FromObject(new
                 {
-                    version = registration.Version,
+                    version = 1,
                     action = "wipe",
-                    K0 = Encoders.Hex.EncodeData(boltCardKeys.AppMasterKey.ToBytes()).ToUpperInvariant(),
-                    K1 = Encoders.Hex.EncodeData(boltCardKeys.EncryptionKey.ToBytes()).ToUpperInvariant(),
-                    K2 = Encoders.Hex.EncodeData(boltCardKeys.AuthenticationKey.ToBytes()).ToUpperInvariant(),
-                    K3 = Encoders.Hex.EncodeData(boltCardKeys.K3.ToBytes()).ToUpperInvariant(),
-                    K4 = Encoders.Hex.EncodeData(boltCardKeys.K4.ToBytes()).ToUpperInvariant(),
+                    k0 = Encoders.Hex.EncodeData(boltCardKeys.AppMasterKey.ToBytes()).ToUpperInvariant(),
+                    k1 = Encoders.Hex.EncodeData(boltCardKeys.EncryptionKey.ToBytes()).ToUpperInvariant(),
+                    k2 = Encoders.Hex.EncodeData(boltCardKeys.AuthenticationKey.ToBytes()).ToUpperInvariant(),
+                    k3 = Encoders.Hex.EncodeData(boltCardKeys.K3.ToBytes()).ToUpperInvariant(),
+                    k4 = Encoders.Hex.EncodeData(boltCardKeys.K4.ToBytes()).ToUpperInvariant(),
                
                 }).ToString(Newtonsoft.Json.Formatting.None),
                 PullPaymentLink = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId = pp.Id }, Request.Scheme, Request.Host.ToString())

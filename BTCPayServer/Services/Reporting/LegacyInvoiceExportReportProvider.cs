@@ -15,7 +15,7 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
     private readonly InvoiceRepository _invoiceRepository;
 
 
-    public override string Name { get; } = "Invoice Export (legacy)";
+    public override string Name { get; } = "Legacy Invoice Export";
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {

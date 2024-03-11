@@ -301,6 +301,16 @@ namespace BTCPayServer.Tests
             Assert.Equal("test app title", app.Title);
             Assert.False(app.Archived);
 
+            // Test title falls back to name
+            app = await client.CreatePointOfSaleApp(
+                user.StoreId,
+                new CreatePointOfSaleAppRequest
+                {
+                    AppName = "test app name"
+                }
+            );
+            Assert.Equal("test app name", app.Title);
+
             // Make sure we return a 404 if we try to get an app that doesn't exist
             await AssertHttpError(404, async () =>
             {
@@ -469,6 +479,16 @@ namespace BTCPayServer.Tests
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("Crowdfund", app.AppType);
             Assert.False(app.Archived);
+
+            // Test title falls back to name
+            app = await client.CreateCrowdfundApp(
+                user.StoreId,
+                new CreateCrowdfundAppRequest
+                {
+                    AppName = "test app name"
+                }
+            );
+            Assert.Equal("test app name", app.Title);
 
             // Make sure we return a 404 if we try to get an app that doesn't exist
             await AssertHttpError(404, async () =>

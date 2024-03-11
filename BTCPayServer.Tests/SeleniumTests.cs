@@ -86,8 +86,9 @@ namespace BTCPayServer.Tests
             s.GenerateWallet(isHotWallet: true);
 
             // Point Of Sale
+            var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
@@ -1152,12 +1153,15 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
+            var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
             s.CreateNewStore();
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
+            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-
+            Assert.Equal(appName, s.Driver.FindElement(By.Id("Title")).GetAttribute("value"));
+            s.Driver.FindElement(By.Id("Title")).Clear();
+            s.Driver.FindElement(By.Id("Title")).SendKeys("Tea shop");
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1)")).Click();
             s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
@@ -1269,11 +1273,13 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.AddDerivationScheme();
 
+            var appName = $"CF-{Guid.NewGuid().ToString()[..21]}";
             s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
+            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-
+            Assert.Equal(appName, s.Driver.FindElement(By.Id("Title")).GetAttribute("value"));
+            s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
             s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
             s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
@@ -2507,7 +2513,9 @@ namespace BTCPayServer.Tests
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            
+            var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Print']")).Click();
@@ -2556,8 +2564,9 @@ namespace BTCPayServer.Tests
             Assert.Contains("User added successfully", s.FindAlertMessage().Text);
             
             // Setup POS
+            var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Light']")).Click();
@@ -2656,8 +2665,10 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.GoToStore();
             s.AddLightningNode(LightningConnectionType.CLightning, false);
+
+            var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();

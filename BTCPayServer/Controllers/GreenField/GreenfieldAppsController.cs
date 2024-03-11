@@ -238,7 +238,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             return new CrowdfundSettings
             {
-                Title = request.Title?.Trim(),
+                Title = request.Title?.Trim() ?? request.AppName,
                 Enabled = request.Enabled ?? true,
                 EnforceTargetAmount = request.EnforceTargetAmount ?? false,
                 StartDate = request.StartDate?.UtcDateTime,
@@ -272,7 +272,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return new PointOfSaleSettings
             {
-                Title = request.Title,
+                Title = request.Title ?? request.AppName,
                 DefaultView = (PosViewType)request.DefaultView,
                 ShowCustomAmount = request.ShowCustomAmount,
                 ShowDiscount = request.ShowDiscount,

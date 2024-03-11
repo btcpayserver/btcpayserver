@@ -36,13 +36,26 @@
         }
         <div class="d-flex justify-content-center  nfc-supported">
             <div class="boltcard-reset boltcard-details mt-3 mt-sm-0 w-100  text-center">
-                <a class="btn btn-outline-danger" href="@Model.BoltcardKeysResetLink">Reset Boltcard</a>
-                <p class="text-secondary mt-2">Requires installing the <a href="https://play.google.com/store/apps/details?id=com.lightningnfcapp&hl=en&gl=US">Bolt Card Creator app</a></p>
-                <button type="button" class="btn btn-link" id="show-wipe-qr">Show QR instead</button>
-                <div id="wipe-qr" class="d-none">
-
-                    <vc:qr-code data="@Model.WipeData" />
+                <div class="input-group">
+                    
+                    <a class="btn btn-outline-danger form-contrrol" href="@Model.BoltcardKeysResetLink">Reset Boltcard</a>
+                    <button type="button" class="btn btn-link" id="show-wipe-qr">
+                        <span class="fa fa-qrcode fa-2x" title="Show wipe QR"></span>
+                    </button>
                 </div>
+                <div id="wipe-qr" class="d-none d-flex cursor-pointer">
+
+                    <vc:qr-code data="@Model.WipeData" data-clipboard-target="#qr-wipe-code-data-input" />
+                    <div class="input-group input-group-sm mt-3">
+                        <input type="text" class="form-control" readonly value="@Model.WipeData" id="qr-wipe-code-data-input">
+                        <button type="button" class="btn btn-outline-secondary px-3" data-clipboard-target="#qr-wipe-code-data-input">
+                            <vc:icon symbol="copy" />
+                        </button>
+                    </div>
+                </div>
+                <p class="text-secondary mt-2">Requires installing the <a href="https://play.google.com/store/apps/details?id=com.lightningnfcapp&hl=en&gl=US">Bolt Card Creator app</a></p>
+              
+
             </div>
         </div>
 

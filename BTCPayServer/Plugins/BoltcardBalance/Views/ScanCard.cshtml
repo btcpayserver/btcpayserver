@@ -218,8 +218,15 @@
                 });
                 
                 delegate('click', "#show-wipe-qr", ()=>{
-                    document.getElementById("wipe-qr").classList.remove("d-none");
-                    document.getElementById("show-wipe-qr").classList.add("d-none");
+                    const el = document.getElementById("wipe-qr");
+                    if (el.classList.contains("d-none")){
+                        el.classList.remove("d-none");
+                    } else {
+                        el.classList.add("d-none")
+                    }
+                    
+                });
+                delegate('click', "#wipe-qr", ()=>{
                     
                 });
             }

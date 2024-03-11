@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
@@ -311,7 +312,7 @@ namespace BTCPayServer.Tests
                 //payjoin is enabled by default.
                 var invoiceId = s.CreateInvoice(receiver.storeId);
                 s.GoToInvoiceCheckout(invoiceId);
-                var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                var bip21 = s.Driver.WaitForElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
                 Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
@@ -327,7 +328,7 @@ namespace BTCPayServer.Tests
 
                 invoiceId = s.CreateInvoice(receiver.storeId);
                 s.GoToInvoiceCheckout(invoiceId);
-                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                bip21 = s.Driver.WaitForElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
                 Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
@@ -361,7 +362,7 @@ namespace BTCPayServer.Tests
                 //let's do it all again, except now the receiver has funds and is able to payjoin
                 invoiceId = s.CreateInvoice();
                 s.GoToInvoiceCheckout(invoiceId);
-                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                bip21 = s.Driver.WaitForElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
                 Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
 
@@ -414,13 +415,13 @@ namespace BTCPayServer.Tests
                 Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
                     StringComparison.InvariantCultureIgnoreCase));
 
+                s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
+                s.Driver.WaitForElement(By.CssSelector("#WalletTransactionsList tr"));
                 TestUtils.Eventually(() =>
                 {
-                    s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
-                    Assert.Contains(invoiceId, s.Driver.PageSource);
                     Assert.Contains("payjoin", s.Driver.PageSource);
-                    //this label does not always show since input gets used
-                    // Assert.Contains("payjoin-exposed", s.Driver.PageSource);
+                    // Either the invoice id or the payjoin-exposed label, depending on the input having been used
+                    Assert.Matches(new Regex($"({invoiceId}|payjoin-exposed)"), s.Driver.PageSource);
                 });
             }
         }

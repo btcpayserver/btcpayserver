@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Abstractions.Models
 @model LndSeedBackupViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Services, "LND Seed Backup");
@@ -11,7 +11,7 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="form-group">
-                <p>The LND seed backup is useful to recover funds of your LND wallet in case of a corruption of your server.</p>
+                <p>The LND seed backup is useful to recover on-chain funds of your LND wallet in case of a corruption of your server.</p>
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
             <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button">See confidential seed information</button>

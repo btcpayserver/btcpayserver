@@ -41,6 +41,14 @@ namespace BTCPayServer.Client
             return response.IsSuccessStatusCode;
         }
 
+        public virtual async Task<bool> ApproveUser(string idOrEmail, bool approved, CancellationToken token = default)
+        {
+            var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/{idOrEmail}/approve", null,
+                new ApproveUserRequest { Approved = approved }, HttpMethod.Post), token);
+            await HandleResponse(response);
+            return response.IsSuccessStatusCode;
+        }
+
         public virtual async Task<ApplicationUserData[]> GetUsers(CancellationToken token = default)
         {
             var response = await _httpClient.SendAsync(CreateHttpRequest($"api/v1/users/", null, HttpMethod.Get), token);

@@ -612,7 +612,7 @@ namespace BTCPayServer.Controllers
                     await _InvoiceRepository.MassArchive(selectedItems, false);
                     TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice{(selectedItems.Length == 1 ? "" : "s")} unarchived.";
                     break;
-                case "cpfp":
+                case "cpfp" when storeId is not null:
                     var network = _NetworkProvider.DefaultNetwork;
                     var explorer = _ExplorerClients.GetExplorerClient(network);
                     if (explorer is null)

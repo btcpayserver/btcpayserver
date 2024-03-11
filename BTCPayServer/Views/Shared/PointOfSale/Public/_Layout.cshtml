@@ -3,6 +3,7 @@
 @using System.IO
 @using BTCPayServer.Services
 @inject IWebHostEnvironment WebHostEnvironment
+@inject SettingsRepository SettingsRepository
 @inject BTCPayServerEnvironment Env
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
@@ -12,6 +13,7 @@
     
     async Task<string> GetDynamicManifest(string title)
     {
+        var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
         var manifest = WebHostEnvironment.WebRootFileProvider.GetFileInfo("manifest.json");
         if (!manifest.Exists)
         {
@@ -19,8 +21,9 @@
         }
         using var reader = new StreamReader(manifest.CreateReadStream());
         var jObject = JObject.Parse(await reader.ReadToEndAsync());
+        var serverName = string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName;
         jObject["short_name"] = title;
-        jObject["name"] = $"BTCPay Server: {title}";
+        jObject["name"] = $"{serverName}: {title}";
         foreach (var jToken in jObject["icons"]!)
         {
             var icon = (JObject)jToken;
@@ -30,7 +33,7 @@
     }
 }
 <!DOCTYPE html>
-<html class="h-100" lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<html class="h-100" lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="POS-@Model.AppId">
 <head>
     <partial name="LayoutHead" />
     <meta name="apple-mobile-web-app-capable" content="yes">

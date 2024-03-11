@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
@@ -125,7 +126,10 @@ namespace BTCPayServer.Security
 
             if (!string.IsNullOrEmpty(storeId))
             {
-                store = await _storeRepository.FindStore(storeId, userId);
+                var cachedStore = _httpContext.GetStoreData();
+                store = cachedStore?.Id == storeId
+                    ? cachedStore
+                    : await _storeRepository.FindStore(storeId, userId);
             }
 
             if (Policies.IsServerPolicy(policy) && isAdmin)
@@ -164,14 +168,15 @@ namespace BTCPayServer.Security
                 {
                     if (store != null)
                     {
-                        _httpContext.SetStoreData(store);
+                        if (_httpContext.GetStoreData()?.Id != store.Id)
+                            _httpContext.SetStoreData(store);
 
                         // cache associated entities if present
-                        if (app != null)
+                        if (app != null && _httpContext.GetAppData()?.Id != app.Id)
                             _httpContext.SetAppData(app);
-                        if (invoice != null)
+                        if (invoice != null && _httpContext.GetInvoiceData()?.Id != invoice.Id)
                             _httpContext.SetInvoiceData(invoice);
-                        if (paymentRequest != null)
+                        if (paymentRequest != null && _httpContext.GetPaymentRequestData()?.Id != paymentRequest.Id)
                             _httpContext.SetPaymentRequestData(paymentRequest);
                     }
                 }

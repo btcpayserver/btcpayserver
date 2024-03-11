@@ -36,7 +36,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string[] Sounds { get; set; }
         public int ResetEveryAmount { get; set; }
         public bool NeverReset { get; set; }
-
+        public string FormUrl { get; set; }
         public Dictionary<string, int> PerkCount { get; set; }
 
         public CurrencyData CurrencyData { get; set; }

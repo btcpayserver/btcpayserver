@@ -225,7 +225,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     if (payout.State != PayoutState.AwaitingPayment)
                     {
-                        _eventAggregator.Publish(new PayoutEvent(null, payout));
+                        _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
                     }
                 }
             }

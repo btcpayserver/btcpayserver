@@ -40,7 +40,6 @@ namespace BTCPayServer.Data
         {
             return Severity switch
             {
-                EventSeverity.Info => "info",
                 EventSeverity.Error => "danger",
                 EventSeverity.Success => "success",
                 EventSeverity.Warning => "warning",

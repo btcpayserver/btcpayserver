@@ -7,6 +7,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -66,6 +67,10 @@ namespace BTCPayServer.Security.Greenfield
                 .FirstOrDefaultAsync(applicationUser =>
                     applicationUser.NormalizedUserName == _userManager.NormalizeName(username));
 
+            if (!UserService.TryCanLogin(user, out var error))
+            {
+                return AuthenticateResult.Fail($"Basic authentication failed: {error}");
+            }
             if (user.Fido2Credentials.Any())
             {
                 return AuthenticateResult.Fail("Cannot use Basic authentication with multi-factor is enabled.");

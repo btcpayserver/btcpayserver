@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Metrics;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -25,6 +27,7 @@ using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.CodeAnalysis.Operations;
+using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.Payment;
 using NBitpayClient;
@@ -32,6 +35,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Npgsql;
 using Xunit;
 using Xunit.Sdk;
 
@@ -452,9 +456,9 @@ namespace BTCPayServer.Tests
         {
             private Client.Models.StoreWebhookData _wh;
             private FakeServer _server;
-            private readonly List<WebhookInvoiceEvent> _webhookEvents;
+            private readonly List<StoreWebhookEvent> _webhookEvents;
             private CancellationTokenSource _cts;
-            public WebhookListener(Client.Models.StoreWebhookData wh, FakeServer server, List<WebhookInvoiceEvent> webhookEvents)
+            public WebhookListener(Client.Models.StoreWebhookData wh, FakeServer server, List<StoreWebhookEvent> webhookEvents)
             {
                 _wh = wh;
                 _server = server;
@@ -472,7 +476,7 @@ namespace BTCPayServer.Tests
                     var callback = Encoding.UTF8.GetString(bytes);
                     lock (_webhookEvents)
                     {
-                        _webhookEvents.Add(JsonConvert.DeserializeObject<WebhookInvoiceEvent>(callback));
+                        _webhookEvents.Add(JsonConvert.DeserializeObject<DummyStoreWebhookEvent>(callback));
                     }
                     req.Response.StatusCode = 200;
                     _server.Done();
@@ -485,8 +489,13 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public List<WebhookInvoiceEvent> WebhookEvents { get; set; } = new List<WebhookInvoiceEvent>();
-        public TEvent AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
+        public class DummyStoreWebhookEvent : StoreWebhookEvent
+        {
+            
+        }
+
+        public List<StoreWebhookEvent> WebhookEvents { get; set; } = new List<StoreWebhookEvent>();
+        public async Task<TEvent> AssertHasWebhookEvent<TEvent>(string eventType, Action<TEvent> assert) where TEvent : class
         {
             int retry = 0;
 retry:
@@ -510,7 +519,7 @@ retry:
             }
             if (retry < 3)
             {
-                Thread.Sleep(1000);
+                await Task.Delay(1000);
                 retry++;
                 goto retry;
             }
@@ -641,6 +650,34 @@ retry:
             await ctx.SaveChangesAsync();
             LNAddress = lnAddrUser;
             return lnAddrUser;
+        }
+
+        public async Task ImportOldInvoices(string storeId = null)
+        {
+            storeId ??= StoreId;
+            var oldInvoices = File.ReadAllLines(TestUtils.GetTestDataFullPath("OldInvoices.csv"));
+            var oldPayments = File.ReadAllLines(TestUtils.GetTestDataFullPath("OldPayments.csv"));
+            var dbContext = this.parent.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+            var db = (NpgsqlConnection)dbContext.Database.GetDbConnection();
+            await db.OpenAsync();
+            using (var writer = db.BeginTextImport("COPY \"Invoices\" (\"Id\",\"Blob\",\"Created\",\"CustomerEmail\",\"ExceptionStatus\",\"ItemCode\",\"OrderId\",\"Status\",\"StoreDataId\",\"Archived\",\"Blob2\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            {
+                foreach (var invoice in oldInvoices)
+                {
+                    var localInvoice = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
+                    await writer.WriteLineAsync(localInvoice);
+                }
+                await writer.FlushAsync();
+            }
+            using (var writer = db.BeginTextImport("COPY \"Payments\" (\"Id\",\"Blob\",\"InvoiceDataId\",\"Accounted\",\"Blob2\",\"Type\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            {
+                foreach (var invoice in oldPayments)
+                {
+                    var localPayment = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
+                    await writer.WriteLineAsync(localPayment);
+                }
+                await writer.FlushAsync();
+            }
         }
     }
 }

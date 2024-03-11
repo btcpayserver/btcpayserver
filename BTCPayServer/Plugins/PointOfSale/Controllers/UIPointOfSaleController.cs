@@ -92,6 +92,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 EmbeddedCSS = settings.EmbeddedCSS,
                 CustomCSSLink = settings.CustomCSSLink
             };
+            // Check if the currency is COP or ARS (exclude decimal places)
 
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {

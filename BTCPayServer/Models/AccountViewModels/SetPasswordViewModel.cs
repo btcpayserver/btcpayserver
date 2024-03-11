@@ -19,5 +19,6 @@ namespace BTCPayServer.Models.AccountViewModels
 
         public string Code { get; set; }
         public bool EmailSetInternally { get; set; }
+        public bool HasPassword { get; set; }
     }
 }

@@ -88,11 +88,11 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                         {
                             continue;
                         }
-                        failed = await TrypayBolt(client, blob, payoutData,
+                        failed = !await TrypayBolt(client, blob, payoutData,
                             lnurlResult.Item1);
                         break;
                     case BoltInvoiceClaimDestination item1:
-                        failed = await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
+                        failed = !await TrypayBolt(client, blob, payoutData, item1.PaymentRequest);
                         break;
                 }
             }

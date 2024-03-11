@@ -56,8 +56,7 @@ namespace BTCPayServer.Plugins.PointOfSale
         public PointOfSaleAppType(
             LinkGenerator linkGenerator,
             IOptions<BTCPayServerOptions> btcPayServerOptions,
-            DisplayFormatter displayFormatter,
-            HtmlSanitizer htmlSanitizer)
+            DisplayFormatter displayFormatter)
         {
             Type = AppType;
             Description = "Point of Sale";
@@ -118,7 +117,7 @@ namespace BTCPayServer.Plugins.PointOfSale
 
         public override Task SetDefaultSettings(AppData appData, string defaultCurrency)
         {
-            var empty = new PointOfSaleSettings { Currency = defaultCurrency };
+            var empty = new PointOfSaleSettings { Title = appData.Name, Currency = defaultCurrency };
             appData.SetSettings(empty);
             return Task.CompletedTask;
         }

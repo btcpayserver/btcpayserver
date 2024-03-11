@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBXplorer;
@@ -47,6 +48,8 @@ namespace BTCPayServer.Controllers
     [Route("wallets")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
+    //16mb psbts
+    [RequestFormLimits(ValueLengthLimit = FormReader.DefaultValueLengthLimit * 4)]
     public partial class UIWalletsController : Controller
     {
         private StoreRepository Repository { get; }
@@ -513,8 +516,6 @@ namespace BTCPayServer.Controllers
                 recommendedFees.Select(tuple => tuple.GetAwaiter().GetResult()).Where(option => option != null).ToList();
 
             model.FeeSatoshiPerByte = recommendedFees[1].GetAwaiter().GetResult()?.FeeRate;
-            model.SupportRBF = network.SupportRBF;
-
             model.CryptoDivisibility = network.Divisibility;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
@@ -570,7 +571,6 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
 
-            vm.SupportRBF = network.SupportRBF;
             vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {

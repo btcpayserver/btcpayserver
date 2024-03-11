@@ -93,7 +93,7 @@ const posCommon = {
         formatCurrency (value, withSymbol) {
             const currency = this.currencyCode
             if (currency === 'BTC' || currency === 'SATS') return this.formatCrypto(value, withSymbol)
-            const { divisibility } = this.currencyInfo
+            const { divisibility } = this.currencyInfo;
             const locale = this.getLocale(currency);
             const style = withSymbol ? 'currency' : 'decimal'
             const opts = { currency, style, maximumFractionDigits: divisibility, minimumFractionDigits: divisibility }

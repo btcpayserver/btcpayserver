@@ -386,7 +386,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Destination = destination.destination,
                 PullPaymentId = pullPaymentId,
                 Value = request.Amount,
-                PaymentMethodId = paymentMethodId
+                PaymentMethodId = paymentMethodId,
+                StoreId = pp.StoreId
             });
 
             return HandleClaimResult(result);

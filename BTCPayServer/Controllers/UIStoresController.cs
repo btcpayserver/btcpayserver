@@ -150,6 +150,7 @@ namespace BTCPayServer.Controllers
             {
                 return Forbid();
             }
+            HttpContext.SetStoreData(store);
             if (store.GetPermissionSet(userId).Contains(Policies.CanModifyStoreSettings, storeId))
             {
                 return RedirectToAction("Dashboard", new { storeId });
@@ -158,7 +159,6 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction("ListInvoices", "UIInvoice", new { storeId });
             }
-            HttpContext.SetStoreData(store);
             return View();
         }
 
@@ -438,6 +438,7 @@ namespace BTCPayServer.Controllers
             vm.CustomLogo = storeBlob.CustomLogo;
             vm.SoundFileId = storeBlob.SoundFileId;
             vm.HtmlTitle = storeBlob.HtmlTitle;
+            vm.SupportUrl = storeBlob.StoreSupportUrl;
             vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
@@ -613,6 +614,7 @@ namespace BTCPayServer.Controllers
             blob.CustomLogo = model.CustomLogo;
             blob.CustomCSS = model.CustomCSS;
             blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
+            blob.StoreSupportUrl = string.IsNullOrWhiteSpace(model.SupportUrl) ? null : model.SupportUrl;
             blob.DisplayExpirationTimer = TimeSpan.FromMinutes(model.DisplayExpirationTimer);
             blob.AutoDetectLanguage = model.AutoDetectLanguage;
             blob.DefaultLang = model.DefaultLang;
@@ -704,7 +706,6 @@ namespace BTCPayServer.Controllers
                 Id = store.Id,
                 StoreName = store.StoreName,
                 StoreWebsite = store.StoreWebsite,
-                StoreSupportUrl = storeBlob.StoreSupportUrl,
                 LogoFileId = storeBlob.LogoFileId,
                 CssFileId = storeBlob.CssFileId,
                 BrandColor = storeBlob.BrandColor,
@@ -741,7 +742,6 @@ namespace BTCPayServer.Controllers
             }
 
             var blob = CurrentStore.GetStoreBlob();
-            blob.StoreSupportUrl = model.StoreSupportUrl;
             blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
             blob.NetworkFeeMode = model.NetworkFeeMode;
             blob.PaymentTolerance = model.PaymentTolerance;

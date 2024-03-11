@@ -7,11 +7,11 @@ namespace BTCPayServer.Client.Models
 {
     public class WebhookPayoutEvent : StoreWebhookEvent
     {
-        public WebhookPayoutEvent(string evtType, string storeId)
+        public WebhookPayoutEvent(string type, string storeId)
         {
-            if (!evtType.StartsWith("payout", StringComparison.InvariantCultureIgnoreCase))
-                throw new ArgumentException("Invalid event type", nameof(evtType));
-            Type = evtType;
+            if (!type.StartsWith("payout", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Invalid event type", nameof(type));
+            Type = type;
             StoreId = storeId;
         }
 
@@ -21,11 +21,11 @@ namespace BTCPayServer.Client.Models
     } 
     public class WebhookPaymentRequestEvent : StoreWebhookEvent
     {
-        public WebhookPaymentRequestEvent(string evtType, string storeId)
+        public WebhookPaymentRequestEvent(string type, string storeId)
         {
-            if (!evtType.StartsWith("paymentrequest", StringComparison.InvariantCultureIgnoreCase))
-                throw new ArgumentException("Invalid event type", nameof(evtType));
-            Type = evtType;
+            if (!type.StartsWith("paymentrequest", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Invalid event type", nameof(type));
+            Type = type;
             StoreId = storeId;
         }
 

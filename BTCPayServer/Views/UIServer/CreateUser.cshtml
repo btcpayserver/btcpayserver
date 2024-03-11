@@ -36,8 +36,6 @@
                     <span asp-validation-for="IsAdmin" class="text-danger"></span>
                 </div>
             }
-            
-
             @if (ViewData["AllowRequestEmailConfirmation"] is true)
             {
                 <div class="form-group form-check">
@@ -47,7 +45,7 @@
                 </div>
             }
 
-            <button id="Save"  type="submit" class="btn btn-primary mt-2" name="command" value="Save">Create account</button>
+            <button id="Save" type="submit" class="btn btn-primary mt-2" name="command" value="Save">Create account</button>
         </form>
     </div>
 </div>

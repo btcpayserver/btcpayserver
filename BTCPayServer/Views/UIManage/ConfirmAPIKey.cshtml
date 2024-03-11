@@ -12,8 +12,6 @@
     </script>
 }
 
-<partial name="_StatusMessage" />
-
 <form method="post" asp-controller="UIManage" asp-action="AuthorizeAPIKey">
     <input type="hidden" asp-for="ApplicationName" value="@Model.ApplicationName"/>
     <input type="hidden" asp-for="ApplicationIdentifier" value="@Model.ApplicationIdentifier"/>

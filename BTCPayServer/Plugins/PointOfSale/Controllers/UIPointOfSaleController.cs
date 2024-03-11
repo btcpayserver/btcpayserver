@@ -292,13 +292,13 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     }
 
                     var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
-                    if (amtField is null && price.HasValue)
+                    if (amtField is null)
                     {
                         form.Fields.Add(new Field
                         {
                             Name = $"{FormDataService.InvoiceParameterPrefix}amount",
                             Type = "hidden",
-                            Value = price.ToString(),
+                            Value = price?.ToString(),
                             Constant = true
                         });
                     }

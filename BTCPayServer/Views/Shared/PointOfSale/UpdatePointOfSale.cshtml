@@ -21,23 +21,14 @@
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
-    <script src="~/pos/admin.js" asp-append-version="true"></script>
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
-
+    <script src="~/pos/admin.js" asp-append-version="true"></script>
     <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const qrApp = initQRShow({ title: "Scan to View POS" });
-            document.getElementById('displayQRCode').addEventListener('click', e => {
-                e.preventDefault();
-                var baseUrl = "@($"{Context.Request.GetAbsoluteRoot()}{Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id })}")"
-                qrApp.showData(baseUrl);
-            });
-        });
+        const qrApp = initQRShow({ title: "Scan to view the Point of Sale" });
+        const posViewUrl = @Safe.Json($"{Context.Request.GetAbsoluteRoot()}{Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id })}");
+        delegate('click', '#displayQRCode', () => { qrApp.showData(posViewUrl); });
     </script>
-
 }
 
 <form method="post">
@@ -52,12 +43,11 @@
             else
             {
                 <div class="btn-group" role="group" aria-label="View Point of Sale">
-                    <button type="submit" class="btn btn-outline-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank">View</button>
-                    <button type="button" class="btn btn-outline-secondary" id="displayQRCode">
+                    <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank">View</a>
+                    <button type="button" class="btn btn-secondary px-3 d-inline-flex align-items-center" id="displayQRCode">
                         <vc:icon symbol="scan-qr" />
                     </button>
                 </div>
-
             }
         </div>
     </div>

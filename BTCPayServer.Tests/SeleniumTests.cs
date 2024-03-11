@@ -2674,7 +2674,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
-            Assert.Equal(1, windows.Count);
+            Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
             s.Driver.WaitForElement(By.Id("PosItems"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector("#CartItems tr")));

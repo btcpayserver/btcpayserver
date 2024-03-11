@@ -216,6 +216,12 @@
                         document.querySelector(".boltcard-reset").classList.add("d-none");
                     }
                 });
+                
+                delegate('click', "#show-wipe-qr", ()=>{
+                    document.getElementById("wipe-qr").classList.remove("d-none");
+                    document.getElementById("show-wipe-qr").classList.add("d-none");
+                    
+                });
             }
             catch (e) {
                 handleError(e);

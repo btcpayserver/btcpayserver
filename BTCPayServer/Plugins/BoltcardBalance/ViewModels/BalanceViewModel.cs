@@ -21,5 +21,6 @@ namespace BTCPayServer.Plugins.BoltcardBalance.ViewModels
         public string PullPaymentLink { get; set; }
         public string LNUrlPay { get; set; }
 
+        public string WipeData{ get; set; }
     }
 }

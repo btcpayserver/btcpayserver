@@ -9,11 +9,14 @@ using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models;
+using BTCPayServer.NTag424;
 using BTCPayServer.Plugins.BoltcardBalance.ViewModels;
 using BTCPayServer.Plugins.BoltcardFactory;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using NBitcoin.DataEncoders;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
 {
@@ -59,12 +62,14 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
             var registration = await _dbContextFactory.GetBoltcardRegistration(issuerKey, boltData, true);
             if (registration is null)
                 return NotFound();
-            return await GetBalanceView(registration.PullPaymentId, p);
+            return await GetBalanceView(registration, p, issuerKey);
         }
         [NonAction]
-        public async Task<IActionResult> GetBalanceView(string ppId, string p)
+        public async Task<IActionResult> GetBalanceView(BoltcardDataExtensions.BoltcardRegistration registration, string p, IssuerKey issuerKey)
         {
-            using var ctx = _dbContextFactory.CreateContext();
+            var ppId = registration.PullPaymentId;
+            var boltCardKeys = issuerKey.CreatePullPaymentCardKey(registration.UId, registration.Version, ppId).DeriveBoltcardKeys(issuerKey);
+            await using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(ppId);
             if (pp is null)
                 return NotFound();
@@ -91,6 +96,17 @@ namespace BTCPayServer.Plugins.BoltcardBalance.Controllers
                 LNUrlBech32 = bech32LNUrl.AbsoluteUri,
                 LNUrlPay = Url.Action(nameof(UIBoltcardController.GetPayRequest), "UIBoltcard", new { p }, "lnurlp"),
                 BoltcardKeysResetLink = $"boltcard://reset?url={GetBoltcardDeeplinkUrl(pp.Id, OnExistingBehavior.KeepVersion)}",
+                WipeData = JObject.FromObject(new
+                {
+                    version = registration.Version,
+                    action = "wipe",
+                    K0 = Encoders.Hex.EncodeData(boltCardKeys.AppMasterKey.ToBytes()).ToUpperInvariant(),
+                    K1 = Encoders.Hex.EncodeData(boltCardKeys.EncryptionKey.ToBytes()).ToUpperInvariant(),
+                    K2 = Encoders.Hex.EncodeData(boltCardKeys.AuthenticationKey.ToBytes()).ToUpperInvariant(),
+                    K3 = Encoders.Hex.EncodeData(boltCardKeys.K3.ToBytes()).ToUpperInvariant(),
+                    K4 = Encoders.Hex.EncodeData(boltCardKeys.K4.ToBytes()).ToUpperInvariant(),
+               
+                }).ToString(Newtonsoft.Json.Formatting.None),
                 PullPaymentLink = Url.Action(nameof(UIPullPaymentController.ViewPullPayment), "UIPullPayment", new { pullPaymentId = pp.Id }, Request.Scheme, Request.Host.ToString())
             };
             foreach (var payout in payouts)

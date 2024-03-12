@@ -64,8 +64,9 @@ const posCommon = {
         },
         posdata () {
             const data = { subTotal: this.amountNumeric, total: this.totalNumeric }
+            const amounts = this.amounts.filter(e => e) // clear empty or zero values
+            if (amounts) data.amounts = amounts.map(parseFloat)
             if (this.cart) data.cart = this.cart
-            if (this.amounts) data.amounts = this.amounts.map(val => parseFloat(val || '0'))
             if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
             if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
             if (this.tipNumeric > 0) data.tip = this.tipNumeric

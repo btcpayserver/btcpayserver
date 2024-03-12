@@ -111,10 +111,9 @@
                     var item = Model.Items[index];
                     var formatted = GetItemPriceFormatted(item);
                     var inStock = item.Inventory is null or > 0;
-                    var buttonText = string.IsNullOrEmpty(item.BuyButtonText) ? Model.ButtonText : item.BuyButtonText;
-                    buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
+                    var displayed = item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && inStock ? "true" : "false";
                     var categories = new JArray(item.Categories ?? new object[] { });
-                    <div class="posItem posItem--displayed p-3" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)' v-show="@(item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && inStock ? "true" : "false")">
+                    <div class="posItem p-3" :class="{ 'posItem--inStock': inStock(@index), 'posItem--displayed': @displayed }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)' v-show="@displayed">
                         <div class="d-flex align-items-start w-100 gap-3">
                             @if (!string.IsNullOrWhiteSpace(item.Image))
                             {
@@ -142,11 +141,11 @@
                                 </div>
                             </div>
                             <div class="d-flex align-items-center gap-2 ms-auto" v-if="inStock(@index)">
-                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, -1, true)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center" :disabled="getQuantity(`@Safe.Raw(item.Id)`) <= 0">
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, -1, true)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center btn-minus" :disabled="getQuantity(`@Safe.Raw(item.Id)`) <= 0">
                                     <vc:icon symbol="minus" />
                                 </button>
                                 <div class="quantity text-center fs-6" style="width:2rem">{{ getQuantity(`@Safe.Raw(item.Id)`) }}</div>
-                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, +1, true)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center">
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, +1, true)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center btn-plus">
                                     <vc:icon symbol="plus" />
                                 </button>
                             </div>

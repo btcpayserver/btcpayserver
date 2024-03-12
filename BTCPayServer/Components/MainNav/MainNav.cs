@@ -54,9 +54,7 @@ namespace BTCPayServer.Components.MainNav
         {
             var store = ViewContext.HttpContext.GetStoreData();
             var vm = new MainNavViewModel { Store = store };
-#if ALTCOINS
-            vm.AltcoinsBuild = true;
-#endif
+            vm.AltcoinsBuild = _networkProvider.GetAll().Count() > 1;
             if (store != null)
             {
                 var storeBlob = store.GetStoreBlob();

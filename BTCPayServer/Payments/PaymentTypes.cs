@@ -1,9 +1,6 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
-#if ALTCOINS
-using BTCPayServer.Services.Altcoins.Monero.Payments;
-using BTCPayServer.Services.Altcoins.Zcash.Payments;
-#endif
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
@@ -15,13 +12,13 @@ namespace BTCPayServer.Payments
     /// </summary>
     public static class PaymentTypes
     {
-        private static PaymentType[] _paymentTypes =
+
+        public static HashSet<PaymentType> AvailablePaymentTypes = new(new PaymentType[]
         {
-            BTCLike, LightningLike, LNURLPay,
-#if ALTCOINS
-            MoneroLike, ZcashLike,
-#endif
-        };
+            BTCLike,
+            LightningLike,
+            LNURLPay});
+      
         /// <summary>
         /// On-Chain UTXO based, bitcoin compatible
         /// </summary>
@@ -34,21 +31,11 @@ namespace BTCPayServer.Payments
         /// Lightning payment
         /// </summary>
         public static LNURLPayPaymentType LNURLPay => LNURLPayPaymentType.Instance;
-
-#if ALTCOINS
-        /// <summary>
-        /// Monero payment
-        /// </summary>
-        public static MoneroPaymentType MoneroLike => MoneroPaymentType.Instance;
-        /// <summary>
-        /// Zcash payment
-        /// </summary>
-        public static ZcashPaymentType ZcashLike => ZcashPaymentType.Instance;
-#endif
+        
 
         public static bool TryParse(string paymentType, out PaymentType type)
         {
-            type = _paymentTypes.FirstOrDefault(type1 => type1.IsPaymentType(paymentType));
+            type = AvailablePaymentTypes.FirstOrDefault(type1 => type1.IsPaymentType(paymentType));
             return type != null;
         }
         public static PaymentType Parse(string paymentType)
@@ -59,7 +46,7 @@ namespace BTCPayServer.Payments
         }
     }
 
-    public abstract class PaymentType
+    public abstract class PaymentType:IEquatable<PaymentType>
     {
         public abstract string ToPrettyString();
         public override string ToString()
@@ -108,5 +95,22 @@ namespace BTCPayServer.Payments
 
         public abstract void PopulateCryptoInfo(InvoiceEntity invoice, PaymentMethod details, Services.Invoices.InvoiceCryptoInfo invoiceCryptoInfo,
             string serverUrl);
+
+        public bool Equals(PaymentType other)
+        {
+            return ToString() == other?.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (ReferenceEquals(null, obj)) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            return obj.GetType() == GetType() && Equals((PaymentType) obj);
+        }
+
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
     }
 }

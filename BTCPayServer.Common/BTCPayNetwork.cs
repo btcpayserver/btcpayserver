@@ -130,6 +130,24 @@ namespace BTCPayServer
         {
             return transactionInformationSet;
         }
+
+        public virtual decimal GetValue(IMoney m)
+        {
+            switch (m)
+            {
+                case Money money:
+                    return money.ToDecimal(MoneyUnit.BTC);
+                case MoneyBag mb:
+                    return mb.Sum(GetValue);
+                default:
+                    throw new NotSupportedException("IMoney type not supported");
+            }
+        }
+
+        public virtual string GetAssetId()
+        {
+            return null;
+        }
     }
 
     public abstract class BTCPayNetworkBase

@@ -118,6 +118,17 @@ namespace BTCPayServer.Plugins
 #if DEBUG
             // Load from DEBUG_PLUGINS, in an optional appsettings.dev.json
             var debugPlugins = config["DEBUG_PLUGINS"] ?? "";
+            var devPlugins =  Directory.EnumerateDirectories(config["DEV_PLUGINS"] ?? Path.Combine(Directory.GetCurrentDirectory(), "../Plugins"));
+            foreach (var devPlugin in devPlugins)
+            {
+                var pluginIdentifier = Path.GetFileName(devPlugin);
+                var pluginFilePath = Path.Combine(devPlugin,"bin/Debug/net8.0", pluginIdentifier + ".dll");
+                if (!File.Exists(pluginFilePath))
+                    continue;
+                if (disabledPluginIdentifiers.Contains(pluginIdentifier))
+                    continue;
+                pluginsToLoad.Add((pluginIdentifier, pluginFilePath));
+            }
             foreach (var plugin in debugPlugins.Split(';', StringSplitOptions.RemoveEmptyEntries))
             {
                 // Formatted either as "<PLUGIN_IDENTIFIER>::<PathToDll>" or "<PathToDll>"
@@ -146,7 +157,13 @@ namespace BTCPayServer.Plugins
             foreach (var toLoad in pluginsToLoad)
             {
                 // This used to be a standalone plugin but due to popular demand has been made as part of core. If we detect an install, we remove the redundant plugin.
-                if (toLoad.PluginIdentifier == "BTCPayServer.Plugins.NFC")
+                if (toLoad.PluginIdentifier == "BTCPayServer.Plugins.NFC" )
+                {
+                    QueueCommands(pluginsFolder, ("delete", toLoad.PluginIdentifier));
+                    continue;
+                } 
+                // This used to be a standalone plugin that enhanced an altcoin specifically. but since altcoins are now plugins, this is redundant.
+                if (toLoad.PluginIdentifier == "BTCPayServer.Plugins.LiquidPlus" )
                 {
                     QueueCommands(pluginsFolder, ("delete", toLoad.PluginIdentifier));
                     continue;

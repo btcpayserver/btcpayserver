@@ -12,7 +12,7 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <RepositoryUrl>https://github.com/btcpayserver/btcpayserver</RepositoryUrl>
         <RepositoryType>git</RepositoryType>
-        <Configurations>Debug;Release;Altcoins-Debug;Altcoins-Release</Configurations>
+        <Configurations>Debug;Release</Configurations>
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
   <PropertyGroup>

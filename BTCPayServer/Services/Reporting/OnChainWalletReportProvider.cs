@@ -79,7 +79,7 @@ public class OnChainWalletReportProvider : ReportProvider
             "ORDER BY r.seen_at",
             parameters: new
             {
-                asset_id = GetAssetId(settings.Network),
+                asset_id = settings.Network.GetAssetId(),
                 wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(settings.Network.CryptoCode, settings.AccountDerivation.ToString()),
                 code = settings.Network.CryptoCode,
                 interval
@@ -115,18 +115,5 @@ public class OnChainWalletReportProvider : ReportProvider
                 row[3] = invoiceId;
             }
         }
-    }
-
-    private string? GetAssetId(BTCPayNetwork network)
-    {
-#if ALTCOINS
-        if (network is Plugins.Altcoins.ElementsBTCPayNetwork elNetwork)
-        {
-            if (elNetwork.CryptoCode == elNetwork.NetworkCryptoCode)
-                return "";
-            return elNetwork.AssetId.ToString();
-        }
-#endif
-        return null;
     }
 }

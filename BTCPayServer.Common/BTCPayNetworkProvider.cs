@@ -3,28 +3,15 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
-using StandardConfiguration;
 
 namespace BTCPayServer
 {
     public partial class BTCPayNetworkProvider
     {
         protected readonly Dictionary<string, BTCPayNetworkBase> _Networks = new Dictionary<string, BTCPayNetworkBase>();
-
-        private readonly NBXplorerNetworkProvider _NBXplorerNetworkProvider;
-        public NBXplorerNetworkProvider NBXplorerNetworkProvider
-        {
-            get
-            {
-                return _NBXplorerNetworkProvider;
-            }
-        }
 
         public ChainName NetworkType { get; private set; }
         public BTCPayNetworkProvider(
@@ -33,15 +20,8 @@ namespace BTCPayServer
             NBXplorerNetworkProvider nbxplorerNetworkProvider,
             Logs logs)
         {
-            var networksList = networks.ToList();
-#if !ALTCOINS
-            var onlyBTC = networksList.Count == 1 && networksList.First().IsBTC;
-            if (!onlyBTC)
-                throw new ConfigException($"This build of BTCPay Server does not support altcoins. Configured networks: {string.Join(',', networksList.Select(n => n.CryptoCode).ToArray())}");
-#endif
-            _NBXplorerNetworkProvider = nbxplorerNetworkProvider;
             NetworkType = nbxplorerNetworkProvider.NetworkType;
-            foreach (var network in networksList)
+            foreach (var network in networks)
             {
                 _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
             }

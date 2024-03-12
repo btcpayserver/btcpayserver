@@ -66,19 +66,12 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
-using NicolasDorier.RateLimits;
 using Serilog;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
-
-#if ALTCOINS
-using BTCPayServer.Services.Altcoins.Monero;
-using BTCPayServer.Services.Altcoins.Zcash;
-#endif
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
@@ -117,12 +110,6 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<BTCPayNetworkJsonSerializerSettings>();
 
             services.AddPayJoinServices();
-#if ALTCOINS
-            if (configuration.SupportChain("xmr"))
-                services.AddMoneroLike();
-            if (configuration.SupportChain("yec") || configuration.SupportChain("zec"))
-                services.AddZcashLike();
-#endif
             services.AddScoped<IScopeProvider, ScopeProvider>();
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());

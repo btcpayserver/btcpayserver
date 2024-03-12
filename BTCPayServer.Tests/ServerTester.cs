@@ -72,7 +72,6 @@ namespace BTCPayServer.Tests
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
         }
-#if ALTCOINS
         public void ActivateLTC()
         {
             LTCExplorerNode = new RPCClient(RPCCredentialString.Parse(GetEnvironment("TESTS_LTCRPCCONNECTION", "server=http://127.0.0.1:43783;ceiwHEbqWI83:DwubwWsoo3")), NetworkProvider.GetNetwork<BTCPayNetwork>("LTC").NBitcoinNetwork);
@@ -91,8 +90,7 @@ namespace BTCPayServer.Tests
         {
             PayTester.Chains.Add("ETH");
         }
-
-#endif
+        
         public void ActivateLightning()
         {
             ActivateLightning(LightningConnectionType.CLightning);
@@ -226,7 +224,6 @@ namespace BTCPayServer.Tests
         {
             get; set;
         }
-#if ALTCOINS
         public RPCClient LTCExplorerNode
         {
             get; set;
@@ -235,7 +232,6 @@ namespace BTCPayServer.Tests
         public RPCClient LBTCExplorerNode { get; set; }
         public ExplorerClient LTCExplorerClient { get; set; }
         public ExplorerClient LBTCExplorerClient { get; set; }
-#endif
 
         public ExplorerClient ExplorerClient
         {

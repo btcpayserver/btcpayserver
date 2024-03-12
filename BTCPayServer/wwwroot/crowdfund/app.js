@@ -41,14 +41,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 if (!this.active || this.loading){
                     return;
                 }
-
-                var formUrl = e.target["FormUrl"].value;
-                if (formUrl != '') {
-                    location.href = formUrl + "?amount=" + this.amount + "&choiceKey=" + this.perk.id;
-                    return;
-                } else {
-                    eventAggregator.$emit("contribute", { amount: parseFloat(this.amount), choiceKey: this.perk.id });
-                }
+                
+                eventAggregator.$emit("contribute", {amount: parseFloat(this.amount), choiceKey: this.perk.id});
             },
             expand: function(){
                 if(this.canExpand){

@@ -143,12 +143,10 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     FormDataService.SetValues(form, formResponseJObject);
                     if (!FormDataService.Validate(form, ModelState))
                     {
-                        //someone tried to bypass validation
+                        // someone tried to bypass validation
                         return RedirectToAction(nameof(ViewCrowdfund), new { appId });
                     }
-
                 }
-
             }
 
             var store = await _appService.GetStore(app);
@@ -253,109 +251,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return BadRequest(e.Message);
             }
         }
-
-        private JObject TryParseJObject(string posData)
-        {
-            try
-            {
-                return JObject.Parse(posData);
-            }
-            catch
-            {
-            }
-            return null;
-        }
-
-        [HttpGet("/apps/{appId}/crowdfund/form")]
-        [IgnoreAntiforgeryToken]
-        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        public async Task<IActionResult> CrowdfundForm(string appId, decimal? amount=0, string choiceKey="")
-        {
-            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
-            if (app == null)
-                return NotFound();
-
-            var settings = app.GetSettings<CrowdfundSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
-            if (formData is null)
-            {
-                return RedirectToAction(nameof(ViewCrowdfund), new { appId });
-            }
-
-            var prefix = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)) + "_";
-            var formParameters = new MultiValueDictionary<string, string>();
-            var controller = nameof(UICrowdfundController).TrimEnd("Controller", StringComparison.InvariantCulture);
-            var store = await _appService.GetStore(app);
-            var storeBlob = store.GetStoreBlob();
-            var form = Form.Parse(formData.Config);
-            form.ApplyValuesFromForm(Request.Query);
-            var vm = new FormViewModel
-            {
-                StoreName = store.StoreName,
-                StoreBranding = new StoreBrandingViewModel(storeBlob),
-                FormName = formData.Name,
-                Form = form,
-                AspController = controller,
-                AspAction = nameof(CrowdfundFormSubmit),
-                RouteParameters = new Dictionary<string, string> { { "appId", appId }, { "amount", amount.ToString() }, { "choiceKey", choiceKey } },
-                FormParameters = formParameters,
-                FormParameterPrefix = prefix
-            };
-
-            return View("Views/UIForms/View", vm);
-        }
-
-        [HttpPost("/apps/{appId}/crowdfund/form/submit")]
-        [IgnoreAntiforgeryToken]
-        [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        public async Task<IActionResult> CrowdfundFormSubmit(string appId, decimal amount, string choiceKey, FormViewModel viewModel)
-        {
-            var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
-            if (app == null)
-                return NotFound();
-
-            var settings = app.GetSettings<CrowdfundSettings>();
-            var formData = await FormDataService.GetForm(settings.FormId);
-            if (formData is null)
-            {
-                return RedirectToAction(nameof(ViewCrowdfund));
-            }
-            var form = Form.Parse(formData.Config);
-            var formFieldNames = form.GetAllFields().Select(tuple => tuple.FullName).Distinct().ToArray();
-
-            // For unit testing
-            if (Request.Headers.Count == 1)
-            {
-                Request.Headers.Add("Content-Type", "application/x-www-form-urlencoded");
-            }
-            var formParameters = Request.Form
-                .Where(pair => pair.Key.StartsWith(viewModel.FormParameterPrefix))
-                .ToDictionary(pair => pair.Key.Replace(viewModel.FormParameterPrefix, string.Empty), pair => pair.Value)
-                .ToMultiValueDictionary(p => p.Key, p => p.Value.ToString());
-
-            form.ApplyValuesFromForm(Request.Form.Where(pair => formFieldNames.Contains(pair.Key)));
-
-            if (FormDataService.Validate(form, ModelState))
-            {
-                var appInfo = await GetAppInfo(appId);
-                var req = new ContributeToCrowdfund()
-                {
-                    RedirectToCheckout = true,
-                    Amount = amount == 0 ? null : amount,
-                    ChoiceKey = choiceKey,
-                    ViewCrowdfundViewModel = appInfo
-                };
-
-                return ContributeToCrowdfund(appId, req, formResponse: FormDataService.GetValues(form).ToString()).Result;
-            }
-
-            viewModel.FormName = formData.Name;
-            viewModel.Form = form;
-
-            viewModel.FormParameters = formParameters;
-            return View("Views/UIForms/View", viewModel);
-        }
-
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]

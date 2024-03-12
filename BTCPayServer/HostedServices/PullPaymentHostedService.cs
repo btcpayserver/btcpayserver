@@ -173,7 +173,15 @@ namespace BTCPayServer.HostedServices
             var query = ctx.Payouts.AsQueryable();
             if (payoutQuery.States is not null)
             {
-                query = query.Where(data => payoutQuery.States.Contains(data.State));
+                if (payoutQuery.States.Length == 1)
+                {
+                    var state = payoutQuery.States[0];
+                    query = query.Where(data => data.State == state);
+                }
+                else
+                {
+                    query = query.Where(data => payoutQuery.States.Contains(data.State));
+                }
             }
 
             if (payoutQuery.PullPayments is not null)
@@ -196,12 +204,28 @@ namespace BTCPayServer.HostedServices
 
             if (payoutQuery.PaymentMethods is not null)
             {
-                query = query.Where(data => payoutQuery.PaymentMethods.Contains(data.PaymentMethodId));
+                if (payoutQuery.PaymentMethods.Length == 1)
+                {
+                    var pm = payoutQuery.PaymentMethods[0];
+                    query = query.Where(data => pm == data.PaymentMethodId);
+                }
+                else
+                {
+                    query = query.Where(data => payoutQuery.PaymentMethods.Contains(data.PaymentMethodId));
+                }
             }
 
             if (payoutQuery.Stores is not null)
             {
-                query = query.Where(data => payoutQuery.Stores.Contains(data.StoreDataId));
+                if (payoutQuery.Stores.Length == 1)
+                {
+                    var store = payoutQuery.Stores[0];
+                    query = query.Where(data => store == data.StoreDataId);
+                }
+                else
+                {
+                    query = query.Where(data => payoutQuery.Stores.Contains(data.StoreDataId));
+                }
             }
             if (payoutQuery.IncludeStoreData)
             {

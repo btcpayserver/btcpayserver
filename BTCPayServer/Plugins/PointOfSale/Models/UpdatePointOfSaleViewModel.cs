@@ -99,6 +99,14 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
 
         [Display(Name = "Custom CSS Code")]
         public string EmbeddedCSS { get; set; }
+
+        [Display(Name = "Language")]
+        public string Lang { get; set; }
+
+        [Display(Name = "HTML Head Tags")]
+        public string HeadHtmlTags { get; set; }
+
+
         public string Description { get; set; }
 
         [Display(Name = "Request customer data on checkout")]

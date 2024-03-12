@@ -9,6 +9,7 @@ namespace BTCPayServer.Services.Apps
         public PointOfSaleSettings()
         {
             Title = "Tea shop";
+            Lang = "en";
             Template = AppService.SerializeTemplate(new ViewPointOfSaleViewModel.Item[]
             {
                 new()
@@ -108,6 +109,9 @@ namespace BTCPayServer.Services.Apps
         public string CustomCSSLink { get; set; }
 
         public string EmbeddedCSS { get; set; }
+
+        public string Lang { get; set; }
+        public string HeadHtmlTags { get; set; }
 
         public string Description { get; set; }
         public string NotificationUrl { get; set; }

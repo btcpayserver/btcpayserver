@@ -124,6 +124,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = settings.CustomTipPercentages,
                 AppId = appId,
                 StoreId = store.Id,
+                Lang = settings.Lang,
+                HeadHtmlTags = settings.HeadHtmlTags,
                 Description = settings.Description,
                 RequiresRefundEmail = settings.RequiresRefundEmail
             });
@@ -593,6 +595,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
                 CustomCSSLink = settings.CustomCSSLink,
                 EmbeddedCSS = settings.EmbeddedCSS,
+                Lang = settings.Lang,
+                HeadHtmlTags = settings.HeadHtmlTags,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
@@ -684,6 +688,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomCSSLink = vm.CustomCSSLink,
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
+                Lang = vm.Lang,
+                HeadHtmlTags = vm.HeadHtmlTags,
                 Description = vm.Description,
                 EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),

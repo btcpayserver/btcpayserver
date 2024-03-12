@@ -657,14 +657,15 @@ retry:
             Assert.Contains("User added successfully", FindAlertMessage().Text);
         }
 
-        public string CreateApp(string type, string name = null)
+        public (string appName, string appId) CreateApp(string type, string name = null)
         {
-            if (string.IsNullOrEmpty(name)) name = $"{type}{Guid.NewGuid()}";
+            if (string.IsNullOrEmpty(name)) name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
             Driver.FindElement(By.Id($"StoreNav-Create{type}")).Click();
             Driver.FindElement(By.Name("AppName")).SendKeys(name);
             Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", FindAlertMessage().Text);
-            return Driver.Url.Split('/')[4];
+            var appId = Driver.Url.Split('/')[4];
+            return (name, appId);
         }
     }
 }

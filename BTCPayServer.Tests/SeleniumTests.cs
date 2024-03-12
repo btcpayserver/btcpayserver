@@ -2658,7 +2658,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("#PosItems .posItem--displayed:nth-child(1) .btn-plus")).Click();
             s.Driver.FindElement(By.CssSelector("#PosItems .posItem--displayed:nth-child(1) .btn-plus")).Click();
             s.Driver.FindElement(By.CssSelector("#PosItems .posItem--displayed:nth-child(2) .btn-plus")).Click();
-            s.Driver.FindElement(By.CssSelector("#ItemsListOffcanvas .btn-close")).Click();
+            s.Driver.FindElement(By.CssSelector("#ItemsListOffcanvas button[data-bs-dismiss=\"offcanvas\"]")).Click();
             
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
             s.Driver.FindElement(By.CssSelector(".keypad [data-key='2']")).Click();

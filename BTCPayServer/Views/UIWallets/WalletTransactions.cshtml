@@ -120,27 +120,35 @@
     </script>
 }
 
-@if (Model.Labels.Any())
-{
-    <div class="col-xl-7 col-xxl-8 mb-4" id="Filter">
-        <div class="input-group">
-            <span class="input-group-text">Filter</span>
-            <div class="form-control d-flex flex-wrap gap-2 align-items-center">
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-3" id="Dropdowns">
+    @if (Model.Labels.Any())
+    {
+        <div class="btn-group" id="Filter">
+            <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+                @if (string.IsNullOrEmpty(labelFilter))
+                {
+                    <span class="text-secondary">Filter by label</span>
+                }
+                else
+                {
+                    <span class="text-secondary">Label:</span>
+                    <span>@labelFilter</span>
+                }
+            </button>
+            <ul class="dropdown-menu">
                 @foreach (var label in Model.Labels)
                 {
-                    <a asp-route-labelFilter="@label.Text" class="transaction-label transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--label-bg:@label.Color;--label-fg:@label.TextColor;">@label.Text</a>
+                    <li><a asp-route-labelFilter="@label.Text" class="dropdown-item transaction-label-text@(labelFilter == label.Text ? " active" : string.Empty)" style="--btcpay-dropdown-link-active-bg:@label.Color;--btcpay-dropdown-link-active-color:@label.TextColor;">@label.Text</a></li>
                 }
-            </div>
-            @if (labelFilter != null)
-            {
-                <a asp-route-labelFilter="" class="btn btn-secondary d-flex align-items-center">Clear filter</a>
-            }
+                @if (!string.IsNullOrEmpty(labelFilter))
+                {
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item" asp-route-labelFilter="">Clear filter</a></li>
+                }
+            </ul>
         </div>
-    </div>
-}
-
-<div class="d-inline-flex align-items-center gap-3" id="Dropdowns">
-    <div class="dropdown d-inline-flex align-items-center gap-3" id="Export">
+    }
+    <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
         <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
             Export
         </button>

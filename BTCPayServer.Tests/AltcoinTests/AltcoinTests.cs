@@ -469,8 +469,11 @@ namespace BTCPayServer.Tests
                 currencyDropdownButton.Click();
 
 
-                elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
-                elements.Single(element => element.Text.Contains("Lightning")).Click();
+                TestUtils.Eventually(() =>
+                {
+                    elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
+                    elements.Single(element => element.Text.Contains("Lightning")).Click();
+                });
 
                 currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
                 Assert.Contains("Lightning", currencyDropdownButton.Text);

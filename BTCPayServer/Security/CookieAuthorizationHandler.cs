@@ -146,7 +146,7 @@ namespace BTCPayServer.Security
             }
             else if (Policies.IsStorePolicy(policy))
             {
-                if (isAdmin)
+                if (isAdmin && storeId is not null)
                 {
                     success = ServerAdminRolePermissions.HasPermission(policy, storeId);
                     

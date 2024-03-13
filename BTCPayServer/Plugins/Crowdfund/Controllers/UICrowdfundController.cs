@@ -220,6 +220,48 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             
 
+            if (settings.FormId is not null)
+            {
+                var formData = await FormDataService.GetForm(settings.FormId);
+                if (formData is not null)
+                {
+                    formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
+                    var form = Form.Parse(formData.Config);
+                    FormDataService.SetValues(form, formResponseJObject);
+                    if (!FormDataService.Validate(form, ModelState))
+                    {
+                        // someone tried to bypass validation
+                        return RedirectToAction(nameof(ViewCrowdfund), new { appId });
+                    }
+
+
+                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
+                    if (amtField is null)
+                    {
+                        form.Fields.Add(new Field
+                        {
+                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+                            Type = "hidden",
+                            Value = price?.ToString(),
+                            Constant = true
+                        });
+                    }
+                    else
+                    {
+                        amtField.Value = price?.ToString();
+                    }
+                    formResponseJObject = FormDataService.GetValues(form);
+
+                    var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
+                    if (invoiceRequest.Amount is not null)
+                    {
+                        price = invoiceRequest.Amount.Value;
+                    }
+                }
+            }
+
+
+
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
                              (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))
             {
@@ -292,7 +334,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpGet("/apps/{appId}/crowdfund/form")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        public async Task<IActionResult> CrowdfundForm(string appId, decimal? amount=0, string choiceKey="")
+        public async Task<IActionResult> CrowdfundForm(string appId, decimal? amount = 0, string choiceKey = "")
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
             if (app == null)
@@ -517,8 +559,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
-                Lang = vm.Lang,
                 HeadHtmlTags = vm.HeadHtmlTags,
+                Lang = vm.Lang,
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,

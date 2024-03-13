@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
 @model List<BTCPayServer.PayoutProcessors.UIPayoutProcessorsController.StorePayoutProcessorsView>
 @{
     ViewData["NavPartialName"] = "../UIStores/_Nav";
@@ -25,7 +26,7 @@
                     <thead>
                     <tr>
                         <th>Payment Method</th>
-                        <th class="text-end">Actions</th>
+                        <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -35,7 +36,7 @@
                             <td>
                                 @conf.Key.ToPrettyString()
                             </td>
-                            <td class="text-end">
+                            <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                                 @if (conf.Value is null)
                                 {
                                     <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Configure</a>
@@ -66,7 +67,7 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete payout processor", "This payout processor will be removed from this store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete payout processor", "This payout processor will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
 }

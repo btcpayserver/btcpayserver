@@ -1,4 +1,6 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model TokensViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -27,7 +29,7 @@
         
         <div class="d-flex align-items-center justify-content-between mt-5 mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>
-            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
+            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
                 Create Token
             </a>
         </div>
@@ -43,7 +45,7 @@
                 <thead>
                 <tr>
                     <th>Label</th>
-                    <th class="text-end">Actions</th>
+                    <th class="text-end" permission="@Policies.CanModifyStoreSettings">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -51,7 +53,7 @@
                 {
                     <tr>
                         <td>@token.Label</td>
-                        <td class="text-end">
+                        <td class="text-end" permission="@Policies.CanModifyStoreSettings">
                             <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - 
                             <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@Html.Encode(token.Label)</strong> will be revoked." data-confirm-input="REVOKE">Revoke</a>
                         </td>
@@ -71,7 +73,7 @@
         <p>Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
         <p><code>Authorization: Basic @Model.EncodedApiKey</code></p>
 
-        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")">
+        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
             <div class="form-group">
                 <label asp-for="ApiKey" class="form-label"></label>
                 <div class="d-flex">
@@ -91,4 +93,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Revoke access token", "The access token will be revoked. Do you wish to continue?", "Revoke"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Revoke access token", "The access token will be revoked. Do you wish to continue?", "Revoke"))" permission="@Policies.CanModifyStoreSettings" />

@@ -1,4 +1,3 @@
-@using BTCPayServer.Components
 @using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
@@ -43,7 +42,7 @@
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h3 class="mb-0">@ViewData["Title"]</h3>
     <a asp-action="CreateOrEditRole" asp-route-storeId="@storeId" class="btn btn-primary" role="button" id="CreateRole" asp-route-role="create"
-       asp-controller="@controller">
+       asp-controller="@controller" permission="@Policies.CanModifyStoreSettings">
         Add Role
     </a>
 </div>
@@ -69,7 +68,7 @@
             {
                 <th>In use</th>
             }
-            <th class="text-end">Actions</th>
+            <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -122,28 +121,18 @@
                         }
                     </td>
                 }
-                <td class="text-end">
-                    <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-role="@role.Role"
-                       asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">
-                        Edit
-                    </a> -
-						<a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-role="@role.Role"
-                       asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">
-                        Remove
-                    </a>
-                    @if (role.IsServerRole && Model.DefaultRole != role.Id)
-                    {
-                        
-                        <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role"
-                           asp-controller="UIServer" id="SetDefault">
-                            - Set as default
-                        </a>
-                    }
+                <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
+                    <div class="d-inline-flex align-items-center gap-3">
+                        @if (role.IsServerRole && Model.DefaultRole != role.Id)
+                        {
+                            <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" id="SetDefault">Set as default</a>
+                        }
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">Edit</a>
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">Remove</a>
+                    </div>
                 </td>
             </tr>
         }
         </tbody>
     </table>
 </div>
-
-<vc:pager view-model="Model"></vc:pager>

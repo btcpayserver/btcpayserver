@@ -38,16 +38,17 @@ namespace BTCPayServer.Controllers
             };
 
             // Widget data
-            if (!vm.WalletEnabled && !vm.LightningEnabled)
+            if (vm is { WalletEnabled: false, LightningEnabled: false })
                 return View(vm);
 
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
+
             var apps = await _appService.GetAllApps(userId, false, store.Id);
             foreach (var app in apps)
             {
-                var appData = await _appService.GetAppDataIfOwner(userId, app.Id);
+                var appData = await _appService.GetAppData(userId, app.Id);
                 vm.Apps.Add(appData);
             }
 

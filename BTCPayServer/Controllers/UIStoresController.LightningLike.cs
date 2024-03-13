@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Components.StoreLightningBalance;
+using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -14,7 +14,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -22,8 +22,8 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-
         [HttpGet("{storeId}/lightning/{cryptoCode}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult Lightning(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -85,6 +85,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/lightning/{cryptoCode}/setup")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult SetupLightningNode(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -101,6 +102,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/lightning/{cryptoCode}/setup")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> SetupLightningNode(string storeId, LightningNodeViewModel vm, string command, string cryptoCode)
         {
             vm.CryptoCode = cryptoCode;
@@ -217,6 +219,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/lightning/{cryptoCode}/settings")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult LightningSettings(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -257,6 +260,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/lightning/{cryptoCode}/settings")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> LightningSettings(LightningSettingsViewModel vm)
         {
             var store = HttpContext.GetStoreData();
@@ -310,6 +314,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/lightning/{cryptoCode}/status")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> SetLightningNodeEnabled(string storeId, string cryptoCode, bool enabled)
         {
             var store = HttpContext.GetStoreData();

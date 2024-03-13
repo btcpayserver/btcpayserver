@@ -1144,7 +1144,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/stores/{storeId}/invoices/create")]
         [HttpGet("invoices/create")]
-        [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanCreateInvoice)]
+        [Authorize(Policy = Policies.CanCreateInvoice, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [BitpayAPIConstraint(false)]
         public async Task<IActionResult> CreateInvoice(InvoicesModel? model = null)
         {

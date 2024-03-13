@@ -979,7 +979,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
             s.GoToUrl(storeUrl);
-            s.AssertNotFound();
+            Assert.Contains("ReturnUrl", s.Driver.Url);
             
             // Archive store
             (storeName, storeId) = s.CreateNewStore();
@@ -3389,7 +3389,7 @@ retry:
             string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
 
             // Owner access
-            s.AssertPageAccess(true, GetStorePath(""));
+            s.AssertPageAccess(false, GetStorePath(""));
             s.AssertPageAccess(true, GetStorePath("reports"));
             s.AssertPageAccess(true, GetStorePath("invoices"));
             s.AssertPageAccess(false, GetStorePath("invoices/create"));

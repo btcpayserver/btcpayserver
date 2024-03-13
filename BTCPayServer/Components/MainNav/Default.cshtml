@@ -29,13 +29,13 @@
                 <div class="accordion-item" permission="@Policies.CanViewStoreSettings">
                     <div class="accordion-body">
                         <ul class="navbar-nav">
-                            <li class="nav-item">
+                            <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                 <a asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Dashboard)" id="StoreNav-Dashboard">
                                     <vc:icon symbol="home"/>
                                     <span>Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" permission="@Policies.CanViewStoreSettings">
                                 <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
                                     <vc:icon symbol="settings"/>
                                     <span>Settings</span>

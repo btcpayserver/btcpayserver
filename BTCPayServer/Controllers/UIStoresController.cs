@@ -147,7 +147,7 @@ namespace BTCPayServer.Controllers
             if (store is null)
                 return NotFound();
 
-            if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewStoreSettings)).Succeeded)
+            if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyStoreSettings)).Succeeded)
             {
                 return RedirectToAction("Dashboard", new { storeId });
             }

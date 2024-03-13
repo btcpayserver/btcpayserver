@@ -979,7 +979,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
             s.GoToUrl(storeUrl);
-            Assert.Contains("ReturnUrl", s.Driver.Url);
+            s.AssertNotFound();
             
             // Archive store
             (storeName, storeId) = s.CreateNewStore();
@@ -998,7 +998,7 @@ namespace BTCPayServer.Tests
             
             var storeLink = s.Driver.FindElement(By.Id($"Store-{storeId}"));
             Assert.Contains(storeName, storeLink.Text);
-            storeLink.Click();
+            s.GoToStore(storeId);
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The store has been unarchived and will appear in the stores list by default again.", s.FindAlertMessage().Text);
         }

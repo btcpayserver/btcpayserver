@@ -17,6 +17,9 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Dashboard()
         {
             var store = CurrentStore;
+            if (store is null)
+                return NotFound();
+            
             var storeBlob = store.GetStoreBlob();
 
             AddPaymentMethods(store, storeBlob,

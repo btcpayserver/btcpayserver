@@ -142,6 +142,10 @@ namespace BTCPayServer.Controllers
             var userId = _UserManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId))
                 return Forbid();
+            
+            var store = await _Repo.FindStore(storeId);
+            if (store is null)
+                return NotFound();
 
             if ((await _authorizationService.AuthorizeAsync(User, Policies.CanViewStoreSettings)).Succeeded)
             {
@@ -174,7 +178,7 @@ namespace BTCPayServer.Controllers
             }).ToList();
         }
 
-        public StoreData CurrentStore => HttpContext.GetStoreData();
+        public StoreData? CurrentStore => HttpContext.GetStoreData();
 
         [HttpPost("{storeId}/users")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

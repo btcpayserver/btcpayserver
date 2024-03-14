@@ -7,9 +7,11 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
 using BTCPayServer.Services.Mails;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
 
@@ -43,6 +45,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/emails")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
         {
             vm.Rules ??= new List<StoreEmailRule>();
@@ -185,13 +188,13 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/email-settings")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
             
-            var emailSender = await _emailSenderFactory.GetEmailSender(store.Id) as StoreEmailSender;
             var fallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
                 ? await storeSender.FallbackSender.GetEmailSettings()
                 : null;

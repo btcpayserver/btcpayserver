@@ -87,7 +87,15 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         return Task.CompletedTask;
     }
 
-    protected abstract Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts);
+    protected virtual Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts) =>
+        throw  new NotImplementedException();
+
+    protected virtual async Task<bool> ProcessShouldSave(ISupportedPaymentMethod paymentMethod,
+        List<PayoutData> payouts)
+    {
+        await Process(paymentMethod, payouts);
+        return true;
+    }
 
     private async Task Act()
     {
@@ -114,14 +122,16 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
             {
                 Logs.PayServer.LogInformation(
                     $"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
-                await Process(paymentMethod, payouts);
-
-                await context.SaveChangesAsync();
-                
-                foreach (var payoutData in payouts.Where(payoutData => payoutData.State != PayoutState.AwaitingPayment))
+                if (await ProcessShouldSave(paymentMethod, payouts))
                 {
-                    _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payoutData));
+                    await context.SaveChangesAsync();
+                
+                    foreach (var payoutData in payouts.Where(payoutData => payoutData.State != PayoutState.AwaitingPayment))
+                    {
+						_eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payoutData));
+                    }
                 }
+
             }
 
             // Allow plugins do to something after automatic payout processing

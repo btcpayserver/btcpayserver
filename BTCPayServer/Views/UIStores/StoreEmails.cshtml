@@ -1,4 +1,7 @@
 @using BTCPayServer.HostedServices.Webhooks
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.TagHelpers
 @model BTCPayServer.Controllers.UIStoresController.StoreEmailRuleViewModel
 @inject WebhookSender WebhookSender
 
@@ -15,7 +18,7 @@
     <div class="col-xxl-constrain">
         <div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>
-            <div class="d-flex gap-3">
+            <div class="d-flex gap-3" permission="@Policies.CanModifyStoreSettings">
                 @if (Model.Rules.Any())
                 {
                     <button class="btn btn-primary" name="command" type="submit" value="save" id="SaveEmailRules">

@@ -656,6 +656,16 @@ retry:
             Driver.FindElement(By.Id("AddUser")).Click();
             Assert.Contains("User added successfully", FindAlertMessage().Text);
         }
+        
+        public void AssertPageAccess(bool shouldHaveAccess, string url)
+        {
+            GoToUrl(url);
+            Assert.DoesNotMatch("404 - Page not found</h", Driver.PageSource);
+            if (shouldHaveAccess)
+                Assert.DoesNotMatch("- Denied</h", Driver.PageSource);
+            else
+                Assert.Contains("- Denied</h", Driver.PageSource);
+        }
 
         public (string appName, string appId) CreateApp(string type, string name = null)
         {

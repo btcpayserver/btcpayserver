@@ -24,13 +24,7 @@
             {
                 <tr>
                     <td>
-                        <a
-                            permission="@Policies.CanModifyStoreSettings"
-                            asp-action="GeneralSettings" asp-controller="UIStores" asp-route-storeId="@store.StoreId"
-                            id="Store-@store.StoreId">
-                            @store.StoreName
-                        </a>
-                        <span not-permission="@Policies.CanModifyStoreSettings">@store.StoreName</span>
+                        <a asp-action="Index" asp-controller="UIStores" asp-route-storeId="@store.StoreId" id="Store-@store.StoreId">@store.StoreName</a>
                         @if (store.Archived)
                         {
                             <span class="badge bg-info ms-2">archived</span>

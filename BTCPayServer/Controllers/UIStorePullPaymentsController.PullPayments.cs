@@ -83,7 +83,7 @@ namespace BTCPayServer.Controllers
                     Message = "You must enable at least one payment method before creating a pull payment.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId });
+                return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
             }
 
             return View(new NewPullPaymentModel
@@ -161,6 +161,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(PullPayments), new { storeId = storeId });
         }
 
+        [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("stores/{storeId}/pull-payments")]
         public async Task<IActionResult> PullPayments(
             string storeId,
@@ -199,7 +200,7 @@ namespace BTCPayServer.Controllers
                     Message = "You must enable at least one payment method before creating a pull payment.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId });
+                return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
             }
 
             var vm = this.ParseListQuery(new PullPaymentsModel
@@ -482,7 +483,7 @@ namespace BTCPayServer.Controllers
                     Message = "You must enable at least one payment method before creating a payout.",
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
-                return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new { storeId });
+                return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
             }
 
             var vm = this.ParseListQuery(new PayoutsModel

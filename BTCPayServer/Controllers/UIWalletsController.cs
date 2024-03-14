@@ -439,7 +439,7 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            var store = await Repository.FindStore(walletId.StoreId);
             var paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null || store is null)
                 return NotFound();
@@ -564,7 +564,7 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            var store = await Repository.FindStore(walletId.StoreId);
             if (store == null)
                 return NotFound();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);

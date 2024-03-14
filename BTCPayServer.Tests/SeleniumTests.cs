@@ -993,7 +993,7 @@ namespace BTCPayServer.Tests
             
             var storeLink = s.Driver.FindElement(By.Id($"Store-{storeId}"));
             Assert.Contains(storeName, storeLink.Text);
-            storeLink.Click();
+            s.GoToStore(storeId);
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The store has been unarchived and will appear in the stores list by default again.", s.FindAlertMessage().Text);
         }
@@ -3472,6 +3472,55 @@ retry:
             s.FindAlertMessage();
             Assert.Contains("Malice",s.Driver.PageSource);
             Assert.DoesNotContain(Policies.CanModifyServerSettings,s.Driver.PageSource);
+        }
+        
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanAccessUserStoreAsAdmin()
+        {
+            using var s = CreateSeleniumTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
+
+            // Setup user, store and wallets
+            s.RegisterNewUser();
+            (_, string storeId) = s.CreateNewStore();
+            s.GoToStore();
+            s.GenerateWallet(isHotWallet: true);
+            s.AddLightningNode(LightningConnectionType.CLightning, false);
+
+            // Add apps
+            (_, string posId) = s.CreateApp("PointOfSale");
+            (_, string crowdfundId) = s.CreateApp("Crowdfund");
+            s.Logout();
+
+            // Setup admin and check access
+            s.GoToRegister();
+            s.RegisterNewUser(true);
+            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
+
+            // Owner access
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(true, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(false, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
+            }
         }
 
         private static void CanBrowseContent(SeleniumTester s)

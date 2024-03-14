@@ -460,6 +460,12 @@
                                     "Print"
                                 ]
                             },
+                            "showItems": {
+                                "type": "boolean",
+                                "default": false,
+                                "description": "Display item selection for keypad",
+                                "example": true
+                            },
                             "showCustomAmount": {
                                 "type": "boolean",
                                 "description": "Whether the option to enter a custom amount is shown",

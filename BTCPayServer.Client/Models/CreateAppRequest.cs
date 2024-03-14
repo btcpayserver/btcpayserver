@@ -26,6 +26,7 @@ namespace BTCPayServer.Client.Models
         public string Template { get; set; } = null;
         [JsonConverter(typeof(StringEnumConverter))]
         public PosViewType DefaultView { get; set; }
+        public bool ShowItems { get; set; } = false;
         public bool ShowCustomAmount { get; set; } = false;
         public bool ShowDiscount { get; set; } = false;
         public bool ShowSearch { get; set; } = true;

@@ -128,6 +128,14 @@
                     <span asp-validation-for="FormId" class="text-danger"></span>
                 </div>
             </fieldset>
+            <fieldset id="keypad-display" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold">Keypad</legend>
+                <div class="form-group d-flex align-items-center pt-2">
+                    <input asp-for="ShowItems" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowItems" class="form-label mb-0"></label>
+                    <span asp-validation-for="ShowItems" class="text-danger"></span>
+                </div>
+            </fieldset>
             <fieldset id="cart-display" class="mt-2">
                 <legend class="h5 mb-3 fw-semibold">Cart</legend>
                 <div class="form-group d-flex align-items-center pt-2">

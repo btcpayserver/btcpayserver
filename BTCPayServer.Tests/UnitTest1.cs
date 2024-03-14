@@ -2274,18 +2274,18 @@ namespace BTCPayServer.Tests
             });
 
             // Test on the webhooks
-            user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
+            await user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
                 c =>
                 {
                     Assert.False(c.ManuallyMarked);
                     Assert.True(c.OverPaid);
                 });
-            user.AssertHasWebhookEvent<WebhookInvoiceProcessingEvent>(WebhookEventType.InvoiceProcessing,
+            await user.AssertHasWebhookEvent<WebhookInvoiceProcessingEvent>(WebhookEventType.InvoiceProcessing,
                 c =>
                 {
                     Assert.True(c.OverPaid);
                 });
-            user.AssertHasWebhookEvent<WebhookInvoiceReceivedPaymentEvent>(WebhookEventType.InvoiceReceivedPayment,
+            await user.AssertHasWebhookEvent<WebhookInvoiceReceivedPaymentEvent>(WebhookEventType.InvoiceReceivedPayment,
                 c =>
                 {
                     Assert.False(c.AfterExpiration);
@@ -2295,7 +2295,7 @@ namespace BTCPayServer.Tests
                     Assert.StartsWith(txId.ToString(), c.Payment.Id);
 
                 });
-            user.AssertHasWebhookEvent<WebhookInvoicePaymentSettledEvent>(WebhookEventType.InvoicePaymentSettled,
+            await user.AssertHasWebhookEvent<WebhookInvoicePaymentSettledEvent>(WebhookEventType.InvoicePaymentSettled,
                 c =>
                 {
                     Assert.False(c.AfterExpiration);

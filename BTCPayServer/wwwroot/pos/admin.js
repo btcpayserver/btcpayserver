@@ -2,6 +2,7 @@ const description = document.getElementById('description');
 const products = document.getElementById('products');
 const tips = document.getElementById('tips');
 const cart = document.getElementById('cart-display');
+const keypad = document.getElementById('keypad-display');
 const discounts = document.getElementById('discounts');
 const buttonPriceText = document.getElementById('button-price-text');
 const customPayments = document.getElementById('custom-payments');
@@ -18,6 +19,7 @@ function updateFormForDefaultView(type) {
         case 'Print':
             hide(tips);
             hide(cart);
+            hide(keypad);
             hide(discounts);
             hide(buttonPriceText);
             show(description);
@@ -32,15 +34,17 @@ function updateFormForDefaultView(type) {
             show(description);
             show(buttonPriceText);
             hide(customPayments);
+            hide(keypad);
             break;
         case 'Light':
             show(tips);
             show(discounts);
+            show(keypad);
             hide(cart);
-            hide(products);
             hide(description);
             hide(buttonPriceText);
             hide(customPayments);
+            document.getElementById('ShowItems').checked ? show(products) : hide(products);
             break;
     }
 }
@@ -54,4 +58,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
 delegate('change', 'input[name="DefaultView"]', e => {
     updateFormForDefaultView(e.target.value);
+});
+
+delegate('change', 'input[name="ShowItems"]', e => {
+    e.target.checked ? show(products) : hide(products);
 });

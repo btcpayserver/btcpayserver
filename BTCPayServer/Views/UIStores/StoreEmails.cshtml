@@ -14,7 +14,7 @@
     <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 }
 
-<form class="row" asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id">
+<form class="row" asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id" permissioned="@Policies.CanModifyStoreSettings">
     <div class="col-xxl-constrain">
         <div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>

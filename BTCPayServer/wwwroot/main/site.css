@@ -78,6 +78,12 @@ hr.primary {
     background-color: var(--btcpay-form-bg);
 }
 
+:disabled .note-editable {
+    border-color: var(--btcpay-form-border-disabled);
+    background-color: var(--btcpay-form-bg-disabled);
+    pointer-events: none;
+}
+
 @media (min-width: 768px) {
     .text-md-nowrap {
         white-space: nowrap;
@@ -647,6 +653,11 @@ label.btcpay-list-select-item {
 label.btcpay-list-select-item:hover {
     border-color: var(--btcpay-form-border-hover);
     background-color: var(--btcpay-form-bg-hover);
+}
+:disabled label.btcpay-list-select-item {
+    border-color: var(--btcpay-form-border-disabled);
+    background-color: var(--btcpay-form-bg-disabled);
+    pointer-events: none;
 }
 @media (max-width: 575px) {
     .btcpay-list-select-item {

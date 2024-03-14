@@ -61,7 +61,7 @@
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All"></div>
@@ -275,7 +275,7 @@
                 <input asp-for="ReceiptOptions.ShowQR" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="ReceiptOptions.ShowQR" class="form-check-label"></label>
             </div>
-            <button type="submit" class="btn btn-primary mt-4" id="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
+            <button type="submit" class="btn btn-primary mt-4" id="Save">Save</button>
         </form>
     </div>
 </div>

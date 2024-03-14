@@ -24,7 +24,7 @@
 
 <h3 class="mt-5 mb-4">Email Server</h3>
 
-<form method="post" autocomplete="off">
+<form method="post" autocomplete="off" permissioned="@Policies.CanModifyStoreSettings">
     @if (Model.IsFallbackSetup())
     {
         <label class="d-flex align-items-center mb-4">

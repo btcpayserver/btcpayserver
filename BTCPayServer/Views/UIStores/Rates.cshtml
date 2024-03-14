@@ -15,7 +15,7 @@
         {
             <div asp-validation-summary="All"></div>
         }
-        <form method="post">
+        <form method="post" permissioned="@Policies.CanModifyStoreSettings">
             <input type="hidden" asp-for="ShowScripting" />
             @if (Model.ShowScripting)
             {
@@ -178,7 +178,7 @@ X_X = kraken(X_X);</code></pre>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
-            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
+            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save">Save</button>
         </form>
     </div>
 </div>

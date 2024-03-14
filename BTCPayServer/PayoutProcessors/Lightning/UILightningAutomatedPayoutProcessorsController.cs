@@ -31,9 +31,10 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         _lightningAutomatedPayoutSenderFactory = lightningAutomatedPayoutSenderFactory;
         _payoutProcessorService = payoutProcessorService;
     }
+
     [HttpGet("~/stores/{storeId}/payout-processors/lightning-automated/{cryptocode}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Configure(string storeId, string cryptoCode)
     {
         if (!_lightningAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(id =>

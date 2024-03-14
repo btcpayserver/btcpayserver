@@ -1,8 +1,10 @@
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Views.Apps
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @using BTCPayServer.Plugins.PointOfSale
 @using BTCPayServer.Forms
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject FormDataService FormDataService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
@@ -35,10 +37,10 @@
     <div class="sticky-header d-sm-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings" permission="@Policies.CanModifyStoreSettings">Save</button>
             @if (Model.Archived)
             {
-                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>
+                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" permission="@Policies.CanModifyStoreSettings">Unarchive</button>
             }
             else
             {
@@ -318,7 +320,7 @@
 <div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
     <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.Id">
-        <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle">
+        <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle" permission="@Policies.CanModifyStoreSettings">
             @if (Model.Archived)
             {
                 <span class="text-nowrap">Unarchive this app</span>
@@ -329,11 +331,10 @@
             }
         </button>
     </form>
-    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE" permission="@Policies.CanModifyStoreSettings">Delete this app</a>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
-
+<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
 <partial name="ShowQR" />
 
 

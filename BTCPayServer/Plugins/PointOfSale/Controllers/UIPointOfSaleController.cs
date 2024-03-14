@@ -558,7 +558,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             return Json(recent);
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/pos")]
         public async Task<IActionResult> UpdatePointOfSale(string appId)
         {

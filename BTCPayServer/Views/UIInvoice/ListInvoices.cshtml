@@ -107,7 +107,12 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
+    <a id="CreateNewInvoice" 
+       permission="@Policies.CanCreateInvoice"
+       asp-action="CreateInvoice" 
+       asp-route-storeId="@Model.StoreId" 
+       asp-route-searchTerm="@Model.SearchTerm" 
+       class="btn btn-primary mt-3 mt-sm-0">
         Create Invoice
     </a>
 </div>

@@ -91,15 +91,15 @@
                     <h3 class="mt-5 mb-3" id="ln-url">LNURL</h3>
                     <div class="form-group d-flex align-items-center">
                         <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
-                        <label asp-for="LNURLEnabled" class="form-label mb-0 me-1"></label>
+                        <label asp-for="LNURLEnabled" class="form-check-label"></label>
                     </div>
 
                     <div class="collapse @(Model.LNURLEnabled ? "show" : "")" id="LNURLSettings">
                         <div class="form-group">
                             <label class="form-group d-flex align-items-center">
                                 <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle me-3" />
-                                <div class="">
-                                    <label asp-for="LNURLBech32Mode" class="form-label mb-0 me-1"></label>
+                                <div>
+                                    <label asp-for="LNURLBech32Mode" class="form-check-label"></label>
                                     <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
                                     <div class="form-text">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</div>
                                 </div>
@@ -108,7 +108,7 @@
                         <div class="form-group mb-3">
                             <div class="d-flex align-items-center">
                                 <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle me-3" />
-                                <label asp-for="LUD12Enabled" class="form-label mb-0 me-1"></label>
+                                <label asp-for="LUD12Enabled" class="form-check-label"></label>
                             </div>
                         </div>
                     </div>

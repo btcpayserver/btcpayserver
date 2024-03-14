@@ -71,8 +71,8 @@
                 <input id="BuyButtonText" type="text" class="form-control mb-2" v-model="editingItem && editingItem.buyButtonText" />
             </div>
             <div class="form-group d-flex align-items-center">
-                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem && editingItem.disabled" />
-                <label for="Disabled" class="form-label mb-0">Disabled</label>
+                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" :checked="editingItem && !editingItem.disabled" v-on:change="$event => editingItem.disabled = !$event.target.checked" />
+                <label for="Disabled" class="form-check-label">Enable</label>
             </div>
             <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
             <div class="text-danger mb-3" v-for="error of errors">{{error}}</div>

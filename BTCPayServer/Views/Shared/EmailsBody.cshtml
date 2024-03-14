@@ -68,11 +68,9 @@
             </button>
             <div id="AdvancedSettings" class="collapse">
                 <div class="pt-3 pb-1">
-                    <div class="form-group">
-                        <div class="form-check">
-                            <input asp-for="Settings.DisableCertificateCheck" class="form-check-input" />
-                            <label asp-for="Settings.DisableCertificateCheck" class="form-check-label">Disable TLS certificate security checks</label>
-                        </div>
+                    <div class="d-flex">
+                        <input asp-for="Settings.EnabledCertificateCheck" type="checkbox" class="btcpay-toggle me-3" />
+                        <label asp-for="Settings.EnabledCertificateCheck" class="form-check-label">TLS certificate security checks</label>
                     </div>
                 </div>
             </div>
@@ -83,6 +81,7 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
+
         delegate('click', '#quick-fill .dropdown-menu a', function (e) {
             e.preventDefault();
             

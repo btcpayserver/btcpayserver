@@ -76,8 +76,8 @@
             <form method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
                 <div class="form-group my-4">
                     <div class="d-flex align-items-center">
-                        <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-2"/>
-                        <label asp-for="Enabled" class="form-label mb-0 me-1"></label>
+                        <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
+                        <label asp-for="Enabled" class="form-check-label"></label>
                     </div>
                     <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
                 </div>
@@ -151,8 +151,8 @@
                 {
                     <div class="form-group">
                         <div class="d-flex align-items-center">
-                            <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-2"/>
-                            <label asp-for="PayJoinEnabled" class="form-label mb-0 me-1"></label>
+                            <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-3"/>
+                            <label asp-for="PayJoinEnabled" class="form-check-label me-1"></label>
                             <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener" title="More information...">
                                 <vc:icon symbol="info"/>
                             </a>
@@ -188,12 +188,14 @@
                     </p>
                     <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
                 </div>
-                <div class="form-check my-1">
-                    <input asp-for="ShowRecommendedFee" type="checkbox" class="form-check-input"/>
-                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
-                    <div class="form-text">Fee will be shown for BTC and LTC onchain payments only.</div>
+                <div class="d-flex align-items-center my-3">
+                    <input asp-for="ShowRecommendedFee" type="checkbox" class="btcpay-toggle me-3" />
+                    <div>
+                        <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                        <div class="form-text">Fee will be shown for BTC and LTC onchain payments only.</div>
+                    </div>
                 </div>
-                <div class="form-group mt-2">
+                <div class="form-group my-3">
                     <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
                     <input inputmode="numeric" asp-for="RecommendedFeeBlockTarget" class="form-control" min="1" style="width:8ch" />
                     <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>

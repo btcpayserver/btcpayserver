@@ -1,3 +1,5 @@
+using Newtonsoft.Json;
+
 namespace BTCPayServer.Client.Models;
 
 public class EmailSettingsData
@@ -26,4 +28,11 @@ public class EmailSettingsData
         get; set;
     }
     public bool DisableCertificateCheck { get; set; }
+
+    [JsonIgnore]
+    public bool EnabledCertificateCheck
+    {
+        get => !DisableCertificateCheck;
+        set { DisableCertificateCheck = !value; }
+    }
 }

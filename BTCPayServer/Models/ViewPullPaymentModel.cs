@@ -71,6 +71,9 @@ namespace BTCPayServer.Models
 
         public PaymentMethodId[] PaymentMethods { get; set; }
 
+        public string SetupDeepLink { get; set; }
+        public string ResetDeepLink { get; set; }
+
         public string HubPath { get; set; }
         public string ResetIn { get; set; }
         public string Email { get; set; }

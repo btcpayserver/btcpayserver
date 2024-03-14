@@ -1,6 +1,9 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
+@using BTCPayServer.Client
+@using BTCPayServer.Abstractions.TagHelpers
 @inject DisplayFormatter DisplayFormatter
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
@@ -37,6 +40,9 @@
                         <vc:icon symbol="pos-cart" />
                         <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
                     </button>
+                    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
+                        <vc:icon symbol="invoice-2 "/>
+                    </button>
                 </div>
                 @if (Model.ShowSearch)
                 {
@@ -64,7 +70,6 @@
                     @for (var index = 0; index < Model.Items.Length; index++)
                     {
                         var item = Model.Items[index];
-                        
                         var formatted = GetItemPriceFormatted(item);
                         var inStock = item.Inventory is null or > 0;
                         var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
@@ -73,7 +78,7 @@
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
                         var categories = new JArray(item.Categories ?? new object[] { });
                         <div class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
-                            <div class="card h-100 px-0" v-on:click="addToCart(@index)">
+                            <div class="card h-100 px-0" v-on:click="addToCart(@index, 1)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {
                                     <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
@@ -133,7 +138,7 @@
         <div class="public-page-wrap" v-cloak>
             <header class="sticky-top bg-tile offcanvas-header py-3 py-lg-4 d-flex align-items-baseline justify-content-center gap-3 px-5 pe-lg-0">
                 <h1 class="mb-0" id="cartLabel">Cart</h1>
-                <button id="CartClear" type="reset" v-on:click="clearCart" class="btn btn-text text-primary p-1" v-if="cartCount > 0">
+                <button id="CartClear" type="reset" v-on:click="clear" class="btn btn-text text-primary p-1" v-if="cartCount > 0">
                     Empty
                 </button>
                 <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="Close">
@@ -251,4 +256,5 @@
             </div>
         </div>
     </aside>
+    <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
 </div>

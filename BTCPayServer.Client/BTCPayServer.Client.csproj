@@ -16,7 +16,7 @@
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
   <PropertyGroup>
-    <Version Condition=" '$(Version)' == '' ">1.7.3</Version>
+    <Version Condition=" '$(Version)' == '' ">1.7.4</Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <PublishRepositoryUrl>true</PublishRepositoryUrl>

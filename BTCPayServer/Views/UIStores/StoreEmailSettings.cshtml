@@ -1,3 +1,5 @@
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.EmailsViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -9,7 +11,7 @@
     <div class="col-xl-10 col-xxl-constrain">
         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
             <h3 class="mb-0">Email Rules</h3>
-            <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id" id="ConfigureEmailRules">
+            <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id" id="ConfigureEmailRules" permission="@Policies.CanModifyStoreSettings">
                 Configure
             </a>
         </div>
@@ -41,6 +43,8 @@
     {
         <partial name="EmailsBody" model="Model" />
     }
+
+    <partial name="EmailsTest" model="Model" permission="@Policies.CanModifyStoreSettings" />
 </form>
 
 @section PageFootContent {

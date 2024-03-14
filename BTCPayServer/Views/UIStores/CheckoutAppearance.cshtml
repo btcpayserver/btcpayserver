@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Client
 @inject IFileService FileService
 @model CheckoutAppearanceViewModel
 @{
@@ -151,7 +152,7 @@
                                 <label asp-for="SoundFile" class="form-label"></label>
                                 @if (!string.IsNullOrEmpty(Model.SoundFileId))
                                 {
-                                    <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true">
+                                    <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true" permission="@Policies.CanModifyStoreSettings">
                                         <span class="fa fa-times"></span> Remove
                                     </button>
                                 }
@@ -274,7 +275,7 @@
                 <input asp-for="ReceiptOptions.ShowQR" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="ReceiptOptions.ShowQR" class="form-check-label"></label>
             </div>
-            <button type="submit" class="btn btn-primary mt-4" id="Save">Save</button>
+            <button type="submit" class="btn btn-primary mt-4" id="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
         </form>
     </div>
 </div>

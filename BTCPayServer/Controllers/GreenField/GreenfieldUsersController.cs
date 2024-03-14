@@ -185,7 +185,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
                 RequiresApproval = policies.RequiresUserApproval,
                 Created = DateTimeOffset.UtcNow,
-                Approved = !anyAdmin && isAdmin // auto-approve first admin
+                Approved = isAdmin // auto-approve first admin and users created by an admin
             };
             var passwordValidation = await this._passwordValidator.ValidateAsync(_userManager, user, request.Password);
             if (!passwordValidation.Succeeded)
@@ -214,7 +214,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
 
-            if (request.IsAdministrator is true)
+            var isNewAdmin = request.IsAdministrator is true;
+            if (isNewAdmin)
             {
                 if (!anyAdmin)
                 {
@@ -233,7 +234,21 @@ namespace BTCPayServer.Controllers.Greenfield
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration, Logs);
                 }
             }
-            _eventAggregator.Publish(new UserRegisteredEvent() { RequestUri = Request.GetAbsoluteRootUri(), User = user, Admin = request.IsAdministrator is true });
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var userEvent = new UserRegisteredEvent
+            {
+                RequestUri = Request.GetAbsoluteRootUri(),
+                Admin = isNewAdmin,
+                User = user
+            };
+            if (currentUser is not null)
+            {
+                userEvent.Kind = UserRegisteredEventKind.Invite;
+                userEvent.InvitedByUser = currentUser;
+            };
+            _eventAggregator.Publish(userEvent);
+
             var model = await FromModel(user);
             return CreatedAtAction(string.Empty, model);
         }

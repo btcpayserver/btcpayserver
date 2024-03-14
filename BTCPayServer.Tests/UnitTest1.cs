@@ -1480,6 +1480,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Lightning", "Lightning")]
+        [Trait("Integration", "Integration")]
         public async Task CanSetPaymentMethodLimits()
         {
             using var tester = CreateServerTester();
@@ -1515,9 +1516,10 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some description",
                     FullNotifications = true
                 }, Facade.Merchant);
-
-            Assert.Single(invoice.CryptoInfo);
-            Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+            // LN and LNURL
+            Assert.Equal(2, invoice.CryptoInfo.Length);
+            Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == PaymentTypes.LNURLPay.ToString());
+            Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == PaymentTypes.LightningLike.ToString());
 
             // Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
             // We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default
@@ -2272,18 +2274,18 @@ namespace BTCPayServer.Tests
             });
 
             // Test on the webhooks
-            user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
+            await user.AssertHasWebhookEvent<WebhookInvoiceSettledEvent>(WebhookEventType.InvoiceSettled,
                 c =>
                 {
                     Assert.False(c.ManuallyMarked);
                     Assert.True(c.OverPaid);
                 });
-            user.AssertHasWebhookEvent<WebhookInvoiceProcessingEvent>(WebhookEventType.InvoiceProcessing,
+            await user.AssertHasWebhookEvent<WebhookInvoiceProcessingEvent>(WebhookEventType.InvoiceProcessing,
                 c =>
                 {
                     Assert.True(c.OverPaid);
                 });
-            user.AssertHasWebhookEvent<WebhookInvoiceReceivedPaymentEvent>(WebhookEventType.InvoiceReceivedPayment,
+            await user.AssertHasWebhookEvent<WebhookInvoiceReceivedPaymentEvent>(WebhookEventType.InvoiceReceivedPayment,
                 c =>
                 {
                     Assert.False(c.AfterExpiration);
@@ -2293,7 +2295,7 @@ namespace BTCPayServer.Tests
                     Assert.StartsWith(txId.ToString(), c.Payment.Id);
 
                 });
-            user.AssertHasWebhookEvent<WebhookInvoicePaymentSettledEvent>(WebhookEventType.InvoicePaymentSettled,
+            await user.AssertHasWebhookEvent<WebhookInvoicePaymentSettledEvent>(WebhookEventType.InvoicePaymentSettled,
                 c =>
                 {
                     Assert.False(c.AfterExpiration);
@@ -2986,7 +2988,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanCreateReports()
         {
-            using var tester = CreateServerTester();
+            using var tester = CreateServerTester(newDb: true);
             tester.ActivateLightning();
             tester.DeleteStore = false;
             await tester.StartAsync();
@@ -3084,6 +3086,13 @@ namespace BTCPayServer.Tests
                 .ToDictionary(d => d.Key, r => r.Sum(d => d[countIndex].Value<int>()));
             Assert.Equal(8, itemsCount["green-tea"]);
             Assert.Equal(1, itemsCount["black-tea"]);
+
+            await acc.ImportOldInvoices();
+            var date2018 = new DateTimeOffset(2018, 1, 1, 0, 0, 0, TimeSpan.Zero);
+            report = await GetReport(acc, new() { ViewName = "Payments", TimePeriod = new TimePeriod() { From = date2018, To = date2018 + TimeSpan.FromDays(365) } });
+            var invoiceIdIndex = report.GetIndex("InvoiceId");
+            var oldPaymentsCount = report.Data.Count(d => d[invoiceIdIndex].Value<string>() == "Q7RqoHLngK9svM4MgRyi9y");
+            Assert.Equal(8, oldPaymentsCount); // 10 payments, but 2 unaccounted
         }
 
         private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)

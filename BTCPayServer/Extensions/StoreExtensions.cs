@@ -10,7 +10,7 @@ namespace BTCPayServer
     {
         public static StoreRole? GetStoreRoleOfUser(this StoreData store, string userId)
         {
-            return store.UserStores.FirstOrDefault(r => r.ApplicationUserId == userId)?.StoreRole;
+            return store.UserStores?.FirstOrDefault(r => r.ApplicationUserId == userId)?.StoreRole;
         }
         
         public static PermissionSet GetPermissionSet(this StoreRole storeRole, string storeId)

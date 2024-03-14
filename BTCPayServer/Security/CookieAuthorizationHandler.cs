@@ -1,5 +1,5 @@
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
@@ -42,7 +42,10 @@ namespace BTCPayServer.Security
             _pluginHookService = pluginHookService;
             _paymentRequestRepository = paymentRequestRepository;
         }
-
+        //TODO: In the future, we will add these store permissions to actual aspnet roles, and remove this class.
+        private static readonly PermissionSet ServerAdminRolePermissions =
+            new PermissionSet(new[] {Permission.Create(Policies.CanViewStoreSettings, null)});
+        
         protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, PolicyRequirement requirement)
         {
             if (context.User.Identity.AuthenticationType != AuthenticationSchemes.Cookie)
@@ -67,7 +70,10 @@ namespace BTCPayServer.Security
                 storeId = s;
             }
             else
+            {
                 storeId = _httpContext.GetImplicitStoreId();
+                store = _httpContext.GetStoreData();
+            }
             var routeData = _httpContext.GetRouteData();
             if (routeData != null)
             {
@@ -124,12 +130,9 @@ namespace BTCPayServer.Security
                 storeId = null;
             }
 
-            if (!string.IsNullOrEmpty(storeId))
+            if (!string.IsNullOrEmpty(storeId) && store is null)
             {
-                var cachedStore = _httpContext.GetStoreData();
-                store = cachedStore?.Id == storeId
-                    ? cachedStore
-                    : await _storeRepository.FindStore(storeId, userId);
+                store = await _storeRepository.FindStore(storeId, userId);
             }
 
             if (Policies.IsServerPolicy(policy) && isAdmin)
@@ -142,14 +145,18 @@ namespace BTCPayServer.Security
             }
             else if (Policies.IsStorePolicy(policy))
             {
-                if (store is not null)
+                if (isAdmin && storeId is not null)
                 {
-                    if (store.HasPermission(userId,policy))
-                    {
-                        success = true;
-                    }
+                    success = ServerAdminRolePermissions.HasPermission(policy, storeId);
+                    
                 }
-                else if (requiredUnscoped)
+
+                if (!success && store?.HasPermission(userId, policy) is true)
+                {
+                    success = true;
+                }
+
+                if (!success && store is null && requiredUnscoped)
                 {
                     success = true;
                 }
@@ -166,6 +173,11 @@ namespace BTCPayServer.Security
                 context.Succeed(requirement);
                 if (!explicitResource)
                 {
+                    if (storeId is not null && store is null)
+                    {
+                        store = await _storeRepository.FindStore(storeId);
+                        
+                    }
                     if (store != null)
                     {
                         if (_httpContext.GetStoreData()?.Id != store.Id)

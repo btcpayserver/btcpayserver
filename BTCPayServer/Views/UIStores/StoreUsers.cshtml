@@ -9,11 +9,21 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().Id);
-    var roles = new SelectList(await StoreRepository.GetStoreRoles(ScopeProvider.GetCurrentStoreId()), nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role), Model.Role);
+    var roles = new SelectList(
+        await StoreRepository.GetStoreRoles(ScopeProvider.GetCurrentStoreId()),
+        nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
+        Model.Role);
+}
+@section PageHeadContent {
+    <style>
+        @@media (min-width: 576px) {
+            #Role { width: auto !important; }
+        }
+    </style>
 }
 
 <div class="row">
-    <div class="col-xxl-constrain col-xl-8">
+    <div class="col-xxl-constrain">
         <h3 class="mb-3">@ViewData["Title"]</h3>
         <p>
             Give other registered BTCPay Server users access to your store.<br />
@@ -27,7 +37,7 @@
 
         <form method="post" class="d-flex flex-wrap align-items-center gap-3" permission="@Policies.CanModifyStoreSettings">
             <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com" style="flex: 1 1 14rem">
-            <select asp-for="Role" class="form-select w-auto" asp-items="roles"></select>
+            <select asp-for="Role" class="form-select" asp-items="roles"></select>
             <button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddUser">Add User</button>
         </form>
 

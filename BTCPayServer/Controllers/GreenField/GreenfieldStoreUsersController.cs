@@ -27,14 +27,15 @@ namespace BTCPayServer.Controllers.Greenfield
             _storeRepository = storeRepository;
             _userManager = userManager;
         }
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/users")]
         public IActionResult GetStoreUsers()
         {
-
             var store = HttpContext.GetStoreData();
             return store == null ? StoreNotFound() : Ok(FromModel(store));
         }
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/stores/{storeId}/users/{idOrEmail}")]
         public async Task<IActionResult> RemoveStoreUser(string storeId, string idOrEmail)

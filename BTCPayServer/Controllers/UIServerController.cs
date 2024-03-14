@@ -1204,8 +1204,10 @@ namespace BTCPayServer.Controllers
                         ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
                     if (!ModelState.IsValid)
                         return View(model);
+                    var serverSettings = await _SettingsRepository.GetSettingAsync<ServerSettings>();
+                    var serverName = string.IsNullOrEmpty(serverSettings?.ServerName) ? "BTCPay Server" : serverSettings.ServerName;
                     using (var client = await model.Settings.CreateSmtpClient())
-                    using (var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), "BTCPay test", "BTCPay test", false))
+                    using (var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{serverName}: Email test", "You received it, the BTCPay Server SMTP settings work.", false))
                     {
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);

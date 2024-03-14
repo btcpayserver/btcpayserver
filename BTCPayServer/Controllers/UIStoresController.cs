@@ -8,10 +8,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -60,7 +62,6 @@ namespace BTCPayServer.Controllers
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             PoliciesSettings policiesSettings,
             IAuthorizationService authorizationService,
-            EventAggregator eventAggregator,
             AppService appService,
             IFileService fileService,
             WebhookSender webhookNotificationManager,
@@ -70,7 +71,9 @@ namespace BTCPayServer.Controllers
             IHtmlHelper html,
             LightningClientFactoryService lightningClientFactoryService,
             EmailSenderFactory emailSenderFactory,
-            WalletFileParsers onChainWalletParsers)
+            WalletFileParsers onChainWalletParsers,
+            SettingsRepository settingsRepository,
+            EventAggregator eventAggregator)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -97,6 +100,8 @@ namespace BTCPayServer.Controllers
             _lightningClientFactoryService = lightningClientFactoryService;
             _emailSenderFactory = emailSenderFactory;
             _onChainWalletParsers = onChainWalletParsers;
+            _settingsRepository = settingsRepository;
+            _eventAggregator = eventAggregator;
             Html = html;
         }
 
@@ -110,6 +115,7 @@ namespace BTCPayServer.Controllers
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         readonly RateFetcher _RateFactory;
+        readonly SettingsRepository _settingsRepository;
         private readonly ExplorerClientProvider _ExplorerProvider;
         private readonly LanguageService _LangService;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
@@ -122,6 +128,7 @@ namespace BTCPayServer.Controllers
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly WalletFileParsers _onChainWalletParsers;
+        private readonly EventAggregator _eventAggregator;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
@@ -189,12 +196,6 @@ namespace BTCPayServer.Controllers
             {
                 return View(vm);
             }
-            var user = await _UserManager.FindByEmailAsync(vm.Email);
-            if (user == null)
-            {
-                ModelState.AddModelError(nameof(vm.Email), "User not found");
-                return View(vm);
-            }
 
             var roles = await _Repo.GetStoreRoles(CurrentStore.Id);
             if (roles.All(role => role.Id != vm.Role))
@@ -202,15 +203,68 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Role), "Invalid role");
                 return View(vm);
             }
-            var roleId = await _Repo.ResolveStoreRoleId(storeId, vm.Role);
-
-            if (!await _Repo.AddStoreUser(CurrentStore.Id, user.Id, roleId))
+            
+            var user = await _UserManager.FindByEmailAsync(vm.Email);
+            var isExistingUser = user is not null;
+            var isExistingStoreUser = isExistingUser && await _Repo.GetStoreUser(storeId, user!.Id) is not null;
+            var successInfo = string.Empty;
+            if (user == null)
             {
-                ModelState.AddModelError(nameof(vm.Email), "The user already has access to this store");
-                return View(vm);
+                user = new ApplicationUser
+                {
+                    UserName = vm.Email,
+                    Email = vm.Email,
+                    RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
+                    RequiresApproval = _policiesSettings.RequiresUserApproval,
+                    Created = DateTimeOffset.UtcNow
+                };
+
+                var result = await _UserManager.CreateAsync(user);
+                if (result.Succeeded)
+                {
+                    var tcs = new TaskCompletionSource<Uri>();
+                    var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
+
+                    _eventAggregator.Publish(new UserRegisteredEvent
+                    {
+                        RequestUri = Request.GetAbsoluteRootUri(),
+                        Kind = UserRegisteredEventKind.Invite,
+                        User = user,
+                        InvitedByUser = currentUser,
+                        CallbackUrlGenerated = tcs
+                    });
+                    
+                    var callbackUrl = await tcs.Task;
+                    var settings = await _settingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+                    var info = settings.IsComplete()
+                        ? "An invitation email has been sent.<br/>You may alternatively"
+                        : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
+                    successInfo = $"{info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>";
+                }
+                else
+                {
+                    ModelState.AddModelError(nameof(vm.Email), "User could not be invited");
+                    return View(vm);
+                }
             }
-            TempData[WellKnownTempData.SuccessMessage] = "User added successfully.";
-            return RedirectToAction(nameof(StoreUsers));
+
+            var roleId = await _Repo.ResolveStoreRoleId(storeId, vm.Role);
+            var action = isExistingUser
+                ? isExistingStoreUser ? "updated" : "added"
+                : "invited";
+            if (await _Repo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId))
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Success,
+                    AllowDismiss = false,
+                    Html = $"User {action} successfully." + (string.IsNullOrEmpty(successInfo) ? "" : $" {successInfo}")
+                });
+                return RedirectToAction(nameof(StoreUsers));
+            }
+
+            ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}");
+            return View(vm);
         }
 
         [HttpGet("{storeId}/users/{userId}/delete")]
@@ -930,6 +984,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/tokens")]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ListTokens()
         {
             var model = new TokensViewModel();

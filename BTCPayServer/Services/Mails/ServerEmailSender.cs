@@ -20,5 +20,12 @@ namespace BTCPayServer.Services.Mails
         {
             return SettingsRepository.GetSettingAsync<EmailSettings>();
         }
+
+        public override async Task<string> GetPrefixedSubject(string subject)
+        {
+            var settings = await SettingsRepository.GetSettingAsync<ServerSettings>();
+            var prefix = string.IsNullOrEmpty(settings?.ServerName) ? "BTCPay Server" : settings.ServerName;
+            return $"{prefix}: {subject}";
+        }
     }
 }

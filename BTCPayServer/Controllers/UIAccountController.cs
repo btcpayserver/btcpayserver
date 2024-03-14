@@ -147,7 +147,7 @@ namespace BTCPayServer.Controllers
                     return await Login(returnUrl);
                 }
 
-                _logger.LogInformation("User with ID {UserId} logged in with a login code", user!.Id);
+                _logger.LogInformation("User {Email} logged in with a login code", user!.Email);
                 await _signInManager.SignInAsync(user, false, "LoginCode");
                 return RedirectToLocal(returnUrl);
             }
@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers
                 var result = await _signInManager.PasswordSignInAsync(model.Email, model.Password, model.RememberMe, lockoutOnFailure: true);
                 if (result.Succeeded)
                 {
-                    _logger.LogInformation("User {UserId} logged in", user.Id);
+                    _logger.LogInformation("User {Email} logged in", user.Email);
                     return RedirectToLocal(returnUrl);
                 }
                 if (result.RequiresTwoFactor)
@@ -230,7 +230,7 @@ namespace BTCPayServer.Controllers
                 }
                 if (result.IsLockedOut)
                 {
-                    _logger.LogWarning("User {UserId} account locked out", user.Id);
+                    _logger.LogWarning("User {Email} tried to log in, but is locked out", user.Email);
                     return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
                 }
                 
@@ -368,7 +368,7 @@ namespace BTCPayServer.Controllers
                 if (await _fido2Service.CompleteLogin(viewModel.UserId, JObject.Parse(viewModel.Response).ToObject<AuthenticatorAssertionRawResponse>()))
                 {
                     await _signInManager.SignInAsync(user!, viewModel.RememberMe, "FIDO2");
-                    _logger.LogInformation("User logged in");
+                    _logger.LogInformation("User {Email} logged in with FIDO2", user.Email);
                     return RedirectToLocal(returnUrl);
                 }
             }
@@ -455,11 +455,11 @@ namespace BTCPayServer.Controllers
             var result = await _signInManager.TwoFactorAuthenticatorSignInAsync(authenticatorCode, rememberMe, model.RememberMachine);
             if (result.Succeeded)
             {
-                _logger.LogInformation("User with ID {UserId} logged in with 2fa", user.Id);
+                _logger.LogInformation("User {Email} logged in with 2FA", user.Email);
                 return RedirectToLocal(returnUrl);
             }
 
-            _logger.LogWarning("Invalid authenticator code entered for user with ID {UserId}", user.Id);
+            _logger.LogWarning("User {Email} entered invalid authenticator code", user.Email);
             ModelState.AddModelError(string.Empty, "Invalid authenticator code.");
             return View("SecondaryLogin", new SecondaryLoginViewModel
             {
@@ -524,17 +524,17 @@ namespace BTCPayServer.Controllers
             var result = await _signInManager.TwoFactorRecoveryCodeSignInAsync(recoveryCode);
             if (result.Succeeded)
             {
-                _logger.LogInformation("User with ID {UserId} logged in with a recovery code", user.Id);
+                _logger.LogInformation("User {Email} logged in with a recovery code", user.Email);
                 return RedirectToLocal(returnUrl);
             }
             if (result.IsLockedOut)
             {
-                _logger.LogWarning("User with ID {UserId} account locked out", user.Id);
+                _logger.LogWarning("User {Email} account locked out", user.Email);
 
                 return RedirectToAction(nameof(Lockout), new { user.LockoutEnd });
             }
 
-            _logger.LogWarning("Invalid recovery code entered for user with ID {UserId}", user.Id);
+            _logger.LogWarning("User {Email} entered invalid recovery code", user.Email);
             ModelState.AddModelError(string.Empty, "Invalid recovery code entered.");
             return View();
         }
@@ -650,9 +650,11 @@ namespace BTCPayServer.Controllers
         [HttpGet("/logout")]
         public async Task<IActionResult> Logout()
         {
+            var userId = _signInManager.UserManager.GetUserId(HttpContext.User);
+            var user = await _userManager.FindByIdAsync(userId);
             await _signInManager.SignOutAsync();
             HttpContext.DeleteUserPrefsCookie();
-            _logger.LogInformation("User logged out");
+            _logger.LogInformation("User {Email} logged out", user!.Email);
             return RedirectToAction(nameof(Login));
         }
 
@@ -747,7 +749,7 @@ namespace BTCPayServer.Controllers
         {
             if (code == null)
             {
-                throw new ApplicationException("A code must be supplied for password reset.");
+                throw new ApplicationException("A code must be supplied for this action.");
             }
 
             var user = string.IsNullOrEmpty(userId) ? null : await _userManager.FindByIdAsync(userId);
@@ -777,6 +779,7 @@ namespace BTCPayServer.Controllers
             }
             
             var user = await _userManager.FindByEmailAsync(model.Email);
+            var hasPassword = user != null && await _userManager.HasPasswordAsync(user);
             if (!UserService.TryCanLogin(user, out _))
             {
                 // Don't reveal that the user does not exist
@@ -789,7 +792,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Message = "Password successfully set."
+                    Message = hasPassword ? "Password successfully set." : "Account successfully created."
                 });
                 return RedirectToAction(nameof(Login));
             }
@@ -816,6 +819,12 @@ namespace BTCPayServer.Controllers
             
             var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
             var requiresSetPassword = !await _userManager.HasPasswordAsync(user);
+            
+            _eventAggregator.Publish(new UserInviteAcceptedEvent
+            {
+                User = user,
+                RequestUri = Request.GetAbsoluteRootUri()
+            });
             
             if (requiresEmailConfirmation)
             {

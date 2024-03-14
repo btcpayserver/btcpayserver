@@ -8,6 +8,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,6 +22,7 @@ public class UserEventHostedService(
     UserManager<ApplicationUser> userManager,
     EmailSenderFactory emailSenderFactory,
     NotificationSender notificationSender,
+    StoreRepository storeRepository,
     LinkGenerator generator,
     Logs logs)
     : EventHostedServiceBase(eventAggregator, logs)
@@ -31,6 +33,7 @@ public class UserEventHostedService(
         Subscribe<UserApprovedEvent>();
         Subscribe<UserConfirmedEmailEvent>();
         Subscribe<UserPasswordResetRequestedEvent>();
+        Subscribe<UserInviteAcceptedEvent>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -121,14 +124,22 @@ public class UserEventHostedService(
                 if (!user.RequiresApproval || user.Approved) return;
                 await NotifyAdminsAboutUserRequiringApproval(user, uri, confirmedUserInfo);
                 break;
+
+            case UserInviteAcceptedEvent inviteAcceptedEvent:
+                user = inviteAcceptedEvent.User;
+                uri = inviteAcceptedEvent.RequestUri;
+                Logs.PayServer.LogInformation("User {Email} accepted the invite", user.Email);
+                await NotifyAboutUserAcceptingInvite(user, uri);
+                break;
         }
     }
 
     private async Task NotifyAdminsAboutUserRequiringApproval(ApplicationUser user, Uri uri, string newUserInfo)
     {
         if (!user.RequiresApproval || user.Approved) return;
+        // notification
         await notificationSender.SendNotification(new AdminScope(), new NewUserRequiresApprovalNotification(user));
-
+        // email
         var admins = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
         var host = new HostString(uri.Host, uri.Port);
         var approvalLink = generator.UserDetailsLink(user.Id, uri.Scheme, host, uri.PathAndQuery);
@@ -136,6 +147,29 @@ public class UserEventHostedService(
         foreach (var admin in admins)
         {
             emailSender.SendNewUserInfo(admin.GetMailboxAddress(), newUserInfo, approvalLink);
+        }
+    }
+
+    private async Task NotifyAboutUserAcceptingInvite(ApplicationUser user, Uri uri)
+    {
+        var stores = await storeRepository.GetStoresByUserId(user.Id);
+        var notifyRoles = new[] { StoreRoleId.Owner, StoreRoleId.Manager };
+        foreach (var store in stores)
+        {
+            // notification
+            await notificationSender.SendNotification(new StoreScope(store.Id, notifyRoles), new InviteAcceptedNotification(user, store));
+            // email
+            var notifyUsers = await storeRepository.GetStoreUsers(store.Id, notifyRoles);
+            var host = new HostString(uri.Host, uri.Port);
+            var storeUsersLink = generator.StoreUsersLink(store.Id, uri.Scheme, host, uri.PathAndQuery);
+            var emailSender = await emailSenderFactory.GetEmailSender(store.Id);
+            foreach (var storeUser in notifyUsers)
+            {
+                if (storeUser.Id == user.Id) continue; // do not notify the user itself (if they were added as owner or manager)
+                var notifyUser = await userManager.FindByIdOrEmail(storeUser.Id);
+                var info = $"User {user.Email} accepted the invite to {store.StoreName}";
+                emailSender.SendUserInviteAcceptedInfo(notifyUser.GetMailboxAddress(), info, storeUsersLink);
+            }
         }
     }
 }

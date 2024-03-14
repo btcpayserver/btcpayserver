@@ -73,7 +73,7 @@ namespace BTCPayServer.Services.Altcoins.Monero
                 var daemonPassword =
                     configuration.GetOrDefault<string>(
                         $"{moneroLikeSpecificBtcPayNetwork.CryptoCode}_daemon_password", null);
-                if (daemonUri == null || walletDaemonUri == null)
+                if (daemonUri == null || walletDaemonUri == null || walletDaemonWalletDirectory == null)
                 {
                     throw new ConfigException($"{moneroLikeSpecificBtcPayNetwork.CryptoCode} is misconfigured");
                 }

@@ -68,6 +68,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
 
         foreach (IGrouping<string, PayoutData> payoutByStore in payouts.GroupBy(data => data.StoreDataId))
         {
+            //this should never happen
             if (!stores.TryGetValue(payoutByStore.Key, out var store))
             {
                 foreach (PayoutData payoutData in payoutByStore)

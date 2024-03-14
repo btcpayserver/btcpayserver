@@ -1480,6 +1480,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Lightning", "Lightning")]
+        [Trait("Integration", "Integration")]
         public async Task CanSetPaymentMethodLimits()
         {
             using var tester = CreateServerTester();
@@ -1515,9 +1516,10 @@ namespace BTCPayServer.Tests
                     ItemDesc = "Some description",
                     FullNotifications = true
                 }, Facade.Merchant);
-
-            Assert.Single(invoice.CryptoInfo);
-            Assert.Equal(PaymentTypes.LightningLike.ToString(), invoice.CryptoInfo[0].PaymentType);
+            // LN and LNURL
+            Assert.Equal(2, invoice.CryptoInfo.Length);
+            Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == PaymentTypes.LNURLPay.ToString());
+            Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == PaymentTypes.LightningLike.ToString());
 
             // Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
             // We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default

@@ -9,6 +9,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public string CryptoCode { get; set; }
         public long AccountIndex { get; set; }
+        public long? InvoiceSettledConfirmationThreshold { get; set; }
         [JsonIgnore]
         public PaymentMethodId PaymentId => new PaymentMethodId(CryptoCode, MoneroPaymentType.Instance);
     }

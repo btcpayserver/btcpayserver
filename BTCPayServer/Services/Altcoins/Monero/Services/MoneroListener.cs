@@ -324,6 +324,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             string txId, long confirmations, long blockHeight, long locktime, InvoiceEntity invoice,
             BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
         {
+            var network = _networkProvider.GetNetwork(cryptoCode);
+            var moneroPaymentMethodDetails = invoice
+                .GetPaymentMethod(network, MoneroPaymentType.Instance)
+                .GetPaymentMethodDetails() as MoneroLikeOnChainPaymentMethodDetails;
+
             //construct the payment data
             var paymentData = new MoneroLikePaymentData()
             {
@@ -335,7 +340,8 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 Amount = totalAmount,
                 BlockHeight = blockHeight,
                 Network = _networkProvider.GetNetwork(cryptoCode),
-                LockTime = locktime
+                LockTime = locktime,
+                InvoiceSettledConfirmationThreshold = moneroPaymentMethodDetails.InvoiceSettledConfirmationThreshold
             };
 
             //check if this tx exists as a payment to this invoice already

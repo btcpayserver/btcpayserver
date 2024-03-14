@@ -34,7 +34,7 @@ public class UIPayoutProcessorsController : Controller
 
     [HttpGet("~/stores/{storeId}/payout-processors")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ConfigureStorePayoutProcessors(string storeId)
     {
         var activeProcessors =

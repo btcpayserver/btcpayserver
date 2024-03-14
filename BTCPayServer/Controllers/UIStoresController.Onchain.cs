@@ -1,5 +1,4 @@
 using System;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,12 +7,12 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -27,6 +26,7 @@ namespace BTCPayServer.Controllers
     public partial class UIStoresController
     {
         [HttpGet("{storeId}/onchain/{cryptoCode}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public ActionResult SetupWallet(WalletSetupViewModel vm)
         {
             var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
@@ -42,6 +42,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/import/{method?}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ImportWallet(WalletSetupViewModel vm)
         {
             var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
@@ -71,6 +72,7 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/modify")]
         [HttpPost("{storeId}/onchain/{cryptoCode}/import/{method}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> UpdateWallet(WalletSetupViewModel vm)
         {
             var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
@@ -197,6 +199,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> GenerateWallet(WalletSetupViewModel vm)
         {
             var checkResult = IsAvailable(vm.CryptoCode, out _, out var network);
@@ -235,8 +238,11 @@ namespace BTCPayServer.Controllers
 
             return View(vm.ViewName, vm);
         }
+
         internal GenerateWalletResponse GenerateWalletResponse;
+
         [HttpPost("{storeId}/onchain/{cryptoCode}/generate/{method}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> GenerateWallet(string storeId, string cryptoCode, WalletSetupMethod method, WalletSetupRequest request)
         {
             var checkResult = IsAvailable(cryptoCode, out _, out var network);
@@ -356,6 +362,7 @@ namespace BTCPayServer.Controllers
         // The purpose of this action is to show the user a success message, which confirms
         // that the store settings have been updated after generating a new wallet.
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/confirm")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public ActionResult GenerateWalletConfirm(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out _, out var network);
@@ -371,6 +378,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/settings")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletSettings(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
@@ -440,6 +448,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/settings/wallet")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> UpdateWalletSettings(WalletSettingsViewModel vm)
         {
             var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
@@ -549,6 +558,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/settings/payment")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> UpdatePaymentSettings(WalletSettingsViewModel vm)
         {
             var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
@@ -612,6 +622,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/seed")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WalletSeed(string storeId, string cryptoCode, CancellationToken cancellationToken = default)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
@@ -658,6 +669,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/replace")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public ActionResult ReplaceWallet(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
@@ -677,6 +689,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/replace")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult ConfirmReplaceWallet(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out _);
@@ -695,6 +708,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/delete")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public ActionResult DeleteWallet(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);
@@ -714,6 +728,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/onchain/{cryptoCode}/delete")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ConfirmDeleteWallet(string storeId, string cryptoCode)
         {
             var checkResult = IsAvailable(cryptoCode, out var store, out var network);

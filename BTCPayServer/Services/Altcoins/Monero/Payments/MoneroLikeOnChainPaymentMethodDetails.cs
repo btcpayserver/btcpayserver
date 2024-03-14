@@ -29,6 +29,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public long AddressIndex { get; set; }
         public string DepositAddress { get; set; }
         public decimal NextNetworkFee { get; set; }
+        public long? InvoiceSettledConfirmationThreshold { get; set; }
     }
 }
 #endif

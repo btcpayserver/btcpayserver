@@ -94,14 +94,14 @@
     white-space: nowrap;
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link:hover {
     color: var(--btcpay-header-link-accent);
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link.active,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link.active,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:hover {
     color: var(--btcpay-header-link-active);
 }
 

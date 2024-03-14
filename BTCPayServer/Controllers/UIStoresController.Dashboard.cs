@@ -1,12 +1,15 @@
 #nullable enable
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Client;
 using BTCPayServer.Components.StoreLightningBalance;
 using BTCPayServer.Components.StoreNumbers;
 using BTCPayServer.Components.StoreRecentInvoices;
 using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
@@ -14,9 +17,13 @@ namespace BTCPayServer.Controllers
     public partial class UIStoresController
     {
         [HttpGet("{storeId}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> Dashboard()
         {
             var store = CurrentStore;
+            if (store is null)
+                return NotFound();
+            
             var storeBlob = store.GetStoreBlob();
 
             AddPaymentMethods(store, storeBlob,
@@ -38,16 +45,17 @@ namespace BTCPayServer.Controllers
             };
 
             // Widget data
-            if (!vm.WalletEnabled && !vm.LightningEnabled)
+            if (vm is { WalletEnabled: false, LightningEnabled: false })
                 return View(vm);
 
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
+
             var apps = await _appService.GetAllApps(userId, false, store.Id);
             foreach (var app in apps)
             {
-                var appData = await _appService.GetAppDataIfOwner(userId, app.Id);
+                var appData = await _appService.GetAppData(userId, app.Id);
                 vm.Apps.Add(appData);
             }
 
@@ -55,6 +63,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/dashboard/{cryptoCode}/lightning/balance")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult LightningBalance(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -66,6 +75,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult StoreNumbers(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -77,6 +87,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-transactions")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult RecentTransactions(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();
@@ -88,6 +99,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-invoices")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult RecentInvoices(string storeId, string cryptoCode)
         {
             var store = HttpContext.GetStoreData();

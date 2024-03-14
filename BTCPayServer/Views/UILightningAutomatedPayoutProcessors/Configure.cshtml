@@ -1,4 +1,4 @@
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.Lightning.UILightningAutomatedPayoutProcessorsController.LightningTransferViewModel
@@ -41,7 +41,7 @@
                 <div class="form-text">If a payout fails this many times, it will be cancelled.</div>
             </div>
             
-            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
+            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
         </form>
     </div>
 </div>

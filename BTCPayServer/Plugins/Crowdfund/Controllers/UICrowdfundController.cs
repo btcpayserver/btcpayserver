@@ -132,26 +132,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
 
             JObject formResponseJObject = null;
-
-            if (settings.FormId is not null)
-            {
-                var formData = await FormDataService.GetForm(settings.FormId);
-                if (formData is not null)
-                {
-                    formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
-                    var form = Form.Parse(formData.Config);
-                    FormDataService.SetValues(form, formResponseJObject);
-                    if (!FormDataService.Validate(form, ModelState))
-                    {
-                        // someone tried to bypass validation
-                        return RedirectToAction(nameof(ViewCrowdfund), new { appId });
-                    }
-                }
-            }
-
             var store = await _appService.GetStore(app);
-            var title = settings.Title;
             decimal? price = request.Amount;
+            var title = settings.Title;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
@@ -194,6 +177,48 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
                 price = request.Amount;
             }
+            
+            if (settings.FormId is not null)
+            {
+                var formData = await FormDataService.GetForm(settings.FormId);
+                if (formData is not null)
+                {
+                    formResponseJObject = TryParseJObject(formResponse) ?? new JObject();
+                    var form = Form.Parse(formData.Config);
+                    FormDataService.SetValues(form, formResponseJObject);
+                    if (!FormDataService.Validate(form, ModelState))
+                    {
+                        // someone tried to bypass validation
+                        return RedirectToAction(nameof(ViewCrowdfund), new { appId });
+                    }
+                    
+                    
+                    var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
+                    if (amtField is null)
+                    {
+                        form.Fields.Add(new Field
+                        {
+                            Name = $"{FormDataService.InvoiceParameterPrefix}amount",
+                            Type = "hidden",
+                            Value = price?.ToString(),
+                            Constant = true
+                        });
+                    }
+                    else
+                    {
+                        amtField.Value = price?.ToString();
+                    }
+                    formResponseJObject = FormDataService.GetValues(form);
+                    
+                    var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
+                    if (invoiceRequest.Amount is not null)
+                    {
+                        price = invoiceRequest.Amount.Value;
+                    }
+                }
+            }
+
+            
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
                              (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))
@@ -354,7 +379,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             return View("Views/UIForms/View", viewModel);
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId)
         {

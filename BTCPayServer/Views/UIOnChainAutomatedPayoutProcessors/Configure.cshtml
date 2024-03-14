@@ -1,5 +1,6 @@
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.OnChain.UIOnChainAutomatedPayoutProcessorsController.OnChainTransferViewModel
 @{
     ViewData["NavPartialName"] = "../UIStores/_Nav";
@@ -48,7 +49,7 @@
                 </div>
                 <div class="form-text">Only process payouts when this payout sum is reached.</div>
             </div>
-            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
+            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
         </form>
     </div>
 </div>

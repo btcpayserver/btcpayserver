@@ -1,6 +1,8 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Collections.Specialized;
+using System.Diagnostics.CodeAnalysis;
 using System.IO.IsolatedStorage;
 using System.Linq;
 using System.Text.RegularExpressions;
@@ -12,6 +14,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Logging;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
@@ -22,8 +25,11 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using NBitcoin.DataEncoders;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Bcpg.OpenPgp;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -43,6 +49,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IAuthorizationService _authorizationService;
         private readonly SettingsRepository _settingsRepository;
         private readonly BTCPayServerEnvironment _env;
+        private readonly Logs _logs;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
             LinkGenerator linkGenerator,
@@ -53,7 +60,7 @@ namespace BTCPayServer.Controllers.Greenfield
             BTCPayNetworkProvider btcPayNetworkProvider,
             IAuthorizationService authorizationService,
             SettingsRepository settingsRepository,
-            BTCPayServerEnvironment env)
+            BTCPayServerEnvironment env, Logs logs)
         {
             _pullPaymentService = pullPaymentService;
             _linkGenerator = linkGenerator;
@@ -65,6 +72,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _authorizationService = authorizationService;
             _settingsRepository = settingsRepository;
             _env = env;
+            _logs = logs;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
@@ -200,13 +208,39 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost]
         [Route("~/api/v1/pull-payments/{pullPaymentId}/boltcards")]
         [AllowAnonymous]
-        public async Task<IActionResult> RegisterBoltcard(string pullPaymentId, RegisterBoltcardRequest request)
+        public async Task<IActionResult> RegisterBoltcard(string pullPaymentId, RegisterBoltcardRequest request, string? onExisting = null)
         {
             if (pullPaymentId is null)
                 return PullPaymentNotFound();
+            this._logs.PayServer.LogInformation($"RegisterBoltcard: onExisting queryParam: {onExisting}");
+            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
             if (pp is null)
                 return PullPaymentNotFound();
+            var issuerKey = await _settingsRepository.GetIssuerKey(_env);
+
+            // LNURLW is used by deeplinks
+            if (request?.LNURLW is not null)
+            {
+                if (request.UID is not null)
+                {
+                    ModelState.AddModelError(nameof(request.LNURLW), "You should pass either LNURLW or UID but not both");
+                    return this.CreateValidationError(ModelState);
+                }
+                var p = ExtractP(request.LNURLW);
+                if (p is null)
+                {
+                    ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW should contains a 'p=' parameter");
+                    return this.CreateValidationError(ModelState);
+                }
+                if (issuerKey.TryDecrypt(p) is not BoltcardPICCData picc)
+                {
+                    ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW 'p=' parameter cannot be decrypted");
+                    return this.CreateValidationError(ModelState);
+                }
+                request.UID = picc.Uid;
+            }
+
             if (request?.UID is null || request.UID.Length != 7)
             {
                 ModelState.AddModelError(nameof(request.UID), "The UID is required and should be 7 bytes");
@@ -217,15 +251,28 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError(400, "lnurl-not-supported", "This pull payment currency should be BTC or SATS and accept lightning");
             }
 
-            var issuerKey = await _settingsRepository.GetIssuerKey(_env);
+            // Passing onExisting as a query parameter is used by deeplink
+            request.OnExisting = onExisting switch
+            {
+                nameof(OnExistingBehavior.UpdateVersion) => OnExistingBehavior.UpdateVersion,
+                nameof(OnExistingBehavior.KeepVersion) => OnExistingBehavior.KeepVersion,
+                _ => request.OnExisting
+            };
+
+            this._logs.PayServer.LogInformation($"After");
+            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
+
             var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
+            this._logs.PayServer.LogInformation($"Version: " + version);
+            this._logs.PayServer.LogInformation($"ID: " + Encoders.Hex.EncodeData(issuerKey.GetId(request.UID)));
+
             var keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
 
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");
             boltcardUrl = Request.GetAbsoluteUri(boltcardUrl);
             boltcardUrl = Regex.Replace(boltcardUrl, "^https?://", "lnurlw://");
 
-            return Ok(new RegisterBoltcardResponse()
+            var resp = new RegisterBoltcardResponse()
             {
                 LNURLW = boltcardUrl,
                 Version = version,
@@ -234,7 +281,25 @@ namespace BTCPayServer.Controllers.Greenfield
                 K2 = Encoders.Hex.EncodeData(keys.AuthenticationKey.ToBytes()).ToUpperInvariant(),
                 K3 = Encoders.Hex.EncodeData(keys.K3.ToBytes()).ToUpperInvariant(),
                 K4 = Encoders.Hex.EncodeData(keys.K4.ToBytes()).ToUpperInvariant(),
-            });
+            };
+            this._logs.PayServer.LogInformation($"Response");
+            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(resp)}");
+
+            return Ok(resp);
+        }
+
+        private string? ExtractP(string? url)
+        {
+            if (url is null || !Uri.TryCreate(url, UriKind.Absolute, out var uri))
+                return null;
+            int num = uri.AbsoluteUri.IndexOf('?');
+            if (num == -1)
+                return null;
+            string input = uri.AbsoluteUri.Substring(num);
+            Match match = Regex.Match(input, "p=([a-f0-9A-F]{32})");
+            if (!match.Success)
+                return null;
+            return match.Groups[1].Value;
         }
 
         [HttpGet("~/api/v1/pull-payments/{pullPaymentId}")]

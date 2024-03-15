@@ -310,6 +310,10 @@ namespace BTCPayServer.Services.Stores
                 userStore = new UserStore { StoreDataId = storeId, ApplicationUserId = userId };
                 ctx.UserStore.Add(userStore);
             }
+
+            if (userStore.StoreRoleId == roleId.Id)
+                return false;
+            
             userStore.StoreRoleId = roleId.Id;
             try
             {

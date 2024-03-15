@@ -5,82 +5,16 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers;
 using BTCPayServer.Plugins;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
-    internal class PluginUpdateNotification : BaseNotification
-    {
-        public bool UpdateDownloaded { get; }
-        private const string TYPE = "pluginupdate";
-
-        internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options) : NotificationHandler<PluginUpdateNotification>
-        {
-            public override string NotificationType => TYPE;
-
-            public override (string identifier, string name)[] Meta
-            {
-                get
-                {
-                    return [(TYPE, "Plugin update")];
-                }
-            }
-
-            protected override void FillViewModel(PluginUpdateNotification notification, NotificationViewModel vm)
-            {
-                vm.Identifier = notification.Identifier;
-                vm.Type = notification.NotificationType;
-                vm.Body = $"New {notification.Name} plugin version {notification.Version} released!";
-                if(notification.UpdateDownloaded)
-                    vm.Body += " Update has automatically been scheduled to be installed on the next restart.";
-                if (notification.UpdateDownloaded)
-                {   
-                    vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.Maintenance),
-                        "UIServer",
-                        new {command = "soft-restart"}, options.RootPath);
-                    vm.ActionText = "Restart now";
-                }
-                else
-                {
-                    
-                    vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
-                        "UIServer",
-                        new {plugin = notification.PluginIdentifier}, options.RootPath);
-                }
-                
-            }
-        }
-
-        public PluginUpdateNotification()
-        {
-        }
-
-        public PluginUpdateNotification(PluginService.AvailablePlugin plugin, bool updateDownloaded)
-        {
-            UpdateDownloaded = updateDownloaded;
-            Name = plugin.Name;
-            PluginIdentifier = plugin.Identifier;
-            Version = plugin.Version.ToString();
-        }
-
-        public string PluginIdentifier { get; set; }
-
-        public string Name { get; set; }
-
-        public string Version { get; set; }
-        public override string Identifier => TYPE;
-        public override string NotificationType => TYPE;
-    }
-
     public class PluginVersionCheckerDataHolder
     {
         public Dictionary<string, Version> LastVersions { get; set; }
@@ -108,10 +42,7 @@ namespace BTCPayServer.HostedServices
                 .Select(group => group.OrderByDescending(plugin => plugin.Version).First())
                 .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.ContainsKey(pair.Name))
                 .ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-            var notify = new HashSet<string>();
-            
-            
-            
+            var notify = new Dictionary<string, string>();
             
             foreach (var pair in remotePluginsList)
             {
@@ -119,11 +50,11 @@ namespace BTCPayServer.HostedServices
                     continue;
                 if (installedPlugins.TryGetValue(pair.Key, out var installedVersion) && installedVersion < pair.Value)
                 {
-                    notify.Add(pair.Key);
+                    notify.TryAdd(pair.Key, "update");
                 }
                 else if (disabledPlugins.TryGetValue(pair.Key, out var disabledVersion) && disabledVersion.Item1 < pair.Value)
                 {
-                    notify.Add(pair.Key);
+                    notify.TryAdd(pair.Key, "update");
                 }
             }
 
@@ -135,19 +66,30 @@ namespace BTCPayServer.HostedServices
                 if(matched is {Kill: true} && dh.KillswitchPlugins.Contains(plugin.Identifier))
                 {
                     PluginManager.DisablePlugin(dataDirectories.PluginDir, plugin.Identifier, "Killswitch");
+                    
+                    notify.TryAdd(plugin.Identifier, "kill");
                 }
             }
-            foreach (string pluginUpdate in notify)
+            foreach (var pluginUpdate in notify)
             {
-                var plugin = remotePlugins.First(p => p.Identifier == pluginUpdate);
-                var update = false;
-                if (dh.AutoUpdatePlugins.Contains(plugin.Identifier))
+                var plugin = remotePlugins.First(p => p.Identifier == pluginUpdate.Key);
+
+                if (pluginUpdate.Value == "kill")
                 {
-                    update = true;
-                    await pluginService.DownloadRemotePlugin(plugin.Identifier, plugin.Version.ToString());
-                    pluginService.UpdatePlugin(plugin.Identifier);
+                    await notificationSender.SendNotification(new AdminScope(), new PluginKillNotification(plugin));
                 }
-                await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin, update));
+                else
+                {
+                    var update = false;
+                    if (dh.AutoUpdatePlugins.Contains(plugin.Identifier))
+                    {
+                        update = true;
+                        await pluginService.DownloadRemotePlugin(plugin.Identifier, plugin.Version.ToString());
+                        pluginService.UpdatePlugin(plugin.Identifier);
+                    }
+                    await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin, update));
+                }
+                
             }
 
             await settingsRepository.UpdateSetting(dh);

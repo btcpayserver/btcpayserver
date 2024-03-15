@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
             public IEnumerable<PluginService.AvailablePlugin> Available { get; set; }
             public (string command, string plugin)[] Commands { get; set; }
             public bool CanShowRestart { get; set; }
-            public Dictionary<string, Version> Disabled { get; set; }
+            public Dictionary<string, (Version v, string? reason)> Disabled { get; set; }
             public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
         }
 
@@ -68,6 +68,19 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Message = "Plugin scheduled to be uninstalled.",
+                Severity = StatusMessageModel.StatusSeverity.Success
+            });
+
+            return RedirectToAction("ListPlugins");
+        }
+        [HttpPost("server/plugins/enable")]
+        public IActionResult EnablePlugin(
+            [FromServices] PluginService pluginService, string plugin)
+        {
+            pluginService.Enable(plugin);
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Message = "Plugin scheduled to be re-enabled.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
@@ -123,7 +136,7 @@ namespace BTCPayServer.Controllers
                      new PluginVersionCheckerDataHolder();
             dh.KillswitchPlugins ??= new List<string>();
             
-            killswitch??= !dh.AutoUpdatePlugins.Contains(plugin); 
+            killswitch??= !dh.KillswitchPlugins.Contains(plugin); 
             if (killswitch is true)
             {
                 dh.KillswitchPlugins.Add(plugin);
@@ -142,6 +155,34 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction("ListPlugins");
         }
+
+        private async Task TogglePluginStuff(string plugin, bool killswitch, bool autoUpdate)
+        {
+            var dh = await _SettingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
+                     new PluginVersionCheckerDataHolder();
+            dh.KillswitchPlugins ??= new List<string>();
+            dh.AutoUpdatePlugins ??= new List<string>();
+            
+            if (killswitch)
+            {
+                dh.KillswitchPlugins.Add(plugin);
+            }
+            else
+            {
+                dh.KillswitchPlugins.Remove(plugin);
+            }
+            
+            if (autoUpdate)
+            {
+                dh.AutoUpdatePlugins.Add(plugin);
+            }
+            else
+            {
+                dh.AutoUpdatePlugins.Remove(plugin);
+            }
+
+            await _SettingsRepository.UpdateSetting(dh);
+        }
         
 
         [HttpPost("server/plugins/install")]
@@ -158,6 +199,7 @@ namespace BTCPayServer.Controllers
                 else
                 {
                     pluginService.InstallPlugin(plugin);
+                    await TogglePluginStuff(plugin, true, false);
                 }
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {

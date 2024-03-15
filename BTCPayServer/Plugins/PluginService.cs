@@ -157,9 +157,15 @@ namespace BTCPayServer.Plugins
             PluginManager.CancelCommands(_dataDirectories.Value.PluginDir, plugin);
         }
 
-        public Dictionary<string, Version> GetDisabledPlugins()
+        public Dictionary<string, (Version, string DisabledReason)> GetDisabledPlugins()
         {
             return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir);
+        }
+
+        public void Enable(string plugin)
+        {
+            var dest = _dataDirectories.Value.PluginDir;
+            PluginManager.QueueCommands(dest, ("enable", plugin));
         }
     }
 }

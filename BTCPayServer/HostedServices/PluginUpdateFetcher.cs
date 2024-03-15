@@ -121,7 +121,7 @@ namespace BTCPayServer.HostedServices
                 {
                     notify.Add(pair.Key);
                 }
-                else if (disabledPlugins.TryGetValue(pair.Key, out var disabledVersion) && disabledVersion < pair.Value)
+                else if (disabledPlugins.TryGetValue(pair.Key, out var disabledVersion) && disabledVersion.Item1 < pair.Value)
                 {
                     notify.Add(pair.Key);
                 }
@@ -134,7 +134,7 @@ namespace BTCPayServer.HostedServices
                 var matched = remotePlugins.FirstOrDefault(p => p.Identifier == plugin.Identifier && p.Version == plugin.Version);
                 if(matched is {Kill: true} && dh.KillswitchPlugins.Contains(plugin.Identifier))
                 {
-                    PluginManager.DisablePlugin(dataDirectories.PluginDir, plugin.Identifier);
+                    PluginManager.DisablePlugin(dataDirectories.PluginDir, plugin.Identifier, "Killswitch");
                 }
             }
             foreach (string pluginUpdate in notify)

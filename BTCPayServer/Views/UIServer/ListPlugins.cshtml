@@ -88,14 +88,28 @@
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                         <span>
                             @plugin
-                            @if (version != null)
+                            @if (version.v != null)
                             {
-                                <span>(@version)</span>
+                                <span>(@version.v)</span>
                             }
                         </span>
-                        <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
-                        </form>
+                        @if(!string.IsNullOrEmpty(version.reason ))
+                        {
+                            <span>@version.reason</span>
+                        }
+                        @if(!Model.Commands.Any(tuple => tuple.plugin == plugin && tuple.command == "delete"))
+                        {
+                            <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
+                                <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
+                            </form>
+                        }
+                        
+                        @if (!Model.Commands.Any(tuple => tuple.plugin == plugin && tuple.command == "enable"))
+                        {
+                            <form asp-action="EnablePlugin" asp-route-plugin="@plugin">
+                                <button type="submit" class="btn btn-sm btn-outline-secondary">Re-enable</button>
+                            </form>
+                        }
                     </div>
                 </li>
             }
@@ -294,15 +308,27 @@
                             }
                         }
 
-                        <form asp-action="ToggleAutoUpdate" asp-route-plugin="@plugin.Identifier">
-                            <button type="submit" class="btn btn-outline-secondary">
-                                @(autoUpdate.Contains(plugin.Identifier) ? "Disable auto update" : "Enable auto update")
-                            </button>
-                        </form>   
-                        <form asp-action="ToggleKillswitch" asp-route-plugin="@plugin.Identifier">
-                            <button type="submit" class="btn btn-outline-secondary">
-                                @(killswitch.Contains(plugin.Identifier) ? "Disable killswitch" : "Enable killswitch")
-                            </button>
+                   
+                      
+                    </div>
+                    <div class="card-footer border-0 ">
+                        <form asp-action="ToggleAutoUpdate" asp-route-plugin="@plugin.Identifier" class="form-group" data-bs-toggle="tooltip" title=" @(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates for this plugin. You will still need to restart BTCPay Server to apply the update.">
+                            <label class="d-flex align-items-center">
+                                <button type="submit" class="btcpay-toggle me-3 @if (autoUpdate.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(autoUpdate.Contains(plugin.Identifier) ? "off" : "on")">@(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates</button>
+                                <div class="">
+                                    <span>Automatic updates</span>
+                                </div>
+                            </label>
+                        </form>
+
+                        <form asp-action="ToggleKillswitch" asp-route-plugin="@plugin.Identifier" class="form-group"
+                              data-bs-toggle="tooltip" title="@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch for this plugin. The plugin server would notify your BTCpay server to disable this plugin if it is found to be vulnerable. You will still need to restart BTCPay Server to apply.">
+                            <label class="d-flex align-items-center">
+                                <button type="submit" class="btcpay-toggle me-3 @if (killswitch.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(killswitch.Contains(plugin.Identifier) ? "off" : "on")">@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch</button>
+                                <div class="">
+                                    <span>Vulnerability kill switch</span>
+                                </div>
+                            </label>
                         </form>
                     </div>
                 </div>
@@ -318,7 +344,7 @@
         @foreach (var plugin in availableAndNotInstalled)
         {
             var recommended = BTCPayServerOptions.RecommendedPlugins.Any(id => string.Equals(id, plugin.Identifier, StringComparison.InvariantCultureIgnoreCase));
-            Model.Disabled.TryGetValue(plugin.Identifier, out var disabled);
+            var disabled = Model.Disabled.TryGetValue(plugin.Identifier, out var disabledData);
 
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <div class="card h-100" id="@plugin.Identifier">
@@ -337,13 +363,13 @@
                         </div>
                         <h5 class="text-muted d-flex align-items-center mt-1 gap-2">
                             @plugin.Version
-                            @if (disabled is { } && disabled != plugin.Version)
+                            @if (disabled && disabledData.v != plugin.Version)
                             {
-                                <div class="badge bg-light">Disabled (@disabled)</div>
+                                <div class="badge bg-light" data-bs-toggle="tooltip" title="@disabledData.reason" >Disabled (@disabled)</div>
                             }
-                            else if (disabled is { } && disabled == plugin.Version)
+                            else if (disabled && disabledData.v == plugin.Version)
                             {
-                                <div class="badge bg-light">Disabled</div>
+                                <div class="badge bg-light" data-bs-toggle="tooltip" title="@disabledData.reason">Disabled</div>
                             }
                             else if (recommended)
                             {
@@ -422,18 +448,20 @@
                             <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction @(versionOfPendingInstall is null? "": $"of {versionOfPendingInstall}")</button>
                             </form>
+                            
+                            
                         }
                         @if (pendingAction is null|| !exclusivePendingAction)
                         {
                             if (PluginManager.DependenciesMet(plugin.Dependencies, installed))
                             {
-                                @if (disabled is null)
+                                @if (!disabled)
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
                                         <button type="submit" class="btn btn-primary">Install</button>
                                     </form>
                                 }
-                                else if (disabled != plugin.Version)
+                                else if (disabled && disabledData.v != plugin.Version)
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version" asp-route-update="true">
                                         <button type="submit" class="btn btn-primary">Update</button>
@@ -447,13 +475,37 @@
                                 </form>
                             }
                         }
-                        @if (disabled is not null && pendingAction is null)
+                        @if (disabled && pendingAction is null)
                         {
                             <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
                                 <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
                             </form>
                         }
+                      
                     </div>
+                      @if (pendingAction == "install")
+                                            {
+                                                <div class="card-footer border-0 ">
+                                            <form asp-action="ToggleAutoUpdate" asp-route-plugin="@plugin.Identifier" class="form-group" data-bs-toggle="tooltip" title=" @(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates for this plugin. You will still need to restart BTCPay Server to apply the update.">
+                                                <label class="d-flex align-items-center">
+                                                    <button type="submit" class="btcpay-toggle me-3 @if (autoUpdate.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(autoUpdate.Contains(plugin.Identifier) ? "off" : "on")">@(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates</button>
+                                                    <div class="">
+                                                        <span>Automatic updates</span>
+                                                    </div>
+                                                </label>
+                                            </form>
+                    
+                                            <form asp-action="ToggleKillswitch" asp-route-plugin="@plugin.Identifier" class="form-group"
+                                                  data-bs-toggle="tooltip" title="@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch for this plugin. The plugin server would notify your BTCpay server to disable this plugin if it is found to be vulnerable. You will still need to restart BTCPay Server to apply.">
+                                                <label class="d-flex align-items-center">
+                                                    <button type="submit" class="btcpay-toggle me-3 @if (killswitch.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(killswitch.Contains(plugin.Identifier) ? "off" : "on")">@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch</button>
+                                                    <div class="">
+                                                        <span>Kill switch</span>
+                                                    </div>
+                                                </label>
+                                            </form>
+                                        </div>
+                                            }
                 </div>
             </div>
         }

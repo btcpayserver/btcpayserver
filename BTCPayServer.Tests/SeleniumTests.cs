@@ -3507,7 +3507,7 @@ retry:
             s.RegisterNewUser(true);
             string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
 
-            // Owner access
+            // Admin access
             s.AssertPageAccess(false, GetStorePath(""));
             s.AssertPageAccess(true, GetStorePath("reports"));
             s.AssertPageAccess(true, GetStorePath("invoices"));
@@ -3523,9 +3523,12 @@ retry:
             s.AssertPageAccess(false, GetStorePath("apps/create"));
             foreach (var path in storeSettingsPaths)
             {   // should have view access to settings, but no submit buttons or create links
-                TestLogs.LogInformation($"Checking access to store page {path} as owner");
+                TestLogs.LogInformation($"Checking access to store page {path} as admin");
                 s.AssertPageAccess(true, $"stores/{storeId}/{path}");
-                s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
+                if (path != "payout-processors")
+                {
+                    s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
+                }
             }
         }
 

@@ -70,7 +70,7 @@
 
 <partial name="_Confirm" model="@(new ConfirmModel("Remove store user", "This action will prevent the user from accessing this store and its settings. Are you sure?", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
 
-<div class="modal fade" id="EditModal" tabindex="-1" aria-labelledby="EditTitle" aria-hidden="true">
+<div class="modal fade" id="EditModal" tabindex="-1" aria-labelledby="EditTitle" aria-hidden="true" permission="@Policies.CanModifyStoreSettings">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">

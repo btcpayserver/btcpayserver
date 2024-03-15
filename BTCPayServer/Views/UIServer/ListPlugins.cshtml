@@ -484,28 +484,28 @@
                       
                     </div>
                       @if (pendingAction == "install")
-                                            {
-                                                <div class="card-footer border-0 ">
-                                            <form asp-action="ToggleAutoUpdate" asp-route-plugin="@plugin.Identifier" class="form-group" data-bs-toggle="tooltip" title=" @(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates for this plugin. You will still need to restart BTCPay Server to apply the update.">
-                                                <label class="d-flex align-items-center">
-                                                    <button type="submit" class="btcpay-toggle me-3 @if (autoUpdate.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(autoUpdate.Contains(plugin.Identifier) ? "off" : "on")">@(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates</button>
-                                                    <div class="">
-                                                        <span>Automatic updates</span>
-                                                    </div>
-                                                </label>
-                                            </form>
-                    
-                                            <form asp-action="ToggleKillswitch" asp-route-plugin="@plugin.Identifier" class="form-group"
-                                                  data-bs-toggle="tooltip" title="@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch for this plugin. The plugin server would notify your BTCpay server to disable this plugin if it is found to be vulnerable. You will still need to restart BTCPay Server to apply.">
-                                                <label class="d-flex align-items-center">
-                                                    <button type="submit" class="btcpay-toggle me-3 @if (killswitch.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(killswitch.Contains(plugin.Identifier) ? "off" : "on")">@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch</button>
-                                                    <div class="">
-                                                        <span>Kill switch</span>
-                                                    </div>
-                                                </label>
-                                            </form>
-                                        </div>
-                                            }
+                    {
+                        <div class="card-footer border-0 ">
+                            <form asp-action="ToggleAutoUpdate" asp-route-plugin="@plugin.Identifier" class="form-group" data-bs-toggle="tooltip" title=" @(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates for this plugin. You will still need to restart BTCPay Server to apply the update.">
+                                <label class="d-flex align-items-center">
+                                    <button type="submit" class="btcpay-toggle me-3 @if (autoUpdate.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(autoUpdate.Contains(plugin.Identifier) ? "off" : "on")">@(autoUpdate.Contains(plugin.Identifier) ? "Disable" : "Enable") automatic updates</button>
+                                    <div class="">
+                                        <span>Automatic updates</span>
+                                    </div>
+                                </label>
+                            </form>
+
+                            <form asp-action="ToggleKillswitch" asp-route-plugin="@plugin.Identifier" class="form-group"
+                                  data-bs-toggle="tooltip" title="@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch for this plugin. The plugin server would notify your BTCpay server to disable this plugin if it is found to be vulnerable. You will still need to restart BTCPay Server to apply.">
+                                <label class="d-flex align-items-center">
+                                    <button type="submit" class="btcpay-toggle me-3 @if (killswitch.Contains(plugin.Identifier)) { @("btcpay-toggle--active") }" value="scripting-@(killswitch.Contains(plugin.Identifier) ? "off" : "on")">@(killswitch.Contains(plugin.Identifier) ? "Disable" : "Enable") killswitch</button>
+                                    <div class="">
+                                        <span>Vulnerability kill switch</span>
+                                    </div>
+                                </label>
+                            </form>
+                        </div>
+                    }
                 </div>
             </div>
         }

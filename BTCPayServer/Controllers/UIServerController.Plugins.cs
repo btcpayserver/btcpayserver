@@ -77,6 +77,7 @@ namespace BTCPayServer.Controllers
         public IActionResult EnablePlugin(
             [FromServices] PluginService pluginService, string plugin)
         {
+            pluginService.CancelCommands(plugin);
             pluginService.Enable(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {

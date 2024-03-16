@@ -66,16 +66,7 @@
 </div>
 
 @{
-    bool isValidEmail = false;
-    try
-    {
-        var emailAddress = new MailAddress(settings.ContactUrl);
-        isValidEmail = true;
-    }
-    catch (FormatException)
-    {
-        isValidEmail = false;
-    }
+    bool isValidEmail = MailAddress.TryCreate(settings.ContactUrl, out var _);
 }
 
 @if (!string.IsNullOrWhiteSpace(settings.ContactUrl))

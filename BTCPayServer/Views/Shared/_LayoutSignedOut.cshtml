@@ -1,6 +1,7 @@
 @using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Components.MainLogo
+@using System.Net.Mail
 @inject SettingsRepository SettingsRepository
 @{
     Layout = "_LayoutSimple";
@@ -64,10 +65,23 @@
     @RenderBody()
 </div>
 
+@{
+    bool isValidEmail = false;
+    try
+    {
+        var emailAddress = new MailAddress(settings.ContactUrl);
+        isValidEmail = true;
+    }
+    catch (FormatException)
+    {
+        isValidEmail = false;
+    }
+}
+
 @if (!string.IsNullOrWhiteSpace(settings.ContactUrl))
 {
     <p class="text-center mt-n5 mb-5 pt-2">
-        <a class="text-secondary" href="@settings.ContactUrl" id="ContactLink">Contact Us</a>
+        <a class="text-secondary" href="@((isValidEmail ? "mailto:" : "") + settings.ContactUrl)" id="ContactLink">Contact Us</a>
     </p>
 }
 

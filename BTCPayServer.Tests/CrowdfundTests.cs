@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Security.AccessControl;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
@@ -11,12 +13,15 @@ using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
+using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 using NBitcoin;
 using NBitpayClient;
+using OpenQA.Selenium.DevTools.V100.Runtime;
 using Xunit;
 using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
@@ -277,7 +282,7 @@ namespace BTCPayServer.Tests
                 PosData = "posData",
                 ItemDesc = "Some description",
                 TransactionSpeed = "high",
-                FullNotifications = true
+                FullNotifications = true,
             }, Facade.Merchant);
             invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
             Assert.DoesNotContain(AppService.GetAppInternalTag(app.Id), invoiceEntity.InternalTags);
@@ -415,6 +420,8 @@ namespace BTCPayServer.Tests
             var res = await crowdfund.CrowdfundFormSubmit(app.Id, (decimal)0.01, "xxx", vm2);
             Assert.IsNotType<NotFoundObjectResult>(res);
             Assert.IsNotType<BadRequest>(res);
+
+
         }
     }
 }

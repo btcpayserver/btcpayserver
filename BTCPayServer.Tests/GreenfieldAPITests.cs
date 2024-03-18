@@ -2338,7 +2338,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());
             Assert.Equal(15, ((JArray)invoice.Metadata["newstuff"]).Values<int>().Sum());
 
-            //also test the the metadata actually got saved
+            //also test the metadata actually got saved
             invoice = await client.GetInvoice(user.StoreId, invoice.Id);
             Assert.Equal(newOrderId, invoice.Metadata["orderId"].Value<string>());
             Assert.Equal("updated", invoice.Metadata["itemCode"].Value<string>());

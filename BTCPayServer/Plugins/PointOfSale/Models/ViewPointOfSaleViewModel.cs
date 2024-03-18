@@ -20,10 +20,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             Minimum,
             Fixed
         }
-
+        
         public class Item
         {
-
+           
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Description { get; set; }
             public string Id { get; set; }
@@ -44,7 +44,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string[] PaymentMethods { get; set; }
             public bool Disabled { get; set; } = false;
-
+            
             [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
         }
 

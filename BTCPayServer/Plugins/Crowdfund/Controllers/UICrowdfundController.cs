@@ -177,7 +177,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
                 price = request.Amount;
             }
-
+            
             if (settings.FormId is not null)
             {
                 var formData = await FormDataService.GetForm(settings.FormId);
@@ -191,8 +191,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                         // someone tried to bypass validation
                         return RedirectToAction(nameof(ViewCrowdfund), new { appId });
                     }
-
-
+                    
+                    
                     var amtField = form.GetFieldByFullName($"{FormDataService.InvoiceParameterPrefix}amount");
                     if (amtField is null)
                     {
@@ -209,7 +209,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                         amtField.Value = price?.ToString();
                     }
                     formResponseJObject = FormDataService.GetValues(form);
-
+                    
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
                     if (invoiceRequest.Amount is not null)
                     {
@@ -218,7 +218,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 }
             }
 
-
+            
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
                              (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))
@@ -379,7 +379,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             return View("Views/UIForms/View", viewModel);
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId)
         {

@@ -540,7 +540,6 @@ namespace BTCPayServer.Controllers
                 }
                 catch (Exception ex) { model.RateError = ex.Message; }
             }
-            
             return View(model);
         }
 

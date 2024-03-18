@@ -11,13 +11,16 @@
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
-	Csp.UnsafeEval();
+    Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
 @section PageHeadContent {
     <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
-    <style>.flatpickr-wrapper { flex-grow: 1; }</style>
+    <style>
+        .flatpickr-wrapper {
+            flex-grow: 1;
+        }</style>
 }
 
 @section PageFootContent {
@@ -30,7 +33,7 @@
     <div class="sticky-header d-sm-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings" permission="@Policies.CanModifyStoreSettings">Save</button>   
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings" permission="@Policies.CanModifyStoreSettings">Save</button>
             @if (Model.Archived)
             {
                 <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" permission="@Policies.CanModifyStoreSettings">Unarchive</button>
@@ -78,7 +81,7 @@
             </div>
             <div class="form-group">
                 <div class="d-flex align-items-center">
-                    <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
+                    <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3" />
                     <div>
                         <label asp-for="Enabled" class="form-check-label"></label>
                         <span asp-validation-for="Enabled" class="text-danger"></span>
@@ -98,7 +101,7 @@
         </div>
     </div>
 
-        <div class="col-xl-10 col-xxl-constrain">
+    <div class="col-xl-10 col-xxl-constrain">
         <div class="form-group mb-0">
             <label asp-for="HeadHtmlTags" class="form-label"></label>
             <textarea asp-for="HeadHtmlTags" rows="5" cols="40" class="form-control"
@@ -145,7 +148,7 @@ Please insert valid HTML here.'>
                                class="form-control flatdtpicker"
                                placeholder="No start date has been set" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
-                            <vc:icon symbol="close"/>
+                            <vc:icon symbol="close" />
                         </button>
                     </div>
                 </div>
@@ -157,14 +160,14 @@ Please insert valid HTML here.'>
                                class="form-control flatdtpicker"
                                placeholder="No end date has been set" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
-                            <vc:icon symbol="close"/>
+                            <vc:icon symbol="close" />
                         </button>
                     </div>
                 </div>
                 <span asp-validation-for="StartDate" class="text-danger"></span>
                 <span asp-validation-for="EndDate" class="text-danger"></span>
             </div>
-            
+
             <div class="form-group mt-4" id="ResetRow" hidden="@(Model.StartDate == null)">
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
@@ -174,7 +177,7 @@ Please insert valid HTML here.'>
                         <div class="text-muted">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
                     </div>
                 </div>
-                
+
                 <div class="collapse @(Model.IsRecurring ? "show" : "")" id="ResetEverySettings">
                     <div class="form-group mb-0 pt-2 w-250px">
                         <label asp-for="ResetEveryAmount" class="form-label"></label>
@@ -221,14 +224,14 @@ Please insert valid HTML here.'>
                 <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
-            
+
             <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
             <div class="d-flex">
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
-            
+
             <h3 class="mt-5 mb-4">Checkout</h3>
             <div class="form-group">
                 <label asp-for="FormId" class="form-label"></label>
@@ -250,7 +253,7 @@ Please insert valid HTML here.'>
                             <div class="accordion-body">
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
-                                        <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
+                                        <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings" />
                                         <label asp-for="SoundsEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
                                     </div>
@@ -276,7 +279,7 @@ Please insert valid HTML here.'>
                             <div class="accordion-body">
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
-                                        <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
+                                        <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings" />
                                         <label asp-for="AnimationsEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
                                     </div>
@@ -302,7 +305,7 @@ Please insert valid HTML here.'>
                             <div class="accordion-body">
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
-                                        <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
+                                        <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings" />
                                         <label asp-for="DisqusEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
                                     </div>
@@ -335,7 +338,7 @@ Please insert valid HTML here.'>
                         </div>
                     </div>
                     @* We are deprecating the custom CSS options in favor of the store branding approach.
-                       Display this section only if these values are set. *@
+                    Display this section only if these values are set. *@
                     @if (!string.IsNullOrWhiteSpace(Model.CustomCSSLink) || !string.IsNullOrWhiteSpace(Model.EmbeddedCSS))
                     {
                         <div class="accordion-item">

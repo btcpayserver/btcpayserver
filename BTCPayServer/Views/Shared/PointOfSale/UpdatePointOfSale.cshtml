@@ -10,7 +10,7 @@
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
-	Csp.UnsafeEval();
+    Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
@@ -106,7 +106,7 @@
                 </div>
             </div>
         </div>
-    </div>        
+    </div>
 
     <div class="col-xl-10 col-xxl-constrain">
         <div class="form-group mb-0">
@@ -121,7 +121,6 @@ Please insert valid HTML here.'>
         </div>
     </div>
     <div id="description" class="row mt-4">
-
         <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group mb-0">
                 <label asp-for="Description" class="form-label"></label>
@@ -205,7 +204,7 @@ Please insert valid HTML here.'>
             <fieldset id="custom-payments" class="mt-2">
                 <legend class="h5 mb-3 fw-semibold">Custom Payments</legend>
                 <div class="form-group mb-4 d-flex align-items-center">
-                    <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
+                    <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings" />
                     <label asp-for="ShowCustomAmount" class="form-check-label"></label>
                     <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
                 </div>
@@ -312,7 +311,7 @@ Please insert valid HTML here.'>
                         </div>
                     </div>
                     @* We are deprecating the custom CSS options in favor of the store branding approach.
-                       Display this section only if these values are set. *@
+                    Display this section only if these values are set. *@
                     @if (!string.IsNullOrWhiteSpace(Model.CustomCSSLink) || !string.IsNullOrWhiteSpace(Model.EmbeddedCSS))
                     {
                         <div class="accordion-item">

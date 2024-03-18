@@ -40,12 +40,10 @@ internal class PluginUpdateNotification : BaseNotification
             }
             else
             {
-                    
                 vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
                     "UIServer",
                     new {plugin = notification.PluginIdentifier}, options.RootPath);
             }
-                
         }
     }
 

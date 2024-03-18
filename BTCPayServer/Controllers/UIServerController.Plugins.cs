@@ -73,9 +73,9 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction("ListPlugins");
         }
+
         [HttpPost("server/plugins/enable")]
-        public IActionResult EnablePlugin(
-            [FromServices] PluginService pluginService, string plugin)
+        public IActionResult EnablePlugin([FromServices] PluginService pluginService, string plugin)
         {
             pluginService.CancelCommands(plugin);
             pluginService.Enable(plugin);
@@ -89,8 +89,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/plugins/cancel")]
-        public IActionResult CancelPluginCommands(
-            [FromServices] PluginService pluginService, string plugin)
+        public IActionResult CancelPluginCommands([FromServices] PluginService pluginService, string plugin)
         {
             pluginService.CancelCommands(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -105,11 +104,9 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/plugins/autoupdate")]
         public async Task<IActionResult> ToggleAutoUpdate( string plugin, bool? autoUpdate)
         {
-            
             var dh = await _SettingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
                      new PluginVersionCheckerDataHolder();
-            dh.AutoUpdatePlugins ??= new List<string>();
-            
+            dh.AutoUpdatePlugins ??= [];
             autoUpdate??= !dh.AutoUpdatePlugins.Contains(plugin); 
             if (autoUpdate is true)
             {
@@ -129,14 +126,13 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction("ListPlugins");
         }
-                [HttpPost("server/plugins/killswitch")]
+
+        [HttpPost("server/plugins/killswitch")]
         public async Task<IActionResult> ToggleKillswitch( string plugin, bool? killswitch)
         {
-            
             var dh = await _SettingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
                      new PluginVersionCheckerDataHolder();
-            dh.KillswitchPlugins ??= new List<string>();
-            
+            dh.KillswitchPlugins ??= [];
             killswitch??= !dh.KillswitchPlugins.Contains(plugin); 
             if (killswitch is true)
             {
@@ -185,10 +181,8 @@ namespace BTCPayServer.Controllers
             await _SettingsRepository.UpdateSetting(dh);
         }
         
-
         [HttpPost("server/plugins/install")]
-        public async Task<IActionResult> InstallPlugin(
-            [FromServices] PluginService pluginService, string plugin, bool update = false, string version = null)
+        public async Task<IActionResult> InstallPlugin([FromServices] PluginService pluginService, string plugin, bool update = false, string version = null)
         {
             try
             {

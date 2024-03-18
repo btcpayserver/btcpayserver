@@ -65,7 +65,7 @@ namespace BTCPayServer.HostedServices
                 var matched = remotePlugins.FirstOrDefault(p => p.Identifier == plugin.Identifier && p.Version == plugin.Version);
                 if(matched is {Kill: true} && dh.KillswitchPlugins.Contains(plugin.Identifier))
                 {
-                    PluginManager.DisablePlugin(dataDirectories.PluginDir, plugin.Identifier, "Killswitch");
+                    PluginManager.DisablePlugin(dataDirectories.PluginDir, plugin.Identifier, "Killswitch activated");
                     
                     notify.TryAdd(plugin.Identifier, "kill");
                 }
@@ -89,13 +89,9 @@ namespace BTCPayServer.HostedServices
                     }
                     await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin, update));
                 }
-                
             }
 
             await settingsRepository.UpdateSetting(dh);
-            
-           
-            
         }
     }
 }

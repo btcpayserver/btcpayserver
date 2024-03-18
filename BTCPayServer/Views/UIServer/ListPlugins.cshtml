@@ -92,11 +92,12 @@
                             {
                                 <span>(@version.v)</span>
                             }
+                            @if (!string.IsNullOrEmpty(version.reason))
+                            {
+                                <span>@version.reason</span>
+                            }
                         </span>
-                        @if(!string.IsNullOrEmpty(version.reason ))
-                        {
-                            <span>@version.reason</span>
-                        }
+                        
                         @if(!Model.Commands.Any(tuple => tuple.plugin == plugin && tuple.command == "delete"))
                         {
                             <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
@@ -107,7 +108,7 @@
                         @if (!Model.Commands.Any(tuple => tuple.plugin == plugin && tuple.command == "enable"))
                         {
                             <form asp-action="EnablePlugin" asp-route-plugin="@plugin">
-                                <button type="submit" class="btn btn-sm btn-outline-secondary">Re-enable</button>
+                                <button type="submit" class="btn btn-sm btn-secondary">Re-enable</button>
                             </form>
                         }
                     </div>

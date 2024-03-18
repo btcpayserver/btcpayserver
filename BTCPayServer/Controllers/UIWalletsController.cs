@@ -459,11 +459,12 @@ namespace BTCPayServer.Controllers
             };
             if (bip21?.Any() is true)
             {
+                var messagePresent = TempData.HasStatusMessage();
                 foreach (var link in bip21)
                 {
                     if (!string.IsNullOrEmpty(link))
                     {
-                        await LoadFromBIP21(walletId, model, link, network);
+                        await LoadFromBIP21(walletId, model, link, network, messagePresent);
                     }
                 }
             }
@@ -539,7 +540,6 @@ namespace BTCPayServer.Controllers
                 }
                 catch (Exception ex) { model.RateError = ex.Message; }
             }
-
             return View(model);
         }
 
@@ -575,7 +575,7 @@ namespace BTCPayServer.Controllers
             if (!string.IsNullOrEmpty(bip21))
             {
                 vm.Outputs?.Clear();
-                await LoadFromBIP21(walletId, vm, bip21, network);
+                await LoadFromBIP21(walletId, vm, bip21, network, TempData.HasStatusMessage());
             }
 
             decimal transactionAmountSum = 0;
@@ -870,7 +870,7 @@ namespace BTCPayServer.Controllers
 
 
         private async Task LoadFromBIP21(WalletId walletId, WalletSendModel vm, string bip21,
-            BTCPayNetwork network)
+            BTCPayNetwork network, bool statusMessagePresent)
         {
             BitcoinAddress? address = null;
             vm.Outputs ??= new();
@@ -892,14 +892,18 @@ namespace BTCPayServer.Controllers
                 }
                 vm.Outputs.Add(output);
                 address = uriBuilder.Address;
-                if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
+                // only set SetStatusMessageModel if there is not message already or there is label / message in uri builder
+                if (!statusMessagePresent)
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                     {
-                        Severity = StatusMessageModel.StatusSeverity.Info,
-                        Html =
-                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to <strong>{uriBuilder.Label}</strong>")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for <strong>{uriBuilder.Message}</strong>")}"
-                    });
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Info,
+                            Html =
+                                $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to <strong>{uriBuilder.Label}</strong>")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for <strong>{uriBuilder.Message}</strong>")}"
+                        });
+                    }
                 }
 
                 if (uriBuilder.TryGetPayjoinEndpoint(out _))

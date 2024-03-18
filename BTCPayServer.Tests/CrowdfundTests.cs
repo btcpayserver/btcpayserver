@@ -420,6 +420,8 @@ namespace BTCPayServer.Tests
             var res = await crowdfund.CrowdfundFormSubmit(app.Id, (decimal)0.01, "xxx", vm2);
             Assert.IsNotType<NotFoundObjectResult>(res);
             Assert.IsNotType<BadRequest>(res);
+
+
         }
     }
 }

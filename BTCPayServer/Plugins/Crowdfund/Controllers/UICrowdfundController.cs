@@ -292,7 +292,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [HttpGet("/apps/{appId}/crowdfund/form")]
         [IgnoreAntiforgeryToken]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
-        public async Task<IActionResult> CrowdfundForm(string appId, decimal? amount = 0, string choiceKey = "")
+        public async Task<IActionResult> CrowdfundForm(string appId, decimal? amount=0, string choiceKey="")
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType);
             if (app == null)
@@ -379,7 +379,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             return View("Views/UIForms/View", viewModel);
         }
 
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpGet("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId)
         {

@@ -20,28 +20,23 @@
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/crowdfund/styles/main.css" asp-append-version="true" rel="stylesheet" />
     <style>
-        #app {
-            --wrap-max-width: 1320px;
-        }
-
+        #app { --wrap-max-width: 1320px; }
         #crowdfund-main-image {
             border-radius: var(--btcpay-border-radius);
             object-fit: cover;
             max-width: 100%;
             max-height: 40vh;
         }
-
         #crowdfund-body-description {
             font-size: 16px;
         }
-
-        .perk.card .card-img-top {
+        .perk.card .card-img-top{
             max-height: 210px;
             object-fit: scale-down;
         }
     </style>
     @Html.Raw(Model.HeadHtmlTags)
-    <vc:ui-extension-point location="crowdfund-head" model="@Model" />
+    <vc:ui-extension-point location="crowdfund-head" model="@Model"/>
 </head>
 <body class="min-vh-100 p-2">
     @if (!Model.Enabled)
@@ -58,7 +53,7 @@
     <div class="public-page-wrap" id="app" @(Model.SimpleDisplay ? "" : "v-cloak")>
         @if (!string.IsNullOrEmpty(Model.MainImageUrl))
         {
-            <img v-if="srvModel.mainImageUrl" :src="srvModel.mainImageUrl" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true" />
+        <img v-if="srvModel.mainImageUrl" :src="srvModel.mainImageUrl" :alt="srvModel.title" id="crowdfund-main-image" asp-append-version="true"/>
         }
         <div class="d-flex flex-column justify-content-between p-3 text-center" id="crowdfund-header-container">
             <h1 class="mb-3">{{ srvModel.title }}</h1>
@@ -251,7 +246,8 @@
                     <div class="overflow-hidden">@Safe.Raw(Model.Description)</div>
                 </div>
                 <div class="col-md-4 col-sm-12">
-                    <partial name="Crowdfund/Public/ContributeForm"
+                <partial
+                    name="Crowdfund/Public/ContributeForm"
                              model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })">
                     </partial>
                 </div>
@@ -394,6 +390,6 @@
         <script src="~/crowdfund/services/listener.js" asp-append-version="true"></script>
         <script src="~/modal/btcpay.js" asp-append-version="true"></script>
     }
-    <partial name="LayoutFoot" />
+<partial name="LayoutFoot"/>
 </body>
 </html>

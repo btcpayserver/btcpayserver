@@ -27,8 +27,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
 
         [Display(Name = "Point of Sale Style")]
         public PosViewType DefaultView { get; set; }
-        [Display(Name = "Display item selection for keypad")]
-        public bool ShowItems { get; set; }
         [Display(Name = "User can input custom amount")]
         public bool ShowCustomAmount { get; set; }
         [Display(Name = "User can input discount in %")]
@@ -107,6 +105,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
 
         [Display(Name = "HTML Head Tags")]
         public string HeadHtmlTags { get; set; }
+
 
         public string Description { get; set; }
 

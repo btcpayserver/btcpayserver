@@ -4,8 +4,7 @@ namespace BTCPayServer.Services.Apps
 {
     public class CrowdfundSettings
     {
-        public CrowdfundSettings()
-        {
+        public CrowdfundSettings() {
             Lang = "en";
         }
 

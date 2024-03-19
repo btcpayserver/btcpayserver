@@ -61,7 +61,7 @@
             }
         </div>
         <input asp-for="PasswordSet" type="hidden"/>
-		<div class="my-4">
+        <div class="my-4">
             <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
                 <vc:icon symbol="caret-down"/>
                 <span class="ms-1">Advanced settings</span>
@@ -75,7 +75,7 @@
                 </div>
             </div>
         </div>
-        <button type="submit" class="btn btn-primary mt-2" name="command" value="Save" id="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
+        <button type="submit" class="btn btn-primary mt-2" name="command" value="Save" id="Save">Save</button>
     </div>
 </div>
 

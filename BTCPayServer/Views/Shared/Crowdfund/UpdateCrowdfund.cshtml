@@ -26,14 +26,14 @@
     <script src="~/crowdfund/admin.js" asp-append-version="true"></script>
 }
 
-<form method="post">
+<form method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header d-sm-flex align-items-center justify-content-between">
         <h2 class="mb-0">@ViewData["Title"]</h2>
         <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings" permission="@Policies.CanModifyStoreSettings">Save</button>   
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>   
             @if (Model.Archived)
             {
-                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" permission="@Policies.CanModifyStoreSettings">Unarchive</button>
+                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>
             }
             else if (Model.ModelWithMinimumData)
             {

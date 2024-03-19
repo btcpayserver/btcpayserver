@@ -12,39 +12,49 @@ namespace BTCPayServer.Services
 
         private static string CallToAction(string actionName, string actionLink)
         {
-            string button = $"{BUTTON_HTML}".Replace("{button_description}", actionName, System.StringComparison.InvariantCulture);
-            button = button.Replace("{button_link}", actionLink, System.StringComparison.InvariantCulture);
-            return button;
+            var button = $"{BUTTON_HTML}".Replace("{button_description}", actionName, System.StringComparison.InvariantCulture);
+            return button.Replace("{button_link}", HtmlEncoder.Default.Encode(actionLink), System.StringComparison.InvariantCulture);
+        }
+
+        private static string CreateEmailBody(string body)
+        {
+            return $"<html><body style='{BODY_STYLE}'>{HEADER_HTML}{body}</body></html>";
         }
 
         public static void SendEmailConfirmation(this IEmailSender emailSender, MailboxAddress address, string link)
         {
-            emailSender.SendEmail(address, "BTCPay Server: Confirm your email",
-                $"Please confirm your account by clicking <a href='{HtmlEncoder.Default.Encode(link)}'>this link</a>.");
+            emailSender.SendEmail(address, "Confirm your email", CreateEmailBody(
+                $"Please confirm your account.<br/><br/>{CallToAction("Confirm Email", link)}"));
         }
 
         public static void SendApprovalConfirmation(this IEmailSender emailSender, MailboxAddress address, string link)
         {
-            emailSender.SendEmail(address, "BTCPay Server: Your account has been approved",
-                $"Your account has been approved and you can now <a href='{HtmlEncoder.Default.Encode(link)}'>login here</a>.");
+            emailSender.SendEmail(address, "Your account has been approved", CreateEmailBody(
+                $"Your account has been approved and you can now <a href='{HtmlEncoder.Default.Encode(link)}'>login here</a>."));
         }
 
         public static void SendResetPassword(this IEmailSender emailSender, MailboxAddress address, string link)
         {
-            var body = $"A request has been made to reset your BTCPay Server password. Please set your password by clicking below.<br/><br/>{CallToAction("Update Password", HtmlEncoder.Default.Encode(link))}";
-            emailSender.SendEmail(address, "BTCPay Server: Update Password", $"<html><body style='{BODY_STYLE}'>{HEADER_HTML}{body}</body></html>");
+            emailSender.SendEmail(address, "Update Password", CreateEmailBody(
+                $"A request has been made to reset your BTCPay Server password. Please set your password by clicking below.<br/><br/>{CallToAction("Update Password", link)}"));
         }
 
         public static void SendInvitation(this IEmailSender emailSender, MailboxAddress address, string link)
         {
-            emailSender.SendEmail(address, "BTCPay Server: Invitation",
-                $"Please complete your account setup by clicking <a href='{HtmlEncoder.Default.Encode(link)}'>this link</a>.");
+            emailSender.SendEmail(address, "Invitation", CreateEmailBody(
+                $"Please complete your account setup by clicking <a href='{HtmlEncoder.Default.Encode(link)}'>this link</a>."));
         }
 
         public static void SendNewUserInfo(this IEmailSender emailSender, MailboxAddress address, string newUserInfo, string link)
         {
-            emailSender.SendEmail(address, $"BTCPay Server: {newUserInfo}",
-                $"{newUserInfo}. You can verify and approve the account here: <a href='{HtmlEncoder.Default.Encode(link)}'>User details</a>");
+            emailSender.SendEmail(address, newUserInfo, CreateEmailBody(
+                $"{newUserInfo}. You can verify and approve the account here: <a href='{HtmlEncoder.Default.Encode(link)}'>User details</a>"));
+        }
+
+        public static void SendUserInviteAcceptedInfo(this IEmailSender emailSender, MailboxAddress address, string userInfo, string link)
+        {
+            emailSender.SendEmail(address, userInfo, CreateEmailBody(
+                $"{userInfo}. You can view the store users here: <a href='{HtmlEncoder.Default.Encode(link)}'>Store users</a>"));
         }
     }
 }

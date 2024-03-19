@@ -187,8 +187,8 @@ namespace BTCPayServer.Controllers
 
                     _eventAggregator.Publish(new UserRegisteredEvent
                     {
-                        Kind = UserRegisteredEventKind.Invite,
                         RequestUri = Request.GetAbsoluteRootUri(),
+                        Kind = UserRegisteredEventKind.Invite,
                         User = user,
                         InvitedByUser = currentUser,
                         Admin = model.IsAdmin,

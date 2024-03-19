@@ -121,7 +121,7 @@ namespace BTCPayServer.Controllers
                             .Where(o => o != null)
                             .ToArray();
                         
-                        emailSender.SendEmail(recipients.ToArray(), null, null, $"({store.StoreName} test) {rule.Subject}", rule.Body);
+                        emailSender.SendEmail(recipients.ToArray(), null, null, $"[TEST] {rule.Subject}", rule.Body);
                         message += "Test email sent — please verify you received it.";
                     }
                     else
@@ -189,32 +189,39 @@ namespace BTCPayServer.Controllers
 
         [HttpPost("{storeId}/email-settings")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command)
+        public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command, [FromForm] bool useCustomSMTP = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            
-            var fallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
+
+            ViewBag.UseCustomSMTP = useCustomSMTP;
+            model.FallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
                 ? await storeSender.FallbackSender.GetEmailSettings()
                 : null;
-            model.FallbackSettings = fallbackSettings;
-            
+            if (useCustomSMTP)
+            {
+                model.Settings.Validate("Settings.", ModelState);
+            }
             if (command == "Test")
             {
                 try
                 {
-                    if (model.PasswordSet)
+                    if (useCustomSMTP)
                     {
-                        model.Settings.Password = store.GetStoreBlob().EmailSettings.Password;
+                        if (model.PasswordSet)
+                        {
+                            model.Settings.Password = store.GetStoreBlob().EmailSettings.Password;
+                        }
                     }
-                    model.Settings.Validate("Settings.", ModelState);
+                    
                     if (string.IsNullOrEmpty(model.TestEmail))
                         ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
                     if (!ModelState.IsValid)
                         return View(model);
-                    using var client = await model.Settings.CreateSmtpClient();
-                    var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), "BTCPay test", "BTCPay test", false);
+                    var settings = useCustomSMTP ? model.Settings : model.FallbackSettings;
+                    using var client = await settings.CreateSmtpClient();
+                    var message = settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{store.StoreName}: Email test", "You received it, the BTCPay Server SMTP settings work.", false);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                     TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
@@ -232,17 +239,17 @@ namespace BTCPayServer.Controllers
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
-                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
-            else // if (command == "Save")
+            if (useCustomSMTP)
             {
                 if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
                 {
                     ModelState.AddModelError("Settings.From", "Invalid email");
-                    return View(model);
                 }
+                if (!ModelState.IsValid)
+                    return View(model);
                 var storeBlob = store.GetStoreBlob();
-                if (storeBlob.EmailSettings != null && new EmailsViewModel(storeBlob.EmailSettings, fallbackSettings).PasswordSet)
+                if (storeBlob.EmailSettings != null && new EmailsViewModel(storeBlob.EmailSettings, model.FallbackSettings).PasswordSet)
                 {
                     model.Settings.Password = storeBlob.EmailSettings.Password;
                 }
@@ -250,8 +257,8 @@ namespace BTCPayServer.Controllers
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
-                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
+            return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
         }
 
         private static async Task<bool> IsSetupComplete(IEmailSender emailSender)

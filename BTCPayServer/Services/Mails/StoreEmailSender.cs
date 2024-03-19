@@ -36,5 +36,11 @@ namespace BTCPayServer.Services.Mails
                 return await FallbackSender?.GetEmailSettings();
             return null;
         }
+
+        public override async Task<string> GetPrefixedSubject(string subject)
+        {
+            var store = await StoreRepository.FindStore(StoreId);
+            return string.IsNullOrEmpty(store?.StoreName) ? subject : $"{store.StoreName}: {subject}";
+        }
     }
 }

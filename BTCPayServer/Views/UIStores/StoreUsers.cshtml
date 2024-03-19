@@ -9,11 +9,21 @@
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().Id);
-    var roles = new SelectList(await StoreRepository.GetStoreRoles(ScopeProvider.GetCurrentStoreId()), nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role), Model.Role);
+    var roles = new SelectList(
+        await StoreRepository.GetStoreRoles(ScopeProvider.GetCurrentStoreId()),
+        nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
+        Model.Role);
+}
+@section PageHeadContent {
+    <style>
+        @@media (min-width: 576px) {
+            #Role { width: auto !important; }
+        }
+    </style>
 }
 
 <div class="row">
-    <div class="col-xxl-constrain col-xl-8">
+    <div class="col-xxl-constrain">
         <h3 class="mb-3">@ViewData["Title"]</h3>
         <p>
             Give other registered BTCPay Server users access to your store.<br />
@@ -27,7 +37,7 @@
 
         <form method="post" class="d-flex flex-wrap align-items-center gap-3" permission="@Policies.CanModifyStoreSettings">
             <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com" style="flex: 1 1 14rem">
-            <select asp-for="Role" class="form-select w-auto" asp-items="roles"></select>
+            <select asp-for="Role" class="form-select" asp-items="roles"></select>
             <button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddUser">Add User</button>
         </form>
 
@@ -39,14 +49,17 @@
                 <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
             </tr>
             </thead>
-            <tbody>
+            <tbody id="StoreUsersList">
             @foreach (var user in Model.Users)
             {
                 <tr>
                     <td>@user.Email</td>
                     <td>@user.Role</td>
                     <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
-                        <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@Html.Encode(user.Email)</strong> from accessing this store and its settings." data-confirm-input="REMOVE">Remove</a>
+                        <div class="d-inline-flex align-items-center gap-3">
+                            <a asp-action="UpdateStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#EditModal" data-user-email="@user.Email" data-user-role="@user.Role">Change Role</a>
+                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@Html.Encode(user.Email)</strong> from accessing this store and its settings." data-confirm-input="REMOVE">Remove</a>
+                        </div>
                     </td>
                 </tr>
             }
@@ -56,6 +69,50 @@
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Remove store user", "This action will prevent the user from accessing this store and its settings. Are you sure?", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+
+<div class="modal fade" id="EditModal" tabindex="-1" aria-labelledby="EditTitle" aria-hidden="true" permission="@Policies.CanModifyStoreSettings">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" id="EditTitle">Edit <span id="EditUserEmail">store user</span></h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close" />
+                </button>
+            </div>
+    		<form id="EditForm" method="post" rel="noreferrer noopener">
+                <div class="modal-body">
+                    <label asp-for="Role" for="EditUserRole" class="form-label">New role</label>
+                    <select asp-for="Role" id="EditUserRole" class="form-select w-auto" asp-items="roles"></select>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="EditCancel">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="EditContinue">Change Role</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function () {
+        const modal = document.getElementById('EditModal')
+        modal.addEventListener('show.bs.modal', event => {
+            const $target = event.relatedTarget
+            const $form = document.getElementById('EditForm')
+            const $role = document.getElementById('EditUserRole')
+            const $email = document.getElementById('EditUserEmail')
+            const { userEmail, userRole } = $target.dataset
+            const action = $target.dataset.action || ($target.nodeName === 'A'
+                ? $target.getAttribute('href')
+                : $target.form.getAttribute('action'))
+    
+            if ($form && !$form.hasAttribute('action')) $form.setAttribute('action', action)
+            if (userEmail) $email.textContent = userEmail
+            if (userRole) $role.value = userRole
+        });
+    })()
+</script>
+
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

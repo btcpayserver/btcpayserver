@@ -21,24 +21,21 @@ namespace BTCPayServer.Controllers
             string sortOrder = null
         )
         {
+            var roles = await storeRepository.GetStoreRoles(null, true);
+            var defaultRole = (await storeRepository.GetDefaultRole()).Role;
             model ??= new RolesViewModel();
+            model.DefaultRole = defaultRole;
 
-            model.DefaultRole = (await storeRepository.GetDefaultRole()).Role;
-            var roles = await storeRepository.GetStoreRoles(null);
-
-            if (sortOrder != null)
+            switch (sortOrder)
             {
-                switch (sortOrder)
-                {
-                    case "desc":
-                        ViewData["NextRoleSortOrder"] = "asc";
-                        roles = roles.OrderByDescending(user => user.Role).ToArray();
-                        break;
-                    case "asc":
-                        roles = roles.OrderBy(user => user.Role).ToArray();
-                        ViewData["NextRoleSortOrder"] = "desc";
-                        break;
-                }
+                case "desc":
+                    ViewData["NextRoleSortOrder"] = "asc";
+                    roles = roles.OrderByDescending(user => user.Role).ToArray();
+                    break;
+                case "asc":
+                    roles = roles.OrderBy(user => user.Role).ToArray();
+                    ViewData["NextRoleSortOrder"] = "desc";
+                    break;
             }
 
             model.Roles = roles.Skip(model.Skip).Take(model.Count).ToList();

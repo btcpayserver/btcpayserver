@@ -380,13 +380,13 @@ namespace BTCPayServer.Tests
             s.Driver.Navigate().GoToUrl(url);
             Assert.Equal("hidden", s.Driver.FindElement(By.Id("Email")).GetAttribute("type"));
             Assert.Equal(usr, s.Driver.FindElement(By.Id("Email")).GetAttribute("value"));
-            Assert.Equal("Set your password", s.Driver.FindElement(By.CssSelector("h4")).Text);
+            Assert.Equal("Create Account", s.Driver.FindElement(By.CssSelector("h4")).Text);
             Assert.Contains("Invitation accepted. Please set your password.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Info).Text);
 
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
             s.Driver.FindElement(By.Id("SetPassword")).Click();
-            Assert.Contains("Password successfully set.", s.FindAlertMessage().Text);
+            Assert.Contains("Account successfully created.", s.FindAlertMessage().Text);
             
             s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
@@ -928,11 +928,9 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.Logout();
 
-            // Let's add Bob as a guest to alice's store
+            // Let's add Bob as an employee to alice's store
             s.LogIn(alice);
-            s.GoToUrl(storeUrl + "/users");
-            s.Driver.FindElement(By.Id("Email")).SendKeys(bob + Keys.Enter);
-            Assert.Contains("User added successfully", s.Driver.PageSource);
+            s.AddUserToStore(storeId, bob, "Employee");
             s.Logout();
 
             // Bob should not have access to store, but should have access to invoice
@@ -1063,7 +1061,8 @@ namespace BTCPayServer.Tests
                     Policies.CanViewInvoices,
                     Policies.CanModifyInvoices,
                     Policies.CanViewPaymentRequests,
-                    Policies.CanViewStoreSettings,
+                    Policies.CanViewPullPayments,
+                    Policies.CanViewPayouts,
                     Policies.CanModifyStoreSettingsUnscoped,
                     Policies.CanDeleteUser
                 });
@@ -1148,13 +1147,8 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
-            var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
             s.CreateNewStore();
-            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
-            s.Driver.FindElement(By.Id("Create")).Click();
-            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-            Assert.Equal(appName, s.Driver.FindElement(By.Id("Title")).GetAttribute("value"));
+            (_, string appId) = s.CreateApp("PointOfSale");
             s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Tea shop");
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
@@ -1169,7 +1163,6 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
-            var appId = s.Driver.Url.Split('/')[4];
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
@@ -1268,12 +1261,7 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.AddDerivationScheme();
 
-            var appName = $"CF-{Guid.NewGuid().ToString()[..21]}";
-            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys(appName);
-            s.Driver.FindElement(By.Id("Create")).Click();
-            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-            Assert.Equal(appName, s.Driver.FindElement(By.Id("Title")).GetAttribute("value"));
+            (_, string appId) = s.CreateApp("Crowdfund");
             s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
             s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
@@ -1293,7 +1281,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
             var editUrl = s.Driver.Url;
-            var appId = editUrl.Split('/')[4];
             
             // Check public page
             s.Driver.FindElement(By.Id("ViewApp")).Click();
@@ -3333,6 +3320,7 @@ retry:
                 Assert.StartsWith(s.ServerUri.ToString(), s.Driver.Url);
             });
         }
+
         [Fact]
         [Trait("Selenium", "Selenium")]
         public async Task CanUseRoleManager()
@@ -3343,14 +3331,24 @@ retry:
             s.GoToHome();
             s.GoToServer(ServerNavPages.Roles);
             var existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
-            Assert.Equal(3, existingServerRoles.Count);
+            Assert.Equal(5, existingServerRoles.Count);
             IWebElement ownerRow = null;
+            IWebElement managerRow = null;
+            IWebElement employeeRow = null;
             IWebElement guestRow = null;
             foreach (var roleItem in existingServerRoles)
             {
                 if (roleItem.Text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
                 {
                     ownerRow = roleItem;
+                }
+                else if (roleItem.Text.Contains("manager", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    managerRow = roleItem;
+                }
+                else if (roleItem.Text.Contains("employee", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    employeeRow = roleItem;
                 }
                 else if (roleItem.Text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -3359,11 +3357,21 @@ retry:
             }
             
             Assert.NotNull(ownerRow);
+            Assert.NotNull(managerRow);
+            Assert.NotNull(employeeRow);
             Assert.NotNull(guestRow);
 
             var ownerBadges = ownerRow.FindElements(By.CssSelector(".badge"));
             Assert.Contains(ownerBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(ownerBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var managerBadges = managerRow.FindElements(By.CssSelector(".badge"));
+            Assert.DoesNotContain(managerBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(managerBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var employeeBadges = employeeRow.FindElements(By.CssSelector(".badge"));
+            Assert.DoesNotContain(employeeBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(employeeBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
             
             var guestBadges = guestRow.FindElements(By.CssSelector(".badge"));
             Assert.DoesNotContain(guestBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
@@ -3391,13 +3399,11 @@ retry:
             ownerRow.FindElement(By.Id("SetDefault")).Click();
             s.FindAlertMessage();
             
-            
-
             s.CreateNewStore();
             s.GoToStore(StoreNavPages.Roles);
             var existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
-            Assert.Equal(3, existingStoreRoles.Count);
-            Assert.Equal(2, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+            Assert.Equal(5, existingStoreRoles.Count);
+            Assert.Equal(4, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
 
             foreach (var roleItem in existingStoreRoles)
             {
@@ -3448,19 +3454,18 @@ retry:
             Assert.DoesNotContain(guestBadges, element => element.Text.Equals("server-wide", StringComparison.InvariantCultureIgnoreCase));
             s.GoToStore(StoreNavPages.Users);
             var options = s.Driver.FindElements(By.CssSelector("#Role option"));
-            Assert.Equal(2, options.Count);
+            Assert.Equal(4, options.Count);
             Assert.Contains(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
             s.CreateNewStore();
             s.GoToStore(StoreNavPages.Roles);
             existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
-            Assert.Equal(2, existingStoreRoles.Count);
-            Assert.Equal(1, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+            Assert.Equal(4, existingStoreRoles.Count);
+            Assert.Equal(3, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
             Assert.Equal(0, existingStoreRoles.Count(element => element.Text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
             s.GoToStore(StoreNavPages.Users);
             options = s.Driver.FindElements(By.CssSelector("#Role option"));
-            Assert.Single(options);
+            Assert.Equal(3, options.Count);
             Assert.DoesNotContain(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
-            
             
             s.GoToStore(StoreNavPages.Roles);
             s.Driver.FindElement(By.Id("CreateRole")).Click();
@@ -3502,7 +3507,7 @@ retry:
             s.RegisterNewUser(true);
             string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
 
-            // Owner access
+            // Admin access
             s.AssertPageAccess(false, GetStorePath(""));
             s.AssertPageAccess(true, GetStorePath("reports"));
             s.AssertPageAccess(true, GetStorePath("invoices"));
@@ -3518,9 +3523,214 @@ retry:
             s.AssertPageAccess(false, GetStorePath("apps/create"));
             foreach (var path in storeSettingsPaths)
             {   // should have view access to settings, but no submit buttons or create links
+                TestLogs.LogInformation($"Checking access to store page {path} as admin");
+                s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
+                }
+            }
+        }
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUsePredefinedRoles()
+        {
+            using var s = CreateSeleniumTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
+
+            // Setup users
+            var manager = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            var employee = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            var guest = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            
+            // Setup store, wallets and add users
+            s.RegisterNewUser(true);
+            (_, string storeId) = s.CreateNewStore();
+            s.GoToStore();
+            s.GenerateWallet(isHotWallet: true);
+            s.AddLightningNode(LightningConnectionType.CLightning, false);
+            s.AddUserToStore(storeId, manager, "Manager");
+            s.AddUserToStore(storeId, employee, "Employee");
+            s.AddUserToStore(storeId, guest, "Guest");
+            
+            // Add apps
+            (_, string posId) = s.CreateApp("PointOfSale");
+            (_, string crowdfundId) = s.CreateApp("Crowdfund");
+            
+            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
+
+            // Owner access
+            s.AssertPageAccess(true, GetStorePath(""));
+            s.AssertPageAccess(true, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(true, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(true, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(true, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(true, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(true, GetStorePath("apps/create"));
+            s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have manage access to settings, hence should see submit buttons or create links
+                TestLogs.LogInformation($"Checking access to store page {path} as owner");
+                s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    s.Driver.FindElement(By.CssSelector("#mainContent .btn-primary"));
+                }
+            }
+            s.Logout();
+
+            // Manager access
+            s.LogIn(manager);
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(true, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                TestLogs.LogInformation($"Checking access to store page {path} as manager");
                 s.AssertPageAccess(true, $"stores/{storeId}/{path}");
                 s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
             }
+            s.Logout();
+            
+            // Employee access
+            s.LogIn(employee);
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(false, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                TestLogs.LogInformation($"Checking access to store page {path} as employee");
+                s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            s.Logout();
+            
+            // Guest access
+            s.LogIn(guest);
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(false, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                TestLogs.LogInformation($"Checking access to store page {path} as guest");
+                s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            s.Logout();
+        }
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanChangeUserRoles()
+        {
+            using var s = CreateSeleniumTester(newDb: true);
+            await s.StartAsync();
+
+            // Setup users and store
+            var employee = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            var owner = s.RegisterNewUser(true);
+            (_, string storeId) = s.CreateNewStore();
+            s.GoToStore();
+            s.AddUserToStore(storeId, employee, "Employee");
+            
+            // Should successfully change the role
+            var userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
+            Assert.Equal(2, userRows.Count);
+            IWebElement employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if (row.Text.Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            employeeRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
+            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, employee);
+            new SelectElement(s.Driver.FindElement(By.Id("EditUserRole"))).SelectByValue("Manager");
+            s.Driver.FindElement(By.Id("EditContinue")).Click();
+            Assert.Contains($"The role of {employee} has been changed to Manager.", s.FindAlertMessage().Text);
+            
+            // Should not see a message when not changing role
+            userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
+            Assert.Equal(2, userRows.Count);
+            employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if (row.Text.Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            employeeRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
+            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, employee);
+            // no change, no alert message
+            s.Driver.FindElement(By.Id("EditContinue")).Click();
+            s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .alert"));
+            
+            // Should not change last owner
+            userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
+            Assert.Equal(2, userRows.Count);
+            IWebElement ownerRow = null;
+            foreach (var row in userRows)
+            {
+                if (row.Text.Contains(owner, StringComparison.InvariantCultureIgnoreCase)) ownerRow = row;
+            }
+            Assert.NotNull(ownerRow);
+            ownerRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
+            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, owner);
+            new SelectElement(s.Driver.FindElement(By.Id("EditUserRole"))).SelectByValue("Employee");
+            s.Driver.FindElement(By.Id("EditContinue")).Click();
+            Assert.Contains($"User {owner} is the last owner. Their role cannot be changed.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
         }
 
         private static void CanBrowseContent(SeleniumTester s)

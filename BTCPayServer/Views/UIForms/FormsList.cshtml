@@ -37,7 +37,7 @@
                         <tr>
                             <td>
                                 <a asp-action="Modify" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Edit-@item.Name" permission="@Policies.CanModifyStoreSettings">@item.Name</a>
-                                <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" not-permission="@Policies.CanModifyStoreSettings">View</a>
+                                <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" not-permission="@Policies.CanModifyStoreSettings">@item.Name</a>
                             </td>
                             <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                                 <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="DELETE">Remove</a> - 

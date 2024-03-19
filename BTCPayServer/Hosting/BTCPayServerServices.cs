@@ -1,11 +1,8 @@
 using System;
-using System.Configuration.Provider;
-using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Threading;
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
@@ -66,11 +63,9 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json;
-using NicolasDorier.RateLimits;
 using Serilog;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
@@ -437,6 +432,7 @@ namespace BTCPayServer.Hosting
 
             services.AddSingleton<INotificationHandler, NewVersionNotification.Handler>();
             services.AddSingleton<INotificationHandler, NewUserRequiresApprovalNotification.Handler>();
+            services.AddSingleton<INotificationHandler, InviteAcceptedNotification.Handler>();
             services.AddSingleton<INotificationHandler, PluginUpdateNotification.Handler>();
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();

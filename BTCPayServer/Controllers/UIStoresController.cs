@@ -8,10 +8,12 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -60,7 +62,6 @@ namespace BTCPayServer.Controllers
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             PoliciesSettings policiesSettings,
             IAuthorizationService authorizationService,
-            EventAggregator eventAggregator,
             AppService appService,
             IFileService fileService,
             WebhookSender webhookNotificationManager,
@@ -70,7 +71,9 @@ namespace BTCPayServer.Controllers
             IHtmlHelper html,
             LightningClientFactoryService lightningClientFactoryService,
             EmailSenderFactory emailSenderFactory,
-            WalletFileParsers onChainWalletParsers)
+            WalletFileParsers onChainWalletParsers,
+            SettingsRepository settingsRepository,
+            EventAggregator eventAggregator)
         {
             _RateFactory = rateFactory;
             _Repo = repo;
@@ -97,6 +100,8 @@ namespace BTCPayServer.Controllers
             _lightningClientFactoryService = lightningClientFactoryService;
             _emailSenderFactory = emailSenderFactory;
             _onChainWalletParsers = onChainWalletParsers;
+            _settingsRepository = settingsRepository;
+            _eventAggregator = eventAggregator;
             Html = html;
         }
 
@@ -110,6 +115,7 @@ namespace BTCPayServer.Controllers
         readonly TokenRepository _TokenRepository;
         readonly UserManager<ApplicationUser> _UserManager;
         readonly RateFetcher _RateFactory;
+        readonly SettingsRepository _settingsRepository;
         private readonly ExplorerClientProvider _ExplorerProvider;
         private readonly LanguageService _LangService;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
@@ -122,6 +128,7 @@ namespace BTCPayServer.Controllers
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly WalletFileParsers _onChainWalletParsers;
+        private readonly EventAggregator _eventAggregator;
 
         public string? GeneratedPairingCode { get; set; }
         public WebhookSender WebhookNotificationManager { get; }
@@ -157,84 +164,8 @@ namespace BTCPayServer.Controllers
             }
             return Forbid();
         }
-
-        [HttpGet("{storeId}/users")]
-        public async Task<IActionResult> StoreUsers()
-        {
-            var vm = new StoreUsersViewModel { Role = StoreRoleId.Guest.Role };
-            await FillUsers(vm);
-            return View(vm);
-        }
-
-        private async Task FillUsers(StoreUsersViewModel vm)
-        {
-            var users = await _Repo.GetStoreUsers(CurrentStore.Id);
-            vm.StoreId = CurrentStore.Id;
-            vm.Users = users.Select(u => new StoreUsersViewModel.StoreUserViewModel()
-            {
-                Email = u.Email,
-                Id = u.Id,
-                Role = u.StoreRole.Role
-            }).ToList();
-        }
-
+        
         public StoreData? CurrentStore => HttpContext.GetStoreData();
-
-        [HttpPost("{storeId}/users")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
-        {
-            await FillUsers(vm);
-            if (!ModelState.IsValid)
-            {
-                return View(vm);
-            }
-            var user = await _UserManager.FindByEmailAsync(vm.Email);
-            if (user == null)
-            {
-                ModelState.AddModelError(nameof(vm.Email), "User not found");
-                return View(vm);
-            }
-
-            var roles = await _Repo.GetStoreRoles(CurrentStore.Id);
-            if (roles.All(role => role.Id != vm.Role))
-            {
-                ModelState.AddModelError(nameof(vm.Role), "Invalid role");
-                return View(vm);
-            }
-            var roleId = await _Repo.ResolveStoreRoleId(storeId, vm.Role);
-
-            if (!await _Repo.AddStoreUser(CurrentStore.Id, user.Id, roleId))
-            {
-                ModelState.AddModelError(nameof(vm.Email), "The user already has access to this store");
-                return View(vm);
-            }
-            TempData[WellKnownTempData.SuccessMessage] = "User added successfully.";
-            return RedirectToAction(nameof(StoreUsers));
-        }
-
-        [HttpGet("{storeId}/users/{userId}/delete")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> DeleteStoreUser(string userId)
-        {
-            var user = await _UserManager.FindByIdAsync(userId);
-            if (user == null)
-                return NotFound();
-            return View("Confirm", new ConfirmModel("Remove store user", $"This action will prevent <strong>{Html.Encode(user.Email)}</strong> from accessing this store and its settings. Are you sure?", "Remove"));
-        }
-
-        [HttpPost("{storeId}/users/{userId}/delete")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-        public async Task<IActionResult> DeleteStoreUserPost(string storeId, string userId)
-        {
-            if (await _Repo.RemoveStoreUser(storeId, userId))
-                TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
-            else
-            {
-                TempData[WellKnownTempData.ErrorMessage] = "Removing this user would result in the store having no owner.";
-            }
-            return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
-        }
 
         [HttpGet("{storeId}/rates")]
         public IActionResult Rates()
@@ -930,6 +861,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/tokens")]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ListTokens()
         {
             var model = new TokensViewModel();

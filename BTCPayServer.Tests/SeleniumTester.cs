@@ -407,15 +407,12 @@ namespace BTCPayServer.Tests
 
         public void Logout()
         {
-            if (!Driver.PageSource.Contains("id=\"Nav-Logout\""))
-            {
-                Driver.Navigate().GoToUrl(ServerUri);
-            }
+            if (!Driver.PageSource.Contains("id=\"Nav-Logout\"")) GoToUrl("/account");
             Driver.FindElement(By.Id("Nav-Account")).Click();
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
 
-        public void LogIn(string user, string password)
+        public void LogIn(string user, string password = "123456")
         {
             Driver.FindElement(By.Id("Email")).SendKeys(user);
             Driver.FindElement(By.Id("Password")).SendKeys(password);
@@ -656,7 +653,7 @@ retry:
             Driver.FindElement(By.Id("AddUser")).Click();
             Assert.Contains("User added successfully", FindAlertMessage().Text);
         }
-        
+
         public void AssertPageAccess(bool shouldHaveAccess, string url)
         {
             GoToUrl(url);

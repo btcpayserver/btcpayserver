@@ -2782,7 +2782,7 @@ namespace BTCPayServer.Tests
             await tester.StartAsync();
 
             var acc = tester.NewAccount();
-            acc.GrantAccess(true);
+            await acc.GrantAccessAsync(true);
 
             var settings = tester.PayTester.GetService<SettingsRepository>();
             var emailSenderFactory = tester.PayTester.GetService<EmailSenderFactory>();
@@ -2807,14 +2807,14 @@ namespace BTCPayServer.Tests
             Assert.Equal("admin@admin.com", (await Assert.IsType<ServerEmailSender>(await emailSenderFactory.GetEmailSender()).GetEmailSettings()).Login);
             Assert.Null(await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings());
 
-            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresController>().StoreEmailSettings(acc.StoreId, new EmailsViewModel(new EmailSettings()
+            Assert.IsType<RedirectToActionResult>(await acc.GetController<UIStoresController>().StoreEmailSettings(acc.StoreId, new EmailsViewModel(new EmailSettings
             {
                 From = "store@store.com",
                 Login = "store@store.com",
                 Password = "store@store.com",
                 Port = 1234,
                 Server = "store.com"
-            }), ""));
+            }), "", true));
 
             Assert.Equal("store@store.com", (await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
         }

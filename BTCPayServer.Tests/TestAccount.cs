@@ -554,13 +554,23 @@ retry:
 
         public async Task AddGuest(string userId)
         {
-            var repo = this.parent.PayTester.GetService<StoreRepository>();
-            await repo.AddStoreUser(StoreId, userId, StoreRoleId.Guest);
+            var repo = parent.PayTester.GetService<StoreRepository>();
+            await repo.AddOrUpdateStoreUser(StoreId, userId, StoreRoleId.Guest);
         }
         public async Task AddOwner(string userId)
         {
-            var repo = this.parent.PayTester.GetService<StoreRepository>();
-            await repo.AddStoreUser(StoreId, userId, StoreRoleId.Owner);
+            var repo = parent.PayTester.GetService<StoreRepository>();
+            await repo.AddOrUpdateStoreUser(StoreId, userId, StoreRoleId.Owner);
+        }
+        public async Task AddManager(string userId)
+        {
+            var repo = parent.PayTester.GetService<StoreRepository>();
+            await repo.AddOrUpdateStoreUser(StoreId, userId, StoreRoleId.Manager);
+        }
+        public async Task AddEmployee(string userId)
+        {
+            var repo = parent.PayTester.GetService<StoreRepository>();
+            await repo.AddOrUpdateStoreUser(StoreId, userId, StoreRoleId.Employee);
         }
 
         public async Task<uint256> PayOnChain(string invoiceId)

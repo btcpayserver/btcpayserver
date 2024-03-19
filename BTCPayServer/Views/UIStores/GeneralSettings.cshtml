@@ -17,7 +17,7 @@
         {
             <div asp-validation-summary="All"></div>
         }
-        <form method="post" enctype="multipart/form-data">
+        <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
             <h3 class="mb-3">General</h3>
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
@@ -159,7 +159,7 @@
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
             </div>
             
-            <button type="submit" class="btn btn-primary mt-2" id="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
+            <button type="submit" class="btn btn-primary mt-2" id="Save">Save</button>
         </form>
         <div permission="@Policies.CanModifyStoreSettings">
             <h3 class="mt-5 mb-3">Additional Actions</h3>

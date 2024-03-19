@@ -17,7 +17,7 @@
         {
             <div asp-validation-summary="All"></div>
         }
-        <form method="post">
+        <form method="post" permissioned="@Policies.CanModifyStoreSettings">
             <div class="d-flex my-3">
                 <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label">Process approved payouts instantly</label>
@@ -41,7 +41,7 @@
                 <div class="form-text">If a payout fails this many times, it will be cancelled.</div>
             </div>
             
-            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save" permission="@Policies.CanModifyStoreSettings">Save</button>
+            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save" id="Save">Save</button>
         </form>
     </div>
 </div>

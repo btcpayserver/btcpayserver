@@ -1049,11 +1049,22 @@ namespace BTCPayServer.Controllers
             vm.LogoFileId = theme.LogoFileId;
             vm.CustomThemeFileId = theme.CustomThemeFileId;
             
-            if (server.ServerName != vm.ServerName || server.ContactUrl != vm.ContactUrl)
+            if (server.ServerName != vm.ServerName)
             {
                 server.ServerName = vm.ServerName;
-                server.ContactUrl = vm.ContactUrl;
                 settingsChanged = true;
+            }
+            
+            if (server.ContactUrl != vm.ContactUrl)
+            {
+                server.ContactUrl = !string.IsNullOrWhiteSpace(vm.ContactUrl)
+                    ? vm.ContactUrl.IsValidEmail() ? $"mailto:{vm.ContactUrl}" : vm.ContactUrl
+                    : null;
+                settingsChanged = true;
+            }
+            
+            if (settingsChanged)
+            {
                 await _SettingsRepository.UpdateSetting(server);
             }
 

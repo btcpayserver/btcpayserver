@@ -405,7 +405,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var paidCurrency = Math.Round(cryptoPaid * invoicePaymentMethod.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
                 new CurrencyPair(paymentMethodId.CryptoCode, invoice.Currency),
-                store.GetStoreBlob().GetRateRules(_networkProvider),
+                store.GetStoreBlob().GetRateRules(_networkProvider), storeId,
                 cancellationToken
             );
             var cryptoCode = invoicePaymentMethod.GetId().CryptoCode;

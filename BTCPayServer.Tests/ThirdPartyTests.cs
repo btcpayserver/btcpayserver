@@ -494,6 +494,10 @@ retry:
             version = Regex.Match(actual, "Original file: /npm/decimal\\.js@([0-9]+.[0-9]+.[0-9]+)/decimal\\.js").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/decimal.js@{version}/decimal.min.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
+            
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bbqr", "bbqr.iife.js").Trim();
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bbqr@1.0.0/dist/bbqr.iife.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
         }
 
         private void EqualJsContent(string expected, string actual)

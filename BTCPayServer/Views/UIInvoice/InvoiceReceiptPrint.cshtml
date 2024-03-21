@@ -174,7 +174,20 @@
                             {
                                 <tr>
                                     <td class="text-nowrap text-secondary">Destination</td>
-                                    <td class="text-break">@payment.Destination</td>
+                                    <td class="text-break">
+                                        @if (payment.Destination.Length > 69)
+                                        {
+                                            <span>
+                                                <span>@payment.Destination[..30]</span>
+                                                <span>...</span>
+                                                <span>@payment.Destination.Substring(payment.Destination.Length - 30, 30)</span>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @payment.Destination
+                                        }
+                                    </td>
                                 </tr>
                             }
                             @if (!string.IsNullOrEmpty(payment.PaymentProof))

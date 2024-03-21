@@ -1,5 +1,57 @@
 # Changelog
 
+## 1.13.0
+
+### New feature
+
+* Server Settings: Customize instance name and add contact URL (#5718) @dennisreimann
+* Admin overview of the stores on the instance (#5745 #5782) @dennisreimann @Kukks
+* Onboarding: Invite new users (#5714 #5719) @dennisreimann @dstrukt
+* POS: Add item list to keypad (#5814) @dennisreimann @dstrukt
+* Wallet: Support BBQr PSBTSs (#5852) @Kukks
+
+### Improvements
+
+* Dashboard: Tooltip for balance on a particular day (#5650) @dennisreimann
+* Shopify: Improve instruction display (#5752) @dennisreimann
+* Wallet: Support 16mb PSBTs (#5768) @Kukks
+* Invoice: Improve events display (#5775) @dennisreimann
+* Crowdfund: Add forms (like with the POS) (#5659) @Nisaba
+* API docs: Add link to API usage examples in docs (#5772) @ndeet
+* Policies: Cleanup and improvements (#5731) @dennisreimann @dstrukt
+* Add legacy report (#5740) @Kukks
+* Store: Move support URL to Checkout Appearance and improve wording (#5717) @dennisreimann
+* Apps: Allow `mailto:` links in descriptions (#5736) @dennisreimann
+* Webhooks: Fixes and docs (#5686) @Kukks
+* UI: Deprecate the custom CSS options — use store branding (#5735) @dennisreimann
+* Wallet: Reposition the camera scan icon on send page (#5790) @TChukwuleta
+* Branding: Remove restriction of square dimension for store logo (#5738) @dennisreimann
+* Apps: Make app name the default title (#5779) @dennisreimann
+* Wallet: Label filter dropdown (#5802) @dennisreimann
+* POS: App to show QR code for public page for easy setup (#5825) @TChukwuleta
+* Payouts: Parallel payout for Lightning invoices (#5781) @Kukks
+* Pull Payments: When opened in mobile, use deeplink to setup card (#5613) @NicolasDorier
+* UI consistency: Use toggles in various setting views (#5769) @TChukwuleta
+* Wallet: Improve info message (#5756) @rockstardev
+* Item Editor: Apply item changes directly (#5849) @dennisreimann
+* Specify mailto: prefix for emails in Server Settings (#5844) @TChukwuleta @dennisreimann
+* UI: Improve Create First Store view (#5854) @dennisreimann
+* Receipts: Smaller printed receipts (#5856) @Kukks
+
+### Bug fixes
+
+* Lightning: Closing Balance in Dashboard was showing incorrect value (#5716) @NicolasDorier
+* Currencies: Remove decimals for Colombian (COP) and Argentina's Peso (ARS) (#5710) @TChukwuleta
+* Wallet: Labels wouldn't be properly applied to some wallet's transactions (#5770) @NicolasDorier
+* Apps: Don't redirect .onion requests to canonical domain (#5776) @dennisreimann
+* UI: Make store selector list scrollable if necessary (#5760) @dennisreimann @dstrukt
+* Lightning: Replace user info in server URL when logging (#5750) @dennisreimann
+* Lightning: Setup page fixes (#5796) @dennisreimann
+* Currencies: Fix currency-api link (#5803) @fawazahmed0
+* Reports: Fix old payments not showing up in reports (#5812) @NicolasDorier
+* POS: Fix exception when asking for data with a top up item (#5816) @dennisreimann
+* Plugins: Do not have report name conflict with old plugin (#5826) @Kukks
+
 ## 1.12.5
 
 ### Bug fixes

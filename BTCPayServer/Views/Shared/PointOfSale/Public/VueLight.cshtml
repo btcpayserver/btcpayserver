@@ -116,7 +116,7 @@
                             @if (!string.IsNullOrWhiteSpace(item.Image))
                             {
                                 <div class="img">
-                                    <img src="@item.Image" alt="@item.Title" />
+                                    <img src="@item.Image" alt="@item.Title" asp-append-version="true" />
                                 </div>
                             }
                             <div class="d-flex flex-column gap-2">

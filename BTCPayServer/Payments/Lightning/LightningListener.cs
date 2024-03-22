@@ -508,8 +508,15 @@ namespace BTCPayServer.Payments.Lightning
             try
             {
                 var lightningClient = _lightningClientFactory.Create(ConnectionString, _network);
+                if(lightningClient is null)
+                    return;
                 uri = lightningClient.GetServerUri();
-                logUrl = string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : uri.ToString().Replace(uri.UserInfo, "***");
+                logUrl = uri switch
+                {
+                    null when LightningConnectionStringHelper.ExtractValues(ConnectionString, out var type) is not null => type,
+                    null => string.Empty,
+                    _ => string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : uri.ToString().Replace(uri.UserInfo, "***")
+                };
                 Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Start listening {Uri}", _network.CryptoCode, logUrl);
                 using var session = await lightningClient.Listen(cancellation);
                 // Just in case the payment arrived after our last poll but before we listened.

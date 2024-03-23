@@ -32,6 +32,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBXplorer;
@@ -47,6 +48,8 @@ namespace BTCPayServer.Controllers
     [Route("wallets")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [AutoValidateAntiforgeryToken]
+    //16mb psbts
+    [RequestFormLimits(ValueLengthLimit = FormReader.DefaultValueLengthLimit * 4)]
     public partial class UIWalletsController : Controller
     {
         private StoreRepository Repository { get; }
@@ -146,7 +149,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var txObjId = new WalletObjectId(walletId, WalletObjectData.Types.Tx, transactionId);
-            var wallet = _walletProvider.GetWallet(paymentMethod.Network);
             if (addlabel != null)
             {
                 await WalletRepository.AddWalletObjectLabels(txObjId, addlabel);
@@ -414,7 +416,6 @@ namespace BTCPayServer.Controllers
             await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode).WaitServerStartedAsync();
             await Task.Delay(1000);
             await using var conn = await factory.OpenConnection();
-            var wallet_id = paymentMethod.GetNBXWalletId();
 
             var txIds = sending.Select(s => s.Result.ToString()).ToArray();
             await conn.ExecuteAsync(
@@ -438,7 +439,7 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            var store = await Repository.FindStore(walletId.StoreId);
             var paymentMethod = GetDerivationSchemeSettings(walletId);
             if (paymentMethod == null || store is null)
                 return NotFound();
@@ -458,11 +459,12 @@ namespace BTCPayServer.Controllers
             };
             if (bip21?.Any() is true)
             {
+                var messagePresent = TempData.HasStatusMessage();
                 foreach (var link in bip21)
                 {
                     if (!string.IsNullOrEmpty(link))
                     {
-                        await LoadFromBIP21(walletId, model, link, network);
+                        await LoadFromBIP21(walletId, model, link, network, messagePresent);
                     }
                 }
             }
@@ -515,8 +517,6 @@ namespace BTCPayServer.Controllers
                 recommendedFees.Select(tuple => tuple.GetAwaiter().GetResult()).Where(option => option != null).ToList();
 
             model.FeeSatoshiPerByte = recommendedFees[1].GetAwaiter().GetResult()?.FeeRate;
-            model.SupportRBF = network.SupportRBF;
-
             model.CryptoDivisibility = network.Divisibility;
             using (CancellationTokenSource cts = new CancellationTokenSource())
             {
@@ -540,7 +540,6 @@ namespace BTCPayServer.Controllers
                 }
                 catch (Exception ex) { model.RateError = ex.Message; }
             }
-
             return View(model);
         }
 
@@ -565,19 +564,18 @@ namespace BTCPayServer.Controllers
         {
             if (walletId?.StoreId == null)
                 return NotFound();
-            var store = await Repository.FindStore(walletId.StoreId, GetUserId());
+            var store = await Repository.FindStore(walletId.StoreId);
             if (store == null)
                 return NotFound();
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
 
-            vm.SupportRBF = network.SupportRBF;
             vm.NBXSeedAvailable = await GetSeed(walletId, network) != null;
             if (!string.IsNullOrEmpty(bip21))
             {
                 vm.Outputs?.Clear();
-                await LoadFromBIP21(walletId, vm, bip21, network);
+                await LoadFromBIP21(walletId, vm, bip21, network, TempData.HasStatusMessage());
             }
 
             decimal transactionAmountSum = 0;
@@ -872,7 +870,7 @@ namespace BTCPayServer.Controllers
 
 
         private async Task LoadFromBIP21(WalletId walletId, WalletSendModel vm, string bip21,
-            BTCPayNetwork network)
+            BTCPayNetwork network, bool statusMessagePresent)
         {
             BitcoinAddress? address = null;
             vm.Outputs ??= new();
@@ -894,14 +892,18 @@ namespace BTCPayServer.Controllers
                 }
                 vm.Outputs.Add(output);
                 address = uriBuilder.Address;
-                if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
+                // only set SetStatusMessageModel if there is not message already or there is label / message in uri builder
+                if (!statusMessagePresent)
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    if (!string.IsNullOrEmpty(uriBuilder.Label) || !string.IsNullOrEmpty(uriBuilder.Message))
                     {
-                        Severity = StatusMessageModel.StatusSeverity.Info,
-                        Html =
-                            $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to <strong>{uriBuilder.Label}</strong>")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for <strong>{uriBuilder.Message}</strong>")}"
-                    });
+                        TempData.SetStatusMessageModel(new StatusMessageModel
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Info,
+                            Html =
+                                $"Payment {(string.IsNullOrEmpty(uriBuilder.Label) ? string.Empty : $" to <strong>{uriBuilder.Label}</strong>")} {(string.IsNullOrEmpty(uriBuilder.Message) ? string.Empty : $" for <strong>{uriBuilder.Message}</strong>")}"
+                        });
+                    }
                 }
 
                 if (uriBuilder.TryGetPayjoinEndpoint(out _))

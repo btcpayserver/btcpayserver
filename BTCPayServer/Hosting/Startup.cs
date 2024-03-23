@@ -88,7 +88,8 @@ namespace BTCPayServer.Hosting
                 .PersistKeysToFileSystem(new DirectoryInfo(new DataDirectories().Configure(Configuration).DataDir));
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<ApplicationDbContext>()
-                .AddDefaultTokenProviders();
+                .AddDefaultTokenProviders()
+                .AddInvitationTokenProvider();
             services.Configure<AuthenticationOptions>(opts =>
             {
                 opts.DefaultAuthenticateScheme = null;
@@ -139,7 +140,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<UserLoginCodeService>();
             services.AddSingleton<LnurlAuthService>();
             services.AddSingleton<LightningAddressService>();
-            var mvcBuilder = services.AddMvc(o =>
+            services.AddMvc(o =>
              {
                  o.Filters.Add(new XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.Deny));
                  o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));

@@ -1,5 +1,8 @@
 @model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
-
+@if(!Model.InitialRendering && Model.Balance == null)
+{
+   return;
+}
 <div id="StoreLightningBalance-@Model.Store.Id" class="widget store-lightning-balance">
     <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Lightning Balance</h6>

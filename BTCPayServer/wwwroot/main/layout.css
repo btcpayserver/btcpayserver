@@ -94,14 +94,14 @@
     white-space: nowrap;
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link:hover {
     color: var(--btcpay-header-link-accent);
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link.active,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link.active,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:hover {
     color: var(--btcpay-header-link-active);
 }
 
@@ -184,8 +184,8 @@
 
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    max-width: 1.5rem;
+    max-height: 1.5rem;
     /* Fixes seemingly delayed icon animation */
     -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }
@@ -193,10 +193,6 @@
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon.icon-store {
     margin-right: var(--btcpay-space-s);
-}
-
-#StoreSelectorToggle .logo {
-    border-radius: 50%;
 }
 
 #StoreSelectorToggle .icon.icon-caret-down {
@@ -219,8 +215,10 @@
 
 #StoreSelectorMenu {
     min-width: 100%;
-    max-height: calc(100vh - var(--header-height));
-    overflow-y: scroll;
+    overflow-y: auto;
+    /* gradually try to set better but less supported values and units */
+    max-height: calc(100vh - var(--header-height) - var(--btcpay-space-xxl));
+    max-height: calc(100dvh - var(--header-height));
 }
 
 /* Logo */

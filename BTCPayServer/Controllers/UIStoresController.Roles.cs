@@ -1,22 +1,19 @@
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.S3.Transfer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services.Stores;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-        [Route("{storeId}/roles")]
+        [HttpGet("{storeId}/roles")]
         public async Task<IActionResult> ListRoles(
             string storeId,
             [FromServices] StoreRepository storeRepository,
@@ -24,24 +21,21 @@ namespace BTCPayServer.Controllers
             string sortOrder = null
         )
         {
+            var roles = await storeRepository.GetStoreRoles(storeId, true);
+            var defaultRole = (await storeRepository.GetDefaultRole()).Role;
             model ??= new RolesViewModel();
+            model.DefaultRole = defaultRole;
 
-            model.DefaultRole = (await storeRepository.GetDefaultRole()).Role;
-            var roles = await storeRepository.GetStoreRoles(storeId, false, false);
-
-            if (sortOrder != null)
+            switch (sortOrder)
             {
-                switch (sortOrder)
-                {
-                    case "desc":
-                        ViewData["NextRoleSortOrder"] = "asc";
-                        roles = roles.OrderByDescending(user => user.Role).ToArray();
-                        break;
-                    case "asc":
-                        roles = roles.OrderBy(user => user.Role).ToArray();
-                        ViewData["NextRoleSortOrder"] = "desc";
-                        break;
-                }
+                case "desc":
+                    ViewData["NextRoleSortOrder"] = "asc";
+                    roles = roles.OrderByDescending(user => user.Role).ToArray();
+                    break;
+                case "asc":
+                    roles = roles.OrderBy(user => user.Role).ToArray();
+                    ViewData["NextRoleSortOrder"] = "desc";
+                    break;
             }
 
             model.Roles = roles.Skip(model.Skip).Take(model.Count).ToList();
@@ -50,6 +44,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/roles/{role}")]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> CreateOrEditRole(
             string storeId,
             [FromServices] StoreRepository storeRepository,
@@ -60,19 +55,19 @@ namespace BTCPayServer.Controllers
                 ModelState.Remove(nameof(role));
                 return View(new UpdateRoleViewModel());
             }
-            else
+
+            var roleData = await storeRepository.GetStoreRole(new StoreRoleId(storeId, role));
+            if (roleData == null)
+                return NotFound();
+            return View(new UpdateRoleViewModel
             {
-                var roleData = await storeRepository.GetStoreRole(new StoreRoleId(storeId, role));
-                if (roleData == null)
-                    return NotFound();
-                return View(new UpdateRoleViewModel()
-                {
-                    Policies = roleData.Permissions,
-                    Role = roleData.Role
-                });
-            }
-        } 
+                Policies = roleData.Permissions,
+                Role = roleData.Role
+            });
+        }
+
         [HttpPost("{storeId}/roles/{role}")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> CreateOrEditRole(
             string storeId,
             [FromServices] StoreRepository storeRepository,
@@ -119,10 +114,9 @@ namespace BTCPayServer.Controllers
 
             return RedirectToAction(nameof(ListRoles), new { storeId });
         }
-        
-
 
         [HttpGet("{storeId}/roles/{role}/delete")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> DeleteRole(
             string storeId,
             [FromServices] StoreRepository storeRepository,
@@ -142,6 +136,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/roles/{role}/delete")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> DeleteRolePost(
             string storeId,
             [FromServices] StoreRepository storeRepository,

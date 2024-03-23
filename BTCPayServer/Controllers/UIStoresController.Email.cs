@@ -7,11 +7,11 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
 
@@ -27,26 +27,25 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var blob = store.GetStoreBlob();
-            var storeSetupComplete = blob.EmailSettings?.IsComplete() is true;
-            if (!storeSetupComplete && !TempData.HasStatusMessage())
+            if (blob.EmailSettings?.IsComplete() is not true && !TempData.HasStatusMessage())
             {
                 var emailSender = await _emailSenderFactory.GetEmailSender(store.Id) as StoreEmailSender;
-                var hasServerFallback = await IsSetupComplete(emailSender?.FallbackSender);
-                var message = hasServerFallback
-                    ? "Emails will be sent with the email settings of the server"
-                    : "You need to configure email settings before this feature works";
-                TempData.SetStatusMessageModel(new StatusMessageModel
+                if (!await IsSetupComplete(emailSender?.FallbackSender))
                 {
-                    Severity = hasServerFallback ? StatusMessageModel.StatusSeverity.Info : StatusMessageModel.StatusSeverity.Warning,
-                    Html = $"{message}. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
-                });
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Warning,
+                        Html = $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
+                    });
+                }
             }
 
-            var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? new List<StoreEmailRule>() };
+            var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? [] };
             return View(vm);
         }
 
         [HttpPost("{storeId}/emails")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
         {
             vm.Rules ??= new List<StoreEmailRule>();
@@ -74,11 +73,10 @@ namespace BTCPayServer.Controllers
                 var rule = vm.Rules[i];
 
                 if (!string.IsNullOrEmpty(rule.To) && (rule.To.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Any(s => !MailboxAddressValidator.TryParse(s, out var mb))))
+                        .Any(s => !MailboxAddressValidator.TryParse(s, out _))))
                 {
                     ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
                         "Invalid mailbox address provided. Valid formats are: 'test@example.com' or 'Firstname Lastname <test@example.com>'");
-
                 }
                 else if (!rule.CustomerEmail && string.IsNullOrEmpty(rule.To))
                     ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
@@ -114,8 +112,17 @@ namespace BTCPayServer.Controllers
                     var emailSender = await _emailSenderFactory.GetEmailSender(store.Id);
                     if (await IsSetupComplete(emailSender))
                     {
-                        emailSender.SendEmail(MailboxAddress.Parse(rule.To), $"({store.StoreName} test) {rule.Subject}", rule.Body);
-                        message += $"Test email sent to {rule.To} — please verify you received it.";
+                        var recipients = rule.To.Split(",", StringSplitOptions.RemoveEmptyEntries)
+                            .Select(o =>
+                            {
+                                MailboxAddressValidator.TryParse(o, out var mb);
+                                return mb;
+                            })
+                            .Where(o => o != null)
+                            .ToArray();
+                        
+                        emailSender.SendEmail(recipients.ToArray(), null, null, $"[TEST] {rule.Subject}", rule.Body);
+                        message += "Test email sent — please verify you received it.";
                     }
                     else
                     {
@@ -164,37 +171,57 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/email-settings")]
-        public IActionResult StoreEmailSettings()
+        public async Task<IActionResult> StoreEmailSettings(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            var data = store.GetStoreBlob().EmailSettings ?? new EmailSettings();
-            return View(new EmailsViewModel(data));
+
+            var blob = store.GetStoreBlob();
+            var data = blob.EmailSettings ?? new EmailSettings();
+            var fallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
+                ? await storeSender.FallbackSender.GetEmailSettings()
+                : null;
+            var vm = new EmailsViewModel(data, fallbackSettings);
+            
+            return View(vm);
         }
 
         [HttpPost("{storeId}/email-settings")]
-        public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command)
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command, [FromForm] bool useCustomSMTP = false)
         {
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
 
+            ViewBag.UseCustomSMTP = useCustomSMTP;
+            model.FallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
+                ? await storeSender.FallbackSender.GetEmailSettings()
+                : null;
+            if (useCustomSMTP)
+            {
+                model.Settings.Validate("Settings.", ModelState);
+            }
             if (command == "Test")
             {
                 try
                 {
-                    if (model.PasswordSet)
+                    if (useCustomSMTP)
                     {
-                        model.Settings.Password = store.GetStoreBlob().EmailSettings.Password;
+                        if (model.PasswordSet)
+                        {
+                            model.Settings.Password = store.GetStoreBlob().EmailSettings.Password;
+                        }
                     }
-                    model.Settings.Validate("Settings.", ModelState);
+                    
                     if (string.IsNullOrEmpty(model.TestEmail))
                         ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
                     if (!ModelState.IsValid)
                         return View(model);
-                    using var client = await model.Settings.CreateSmtpClient();
-                    var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), "BTCPay test", "BTCPay test", false);
+                    var settings = useCustomSMTP ? model.Settings : model.FallbackSettings;
+                    using var client = await settings.CreateSmtpClient();
+                    var message = settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{store.StoreName}: Email test", "You received it, the BTCPay Server SMTP settings work.", false);
                     await client.SendAsync(message);
                     await client.DisconnectAsync(true);
                     TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
@@ -212,17 +239,17 @@ namespace BTCPayServer.Controllers
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
-                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
-            else // if (command == "Save")
+            if (useCustomSMTP)
             {
                 if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
                 {
                     ModelState.AddModelError("Settings.From", "Invalid email");
-                    return View(model);
                 }
+                if (!ModelState.IsValid)
+                    return View(model);
                 var storeBlob = store.GetStoreBlob();
-                if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet && storeBlob.EmailSettings != null)
+                if (storeBlob.EmailSettings != null && new EmailsViewModel(storeBlob.EmailSettings, model.FallbackSettings).PasswordSet)
                 {
                     model.Settings.Password = storeBlob.EmailSettings.Password;
                 }
@@ -230,8 +257,8 @@ namespace BTCPayServer.Controllers
                 store.SetStoreBlob(storeBlob);
                 await _Repo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
-                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
             }
+            return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
         }
 
         private static async Task<bool> IsSetupComplete(IEmailSender emailSender)

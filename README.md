@@ -137,7 +137,7 @@ To begin developing locally, visit our [local development guide](https://docs.bt
 
 While the documentation advises using docker-compose, you may want to build BTCPay Server yourself.
 
-First, install .NET Core SDK v8.0 as specified by the [Microsoft website](https://dotnet.microsoft.com/download/dotnet-core/8.0).
+First, install .NET SDK v8.0 as specified by the [Microsoft website](https://dotnet.microsoft.com/download/dotnet/8.0).
 
 On Powershell:
 
@@ -217,7 +217,6 @@ The BTCPay Server Project is proudly supported by these entities through the [BT
 [![Baillie Gifford](BTCPayServer/wwwroot/img/readme/supporter_bailliegifford.svg)](https://www.bailliegifford.com)
 [![Strike](BTCPayServer/wwwroot/img/readme/supporter_strike.svg)](https://strike.me)
 [![Human Rights Foundation](BTCPayServer/wwwroot/img/readme/supporter_hrf.svg)](https://hrf.org)
-[![Escape to El Salvador](BTCPayServer/wwwroot/img/readme/supporter_esc.svg)](https://escapetoelsalvador.org/)
 [![LunaNode](BTCPayServer/wwwroot/img/readme/supporter_lunanode.svg)](https://lunanode.com)
 [![Wallet of Satoshi](BTCPayServer/wwwroot/img/readme/supporter_walletofsatoshi.svg)](https://walletofsatoshi.com/)
 [![Coincards](BTCPayServer/wwwroot/img/readme/supporter_coincards.svg)](https://coincards.com/)

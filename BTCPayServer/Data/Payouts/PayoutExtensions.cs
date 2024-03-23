@@ -44,18 +44,18 @@ namespace BTCPayServer.Data
 
         public static PayoutBlob GetBlob(this PayoutData data, BTCPayNetworkJsonSerializerSettings serializers)
         {
-            var result =  JsonConvert.DeserializeObject<PayoutBlob>(Encoding.UTF8.GetString(data.Blob), serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode));
+            var result =  JsonConvert.DeserializeObject<PayoutBlob>(data.Blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode));
             result.Metadata ??= new JObject();
             return result;
         }
         public static void SetBlob(this PayoutData data, PayoutBlob blob, BTCPayNetworkJsonSerializerSettings serializers)
         {
-            data.Blob = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode)));
+            data.Blob = JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode)).ToString();
         }
 
         public static JObject GetProofBlobJson(this PayoutData data)
         {
-            return data?.Proof is null ? null : JObject.Parse(Encoding.UTF8.GetString(data.Proof));
+            return data?.Proof is null ? null : JObject.Parse(data.Proof);
         }
         public static void SetProofBlob(this PayoutData data, IPayoutProof blob, JsonSerializerSettings settings)
         {
@@ -76,11 +76,10 @@ namespace BTCPayServer.Data
                 data.Proof = null;
                 return;
             }
-            var bytes = Encoding.UTF8.GetBytes(blob.ToString(Formatting.None));
             // We only update the property if the bytes actually changed, this prevent from hammering the DB too much
-            if (data.Proof is null || bytes.Length != data.Proof.Length || !bytes.SequenceEqual(data.Proof))
+            if (!JToken.DeepEquals(blob, data.Proof is null ? null : JObject.Parse(data.Proof)))
             {
-                data.Proof = bytes;
+                data.Proof = blob.ToString(Formatting.None);
             }
         }
 

@@ -1,14 +1,18 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
+using BTCPayServer.HostedServices;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 
 namespace BTCPayServer.Services.Fees;
 
-public class FeeProviderFactory : IFeeProviderFactory
+public class FeeProviderFactory : IFeeProviderFactory, IPeriodicTask
 {
     public FeeProviderFactory(
     BTCPayServerEnvironment Environment,
@@ -16,7 +20,7 @@ public class FeeProviderFactory : IFeeProviderFactory
     IHttpClientFactory HttpClientFactory,
     IMemoryCache MemoryCache)
     {
-        _FeeProviders = new ();
+        _FeeProviders = new();
 
         // TODO: Pluginify this
         foreach ((var network, var client) in ExplorerClients.GetAll())
@@ -29,7 +33,10 @@ public class FeeProviderFactory : IFeeProviderFactory
                     $"MempoolSpaceFeeProvider-{network.CryptoCode}",
                     HttpClientFactory,
                     network is BTCPayNetwork n &&
-                    n.NBitcoinNetwork.ChainName == ChainName.Testnet));
+                    n.NBitcoinNetwork.ChainName == ChainName.Testnet)
+                {
+                    CachedOnly = true
+                });
             }
             providers.Add(new NBXplorerFeeProvider(client));
             providers.Add(new StaticFeeProvider(new FeeRate(100L, 1)));
@@ -42,4 +49,27 @@ public class FeeProviderFactory : IFeeProviderFactory
     {
         return _FeeProviders.TryGetValue(network, out var prov) ? prov : throw new NotSupportedException($"No fee provider for this network ({network.CryptoCode})");
     }
+
+    public async Task Do(CancellationToken cancellationToken)
+    {
+        try
+        {
+            await RefreshCache(_FeeProviders.Values);
+        }
+        // Do not spam logs if mempoolspace is down
+        catch (TaskCanceledException)
+        {
+        }
+        catch (HttpRequestException)
+        {
+        }
+    }
+    private Task RefreshCache(IEnumerable<IFeeProvider> feeProviders) => Task.WhenAll(feeProviders.Select(fp => RefreshCache(fp)));
+    private Task RefreshCache(IFeeProvider fp) =>
+        fp switch
+        {
+            FallbackFeeProvider ffp => Task.WhenAll(ffp.Providers.Select(p => RefreshCache(p))),
+            MempoolSpaceFeeProvider mempool => mempool.RefreshCache(),
+            _ => Task.CompletedTask
+        };
 }

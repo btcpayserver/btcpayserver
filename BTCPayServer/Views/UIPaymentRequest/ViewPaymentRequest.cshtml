@@ -32,7 +32,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PaymentRequest-@Model.Id">
 <head>
     <partial name="LayoutHead"/>
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>

@@ -135,7 +135,7 @@ namespace BTCPayServer.HostedServices
 
                 (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
                     notificationEmail,
-                    $"{storeName} Invoice Notification - ${invoice.StoreId}",
+                    $"Invoice Notification - ${invoice.StoreId}",
                     emailBody);
             }
 

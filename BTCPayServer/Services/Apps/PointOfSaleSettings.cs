@@ -76,10 +76,10 @@ namespace BTCPayServer.Services.Apps
             });
             DefaultView = PosViewType.Static;
             ShowCustomAmount = false;
-            ShowDiscount = true;
+            ShowDiscount = false;
             ShowSearch = true;
             ShowCategories = true;
-            EnableTips = true;
+            EnableTips = false;
             RequiresRefundEmail = RequiresRefundEmail.InheritFromStore;
         }
         public string Title { get; set; }
@@ -87,6 +87,7 @@ namespace BTCPayServer.Services.Apps
         public string Template { get; set; }
         public bool EnableShoppingCart { get; set; }
         public PosViewType DefaultView { get; set; }
+        public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
         public bool ShowSearch { get; set; } = true;

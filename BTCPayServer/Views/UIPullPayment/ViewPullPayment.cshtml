@@ -25,16 +25,11 @@
 	ViewData.SetBlazorAllowed(false);
 }
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PullPayment-@Model.Id">
 <head>
     <partial name="LayoutHead"/>
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
-    <style>
-        .no-marker > ul {
-            list-style-type: none;
-        }
-    </style>
 </head>
 <body class="min-vh-100">
     <div id="app" class="d-flex flex-column min-vh-100 pb-l">
@@ -207,15 +202,15 @@
             </p>
 			@if (Model.LnurlEndpoint is not null)
 			{
-            <p>
-                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
-					Setup Boltcard
-                </a>
-                <span>&nbsp;|&nbsp;</span>
-                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
-                    Reset Boltcard
-                </a>
-            </p>
+				<p id="BoltcardActions" style="visibility:hidden">
+					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
+						Setup Boltcard
+					</a>
+					<span>&nbsp;|&nbsp;</span>
+					<a id="ResetBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
+						Reset Boltcard
+					</a>
+				</p>
 			}
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 Powered by <partial name="_StoreFooterLogo" />
@@ -231,6 +226,15 @@
     <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+			const isAndroid = /(android)/i.test(navigator.userAgent);
+			if (isAndroid) {
+				document.getElementById("SetupBoltcard").setAttribute('target', '_blank');
+				document.getElementById("SetupBoltcard").setAttribute('href', @Safe.Json(@Model.SetupDeepLink));
+				document.getElementById("ResetBoltcard").setAttribute('target', '_blank');
+				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(@Model.ResetDeepLink));
+			}
+			document.getElementById("BoltcardActions").style.visibility = "visible";
+
             window.qrApp = initQRShow({});
             delegate('click', 'button[page-qr]', event => {
                 qrApp.title = "Pull Payment QR";

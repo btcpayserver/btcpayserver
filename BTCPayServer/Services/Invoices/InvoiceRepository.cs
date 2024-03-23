@@ -319,8 +319,6 @@ namespace BTCPayServer.Services.Invoices
                 var paymentMethod = invoiceEntity.GetPaymentMethod(network, paymentMethodDetails.GetPaymentType());
                 if (paymentMethod == null)
                     return false;
-
-                var existingPaymentMethod = paymentMethod.GetPaymentMethodDetails();
                 paymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
 #pragma warning disable CS0618
                 if (network.IsBTC)
@@ -358,7 +356,6 @@ namespace BTCPayServer.Services.Invoices
                 var invoice = await context.Invoices.FindAsync(invoiceId);
                 if (invoice == null)
                     return;
-                var network = paymentMethod.Network;
                 var invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
                 var newDetails = paymentMethod.GetPaymentMethodDetails();
                 var existing = invoiceEntity.GetPaymentMethod(paymentMethod.GetId());
@@ -780,7 +777,10 @@ retry:
                 query = query.Where(i => unusual == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
-            query = query.OrderByDescending(q => q.Created);
+            if (queryObject.OrderByDesc)
+                query = query.OrderByDescending(q => q.Created);
+            else
+                query = query.OrderBy(q => q.Created);
 
             if (queryObject.Skip != null)
                 query = query.Skip(queryObject.Skip.Value);
@@ -805,7 +805,7 @@ retry:
                 query = query.Include(o => o.Events);
             if (queryObject.IncludeRefunds)
                 query = query.Include(o => o.Refunds).ThenInclude(refundData => refundData.PullPaymentData);
-            var data = await query.ToArrayAsync(cancellationToken).ConfigureAwait(false);
+            var data = await query.AsNoTracking().ToArrayAsync(cancellationToken).ConfigureAwait(false);
             return data.Select(ToEntity).ToArray();
         }
         
@@ -977,6 +977,7 @@ retry:
         public bool IncludeEvents { get; set; }
         public bool IncludeArchived { get; set; } = true;
         public bool IncludeRefunds { get; set; }
+        public bool OrderByDesc { get; set; } = true;
     }
 
     public class InvoiceStatistics : Dictionary<PaymentMethodId, InvoiceStatistics.Contribution>

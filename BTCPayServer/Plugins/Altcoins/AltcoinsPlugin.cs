@@ -25,7 +25,6 @@ namespace BTCPayServer.Plugins.Altcoins
         public override void Execute(IServiceCollection applicationBuilder)
         {
             var services = (PluginServiceCollection)applicationBuilder;
-            var onChain = new Payments.PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike);
 
             NBXplorerNetworkProvider = services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>();
             ChainName = NBXplorerNetworkProvider.NetworkType;

@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Reporting;
 
 namespace BTCPayServer.Services
@@ -11,10 +9,10 @@ namespace BTCPayServer.Services
         {
             foreach (var r in reportProviders)
             {
-                ReportProviders.Add(r.Name, r);
+                ReportProviders.TryAdd(r.Name, r);
             }
         }
 
-        public Dictionary<string, ReportProvider> ReportProviders { get; } = new Dictionary<string, ReportProvider>();
+        public Dictionary<string, ReportProvider> ReportProviders { get; } = new();
     }
 }

@@ -1,5 +1,6 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
 @model List<BTCPayServer.Data.FormData>
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -17,7 +18,7 @@
 					<vc:icon symbol="info" />
 				</a>
 			</h3>
-            <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm">
+            <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm" permission="@Policies.CanModifyStoreSettings">
                 Create Form
             </a>
         </div>
@@ -27,7 +28,7 @@
                 <thead>
                     <tr>
                         <th>Name</th>
-                        <th class="text-end">Actions</th>
+                        <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -35,10 +36,10 @@
                     {
                         <tr>
                             <td>
-                                <a asp-action="Modify" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Edit-@item.Name">@item.Name</a>
+                                <a asp-action="Modify" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Edit-@item.Name" permission="@Policies.CanModifyStoreSettings">@item.Name</a>
+                                <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" not-permission="@Policies.CanModifyStoreSettings">@item.Name</a>
                             </td>
-                            
-                            <td class="text-end">
+                            <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                                 <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="DELETE">Remove</a> - 
                                 <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name">View</a>
                             </td>
@@ -56,4 +57,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete form", "This form will be removed from this store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete form", "This form will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />

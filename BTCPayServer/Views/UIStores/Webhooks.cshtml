@@ -1,4 +1,6 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebhooksViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -8,7 +10,7 @@
     <div class="col-xl-8 col-xxl-constrain">
         <div class="d-flex align-items-center justify-content-between mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>
-            <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
+            <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
                 Create Webhook
             </a>
         </div>
@@ -21,7 +23,7 @@
                     <tr>
                         <th>Status</th>
                         <th>Url</th>
-                        <th class="text-end">Actions</th>
+                        <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -46,7 +48,7 @@
                                 }
                             </td>
                             <td class="d-block text-break">@wh.Url</td>
-                            <td class="text-end text-md-nowrap">
+                            <td class="actions-col text-md-nowrap" permission="@Policies.CanModifyStoreSettings">
                                 <a asp-action="TestWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
                                 <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
                                 <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE">Delete</a>
@@ -56,7 +58,7 @@
                 </tbody>
             </table>
 
-            <partial name="_Confirm" model="@(new ConfirmModel("Delete Webhook", "This webhook will be removed from this store.", "Delete"))" />
+            <partial name="_Confirm" model="@(new ConfirmModel("Delete Webhook", "This webhook will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
         }
         else
         {

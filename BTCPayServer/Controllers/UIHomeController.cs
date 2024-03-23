@@ -29,7 +29,6 @@ namespace BTCPayServer.Controllers
     {
         private readonly ThemeSettings _theme;
         private readonly StoreRepository _storeRepository;
-        private readonly BTCPayNetworkProvider _networkProvider;
         private IHttpClientFactory HttpClientFactory { get; }
         private SignInManager<ApplicationUser> SignInManager { get; }
 
@@ -41,14 +40,12 @@ namespace BTCPayServer.Controllers
                               ThemeSettings theme,
                               LanguageService languageService,
                               StoreRepository storeRepository,
-                              BTCPayNetworkProvider networkProvider,
                               IWebHostEnvironment environment,
                               SignInManager<ApplicationUser> signInManager)
         {
             _theme = theme;
             HttpClientFactory = httpClientFactory;
             LanguageService = languageService;
-            _networkProvider = networkProvider;
             _storeRepository = storeRepository;
             SignInManager = signInManager;
             _WebRootFileProvider = environment.WebRootFileProvider;
@@ -76,17 +73,17 @@ namespace BTCPayServer.Controllers
                 if (storeId != null)
                 {
                     // verify store exists and redirect to it
-                    var store = await _storeRepository.FindStore(storeId, userId);
+                    var store = await _storeRepository.FindStore(storeId);
                     if (store != null)
                     {
-                        return RedirectToStore(userId, store);
+                        return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
                     }
                 }
 
-                var stores = await _storeRepository.GetStoresByUserId(userId);
+                var stores = await _storeRepository.GetStoresByUserId(userId!);
                 var activeStore = stores.FirstOrDefault(s => !s.Archived);
                 return activeStore != null
-                    ? RedirectToStore(userId, activeStore)
+                    ? RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId = activeStore.Id })
                     : RedirectToAction(nameof(UIUserStoresController.CreateStore), "UIUserStores");
             }
 
@@ -197,15 +194,6 @@ namespace BTCPayServer.Controllers
         public IActionResult Error()
         {
             return View(new ErrorViewModel { RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier });
-        }
-        public static RedirectToActionResult RedirectToStore(string userId, StoreData store)
-        {
-            var perms = store.GetPermissionSet(userId);
-            if (perms.Contains(Policies.CanModifyStoreSettings, store.Id))
-                return new RedirectToActionResult("Dashboard", "UIStores", new {storeId = store.Id});
-            if (perms.Contains(Policies.CanViewInvoices, store.Id))
-                return new RedirectToActionResult("ListInvoices", "UIInvoice", new { storeId = store.Id });
-            return new RedirectToActionResult("Index", "UIStores", new {storeId = store.Id});
         }
     }
 }

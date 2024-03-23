@@ -26,16 +26,16 @@
         {
             @if (Model.Store != null)
             {
-                <div class="accordion-item" permission="@Policies.CanModifyStoreSettings">
+                <div class="accordion-item" permission="@Policies.CanViewStoreSettings">
                     <div class="accordion-body">
                         <ul class="navbar-nav">
-                            <li class="nav-item">
+                            <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                 <a asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Dashboard)" id="StoreNav-Dashboard">
                                     <vc:icon symbol="home"/>
                                     <span>Dashboard</span>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" permission="@Policies.CanViewStoreSettings">
                                 <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
                                     <vc:icon symbol="settings"/>
                                     <span>Settings</span>
@@ -115,7 +115,6 @@
                                         </a>
                                     </li>
                                 }
-                                
                             </ul>
                         </div>
                     </div>
@@ -252,7 +251,7 @@
     {
         <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                <a asp-area="" asp-controller="UIServer" asp-action="ListUsers" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Theme) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
+                <a asp-area="" asp-controller="UIServer" asp-action="ListUsers" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Branding) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
                     <vc:icon symbol="server-settings"/>
                     <span>Server Settings</span>
                 </a>

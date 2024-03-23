@@ -34,10 +34,9 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         _payoutProcessorService = payoutProcessorService;
     }
 
-
     [HttpGet("~/stores/{storeId}/payout-processors/onchain-automated/{cryptocode}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Configure(string storeId, string cryptoCode)
     {
         if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(id =>

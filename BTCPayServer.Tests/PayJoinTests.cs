@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
@@ -68,7 +69,7 @@ namespace BTCPayServer.Tests
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
-            var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
+            tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var repo = tester.PayTester.GetService<UTXOLocker>();
             var outpoint = RandomOutpoint();
 
@@ -189,10 +190,10 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
-            var payjoinRepository = tester.PayTester.GetService<UTXOLocker>();
+            tester.PayTester.GetService<UTXOLocker>();
             broadcaster.Disable();
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
-            var btcPayWallet = tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
+            tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet(network);
             var cashCow = tester.ExplorerNode;
             cashCow.Generate(2); // get some money in case
 
@@ -218,7 +219,7 @@ namespace BTCPayServer.Tests
                     receiverUser.GrantAccess(true);
                     receiverUser.RegisterDerivationScheme("BTC", receiverAddressType, true);
                     await receiverUser.ModifyOnchainPaymentSettings(p => p.PayJoinEnabled = true);
-                    var receiverCoin = await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
+                    await receiverUser.ReceiveUTXO(Money.Satoshis(810), network);
 
                     string errorCode = receiverAddressType == senderAddressType ? null : "unavailable|any UTXO available";
                     var invoice = receiverUser.BitPay.CreateInvoice(new Invoice() { Price = 50000, Currency = "SATS", FullNotifications = true });
@@ -236,7 +237,7 @@ namespace BTCPayServer.Tests
                     txBuilder.SendEstimatedFees(new FeeRate(50m));
                     var psbt = txBuilder.BuildPSBT(false);
                     psbt = await senderUser.Sign(psbt);
-                    var pj = await senderUser.SubmitPayjoin(invoice, psbt, errorCode, false);
+                    await senderUser.SubmitPayjoin(invoice, psbt, errorCode, false);
                 }
             }
         }
@@ -250,11 +251,11 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             var receiver = s.CreateNewStore();
             s.EnableCheckout(CheckoutType.V1);
-            var receiverSeed = s.GenerateWallet("BTC", "", true, true, ScriptPubKeyType.Segwit);
+            s.GenerateWallet("BTC", "", true, true, ScriptPubKeyType.Segwit);
             var receiverWalletId = new WalletId(receiver.storeId, "BTC");
 
             var sender = s.CreateNewStore();
-            var senderSeed = s.GenerateWallet("BTC", "", true, true, ScriptPubKeyType.Segwit);
+            s.GenerateWallet("BTC", "", true, true, ScriptPubKeyType.Segwit);
             var senderWalletId = new WalletId(sender.storeId, "BTC");
 
             await s.Server.ExplorerNode.GenerateAsync(1);
@@ -305,13 +306,13 @@ namespace BTCPayServer.Tests
                 var cryptoCode = "BTC";
                 var receiver = s.CreateNewStore();
                 s.EnableCheckout(CheckoutType.V1);
-                var receiverSeed = s.GenerateWallet(cryptoCode, "", true, true, format);
+                s.GenerateWallet(cryptoCode, "", true, true, format);
                 var receiverWalletId = new WalletId(receiver.storeId, cryptoCode);
 
                 //payjoin is enabled by default.
                 var invoiceId = s.CreateInvoice(receiver.storeId);
                 s.GoToInvoiceCheckout(invoiceId);
-                var bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                var bip21 = s.Driver.WaitForElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
                 Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
@@ -320,14 +321,14 @@ namespace BTCPayServer.Tests
                 Assert.True(s.Driver.FindElement(By.Id("PayJoinEnabled")).Selected);
 
                 var sender = s.CreateNewStore();
-                var senderSeed = s.GenerateWallet(cryptoCode, "", true, true, format);
+                s.GenerateWallet(cryptoCode, "", true, true, format);
                 var senderWalletId = new WalletId(sender.storeId, cryptoCode);
                 await s.Server.ExplorerNode.GenerateAsync(1);
                 await s.FundStoreWallet(senderWalletId);
 
                 invoiceId = s.CreateInvoice(receiver.storeId);
                 s.GoToInvoiceCheckout(invoiceId);
-                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                bip21 = s.Driver.WaitForElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
                 Assert.Contains($"{PayjoinClient.BIP21EndpointKey}=", bip21);
 
@@ -361,7 +362,7 @@ namespace BTCPayServer.Tests
                 //let's do it all again, except now the receiver has funds and is able to payjoin
                 invoiceId = s.CreateInvoice();
                 s.GoToInvoiceCheckout(invoiceId);
-                bip21 = s.Driver.FindElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
+                bip21 = s.Driver.WaitForElement(By.ClassName("payment__details__instruction__open-wallet__btn"))
                     .GetAttribute("href");
                 Assert.Contains($"{PayjoinClient.BIP21EndpointKey}", bip21);
 
@@ -374,7 +375,7 @@ namespace BTCPayServer.Tests
                 s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).Clear();
                 s.Driver.FindElement(By.Id("FeeSatoshiPerByte")).SendKeys("2");
                 s.Driver.FindElement(By.Id("SignTransaction")).Click();
-                var txId = await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
+                await s.Server.WaitForEvent<NewOnChainTransactionEvent>(() =>
                 {
                     s.Driver.FindElement(By.CssSelector("button[value=payjoin]")).Click();
                     return Task.CompletedTask;
@@ -406,7 +407,6 @@ namespace BTCPayServer.Tests
                 await TestUtils.EventuallyAsync(async () =>
                 {
                     var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
-                    var dto = invoice.EntityToDTO();
                     Assert.Equal(InvoiceStatusLegacy.Paid, invoice.Status);
                 });
                 s.GoToInvoices(receiver.storeId);
@@ -415,13 +415,13 @@ namespace BTCPayServer.Tests
                 Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
                     StringComparison.InvariantCultureIgnoreCase));
 
+                s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
+                s.Driver.WaitForElement(By.CssSelector("#WalletTransactionsList tr"));
                 TestUtils.Eventually(() =>
                 {
-                    s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
-                    Assert.Contains(invoiceId, s.Driver.PageSource);
                     Assert.Contains("payjoin", s.Driver.PageSource);
-                    //this label does not always show since input gets used
-                    // Assert.Contains("payjoin-exposed", s.Driver.PageSource);
+                    // Either the invoice id or the payjoin-exposed label, depending on the input having been used
+                    Assert.Matches(new Regex($"({invoiceId}|payjoin-exposed)"), s.Driver.PageSource);
                 });
             }
         }
@@ -875,7 +875,6 @@ retry:
                     new Invoice() { Price = 0.02m, Currency = "BTC", FullNotifications = true });
                 cashCow.SendToAddress(BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network),
                     Money.Coins(0.06m));
-                var receiverWalletId = new WalletId(receiverUser.StoreId, "BTC");
 
                 //give the cow some cash
                 await cashCow.GenerateAsync(1);
@@ -963,8 +962,6 @@ retry:
                     senderUser.GenerateWalletResponseV.MasterHDKey.Derive(signingKeySettings.GetRootedKeyPath()
                         .KeyPath);
 
-
-                var n = tester.ExplorerClient.Network.NBitcoinNetwork;
                 var Invoice1Coin1 = tester.ExplorerClient.Network.NBitcoinNetwork.CreateTransactionBuilder()
                     .SetChange(senderChange)
                     .Send(parsedBip21.Address, parsedBip21.Amount)
@@ -973,7 +970,7 @@ retry:
                     .SendEstimatedFees(new FeeRate(100m))
                     .BuildTransaction(true);
 
-                var Invoice1Coin2 = tester.ExplorerClient.Network.NBitcoinNetwork.CreateTransactionBuilder()
+                tester.ExplorerClient.Network.NBitcoinNetwork.CreateTransactionBuilder()
                     .SetChange(senderChange)
                     .Send(parsedBip21.Address, parsedBip21.Amount)
                     .AddCoins(coin2.Coin)
@@ -1133,8 +1130,7 @@ retry:
 
                 var invoice7Coin6Response1Tx = await senderUser.SubmitPayjoin(invoice7, invoice7Coin6Tx, btcPayNetwork);
                 var Invoice7Coin6Response1TxSigned = invoice7Coin6TxBuilder.SignTransaction(invoice7Coin6Response1Tx);
-                var contributedInputsInvoice7Coin6Response1TxSigned =
-                    Invoice7Coin6Response1TxSigned.Inputs.Single(txin => coin6.OutPoint != txin.PrevOut);
+                Invoice7Coin6Response1TxSigned.Inputs.Single(txin => coin6.OutPoint != txin.PrevOut);
 
 
                 ////var receiverWalletPayJoinState = payJoinStateProvider.Get(receiverWalletId);

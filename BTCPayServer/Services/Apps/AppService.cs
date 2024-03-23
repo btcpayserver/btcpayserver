@@ -45,7 +45,6 @@ namespace BTCPayServer.Services.Apps
         readonly CurrencyNameTable _Currencies;
         private readonly DisplayFormatter _displayFormatter;
         private readonly StoreRepository _storeRepository;
-        private readonly HtmlSanitizer _HtmlSanitizer;
         public CurrencyNameTable Currencies => _Currencies;
 
         public AppService(
@@ -54,15 +53,13 @@ namespace BTCPayServer.Services.Apps
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencies,
             DisplayFormatter displayFormatter,
-            StoreRepository storeRepository,
-            HtmlSanitizer htmlSanitizer)
+            StoreRepository storeRepository)
         {
             _appTypes = apps.ToDictionary(a => a.Type, a => a);
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
             _storeRepository = storeRepository;
-            _HtmlSanitizer = htmlSanitizer;
             _displayFormatter = displayFormatter;
         }
 #nullable enable
@@ -371,10 +368,26 @@ namespace BTCPayServer.Services.Apps
                 return null;
             await using var ctx = _ContextFactory.CreateContext();
             var app = await ctx.UserStore
-                            .Include(store => store.StoreRole)
-                            .Where(us => us.ApplicationUserId == userId && us.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
-                            .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
-               .FirstOrDefaultAsync();
+                .Include(store => store.StoreRole)
+                .Where(us => us.ApplicationUserId == userId && us.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
+                .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
+                .FirstOrDefaultAsync();
+            if (app == null)
+                return null;
+            if (type != null && type != app.AppType)
+                return null;
+            return app;
+        }
+
+        public async Task<AppData?> GetAppData(string userId, string appId, string? type = null)
+        {
+            if (userId == null || appId == null)
+                return null;
+            await using var ctx = _ContextFactory.CreateContext();
+            var app = await ctx.UserStore
+                .Where(us => us.ApplicationUserId == userId && us.StoreData != null && us.StoreData.UserStores.Any(u => u.ApplicationUserId == userId))
+                .SelectMany(us => us.StoreData.Apps.Where(a => a.Id == appId))
+                .FirstOrDefaultAsync();
             if (app == null)
                 return null;
             if (type != null && type != app.AppType)

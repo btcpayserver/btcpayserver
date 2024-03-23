@@ -1,4 +1,7 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
     Layout = "../Shared/_NavLayout.cshtml";
@@ -12,7 +15,7 @@
         {
             <div asp-validation-summary="All"></div>
         }
-        <form method="post">
+        <form method="post" permissioned="@Policies.CanModifyStoreSettings">
             <input type="hidden" asp-for="ShowScripting" />
             @if (Model.ShowScripting)
             {
@@ -141,8 +144,8 @@ X_X = kraken(X_X);</code></pre>
             }
             <div class="form-group">
                 <label class="d-flex align-items-center">
-                    <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
-                    <div class="">
+                    <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal" permission="@Policies.CanModifyStoreSettings">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
+                    <div>
                         <span>Advanced rate rule scripting</span>
                         <div class="form-text">
                             @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
@@ -164,7 +167,7 @@ X_X = kraken(X_X);</code></pre>
                 <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
                 <div class="d-flex">
                     <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
-                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test">Test</button>
+                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test" permission="@Policies.CanModifyStoreSettings">Test</button>
                 </div>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
             </div>
@@ -180,8 +183,7 @@ X_X = kraken(X_X);</code></pre>
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" />
-
+<partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageHeadContent {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">

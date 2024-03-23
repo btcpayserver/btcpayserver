@@ -19,6 +19,7 @@ namespace BTCPayServer.Client.Models
     {
         public string Title { get; set; }
         public string DefaultView { get; set; }
+        public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
         public bool ShowSearch { get; set; }

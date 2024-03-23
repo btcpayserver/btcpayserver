@@ -1,11 +1,21 @@
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components.MainLogo
+@inject SettingsRepository SettingsRepository
 @{
     Layout = "_LayoutSimple";
     ViewBag.ShowTitle ??= true;
     ViewBag.ShowLeadText ??= false;
+    
+    var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
 }
 
 @section PageHeadContent {
     <style>
+        .alert {
+            max-width: 35em;
+            margin: var(--btcpay-space-l) auto;
+        }
         .account-form {
             max-width: 35em;
             margin: 0 auto var(--btcpay-space-xl);
@@ -33,7 +43,7 @@
             <vc:main-logo />
         </a>
 
-        <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
+        <h1 class="h2 mb-3">Welcome to @(string.IsNullOrWhiteSpace(settings.ServerName) ? "your BTCPay\u00a0Server" : settings.ServerName)</h1>
         @if (ViewBag.ShowLeadText)
         {
             <p class="lead">
@@ -49,10 +59,17 @@
 <div class="account-form">
     @if (ViewBag.ShowTitle)
     {
-	  <h4 v-pre>@ViewData["Title"]</h4>
+        <h4>@ViewData["Title"]</h4>
     }
     @RenderBody()
 </div>
+
+@if (!string.IsNullOrWhiteSpace(settings.ContactUrl))
+{
+    <p class="text-center mt-n5 mb-5 pt-2">
+        <a class="text-secondary" href="@settings.ContactUrl" id="ContactLink">Contact Us</a>
+    </p>
+}
 
 <div class="row justify-content-center mt-5">
     <div class="col">

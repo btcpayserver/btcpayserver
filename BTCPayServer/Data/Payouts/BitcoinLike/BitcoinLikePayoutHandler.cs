@@ -134,7 +134,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         return raw.ToObject<ManualPayoutProof>();
     }
 
-    public static void ParseProofType(byte[] proof, out JObject obj, out string type)
+    public static void ParseProofType(string proof, out JObject obj, out string type)
     {
         type = null;
         if (proof is null)
@@ -143,7 +143,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
             return;
         }
 
-        obj = JObject.Parse(Encoding.UTF8.GetString(proof));
+        obj = JObject.Parse(proof);
         TryParseProofType(obj, out type);
     }
 

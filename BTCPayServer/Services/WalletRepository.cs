@@ -393,8 +393,7 @@ namespace BTCPayServer.Services
             }
             else
             {
-                var conn = ctx.Database.GetDbConnection();
-                await conn.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) ON CONFLICT DO NOTHING", links);
+                await connection.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) ON CONFLICT DO NOTHING", links);
             }
         }
 
@@ -700,11 +699,9 @@ namespace BTCPayServer.Services
             walletObjectLinks ??= new List<WalletObjectLinkData>();
             var objs = walletObjects.Concat(ExtractObjectsFromLinks(walletObjectLinks).Except(walletObjects)).ToArray();
             await using var ctx = _ContextFactory.CreateContext();
-            await using var connection = ctx.Database.GetDbConnection();
-            await connection.OpenAsync();
+            var connection = ctx.Database.GetDbConnection();
             await EnsureWalletObjects(ctx,connection, objs);
             await EnsureWalletObjectLinks(ctx,connection, walletObjectLinks);
-            await connection.CloseAsync();
         }
 #nullable restore
     }

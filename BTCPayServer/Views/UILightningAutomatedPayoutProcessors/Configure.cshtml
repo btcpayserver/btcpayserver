@@ -1,4 +1,4 @@
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.Lightning.UILightningAutomatedPayoutProcessorsController.LightningTransferViewModel
@@ -17,9 +17,9 @@
         {
             <div asp-validation-summary="All"></div>
         }
-        <form method="post">
-            <div class="form-check">
-                <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="form-check-input" />
+        <form method="post" permissioned="@Policies.CanModifyStoreSettings">
+            <div class="d-flex my-3">
+                <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label">Process approved payouts instantly</label>
                 <span asp-validation-for="ProcessNewPayoutsInstantly" class="text-danger"></span>
             </div>

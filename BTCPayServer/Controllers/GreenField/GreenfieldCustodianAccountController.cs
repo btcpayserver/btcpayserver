@@ -326,7 +326,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 if (result == null)
                 {
                     return this.CreateAPIError(404, "trade-not-found",
-                        $"Could not find the the trade with ID {tradeId} on {custodianAccount.Name}");
+                        $"Could not find the trade with ID {tradeId} on {custodianAccount.Name}");
                 }
                 return Ok(ToModel(result, accountId, custodianAccount.CustodianCode));
             }

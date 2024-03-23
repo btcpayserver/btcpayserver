@@ -6,7 +6,6 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -35,7 +34,7 @@ namespace BTCPayServer.Controllers
             _rateFactory = rateFactory;
         }
 
-        [HttpGet()]
+        [HttpGet]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettingsUnscoped)]
         public async Task<IActionResult> ListStores(bool archived = false)
         {
@@ -90,7 +89,7 @@ namespace BTCPayServer.Controllers
             await _repo.CreateStore(GetUserId(), store);
             CreatedStoreId = store.Id;
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
-            return RedirectToAction(nameof(UIStoresController.Dashboard), "UIStores", new
+            return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new
             {
                 storeId = store.Id
             });

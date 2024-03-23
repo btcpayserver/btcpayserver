@@ -132,7 +132,7 @@ namespace BTCPayServer.Payments.Lightning
                 // LNDhub-compatible implementations might not offer all of GetInfo data.
                 // Skip checks in those cases, see https://github.com/lnbits/lnbits/issues/1182
                 var isLndHub = client is LndHubLightningClient;
-                
+
                 LightningNodeInformation info;
                 try
                 {
@@ -163,11 +163,14 @@ namespace BTCPayServer.Payments.Lightning
                     ? info.NodeInfoList.Where(i => i.IsTor == preferOnion.Value).ToArray()
                     : info.NodeInfoList.Select(i => i).ToArray();
 
-                var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
-                if (blocksGap > 10 && !(isLndHub && info.BlockHeight == 0))
+                if (summary.Status is not null)
                 {
-                    throw new PaymentMethodUnavailableException(
-                        $"The lightning node is not synched ({blocksGap} blocks left)");
+                    var blocksGap = summary.Status.ChainHeight - info.BlockHeight;
+                    if (blocksGap > 10 && !(isLndHub && info.BlockHeight == 0))
+                    {
+                        throw new PaymentMethodUnavailableException(
+                            $"The lightning node is not synched ({blocksGap} blocks left)");
+                    }
                 }
                 return nodeInfo;
             }

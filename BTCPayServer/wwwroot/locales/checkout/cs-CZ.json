@@ -39,5 +39,7 @@
   "submitting_nfc": "Odesílání NFC...",
   "payment_received": "Platba přijata",
   "payment_received_body": "Vaše platba byla přijata a nyní se zpracovává",
-  "payment_received_confirmations": "Jakmile vaše platba obdrží {{requiredConfirmations}} potvrzení na blockchainu {{cryptoCode}}, vaše faktura bude uhrazena."
+  "payment_received_confirmations": "Jakmile vaše platba obdrží {{requiredConfirmations}} potvrzení na blockchainu {{cryptoCode}}, vaše faktura bude uhrazena.",
+  "invoice_paidpartial_body": "Faktura je platná pouze po dobu {{minut}} minut. Tato faktura vypršela s částečnou platbou. Prosím, kontaktujte nás, abychom mohli splnit vaši objednávku.",
+  "contact_us": "Kontaktujte nás"
 }

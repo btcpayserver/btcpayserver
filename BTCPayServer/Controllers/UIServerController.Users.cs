@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,25 +7,22 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
-using MimeKit;
 
 namespace BTCPayServer.Controllers
 {
     public partial class UIServerController
     {
-        [Route("server/users")]
+        [HttpGet("server/users")]
         public async Task<IActionResult> ListUsers(
             [FromServices] RoleManager<IdentityRole> roleManager,
-        UsersViewModel model,
-            string sortOrder = null
-        )
+            UsersViewModel model,
+            string sortOrder = null)
         {
             model = this.ParseListQuery(model ?? new UsersViewModel());
 
@@ -57,6 +53,8 @@ namespace BTCPayServer.Controllers
             model.Roles = roleManager.Roles.ToDictionary(role => role.Id, role => role.Name);
             model.Users = await usersQuery
                 .Include(user => user.UserRoles)
+                .Include(user => user.UserStores)
+                .ThenInclude(data => data.StoreData)
                 .Skip(model.Skip)
                 .Take(model.Count)
                 .Select(u => new UsersViewModel.UserViewModel
@@ -64,40 +62,56 @@ namespace BTCPayServer.Controllers
                     Name = u.UserName,
                     Email = u.Email,
                     Id = u.Id,
-                    Verified = u.EmailConfirmed || !u.RequiresEmailConfirmation,
+                    EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
+                    Approved = u.RequiresApproval ? u.Approved : null,
                     Created = u.Created,
                     Roles = u.UserRoles.Select(role => role.RoleId),
-                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime
+                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
+                    Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                 })
                 .ToListAsync();
 
             return View(model);
         }
 
-        [Route("server/users/{userId}")]
+        [HttpGet("server/users/{userId}")]
         public new async Task<IActionResult> User(string userId)
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
             var roles = await _UserManager.GetRolesAsync(user);
-            var userVM = new UsersViewModel.UserViewModel
+            var model = new UsersViewModel.UserViewModel
             {
                 Id = user.Id,
                 Email = user.Email,
-                Verified = user.EmailConfirmed || !user.RequiresEmailConfirmation,
+                EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
+                Approved = user.RequiresApproval ? user.Approved : null,
                 IsAdmin = Roles.HasServerAdmin(roles)
             };
-            return View(userVM);
+            return View(model);
         }
 
-        [Route("server/users/{userId}")]
-        [HttpPost]
+        [HttpPost("server/users/{userId}")]
         public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel)
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
                 return NotFound();
+
+            bool? propertiesChanged = null;
+            bool? adminStatusChanged = null;
+            bool? approvalStatusChanged = null;
+
+            if (user.RequiresApproval && viewModel.Approved.HasValue && user.Approved != viewModel.Approved.Value)
+            {
+                approvalStatusChanged = await _userService.SetUserApproval(user.Id, viewModel.Approved.Value, Request.GetAbsoluteRootUri());
+            }
+            if (user.RequiresEmailConfirmation && viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
+            {
+                user.EmailConfirmed = viewModel.EmailConfirmed.Value;
+                propertiesChanged = true;
+            }
 
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
@@ -105,13 +119,22 @@ namespace BTCPayServer.Controllers
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
-                return View(viewModel); // return
+                return View(viewModel);
             }
 
             if (viewModel.IsAdmin != wasAdmin)
             {
-                var success = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);
-                if (success)
+                adminStatusChanged = await _userService.SetAdminUser(user.Id, viewModel.IsAdmin);
+            }
+
+            if (propertiesChanged is true)
+            {
+                propertiesChanged = await _UserManager.UpdateAsync(user) is { Succeeded: true };
+            }
+
+            if (propertiesChanged.HasValue || adminStatusChanged.HasValue || approvalStatusChanged.HasValue)
+            {
+                if (propertiesChanged is not false && adminStatusChanged is not false && approvalStatusChanged is not false)
                 {
                     TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
                 }
@@ -121,45 +144,38 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            return RedirectToAction(nameof(User), new { userId = userId });
+            return RedirectToAction(nameof(User), new { userId });
         }
 
-        [Route("server/users/new")]
-        [HttpGet]
+        [HttpGet("server/users/new")]
         public IActionResult CreateUser()
         {
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             return View();
         }
 
-        [Route("server/users/new")]
-        [HttpPost]
+        [HttpPost("server/users/new")]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
-            var requiresConfirmedEmail = _policiesSettings.RequiresConfirmedEmail;
-            ViewData["AllowRequestEmailConfirmation"] = requiresConfirmedEmail;
+            ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
             {
-                IdentityResult result;
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
                     Email = model.Email,
                     EmailConfirmed = model.EmailConfirmed,
-                    RequiresEmailConfirmation = requiresConfirmedEmail,
+                    RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
+                    RequiresApproval = _policiesSettings.RequiresUserApproval,
+                    Approved = true, // auto-approve users created by an admin
                     Created = DateTimeOffset.UtcNow
                 };
 
-                if (!string.IsNullOrEmpty(model.Password))
-                {
-                    result = await _UserManager.CreateAsync(user, model.Password);
-                }
-                else
-                {
-                    result = await _UserManager.CreateAsync(user);
-                }
+                var result = string.IsNullOrEmpty(model.Password)
+                    ? await _UserManager.CreateAsync(user)
+                    : await _UserManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
@@ -167,37 +183,30 @@ namespace BTCPayServer.Controllers
                         model.IsAdmin = false;
 
                     var tcs = new TaskCompletionSource<Uri>();
+                    var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
 
-                    _eventAggregator.Publish(new UserRegisteredEvent()
+                    _eventAggregator.Publish(new UserRegisteredEvent
                     {
                         RequestUri = Request.GetAbsoluteRootUri(),
+                        Kind = UserRegisteredEventKind.Invite,
                         User = user,
-                        Admin = model.IsAdmin is true,
+                        InvitedByUser = currentUser,
+                        Admin = model.IsAdmin,
                         CallbackUrlGenerated = tcs
                     });
+                    
                     var callbackUrl = await tcs.Task;
-
-                    if (user.RequiresEmailConfirmation && !user.EmailConfirmed)
+                    var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+                    var info = settings.IsComplete()
+                        ? "An invitation email has been sent.<br/>You may alternatively"
+                        : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
+                    
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
-
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                            AllowDismiss = false,
-                            Html =
-                                $"Account created without a set password. An email will be sent (if configured) to set the password.<br/> You may alternatively share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
-                        });
-                    }
-                    else if (!await _UserManager.HasPasswordAsync(user))
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                            AllowDismiss = false,
-                            Html =
-                                $"Account created without a set password. An email will be sent (if configured) to set the password.<br/> You may alternatively share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
-                        });
-                    }
+                        Severity = StatusMessageModel.StatusSeverity.Success,
+                        AllowDismiss = false,
+                        Html = $"Account successfully created. {info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
+                    });
                     return RedirectToAction(nameof(ListUsers));
                 }
 
@@ -223,7 +232,6 @@ namespace BTCPayServer.Controllers
             {
                 if (await _userService.IsUserTheOnlyOneAdmin(user))
                 {
-                    // return
                     return View("Confirm", new ConfirmModel("Delete admin",
                         $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be removed."));
                 }
@@ -278,6 +286,29 @@ namespace BTCPayServer.Controllers
             await _userService.ToggleUser(userId, enable ? null : DateTimeOffset.MaxValue);
 
             TempData[WellKnownTempData.SuccessMessage] = $"User {(enable ? "enabled" : "disabled")}";
+            return RedirectToAction(nameof(ListUsers));
+        }
+
+        [HttpGet("server/users/{userId}/approve")]
+        public async Task<IActionResult> ApproveUser(string userId, bool approved)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            return View("Confirm", new ConfirmModel($"{(approved ? "Approve" : "Unapprove")} user", $"The user <strong>{Html.Encode(user.Email)}</strong> will be {(approved ? "approved" : "unapproved")}. Are you sure?", (approved ? "Approve" : "Unapprove")));
+        }
+
+        [HttpPost("server/users/{userId}/approve")]
+        public async Task<IActionResult> ApproveUserPost(string userId, bool approved)
+        {
+            var user = userId == null ? null : await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+                return NotFound();
+
+            await _userService.SetUserApproval(userId, approved, Request.GetAbsoluteRootUri());
+
+            TempData[WellKnownTempData.SuccessMessage] = $"User {(approved ? "approved" : "unapproved")}";
             return RedirectToAction(nameof(ListUsers));
         }
 

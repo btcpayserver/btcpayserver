@@ -4,51 +4,53 @@
 </div>
 
 <script>
-    const modal = document.getElementById('ConfirmModal')
-    modal.addEventListener('show.bs.modal', event => {
-        const $target = event.relatedTarget
-        const $form = document.getElementById('ConfirmForm')
-        const $text = document.getElementById('ConfirmText')
-        const $title = document.getElementById('ConfirmTitle')
-        const $description = document.getElementById('ConfirmDescription')
-        const $input = document.getElementById('ConfirmInput')
-        const $inputText = document.getElementById('ConfirmInputText')
-        const $continue = document.getElementById('ConfirmContinue')
-        const { title, description, confirm, confirmInput } = $target.dataset
-        const action = $target.dataset.action || ($target.nodeName === 'A'
-            ? $target.getAttribute('href')
-            : $target.form.getAttribute('action'))
-
-        if ($form && !$form.hasAttribute('action')) $form.setAttribute('action', action)
-        if (title) $title.textContent = title
-        if (description) $description.innerHTML = description
-        if (confirm) $continue.textContent = confirm
-        if (confirmInput) {
-            $text.removeAttribute('hidden')
-            $continue.setAttribute('disabled', 'disabled')
-            $inputText.textContent = confirmInput
-            $input.setAttribute("autocomplete", "off")
-            $input.addEventListener('input', event => {
-                event.target.value.trim() === confirmInput
-                    ? $continue.removeAttribute('disabled')
-                    : $continue.setAttribute('disabled', 'disabled')
-            })
-            $form.addEventListener('submit', event => {
-                if ($input.value.trim() !== confirmInput) {
-                    event.preventDefault()
-                }
-            })
-        } else {
-            $text.setAttribute('hidden', 'hidden')
-            $continue.removeAttribute('disabled')
-        }
-    });
-    modal.addEventListener('shown.bs.modal', event => {
-        const $target = event.relatedTarget
-        const $input = document.getElementById('ConfirmInput')
-        const { confirmInput } = $target.dataset
-        if (confirmInput) {
-            $input.focus();
-        }
-    });
+    (function () {
+        const modal = document.getElementById('ConfirmModal')
+        modal.addEventListener('show.bs.modal', event => {
+            const $target = event.relatedTarget
+            const $form = document.getElementById('ConfirmForm')
+            const $text = document.getElementById('ConfirmText')
+            const $title = document.getElementById('ConfirmTitle')
+            const $description = document.getElementById('ConfirmDescription')
+            const $input = document.getElementById('ConfirmInput')
+            const $inputText = document.getElementById('ConfirmInputText')
+            const $continue = document.getElementById('ConfirmContinue')
+            const { title, description, confirm, confirmInput } = $target.dataset
+            const action = $target.dataset.action || ($target.nodeName === 'A'
+                ? $target.getAttribute('href')
+                : $target.form.getAttribute('action'))
+    
+            if ($form && !$form.hasAttribute('action')) $form.setAttribute('action', action)
+            if (title) $title.textContent = title
+            if (description) $description.innerHTML = description
+            if (confirm) $continue.textContent = confirm
+            if (confirmInput) {
+                $text.removeAttribute('hidden')
+                $continue.setAttribute('disabled', 'disabled')
+                $inputText.textContent = confirmInput
+                $input.setAttribute("autocomplete", "off")
+                $input.addEventListener('input', event => {
+                    event.target.value.trim() === confirmInput
+                        ? $continue.removeAttribute('disabled')
+                        : $continue.setAttribute('disabled', 'disabled')
+                })
+                $form.addEventListener('submit', event => {
+                    if ($input.value.trim() !== confirmInput) {
+                        event.preventDefault()
+                    }
+                })
+            } else {
+                $text.setAttribute('hidden', 'hidden')
+                $continue.removeAttribute('disabled')
+            }
+        })
+        modal.addEventListener('shown.bs.modal', event => {
+            const $target = event.relatedTarget
+            const $input = document.getElementById('ConfirmInput')
+            const { confirmInput } = $target.dataset
+            if (confirmInput) {
+                $input.focus()
+            }
+        })
+    })()
 </script>

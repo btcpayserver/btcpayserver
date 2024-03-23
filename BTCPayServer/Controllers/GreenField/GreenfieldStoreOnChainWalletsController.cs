@@ -117,7 +117,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null)
         {
             if (IsInvalidWalletRequest(cryptoCode, out var network,
-                    out var derivationScheme, out var actionResult))
+                    out _, out var actionResult))
                 return actionResult;
 
             var feeRateTarget = blockTarget ?? Store.GetStoreBlob().RecommendedFeeBlockTarget;
@@ -164,8 +164,8 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address")]
         public async Task<IActionResult> UnReserveOnChainWalletReceiveAddress(string storeId, string cryptoCode)
         {
-            if (IsInvalidWalletRequest(cryptoCode, out var network,
-                    out var derivationScheme, out var actionResult))
+            if (IsInvalidWalletRequest(cryptoCode, out _,
+                    out _, out var actionResult))
                 return actionResult;
 
             var addr = await _walletReceiveService.UnReserveAddress(new WalletId(storeId, cryptoCode));
@@ -518,10 +518,6 @@ namespace BTCPayServer.Controllers.Greenfield
                         Outputs = outputs,
                         AlwaysIncludeNonWitnessUTXO = true,
                         InputSelection = request.SelectedInputs?.Any() is true,
-                        AllowFeeBump =
-                            !request.RBF.HasValue ? WalletSendModel.ThreeStateBool.Maybe :
-                            request.RBF.Value ? WalletSendModel.ThreeStateBool.Yes :
-                            WalletSendModel.ThreeStateBool.No,
                         FeeSatoshiPerByte = request.FeeRate?.SatoshiPerByte,
                         NoChange = request.NoChange
                     },

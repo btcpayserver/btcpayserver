@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Rates;
@@ -90,9 +91,43 @@ namespace BTCPayServer.Tests
                     "test" + isTestnet,
                     prov.GetService<IHttpClientFactory>(),
                     isTestnet);
+                mempoolSpaceFeeProvider.CachedOnly = true;
+                await Assert.ThrowsAsync<InvalidOperationException>(() => mempoolSpaceFeeProvider.GetFeeRateAsync());
+                mempoolSpaceFeeProvider.CachedOnly = false;
                 var rates = await mempoolSpaceFeeProvider.GetFeeRatesAsync();
+                mempoolSpaceFeeProvider.CachedOnly = true;
+                await mempoolSpaceFeeProvider.GetFeeRateAsync();
+                mempoolSpaceFeeProvider.CachedOnly = false;
                 Assert.NotEmpty(rates);
-                await mempoolSpaceFeeProvider.GetFeeRateAsync(20);
+                
+                
+                var recommendedFees =
+                    await Task.WhenAll(new[]
+                        {
+                            TimeSpan.FromMinutes(10.0), TimeSpan.FromMinutes(60.0), TimeSpan.FromHours(6.0),
+                            TimeSpan.FromHours(24.0),
+                        }.Select(async time =>
+                        {
+                            try
+                            {
+                                var result = await mempoolSpaceFeeProvider.GetFeeRateAsync(
+                                    (int)Network.Main.Consensus.GetExpectedBlocksFor(time));
+                                return new WalletSendModel.FeeRateOption()
+                                {
+                                    Target = time,
+                                    FeeRate = result.SatoshiPerByte
+                                };
+                            }
+                            catch (Exception)
+                            {
+                                return null;
+                            }
+                        })
+                        .ToArray());
+                //ENSURE THESE ARE LOGICAL
+                Assert.True(recommendedFees[0].FeeRate >= recommendedFees[1].FeeRate, $"{recommendedFees[0].Target}:{recommendedFees[0].FeeRate} >= {recommendedFees[1].Target}:{recommendedFees[1].FeeRate}");
+                Assert.True(recommendedFees[1].FeeRate >= recommendedFees[2].FeeRate, $"{recommendedFees[1].Target}:{recommendedFees[1].FeeRate} >= {recommendedFees[2].Target}:{recommendedFees[2].FeeRate}");
+                Assert.True(recommendedFees[2].FeeRate >= recommendedFees[3].FeeRate, $"{recommendedFees[2].Target}:{recommendedFees[2].FeeRate} >= {recommendedFees[3].Target}:{recommendedFees[3].FeeRate}");                
             }
         }
         [Fact]
@@ -155,6 +190,12 @@ namespace BTCPayServer.Tests
                 {
                     // Ripio keeps changing their pair, so anything is fine...
                     Assert.NotEmpty(exchangeRates.ByExchange[name]);
+                }
+                else if (name == "bitnob")
+                {
+                    Assert.Contains(exchangeRates.ByExchange[name],
+                        e => e.CurrencyPair == new CurrencyPair("BTC", "NGN") &&
+                             e.BidAsk.Bid > 1.0m); // 1 BTC will always be more than 1 NGN
                 }
                 else if (name == "cryptomarket")
                 {
@@ -284,7 +325,6 @@ retry:
             }
             catch (Exception ex) when (ex is MatchesException)
             {
-                var details = ex.Message;
                 TestLogs.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
 
                 throw;
@@ -459,6 +499,10 @@ retry:
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "decimal.js", "decimal.min.js").Trim();
             version = Regex.Match(actual, "Original file: /npm/decimal\\.js@([0-9]+.[0-9]+.[0-9]+)/decimal\\.js").Groups[1].Value;
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/decimal.js@{version}/decimal.min.js")).Content.ReadAsStringAsync()).Trim();
+            EqualJsContent(expected, actual);
+            
+            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bbqr", "bbqr.iife.js").Trim();
+            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bbqr@1.0.0/dist/bbqr.iife.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
         }
 

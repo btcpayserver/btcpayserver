@@ -200,24 +200,31 @@ namespace BTCPayServer.Tests
 
                     if (!askedPrompt)
                     {
-                        driver.FindElement(By.XPath("//a[contains(text(), \"New chat\")]")).Click();
+                        driver.FindElements(By.XPath("//button[contains(@class,'text-token-text-primary')]")).Where(e => e.Displayed).First().Click();
                         Thread.Sleep(200);
                         var input = driver.FindElement(By.XPath("//textarea[@data-id]"));
                         input.SendKeys($"I am translating a checkout crypto payment page, and I want you to translate it from English (en-US) to {languageCurrent} ({jsonLangCode}).");
                         input.SendKeys(Keys.LeftShift + Keys.Enter);
-                        input.SendKeys("Reply only with the translation of the sentences I will give you and nothing more." + Keys.Enter);
+                        input.SendKeys("Reply only with the translation of the sentences I will give you and nothing more, and do not translate what is inside `{{` and `}}`." + Keys.Enter);
                         WaitCanWritePrompt(driver);
                         askedPrompt = true;
                     }
                     english = english.Replace('\n', ' ');
+
                     driver.FindElement(By.XPath("//textarea[@data-id]")).SendKeys(english + Keys.Enter);
                     WaitCanWritePrompt(driver);
-                    var elements = driver.FindElements(By.XPath("//div[contains(@class,'markdown') and contains(@class,'prose')]//p"));
-                    var result = elements.Last().Text;
+                    string result = GetLastResponse(driver);
                     langFile.Words[translation.Key] = result;
                 }
                 langFile.Save();
             }
+        }
+
+        private static string GetLastResponse(ChromeDriver driver)
+        {
+            var elements = driver.FindElements(By.XPath("//div[contains(@class,'markdown') and contains(@class,'prose')]//p"));
+            var result = elements.LastOrDefault()?.Text;
+            return result;
         }
 
         private static TransifexClient GetTransifexClient()
@@ -227,12 +234,27 @@ namespace BTCPayServer.Tests
 
         private void WaitCanWritePrompt(IWebDriver driver)
         {
-
+            bool stopGenerating = false;
 retry:
             Thread.Sleep(200);
             try
             {
-                driver.FindElement(By.XPath("//*[contains(text(), \"Regenerate response\")]"));
+                var el = driver.FindElement(By.XPath("//button[contains(@aria-label, 'Stop generating')]"));
+                if (!el.Enabled)
+                    goto retry;
+                stopGenerating = true;
+                goto retry;
+            }
+            catch
+            {
+                if (!stopGenerating)
+                    goto retry;
+            }
+            try
+            {
+                var el = driver.FindElement(By.XPath("//button[contains(@data-testid, 'send-button')]"));
+                if (!el.Displayed)
+                    goto retry;
             }
             catch
             {
@@ -409,7 +431,7 @@ retry:
                 content.Headers.TryAddWithoutValidation("Content-Type", "application/vnd.api+json;profile=\"bulk\"");
                 message.Content = content;
                 using var response = await Client.SendAsync(message);
-                var str = await response.Content.ReadAsStringAsync();
+                await response.Content.ReadAsStringAsync();
             }).ToArray());
         }
 

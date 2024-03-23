@@ -34,16 +34,13 @@ public class UIPayoutProcessorsController : Controller
 
     [HttpGet("~/stores/{storeId}/payout-processors")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ConfigureStorePayoutProcessors(string storeId)
     {
         var activeProcessors =
             (await _payoutProcessorService.GetProcessors(
                 new PayoutProcessorService.PayoutProcessorQuery() { Stores = new[] { storeId } }))
             .GroupBy(data => data.Processor);
-
-        var paymentMethods = HttpContext.GetStoreData().GetEnabledPaymentMethods(_btcPayNetworkProvider)
-            .Select(method => method.PaymentId).ToList();
 
         return View(_payoutProcessorFactories.Select(factory =>
         {

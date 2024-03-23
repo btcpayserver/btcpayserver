@@ -577,7 +577,7 @@
                                     <span>@blob.Limit @blob.Currency</span>
                                 </td>
                                 <td>
-                                    <span> @refund.PullPaymentData.StartDate.ToBrowserDate() </span>
+                                    <span>@refund.PullPaymentData.StartDate.ToBrowserDate()</span>
                                 </td>
                             </tr>
                         }
@@ -598,9 +598,10 @@
             <tbody>
             @foreach (var evt in Model.Events)
             {
-                <tr class="text-@evt.GetCssClass()">
-                    <td>@evt.Timestamp.ToBrowserDate()</td>
-                    <td>@evt.Message</td>
+                var cssClass = string.IsNullOrEmpty(evt.GetCssClass()) ? null : $"text-{evt.GetCssClass()}";
+                <tr>
+                    <td class="@cssClass">@evt.Timestamp.ToBrowserDate("o", "short", "medium")</td>
+                    <td class="@cssClass">@evt.Message</td>
                 </tr>
             }
             </tbody>

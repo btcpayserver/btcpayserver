@@ -1,0 +1,322 @@
+﻿@using Newtonsoft.Json.Linq
+@inject WidgetService WidgetService
+<div class="d-flex justify-content-start gap-4 mb-4">
+    <h3>Dashboard</h3>
+
+    <div class="d-flex gap-4">
+        @if (EditMode)
+        {
+            <button class="btn btn-link" disabled="@WidgetEditMode" @onclick="() => EditMode = !EditMode">Done</button>
+
+            <div class="input-group">
+                <select class="form-select" @bind="NewWidgetType"  disabled="@WidgetEditMode" >
+
+                    <option value="">Select</option>
+                    @foreach (var widget in WidgetService.AvailableWidgets)
+                    {
+                        <option value="@widget.Type">@widget.Name</option>
+                    }
+                </select>
+
+                <button class="btn btn-outline-primary" @onclick="AddNew" disabled="@(string.IsNullOrEmpty(NewWidgetType) || WidgetEditMode)">Add</button>
+            </div>
+        }
+        else
+        {
+            <button class="btn btn-link" @onclick="() => EditMode = !EditMode">Edit</button>
+        }
+
+
+    </div>
+    <style>   
+    .db{
+        display: grid;
+        grid-template-columns: repeat(12, minmax(0, 1fr));
+        grid-gap: 10px;
+    }
+    
+    
+@@media (max-width: 1199px) {
+   .db{
+        grid-template-columns: repeat(6, minmax(0, 1fr));
+}
+    }
+</style>
+
+</div>
+<div class="db">
+
+    @{
+        var lastEnd = 1; // Initialize lastEnd to the start of the grid
+    }
+      @foreach (var widget in Widgets)
+        {
+            var actualLastEnd = lastEnd;
+            var start = lastEnd ;
+
+            // Apply the widget offset
+            start += widget.Offset;
+
+            // If start position is beyond the grid, reset to the first column
+            if (start > 12)
+                start = 1;
+
+            lastEnd = start + widget.ColumnSize;
+
+            // If the widget overflows the grid, move it to a new row
+            if (lastEnd > 13)
+            {
+                start = lastEnd - 13; // Start at the beginning of a new row with offset applied
+                
+            }
+            start = Math.Max(1, start);
+
+            lastEnd = start + widget.ColumnSize;
+            
+            
+              
+            //if there are columns between the last widget and the current one, add gap widgets 1 col each
+            // so if the last end if not 13 and the start is not 1 and start  != lastEnd
+//create a <div > for every grid column to fill the gap
+            if (EditMode && start != actualLastEnd && (start != 1 || actualLastEnd != 13))
+            {
+                int i = actualLastEnd;
+                while (i != start)
+                {
+                    if(i == 13)
+                        i = 1;
+                    <div class="widget bg-transparent border-2" style="border-style: dotted; border-color: var(--btcpay-primary-border-active); grid-column-start: @i; grid-column-end: @(i+1);">
+                    </div>
+
+                    i++;
+                    if(i == 13)
+                        i = 1;
+                }
+                
+            }
+
+            
+
+            var availableWidget = WidgetService.AvailableWidgets.FirstOrDefault(w => w.Type == widget.Type);
+
+      
+        
+        // var start = lastEnd;
+        // if (start is > 13 or 0)
+        //     start = 1;
+        // start += widget.Offset;
+        // if (start is >= 13 or 0)
+        //     start = 1;
+        // lastEnd = start + widget.ColumnSize;
+        // if (lastEnd > 13)
+        // {
+        //     start = widget.Offset +1;
+        //     lastEnd = start + widget.ColumnSize;
+        // }
+        //
+        // var availableWidget = WidgetService.AvailableWidgets.FirstOrDefault(w => w.Type == widget.Type);
+
+        <div class="widget bg-light" style=" grid-column-start: @start; grid-column-end: @(widget.ColumnSize +start);">
+
+            @if (availableWidget is null)
+            {
+                <h2>Widget unavailable..</h2>
+                @if (EditMode)
+                {
+                    <button class="btn btn-link" @onclick="() => RemoveWidget(widget)">Remove</button>
+                }
+            }
+            else
+            {
+                var dynamicComponentParameters = new Dictionary<string, object>
+                {
+                    {"StoreId", StoreId},
+                    {"Readonly", !EditMode || WidgetEditMode},
+                    {"Size", widget.ColumnSize},
+                    {"Config", widget.Config},
+                    {"ConfigChanged", EventCallback.Factory.Create<JObject>(this, (newConfig) => OnConfigChanged(widget, newConfig))},
+                    {"EditModeChanged", EventCallback.Factory.Create<bool>(this, (newConfig) => WidgetEditMode = newConfig)},
+                    {"OnRemove", EventCallback.Factory.Create(this, () => RemoveWidget(widget))},
+                };
+                <DynamicComponent @key="widget.Id" Type="@availableWidget.ComponentType" Parameters="dynamicComponentParameters" />
+            }
+            @if (EditMode && !WidgetEditMode)
+            {
+                <div class="d-flex flex-wrap mt-4">
+                    <input class="form-control form-control-sm w-25 my-1" type="number" min="0" title="order" @bind="widget.Order" />
+                    <input class="form-control form-control-sm w-25 my-1" type="number" min="@availableWidget.MinSize" max="@availableWidget.MaxSize" title="size" @bind="widget.ColumnSize" />
+                    <input class="form-control form-control-sm w-25 my-1" type="number" min="0" title="offset" @bind="widget.Offset" />
+                </div>
+            }
+        </div>
+    }
+    @while(EditMode &&  lastEnd != 13 )
+    {
+        <div class="widget bg-transparent border-2" style="border-style: dotted; border-color: var(--btcpay-primary-border-active); grid-column-start: @lastEnd; grid-column-end: @(lastEnd+1);">
+        </div>
+        lastEnd++;
+    }
+    
+    
+</div>
+
+
+@code {
+
+    public bool WidgetEditMode { get; set; }
+    public bool EditMode { get; set; }
+    public string NewWidgetType { get; set; }
+
+    public async Task OnConfigChanged(Widget widget, JObject newConfig)
+    {
+        //replace the widget with the new one
+        widget.Config = newConfig;
+        await WidgetService.SetWidgetSet(StoreId, new WidgetSet() {Widgets = Widgets});
+    }
+
+    public List<Widget> Widgets { get; set; } = new List<Widget>();
+
+
+    private async Task RemoveWidget(Widget widget)
+    {
+        //loop through widgets and adjust the order
+        Widgets.Remove(widget);
+
+        widget.OnResize -= OnResize;
+        widget.OnNewOrder -= OnNewOrder;
+        widget.OnNewOffset -= OnNewOffset;
+        foreach (var w in Widgets)
+        {
+            if (w.Order > widget.Order)
+            {
+                w.Order--;
+            }
+        }
+        
+        await WidgetService.SetWidgetSet(StoreId, new WidgetSet() {Widgets = Widgets});
+    }
+
+    private async Task AddNew()
+    {
+        var widget = new Widget()
+        {
+            ColumnSize = 3,
+            Order = Widgets.Count,
+            Offset = 0,
+            Type = NewWidgetType
+        };
+        widget.OnResize += OnResize;
+        widget.OnNewOrder += OnNewOrder;
+        widget.OnNewOffset += OnNewOffset;
+        Widgets.Add(widget);
+        NewWidgetType = null;
+        _ = WidgetService.SetWidgetSet(StoreId, new WidgetSet() {Widgets = Widgets});
+    }
+
+
+    private void OnNewOrder(object sender, (int oldOrder, int newOrder) e)
+    {
+//switch the order with the widget that has the new order
+        var widget = Widgets.FirstOrDefault(w => w.Order == e.newOrder && w != sender);
+        if (widget != null)
+        {
+            widget.Order = e.oldOrder;
+            if (sender is Widget senderWidget)
+            {
+                //switch the offsets too
+                (senderWidget.Offset, widget.Offset) = (widget.Offset, senderWidget.Offset);
+            }
+            Widgets = Widgets.OrderBy(w => w.Order).ToList();
+            
+            _ = WidgetService.SetWidgetSet(StoreId, new WidgetSet() {Widgets = Widgets});
+        }
+
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void OnResize(object sender, (int oldSize, int newSize) e)
+    {
+        if (sender is Widget w)
+        {
+            //find the next wudget and adjust its offset
+            var nextWidget = Widgets.FirstOrDefault(widget => widget.Order > w.Order);
+            if (nextWidget != null)
+            {
+                // var newOffset = 0;
+                // if (e.newSize > e.oldSize)
+                // {
+                //     newOffset = nextWidget.Offset - e.newSize - e.oldSize;
+                // }
+                // else if (e.newSize < e.oldSize)
+                // {
+                //     
+                //     newOffset =  nextWidget.Offset + Math.Abs( e.newSize - e.oldSize);
+                // }
+                //
+                // var wDict = Widgets.ToDictionary(w => w.Order, w => (w.ColumnSize, w.Offset));
+                // wDict[w.Order] = (e.oldSize, w.Offset);
+                //
+                // var widgetOldDimensions =  ComputeStartOfWidget(wDict, w.Order);
+                // var widgetNewDimensions =  ComputeStartOfWidget(Widgets.ToDictionary(w => w.Order, w => (w.ColumnSize, w.Offset)),w.Order);
+                // var nextWidgetOldDimensions =  ComputeStartOfWidget(wDict, nextWidget.Order);
+                // var nextWidgetNewDimensions =  ComputeStartOfWidget(Widgets.ToDictionary(w => w.Order, w => (w.ColumnSize, w.Offset)),nextWidget.Order);
+                //
+                // //try not to move the widget if it was on another row
+                // if (widgetNewDimensions.row == nextWidgetNewDimensions.row)
+                // {
+                //     
+                //     nextWidget.Offset = newOffset+ nextWidget.ColumnSize > 12 ? Math.Max(0, 12 - nextWidget.ColumnSize) : Math.Max(0, newOffset);
+                // }
+                // else
+                // {
+                //     
+                // }
+                
+                
+                
+               
+            }
+        }
+        _ = WidgetService.SetWidgetSet(StoreId, new WidgetSet() {Widgets = Widgets});
+    }
+
+    private (int row, int col) ComputeStartOfWidget(Dictionary<int,(int size, int offset)> orderToSize, int target)
+    {
+        var currRow = 1;
+        var currCol = 1;
+        foreach (var widget in orderToSize.OrderBy(w => w.Key))
+        {
+            currCol += widget.Value.size + widget.Value.offset;
+            if (currCol > 12)
+            {
+                currRow++;
+                currCol = 1;
+            }
+            if(widget.Key == target)
+                return (currRow, currCol);
+            
+        }
+
+        return (currRow, currCol);
+    }
+    private void OnNewOffset(object sender, (int oldSize, int newSize) e)
+    {
+        _ = WidgetService.SetWidgetSet(StoreId, new WidgetSet() {Widgets = Widgets});
+    }
+
+    [Parameter] public string StoreId { get; set; }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var set = await WidgetService.GetWidgetSet(StoreId);
+        Widgets = set?.Widgets ?? [];
+        foreach (var widget in Widgets)
+        {
+            widget.OnResize += OnResize;
+            widget.OnNewOrder += OnNewOrder;
+            widget.OnNewOffset += OnNewOffset;
+        }
+        await base.OnParametersSetAsync();
+    }
+
+}

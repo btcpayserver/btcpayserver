@@ -64,7 +64,7 @@ namespace BTCPayServer.Plugins
         public static IMvcBuilder AddPlugins(this IMvcBuilder mvcBuilder, IServiceCollection serviceCollection,
             IConfiguration config, ILoggerFactory loggerFactory, ServiceProvider bootstrapServiceProvider)
         {
-            void LoadPluginsFromAssemblies(Assembly systemAssembly1, HashSet<string> exclude, HashSet<string> loadedPluginIdentifiers1,
+            void LoadPluginsFromAssemblies(Assembly systemAssembly1, IEnumerable<string> exclude, HashSet<string> loadedPluginIdentifiers1,
                 List<IBTCPayServerPlugin> btcPayServerPlugins)
             {
                 // Load the referenced assembly plugins
@@ -104,13 +104,13 @@ namespace BTCPayServer.Plugins
 
             var disabledPluginIdentifiers = GetDisabledPluginIdentifiers(pluginsFolder);
             var systemAssembly = typeof(Program).Assembly;
-            LoadPluginsFromAssemblies(systemAssembly, disabledPluginIdentifiers, loadedPluginIdentifiers, plugins);
+            LoadPluginsFromAssemblies(systemAssembly, disabledPluginIdentifiers.Keys, loadedPluginIdentifiers, plugins);
 
             if (ExecuteCommands(pluginsFolder, plugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version)))
             {
                 plugins.Clear();
                 loadedPluginIdentifiers.Clear();
-                LoadPluginsFromAssemblies(systemAssembly, disabledPluginIdentifiers, loadedPluginIdentifiers, plugins);
+                LoadPluginsFromAssemblies(systemAssembly, disabledPluginIdentifiers.Keys, loadedPluginIdentifiers, plugins);
             }
 
             var pluginsToLoad = new List<(string PluginIdentifier, string PluginFilePath)>();
@@ -136,7 +136,7 @@ namespace BTCPayServer.Plugins
                 var pluginFilePath = Path.Combine(directory, pluginIdentifier + ".dll");
                 if (!File.Exists(pluginFilePath))
                     continue;
-                if (disabledPluginIdentifiers.Contains(pluginIdentifier))
+                if (disabledPluginIdentifiers.Keys.Contains(pluginIdentifier))
                     continue;
                 pluginsToLoad.Add((pluginIdentifier, pluginFilePath));
             }
@@ -191,14 +191,14 @@ namespace BTCPayServer.Plugins
             {
                 if (plugin.Identifier == "BTCPayServer.Plugins.Prism" && plugin.Version <= new Version("1.1.18"))
                 {
-                    QueueCommands(pluginsFolder, ("disable", plugin.Identifier));
+                    QueueCommands(pluginsFolder, ("disable: Old version not supported", plugin.Identifier));
                     logger.LogWarning("Please update your prism plugin, this version is incompatible");
                     continue;
                 } 
                 if (plugin.Identifier == "BTCPayServer.Plugins.Wabisabi" && plugin.Version <= new Version("1.0.66"))
                 {
                     
-                    QueueCommands(pluginsFolder, ("disable", plugin.Identifier));
+                    QueueCommands(pluginsFolder, ("disable: Old version not supported", plugin.Identifier));
                     continue;
                 }
                 try
@@ -289,27 +289,27 @@ namespace BTCPayServer.Plugins
 
             return remainingCommands.Count != pendingCommands.Length;
         }
-        private static Dictionary<string, (Version, IBTCPayServerPlugin.PluginDependency[] Dependencies, bool Disabled)> TryGetInstalledInfo(
+        private static Dictionary<string, (Version, IBTCPayServerPlugin.PluginDependency[] Dependencies, bool Disabled, string? DisabledReason)> TryGetInstalledInfo(
             string pluginsFolder)
         {
             var disabled = GetDisabledPluginIdentifiers(pluginsFolder);
-            var installed = new Dictionary<string, (Version, IBTCPayServerPlugin.PluginDependency[] Dependencies, bool Disabled)>();
+            var installed = new Dictionary<string, (Version, IBTCPayServerPlugin.PluginDependency[] Dependencies, bool Disabled, string DisabledReason)>();
             foreach (string pluginDir in Directory.EnumerateDirectories(pluginsFolder))
             {
                 var plugin = Path.GetFileName(pluginDir);
                 var dirName = Path.Combine(pluginsFolder, plugin);
-                var isDisabled = disabled.Contains(plugin);
+                var isDisabled = disabled.TryGetValue(plugin, out var disabledReason);
                 var manifestFileName = Path.Combine(dirName, plugin + ".json");
                 if (File.Exists(manifestFileName))
                 {
                     var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
-                    installed.TryAdd(pluginManifest.Identifier, (pluginManifest.Version, pluginManifest.Dependencies, isDisabled));
+                    installed.TryAdd(pluginManifest.Identifier, (pluginManifest.Version, pluginManifest.Dependencies, isDisabled, disabledReason));
                 }
                 else if (isDisabled)
                 {
                     // Disabled plugin might not have a manifest, but we still need to include
                     // it in the list, so that it can be shown on the Manage Plugins page
-                    installed.TryAdd(plugin, (null, null, true));
+                    installed.TryAdd(plugin, (null, null, true, disabledReason));
                 }
             }
             return installed;
@@ -377,20 +377,23 @@ namespace BTCPayServer.Plugins
                     }
                     break;
 
-                case "disable":
+                case { } x when x.StartsWith("disable"):
                     if (Directory.Exists(dirName))
                     {
+                        var split = x.Split(':');
+                        var reason = split.Length > 1 ? split[1] : "";
                         if (File.Exists(Path.Combine(pluginsFolder, "disabled")))
                         {
                             var disabled = File.ReadAllLines(Path.Combine(pluginsFolder, "disabled"));
-                            if (!disabled.Contains(command.extension))
+                            
+                            if (!disabled.Any(s => s ==command.extension ||  s.StartsWith(command.extension + ":")))
                             {
-                                File.AppendAllLines(Path.Combine(pluginsFolder, "disabled"), new[] { command.extension });
+                                File.AppendAllLines(Path.Combine(pluginsFolder, "disabled"), new[] {  command.extension+":"+reason  });
                             }
                         }
                         else
                         {
-                            File.AppendAllLines(Path.Combine(pluginsFolder, "disabled"), new[] { command.extension });
+                            File.AppendAllLines(Path.Combine(pluginsFolder, "disabled"), new[] { command.extension+":"+reason });
                         }
                     }
 
@@ -400,9 +403,9 @@ namespace BTCPayServer.Plugins
                     if (File.Exists(Path.Combine(pluginsFolder, "disabled")))
                     {
                         var disabled = File.ReadAllLines(Path.Combine(pluginsFolder, "disabled"));
-                        if (disabled.Contains(command.extension))
+                        if (disabled.Any(s => s ==command.extension ||  s.StartsWith(command.extension + ":")))
                         {
-                            File.WriteAllLines(Path.Combine(pluginsFolder, "disabled"), disabled.Where(s => s != command.extension));
+                            File.WriteAllLines(Path.Combine(pluginsFolder, "disabled"), disabled.Where(s => s != command.extension && !s.StartsWith(command.extension + ":")));
                         }
                     }
 
@@ -419,8 +422,10 @@ namespace BTCPayServer.Plugins
             var commands = File.ReadAllLines(Path.Combine(pluginsFolder, "commands"));
             return commands.Select(s =>
             {
+                
                 var split = s.Split(':');
-                return (split[0].ToLower(CultureInfo.InvariantCulture), split[1]);
+                var plugin = split.Last();
+                return ( (s.Length > 2? s.Replace(":"+plugin, ""): split[0]).ToLowerInvariant() , plugin);
             }).ToArray();
         }
 
@@ -447,23 +452,31 @@ namespace BTCPayServer.Plugins
             QueueCommands(pluginDir, cmds);
         }
 
-        public static void DisablePlugin(string pluginDir, string plugin)
+        public static void DisablePlugin(string pluginDir, string plugin, string reason)
         {
-            QueueCommands(pluginDir, ("disable", plugin));
+            QueueCommands(pluginDir, ($"disable:{reason}", plugin));
         }
 
         // Loads the list of disabled plugins from the file
-        private static HashSet<string> GetDisabledPluginIdentifiers(string pluginsFolder)
+        private static Dictionary<string, string> GetDisabledPluginIdentifiers(string pluginsFolder)
         {
             var disabledPath = Path.Combine(pluginsFolder, "disabled");
-            return File.Exists(disabledPath) ? File.ReadAllLines(disabledPath).ToHashSet() : [];
+            if (!File.Exists(disabledPath))
+            {
+                return new Dictionary<string, string>();
+            }
+            return File.ReadAllLines(disabledPath).Select(s =>
+            {
+                var split = s.Split(':');
+                return (split[0], split.Length > 1 ? split[1] : "");
+            }).ToDictionary(tuple => tuple.Item1, tuple => tuple.Item2);
         }
 
         // List of disabled plugins with additional info, like the disabled version and its dependencies
-        public static Dictionary<string, Version> GetDisabledPlugins(string pluginsFolder)
+        public static Dictionary<string, (Version, string DisabledReason)> GetDisabledPlugins(string pluginsFolder)
         {
             return TryGetInstalledInfo(pluginsFolder).Where(pair => pair.Value.Disabled)
-                .ToDictionary(pair => pair.Key, pair => pair.Value.Item1);
+                .ToDictionary(pair => pair.Key, pair => (pair.Value.Item1, pair.Value.DisabledReason));
         }
 
         public static bool DependencyMet(IBTCPayServerPlugin.PluginDependency dependency,

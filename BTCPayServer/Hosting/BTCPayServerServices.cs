@@ -434,6 +434,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<INotificationHandler, NewUserRequiresApprovalNotification.Handler>();
             services.AddSingleton<INotificationHandler, InviteAcceptedNotification.Handler>();
             services.AddSingleton<INotificationHandler, PluginUpdateNotification.Handler>();
+            services.AddSingleton<INotificationHandler, PluginKillNotification.Handler>();
             services.AddSingleton<INotificationHandler, InvoiceEventNotification.Handler>();
             services.AddSingleton<INotificationHandler, PayoutNotification.Handler>();
             services.AddSingleton<INotificationHandler, ExternalPayoutTransactionNotification.Handler>();

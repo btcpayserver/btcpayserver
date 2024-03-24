@@ -23,6 +23,7 @@ using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -116,20 +117,37 @@ namespace BTCPayServer
             {
                 return NotFound();
             }
-
-            var unit = blob.Currency == "SATS" ? LightMoneyUnit.Satoshi : LightMoneyUnit.BTC;
+            var store = await _storeRepository.FindStore(pp.StoreId);
+            RateFetcher r;
+            // var unit = blob.Currency == "SATS" ? LightMoneyUnit.Satoshi : LightMoneyUnit.BTC;
             var progress = _pullPaymentHostedService.CalculatePullPaymentProgress(pp, DateTimeOffset.UtcNow);
             var remaining = progress.Limit - progress.Completed - progress.Awaiting;
+            LightMoney balance = null;
+            switch (blob.Currency)
+            {
+               case  "SATS":
+                    balance = LightMoney.FromUnit(remaining, LightMoneyUnit.Satoshi);
+                    break;
+               case  "BTC":
+                    balance = LightMoney.FromUnit(remaining, LightMoneyUnit.BTC);
+                    break;
+                default:
+                
+                    var storeBlob = store.GetStoreBlob();
+                    r = new RateFetcher(null);
+                    var currencyPair = new CurrencyPair(blob.Currency, "BTC");
+                    var rate = await r.FetchRate(currencyPair, storeBlob.GetRateRules(_btcPayNetworkProvider), cancellationToken);
+                    
+                    balance = LightMoney.FromUnit(remaining * rate.BidAsk.Center, LightMoneyUnit.BTC);
+                    break;
+            }
             var request = new LNURLWithdrawRequest
             {
-                MaxWithdrawable = LightMoney.FromUnit(remaining, unit),
+                MaxWithdrawable = balance,
                 K1 = k1,
                 BalanceCheck = new Uri(Request.GetCurrentUrl()),
-                CurrentBalance = LightMoney.FromUnit(remaining, unit),
-                MinWithdrawable =
-                    LightMoney.FromUnit(
-                        Math.Min(await _lightningLikePayoutHandler.GetMinimumPayoutAmount(pmi, null), remaining),
-                        unit),
+                CurrentBalance = balance,
+                MinWithdrawable = LightMoney.Satoshis(Math.Min(1, balance.ToDecimal(LightMoneyUnit.Satoshi))),
                 Tag = "withdrawRequest",
                 Callback = new Uri(Request.GetCurrentUrl()),
                 // It's not `pp.GetBlob().Description` because this would be HTML
@@ -148,7 +166,7 @@ namespace BTCPayServer
 
             if (result.MinimumAmount < request.MinWithdrawable || result.MinimumAmount > request.MaxWithdrawable)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = $"Payment request was not within bounds ({request.MinWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} - {request.MaxWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} sats)" });
-            var store = await _storeRepository.FindStore(pp.StoreId);
+          
             var pm = store!.GetSupportedPaymentMethods(_btcPayNetworkProvider)
                 .OfType<LightningSupportedPaymentMethod>()
                 .FirstOrDefault(method => method.PaymentId == pmi);
@@ -157,13 +175,32 @@ namespace BTCPayServer
                 return NotFound();
             }
 
+            decimal? prAmount = null; 
+            switch (blob.Currency)
+            {
+                case  "SATS":
+                    prAmount =  result.MinimumAmount.ToDecimal(LightMoneyUnit.Satoshi);
+                    break;
+                case  "BTC":
+                    prAmount =  result.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
+                    break;
+                default:
+                
+                    var storeBlob = store.GetStoreBlob();
+                    r = new RateFetcher(null);
+                    var currencyPair = new CurrencyPair(blob.Currency, "BTC");
+                    var rate = await r.FetchRate(currencyPair, storeBlob.GetRateRules(_btcPayNetworkProvider), cancellationToken);
+                    
+                    prAmount = result.MinimumAmount.ToDecimal(LightMoneyUnit.BTC) * rate.BidAsk.Center;
+                    break;
+            }
             var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),
                 PaymentMethodId = pmi,
                 PullPaymentId = pullPaymentId,
                 StoreId = pp.StoreId,
-                Value = result.MinimumAmount.ToDecimal(unit)
+                Value = prAmount
             });
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)

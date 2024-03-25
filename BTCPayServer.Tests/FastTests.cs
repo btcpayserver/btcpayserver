@@ -152,13 +152,6 @@ namespace BTCPayServer.Tests
             CanParseDecimalsCore("{\"qty\": \"1.0\"}", 1.0m);
             CanParseDecimalsCore("{\"qty\": 6.1e-7}", 6.1e-7m);
             CanParseDecimalsCore("{\"qty\": \"6.1e-7\"}", 6.1e-7m);
-
-            var data = JsonConvert.DeserializeObject<TradeRequestData>("{\"qty\": \"6.1e-7\", \"fromAsset\":\"Test\"}");
-            Assert.Equal(6.1e-7m, data.Qty.Value);
-            Assert.Equal("Test", data.FromAsset);
-            data = JsonConvert.DeserializeObject<TradeRequestData>("{\"fromAsset\":\"Test\", \"qty\": \"6.1e-7\"}");
-            Assert.Equal(6.1e-7m, data.Qty.Value);
-            Assert.Equal("Test", data.FromAsset);
         }
 
         [Fact]
@@ -202,8 +195,6 @@ namespace BTCPayServer.Tests
         {
             var d = JsonConvert.DeserializeObject<LedgerEntryData>(str);
             Assert.Equal(expected, d.Qty);
-            var d2 = JsonConvert.DeserializeObject<TradeRequestData>(str);
-            Assert.Equal(new TradeQuantity(expected, TradeQuantity.ValueType.Exact), d2.Qty);
         }
 
         [Fact]
@@ -892,33 +883,6 @@ namespace BTCPayServer.Tests
             Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("invalid"); }); // invalid in general
             Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("wpkh([8b60afd1/49h/0h/0h]xpub661MyMwAFXkMnyoBjyHndD3QwRbcGVBsTGeNZN6QGVHcfz4MPzBUxjSevweNFQx7SqmMHLdSA4FteGsRrEriu4pnVZMZWnruFFAYZATtcDw/0/*)#9x4vkw48"); }); // invalid checksum
         }
-
-        [Fact]
-        public void ParseTradeQuantity()
-        {
-            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.2345o"));
-            Assert.Throws<FormatException>(() => TradeQuantity.Parse("o"));
-            Assert.Throws<FormatException>(() => TradeQuantity.Parse(""));
-            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.353%%"));
-            Assert.Throws<FormatException>(() => TradeQuantity.Parse("1.353 %%"));
-            Assert.Throws<FormatException>(() => TradeQuantity.Parse("-1.353%"));
-            Assert.Throws<FormatException>(() => TradeQuantity.Parse("-1.353"));
-
-            var qty = TradeQuantity.Parse("1.3%");
-            Assert.Equal(1.3m, qty.Value);
-            Assert.Equal(TradeQuantity.ValueType.Percent, qty.Type);
-            var qty2 = TradeQuantity.Parse("1.3");
-            Assert.Equal(1.3m, qty2.Value);
-            Assert.Equal(TradeQuantity.ValueType.Exact, qty2.Type);
-            Assert.NotEqual(qty, qty2);
-            Assert.Equal(qty, TradeQuantity.Parse("1.3%"));
-            Assert.Equal(qty2, TradeQuantity.Parse("1.3"));
-            Assert.Equal(TradeQuantity.Parse(qty.ToString()), TradeQuantity.Parse("1.3%"));
-            Assert.Equal(TradeQuantity.Parse(qty2.ToString()), TradeQuantity.Parse("1.3"));
-            Assert.Equal(TradeQuantity.Parse(qty2.ToString()), TradeQuantity.Parse(" 1.3 "));
-        }
-
-
         public static WalletFileParsers GetParsers()
         {
             var service = new ServiceCollection();

@@ -44,7 +44,6 @@ namespace BTCPayServer.Data
         public IEnumerable<LightningAddressData> LightningAddresses { get; set; }
         public IEnumerable<PayoutProcessorData> PayoutProcessors { get; set; }
         public IEnumerable<PayoutData> Payouts { get; set; }
-        public IEnumerable<CustodianAccountData> CustodianAccounts { get; set; }
         public IEnumerable<StoreSettingData> Settings { get; set; }
         public IEnumerable<FormData> Forms { get; set; }
         public IEnumerable<StoreRole> StoreRoles { get; set; }

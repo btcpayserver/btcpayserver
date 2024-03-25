@@ -10,7 +10,6 @@
 @using BTCPayServer.Plugins
 @using BTCPayServer.Services
 @using BTCPayServer.Views.Apps
-@using BTCPayServer.Views.CustodianAccounts
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
 @inject BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
@@ -95,26 +94,6 @@
                                     </li>
                                 }
                                 <vc:ui-extension-point location="store-wallets-nav" model="@Model"/>
-                                @if (PoliciesSettings.Experimental)
-                                {
-                                    @foreach (var custodianAccount in Model.CustodianAccounts)
-                                    {
-                                        <li class="nav-item">
-                                            <a asp-area="" asp-controller="UICustodianAccounts" asp-action="ViewCustodianAccount" asp-route-storeId="@custodianAccount.StoreId" asp-route-accountId="@custodianAccount.Id" class="nav-link @ViewData.IsActivePage(CustodianAccountsNavPages.View, custodianAccount.Id)" id="@($"StoreNav-CustodianAccount-{custodianAccount.Id}")">
-                                                @* TODO which icon should we use? *@
-                                                <span>@custodianAccount.Name</span>
-                                                <span class="badge bg-warning ms-1" style="font-size:10px;">Experimental</span>
-                                            </a>
-                                        </li>
-                                    }
-                                    <li class="nav-item">
-                                        <a asp-area="" asp-controller="UICustodianAccounts" asp-action="CreateCustodianAccount" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(CustodianAccountsNavPages.Create)" id="StoreNav-CreateCustodianAccount">
-                                            <vc:icon symbol="new"/>
-                                            <span>Add Custodian</span>
-                                            <span class="badge bg-warning ms-1" style="font-size:10px;">Experimental</span>
-                                        </a>
-                                    </li>
-                                }
                             </ul>
                         </div>
                     </div>

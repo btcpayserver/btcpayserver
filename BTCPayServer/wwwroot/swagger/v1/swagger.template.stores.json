@@ -327,10 +327,7 @@
                             "type": "string"
                         },
                         "example": [
-                            "btcpay.store.canmodifystoresettings",
-                            "btcpay.store.cantradecustodianaccount",
-                            "btcpay.store.canwithdrawfromcustodianaccount",
-                            "btcpay.store.candeposittocustodianaccount"
+                            "btcpay.store.canmodifystoresettings"
                         ]
                     },
                     "isServerRole": {

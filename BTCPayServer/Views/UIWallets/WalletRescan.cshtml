@@ -1,7 +1,6 @@
 ﻿@model RescanWalletModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(WalletsNavPages.Settings, "Rescan Wallet", walletId);
 }
 

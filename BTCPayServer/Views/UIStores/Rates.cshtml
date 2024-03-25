@@ -4,13 +4,13 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Rates, "Rates", Context.GetStoreData().Id);
 }
 
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <h3 class="mb-3">@ViewData["Title"]</h3>
         @if (!ViewContext.ModelState.IsValid)
         {
             <div asp-validation-summary="All"></div>

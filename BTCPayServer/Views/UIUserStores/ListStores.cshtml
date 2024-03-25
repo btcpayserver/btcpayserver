@@ -4,13 +4,8 @@
     ViewData.SetActivePage(StoreNavPages.Index, Model.Archived ? "Archived Stores" : "Stores");
 }
 
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
-
-<div class="d-sm-flex justify-content-between mb-2">
-    <h2 class="mb-0">
-        @ViewData["Title"]
-    </h2>
-</div>
 @if (Model.Stores.Any())
 {
     <table class="table table-hover">

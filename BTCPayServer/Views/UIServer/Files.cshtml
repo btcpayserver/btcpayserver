@@ -5,13 +5,14 @@
 
 <div class="row">
     <div class="col">
-        <div class="d-flex align-items-center justify-content-between mt-n1 mb-4">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
+        <div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
             <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]" class="btn btn-secondary d-flex align-items-center">
                 <vc:icon symbol="settings" />
                 <span class="ms-1">Settings</span>
             </a>
         </div>
+        <partial name="_StatusMessage" />
 
         @if (!Model.StorageConfigured)
         {

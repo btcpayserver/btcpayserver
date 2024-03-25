@@ -3,7 +3,9 @@
     ViewData.SetActivePage(ServerNavPages.Emails, "Emails");
 }
 
-<h3 class="mb-4">Email Server</h3>
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
+
 <form method="post" autocomplete="off">
     <div class="form-group" style="margin:1rem 0 2rem">
         <div class="d-flex align-items-center">

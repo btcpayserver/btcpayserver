@@ -1,13 +1,11 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Server
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Controllers
 @using BTCPayServer.Views.Stores
 @model UpdateRoleViewModel
 @{
-    Layout = "_NavLayout.cshtml";
     var role = Context.GetRouteValue("role") as string;
 
     if (role == "create")

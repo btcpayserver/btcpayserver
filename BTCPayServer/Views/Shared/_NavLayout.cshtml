@@ -1,7 +1,6 @@
-@using NBitcoin
 @{
     Layout = "/Views/Shared/_Layout.cshtml";
-    ViewBag.ShowMenu = ViewBag.ShowMenu ?? true;
+    ViewBag.ShowMenu ??= true;
     if (!ViewData.ContainsKey("NavPartialName"))
     {
         ViewData["NavPartialName"] = "_Nav";

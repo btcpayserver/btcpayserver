@@ -3,8 +3,6 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.OnChain.UIOnChainAutomatedPayoutProcessorsController.OnChainTransferViewModel
 @{
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "On-Chain Payout Processor", Context.GetStoreData().Id);
     var cryptoCode = Context.GetRouteValue("cryptocode")?.ToString();
 }

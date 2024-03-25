@@ -199,8 +199,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("Kraken (Recommended)", rateSource.SelectedOption.Text);
             rateSource.SelectByText("CoinGecko");
             Driver.WaitForElement(By.Id("Create")).Click();
-            Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
-            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.General.ToString()}")).Click();
+            Driver.FindElement(By.Id("StoreNav-General")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             if (keepId)
                 StoreId = storeId;
@@ -434,23 +433,11 @@ namespace BTCPayServer.Tests
                     WalletId = new WalletId(storeId, WalletId.CryptoCode);
             }
 
-            Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
-
             if (storeNavPage != StoreNavPages.General)
             {
-                switch (storeNavPage)
-                {
-                    case StoreNavPages.Dashboard:
-                    case StoreNavPages.Payouts:
-                    case StoreNavPages.PayButton:
-                    case StoreNavPages.PullPayments:
-                        Driver.FindElement(By.Id($"StoreNav-{storeNavPage.ToString()}")).Click();
-                        break;
-                    default:
-                        Driver.FindElement(By.Id($"SectionNav-{storeNavPage.ToString()}")).Click();
-                        break;
-                }
+                Driver.FindElement(By.Id($"StoreNav-{StoreNavPages.General}")).Click();
             }
+            Driver.FindElement(By.Id($"StoreNav-{storeNavPage}")).Click();
         }
 
         public void GoToWalletSettings(string cryptoCode = "BTC")
@@ -466,9 +453,9 @@ namespace BTCPayServer.Tests
         {
             Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
             // if Lightning is already set up we need to navigate to the settings
-            if (Driver.PageSource.Contains("id=\"SectionNav-LightningSettings\""))
+            if (Driver.PageSource.Contains("id=\"StoreNav-LightningSettings\""))
             {
-                Driver.FindElement(By.Id("SectionNav-LightningSettings")).Click();
+                Driver.FindElement(By.Id("StoreNav-LightningSettings")).Click();
             }
         }
 

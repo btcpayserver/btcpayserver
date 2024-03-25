@@ -2,28 +2,28 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.EmailsViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Emails, "Emails", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
     var hasCustomSettings = (Model.IsSetup() && !Model.UsesFallback()) || ViewBag.UseCustomSMTP ?? false;
+    ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", storeId);
 }
 
-<div class="row mb-4">
+<div class="row">
     <div class="col-xl-10 col-xxl-constrain">
-        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-4">
+        <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
             <h3 class="mb-0">Email Rules</h3>
-            <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id" id="ConfigureEmailRules" permission="@Policies.CanModifyStoreSettings">
+            <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@storeId" id="ConfigureEmailRules" permission="@Policies.CanModifyStoreSettings">
                 Configure
             </a>
         </div>
-        <p class="mb-0">
-            <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id">Email rules</a>
+        <partial name="_StatusMessage" />
+        <p permission="@Policies.CanModifyStoreSettings">
+            <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@storeId">Email rules</a>
             allow BTCPay Server to send customized emails from your store based on events.
         </p>
     </div>
 </div>
 
-<h3 class="mt-5 mb-4">Email Server</h3>
-
+<h3 class="my-3">Email Server</h3>
 <form method="post" autocomplete="off" permissioned="@Policies.CanModifyStoreSettings">
     @if (Model.IsFallbackSetup())
     {

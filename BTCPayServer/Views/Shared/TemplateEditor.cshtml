@@ -153,16 +153,10 @@
                 <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
                     <div class="offcanvas-header p-3">
                         <h5 class="offcanvas-title">Edit Item</h5>
-                        <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
-                            <vc:icon symbol="close" />
-                        </button>
+                        <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': itemChanged, 'btn-outline-secondary': !itemChanged }" v-on:click="hideOffcanvas" v-text="itemChanged ? 'Apply' : 'Close'"></button>
                     </div>
                     <div class="offcanvas-body p-3 p-xl-0">
                         <item-editor ref="itemEditor" :item="selectedItem" class="bg-tile w-100 p-xl-4 rounded" />
-                    </div>
-                    <div class="offcanvas-header p-3">
-                        <button class="btn btn-primary" type="button" v-on:click="() => { $refs.itemEditor.apply(); hideOffcanvas() }">Apply and close</button>
-                        <button class="btn btn-secondary" type="button" v-on:click="hideOffcanvas">Cancel</button>
                     </div>
                 </div>
             </div>

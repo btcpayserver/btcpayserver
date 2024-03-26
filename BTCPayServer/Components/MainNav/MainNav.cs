@@ -62,10 +62,10 @@ namespace BTCPayServer.Components.MainNav
             {
                 Store = store,
                 ContactUrl = serverSettings.ContactUrl
-#if ALTCOINS
-            AltcoinsBuild = true;
-#endif
             };
+#if ALTCOINS
+            vm.AltcoinsBuild = true;
+#endif
             if (store != null)
             {
                 var storeBlob = store.GetStoreBlob();

@@ -4,13 +4,13 @@
 @using BTCPayServer.Client
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model StoreUsersViewModel
-@inject IScopeProvider ScopeProvider
 @inject StoreRepository StoreRepository
 @{
+    var storeId = Context.GetStoreData().Id;
     Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", storeId);
     var roles = new SelectList(
-        await StoreRepository.GetStoreRoles(ScopeProvider.GetCurrentStoreId()),
+        await StoreRepository.GetStoreRoles(storeId),
         nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
         Model.Role);
 }
@@ -26,8 +26,9 @@
     <div class="col-xxl-constrain">
         <h3 class="mb-3">@ViewData["Title"]</h3>
         <p>
-            Give other registered BTCPay Server users access to your store.<br />
-            Guests will not be able to see or modify the store settings.
+            Give other registered BTCPay Server users access to your store. See the
+            <a asp-controller="UIStores" asp-action="ListRoles" asp-route-storeId="@storeId">roles</a>
+            for granted permissions.
         </p>
 
         @if (!ViewContext.ModelState.IsValid)

@@ -13,6 +13,7 @@ namespace BTCPayServer.Components.MainNav
         public CustodianAccountData[] CustodianAccounts { get; set; }
         public bool AltcoinsBuild { get; set; }
         public int ArchivedAppsCount { get; set; }
+        public string ContactUrl { get; set; }
     }
 
     public class StoreApp

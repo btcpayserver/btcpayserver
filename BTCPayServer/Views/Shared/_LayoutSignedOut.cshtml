@@ -1,13 +1,19 @@
 @using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Components.MainLogo
+@using System.Text
 @inject SettingsRepository SettingsRepository
 @{
     Layout = "_LayoutSimple";
     ViewBag.ShowTitle ??= true;
     ViewBag.ShowLeadText ??= false;
-    
+    // obfuscate email on public page, decode via JS (see below)
     var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+    var contactUrl = settings.ContactUrl;
+    if (contactUrl?.StartsWith("mailto:") is true)
+    {
+        contactUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(contactUrl));
+    }
 }
 
 @section PageHeadContent {
@@ -64,11 +70,20 @@
     @RenderBody()
 </div>
 
-@if (!string.IsNullOrWhiteSpace(settings.ContactUrl))
+@if (!string.IsNullOrWhiteSpace(contactUrl))
 {
     <p class="text-center mt-n5 mb-5 pt-2">
-        <a class="text-secondary" href="@settings.ContactUrl" id="ContactLink">Contact Us</a>
+        <a class="text-secondary" href="@contactUrl" id="ContactLink">Contact Us</a>
     </p>
+    @if (contactUrl != settings.ContactUrl)
+    {
+        <script>
+            (function() {
+                const link = document.getElementById('ContactLink')
+                link.setAttribute('href', atob(link.getAttribute('href')))
+            })()
+        </script>
+    }
 }
 
 <div class="row justify-content-center mt-5">

@@ -9,9 +9,12 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -29,7 +32,9 @@ namespace BTCPayServer.Controllers
         readonly RateFetcher _rateProviderFactory;
         readonly BTCPayNetworkProvider _networkProvider;
         readonly CurrencyNameTable _currencyNameTable;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         readonly StoreRepository _storeRepo;
+        private readonly InvoiceRepository _invoiceRepository;
 
         private StoreData CurrentStore => HttpContext.GetStoreData();
 
@@ -37,12 +42,16 @@ namespace BTCPayServer.Controllers
             RateFetcher rateProviderFactory,
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepo,
-            CurrencyNameTable currencyNameTable)
+            InvoiceRepository invoiceRepository,
+            CurrencyNameTable currencyNameTable,
+            PaymentMethodHandlerDictionary handlers)
         {
             _rateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
             _networkProvider = networkProvider;
             _storeRepo = storeRepo;
+            _invoiceRepository = invoiceRepository;
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
+            _handlers = handlers;
         }
 
         [Route("rates/{baseCurrency}")]
@@ -50,11 +59,17 @@ namespace BTCPayServer.Controllers
         [BitpayAPIConstraint]
         public async Task<IActionResult> GetBaseCurrencyRates(string baseCurrency, string cryptoCode = null, CancellationToken cancellationToken = default)
         {
-            var supportedMethods = CurrentStore.GetSupportedPaymentMethods(_networkProvider);
-
-            var currencyCodes = supportedMethods.Where(method => !string.IsNullOrEmpty(method.PaymentId.CryptoCode))
-                .Select(method => method.PaymentId.CryptoCode).Distinct();
-
+            var inv = _invoiceRepository.CreateNewInvoice(CurrentStore.Id);
+            inv.Currency = baseCurrency;
+            var ctx = new InvoiceCreationContext(CurrentStore, CurrentStore.GetStoreBlob(), inv, new Logging.InvoiceLogs(), _handlers, null);
+            ctx.SetLazyActivation(true);
+            await ctx.BeforeFetchingRates();
+            var currencyCodes = ctx
+                                .PaymentMethodContexts
+                                .SelectMany(c => c.Value.RequiredRates)
+                                .Where(c => c.Left.Equals(baseCurrency, StringComparison.OrdinalIgnoreCase))
+                                .Select(c => c.Right)
+                                .ToHashSet();
             var currencypairs = BuildCurrencyPairs(currencyCodes, baseCurrency);
 
             var result = await GetRates2(currencypairs, null, cryptoCode, cancellationToken);

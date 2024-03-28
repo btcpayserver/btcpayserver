@@ -45,7 +45,6 @@ public class BSMSWalletFileParser : IWalletFileParser
 
         derivationSchemeSettings = new BTCPayServer.DerivationSchemeSettings()
         {
-            Network = network,
             Source = "BSMS",
             AccountDerivation = result.Item1,
             AccountOriginal = descriptor.Trim(),

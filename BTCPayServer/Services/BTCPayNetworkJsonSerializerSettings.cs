@@ -42,17 +42,6 @@ namespace BTCPayServer.Services
         }
 
         readonly Dictionary<string, JsonSerializerSettings> _Serializers = new Dictionary<string, JsonSerializerSettings>();
-
-        public JsonSerializerSettings GetSerializer(Network network)
-        {
-            ArgumentNullException.ThrowIfNull(network);
-            return GetSerializer(network.NetworkSet.CryptoCode);
-        }
-        public JsonSerializerSettings GetSerializer(BTCPayNetwork network)
-        {
-            ArgumentNullException.ThrowIfNull(network);
-            return GetSerializer(network.CryptoCode);
-        }
         public JsonSerializerSettings GetSerializer(string cryptoCode)
         {
             ArgumentNullException.ThrowIfNull(cryptoCode);

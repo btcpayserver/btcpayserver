@@ -8,7 +8,7 @@ namespace BTCPayServer.Payments.Lightning
     {
 
 
-        public static ILightningClient CreateLightningClient(this LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, LightningNetworkOptions options, LightningClientFactoryService lightningClientFactory)
+        public static ILightningClient CreateLightningClient(this LightningPaymentMethodConfig supportedPaymentMethod, BTCPayNetwork network, LightningNetworkOptions options, LightningClientFactoryService lightningClientFactory)
         {
             var external = supportedPaymentMethod.GetExternalLightningUrl();
             if (external != null)

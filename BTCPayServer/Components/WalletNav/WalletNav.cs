@@ -26,6 +26,7 @@ namespace BTCPayServer.Components.WalletNav
     public class WalletNav : ViewComponent
     {
         private readonly BTCPayWalletProvider _walletProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly UIWalletsController _walletsController;
         private readonly CurrencyNameTable _currencies;
         private readonly BTCPayNetworkProvider _networkProvider;
@@ -33,12 +34,14 @@ namespace BTCPayServer.Components.WalletNav
 
         public WalletNav(
             BTCPayWalletProvider walletProvider,
+            PaymentMethodHandlerDictionary handlers,
             BTCPayNetworkProvider networkProvider,
             UIWalletsController walletsController,
             CurrencyNameTable currencies,
             RateFetcher rateFetcher)
         {
             _walletProvider = walletProvider;
+            _handlers = handlers;
             _networkProvider = networkProvider;
             _walletsController = walletsController;
             _currencies = currencies;
@@ -51,7 +54,7 @@ namespace BTCPayServer.Components.WalletNav
             var network = _networkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var wallet = _walletProvider.GetWallet(network);
             var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
-            var derivation = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
+            var derivation = store.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
             var balance = await wallet.GetBalance(derivation?.AccountDerivation) switch
             {
                 { Available: null, Total: var total } => total,

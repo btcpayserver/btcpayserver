@@ -29,13 +29,12 @@ namespace BTCPayServer.Client.Models
         public decimal Amount { get; set; }
 
         [JsonConverter(typeof(NumericStringJsonConverter))]
-        public decimal NetworkFee { get; set; }
+        public decimal PaymentMethodFee { get; set; }
 
         public List<Payment> Payments { get; set; }
-        public string PaymentMethod { get; set; }
-
-        public string CryptoCode { get; set; }
-        public JObject AdditionalData { get; set; }
+        public string PaymentMethodId { get; set; }
+        public JToken AdditionalData { get; set; }
+        public string Currency { get; set; }
 
         public class Payment
         {

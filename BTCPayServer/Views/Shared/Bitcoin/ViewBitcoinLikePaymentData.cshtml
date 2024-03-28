@@ -2,27 +2,26 @@
 @using BTCPayServer.Payments
 @using BTCPayServer.Payments.Bitcoin
 @using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
+@using NBitcoin
 @inject DisplayFormatter DisplayFormatter
 @inject TransactionLinkProviders TransactionLinkProviders
+@inject PaymentMethodHandlerDictionary handlers
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
 @{
-    PayjoinInformation payjoinInformation = null;
-    var payments = Model
-        .Where(entity => entity.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance)
-        .Select(payment =>
+	PayjoinInformation payjoinInformation = null;
+	var payments = Model
+		.Select(payment =>
         {
-			var pmi = payment.GetPaymentMethodId();
+			if (!handlers.TryGetValue(payment.PaymentMethodId, out var h) || h is not BitcoinLikePaymentHandler handler)
+				return null;
+			var network = handler.Network;
             var m = new OnchainPaymentViewModel();
-            var onChainPaymentData = payment.GetCryptoPaymentData() as BitcoinLikePaymentData;
-            if (onChainPaymentData is null)
-            {
-                return null;
-            }
-			m.Crypto = pmi.CryptoCode;
-            m.DepositAddress = onChainPaymentData.GetDestination();
+            var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
+			m.Crypto = network.CryptoCode;
+            m.DepositAddress = BitcoinAddress.Create(payment.Destination, network.NBitcoinNetwork);
 
             var confirmationCount = onChainPaymentData.ConfirmationCount;
-            var network = payment.Network as BTCPayNetwork;
             if (confirmationCount >= network.MaxTrackedConfirmation)
             {
                 m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
@@ -43,10 +42,11 @@
             }
             m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
             m.ReceivedTime = payment.ReceivedTime;
-			m.TransactionLink = TransactionLinkProviders.GetTransactionLink(pmi, onChainPaymentData.Outpoint.ToString());
+			m.TransactionLink = TransactionLinkProviders.GetTransactionLink(network.CryptoCode, onChainPaymentData.Outpoint.ToString());
             m.Replaced = !payment.Accounted;
             m.CryptoPaymentData = onChainPaymentData;
-            m.NetworkFee = payment.NetworkFee;
+			m.Value = payment.Value;
+            m.NetworkFee = payment.PaymentMethodFee;
             m.PaymentProof = onChainPaymentData.Outpoint.ToString();
             return m;
         })
@@ -98,7 +98,7 @@
                         }
                         <td class="text-end">@payment.Confirmations</td>
                         <td class="payment-value text-end text-nowrap">
-                            <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.CryptoPaymentData.GetValue(), payment.Crypto)</span>
+                            <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Value, payment.Crypto)</span>
                             @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
                             {
                                 <div>(@payment.AdditionalInformation)</div>

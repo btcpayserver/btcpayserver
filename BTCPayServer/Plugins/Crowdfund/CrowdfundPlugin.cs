@@ -9,6 +9,8 @@ using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Plugins.Crowdfund.Controllers;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Services;
@@ -19,6 +21,7 @@ using Ganss.Xss;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
+using static BTCPayServer.Plugins.Crowdfund.Models.ViewCrowdfundViewModel.CrowdfundInfo;
 
 namespace BTCPayServer.Plugins.Crowdfund
 {

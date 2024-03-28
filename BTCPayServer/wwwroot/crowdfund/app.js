@@ -139,11 +139,10 @@ app = new Vue({
                     if(!combinedStats[keys[i]]){
                     continue;
                 }
-                var paymentMethodId = keys[i].split("_");
+                var paymentMethodId = keys[i].split("-");
                 var value = combinedStats[keys[i]].toFixed(this.srvModel.currencyDataPayments[paymentMethodId[0]].divisibility);
                     var newItem = {key:keys[i], value: value, label: paymentMethodId[0]};
-
-                    if(paymentMethodId.length > 1 && paymentMethodId[1].endsWith("LightningLike")){
+                if (paymentMethodId.length > 1 && (paymentMethodId[1].endsWith("LN") || paymentMethodId[1].endsWith("LNURL"))){
                     newItem.lightning = true;
                 }
                 result.push(newItem);

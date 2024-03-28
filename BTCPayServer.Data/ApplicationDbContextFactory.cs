@@ -17,6 +17,7 @@ namespace BTCPayServer.Data
         public override ApplicationDbContext CreateContext()
         {
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
+            builder.AddInterceptors(Data.InvoiceData.MigrationInterceptor.Instance);
             ConfigureBuilder(builder);
             return new ApplicationDbContext(builder.Options);
         }

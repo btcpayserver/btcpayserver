@@ -3,25 +3,35 @@
 @inject ThemeSettings Theme
 @inject IFileService FileService
 
+@* See these for details on the color-scheme meta tag:
+   https://github.com/btcpayserver/btcpayserver/issues/5860
+   https://developer.mozilla.org/en-US/docs/Web/CSS/color-scheme *@
 <script>if (window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true') { document.documentElement.setAttribute('data-hide-sensitive-info', 'true')}</script>
 @if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CssUri))
-{   // legacy customization with CSS URI - keep it for backwards-compatibility
+{   @* legacy customization with CSS URI - keep it for backwards-compatibility *@
     <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true" />
 }
 else if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CustomThemeFileId))
-{   // new customization uses theme file id provided by upload
+{   
+    @if (Theme.CustomThemeExtension == ThemeExtension.Light)
+    {
+        <meta name="color-scheme" content="only light">
+    }
     @if (Theme.CustomThemeExtension != ThemeExtension.Custom)
     {   // needs to be added for light and dark, because dark extends light
         <link href="~/main/themes/default.css" rel="stylesheet" asp-append-version="true" />
     }
     @if (Theme.CustomThemeExtension == ThemeExtension.Dark)
     {
+        <meta name="color-scheme" content="only dark">
         <link href="~/main/themes/default-dark.css" rel="stylesheet" asp-append-version="true" />
     }
+    @* new customization uses theme file id provided by upload *@
     <link href="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Theme.CustomThemeFileId))" rel="stylesheet" asp-append-version="true" />
 }
 else
 {
+    <meta name="color-scheme" content="light dark">
     <link href="~/main/themes/default.css" asp-append-version="true" rel="stylesheet" />
     <link href="~/main/themes/default-dark.css" asp-append-version="true" rel="stylesheet" id="DarkThemeLinkTag" />
     <script src="~/js/theme-switch.js" asp-append-version="true"></script>

@@ -38,7 +38,6 @@ using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -168,7 +167,6 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
-            services.AddSingleton<CustodianAccountRepository>();
             services.TryAddSingleton<WalletHistogramService>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(

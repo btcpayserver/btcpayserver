@@ -9,7 +9,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Custodian.Client;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
@@ -28,7 +27,6 @@ namespace BTCPayServer.Components.MainNav
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
-        private readonly CustodianAccountRepository _custodianAccountRepository;
         private readonly SettingsRepository _settingsRepository;
         public PoliciesSettings PoliciesSettings { get; }
 
@@ -39,7 +37,6 @@ namespace BTCPayServer.Components.MainNav
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
-            CustodianAccountRepository custodianAccountRepository,
             SettingsRepository settingsRepository,
             PoliciesSettings policiesSettings)
         {
@@ -49,7 +46,6 @@ namespace BTCPayServer.Components.MainNav
             _networkProvider = networkProvider;
             _storesController = storesController;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
-            _custodianAccountRepository = custodianAccountRepository;
             _settingsRepository = settingsRepository;
             PoliciesSettings = policiesSettings;
         }
@@ -88,13 +84,6 @@ namespace BTCPayServer.Components.MainNav
                     }).ToList();
 
                 vm.ArchivedAppsCount = apps.Count(a => a.Archived);
-
-                if (PoliciesSettings.Experimental)
-                {
-                    // Custodian Accounts
-                    var custodianAccounts = await _custodianAccountRepository.FindByStoreId(store.Id);
-                    vm.CustodianAccounts = custodianAccounts;
-                }
             }
 
             return View(vm);

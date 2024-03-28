@@ -217,27 +217,6 @@ namespace BTCPayServer.Controllers.Greenfield
             throw new NotSupportedException("This method is not supported by the LocalBTCPayServerClient.");
         }
 
-        public override async Task<MarketTradeResponseData> MarketTradeCustodianAccountAsset(string storeId, string accountId,
-            TradeRequestData request, CancellationToken cancellationToken = default)
-        {
-            return GetFromActionResult<MarketTradeResponseData>(
-                await GetController<GreenfieldCustodianAccountController>().MarketTradeCustodianAccountAsset(storeId, accountId, request, cancellationToken));
-        }
-
-        public override async Task<WithdrawalSimulationResponseData> SimulateCustodianAccountWithdrawal(string storeId, string accountId,
-            WithdrawRequestData request, CancellationToken cancellationToken = default)
-        {
-            return GetFromActionResult<WithdrawalSimulationResponseData>(
-                await GetController<GreenfieldCustodianAccountController>().SimulateWithdrawal(storeId, accountId, request, cancellationToken));
-        }
-
-        public override async Task<WithdrawalResponseData> CreateCustodianAccountWithdrawal(string storeId, string accountId,
-            WithdrawRequestData request, CancellationToken cancellationToken = default)
-        {
-            return GetFromActionResult<WithdrawalResponseData>(
-                await GetController<GreenfieldCustodianAccountController>().CreateWithdrawal(storeId, accountId, request, cancellationToken));
-        }
-
         public override async Task<OnChainWalletObjectData[]> GetOnChainWalletObjects(string storeId, string cryptoCode,
             GetWalletObjectsRequest query = null,
             CancellationToken token = default)

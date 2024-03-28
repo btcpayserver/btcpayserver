@@ -100,14 +100,6 @@ header .cart-toggle-btn {
     background-color: var(--btcpay-bg-tile);
 }
 
-#cart .quantity .btn {
-    width: 2rem;
-    height: 2rem;
-}
-#cart .quantity .btn .icon{
-    --btn-icon-size: .75rem;
-}
-
 #CartBadge {
     position: absolute;
     top: 0;

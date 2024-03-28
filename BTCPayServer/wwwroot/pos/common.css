@@ -96,3 +96,30 @@
     max-height: 210px;
     object-fit: scale-down;
 }
+.quantities .btn {
+    --btcpay-btn-disabled-opacity: .3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: none;
+    border: transparent;
+    padding: 0;
+}
+.quantities .btn span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--btcpay-light);
+}
+.quantities .btn:hover span {
+    background: var(--btcpay-light-bg-hover);
+}
+.quantities .icon {
+    width: 1rem;
+    height: 1rem;
+}

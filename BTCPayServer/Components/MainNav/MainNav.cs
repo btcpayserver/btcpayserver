@@ -27,6 +27,8 @@ namespace BTCPayServer.Components.MainNav
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly SettingsRepository _settingsRepository;
+        public PoliciesSettings PoliciesSettings { get; }
 
         public MainNav(
             AppService appService,
@@ -35,6 +37,7 @@ namespace BTCPayServer.Components.MainNav
             BTCPayNetworkProvider networkProvider,
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            SettingsRepository settingsRepository,
             PoliciesSettings policiesSettings)
         {
             _storeRepo = storeRepo;
@@ -43,13 +46,19 @@ namespace BTCPayServer.Components.MainNav
             _networkProvider = networkProvider;
             _storesController = storesController;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _settingsRepository = settingsRepository;
             PoliciesSettings = policiesSettings;
         }
 
         public async Task<IViewComponentResult> InvokeAsync()
         {
             var store = ViewContext.HttpContext.GetStoreData();
-            var vm = new MainNavViewModel { Store = store };
+            var serverSettings = await _settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+            var vm = new MainNavViewModel
+            {
+                Store = store,
+                ContactUrl = serverSettings.ContactUrl
+            };
 #if ALTCOINS
             vm.AltcoinsBuild = true;
 #endif
@@ -81,7 +90,5 @@ namespace BTCPayServer.Components.MainNav
         }
 
         private string UserId => _userManager.GetUserId(HttpContext.User);
-
-        public PoliciesSettings PoliciesSettings { get; }
     }
 }

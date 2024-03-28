@@ -275,6 +275,15 @@
                     </li>
                 </ul>
             </li>
+            @if (!string.IsNullOrWhiteSpace(Model.ContactUrl))
+            {
+                <li class="nav-item">
+                    <a href="@Model.ContactUrl" class="nav-link" id="Nav-ContactUs">
+                    <vc:icon symbol="contact"/>
+                        <span>Contact Us</span>
+                    </a>
+                </li>
+            }
         </ul>
     }
 </nav>

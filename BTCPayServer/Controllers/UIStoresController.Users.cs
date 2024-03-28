@@ -45,7 +45,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/users")]
         public async Task<IActionResult> StoreUsers()
         {
-            var vm = new StoreUsersViewModel { Role = StoreRoleId.Guest.Role };
+            var vm = new StoreUsersViewModel { Role = StoreRoleId.Employee.Role };
             await FillUsers(vm);
             return View(vm);
         }

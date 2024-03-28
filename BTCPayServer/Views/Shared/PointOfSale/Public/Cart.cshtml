@@ -163,13 +163,13 @@
                                     <span class="badge text-bg-warning inventory" v-if="item.inventory">
                                         {{ item.inventory > 0 ? `${item.inventory} left` : "Sold out" }}
                                     </span>
-                                    <div class="d-flex align-items-center gap-2">
-                                        <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center">
-                                            <vc:icon symbol="minus" />
+                                    <div class="d-flex align-items-center gap-2 quantities">
+                                        <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-minus">
+                                            <span><vc:icon symbol="minus" /></span>
                                         </button>
-                                        <input class="form-control hide-number-spin w-50px" type="number" placeholder="Qty" min="1" step="1" :max="item.inventory" v-model.number="item.count">
-                                        <button type="button" v-on:click="updateQuantity(item.id, +1)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center">
-                                            <vc:icon symbol="plus" />
+                                        <input class="form-control hide-number-spin w-50px text-center" type="number" placeholder="Qty" min="1" step="1" :max="item.inventory" v-model.number="item.count">
+                                        <button type="button" v-on:click="updateQuantity(item.id, +1)" class="btn btn-plus">
+                                            <span><vc:icon symbol="plus" /></span>
                                         </button>
                                     </div>
                                 </div>

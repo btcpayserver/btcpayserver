@@ -115,7 +115,7 @@
                         <div class="d-flex align-items-start w-100 gap-3">
                             @if (!string.IsNullOrWhiteSpace(item.Image))
                             {
-                                <div class="img">
+                                <div class="img d-none d-sm-block">
                                     <img src="@item.Image" alt="@item.Title" asp-append-version="true" />
                                 </div>
                             }
@@ -138,13 +138,13 @@
                                     }
                                 </div>
                             </div>
-                            <div class="d-flex align-items-center gap-2 ms-auto" v-if="inStock(@index)">
-                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, -1, true)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center btn-minus" :disabled="getQuantity(`@Safe.Raw(item.Id)`) <= 0">
-                                    <vc:icon symbol="minus" />
+                            <div class="d-flex align-items-center gap-2 ms-auto quantities">
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, -1, true)" class="btn btn-minus" :disabled="getQuantity(`@Safe.Raw(item.Id)`) <= 0">
+                                    <span><vc:icon symbol="minus" /></span>
                                 </button>
-                                <div class="quantity text-center fs-6" style="width:2rem">{{ getQuantity(`@Safe.Raw(item.Id)`) }}</div>
-                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, +1, true)" class="btn btn-light p-1 rounded-pill d-flex align-items-center justify-content-center btn-plus">
-                                    <vc:icon symbol="plus" />
+                                <div class="quantity text-center fs-5" style="width:2rem">{{ getQuantity(`@Safe.Raw(item.Id)`) }}</div>
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, +1, true)" class="btn btn-plus" :disabled="!inStock(@index)">
+                                    <span><vc:icon symbol="plus" /></span>
                                 </button>
                             </div>
                         </div>

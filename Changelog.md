@@ -4,10 +4,10 @@
 
 ### New feature
 
-* Server Settings: Customize instance name and add contact URL (#5718) @dennisreimann
+* Server Settings: Customize instance name and add contact URL (#5718 #5872) @dennisreimann
 * Admin overview of the stores on the instance (#5745 #5782) @dennisreimann @Kukks
-* Onboarding: Invite new users (#5714 #5719) @dennisreimann @dstrukt
-* POS: Add item list to keypad (#5814) @dennisreimann @dstrukt
+* Onboarding: Invite new users (#5714 #5719 #5874) @dennisreimann @dstrukt
+* POS: Add item list to keypad (#5814 #5857 #5877) @dennisreimann @dstrukt
 * Wallet: Support BBQr PSBTSs (#5852) @Kukks
 
 ### Improvements
@@ -17,7 +17,7 @@
 * Wallet: Support 16mb PSBTs (#5768) @Kukks
 * Invoice: Improve events display (#5775) @dennisreimann
 * Crowdfund: Add forms (like with the POS) (#5659) @Nisaba
-* API docs: Add link to API usage examples in docs (#5772) @ndeet
+* API docs: Adding introduction, Authentication and Usage examples sections (#5772 #5858) @ndeet
 * Policies: Cleanup and improvements (#5731) @dennisreimann @dstrukt
 * Add legacy report (#5740) @Kukks
 * Store: Move support URL to Checkout Appearance and improve wording (#5717) @dennisreimann
@@ -33,7 +33,7 @@
 * Pull Payments: When opened in mobile, use deeplink to setup card (#5613) @NicolasDorier
 * UI consistency: Use toggles in various setting views (#5769) @TChukwuleta
 * Wallet: Improve info message (#5756) @rockstardev
-* Item Editor: Apply item changes directly (#5849) @dennisreimann
+* Item Editor: Apply item changes directly (#5849 #5871) @dennisreimann
 * Specify mailto: prefix for emails in Server Settings (#5844) @TChukwuleta @dennisreimann
 * UI: Improve Create First Store view (#5854) @dennisreimann
 * Receipts: Smaller printed receipts (#5856) @Kukks
@@ -51,6 +51,7 @@
 * Reports: Fix old payments not showing up in reports (#5812) @NicolasDorier
 * POS: Fix exception when asking for data with a top up item (#5816) @dennisreimann
 * Plugins: Do not have report name conflict with old plugin (#5826) @Kukks
+* Lightning: Do not throw when local node is not synced and using external ln node (#5859) @Kukks
 
 ## 1.12.5
 

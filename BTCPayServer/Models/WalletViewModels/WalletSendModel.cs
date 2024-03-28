@@ -44,7 +44,7 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public List<FeeRateOption> RecommendedSatoshiPerByte { get; set; }
 
-        [Display(Name = "Fee rate (satoshi per byte)")]
+        [Display(Name = "Fee rate (sat/vB)")]
         [Required]
         public decimal? FeeSatoshiPerByte { get; set; }
 

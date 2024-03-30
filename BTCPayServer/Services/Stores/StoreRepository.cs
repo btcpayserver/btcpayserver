@@ -248,7 +248,7 @@ namespace BTCPayServer.Services.Stores
         /// `role` can be passed in two format:
         /// STOREID::ROLE or ROLE.
         /// If the first case, this method make sure the storeId is same as <paramref name="storeId"/>.
-        /// In the second case, we interprete ROLE as a server level roleId first, then if it does not exist, check if there is a store level role.
+        /// In the second case, we interpret ROLE as a server level roleId first, then if it does not exist, check if there is a store level role.
         /// </summary>
         /// <param name="storeId"></param>
         /// <param name="role"></param>

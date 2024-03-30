@@ -114,7 +114,7 @@ namespace BTCPayServer.Hosting
             if (!httpContext.Request.Path.HasValue)
                 return false;
 
-            // In case of anyone can create invoice, the storeId can be set explicitely
+            // In case of anyone can create invoice, the storeId can be set explicitly
             bitpayAuth |= httpContext.Request.Query.ContainsKey("storeid");
 
             var isJson = (httpContext.Request.ContentType ?? string.Empty).StartsWith("application/json", StringComparison.OrdinalIgnoreCase);

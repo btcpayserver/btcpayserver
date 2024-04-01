@@ -423,9 +423,11 @@ retry:
         [Trait("Fast", "Fast")]
         public async Task CheckJsContent()
         {
+            var handler = new HttpClientHandler();
+            handler.AutomaticDecompression = DecompressionMethods.GZip | DecompressionMethods.Deflate | DecompressionMethods.Brotli;
             // This test verify that no malicious js is added in the minified files.
             // We should extend the tests to other js files, but we can do as we go...
-            using var client = new HttpClient();
+            using var client = new HttpClient(handler);
             var actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "bootstrap", "bootstrap.bundle.min.js").Trim();
             var version = Regex.Match(actual, "Bootstrap v([0-9]+.[0-9]+.[0-9]+)").Groups[1].Value;
             var expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/bootstrap@{version}/dist/js/bootstrap.bundle.min.js")).Content.ReadAsStringAsync()).Trim();

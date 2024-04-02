@@ -21,7 +21,8 @@
     </style>
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 
 @if (!ViewContext.ModelState.IsValid)
 {

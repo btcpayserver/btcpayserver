@@ -3,7 +3,7 @@
 @using BTCPayServer.Views.Apps
 @using BTCPayServer.Plugins.PointOfSale
 @using BTCPayServer.Services.Apps
-@inject AppService AppService;
+@inject AppService AppService
 @model BTCPayServer.Components.MainNav.MainNavViewModel
 @{
     var store = Context.GetStoreData();
@@ -14,7 +14,7 @@
     var appType = AppService.GetAppType(PointOfSaleAppType.AppType)!;
     var apps = Model.Apps.Where(app => app.AppType == appType.Type).ToList();
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-        <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type" class="nav-link @ViewData.IsActivePage(AppsNavPages.Create, appType.Type)" id="@($"StoreNav-Create{appType.Type}")">
+        <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Create, appType.Type)" id="@($"StoreNav-Create{appType.Type}")">
             <vc:icon symbol="nav-pointofsale" />
             <span>@appType.Description</span>
         </a>
@@ -31,7 +31,7 @@
     @foreach (var app in apps)
     {
         <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-            <a asp-area="" asp-controller="UIPointOfSale" asp-action="UpdatePointOfSale" asp-route-appId="@app.Id" class="nav-link @ViewData.IsActivePage(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+            <a asp-area="" asp-controller="UIPointOfSale" asp-action="UpdatePointOfSale" asp-route-appId="@app.Id" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
                 <span>@app.AppName</span>
             </a>
         </li>

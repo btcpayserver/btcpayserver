@@ -2,10 +2,10 @@
 @{
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Enable authenticator app");
 }
-
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
+<p class="my-3">To use an authenticator app go through the following steps:</p>
 <div class="col-xl-8 col-xxl-constrain">
-    <h3>Enable Authenticator</h3>
-    <p class="my-3">To use an authenticator app go through the following steps:</p>
     <ol class="ps-3">
         <li class="mb-5">
             <div class="mb-2">Download a two-factor authenticator app like …</div>

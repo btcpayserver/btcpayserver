@@ -6,7 +6,6 @@
 @inject WebhookSender WebhookSender
 
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", Context.GetStoreData().Id);
 }
 
@@ -14,126 +13,132 @@
     <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 }
 
-<form class="row" asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id" permissioned="@Policies.CanModifyStoreSettings">
-    <div class="col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mt-n1 mb-3">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
-            <div class="d-flex gap-3" permission="@Policies.CanModifyStoreSettings">
-                @if (Model.Rules.Any())
-                {
-                    <button class="btn btn-primary" name="command" type="submit" value="save" id="SaveEmailRules">
-                        Save
+<form asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="row">
+        <div class="col-xxl-constrain">
+            <div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
+                <h3 class="mb-0">@ViewData["Title"]</h3>
+                <div class="d-flex gap-3" permission="@Policies.CanModifyStoreSettings">
+                    @if (Model.Rules.Any())
+                    {
+                        <button class="btn btn-primary" name="command" type="submit" value="save" id="SaveEmailRules">
+                            Save
+                        </button>
+                    }
+                    <button class="btn btn-primary" name="command" type="submit" value="add" id="CreateEmailRule">
+                        Create
                     </button>
-                }
-                <button class="btn btn-primary" name="command" type="submit" value="add" id="CreateEmailRule">
-                    Create
-                </button>
+                </div>
             </div>
+            <partial name="_StatusMessage" />
+            <p>
+                <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id">Email rules</a>
+                allow BTCPay Server to send customized emails from your store based on events.
+            </p>
         </div>
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All"></div>
-        }
-        else
-        {
-            <p class="mb-0">Email rules allow BTCPay Server to send customized emails from your store based on events.</p>
-        }
-
-        @if (Model.Rules.Any())
-        {
-            <ul class="list-group list-group-flush">
-                @for (var index = 0; index < Model.Rules.Count; index++)
-                {
-                    <li class="list-group-item py-4 px-0 email-rule">
-                        <div class="form-group">
-                            <div class="d-flex align-items-center justify-content-between gap-3">
-                                <label asp-for="Rules[index].Trigger" class="form-label" data-required></label>
-                                <div class="align-items-right">
-                                    <button name="command" type="submit" value="test:@index" class="d-inline-block btn text-info btn-link p-0">
-                                        <vc:icon symbol="actions-email" /> Test this email rule
-                                    </button>
-                                    &nbsp;
-                                    <button name="command" type="submit" value="remove:@index" class="d-inline-block btn text-danger btn-link p-0">
-                                        <vc:icon symbol="actions-remove" /> Remove this email rule
-                                    </button>
+    </div>
+    <div class="row">
+        <div class="col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
+            @if (Model.Rules.Any())
+            {
+                <ul class="list-group list-group-flush">
+                    @for (var index = 0; index < Model.Rules.Count; index++)
+                    {
+                        <li class="list-group-item py-4 px-0 email-rule">
+                            <div class="form-group">
+                                <div class="d-flex align-items-center justify-content-between gap-3">
+                                    <label asp-for="Rules[index].Trigger" class="form-label" data-required></label>
+                                    <div class="align-items-right">
+                                        <button name="command" type="submit" value="test:@index" class="d-inline-block btn text-info btn-link p-0">
+                                            <vc:icon symbol="actions-email" /> Test this email rule
+                                        </button>
+                                        &nbsp;
+                                        <button name="command" type="submit" value="remove:@index" class="d-inline-block btn text-danger btn-link p-0">
+                                            <vc:icon symbol="actions-remove" /> Remove this email rule
+                                        </button>
+                                    </div>
+                                </div>
+                                <select asp-for="Rules[index].Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value, s.Key))" class="form-select email-rule-trigger" required></select>
+                                <span asp-validation-for="Rules[index].Trigger" class="text-danger"></span>
+                                <div class="form-text">Choose what event sends the email.</div>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Rules[index].To" class="form-label">Recipients</label>
+                                <input type="text" asp-for="Rules[index].To" class="form-control email-rule-to" />
+                                <span asp-validation-for="Rules[index].To" class="text-danger"></span>
+                                <div class="form-text">Who to send the email to. For multiple emails, separate with a comma.</div>
+                            </div>
+                            <div class="form-check mb-4">
+                                <input asp-for="Rules[index].CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email" />
+                                <label asp-for="Rules[index].CustomerEmail" class="form-check-label">Send the email to the buyer, if email was provided to the invoice</label>
+                                <span asp-validation-for="Rules[index].CustomerEmail" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Rules[index].Subject" class="form-label" data-required></label>
+                                <input type="text" asp-for="Rules[index].Subject" class="form-control email-rule-subject" />
+                                <span asp-validation-for="Rules[index].Subject" class="text-danger"></span>
+                            </div>
+                            <div class="form-group">
+                                <label asp-for="Rules[index].Body" class="form-label" data-required></label>
+                                <textarea asp-for="Rules[index].Body" class="form-control richtext email-rule-body" rows="4"></textarea>
+                                <span asp-validation-for="Rules[index].Body" class="text-danger"></span>
+                                <div class="form-text rounded bg-light p-2">
+                                    <table class="table table-sm caption-top m-0">
+                                        <caption class="text-muted p-0">Placeholders</caption>
+                                        <tr>
+                                            <th>Invoice</th>
+                                            <td>
+                                                <code>{Invoice.Id}</code>,
+                                                <code>{Invoice.StoreId}</code>,
+                                                <code>{Invoice.Price}</code>,
+                                                <code>{Invoice.Currency}</code>,
+                                                <code>{Invoice.Status}</code>,
+                                                <code>{Invoice.AdditionalStatus}</code>,
+                                                <code>{Invoice.OrderId}</code>
+                                                <code>{Invoice.Metadata}*</code>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Request</th>
+                                            <td>
+                                                <code>{PaymentRequest.Id}</code>,
+                                                <code>{PaymentRequest.Price}</code>,
+                                                <code>{PaymentRequest.Currency}</code>,
+                                                <code>{PaymentRequest.Title}</code>,
+                                                <code>{PaymentRequest.Description}</code>,
+                                                <code>{PaymentRequest.Status}</code>
+                                                <code>{PaymentRequest.FormResponse}*</code>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Payout</th>
+                                            <td>
+                                                <code>{Payout.Id}</code>,
+                                                <code>{Payout.PullPaymentId}</code>,
+                                                <code>{Payout.Destination}</code>,
+                                                <code>{Payout.State}</code>
+                                                <code>{Payout.Metadata}*</code>
+                                            </td>
+                                        </tr>
+                                        <tr><td colspan="2">* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" rel="noreferrer noopener" target="_blank">this syntax</a>. One example is <code>{Invoice.Metadata.itemCode}</code></td></tr>
+                                    </table>
                                 </div>
                             </div>
-                            <select asp-for="Rules[index].Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value,s.Key))" class="form-select email-rule-trigger" required></select>
-                            <span asp-validation-for="Rules[index].Trigger" class="text-danger"></span>
-                            <div class="form-text">Choose what event sends the email.</div>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="Rules[index].To" class="form-label">Recipients</label>
-                            <input type="text" asp-for="Rules[index].To" class="form-control email-rule-to" />
-                            <span asp-validation-for="Rules[index].To" class="text-danger"></span>
-                            <div class="form-text">Who to send the email to. For multiple emails, separate with a comma.</div>
-                        </div>
-                        <div class="form-check mb-4">
-                            <input asp-for="Rules[index].CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email" />
-                            <label asp-for="Rules[index].CustomerEmail" class="form-check-label">Send the email to the buyer, if email was provided to the invoice</label>
-                            <span asp-validation-for="Rules[index].CustomerEmail" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="Rules[index].Subject" class="form-label" data-required></label>
-                            <input type="text" asp-for="Rules[index].Subject" class="form-control email-rule-subject" />
-                            <span asp-validation-for="Rules[index].Subject" class="text-danger"></span>
-                        </div>
-                        <div class="form-group">
-                            <label asp-for="Rules[index].Body" class="form-label" data-required></label>
-                            <textarea asp-for="Rules[index].Body" class="form-control richtext email-rule-body" rows="4"></textarea>
-                            <span asp-validation-for="Rules[index].Body" class="text-danger"></span>
-                            <div class="form-text rounded bg-light p-2">
-                                <table class="table table-sm caption-top m-0">
-                                    <caption class="text-muted p-0">Placeholders</caption>
-                                    <tr>
-                                        <th>Invoice</th>
-                                        <td>
-                                            <code>{Invoice.Id}</code>,
-                                            <code>{Invoice.StoreId}</code>,
-                                            <code>{Invoice.Price}</code>,
-                                            <code>{Invoice.Currency}</code>,
-                                            <code>{Invoice.Status}</code>,
-                                            <code>{Invoice.AdditionalStatus}</code>,
-                                            <code>{Invoice.OrderId}</code>
-                                        	<code>{Invoice.Metadata}*</code>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Request</th>
-                                        <td>
-                                            <code>{PaymentRequest.Id}</code>,
-                                            <code>{PaymentRequest.Price}</code>,
-                                            <code>{PaymentRequest.Currency}</code>,
-                                            <code>{PaymentRequest.Title}</code>,
-                                            <code>{PaymentRequest.Description}</code>,
-                                            <code>{PaymentRequest.Status}</code>
-                                        	<code>{PaymentRequest.FormResponse}*</code>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <th>Payout</th>
-                                        <td>
-                                            <code>{Payout.Id}</code>,
-                                            <code>{Payout.PullPaymentId}</code>,
-                                            <code>{Payout.Destination}</code>,
-                                            <code>{Payout.State}</code>
-                                        	<code>{Payout.Metadata}*</code>
-                                        </td>
-                                    </tr>
-                                    <tr><td colspan="2">* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" rel="noreferrer noopener" target="_blank">this syntax</a>. One example is <code>{Invoice.Metadata.itemCode}</code></td></tr>
-                                </table>
-                            </div>
-                        </div>
-                    </li>
-                }
-            </ul>
-        }
-        else
-        {
-            <p class="text-secondary mt-3">
-                There are no rules yet.
-            </p>
-        }
+                        </li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p class="text-secondary">
+                    There are no rules yet.
+                </p>
+            }
+        </div>
     </div>
 </form>
 

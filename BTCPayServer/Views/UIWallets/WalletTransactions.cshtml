@@ -4,9 +4,11 @@
 
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
+    var storeId = Context.GetRouteValue("storeId")?.ToString();
+    var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
+    var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
 
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
 }
 
@@ -119,6 +121,11 @@
         observer.observe($actions);
     </script>
 }
+
+<div class="sticky-header">
+    <vc:wallet-nav wallet-id="wallet"/>
+</div>
+<partial name="_StatusMessage" />
 
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3" id="Dropdowns">
     @if (Model.Labels.Any())

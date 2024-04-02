@@ -609,6 +609,12 @@ namespace BTCPayServer.Tests
             
             // Ensure empty server settings
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
+            if (s.Driver.PageSource.Contains("id=\"ResetPassword\""))
+            {
+                s.Driver.FindElement(By.Id("ResetPassword")).Click();
+                Assert.Contains("Email server password reset", s.FindAlertMessage().Text);
+            }
+            
             s.Driver.FindElement(By.Id("Settings_Login")).Clear();
             s.Driver.FindElement(By.Id("Settings_Password")).Clear();
             s.Driver.FindElement(By.Id("Settings_From")).Clear();
@@ -3429,7 +3435,7 @@ retry:
             Assert.DoesNotContain(guestBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(guestBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
             guestRow.FindElement(By.Id("SetDefault")).Click();
-            s.FindAlertMessage();
+            Assert.Contains("Role set default", s.FindAlertMessage().Text);
             
             existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
             foreach (var roleItem in existingServerRoles)
@@ -3451,6 +3457,8 @@ retry:
             ownerRow.FindElement(By.Id("SetDefault")).Click();
             s.FindAlertMessage();
             
+            Assert.Contains("Role set default", s.FindAlertMessage().Text);
+
             s.CreateNewStore();
             s.GoToStore(StoreNavPages.Roles);
             var existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));

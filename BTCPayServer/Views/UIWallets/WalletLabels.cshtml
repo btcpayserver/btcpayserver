@@ -2,8 +2,7 @@
 @model WalletLabelsModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.Settings, "Wallet Labels", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Settings, $"{Model.WalletId.CryptoCode} Wallet Labels", walletId);
 }
 
 @section PageFootContent {
@@ -12,7 +11,8 @@
     </script>
 }
 
-<h3>@ViewData["Title"]</h3>
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 
 @if (Model.Labels.Any())
 {

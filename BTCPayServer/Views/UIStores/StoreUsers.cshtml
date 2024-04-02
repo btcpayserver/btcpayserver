@@ -1,18 +1,16 @@
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Services.Stores
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model StoreUsersViewModel
 @inject StoreRepository StoreRepository
 @{
     var storeId = Context.GetStoreData().Id;
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", storeId);
     var roles = new SelectList(
         await StoreRepository.GetStoreRoles(storeId),
         nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
         Model.Role);
+    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", storeId);
 }
 @section PageHeadContent {
     <style>
@@ -21,10 +19,10 @@
         }
     </style>
 }
-
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="row">
-    <div class="col-xxl-constrain">
-        <h3 class="mb-3">@ViewData["Title"]</h3>
+    <div class="col-xxl-constrain col-xl-8">
         <p>
             Give other registered BTCPay Server users access to your store. See the
             <a asp-controller="UIStores" asp-action="ListRoles" asp-route-storeId="@storeId">roles</a>

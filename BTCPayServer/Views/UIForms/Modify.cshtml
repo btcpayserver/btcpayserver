@@ -6,8 +6,6 @@
     Csp.UnsafeEval();
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
     var storeId = Context.GetCurrentStoreId();
 }
@@ -196,13 +194,13 @@
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h3 class="mb-0">
+            <div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
+                <h2 class="mb-0">
                     <span>@ViewData["Title"]</span>
                     <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
                         <vc:icon symbol="info" />
                     </a>
-                </h3>
+                </h2>
                 <div class="d-flex gap-3 mt-3 mt-sm-0">
                     <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
                     @if (!isNew)

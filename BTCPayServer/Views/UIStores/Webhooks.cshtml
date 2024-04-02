@@ -3,19 +3,24 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebhooksViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().Id);
 }
+
 <div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
+            <h2 class="mb-0">@ViewData["Title"]</h2>
             <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
                 Create Webhook
             </a>
         </div>
+        <partial name="_StatusMessage" />
         <p>Webhooks allow BTCPay Server to send HTTP events related to your store to another server.</p>
+    </div>
+</div>
 
+<div class="row">
+    <div class="col-xl-8 col-xxl-constrain">
         @if (Model.Webhooks.Any())
         {
             <table class="table table-hover table-responsive-md">

@@ -5,9 +5,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSettingsViewModel
 @{
-	Layout = "../Shared/_NavLayout.cshtml";
-	ViewData["NavPartialName"] = "../UIWallets/_Nav";
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Wallet Settings", Context.GetStoreData().Id);
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Wallet Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 	Csp.UnsafeEval();
 }
 
@@ -18,11 +16,11 @@
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 }
-
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <div class="mb-5">
-            <h3 class="mb-3">@ViewData["Title"]</h3>
             <div class="mb-3 d-flex align-items-center">
                 <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
                 <div class="dropdown">

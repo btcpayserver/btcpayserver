@@ -1,9 +1,7 @@
 @model EditWebhookViewModel
-@using  BTCPayServer.Client.Models;
 @using BTCPayServer.HostedServices.Webhooks
 @inject WebhookSender WebhookSender 
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().Id);
 }
 
@@ -13,11 +11,11 @@
         #Everything[data-value='false'] + #event-selector { display: block; }
     </style>
 }
-
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
         <form method="post">
-            <h3 class="mb-3">@ViewData["Title"]</h3>
             <div class="form-group">
                 <label asp-for="PayloadUrl" class="form-label">Payload URL</label>
                 <input asp-for="PayloadUrl" class="form-control" />

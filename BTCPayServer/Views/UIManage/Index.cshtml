@@ -3,7 +3,8 @@
 @{
     ViewData.SetActivePage(ManageNavPages.Index, "Update your account");
 }
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 
 <div class="col-xxl-constrain col-xl-8">
     <form method="post">

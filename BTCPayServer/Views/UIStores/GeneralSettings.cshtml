@@ -6,10 +6,12 @@
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
-	Layout = "../Shared/_NavLayout.cshtml";
 	ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
 	var canUpload = await FileService.IsAvailable();
 }
+<h2 class="mb-2 mb-lg-3">Store Settings</h2>
+
+<partial name="_StatusMessage" />
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
@@ -18,7 +20,6 @@
             <div asp-validation-summary="All"></div>
         }
         <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
-            <h3 class="mb-3">General</h3>
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
                 <input asp-for="Id" readonly class="form-control" />

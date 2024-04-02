@@ -3,7 +3,8 @@
     ViewData.SetActivePage(ServerNavPages.Services, $"LND {Model.ConnectionType}");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <p>
     BTCPay exposes LND's @Model.ConnectionType service for outside consumption, you will find connection information here.
 </p>

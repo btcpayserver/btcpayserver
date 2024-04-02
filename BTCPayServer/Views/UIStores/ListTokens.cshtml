@@ -3,7 +3,6 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model TokensViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().Id);
 }
 
@@ -17,14 +16,15 @@
         See <a href="https://docs.btcpayserver.org/WalletSetup/" target="_blank" class="alert-link" rel="noreferrer noopener">this link</a> for more information on how to connect your store and wallet.
     </div>
 }
-
+<h2 class="mb-2 mb-lg-3">
+    Greenfield API Keys
+    <a href="/docs" target="_blank" rel="noreferrer noopener" title="More information...">
+        <vc:icon symbol="info"/>
+    </a>
+</h2>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <h3 class="mb-3">Greenfield API Keys
-            <a href="/docs" target="_blank" rel="noreferrer noopener" title="More information...">
-                <vc:icon symbol="info"/>
-            </a>
-        </h3>
         <p>To generate Greenfield API keys, please <a asp-controller="UIManage" asp-action="APIKeys">click here</a>.</p>
         
         <div class="d-flex align-items-center justify-content-between mt-5 mb-3">

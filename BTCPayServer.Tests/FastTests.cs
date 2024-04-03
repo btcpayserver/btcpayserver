@@ -1111,6 +1111,38 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
+        public async Task CanPassContextToRateProviders()
+        {
+            var factory = CreateBTCPayRateFactory();
+            var fetcher = new RateFetcher(factory);
+            Assert.True(RateRules.TryParse("X_X=spy(X_X)", out var rule));
+			var result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
+			Assert.Single(result.Errors);
+			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, new StoreIdRateContext("hello"), default);
+            Assert.Empty(result.Errors);
+            Assert.Equal(SpyContextualRateProvider.ExpectedBidAsk, result.BidAsk);
+
+			// Even if there is no context, it should work because the background fetcher remember the context
+			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
+			Assert.Empty(result.Errors);
+			Assert.Equal(SpyContextualRateProvider.ExpectedBidAsk, result.BidAsk);
+
+			var backgroundProv = (BackgroundFetcherRateProvider)factory.Providers["spy"];
+			backgroundProv.RefreshRate = TimeSpan.Zero; // Refresh now
+			await backgroundProv.UpdateIfNecessary(default);
+
+			// Refreshing use the previous working context.
+			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
+			Assert.Empty(result.Errors);
+			Assert.Equal(SpyContextualRateProvider.ExpectedBidAsk, result.BidAsk);
+
+			// Losing the previous working context will result in subsequent failure.
+			backgroundProv.InvalidateCache();
+			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
+			Assert.Single(result.Errors);
+		}
+
+        [Fact]
         public async Task CheckRatesProvider()
         {
             var spy = new SpyRateProvider();
@@ -1141,13 +1173,29 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             await Assert.ThrowsAsync<InvalidOperationException>(() => fetch.GetRatesAsync(default));
         }
 
+        class SpyContextualRateProvider : IContextualRateProvider
+        {
+            public static BidAsk ExpectedBidAsk = new BidAsk(1.12345m);
+            public RateSourceInfo RateSourceInfo => new RateSourceInfo("spy", "hello world", "abc...");
+            public Task<PairRate[]> GetRatesAsync(IRateContext context, CancellationToken cancellationToken)
+            {
+                Assert.IsAssignableFrom<IHasStoreIdRateContext>(context);
+                return Task.FromResult(new [] { new PairRate(new CurrencyPair("BTC", "USD"), ExpectedBidAsk) });
+            }
+
+            public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
+            {
+                throw new NotImplementedException();
+            }
+        }
         public static RateProviderFactory CreateBTCPayRateFactory()
         {
             ServiceCollection services = new ServiceCollection();
             services.AddHttpClient();
             BTCPayServerServices.RegisterRateSources(services);
+            services.AddRateProvider<SpyContextualRateProvider>();
             var o = services.BuildServiceProvider();
-            return new RateProviderFactory(TestUtils.CreateHttpFactory(), o.GetService<IEnumerable<IRateProvider>>(), o.GetService<IEnumerable<IDynamicRateProvider>>());
+            return new RateProviderFactory(TestUtils.CreateHttpFactory(), o.GetService<IEnumerable<IRateProvider>>());
         }
 
         class SpyRateProvider : IRateProvider

@@ -9,31 +9,33 @@ namespace BTCPayServer.Services.Rates
     public interface IRateProvider
     {
         RateSourceInfo RateSourceInfo { get; }
+        /// <summary>
+        /// Returns rates of the provider
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException">If using this provider isn't supported (For example if a <see cref="IContextualRateProvider"/> requires a context)</exception>
         Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken);
     }
 
-    public interface IDynamicRateProvider
+    public interface IRateContext { }
+    public interface IHasStoreIdRateContext : IRateContext
     {
-        public RateSourceInfo RateSourceInfo { get; }
-
-        Task<IRateProvider?> GetRateProvider(string context, CancellationToken cancellationToken);
+        string StoreId { get; }
     }
-    
-    public class DynamicRateProvider : IDynamicRateProvider
+    public record StoreIdRateContext(string StoreId) : IHasStoreIdRateContext;
+
+    /// <summary>
+    /// A rate provider which know additional context about the rate query.
+    /// </summary>
+    public interface IContextualRateProvider : IRateProvider
     {
-        private readonly Func<string, CancellationToken, Task<IRateProvider>> _fetch;
-
-        public DynamicRateProvider(RateSourceInfo rateSourceInfo,Func<string, CancellationToken, Task<IRateProvider>> fetch)
-        {
-            RateSourceInfo = rateSourceInfo;
-            _fetch = fetch;
-        }
-
-        public RateSourceInfo RateSourceInfo { get; }
-
-        public async Task<IRateProvider> GetRateProvider(string context, CancellationToken cancellationToken)
-        {
-            return await _fetch(context, cancellationToken);
-        }
+        /// <summary>
+        /// Returns rates of the provider when a context is available
+        /// </summary>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        /// <exception cref="NotSupportedException">If using this provider isn't getting an expected context</exception>
+        Task<PairRate[]> GetRatesAsync(IRateContext context, CancellationToken cancellationToken);
     }
 }

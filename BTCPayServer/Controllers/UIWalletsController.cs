@@ -531,7 +531,7 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     cts.CancelAfter(TimeSpan.FromSeconds(5));
-                    var result = await RateFetcher.FetchRate(currencyPair, rateRules, walletId.StoreId,  cts.Token)
+                    var result = await RateFetcher.FetchRate(currencyPair, rateRules, new StoreIdRateContext(walletId.StoreId),  cts.Token)
                         .WithCancellation(cts.Token);
                     if (result.BidAsk != null)
                     {

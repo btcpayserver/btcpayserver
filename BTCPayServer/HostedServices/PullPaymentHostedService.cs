@@ -412,7 +412,7 @@ namespace BTCPayServer.HostedServices
                 throw new FormatException("Invalid RateRule");
             }
 
-            return _rateFetcher.FetchRate(rule, payout.StoreDataId, cancellationToken);
+            return _rateFetcher.FetchRate(rule, new StoreIdRateContext(payout.StoreDataId), cancellationToken);
         }
 
         public Task<PayoutApproval.ApprovalResult> Approve(PayoutApproval approval)

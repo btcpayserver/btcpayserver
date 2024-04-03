@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -15,22 +16,21 @@ namespace BTCPayServer.Services.Rates
 {
     public class RateProviderFactory
     {
-        class WrapperRateProvider : IRateProvider
+        class WrapperRateProvider
         {
-            public RateSourceInfo RateSourceInfo => _inner.RateSourceInfo;
             private readonly IRateProvider _inner;
-            public Exception Exception { get; private set; }
+            public Exception? Exception { get; private set; }
             public TimeSpan Latency { get; set; }
             public WrapperRateProvider(IRateProvider inner)
             {
                 _inner = inner;
             }
-            public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
+            public async Task<PairRate[]> GetRatesAsync(IRateContext? context, CancellationToken cancellationToken)
             {
                 DateTimeOffset now = DateTimeOffset.UtcNow;
                 try
                 {
-                    return await _inner.GetRatesAsync(cancellationToken);
+					return await _inner.GetRatesAsyncWithMaybeContext(context, cancellationToken);
                 }
                 catch (Exception ex)
                 {
@@ -45,15 +45,21 @@ namespace BTCPayServer.Services.Rates
         }
         public class QueryRateResult
         {
+            public QueryRateResult(string exchangeName, TimeSpan latency, PairRate[] pairRates)
+            {
+                Exchange = exchangeName;
+                Latency = latency;
+                PairRates = pairRates;
+            }
+
             public TimeSpan Latency { get; set; }
             public PairRate[] PairRates { get; set; }
-            public ExchangeException Exception { get; internal set; }
+            public ExchangeException? Exception { get; internal set; }
             public string Exchange { get; internal set; }
         }
-        public RateProviderFactory(IHttpClientFactory httpClientFactory,IEnumerable<IRateProvider> rateProviders, IEnumerable<IDynamicRateProvider> dynamicProviders)
+        public RateProviderFactory(IHttpClientFactory httpClientFactory,IEnumerable<IRateProvider> rateProviders)
         {
             _httpClientFactory = httpClientFactory;
-            _dynamicProviders = dynamicProviders;
             foreach (var prov in rateProviders)
             {
                 Providers.Add(prov.RateSourceInfo.Id, prov);
@@ -61,7 +67,6 @@ namespace BTCPayServer.Services.Rates
             InitExchanges();
         }
         private readonly IHttpClientFactory _httpClientFactory;
-        private readonly IEnumerable<IDynamicRateProvider> _dynamicProviders;
         public Dictionary<string, IRateProvider> Providers { get; } = new Dictionary<string, IRateProvider>();
         void InitExchanges()
         {
@@ -90,31 +95,20 @@ namespace BTCPayServer.Services.Rates
                     AvailableRateProviders.Add(coingecko.RateSourceInfo);
                 }
             }
-            AvailableRateProviders.AddRange(_dynamicProviders.Select(provider => provider.RateSourceInfo));
             AvailableRateProviders.Sort((a, b) => StringComparer.Ordinal.Compare(a.DisplayName, b.DisplayName));
         }
 
         public List<RateSourceInfo> AvailableRateProviders { get; } = new List<RateSourceInfo>();
 
-        public async Task<QueryRateResult> QueryRates(string exchangeName,string context = null, CancellationToken cancellationToken = default)
+        public async Task<QueryRateResult> QueryRates(string exchangeName, IRateContext? context = null, CancellationToken cancellationToken = default)
         {
-            if (!Providers.TryGetValue(exchangeName, out var directProvider))
-            {
-               var dynamicProvider =  _dynamicProviders.FirstOrDefault(provider => provider.RateSourceInfo.Id.Equals(exchangeName, StringComparison.InvariantCultureIgnoreCase));
-               if (dynamicProvider != null)
-               {
-                   directProvider = await dynamicProvider.GetRateProvider(context, cancellationToken);
-               }
-            }
+            Providers.TryGetValue(exchangeName, out var directProvider);
             directProvider ??= NullRateProvider.Instance;
 
             var wrapper = new WrapperRateProvider(directProvider);
-            var value = await wrapper.GetRatesAsync(cancellationToken);
-            return new QueryRateResult()
+            var value = await wrapper.GetRatesAsync(context, cancellationToken);
+            return new QueryRateResult(exchangeName, wrapper.Latency, value)
             {
-                Exchange = exchangeName,
-                Latency = wrapper.Latency,
-                PairRates = value,
                 Exception = wrapper.Exception != null ? new ExchangeException() { Exception = wrapper.Exception, ExchangeName = exchangeName } : null
             };
         }

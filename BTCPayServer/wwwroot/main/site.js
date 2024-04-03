@@ -2,19 +2,6 @@ const baseUrl = Object.values(document.scripts).find(s => s.src.includes('/main/
 
 const flatpickrInstances = [];
 
-const formatDateTimes = format => {
-    // select only elements which haven't been initialized before, those without data-localized
-    document.querySelectorAll("time[datetime]:not([data-localized])").forEach($el => {
-        const date = new Date($el.getAttribute("datetime"));
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
-        const { dateStyle = 'short', timeStyle = 'short' } = $el.dataset;
-        // initialize and set localized attribute
-        $el.dataset.localized = new Intl.DateTimeFormat('default', { dateStyle, timeStyle }).format(date);
-        // set text to chosen mode
-        const mode = format || $el.dataset.initial;
-        if ($el.dataset[mode]) $el.innerText = $el.dataset[mode];
-    });
-};
 
 const switchTimeFormat = event => {
     const curr = event.target.dataset.mode || 'localized';
@@ -166,8 +153,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     // initialize timezone offset value if field is present in page
-    var timezoneOffset = new Date().getTimezoneOffset();
-    $("#TimezoneOffset").val(timezoneOffset);
+    const $timezoneOffset = document.getElementById("TimezoneOffset");
+    const timezoneOffset = new Date().getTimezoneOffset();
+    if ($timezoneOffset) $timezoneOffset.value = timezoneOffset;
 
     // localize all elements that have localizeDate class
     formatDateTimes();

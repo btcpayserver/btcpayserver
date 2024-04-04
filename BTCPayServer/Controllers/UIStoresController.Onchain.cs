@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -13,9 +14,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
-using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -837,6 +836,29 @@ namespace BTCPayServer.Controllers
         {
             return WalletWarning(isHotWallet,
                 $"The store won't be able to receive {cryptoCode} onchain payments until a new wallet is set up.");
+        }
+    
+        private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
+        {
+            var parser = new DerivationSchemeParser(network);
+            var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
+            if (isOD.Success)
+            {
+                var derivationSchemeSettings = new DerivationSchemeSettings();
+                var result = parser.ParseOutputDescriptor(derivationScheme);
+                derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
+                derivationSchemeSettings.AccountDerivation = result.Item1;
+                derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
+                {
+                    RootFingerprint = path?.MasterFingerprint,
+                    AccountKeyPath = path?.KeyPath,
+                    AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(parser.Network)
+                }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
+                return derivationSchemeSettings;
+            }
+
+            var strategy = parser.Parse(derivationScheme);
+            return new DerivationSchemeSettings(strategy, network);
         }
     }
 }

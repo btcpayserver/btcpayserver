@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -9,8 +10,11 @@ using BTCPayServer.Components.StoreRecentInvoices;
 using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using NBitcoin;
 
 namespace BTCPayServer.Controllers
 {
@@ -109,5 +113,59 @@ namespace BTCPayServer.Controllers
             var vm = new StoreRecentInvoicesViewModel { Store = store, CryptoCode = cryptoCode };
             return ViewComponent("StoreRecentInvoices", new { vm });
         }
+
+        internal void AddPaymentMethods(StoreData store, StoreBlob storeBlob,
+            out List<StoreDerivationScheme> derivationSchemes, out List<StoreLightningNode> lightningNodes)
+        {
+            var excludeFilters = storeBlob.GetExcludedPaymentMethods();
+            var derivationByCryptoCode =
+                store
+                .GetPaymentMethodConfigs<DerivationSchemeSettings>(_handlers)
+                .ToDictionary(c => ((IHasNetwork)_handlers[c.Key]).Network.CryptoCode, c => (DerivationSchemeSettings)c.Value);
+
+            var lightningByCryptoCode = store
+                .GetPaymentMethodConfigs(_handlers)
+                .Where(c => c.Value is LightningPaymentMethodConfig)
+                .ToDictionary(c => ((IHasNetwork)_handlers[c.Key]).Network.CryptoCode, c => (LightningPaymentMethodConfig)c.Value);
+
+            derivationSchemes = new List<StoreDerivationScheme>();
+            lightningNodes = new List<StoreLightningNode>();
+
+            foreach (var handler in _handlers)
+            {
+                if (handler is BitcoinLikePaymentHandler { Network: var network })
+                {
+                    var strategy = derivationByCryptoCode.TryGet(network.CryptoCode);
+                    var value = strategy?.ToPrettyString() ?? string.Empty;
+
+                    derivationSchemes.Add(new StoreDerivationScheme
+                    {
+                        Crypto = network.CryptoCode,
+                        PaymentMethodId = handler.PaymentMethodId,
+                        WalletSupported = network.WalletSupported,
+                        Value = value,
+                        WalletId = new WalletId(store.Id, network.CryptoCode),
+                        Enabled = !excludeFilters.Match(handler.PaymentMethodId) && strategy != null,
+#if ALTCOINS
+                        Collapsed = network is Plugins.Altcoins.ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
+#endif
+                    });
+                }
+                else if (handler is LightningLikePaymentHandler)
+                {
+                    var lnNetwork = ((IHasNetwork)handler).Network;
+                    var lightning = lightningByCryptoCode.TryGet(lnNetwork.CryptoCode);
+                    var isEnabled = !excludeFilters.Match(handler.PaymentMethodId) && lightning != null;
+                    lightningNodes.Add(new StoreLightningNode
+                    {
+                        CryptoCode = lnNetwork.CryptoCode,
+                        PaymentMethodId = handler.PaymentMethodId,
+                        Address = lightning?.GetDisplayableConnectionString(),
+                        Enabled = isEnabled
+                    });
+                }
+            }
+        }
+
     }
 }

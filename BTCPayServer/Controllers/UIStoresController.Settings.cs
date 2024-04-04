@@ -18,7 +18,7 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-            [HttpGet("{storeId}/settings")]
+        [HttpGet("{storeId}/settings")]
         public IActionResult GeneralSettings()
         {
             var store = HttpContext.GetStoreData();
@@ -358,7 +358,7 @@ namespace BTCPayServer.Controllers
             {
                 var paymentMethodId = PaymentMethodId.Parse(newCriteria.PaymentMethod);
                 if (_handlers.TryGet(paymentMethodId) is LightningLikePaymentHandler h)
-                    model.PaymentMethodCriteria.Add(new PaymentMethodCriteriaViewModel()
+                    model.PaymentMethodCriteria.Add(new PaymentMethodCriteriaViewModel
                     {
                         PaymentMethod = PaymentTypes.LNURL.GetPaymentMethodId(h.Network.CryptoCode).ToString(),
                         Type = newCriteria.Type,
@@ -419,7 +419,7 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        void SetCryptoCurrencies(CheckoutAppearanceViewModel vm, Data.StoreData storeData)
+        void SetCryptoCurrencies(CheckoutAppearanceViewModel vm, StoreData storeData)
         {
             var choices = GetEnabledPaymentMethodChoices(storeData);
             var chosen = GetDefaultPaymentMethodChoice(storeData);
@@ -432,7 +432,7 @@ namespace BTCPayServer.Controllers
         {
             var enabled = storeData.GetEnabledPaymentIds();
             var defaultPaymentId = storeData.GetDefaultPaymentId();
-            var defaultChoice = defaultPaymentId is not null ? defaultPaymentId.FindNearest(enabled) : null;
+            var defaultChoice = defaultPaymentId?.FindNearest(enabled);
             if (defaultChoice is null)
             {
                 defaultChoice = enabled.FirstOrDefault(e => e == PaymentTypes.CHAIN.GetPaymentMethodId(_networkProvider.DefaultNetwork.CryptoCode)) ??

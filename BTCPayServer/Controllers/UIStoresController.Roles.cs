@@ -73,7 +73,7 @@ namespace BTCPayServer.Controllers
             [FromServices] StoreRepository storeRepository,
             [FromRoute] string role, UpdateRoleViewModel viewModel)
         {
-            string successMessage = null;
+            string successMessage;
             StoreRoleId roleId;
             if (role == "create")
             {
@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers
             [FromServices] StoreRepository storeRepository,
             string role)
         {
-            var roleData = await storeRepository.GetStoreRole(new StoreRoleId(storeId, role), true);;
+            var roleData = await storeRepository.GetStoreRole(new StoreRoleId(storeId, role), true);
             if (roleData == null)
                 return NotFound();
 

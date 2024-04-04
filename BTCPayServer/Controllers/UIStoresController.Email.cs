@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
         {
-            vm.Rules ??= new List<StoreEmailRule>();
+            vm.Rules ??= [];
             int commandIndex = 0;
             
             var indSep = command.Split(':', StringSplitOptions.RemoveEmptyEntries);
@@ -72,8 +72,8 @@ namespace BTCPayServer.Controllers
             {
                 var rule = vm.Rules[i];
 
-                if (!string.IsNullOrEmpty(rule.To) && (rule.To.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                        .Any(s => !MailboxAddressValidator.TryParse(s, out _))))
+                if (!string.IsNullOrEmpty(rule.To) && rule.To.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Any(s => !MailboxAddressValidator.TryParse(s, out _)))
                 {
                     ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
                         "Invalid mailbox address provided. Valid formats are: 'test@example.com' or 'Firstname Lastname <test@example.com>'");

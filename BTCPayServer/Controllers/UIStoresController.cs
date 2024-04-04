@@ -158,9 +158,7 @@ namespace BTCPayServer.Controllers
 
         private string? GetUserId()
         {
-            if (User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie)
-                return null;
-            return _userManager.GetUserId(User);
+            return User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie ? null : _userManager.GetUserId(User);
         }
     }
 }

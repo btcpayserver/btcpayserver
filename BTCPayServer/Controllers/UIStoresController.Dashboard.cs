@@ -121,15 +121,15 @@ namespace BTCPayServer.Controllers
             var derivationByCryptoCode =
                 store
                 .GetPaymentMethodConfigs<DerivationSchemeSettings>(_handlers)
-                .ToDictionary(c => ((IHasNetwork)_handlers[c.Key]).Network.CryptoCode, c => (DerivationSchemeSettings)c.Value);
+                .ToDictionary(c => ((IHasNetwork)_handlers[c.Key]).Network.CryptoCode, c => c.Value);
 
             var lightningByCryptoCode = store
                 .GetPaymentMethodConfigs(_handlers)
                 .Where(c => c.Value is LightningPaymentMethodConfig)
                 .ToDictionary(c => ((IHasNetwork)_handlers[c.Key]).Network.CryptoCode, c => (LightningPaymentMethodConfig)c.Value);
 
-            derivationSchemes = new List<StoreDerivationScheme>();
-            lightningNodes = new List<StoreLightningNode>();
+            derivationSchemes = [];
+            lightningNodes = [];
 
             foreach (var handler in _handlers)
             {

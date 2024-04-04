@@ -122,7 +122,7 @@ namespace BTCPayServer.Controllers
             
             var paymentMethodId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
 
-            LightningPaymentMethodConfig? paymentMethod = null;
+            LightningPaymentMethodConfig? paymentMethod;
             if (vm.LightningNodeType == LightningNodeType.Internal)
             {
                 paymentMethod = new LightningPaymentMethodConfig();
@@ -135,8 +135,7 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.ConnectionString), "Please provide a connection string");
                     return View(vm);
                 }
-                paymentMethod = new LightningPaymentMethodConfig();
-                paymentMethod.ConnectionString = vm.ConnectionString;
+                paymentMethod = new LightningPaymentMethodConfig { ConnectionString = vm.ConnectionString };
             }
 
             var handler = (LightningLikePaymentHandler)_handlers[paymentMethodId];
@@ -153,7 +152,7 @@ namespace BTCPayServer.Controllers
                 case "save":
                     var lnurl = PaymentTypes.LNURL.GetPaymentMethodId(vm.CryptoCode);
                     store.SetPaymentMethodConfig(_handlers[paymentMethodId], paymentMethod);
-                    store.SetPaymentMethodConfig(_handlers[lnurl], new LNURLPaymentMethodConfig()
+                    store.SetPaymentMethodConfig(_handlers[lnurl], new LNURLPaymentMethodConfig
                     {
                         UseBech32Scheme = true,
                         LUD12Enabled = false
@@ -293,10 +292,10 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            if (cryptoCode == null)
+            var network = _explorerProvider.GetNetwork(cryptoCode);
+            if (network == null)
                 return NotFound();
 
-            var network = _explorerProvider.GetNetwork(cryptoCode);
             var lightning = GetConfig<LightningPaymentMethodConfig>(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), store);
             if (lightning == null)
                 return NotFound();

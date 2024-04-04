@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Webhooks()
         {
             var webhooks = await _storeRepo.GetWebhooks(CurrentStore.Id);
-            return View(nameof(Webhooks), new WebhooksViewModel()
+            return View(nameof(Webhooks), new WebhooksViewModel
             {
                 Webhooks = webhooks.Select(async w =>
                 {
@@ -146,11 +146,11 @@ namespace BTCPayServer.Controllers
 
             if (result.Success)
             {
-                TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type.ToString()} event delivered successfully! Delivery ID is {result.DeliveryId}";
+                TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type} event delivered successfully! Delivery ID is {result.DeliveryId}";
             }
             else
             {
-                TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type.ToString()} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
+                TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
             }
 
             return View(nameof(TestWebhook));

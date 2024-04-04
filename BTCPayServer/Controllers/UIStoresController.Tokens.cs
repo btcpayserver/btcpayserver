@@ -33,10 +33,7 @@ namespace BTCPayServer.Controllers
             }).ToArray();
 
             model.ApiKey = (await _tokenRepository.GetLegacyAPIKeys(CurrentStore.Id)).FirstOrDefault();
-            if (model.ApiKey == null)
-                model.EncodedApiKey = "*API Key*";
-            else
-                model.EncodedApiKey = Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
+            model.EncodedApiKey = model.ApiKey == null ? "*API Key*" : Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(model.ApiKey));
             return View(model);
         }
 
@@ -94,7 +91,7 @@ namespace BTCPayServer.Controllers
             {
                 return View(nameof(CreateToken), model);
             }
-            model.Label = model.Label ?? string.Empty;
+            model.Label ??= string.Empty;
             var userId = GetUserId();
             if (userId == null)
                 return Challenge(AuthenticationSchemes.Cookie);
@@ -111,7 +108,7 @@ namespace BTCPayServer.Controllers
                 Id = model.PublicKey == null ? null : NBitpayClient.Extensions.BitIdExtensions.GetBitIDSIN(new PubKey(model.PublicKey).Compress())
             };
 
-            string? pairingCode = null;
+            string? pairingCode;
             if (model.PublicKey == null)
             {
                 tokenRequest.PairingCode = await _tokenRepository.CreatePairingCodeAsync();
@@ -245,26 +242,21 @@ namespace BTCPayServer.Controllers
             if (pairingResult == PairingResult.Complete || pairingResult == PairingResult.Partial)
             {
                 var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();
-                StoreNotConfigured = !store.GetPaymentMethodConfigs(_handlers)
-                                          .Where(p => !excludeFilter.Match(p.Key))
-                                          .Any();
+                StoreNotConfigured = store.GetPaymentMethodConfigs(_handlers).All(p => excludeFilter.Match(p.Key));
                 TempData[WellKnownTempData.SuccessMessage] = "Pairing is successful";
                 if (pairingResult == PairingResult.Partial)
                     TempData[WellKnownTempData.SuccessMessage] = "Server initiated pairing code: " + pairingCode;
                 return RedirectToAction(nameof(ListTokens), new
                 {
-                    storeId = store.Id,
-                    pairingCode = pairingCode
+                    storeId = store.Id, pairingCode
                 });
             }
-            else
+
+            TempData[WellKnownTempData.ErrorMessage] = $"Pairing failed ({pairingResult})";
+            return RedirectToAction(nameof(ListTokens), new
             {
-                TempData[WellKnownTempData.ErrorMessage] = $"Pairing failed ({pairingResult})";
-                return RedirectToAction(nameof(ListTokens), new
-                {
-                    storeId = store.Id
-                });
-            }
+                storeId = store.Id
+            });
         }
     }
 }

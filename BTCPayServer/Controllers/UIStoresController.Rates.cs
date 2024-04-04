@@ -21,7 +21,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/rates")]
         public IActionResult Rates()
         {
-            var exchanges = GetSupportedExchanges();
+            var exchanges = GetSupportedExchanges().ToList();
             var storeBlob = CurrentStore.GetStoreBlob();
             var vm = new RatesViewModel();
             vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? storeBlob.GetRecommendedExchange());
@@ -43,13 +43,13 @@ namespace BTCPayServer.Controllers
             {
                 return RedirectToAction(nameof(ShowRateRules), new { scripting = true, storeId = model.StoreId });
             }
-            else if (command == "scripting-off")
+            if (command == "scripting-off")
             {
                 return RedirectToAction(nameof(ShowRateRules), new { scripting = false, storeId = model.StoreId });
             }
 
-            var exchanges = GetSupportedExchanges();
-            model.SetExchangeRates(exchanges, model.PreferredExchange ?? this.HttpContext.GetStoreData().GetStoreBlob().GetRecommendedExchange());
+            var exchanges = GetSupportedExchanges().ToList();
+            model.SetExchangeRates(exchanges, model.PreferredExchange ?? HttpContext.GetStoreData().GetStoreBlob().GetRecommendedExchange());
             model.StoreId = storeId ?? model.StoreId;
             CurrencyPair[]? currencyPairs = null;
             try
@@ -85,13 +85,13 @@ namespace BTCPayServer.Controllers
                     return View(model);
                 }
             }
-            RateRules? rules = null;
+            RateRules? rules;
             if (model.ShowScripting)
             {
                 if (!RateRules.TryParse(model.Script, out rules, out var errors))
                 {
-                    errors = errors ?? new List<RateRulesErrors>();
-                    var errorString = String.Join(", ", errors.ToArray());
+                    errors ??= [];
+                    var errorString = string.Join(", ", errors.ToArray());
                     ModelState.AddModelError(nameof(model.Script), $"Parsing error ({errorString})");
                     return View(model);
                 }
@@ -129,7 +129,7 @@ namespace BTCPayServer.Controllers
                 foreach (var fetch in fetchs)
                 {
                     var testResult = await (fetch.Value);
-                    testResults.Add(new RatesViewModel.TestResultViewModel()
+                    testResults.Add(new RatesViewModel.TestResultViewModel
                     {
                         CurrencyPair = fetch.Key.ToString(),
                         Error = testResult.Errors.Count != 0,
@@ -140,18 +140,17 @@ namespace BTCPayServer.Controllers
                 model.TestRateRules = testResults;
                 return View(model);
             }
-            else // command == Save
+
+            // command == Save
+            if (CurrentStore.SetStoreBlob(blob))
             {
-                if (CurrentStore.SetStoreBlob(blob))
-                {
-                    await _storeRepo.UpdateStore(CurrentStore);
-                    TempData[WellKnownTempData.SuccessMessage] = "Rate settings updated";
-                }
-                return RedirectToAction(nameof(Rates), new
-                {
-                    storeId = CurrentStore.Id
-                });
+                await _storeRepo.UpdateStore(CurrentStore);
+                TempData[WellKnownTempData.SuccessMessage] = "Rate settings updated";
             }
+            return RedirectToAction(nameof(Rates), new
+            {
+                storeId = CurrentStore.Id
+            });
         }
 
         [HttpGet("{storeId}/rates/confirm")]

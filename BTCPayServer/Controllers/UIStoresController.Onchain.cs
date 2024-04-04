@@ -103,7 +103,9 @@ namespace BTCPayServer.Controllers
                 }
                 catch
                 {
+                    // ignored
                 }
+
                 if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, network, out strategy, out _))
                 {
                     ModelState.AddModelError(nameof(vm.WalletFile), $"Import failed, make sure you import a compatible wallet format");
@@ -430,7 +432,7 @@ namespace BTCPayServer.Controllers
                     .Select(e => new WalletSettingsAccountKeyViewModel
                     {
                         AccountKey = e.AccountKey.ToString(),
-                        MasterFingerprint = e.RootFingerprint is HDFingerprint fp ? fp.ToString() : null,
+                        MasterFingerprint = e.RootFingerprint is { } fp ? fp.ToString() : null,
                         AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
                     }).ToList(),
                 Config = ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
@@ -521,7 +523,7 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     rootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
-                        ? (HDFingerprint?)null
+                        ? null
                         : new HDFingerprint(Encoders.Hex.DecodeData(vm.AccountKeys[i].MasterFingerprint));
 
                     if (rootFingerprint != null && derivation.AccountKeySettings[i].RootFingerprint != rootFingerprint)
@@ -603,17 +605,16 @@ namespace BTCPayServer.Controllers
 
                 TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
 
-
                 if (payjoinChanged && blob.PayJoinEnabled && network.SupportPayJoin)
                 {
                     var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
-                    if (!config.IsHotWallet)
+                    if (config?.IsHotWallet is not true)
                     {
                         TempData.Remove(WellKnownTempData.SuccessMessage);
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        TempData.SetStatusMessageModel(new StatusMessageModel
                         {
                             Severity = StatusMessageModel.StatusSeverity.Warning,
-                            Html = $"The payment settings were updated successfully. However, PayJoin will not work, as this isn't a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
+                            Html = "The payment settings were updated successfully. However, PayJoin will not work, as this isn't a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
                         });
                     }
                 }
@@ -798,7 +799,7 @@ namespace BTCPayServer.Controllers
         private async Task<string> GetSeed(ExplorerClient client, DerivationSchemeSettings derivation)
         {
             return derivation.IsHotWallet &&
-                   await client.GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is string seed &&
+                   await client.GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.MasterHDKey) is { } seed &&
                    !string.IsNullOrEmpty(seed) ? seed : null;
         }
 

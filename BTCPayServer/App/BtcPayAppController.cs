@@ -1,8 +1,6 @@
 ﻿#nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
@@ -12,9 +10,9 @@ using BTCPayServer.Common;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
@@ -23,7 +21,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -45,6 +42,7 @@ public class BtcPayAppController(
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
     TimeProvider timeProvider,
+    PaymentMethodHandlerDictionary handlers,
     IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
     : Controller
 {
@@ -207,19 +205,17 @@ public class BtcPayAppController(
             }
         }
         
-
-        var key = new APIKeyData()
+        var key = new APIKeyData
         {
             Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
             Type = APIKeyType.Permanent,
             UserId = res.UserId,
             Label = "BTCPay App Pairing"
         };
-        key.SetBlob(new APIKeyBlob() {Permissions = new[] {Policies.Unrestricted}});
+        key.SetBlob(new APIKeyBlob {Permissions = [Policies.Unrestricted] });
         await apiKeyRepository.CreateKey(key);
-
-
-        var onchain = store?.GetDerivationSchemeSettings(btcPayNetworkProvider, "BTC");
+        
+        var onchain = store?.GetDerivationSchemeSettings(handlers, "BTC");
         string? onchainSeed = null;
         if (onchain is not null)
         {
@@ -227,16 +223,15 @@ public class BtcPayAppController(
             onchainSeed = await GetSeed(explorerClient, onchain);
         }
 
-        return Ok(new PairSuccessResult()
+        var nBitcoinNetwork = btcPayNetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
+        return Ok(new PairSuccessResult
         {
             Key = key.Id,
             StoreId = store?.Id,
             UserId = res.UserId,
-            ExistingWallet =
-                onchain?.AccountDerivation?.GetExtPubKeys()?.FirstOrDefault()
-                    ?.ToString(onchain.Network.NBitcoinNetwork),
+            ExistingWallet = onchain?.AccountDerivation?.GetExtPubKeys()?.FirstOrDefault()?.ToString(nBitcoinNetwork),
             ExistingWalletSeed = onchainSeed,
-            Network = btcPayNetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork.Name
+            Network = nBitcoinNetwork.Name
         });
     }
 

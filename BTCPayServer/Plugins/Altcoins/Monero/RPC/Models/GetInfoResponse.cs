@@ -3,10 +3,10 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Altcoins.Monero.RPC.Models
 {
-    public partial class SyncInfoResponse
+    public partial class GetInfoResponse
     {
         [JsonProperty("height")] public long Height { get; set; }
-        [JsonProperty("peers")] public List<Peer> Peers { get; set; }
+        [JsonProperty("busy_syncing")] public bool BusySyncing { get; set; }
         [JsonProperty("status")] public string Status { get; set; }
         [JsonProperty("target_height")] public long? TargetHeight { get; set; }
     }

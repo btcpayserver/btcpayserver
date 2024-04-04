@@ -14,6 +14,7 @@ using Newtonsoft.Json;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using BTCPayServer.Migrations;
 using Newtonsoft.Json.Serialization;
+using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
 
 namespace BTCPayServer.Data
 {
@@ -28,11 +29,11 @@ namespace BTCPayServer.Data
             public static readonly MigrationInterceptor Instance = new MigrationInterceptor();
             public object InitializedInstance(MaterializationInterceptionData materializationData, object entity)
             {
-                if (entity is InvoiceData invoiceData)
+                if (entity is InvoiceData invoiceData && invoiceData.Currency is null)
                 {
                     invoiceData.Migrate();
                 }
-                else if (entity is PaymentData paymentData)
+                else if (entity is PaymentData paymentData && paymentData.Currency is null)
                 {
                     paymentData.Migrate();
                 }
@@ -65,7 +66,8 @@ namespace BTCPayServer.Data
             "derivationStrategy",
             "archived",
             "isUnderPaid",
-            "requiresRefundEmail"
+            "requiresRefundEmail",
+            "invoiceTime"
         };
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -73,13 +75,13 @@ namespace BTCPayServer.Data
         {
             if (Currency is not null)
                 return;
-            if (Blob is not null)
+            if (Blob is not (null or { Length: 0 }))
             {
                 Blob2 = MigrationExtensions.Unzip(Blob);
                 Blob = null;
             }
             var blob = JObject.Parse(Blob2);
-            if (blob["cryptoData"]?["BTC"] is not null)
+            if (blob["cryptoData"]?["BTC"] is not (null or { Type: JTokenType.Null }))
             {
                 blob.Move(["rate"], ["cryptoData", "BTC", "rate"]);
                 blob.Move(["txFee"], ["cryptoData", "BTC", "txFee"]);
@@ -280,7 +282,7 @@ namespace BTCPayServer.Data
 
                 var divisibility = MigrationExtensions.GetDivisibility(prop.Name);
                 prompt.Add("divisibility", divisibility);
-                if (prompt["paymentMethodFee"] is { } paymentMethodFee)
+                if (prompt["paymentMethodFee"] is { Type: JTokenType.Integer } paymentMethodFee)
                 {
                     prompt["paymentMethodFee"] = ((decimal)paymentMethodFee.Value<long>() / (decimal)Math.Pow(10, divisibility)).ToString(CultureInfo.InvariantCulture);
                     prompt.RemoveIfValue<string>("paymentMethodFee", "0");
@@ -304,7 +306,7 @@ namespace BTCPayServer.Data
                 var details = prompt["details"] as JObject ?? new JObject();
                 details.RemoveIfValue<bool>("payjoinEnabled", false);
                 details.RemoveIfNull("feeMode");
-                if (details["feeMode"] is not null)
+                if (details["feeMode"] is not (null or { Type: JTokenType.Null }))
                 {
                     details["feeMode"] = details["feeMode"].Value<int>() switch
                     {
@@ -341,7 +343,7 @@ namespace BTCPayServer.Data
                 }
             }
 
-            if (blob["defaultPaymentMethod"] is not null)
+            if (blob["defaultPaymentMethod"] is not (null or { Type : JTokenType.Null }))
                 blob["defaultPaymentMethod"] = MigrationExtensions.MigratePaymentMethodId(blob["defaultPaymentMethod"].Value<string>());
             blob.Remove("derivationStrategies");
 

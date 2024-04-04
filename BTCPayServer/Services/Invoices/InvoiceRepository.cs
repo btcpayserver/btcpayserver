@@ -228,7 +228,6 @@ namespace BTCPayServer.Services.Invoices
                 {
                     StoreDataId = invoice.StoreId,
                     Id = invoice.Id,
-                    Created = invoice.InvoiceTime,
                     OrderId = invoice.Metadata.OrderId,
 #pragma warning disable CS0618 // Type or member is obsolete
                     Status = invoice.StatusString,

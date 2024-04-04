@@ -16,7 +16,6 @@ public class OutputDescriptorWalletFileParser : IWalletFileParser
         var descriptor = derivationSchemeParser.ParseOutputDescriptor(data);
         derivationSchemeSettings = new DerivationSchemeSettings()
         {
-            Network = network,
             Source = "OutputDescriptor",
             AccountOriginal = data.Trim(),
             AccountDerivation = descriptor.Item1,

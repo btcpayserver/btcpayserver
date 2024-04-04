@@ -112,7 +112,7 @@ namespace BTCPayServer.Tests
         {
             string connectionString = null;
             if (connectionType is null)
-                return LightningSupportedPaymentMethod.InternalNode;
+                return LightningPaymentMethodConfig.InternalNode;
             if (connectionType == LightningConnectionType.CLightning)
             {
                 if (isMerchant)

@@ -34,7 +34,7 @@
                     {
                         <tr>
                             <td>
-                                @conf.Key.ToPrettyString()
+                                @conf.Key.ToString()
                             </td>
                             <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                                 @if (conf.Value is null)

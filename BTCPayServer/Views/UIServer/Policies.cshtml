@@ -1,9 +1,11 @@
 @using BTCPayServer.Payments;
 @using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Mails;
 @model BTCPayServer.Services.PoliciesSettings
 @inject SettingsRepository _SettingsRepository
 @inject TransactionLinkProviders TransactionLinkProviders
+@inject PaymentMethodHandlerDictionary _handlers;
 @{
     ViewData.SetActivePage(ServerNavPages.Policies);
     var linkProviders = TransactionLinkProviders.ToArray();
@@ -231,12 +233,12 @@
 
             @for (var lpi = 0; lpi < linkProviders.Length; lpi++)
             {
-                var pmi = linkProviders[lpi].Key;
+                var cryptoCode = linkProviders[lpi].Key;
                 var defaultLink = linkProviders[lpi].Value.BlockExplorerLinkDefault;
-                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => PaymentMethodId.Parse(tuple.CryptoCode) == pmi);
+				var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode == cryptoCode);
                 if (existingOverride is null)
                 {
-                    existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = pmi.ToStringNormalized(), Link = null };
+					existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = cryptoCode, Link = null };
                     Model.BlockExplorerLinks ??= new ();
                     Model.BlockExplorerLinks.Add(existingOverride);
                 }
@@ -244,12 +246,12 @@
                 var linkValue = existingOverride.Link ?? defaultLink;
                 <div class="form-group" data-default="@defaultLink">
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@pmi.ToPrettyString()</label>
+						<label asp-for="BlockExplorerLinks[i].Link" class="form-label">@cryptoCode</label>
                         <button type="button" class="btn btn-link p-0 only-for-js revert-default" title="Revert to default">
                             Set to default
                         </button>
                     </div>
-                    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@pmi.ToStringNormalized()" />
+					<input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@cryptoCode" />
                     <input type="text" class="form-control block-explorer-link" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
                 </div>
             }

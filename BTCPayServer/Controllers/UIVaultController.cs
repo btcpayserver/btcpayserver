@@ -9,6 +9,9 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Hwi;
 using BTCPayServer.ModelBinders;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,15 +25,15 @@ namespace BTCPayServer.Controllers
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
     public class UIVaultController : Controller
     {
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly IAuthorizationService _authorizationService;
 
-        public UIVaultController(BTCPayNetworkProvider networks, IAuthorizationService authorizationService)
+        public UIVaultController(PaymentMethodHandlerDictionary handlers, IAuthorizationService authorizationService)
         {
-            Networks = networks;
+            _handlers = handlers;
             _authorizationService = authorizationService;
         }
 
-        public BTCPayNetworkProvider Networks { get; }
 
         [HttpGet]
         [Route("{cryptoCode}/xpub")]
@@ -46,8 +49,7 @@ namespace BTCPayServer.Controllers
             using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10)))
             {
                 var cancellationToken = cts.Token;
-                var network = Networks.GetNetwork<BTCPayNetwork>(cryptoCode);
-                if (network == null)
+                if (!_handlers.TryGetValue(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), out var h) || h is not IHasNetwork { Network: var network })
                     return NotFound();
                 var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
                 var vaultClient = new VaultClient(websocket);
@@ -397,11 +399,8 @@ askdevice:
 
         private DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
         {
-            var paymentMethod = CurrentStore
-                            .GetSupportedPaymentMethods(Networks)
-                            .OfType<DerivationSchemeSettings>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
-            return paymentMethod;
+            var pmi = Payments.PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
+            return CurrentStore.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, _handlers);
         }
     }
 }

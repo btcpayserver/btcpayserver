@@ -12,6 +12,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Rates;
@@ -283,6 +284,7 @@ namespace BTCPayServer.HostedServices
             BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
             EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
+            PaymentMethodHandlerDictionary handlers,
             NotificationSender notificationSender,
             RateFetcher rateFetcher,
             IEnumerable<IPayoutHandler> payoutHandlers,
@@ -295,6 +297,7 @@ namespace BTCPayServer.HostedServices
             _jsonSerializerSettings = jsonSerializerSettings;
             _eventAggregator = eventAggregator;
             _networkProvider = networkProvider;
+            _handlers = handlers;
             _notificationSender = notificationSender;
             _rateFetcher = rateFetcher;
             _payoutHandlers = payoutHandlers;
@@ -308,6 +311,7 @@ namespace BTCPayServer.HostedServices
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly NotificationSender _notificationSender;
         private readonly RateFetcher _rateFetcher;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
@@ -376,8 +380,8 @@ namespace BTCPayServer.HostedServices
         public bool SupportsLNURL(PullPaymentBlob blob)
         {
             var pms = blob.SupportedPaymentMethods.FirstOrDefault(id => 
-                id.PaymentType == LightningPaymentType.Instance && 
-                _networkProvider.DefaultNetwork.CryptoCode == id.CryptoCode);
+                PaymentTypes.LN.GetPaymentMethodId(_networkProvider.DefaultNetwork.CryptoCode)
+                == id);
             return pms is not null && _lnurlSupportedCurrencies.Contains(blob.Currency);
         }
 
@@ -385,8 +389,9 @@ namespace BTCPayServer.HostedServices
         {
             var ppBlob = payout.PullPaymentData?.GetBlob();
             var payoutPaymentMethod = payout.GetPaymentMethodId();
-            var currencyPair = new Rating.CurrencyPair(payoutPaymentMethod.CryptoCode,
-                ppBlob?.Currency ?? payoutPaymentMethod.CryptoCode);
+            var cryptoCode = _handlers.TryGetNetwork(payoutPaymentMethod)?.NBXplorerNetwork.CryptoCode;
+            var currencyPair = new Rating.CurrencyPair(cryptoCode,
+                ppBlob?.Currency ?? cryptoCode);
             Rating.RateRule rule = null;
             try
             {
@@ -450,11 +455,17 @@ namespace BTCPayServer.HostedServices
                     req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.NotFound, null));
                     return;
                 }
-
+                var network = _handlers.TryGetNetwork(paymentMethod);
+                if (network is null)
+                {
+                    req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.InvalidState, null));
+                    return;
+                }
+                var cryptoCode = network.NBXplorerNetwork.CryptoCode;
                 payout.State = PayoutState.AwaitingPayment;
 
                 if (payout.PullPaymentData is null ||
-                    paymentMethod.CryptoCode == payout.PullPaymentData.GetBlob().Currency)
+                    cryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
                 var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethod);
@@ -470,7 +481,7 @@ namespace BTCPayServer.HostedServices
                 }
 
                 payoutBlob.CryptoAmount = Extensions.RoundUp(cryptoAmount,
-                    _networkProvider.GetNetwork(paymentMethod.CryptoCode).Divisibility);
+                    network.Divisibility);
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
 
@@ -672,7 +683,7 @@ namespace BTCPayServer.HostedServices
                         new PayoutNotification()
                         {
                             StoreId = payout.StoreDataId,
-                            Currency = ppBlob?.Currency ?? req.ClaimRequest.PaymentMethodId.CryptoCode,
+                            Currency = ppBlob?.Currency ?? _handlers.TryGetNetwork(req.ClaimRequest.PaymentMethodId)?.NBXplorerNetwork.CryptoCode,
                             Status = payout.State,
                             PaymentMethod = payout.PaymentMethodId,
                             PayoutId = payout.Id

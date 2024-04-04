@@ -48,7 +48,7 @@ public class OnChainAutomatedPayoutSenderFactory : EventHostedServiceBase, IPayo
         return _btcPayNetworkProvider.GetAll().OfType<BTCPayNetwork>()
             .Where(network => !network.ReadonlyWallet && network.WalletSupported)
             .Select(network =>
-                new PaymentMethodId(network.CryptoCode, BitcoinPaymentType.Instance));
+                PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode));
     }
 
     public Task<IHostedService> ConstructProcessor(PayoutProcessorData settings)

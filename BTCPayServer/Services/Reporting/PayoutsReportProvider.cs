@@ -6,6 +6,9 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Reporting;
 
@@ -14,13 +17,16 @@ public class PayoutsReportProvider : ReportProvider
     private readonly PullPaymentHostedService _pullPaymentHostedService;
     private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
     private readonly DisplayFormatter _displayFormatter;
+    private readonly PaymentMethodHandlerDictionary _handlers;
 
     public PayoutsReportProvider(
         PullPaymentHostedService pullPaymentHostedService,
         DisplayFormatter displayFormatter,
+        PaymentMethodHandlerDictionary handlers,
         BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
     {
         _displayFormatter = displayFormatter;
+        _handlers = handlers;
         _pullPaymentHostedService = pullPaymentHostedService;
         _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
     }
@@ -45,22 +51,23 @@ public class PayoutsReportProvider : ReportProvider
             data.Add(payout.Date);
             data.Add(payout.GetPayoutSource(_btcPayNetworkJsonSerializerSettings));
             data.Add(payout.State.ToString());
-            if (PaymentMethodId.TryParse(payout.PaymentMethodId, out var paymentType))
+            if (PaymentMethodId.TryParse(payout.PaymentMethodId, out var pmi))
             {
-                if (paymentType.PaymentType == PaymentTypes.LightningLike || paymentType.PaymentType == PaymentTypes.LNURLPay)
+                var handler = _handlers.TryGet(pmi);
+                if (handler is ILightningPaymentHandler)
                     data.Add("Lightning");
-                else if (paymentType.PaymentType == PaymentTypes.BTCLike)
+                else if (handler is BitcoinLikePaymentHandler)
                     data.Add("On-Chain");
                 else
-                    data.Add(paymentType.PaymentType.ToStringNormalized());
+                    data.Add(pmi.ToString());
             }
             else
                 continue;
 
             var ppBlob = payout.PullPaymentData?.GetBlob();
-            var currency = ppBlob?.Currency ?? paymentType.CryptoCode;
-            data.Add(paymentType.CryptoCode);
-            data.Add(blob.CryptoAmount.HasValue ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, paymentType.CryptoCode) : null);
+            var currency = ppBlob?.Currency ?? pmi.CryptoCode;
+            data.Add(pmi.CryptoCode);
+            data.Add(blob.CryptoAmount.HasValue ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, pmi.CryptoCode) : null);
             data.Add(currency);
             data.Add(_displayFormatter.ToFormattedAmount(blob.Amount, currency));
             data.Add(blob.Destination);

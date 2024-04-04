@@ -1,15 +1,9 @@
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Payments;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
-    public class CheckoutUIPaymentMethodSettings
-    {
-        public string ExtensionPartial { get; set; }
-        public string CheckoutBodyVueComponentName { get; set; }
-        public string CheckoutHeaderVueComponentName { get; set; }
-        public string NoScriptPartialName { get; set; }
-    }
     public class PaymentModel
     {
         public CheckoutUIPaymentMethodSettings UISettings;
@@ -69,7 +63,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public decimal NetworkFee { get; set; }
         public bool IsMultiCurrency { get; set; }
         public int MaxTimeMinutes { get; set; }
-        public string PaymentType { get; set; }
         public string PaymentMethodId { get; set; }
         public string PaymentMethodName { get; set; }
         public string CryptoImage { get; set; }
@@ -83,5 +76,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public CheckoutType CheckoutType { get; set; }
         public int? RequiredConfirmations { get; set; }
         public long? ReceivedConfirmations { get; set; }
+
+        public HashSet<string> ExtensionPartials { get; } = new HashSet<string>();
     }
 }

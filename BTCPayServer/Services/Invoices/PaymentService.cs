@@ -6,24 +6,28 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBitpayClient;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Invoices
 {
     public class PaymentService
     {
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
 
         public PaymentService(EventAggregator eventAggregator,
             ApplicationDbContextFactory applicationDbContextFactory,
-            BTCPayNetworkProvider btcPayNetworkProvider, InvoiceRepository invoiceRepository)
+            PaymentMethodHandlerDictionary handlers,
+            InvoiceRepository invoiceRepository)
         {
             _applicationDbContextFactory = applicationDbContextFactory;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _handlers = handlers;
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
         }
@@ -36,52 +40,38 @@ namespace BTCPayServer.Services.Invoices
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(string invoiceId, DateTimeOffset date, CryptoPaymentData paymentData, BTCPayNetworkBase network, bool accounted = false)
+        public async Task<PaymentEntity> AddPayment(Data.PaymentData paymentData, HashSet<string> searchTerms = null)
         {
-            await using var context = _applicationDbContextFactory.CreateContext();
-            var invoice = await context.Invoices.FindAsync(invoiceId);
-            if (invoice == null)
-                return null;
-            InvoiceEntity invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
-            PaymentMethod paymentMethod = invoiceEntity.GetPaymentMethod(new PaymentMethodId(network.CryptoCode, paymentData.GetPaymentType()));
-            if (paymentMethod is null)
-                return null;
-            IPaymentMethodDetails paymentMethodDetails = paymentMethod.GetPaymentMethodDetails();
-            PaymentEntity entity = new PaymentEntity
+            InvoiceEntity invoiceEntity;
+            await using (var context = _applicationDbContextFactory.CreateContext())
             {
-                Version = 1,
-#pragma warning disable CS0618
-                Currency = network.CryptoCode,
-#pragma warning restore CS0618
-                ReceivedTime = date.UtcDateTime,
-                Accounted = accounted,
-                NetworkFee = paymentMethodDetails.GetNextNetworkFee(),
-                Network = network
-            };
-            entity.SetCryptoPaymentData(paymentData);
-            PaymentData data = new PaymentData
-            {
-                Id = paymentData.GetPaymentId(),
-                InvoiceDataId = invoiceId,
-                Accounted = accounted
-            };
-            data.SetBlob(entity);
-            await context.Payments.AddAsync(data);
+                var invoice = await context.Invoices.FindAsync(paymentData.InvoiceDataId);
+                if (invoice == null)
+                    return null;
+                invoiceEntity = invoice.GetBlob();
+                var pmi = PaymentMethodId.Parse(paymentData.Type);
+                PaymentPrompt paymentMethod = invoiceEntity.GetPaymentPrompt(pmi);
+                if (paymentMethod is null || !_handlers.TryGetValue(pmi, out var handler))
+                    return null;
+                await context.Payments.AddAsync(paymentData);
 
-            InvoiceRepository.AddToTextSearch(context, invoice, paymentData.GetSearchTerms());
-            var alreadyExists = false;
-            try
-            {
-                await context.SaveChangesAsync().ConfigureAwait(false);
+                if (searchTerms is not null)
+                    InvoiceRepository.AddToTextSearch(context, invoice, searchTerms.ToArray());
+                var alreadyExists = false;
+                try
+                {
+                    await context.SaveChangesAsync().ConfigureAwait(false);
+                }
+                catch (DbUpdateException) { alreadyExists = true; }
+
+                if (alreadyExists)
+                {
+                    return null;
+                }
             }
-            catch (DbUpdateException) { alreadyExists = true; }
-
-            if (alreadyExists)
-            {
-                return null;
-            }
-
-            if (paymentData.PaymentConfirmed(entity, invoiceEntity.SpeedPolicy))
+            invoiceEntity = await _invoiceRepository.GetInvoice(paymentData.InvoiceDataId);
+            var entity = invoiceEntity.GetPayments(false).Single(p => p.Id == paymentData.Id);
+            if (paymentData.Status is PaymentStatus.Settled)
             {
                 _eventAggregator.Publish(new InvoiceEvent(invoiceEntity, InvoiceEvent.PaymentSettled) { Payment = entity });
             }
@@ -93,28 +83,23 @@ namespace BTCPayServer.Services.Invoices
             if (payments.Count == 0)
                 return;
             await using var context = _applicationDbContextFactory.CreateContext();
-            var paymentsDict = payments
-                .Select(entity => (entity, entity.GetCryptoPaymentData()))
-                .ToDictionary(tuple => tuple.Item2.GetPaymentId());
-            var paymentIds = paymentsDict.Keys.ToArray();
+            var paymentIds = payments.Select(p => p.Id).ToArray();
             var dbPayments = await context.Payments
                 .Include(data => data.InvoiceData)
-                .Where(data => paymentIds.Contains(data.Id)).ToDictionaryAsync(data => data.Id);
+                .Where(data => paymentIds.Contains(data.Id))
+                .ToDictionaryAsync(data => data.Id);
             var eventsToSend = new List<InvoiceEvent>();
-            foreach (KeyValuePair<string, (PaymentEntity entity, CryptoPaymentData)> payment in paymentsDict)
+            foreach (var payment in payments)
             {
-                var dbPayment = dbPayments[payment.Key];
+                var dbPayment = dbPayments[payment.Id];
                 var invBlob = _invoiceRepository.ToEntity(dbPayment.InvoiceData);
-                var dbPaymentEntity = dbPayment.GetBlob(_btcPayNetworkProvider);
-                var wasConfirmed = dbPayment.GetBlob(_btcPayNetworkProvider).GetCryptoPaymentData()
-                    .PaymentConfirmed(dbPaymentEntity, invBlob.SpeedPolicy);
-                if (!wasConfirmed && payment.Value.Item2.PaymentConfirmed(payment.Value.entity, invBlob.SpeedPolicy))
+                var dbPaymentEntity = dbPayment.GetBlob();
+                var wasConfirmed = dbPayment.Status is PaymentStatus.Settled;
+                if (!wasConfirmed && payment.Status is PaymentStatus.Settled)
                 {
-                    eventsToSend.Add(new InvoiceEvent(invBlob, InvoiceEvent.PaymentSettled) { Payment = payment.Value.entity });
+                    eventsToSend.Add(new InvoiceEvent(invBlob, InvoiceEvent.PaymentSettled) { Payment = payment });
                 }
-
-                dbPayment.Accounted = payment.Value.entity.Accounted;
-                dbPayment.SetBlob(payment.Value.entity);
+                dbPayment.SetBlob(payment);
             }
             await context.SaveChangesAsync().ConfigureAwait(false);
             eventsToSend.ForEach(_eventAggregator.Publish);

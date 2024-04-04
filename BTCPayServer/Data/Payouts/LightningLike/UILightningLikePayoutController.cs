@@ -10,9 +10,11 @@ using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
@@ -32,7 +34,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly IOptions<LightningNetworkOptions> _options;
         private readonly IAuthorizationService _authorizationService;
@@ -43,7 +45,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             UserManager<ApplicationUser> userManager,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             IEnumerable<IPayoutHandler> payoutHandlers,
-            BTCPayNetworkProvider btcPayNetworkProvider,
+            PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository,
             LightningClientFactoryService lightningClientFactoryService,
             IOptions<LightningNetworkOptions> options, 
@@ -54,7 +56,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             _userManager = userManager;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _payoutHandlers = payoutHandlers;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _handlers = handlers;
             _lightningClientFactoryService = lightningClientFactoryService;
             _options = options;
             _storeRepository = storeRepository;
@@ -101,7 +103,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             await SetStoreContext();
 
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var pmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
 
             await using var ctx = _applicationDbContextFactory.CreateContext();
             var payouts = await GetPayouts(ctx, pmi, payoutIds);
@@ -125,14 +127,14 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             await SetStoreContext();
 
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            var pmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
             var payoutHandler = (LightningLikePayoutHandler)_payoutHandlers.FindPayoutHandler(pmi);
 
             await using var ctx = _applicationDbContextFactory.CreateContext();
 
             var payouts = (await GetPayouts(ctx, pmi, payoutIds)).GroupBy(data => data.StoreDataId);
             var results = new List<ResultVM>();
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(pmi.CryptoCode);
+            var network = ((IHasNetwork)_handlers[pmi]).Network;
 
             //we group per store and init the transfers by each
 
@@ -141,9 +143,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             {
                 var store = payoutDatas.First().StoreData;
 
-                var lightningSupportedPaymentMethod = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                    .OfType<LightningSupportedPaymentMethod>()
-                    .FirstOrDefault(method => method.PaymentId == pmi);
+                var lightningSupportedPaymentMethod = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, _handlers);
 
                 if (lightningSupportedPaymentMethod.IsInternalNode && !authorizedForInternalNode)
                 {

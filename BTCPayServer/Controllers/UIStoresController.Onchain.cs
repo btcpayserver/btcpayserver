@@ -12,7 +12,10 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -20,6 +23,7 @@ using NBitcoin.DataEncoders;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -83,7 +87,8 @@ namespace BTCPayServer.Controllers
 
             vm.Network = network;
             DerivationSchemeSettings strategy = null;
-
+            PaymentMethodId paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+            BitcoinLikePaymentHandler handler = (BitcoinLikePaymentHandler)_handlers[paymentMethodId];
             var wallet = _WalletProvider.GetWallet(network);
             if (wallet == null)
             {
@@ -145,7 +150,11 @@ namespace BTCPayServer.Controllers
             }
             else if (!string.IsNullOrEmpty(vm.Config))
             {
-                if (!DerivationSchemeSettings.TryParseFromJson(UnprotectString(vm.Config), network, out strategy))
+                try
+                {
+                    strategy = handler.ParsePaymentMethodConfig(JToken.Parse(UnprotectString(vm.Config)));
+                }
+                catch
                 {
                     ModelState.AddModelError(nameof(vm.Config), "Config file was not in the correct format");
                     return View(vm.ViewName, vm);
@@ -158,17 +167,16 @@ namespace BTCPayServer.Controllers
                 return View(vm.ViewName, vm);
             }
 
-            vm.Config = ProtectString(strategy.ToJson());
+            vm.Config = ProtectString(JToken.FromObject(strategy, handler.Serializer).ToString());
             ModelState.Remove(nameof(vm.Config));
 
-            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
             var storeBlob = store.GetStoreBlob();
             if (vm.Confirmation)
             {
                 try
                 {
                     await wallet.TrackAsync(strategy.AccountDerivation);
-                    store.SetSupportedPaymentMethod(paymentMethodId, strategy);
+                    store.SetPaymentMethodConfig(_handlers[paymentMethodId], strategy);
                     storeBlob.SetExcluded(paymentMethodId, false);
                     storeBlob.PayJoinEnabled = strategy.IsHotWallet && !(vm.SetupRequest?.PayJoinEnabled is false);
                     store.SetStoreBlob(storeBlob);
@@ -186,7 +194,7 @@ namespace BTCPayServer.Controllers
                 // This is success case when derivation scheme is added to the store
                 return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
             }
-            return ConfirmAddresses(vm, strategy);
+            return ConfirmAddresses(vm, strategy, network.NBXplorerNetwork);
         }
 
         private string ProtectString(string str)
@@ -256,7 +264,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-
+            var handler = _handlers.GetBitcoinHandler(cryptoCode);
             var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
             var isImport = method == WalletSetupMethod.Seed;
             var vm = new WalletSetupViewModel
@@ -322,7 +330,7 @@ namespace BTCPayServer.Controllers
             vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
             vm.AccountKey = response.AccountHDKey.Neuter().ToWif();
             vm.KeyPath = response.AccountKeyPath.KeyPath.ToString();
-            vm.Config = ProtectString(derivationSchemeSettings.ToJson());
+            vm.Config = ProtectString(JToken.FromObject(derivationSchemeSettings, handler.Serializer).ToString());
 
             var result = await UpdateWallet(vm);
 
@@ -398,12 +406,13 @@ namespace BTCPayServer.Controllers
             (bool canUseHotWallet, bool rpcImport) = await CanUseHotWallet();
             var client = _ExplorerProvider.GetExplorerClient(network);
 
+            var handler = _handlers.GetBitcoinHandler(cryptoCode);
             var vm = new WalletSettingsViewModel
             {
                 StoreId = storeId,
                 CryptoCode = cryptoCode,
                 WalletId = new WalletId(storeId, cryptoCode),
-                Enabled = !excludeFilters.Match(derivation.PaymentId),
+                Enabled = !excludeFilters.Match(handler.PaymentMethodId),
                 Network = network,
                 IsHotWallet = derivation.IsHotWallet,
                 Source = derivation.Source,
@@ -411,7 +420,7 @@ namespace BTCPayServer.Controllers
                 DerivationScheme = derivation.AccountDerivation.ToString(),
                 DerivationSchemeInput = derivation.AccountOriginal,
                 KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString(),
-                UriScheme = derivation.Network.NBitcoinNetwork.UriScheme,
+                UriScheme = network.NBitcoinNetwork.UriScheme,
                 Label = derivation.Label,
                 SelectedSigningKey = derivation.SigningKey.ToString(),
                 NBXSeedAvailable = derivation.IsHotWallet &&
@@ -425,7 +434,7 @@ namespace BTCPayServer.Controllers
                         MasterFingerprint = e.RootFingerprint is HDFingerprint fp ? fp.ToString() : null,
                         AccountKeyPath = e.AccountKeyPath == null ? "" : $"m/{e.AccountKeyPath}"
                     }).ToList(),
-                Config = ProtectString(derivation.ToJson()),
+                Config = ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
                 PayJoinEnabled = storeBlob.PayJoinEnabled,
                 MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
                 SpeedPolicy = store.SpeedPolicy,
@@ -433,10 +442,7 @@ namespace BTCPayServer.Controllers
                 RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
                 CanUseHotWallet = canUseHotWallet,
                 CanUseRPCImport = rpcImport,
-                CanUsePayJoin = canUseHotWallet && store
-                    .GetSupportedPaymentMethods(_NetworkProvider)
-                    .OfType<DerivationSchemeSettings>()
-                    .Any(settings => settings.Network.SupportPayJoin && settings.IsHotWallet),
+                CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
                 StoreName = store.StoreName,
 
             };
@@ -451,7 +457,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> UpdateWalletSettings(WalletSettingsViewModel vm)
         {
-            var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
             if (checkResult != null)
             {
                 return checkResult;
@@ -462,17 +468,17 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-
+            var handler = _handlers.GetBitcoinHandler(vm.CryptoCode);
             var storeBlob = store.GetStoreBlob();
             var excludeFilters = storeBlob.GetExcludedPaymentMethods();
-            var currentlyEnabled = !excludeFilters.Match(derivation.PaymentId);
+            var currentlyEnabled = !excludeFilters.Match(handler.PaymentMethodId);
             bool enabledChanged = currentlyEnabled != vm.Enabled;
             bool needUpdate = enabledChanged;
             string errorMessage = null;
 
             if (enabledChanged)
             {
-                storeBlob.SetExcluded(derivation.PaymentId, !vm.Enabled);
+                storeBlob.SetExcluded(handler.PaymentMethodId, !vm.Enabled);
                 store.SetStoreBlob(storeBlob);
             }
 
@@ -484,7 +490,7 @@ namespace BTCPayServer.Controllers
 
             var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)
                 ? null
-                : new BitcoinExtPubKey(vm.SelectedSigningKey, derivation.Network.NBitcoinNetwork);
+                : new BitcoinExtPubKey(vm.SelectedSigningKey, network.NBitcoinNetwork);
             if (derivation.SigningKey != signingKey && signingKey != null)
             {
                 needUpdate = true;
@@ -531,9 +537,15 @@ namespace BTCPayServer.Controllers
                 }
             }
 
+            if (store.SpeedPolicy != vm.SpeedPolicy)
+            {
+                store.SpeedPolicy = vm.SpeedPolicy;
+                needUpdate = true;
+            }
+
             if (needUpdate)
             {
-                store.SetSupportedPaymentMethod(derivation);
+                store.SetPaymentMethodConfig(handler, derivation);
 
                 await _Repo.UpdateStore(store);
 
@@ -561,7 +573,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> UpdatePaymentSettings(WalletSettingsViewModel vm)
         {
-            var checkResult = IsAvailable(vm.CryptoCode, out var store, out _);
+            var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
             if (checkResult != null)
             {
                 return checkResult;
@@ -574,12 +586,6 @@ namespace BTCPayServer.Controllers
             }
 
             bool needUpdate = false;
-            if (store.SpeedPolicy != vm.SpeedPolicy)
-            {
-                needUpdate = true;
-                store.SpeedPolicy = vm.SpeedPolicy;
-            }
-
             var blob = store.GetStoreBlob();
             var payjoinChanged = blob.PayJoinEnabled != vm.PayJoinEnabled;
             blob.MonitoringExpiration = TimeSpan.FromMinutes(vm.MonitoringExpiration);
@@ -598,21 +604,17 @@ namespace BTCPayServer.Controllers
 
                 TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
 
-                if (payjoinChanged && blob.PayJoinEnabled)
-                {
-                    var problematicPayjoinEnabledMethods = store.GetSupportedPaymentMethods(_NetworkProvider)
-                        .OfType<DerivationSchemeSettings>()
-                        .Where(settings => settings.Network.SupportPayJoin && !settings.IsHotWallet)
-                        .Select(settings => settings.PaymentId.CryptoCode)
-                        .ToArray();
 
-                    if (problematicPayjoinEnabledMethods.Any())
+                if (payjoinChanged && blob.PayJoinEnabled && network.SupportPayJoin)
+                {
+                    var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
+                    if (!config.IsHotWallet)
                     {
                         TempData.Remove(WellKnownTempData.SuccessMessage);
                         TempData.SetStatusMessageModel(new StatusMessageModel()
                         {
                             Severity = StatusMessageModel.StatusSeverity.Warning,
-                            Html = $"The payment settings were updated successfully. However, PayJoin will not work for {string.Join(", ", problematicPayjoinEnabledMethods)} until you configure them to be a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
+                            Html = $"The payment settings were updated successfully. However, PayJoin will not work, as this isn't a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
                         });
                     }
                 }
@@ -743,8 +745,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            PaymentMethodId paymentMethodId = new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike);
-            store.SetSupportedPaymentMethod(paymentMethodId, null);
+            store.SetPaymentMethodConfig(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), null);
 
             await _Repo.UpdateStore(store);
             _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(storeId, cryptoCode) });
@@ -755,7 +756,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(GeneralSettings), new { storeId });
         }
 
-        private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy)
+        private IActionResult ConfirmAddresses(WalletSetupViewModel vm, DerivationSchemeSettings strategy, NBXplorerNetwork network)
         {
             vm.DerivationScheme = strategy.AccountDerivation.ToString();
             var deposit = new KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
@@ -769,7 +770,7 @@ namespace BTCPayServer.Controllers
                     var keyPath = deposit.GetKeyPath(i);
                     var rootedKeyPath = vm.GetAccountKeypath()?.Derive(keyPath);
                     var derivation = line.Derive(i);
-                    var address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
+                    var address = network.CreateAddress(strategy.AccountDerivation,
                         line.KeyPathTemplate.GetKeyPath(i),
                         derivation.ScriptPubKey).ToString();
                     vm.AddressSamples.Add((keyPath.ToString(), address, rootedKeyPath));
@@ -792,11 +793,7 @@ namespace BTCPayServer.Controllers
 
         private DerivationSchemeSettings GetExistingDerivationStrategy(string cryptoCode, StoreData store)
         {
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-            var existing = store.GetSupportedPaymentMethods(_NetworkProvider)
-                .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault(d => d.PaymentId == id);
-            return existing;
+            return store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), _handlers);
         }
 
         private async Task<string> GetSeed(ExplorerClient client, DerivationSchemeSettings derivation)

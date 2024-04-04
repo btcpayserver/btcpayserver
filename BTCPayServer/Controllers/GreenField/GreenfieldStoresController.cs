@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Archived = data.Archived,
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
-                DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
+                DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToString(),
                 //blob
                 //we do not include DefaultCurrencyPairs,Spread, PreferredExchange, RateScripting, RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
                 //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
@@ -163,7 +163,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
-                    PaymentMethod = criteria.PaymentMethod.ToStringNormalized()
+                    PaymentMethod = criteria.PaymentMethod.ToString()
                 }).ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }

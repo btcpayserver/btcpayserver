@@ -6,36 +6,39 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
     public partial class GreenfieldStoreOnChainPaymentMethodsController
     {
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/generate")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/generate")]
         [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> GenerateOnChainWallet(string storeId, string cryptoCode,
+        public async Task<IActionResult> GenerateOnChainWallet(string storeId,
+            [ModelBinder(typeof(PaymentMethodIdModelBinder))]
+            PaymentMethodId paymentMethodId,
             GenerateWalletRequest request)
         {
 
-            AssertCryptoCodeWallet(cryptoCode, out var network, out _);
+            AssertCryptoCodeWallet(paymentMethodId, out var network, out _);
 
             if (!_walletProvider.IsAvailable(network))
             {
                 return this.CreateAPIError(503, "not-available",
-                    $"{cryptoCode} services are not currently available");
+                    $"{paymentMethodId} services are not currently available");
             }
 
-            var method = GetExistingBtcLikePaymentMethod(cryptoCode);
-            if (method != null)
+            if (IsConfigured(paymentMethodId, out _))
             {
                 return this.CreateAPIError("already-configured",
-                    $"{cryptoCode} wallet is already configured for this store");
+                    $"{paymentMethodId} wallet is already configured for this store");
             }
 
             var canUseHotWallet = await CanUseHotWallet();
@@ -64,13 +67,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 if (response == null)
                 {
                     return this.CreateAPIError(503, "not-available",
-                        $"{cryptoCode} services are not currently available");
+                        $"{paymentMethodId} services are not currently available");
                 }
             }
             catch (Exception e)
             {
                 return this.CreateAPIError(503, "not-available",
-                    $"{cryptoCode} error: {e.Message}");
+                    $"{paymentMethodId} error: {e.Message}");
             }
 
             var derivationSchemeSettings = new DerivationSchemeSettings(response.DerivationScheme, network);
@@ -86,16 +89,22 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var store = Store;
             var storeBlob = store.GetStoreBlob();
-            store.SetSupportedPaymentMethod(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike),
+            var handler = _handlers[paymentMethodId];
+            store.SetPaymentMethodConfig(_handlers[paymentMethodId],
                 derivationSchemeSettings);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);
-            var rawResult = GetExistingBtcLikePaymentMethod(cryptoCode, store);
-            var result = new OnChainPaymentMethodDataWithSensitiveData(rawResult.CryptoCode, rawResult.DerivationScheme,
-                rawResult.Enabled, rawResult.Label, rawResult.AccountKeyPath, response.GetMnemonic(), derivationSchemeSettings.PaymentId.ToStringNormalized());
+            
+            var result = new GenerateOnChainWalletResponse()
+            {
+                Enabled = !storeBlob.IsExcluded(paymentMethodId),
+                PaymentMethodId = paymentMethodId.ToString(),
+                Config = ((JObject)JToken.FromObject(derivationSchemeSettings, handler.Serializer.ForAPI())).ToObject<GenerateOnChainWalletResponse.ConfigData>(handler.Serializer.ForAPI())
+            };
+            result.Mnemonic = response.GetMnemonic();
             _eventAggregator.Publish(new WalletChangedEvent()
             {
-                WalletId = new WalletId(storeId, cryptoCode)
+                WalletId = new WalletId(storeId, network.CryptoCode)
             });
             return Ok(result);
         }

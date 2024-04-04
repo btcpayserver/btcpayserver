@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -559,54 +560,21 @@ namespace BTCPayServer.Controllers.Greenfield
             return result.Value ?? GetFromActionResult<T>(result.Result);
         }
 
-        public override Task<IEnumerable<OnChainPaymentMethodData>> GetStoreOnChainPaymentMethods(string storeId,
-            bool? enabled, CancellationToken token = default)
-        {
-            return Task.FromResult(
-                GetFromActionResult(GetController<GreenfieldStoreOnChainPaymentMethodsController>().GetOnChainPaymentMethods(storeId, enabled)));
-        }
-
-        public override Task<OnChainPaymentMethodData> GetStoreOnChainPaymentMethod(string storeId,
-            string cryptoCode, CancellationToken token = default)
-        {
-            return Task.FromResult(GetFromActionResult(
-                GetController<GreenfieldStoreOnChainPaymentMethodsController>().GetOnChainPaymentMethod(storeId, cryptoCode)));
-        }
-
-        public override async Task RemoveStoreOnChainPaymentMethod(string storeId, string cryptoCode,
+        public override async Task<OnChainPaymentMethodPreviewResultData> PreviewProposedStoreOnChainPaymentMethodAddresses(
+            string storeId, string paymentMethodId,
+            string derivationScheme, int offset = 0, int count = 10,
             CancellationToken token = default)
         {
-            HandleActionResult(await GetController<GreenfieldStoreOnChainPaymentMethodsController>().RemoveOnChainPaymentMethod(storeId, cryptoCode));
-        }
-
-        public override async Task<OnChainPaymentMethodData> UpdateStoreOnChainPaymentMethod(string storeId,
-            string cryptoCode, UpdateOnChainPaymentMethodRequest paymentMethod, CancellationToken token = default)
-        {
-            return GetFromActionResult<OnChainPaymentMethodData>(
-                await GetController<GreenfieldStoreOnChainPaymentMethodsController>().UpdateOnChainPaymentMethod(storeId, cryptoCode,
-                    new UpdateOnChainPaymentMethodRequest(
-                        enabled: paymentMethod.Enabled,
-                        label: paymentMethod.Label,
-                        accountKeyPath: paymentMethod.AccountKeyPath,
-                        derivationScheme: paymentMethod.DerivationScheme
-                    )));
-        }
-
-        public override Task<OnChainPaymentMethodPreviewResultData> PreviewProposedStoreOnChainPaymentMethodAddresses(
-            string storeId, string cryptoCode,
-            UpdateOnChainPaymentMethodRequest paymentMethod, int offset = 0, int amount = 10,
-            CancellationToken token = default)
-        {
-            return Task.FromResult(GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
-                GetController<GreenfieldStoreOnChainPaymentMethodsController>().GetProposedOnChainPaymentMethodPreview(storeId, cryptoCode,
-                    paymentMethod, offset, amount)));
+            return GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
+                await GetController<GreenfieldStoreOnChainPaymentMethodsController>().GetProposedOnChainPaymentMethodPreview(storeId, Payments.PaymentMethodId.Parse(paymentMethodId),
+                    new UpdatePaymentMethodRequest() { Config = JValue.CreateString(derivationScheme) }, offset, count));
         }
 
         public override Task<OnChainPaymentMethodPreviewResultData> PreviewStoreOnChainPaymentMethodAddresses(
-            string storeId, string cryptoCode, int offset = 0, int amount = 10, CancellationToken token = default)
+            string storeId, string paymentMethodId, int offset = 0, int amount = 10, CancellationToken token = default)
         {
             return Task.FromResult(GetFromActionResult<OnChainPaymentMethodPreviewResultData>(
-                GetController<GreenfieldStoreOnChainPaymentMethodsController>().GetOnChainPaymentMethodPreview(storeId, cryptoCode, offset,
+                GetController<GreenfieldStoreOnChainPaymentMethodsController>().GetOnChainPaymentMethodPreview(storeId, Payments.PaymentMethodId.Parse(paymentMethodId), offset,
                     amount)));
         }
 
@@ -814,71 +782,6 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<StoreData>(await GetController<GreenfieldStoresController>().UpdateStore(storeId, request));
         }
 
-        public override Task<IEnumerable<LNURLPayPaymentMethodData>>
-            GetStoreLNURLPayPaymentMethods(string storeId, bool? enabled,
-                CancellationToken token = default)
-        {
-            return Task.FromResult(GetFromActionResult(
-                GetController<GreenfieldStoreLNURLPayPaymentMethodsController>().GetLNURLPayPaymentMethods(storeId, enabled)));
-        }
-
-        public override Task<LNURLPayPaymentMethodData> GetStoreLNURLPayPaymentMethod(
-            string storeId, string cryptoCode, CancellationToken token = default)
-        {
-            return Task.FromResult(GetFromActionResult<LNURLPayPaymentMethodData>(
-                GetController<GreenfieldStoreLNURLPayPaymentMethodsController>().GetLNURLPayPaymentMethod(storeId, cryptoCode)));
-        }
-
-        public override async Task RemoveStoreLNURLPayPaymentMethod(string storeId, string cryptoCode,
-            CancellationToken token = default)
-        {
-            HandleActionResult(
-                await GetController<GreenfieldStoreLNURLPayPaymentMethodsController>().RemoveLNURLPayPaymentMethod(storeId,
-                    cryptoCode));
-        }
-
-        public override async Task<LNURLPayPaymentMethodData> UpdateStoreLNURLPayPaymentMethod(
-            string storeId, string cryptoCode,
-            LNURLPayPaymentMethodData paymentMethod, CancellationToken token = default)
-        {
-            return GetFromActionResult<LNURLPayPaymentMethodData>(await
-                GetController<GreenfieldStoreLNURLPayPaymentMethodsController>().UpdateLNURLPayPaymentMethod(storeId, cryptoCode,
-                    paymentMethod));
-        }
-
-        public override Task<IEnumerable<LightningNetworkPaymentMethodData>>
-            GetStoreLightningNetworkPaymentMethods(string storeId, bool? enabled,
-                CancellationToken token = default)
-        {
-            return Task.FromResult(GetFromActionResult(
-                GetController<GreenfieldStoreLightningNetworkPaymentMethodsController>().GetLightningPaymentMethods(storeId, enabled)));
-        }
-
-        public override Task<LightningNetworkPaymentMethodData> GetStoreLightningNetworkPaymentMethod(
-            string storeId, string cryptoCode, CancellationToken token = default)
-        {
-            return Task.FromResult(GetFromActionResult(
-                GetController<GreenfieldStoreLightningNetworkPaymentMethodsController>().GetLightningNetworkPaymentMethod(storeId, cryptoCode)));
-        }
-
-        public override async Task RemoveStoreLightningNetworkPaymentMethod(string storeId, string cryptoCode,
-            CancellationToken token = default)
-        {
-            HandleActionResult(
-                await GetController<GreenfieldStoreLightningNetworkPaymentMethodsController>().RemoveLightningNetworkPaymentMethod(storeId,
-                    cryptoCode));
-        }
-
-        public override async Task<LightningNetworkPaymentMethodData> UpdateStoreLightningNetworkPaymentMethod(
-            string storeId, string cryptoCode,
-            UpdateLightningNetworkPaymentMethodRequest paymentMethod, CancellationToken token = default)
-        {
-            return GetFromActionResult<LightningNetworkPaymentMethodData>(await
-                GetController<GreenfieldStoreLightningNetworkPaymentMethodsController>().UpdateLightningNetworkPaymentMethod(storeId, cryptoCode,
-                    new UpdateLightningNetworkPaymentMethodRequest(paymentMethod.ConnectionString,
-                        paymentMethod.Enabled)));
-        }
-
         public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
             InvoiceStatus[] status = null,
             DateTimeOffset? startDate = null,
@@ -982,18 +885,18 @@ namespace BTCPayServer.Controllers.Greenfield
             return Task.FromResult(GetFromActionResult<PermissionMetadata[]>(GetController<UIHomeController>().Permissions()));
         }
 
-        public override async Task<Dictionary<string, GenericPaymentMethodData>> GetStorePaymentMethods(string storeId,
-            bool? enabled = null, CancellationToken token = default)
+        public override async Task<GenericPaymentMethodData[]> GetStorePaymentMethods(string storeId,
+            bool? onlyEnabled = null, bool? includeConfig = null, CancellationToken token = default)
         {
-            return GetFromActionResult(await GetController<GreenfieldStorePaymentMethodsController>().GetStorePaymentMethods(storeId, enabled));
+            return GetFromActionResult<GenericPaymentMethodData[]>(await GetController<GreenfieldStorePaymentMethodsController>().GetStorePaymentMethods(storeId, onlyEnabled, includeConfig));
         }
 
-        public override async Task<OnChainPaymentMethodDataWithSensitiveData> GenerateOnChainWallet(string storeId,
-            string cryptoCode, GenerateOnChainWalletRequest request,
+        public override async Task<GenerateOnChainWalletResponse> GenerateOnChainWallet(string storeId,
+            string paymentMethodId, GenerateOnChainWalletRequest request,
             CancellationToken token = default)
         {
-            return GetFromActionResult<OnChainPaymentMethodDataWithSensitiveData>(
-                await GetController<GreenfieldStoreOnChainPaymentMethodsController>().GenerateOnChainWallet(storeId, cryptoCode,
+            return GetFromActionResult<GenerateOnChainWalletResponse>(
+                await GetController<GreenfieldStoreOnChainPaymentMethodsController>().GenerateOnChainWallet(storeId, Payments.PaymentMethodId.Parse(paymentMethodId),
                     new GenerateWalletRequest()
                     {
                         Passphrase = request.Passphrase,

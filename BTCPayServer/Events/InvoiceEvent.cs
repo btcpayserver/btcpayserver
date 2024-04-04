@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Services.Invoices;
 
@@ -52,6 +53,8 @@ namespace BTCPayServer.Events
 
         public InvoiceEvent(InvoiceEntity invoice, string name)
         {
+            if (invoice is null)
+                throw new ArgumentNullException(nameof(invoice));
             Invoice = invoice;
             EventCode = EventCodes[name];
             Name = name;

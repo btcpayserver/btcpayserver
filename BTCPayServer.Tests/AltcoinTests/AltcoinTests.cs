@@ -17,6 +17,7 @@ using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitpayClient;
@@ -172,12 +173,13 @@ namespace BTCPayServer.Tests
 
                 // Now let's check that no data has been lost in the process
                 var store = tester.PayTester.StoreRepository.FindStore(storeId).GetAwaiter().GetResult();
-                var onchainBTC = store.GetSupportedPaymentMethods(tester.PayTester.Networks)
-#pragma warning disable CS0618 // Type or member is obsolete
-                    .OfType<DerivationSchemeSettings>().First(o => o.PaymentId.IsBTCOnChain);
-#pragma warning restore CS0618 // Type or member is obsolete
-                FastTests.GetParsers().TryParseWalletFile(content, onchainBTC.Network, out var expected, out var error);
-                Assert.Equal(expected.ToJson(), onchainBTC.ToJson());
+                var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
+                var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+                var onchainBTC = store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
+                var network = handlers.GetBitcoinHandler("BTC").Network;
+                FastTests.GetParsers().TryParseWalletFile(content, network, out var expected, out var error);
+                var handler = handlers[pmi];
+                Assert.Equal(JToken.FromObject(expected, handler.Serializer), JToken.FromObject(onchainBTC, handler.Serializer));
                 Assert.Null(error);
 
                 // Let's check that the root hdkey and account key path are taken into account when making a PSBT
@@ -302,6 +304,7 @@ namespace BTCPayServer.Tests
                 var cashCow = tester.LTCExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
                 var firstPayment = Money.Coins(0.1m);
+                var firstDue = invoice.CryptoInfo[0].Due;
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
                 TestUtils.Eventually(() =>
                 {
@@ -381,7 +384,7 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 invoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
-                Assert.Equal("confirmed", invoice.Status);
+                Assert.Equal("complete", invoice.Status);
             });
 
             // BTC crash by 50%
@@ -829,13 +832,13 @@ normal:
                 Assert.Single(btcOnlyInvoice.CryptoInfo);
                 Assert.Equal("BTC",
                     btcOnlyInvoice.CryptoInfo.First().CryptoCode);
-                Assert.Equal(PaymentTypes.BTCLike.ToString(),
+                Assert.Equal("BTC-CHAIN",
                     btcOnlyInvoice.CryptoInfo.First().PaymentType);
 
                 Assert.Equal(2, normalInvoice.CryptoInfo.Length);
                 Assert.Contains(
                     normalInvoice.CryptoInfo,
-                    s => PaymentTypes.BTCLike.ToString() == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
+                    s => "BTC-CHAIN" == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
                              s.CryptoCode));
 
                 //test topup option

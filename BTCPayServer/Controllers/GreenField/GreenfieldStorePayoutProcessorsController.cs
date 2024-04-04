@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -53,7 +54,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { processor },
-                        PaymentMethods = new[] { paymentMethod }
+                        PaymentMethods = new[] { PaymentMethodId.Parse(paymentMethod) }
                     })).FirstOrDefault();
             if (matched is null)
             {

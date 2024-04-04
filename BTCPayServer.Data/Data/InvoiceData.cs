@@ -1,16 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
-    public class InvoiceData : IHasBlobUntyped
+    public partial class InvoiceData : IHasBlobUntyped
     {
         public string Id { get; set; }
-
+        public string Currency { get; set; }
+        public decimal? Amount { get; set; }
         public string StoreDataId { get; set; }
         public StoreData StoreData { get; set; }
 
@@ -25,6 +25,7 @@ namespace BTCPayServer.Data
         public string OrderId { get; set; }
         public string Status { get; set; }
         public string ExceptionStatus { get; set; }
+		[Obsolete("Unused")]
         public string CustomerEmail { get; set; }
         public List<AddressInvoiceData> AddressInvoices { get; set; }
         public bool Archived { get; set; }
@@ -43,12 +44,14 @@ namespace BTCPayServer.Data
             builder.Entity<InvoiceData>().HasIndex(o => o.StoreDataId);
             builder.Entity<InvoiceData>().HasIndex(o => o.OrderId);
             builder.Entity<InvoiceData>().HasIndex(o => o.Created);
-
             if (databaseFacade.IsNpgsql())
             {
                 builder.Entity<InvoiceData>()
                         .Property(o => o.Blob2)
                         .HasColumnType("JSONB");
+                builder.Entity<InvoiceData>()
+                        .Property(o => o.Amount)
+                        .HasColumnType("NUMERIC");
             }
         }
     }

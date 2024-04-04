@@ -15,11 +15,6 @@ namespace BTCPayServer.Data
                 return addressInvoiceData.Address;
             return addressInvoiceData.Address.Substring(0, index);
         }
-        public static AddressInvoiceData Set(this AddressInvoiceData addressInvoiceData, string address, PaymentMethodId paymentMethodId)
-        {
-            addressInvoiceData.Address = address + "#" + paymentMethodId.ToString();
-            return addressInvoiceData;
-        }
         public static PaymentMethodId GetPaymentMethodId(this AddressInvoiceData addressInvoiceData)
         {
             if (addressInvoiceData.Address == null)

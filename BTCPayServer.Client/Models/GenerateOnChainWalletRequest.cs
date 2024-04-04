@@ -1,7 +1,10 @@
+using System.Collections.Generic;
 using BTCPayServer.Client.JsonConverters;
+using BTCPayServer.Client.Models;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client
 {
@@ -21,5 +24,17 @@ namespace BTCPayServer.Client
         public string Passphrase { get; set; }
         public bool ImportKeysToRPC { get; set; }
         public bool SavePrivateKeys { get; set; }
+    }
+    public class GenerateOnChainWalletResponse : GenericPaymentMethodData
+    {
+        public class ConfigData
+        {
+            public string AccountDerivation { get; set; }
+            [JsonExtensionData]
+            IDictionary<string, JToken> AdditionalData { get; set; }
+        }
+        [JsonConverter(typeof(MnemonicJsonConverter))]
+        public Mnemonic Mnemonic { get; set; }
+        public new ConfigData Config { get; set; }
     }
 }

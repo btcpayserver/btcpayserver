@@ -62,13 +62,13 @@ namespace BTCPayServer.Tests
             var qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             var clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             var payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
-            var address = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
-            Assert.StartsWith("bcrt", s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text);
+            var address = s.Driver.FindElement(By.CssSelector("#Address_BTC-CHAIN .truncate-center-start")).Text;
+            Assert.StartsWith("bcrt", s.Driver.FindElement(By.CssSelector("#Address_BTC-CHAIN .truncate-center-start")).Text);
             Assert.DoesNotContain("lightning=", payUrl);
             Assert.Equal($"bitcoin:{address}", payUrl);
             Assert.Equal($"bitcoin:{address}", clipboard);
             Assert.Equal($"bitcoin:{address.ToUpperInvariant()}", qrValue);
-            s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC"));
+            s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC-CHAIN"));
 
             // Details should show exchange rate
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -84,13 +84,13 @@ namespace BTCPayServer.Tests
             {
                 payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
                 Assert.StartsWith("lightning:lnurl", payUrl);
-                Assert.StartsWith("lnurl", s.Driver.WaitForElement(By.CssSelector("#Lightning_BTC .truncate-center-start")).Text);
-                s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
+                Assert.StartsWith("lnurl", s.Driver.WaitForElement(By.CssSelector("#Lightning_BTC-CHAIN .truncate-center-start")).Text);
+                s.Driver.ElementDoesNotExist(By.Id("Address_BTC-CHAIN"));
             });
 
             // Default payment method
             s.GoToHome();
-            invoiceId = s.CreateInvoice(21000, "SATS", defaultPaymentMethod: "BTC_LightningLike");
+            invoiceId = s.CreateInvoice(21000, "SATS", defaultPaymentMethod: "BTC-LN");
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
@@ -99,11 +99,11 @@ namespace BTCPayServer.Tests
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
-            address = s.Driver.FindElement(By.CssSelector("#Lightning_BTC_LightningLike .truncate-center-start")).Text;
+            address = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LN .truncate-center-start")).Text;
             Assert.Equal($"lightning:{address}", payUrl);
             Assert.Equal($"lightning:{address}", clipboard);
             Assert.Equal($"lightning:{address.ToUpperInvariant()}", qrValue);
-            s.Driver.ElementDoesNotExist(By.Id("Address_BTC"));
+            s.Driver.ElementDoesNotExist(By.Id("Address_BTC-CHAIN"));
 
             // Lightning amount in sats
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
@@ -155,7 +155,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             
             await Task.Delay(200);
-            address = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
+            address = s.Driver.FindElement(By.CssSelector("#Address_BTC-CHAIN .truncate-center-start")).Text;
             var amountFraction = "0.00001";
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(address, Network.RegTest),
                 Money.Parse(amountFraction));
@@ -271,8 +271,8 @@ namespace BTCPayServer.Tests
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
-            var copyAddressOnchain = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
-            var copyAddressLightning = s.Driver.FindElement(By.CssSelector("#Lightning_BTC .truncate-center-start")).Text;
+            var copyAddressOnchain = s.Driver.FindElement(By.CssSelector("#Address_BTC-CHAIN .truncate-center-start")).Text;
+            var copyAddressLightning = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-CHAIN .truncate-center-start")).Text;
             Assert.StartsWith($"bitcoin:{copyAddressOnchain}?amount=", payUrl);
             Assert.Contains("?amount=", payUrl);
             Assert.Contains("&lightning=", payUrl);
@@ -311,7 +311,7 @@ namespace BTCPayServer.Tests
 
             // BIP21 with LN as default payment method
             s.GoToHome();
-            invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
+            invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC-LN");
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
@@ -340,8 +340,8 @@ namespace BTCPayServer.Tests
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
-            copyAddressOnchain = s.Driver.FindElement(By.CssSelector("#Address_BTC .truncate-center-start")).Text;
-            copyAddressLightning = s.Driver.FindElement(By.CssSelector("#Lightning_BTC .truncate-center-start")).Text;
+            copyAddressOnchain = s.Driver.FindElement(By.CssSelector("#Address_BTC-CHAIN .truncate-center-start")).Text;
+            copyAddressLightning = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-CHAIN .truncate-center-start")).Text;
             Assert.StartsWith($"bitcoin:{copyAddressOnchain}", payUrl);
             Assert.Contains("?lightning=lnurl", payUrl);
             Assert.DoesNotContain("amount=", payUrl);
@@ -414,7 +414,7 @@ namespace BTCPayServer.Tests
             // - NFC/LNURL-W available with just Lightning
             // - BIP21 works correctly even though Lightning is default payment method
             s.GoToHome();
-            invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC_LightningLike");
+            invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC-LN");
             s.GoToInvoiceCheckout(invoiceId);
             s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
@@ -462,8 +462,8 @@ namespace BTCPayServer.Tests
             iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
 
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
-                    .GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.BTCLike))
-                    .GetPaymentMethodDetails().GetPaymentDestination(), Network.RegTest),
+                    .GetPaymentPrompt(PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
+                    .Destination, Network.RegTest),
                 new Money(0.001m, MoneyUnit.BTC));
 
             TestUtils.Eventually(() =>

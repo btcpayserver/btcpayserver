@@ -1,7 +1,8 @@
+@using BTCPayServer.Payments
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Components.InvoiceStatus.InvoiceStatusViewModel
-@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
+@inject Dictionary<PaymentMethodId, IPaymentModelExtension> Extensions
 
 @{
     var state = Model.State.ToString();
@@ -41,16 +42,17 @@
     </div>
     @if (Model.Payments != null)
     {
-        foreach (var paymentMethodId in Model.Payments.Select(payment => payment.GetPaymentMethodId()).Distinct())
+        foreach (var paymentMethodId in Model.Payments.Select(payment => payment.PaymentMethodId).Distinct())
         {
-            var image = PaymentMethodHandlerDictionary[paymentMethodId]?.GetCryptoImage(paymentMethodId);
-            var badge = paymentMethodId.PaymentType.GetBadge();
+            var extension = Extensions.TryGetValue(paymentMethodId, out var e) ? e : null;
+			var image = extension?.Image;
+			var badge = extension?.Badge;
             if (!string.IsNullOrEmpty(image) || !string.IsNullOrEmpty(badge))
             {
                 <span class="d-inline-flex align-items-center gap-1">
                     @if (!string.IsNullOrEmpty(image))
                     {
-                        <img src="@Context.Request.GetRelativePathOrAbsolute(image)" alt="@paymentMethodId.PaymentType.ToString()" style="height:1.5em" />
+                        <img src="@Context.Request.GetRelativePathOrAbsolute(image)" alt="@paymentMethodId.ToString()" style="height:1.5em" />
                     }
                     @if (!string.IsNullOrEmpty(badge))
                     {

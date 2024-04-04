@@ -4,6 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -13,73 +16,100 @@ using BTCPayServer.Lightning.LndHub;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using NBitcoin.Protocol;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public class LightningLikePaymentHandler : PaymentMethodHandlerBase<LightningSupportedPaymentMethod, BTCPayNetwork>
+    public interface ILightningPaymentHandler : IHasNetwork
     {
+        LightningPaymentData ParsePaymentDetails(JToken details);
+    }
+    public class LightningLikePaymentHandler : IPaymentMethodHandler, ILightningPaymentHandler
+    {
+        public JsonSerializer Serializer { get; }
         public static readonly int LightningTimeout = 5000;
         readonly NBXplorerDashboard _Dashboard;
         private readonly LightningClientFactoryService _lightningClientFactory;
-        private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly BTCPayNetwork _Network;
         private readonly SocketFactory _socketFactory;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly ISettingsAccessor<PoliciesSettings> _policies;
+        private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
 
         public LightningLikePaymentHandler(
+            PaymentMethodId paymentMethodId,
             NBXplorerDashboard dashboard,
             LightningClientFactoryService lightningClientFactory,
-            BTCPayNetworkProvider networkProvider,
+            BTCPayNetwork network,
             SocketFactory socketFactory,
             DisplayFormatter displayFormatter,
-            IOptions<LightningNetworkOptions> options)
+            IOptions<LightningNetworkOptions> options,
+            ISettingsAccessor<PoliciesSettings> policies,
+            IOptions<LightningNetworkOptions> lightningNetworkOptions)
         {
+            Serializer = BlobSerializer.CreateSerializer(network.NBitcoinNetwork).Serializer;
             _Dashboard = dashboard;
             _lightningClientFactory = lightningClientFactory;
-            _networkProvider = networkProvider;
+            _Network = network;
             _socketFactory = socketFactory;
             _displayFormatter = displayFormatter;
             Options = options;
+            _policies = policies;
+            _lightningNetworkOptions = lightningNetworkOptions;
+            PaymentMethodId = paymentMethodId;
         }
 
-        public override PaymentType PaymentType => PaymentTypes.LightningLike;
+        public Task BeforeFetchingRates(PaymentMethodContext context)
+        {
+            context.Prompt.Currency = _Network.CryptoCode;
+            context.Prompt.PaymentMethodFee = 0m;
+            context.Prompt.Divisibility = 11;
+            return Task.CompletedTask;
+        }
+
+        public PaymentMethodId PaymentMethodId { get; private set; }
 
         public IOptions<LightningNetworkOptions> Options { get; }
 
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
-            InvoiceLogs logs,
-            LightningSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod, Data.StoreData store,
-            BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
+        public BTCPayNetwork Network => _Network;
+
+        public async Task ConfigurePrompt(PaymentMethodContext context)
         {
-            if (paymentMethod.ParentEntity.Type == InvoiceType.TopUp)
+            if (context.InvoiceEntity.Type == InvoiceType.TopUp)
             {
                 throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
             }
 
-            if (preparePaymentObject is null)
-            {
-                return new LightningLikePaymentMethodDetails
-                {
-                    Activated = false
-                };
-            }
-            var storeBlob = store.GetStoreBlob();
-            var nodeInfo = GetNodeInfo(supportedPaymentMethod, network, logs, paymentMethod.PreferOnion);
+            var paymentPrompt = context.Prompt;
 
-            var invoice = paymentMethod.ParentEntity;
-            decimal due = Extensions.RoundUp(invoice.Price / paymentMethod.Rate, network.Divisibility);
+            var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();
+
+            var storeBlob = context.StoreBlob;
+            var store = context.Store;
+
+            var config = ParsePaymentMethodConfig(context.PaymentMethodConfig);
+            var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
+
+            var invoice = context.InvoiceEntity;
+            decimal due = Extensions.RoundUp(invoice.Price / paymentPrompt.Rate, _Network.Divisibility);
             try
             {
-                due = paymentMethod.Calculate().Due;
+                due = paymentPrompt.Calculate().Due;
             }
             catch (Exception)
             {
                 // ignored
             }
-            var client = supportedPaymentMethod.CreateLightningClient(network, Options.Value, _lightningClientFactory);
+            var client = config.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
                 expiry = TimeSpan.FromSeconds(1);
@@ -108,26 +138,28 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }
 
-            return new LightningLikePaymentMethodDetails
+            paymentPrompt.Destination = lightningInvoice.BOLT11;
+            var details = new LigthningPaymentPromptDetails
             {
-                Activated = true,
-                BOLT11 = lightningInvoice.BOLT11,
-                PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, network.NBitcoinNetwork).PaymentHash,
+                PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, _Network.NBitcoinNetwork).PaymentHash,
                 Preimage = string.IsNullOrEmpty(lightningInvoice.Preimage) ? null : uint256.Parse(lightningInvoice.Preimage),
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };
+            paymentPrompt.Details = JObject.FromObject(details, Serializer);
         }
 
-        public async Task<NodeInfo[]> GetNodeInfo(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, InvoiceLogs invoiceLogs, bool? preferOnion = null, bool throws = false)
+
+        public async Task<NodeInfo[]> GetNodeInfo(LightningPaymentMethodConfig supportedPaymentMethod, PrefixedInvoiceLogs? invoiceLogs, bool? preferOnion = null, bool throws = false)
         {
-            var synced = _Dashboard.IsFullySynched(network.CryptoCode, out var summary);
+            var synced = _Dashboard.IsFullySynched(_Network.CryptoCode, out var summary);
             if (supportedPaymentMethod.IsInternalNode && !synced)
-                throw new PaymentMethodUnavailableException("Full node not available");;
+                throw new PaymentMethodUnavailableException("Full node not available");
+            ;
             try
             {
                 using var cts = new CancellationTokenSource(LightningTimeout);
-                var client = CreateLightningClient(supportedPaymentMethod, network);
+                var client = CreateLightningClient(supportedPaymentMethod);
 
                 // LNDhub-compatible implementations might not offer all of GetInfo data.
                 // Skip checks in those cases, see https://github.com/lnbits/lnbits/issues/1182
@@ -145,12 +177,12 @@ namespace BTCPayServer.Payments.Lightning
                 catch (NotSupportedException)
                 {
                     // LNDhub, LNbits and others might not support this call, yet we can create invoices.
-                    return new NodeInfo[] {};
+                    return new NodeInfo[] { };
                 }
                 catch (UnauthorizedAccessException)
                 {
                     // LND might return this with restricted macaroon, support this nevertheless..
-                    return new NodeInfo[] {};
+                    return new NodeInfo[] { };
                 }
                 catch (Exception ex)
                 {
@@ -176,15 +208,15 @@ namespace BTCPayServer.Payments.Lightning
             }
             catch (Exception e) when (!throws)
             {
-                invoiceLogs.Write($"NodeInfo failed to be fetched: {e.Message}", InvoiceEventData.EventSeverity.Error);
+                invoiceLogs?.Write($"NodeInfo failed to be fetched: {e.Message}", InvoiceEventData.EventSeverity.Error);
             }
 
             return Array.Empty<NodeInfo>();
         }
 
-        public ILightningClient CreateLightningClient(LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network)
+        public ILightningClient CreateLightningClient(LightningPaymentMethodConfig supportedPaymentMethod)
         {
-            return supportedPaymentMethod.CreateLightningClient(network, Options.Value, _lightningClientFactory);
+            return supportedPaymentMethod.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
         }
 
         public async Task TestConnection(NodeInfo nodeInfo, CancellationToken cancellation)
@@ -201,70 +233,85 @@ namespace BTCPayServer.Payments.Lightning
                 throw new PaymentMethodUnavailableException($"Error while connecting to the lightning node via {nodeInfo.Host}:{nodeInfo.Port} ({ex.Message})");
             }
         }
-
-        public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
+        public LightningPaymentMethodConfig ParsePaymentMethodConfig(JToken config)
         {
-            return _networkProvider
-                .GetAll()
-                .OfType<BTCPayNetwork>()
-                .Where(network => network.NBitcoinNetwork.Consensus.SupportSegwit && network.SupportLightning)
-                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
+            return config.ToObject<LightningPaymentMethodConfig>(Serializer) ?? throw new FormatException($"Invalid {nameof(LightningPaymentMethodConfig)}");
         }
-
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
-            StoreBlob storeBlob, IPaymentMethod paymentMethod)
+        object IPaymentMethodHandler.ParsePaymentMethodConfig(JToken config)
         {
-            var paymentMethodId = paymentMethod.GetId();
-            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
-
-            model.PaymentMethodName = GetPaymentMethodName(network);
-            model.InvoiceBitcoinUrl = cryptoInfo.PaymentUrls?.BOLT11;
-            model.InvoiceBitcoinUrlQR = $"lightning:{cryptoInfo.PaymentUrls?.BOLT11?.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
-            model.PeerInfo = ((LightningLikePaymentMethodDetails)paymentMethod.GetPaymentMethodDetails()).NodeInfo;
-
-            if (storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC")
+            return ParsePaymentMethodConfig(config);
+        }
+        object IPaymentMethodHandler.ParsePaymentPromptDetails(JToken details)
+        {
+            return ParsePaymentPromptDetails(details);
+        }
+        public LigthningPaymentPromptDetails ParsePaymentPromptDetails(JToken details)
+        {
+            return details.ToObject<LigthningPaymentPromptDetails>(Serializer) ?? throw new FormatException($"Invalid {nameof(LigthningPaymentPromptDetails)}");
+        }
+        public LightningPaymentData ParsePaymentDetails(JToken details)
+        {
+            return details.ToObject<LightningPaymentData>(Serializer) ?? throw new FormatException($"Invalid {nameof(LightningPaymentData)}");
+        }
+        object IPaymentMethodHandler.ParsePaymentDetails(JToken details)
+        {
+            return ParsePaymentDetails(details);
+        }
+        public async Task ValidatePaymentMethodConfig(PaymentMethodConfigValidationContext validationContext)
+        {
+            if (validationContext.Config is JValue { Type: JTokenType.String })
+                validationContext.Config = new JObject() { ["connectionString"] = validationContext.Config.Value<string>()! };
+#pragma warning disable CS0618 // Type or member is obsolete
+            var config = ParsePaymentMethodConfig(validationContext.Config);
+            if (config.ConnectionString == LightningPaymentMethodConfig.InternalNode)
+                config.SetInternalNode();
+            LightningPaymentMethodConfig? oldConfig = null;
+            if (validationContext.PreviousConfig is not null)
+                oldConfig = ParsePaymentMethodConfig(validationContext.PreviousConfig);
+            var connectionStringChanged = oldConfig?.ConnectionString != config.ConnectionString;
+            if (connectionStringChanged && !string.IsNullOrEmpty(config.ConnectionString))
             {
-                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);
+                // Let's check the connection string can be parsed and is safe to use for non-admin.
+                try
+                {
+                    var client = _lightningClientFactory.Create(config.ConnectionString, _Network);
+                    if (!client.IsSafe())
+                    {
+                        var canManage = (await validationContext.AuthorizationService.AuthorizeAsync(validationContext.User, null,
+                    new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
+                        if (!canManage)
+                        {
+                            validationContext.ModelState.AddModelError(nameof(config.ConnectionString), $"You do not have 'btcpay.server.canmodifyserversettings' rights, so the connection string should not contain 'cookiefilepath', 'macaroondirectorypath', 'macaroonfilepath', and should not point to a local ip or to a dns name ending with '.internal', '.local', '.lan' or '.'.");
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    validationContext.ModelState.AddModelError(nameof(config.ConnectionString), "Invalid connection string");
+                    return;
+                }
             }
-        }
-        public override string GetCryptoImage(PaymentMethodId paymentMethodId)
-        {
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            return GetCryptoImage(network);
-        }
 
-        private string GetCryptoImage(BTCPayNetworkBase network)
-        {
-            return ((BTCPayNetwork)network).LightningImagePath;
-        }
-        public override string GetPaymentMethodName(PaymentMethodId paymentMethodId)
-        {
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            return GetPaymentMethodName(network);
-        }
-
-        public override CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
-        {
-            return new CheckoutUIPaymentMethodSettings
+            if (oldConfig?.IsInternalNode != config.IsInternalNode && config.IsInternalNode)
             {
-                ExtensionPartial = "Lightning/LightningLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "LightningLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "LightningLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Lightning/LightningLikeMethodCheckoutNoScript"
-            };
-        }
+                var canUseInternalNode = _policies.Settings.AllowLightningInternalNodeForAll ||
+                   (await validationContext.AuthorizationService.AuthorizeAsync(validationContext.User, null,
+                       new PolicyRequirement(Policies.CanUseInternalLightningNode))).Succeeded && _lightningNetworkOptions.Value.InternalLightningByCryptoCode.ContainsKey(_Network.CryptoCode);
+                if (!canUseInternalNode)
+                {
+                    validationContext.SetMissingPermission(Policies.CanUseInternalLightningNode, $"You are not authorized to use the internal lightning node. Either add '{Policies.CanUseInternalLightningNode}' to an API Key, or allow non-admin users to use the internal lightning node in the server settings.");
+                    return;
+                }
+            }
 
-        private string GetPaymentMethodName(BTCPayNetworkBase network)
-        {
-            return $"{network.DisplayName} (Lightning)";
-        }
-
-        public override object PreparePayment(LightningSupportedPaymentMethod supportedPaymentMethod, Data.StoreData store,
-            BTCPayNetworkBase network)
-        {
-            // pass a non null obj, so that if lazy payment feature is used, it has a marker to trigger activation
-            return new { };
+            if (!config.IsInternalNode && string.IsNullOrEmpty(config.ConnectionString))
+            {
+                validationContext.ModelState.AddModelError(nameof(config.ConnectionString), "The connection string or setting the internal node is required");
+                return;
+            }
+            validationContext.Config = JToken.FromObject(config, Serializer);
+#pragma warning restore CS0618 // Type or member is obsolete
         }
     }
 }

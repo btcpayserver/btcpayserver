@@ -12,8 +12,10 @@ using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -33,7 +35,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
     private readonly IOptions<LightningNetworkOptions> _options;
     private readonly PullPaymentHostedService _pullPaymentHostedService;
     private readonly LightningLikePayoutHandler _payoutHandler;
-    private readonly BTCPayNetwork _network;
+    private readonly PaymentMethodHandlerDictionary _handlers;
 
     public LightningAutomatedPayoutProcessor(
         BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
@@ -42,13 +44,13 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         UserService userService,
         ILoggerFactory logger, IOptions<LightningNetworkOptions> options,
         StoreRepository storeRepository, PayoutProcessorData payoutProcessorSettings,
-        ApplicationDbContextFactory applicationDbContextFactory,
-        BTCPayNetworkProvider btcPayNetworkProvider,
+        ApplicationDbContextFactory applicationDbContextFactory, 
+        PaymentMethodHandlerDictionary handlers,
         IPluginHookService pluginHookService,
         EventAggregator eventAggregator,
         PullPaymentHostedService pullPaymentHostedService) :
         base(logger, storeRepository, payoutProcessorSettings, applicationDbContextFactory,
-            btcPayNetworkProvider, pluginHookService, eventAggregator)
+            handlers, pluginHookService, eventAggregator)
     {
         _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
         _lightningClientFactoryService = lightningClientFactoryService;
@@ -56,14 +58,14 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         _options = options;
         _pullPaymentHostedService = pullPaymentHostedService;
         _payoutHandler = (LightningLikePayoutHandler)payoutHandlers.FindPayoutHandler(PaymentMethodId);
-
-        _network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(PayoutProcessorSettings.GetPaymentMethodId()
-            .CryptoCode);
+        _handlers = handlers;
     }
 
     private async Task HandlePayout(PayoutData payoutData, ILightningClient lightningClient)
     {
         if (payoutData.State != PayoutState.AwaitingPayment)
+            return;
+        if (!_handlers.TryGetValue(PaymentMethodId, out var handler) || handler is not IHasNetwork { Network: var network })
             return;
         var res = await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
         {
@@ -83,7 +85,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
                     var lnurlResult = await UILightningLikePayoutController.GetInvoiceFromLNURL(payoutData,
                         _payoutHandler, blob,
-                        lnurlPayClaimDestinaton, _network.NBitcoinNetwork, CancellationToken);
+                        lnurlPayClaimDestinaton, network.NBitcoinNetwork, CancellationToken);
                     if (lnurlResult.Item2 is null)
                     {
                         await TrypayBolt(lightningClient, blob, payoutData,
@@ -109,10 +111,12 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         }
     }
 
-    protected override async Task<bool>ProcessShouldSave(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts)
+    protected override async Task<bool> ProcessShouldSave(object paymentMethodConfig, List<PayoutData> payouts)
     {
-        var processorBlob = GetBlob(PayoutProcessorSettings);
-        var lightningSupportedPaymentMethod = (LightningSupportedPaymentMethod)paymentMethod;
+		if (!_handlers.TryGetValue(PaymentMethodId, out var handler) || handler is not IHasNetwork { Network: var network })
+			return false;
+		var processorBlob = GetBlob(PayoutProcessorSettings);
+        var lightningSupportedPaymentMethod = (LightningPaymentMethodConfig)paymentMethodConfig;
         if (lightningSupportedPaymentMethod.IsInternalNode &&
             !(await Task.WhenAll((await _storeRepository.GetStoreUsers(PayoutProcessorSettings.StoreId))
                 .Where(user =>
@@ -125,7 +129,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         }
 
         var client =
-            lightningSupportedPaymentMethod.CreateLightningClient(_network, _options.Value,
+            lightningSupportedPaymentMethod.CreateLightningClient(network, _options.Value,
                 _lightningClientFactoryService);
         await Task.WhenAll(payouts.Select(data => HandlePayout(data, client)));
 

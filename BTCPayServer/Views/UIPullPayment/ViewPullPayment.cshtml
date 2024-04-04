@@ -51,11 +51,11 @@
                                     @if (Model.PaymentMethods.Length == 1)
                                     {
                                         <input type="hidden" asp-for="SelectedPaymentMethod">
-                                        <span class="input-group-text">@Model.PaymentMethods.First().ToPrettyString()</span>
+                                        <span class="input-group-text">@Model.PaymentMethods.First().ToString()</span>
                                     }
                                     else if (!Model.BitcoinOnly)
                                     {
-                                        <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))"></select>
+                                        <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
                                     }
                                     <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan destination with camera" id="scandestination-button">
                                         <i class="fa fa-camera"></i>
@@ -167,7 +167,7 @@
                                                     <td class="text-break">
                                                         @invoice.Destination
                                                     </td>
-                                                    <td class="text-nowrap">@invoice.PaymentMethod.ToPrettyString()</td>
+                                                    <td class="text-nowrap">@invoice.PaymentMethod.ToString()</td>
                                                     <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
                                                     <td class="text-end text-nowrap">
                                                         @if (!string.IsNullOrEmpty(invoice.Link))

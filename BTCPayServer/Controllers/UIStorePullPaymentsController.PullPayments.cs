@@ -93,7 +93,7 @@ namespace BTCPayServer.Controllers
                 CustomCSSLink = "",
                 EmbeddedCSS = "",
                 PaymentMethodItems =
-                    paymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true))
+                    paymentMethods.Select(id => new SelectListItem(id.ToString(), id.ToString(), true))
             });
         }
 
@@ -106,7 +106,7 @@ namespace BTCPayServer.Controllers
 
             var paymentMethodOptions = await _payoutHandlers.GetSupportedPaymentMethods(CurrentStore);
             model.PaymentMethodItems =
-                paymentMethodOptions.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), true));
+                paymentMethodOptions.Select(id => new SelectListItem(id.ToString(), id.ToString(), true));
             model.Name ??= string.Empty;
             model.Currency = model.Currency?.ToUpperInvariant()?.Trim() ?? String.Empty;
             model.PaymentMethods ??= new List<string>();
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                 // Since we assign all payment methods to be selected by default above we need to update 
                 // them here to reflect user's selection so that they can correct their mistake
                 model.PaymentMethodItems =
-                    paymentMethodOptions.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString(), false));
+                    paymentMethodOptions.Select(id => new SelectListItem(id.ToString(), id.ToString(), false));
                 ModelState.AddModelError(nameof(model.PaymentMethods), "You need at least one payment method");
             }
             if (_currencyNameTable.GetCurrencyData(model.Currency, false) is null)
@@ -386,7 +386,7 @@ namespace BTCPayServer.Controllers
                 case "pay":
                     {
                         if (handler is { })
-                            return await handler?.InitiatePayment(paymentMethodId, payoutIds);
+                            return await handler.InitiatePayment(paymentMethodId, payoutIds);
                         TempData.SetStatusMessageModel(new StatusMessageModel()
                         {
                             Message = "Paying via this payment method is not supported",

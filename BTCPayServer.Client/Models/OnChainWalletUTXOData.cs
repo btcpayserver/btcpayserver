@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using NBitcoin;
 using NBitcoin.JsonConverters;
@@ -12,7 +13,7 @@ namespace BTCPayServer.Client.Models
         public string Comment { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
-        [JsonConverter(typeof(OutpointJsonConverter))]
+        [JsonConverter(typeof(SaneOutpointJsonConverter))]
         public OutPoint Outpoint { get; set; }
         public string Link { get; set; }
 #pragma warning disable CS0612 // Type or member is obsolete

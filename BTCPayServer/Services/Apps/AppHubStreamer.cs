@@ -11,14 +11,17 @@ namespace BTCPayServer.Services.Apps
     public class AppHubStreamer : EventHostedServiceBase
     {
         private readonly AppService _appService;
+        private readonly PrettyNameProvider _prettyNameProvider;
         private readonly IHubContext<AppHub> _HubContext;
 
         public AppHubStreamer(EventAggregator eventAggregator,
            IHubContext<AppHub> hubContext,
            AppService appService,
+           PrettyNameProvider prettyNameProvider,
            Logs logs) : base(eventAggregator, logs)
         {
             _appService = appService;
+            _prettyNameProvider = prettyNameProvider;
             _HubContext = hubContext;
         }
 
@@ -36,12 +39,12 @@ namespace BTCPayServer.Services.Apps
                 {
                     if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment)
                     {
-                        var data = invoiceEvent.Payment.GetCryptoPaymentData();
                         await _HubContext.Clients.Group(appId).SendCoreAsync(AppHub.PaymentReceived, new object[]
                             {
-                        data.GetValue(),
+                        invoiceEvent.Payment.Value,
                         invoiceEvent.Payment.Currency,
-                        invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
+                        _prettyNameProvider.PrettyName(invoiceEvent.Payment.PaymentMethodId),
+                        invoiceEvent.Payment.PaymentMethodId.ToString()
                             }, cancellationToken);
                     }
                     await InfoUpdated(appId);

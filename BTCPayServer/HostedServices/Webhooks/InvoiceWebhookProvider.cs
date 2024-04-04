@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
@@ -99,7 +99,7 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                     AfterExpiration =
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired ||
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
-                    PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
+                    PaymentMethodId = invoiceEvent.Payment.PaymentMethodId.ToString(),
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
                     StoreId = invoiceEvent.Invoice.StoreId
                 };
@@ -109,7 +109,7 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                     AfterExpiration =
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired ||
                         invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
-                    PaymentMethod = invoiceEvent.Payment.GetPaymentMethodId().ToStringNormalized(),
+                    PaymentMethodId = invoiceEvent.Payment.PaymentMethodId.ToString(),
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
                     StoreId = invoiceEvent.Invoice.StoreId
                 };

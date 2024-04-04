@@ -18,29 +18,29 @@ namespace BTCPayServer.PayoutProcessors.OnChain;
 public class UIOnChainAutomatedPayoutProcessorsController : Controller
 {
     private readonly EventAggregator _eventAggregator;
-    private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+    private readonly PaymentMethodHandlerDictionary _handlers;
     private readonly OnChainAutomatedPayoutSenderFactory _onChainAutomatedPayoutSenderFactory;
     private readonly PayoutProcessorService _payoutProcessorService;
 
     public UIOnChainAutomatedPayoutProcessorsController(
         EventAggregator eventAggregator,
-        BTCPayNetworkProvider btcPayNetworkProvider,
+        PaymentMethodHandlerDictionary handlers,
         OnChainAutomatedPayoutSenderFactory onChainAutomatedPayoutSenderFactory,
         PayoutProcessorService payoutProcessorService)
     {
         _eventAggregator = eventAggregator;
-        _btcPayNetworkProvider = btcPayNetworkProvider;
+        _handlers = handlers;
         _onChainAutomatedPayoutSenderFactory = onChainAutomatedPayoutSenderFactory;
         _payoutProcessorService = payoutProcessorService;
     }
-
+    PaymentMethodId GetPaymentMethodId(string cryptoCode) => PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
     [HttpGet("~/stores/{storeId}/payout-processors/onchain-automated/{cryptocode}")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Configure(string storeId, string cryptoCode)
     {
-        if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(id =>
-                id.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase)))
+        var id = GetPaymentMethodId(cryptoCode);
+        if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(i => id == i))
         {
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
@@ -49,7 +49,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
             });
             return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors");
         }
-        var wallet = HttpContext.GetStoreData().GetDerivationSchemeSettings(_btcPayNetworkProvider, cryptoCode);
+        var wallet = HttpContext.GetStoreData().GetDerivationSchemeSettings(_handlers, cryptoCode);
         if (wallet?.IsHotWallet is not true)
         {
             TempData.SetStatusMessageModel(new StatusMessageModel()
@@ -66,7 +66,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                     Processors = new[] { _onChainAutomatedPayoutSenderFactory.Processor },
                     PaymentMethods = new[]
                     {
-                        new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance).ToString()
+                        PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode)
                     }
                 }))
             .FirstOrDefault();
@@ -81,8 +81,8 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
     {
         if (!ModelState.IsValid)
             return View(automatedTransferBlob);
-        if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(id =>
-                id.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase)))
+        var id = GetPaymentMethodId(cryptoCode);
+        if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPaymentMethods().Any(i => id == i))
         {
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
@@ -99,14 +99,14 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                     Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
                     PaymentMethods = new[]
                     {
-                        new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance).ToString()
+                        PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode)
                     }
                 }))
             .FirstOrDefault();
         activeProcessor ??= new PayoutProcessorData();
         activeProcessor.HasTypedBlob<OnChainAutomatedPayoutBlob>().SetBlob(automatedTransferBlob.ToBlob());
         activeProcessor.StoreId = storeId;
-        activeProcessor.PaymentMethod = new PaymentMethodId(cryptoCode, BitcoinPaymentType.Instance).ToString();
+        activeProcessor.PaymentMethod = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode).ToString();
         activeProcessor.Processor = _onChainAutomatedPayoutSenderFactory.Processor;
         var tcs = new TaskCompletionSource();
         _eventAggregator.Publish(new PayoutProcessorUpdated()

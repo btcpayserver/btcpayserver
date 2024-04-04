@@ -27,6 +27,7 @@ using BTCPayServer.Views.Wallets;
 using ExchangeSharp;
 using LNURL;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -1550,17 +1551,16 @@ namespace BTCPayServer.Tests
             {
                 await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.0m));
             }
-
+            var handlers = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
             var targetTx = await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.2m));
             var tx = await s.Server.ExplorerNode.GetRawTransactionAsync(targetTx);
             var spentOutpoint = new OutPoint(targetTx,
                 tx.Outputs.FindIndex(txout => txout.Value == Money.Coins(1.2m)));
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var store = await s.Server.PayTester.StoreRepository.FindStore(storeId);
-                var x = store.GetSupportedPaymentMethods(s.Server.NetworkProvider)
-                    .OfType<DerivationSchemeSettings>()
-                    .Single(settings => settings.PaymentId.CryptoCode == walletId.CryptoCode);
+                var x = store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
                 var wallet = s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet(walletId.CryptoCode);
                 wallet.InvalidateCache(x.AccountDerivation);
                 Assert.Contains(
@@ -1821,7 +1821,8 @@ namespace BTCPayServer.Tests
 
             var invoiceId = s.CreateInvoice(storeId);
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
-            var address = invoice.EntityToDTO().Addresses["BTC"];
+            var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+            var address = invoice.GetPaymentPrompt(btc).Destination;
 
             //wallet should have been imported to bitcoin core wallet in watch only mode.
             var result =
@@ -1833,7 +1834,7 @@ namespace BTCPayServer.Tests
             //lets import and save private keys
             invoiceId = s.CreateInvoice(storeId);
             invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
-            address = invoice.EntityToDTO().Addresses["BTC"];
+            address = invoice.GetPaymentPrompt(btc).Destination;
             result = await s.Server.ExplorerNode.GetAddressInfoAsync(
                 BitcoinAddress.Create(address, Network.RegTest));
             //spendable from bitcoin core wallet!
@@ -1895,8 +1896,7 @@ namespace BTCPayServer.Tests
             Assert.EndsWith("psbt/ready", s.Driver.Url);
             s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
             Assert.Equal(walletTransactionUri.ToString(), s.Driver.Url);
-
-            var bip21 = invoice.EntityToDTO().CryptoInfo.First().PaymentUrls.BIP21;
+            var bip21 = invoice.EntityToDTO(s.Server.PayTester.GetService<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>()).CryptoInfo.First().PaymentUrls.BIP21;
             //let's make bip21 more interesting
             bip21 += "&label=Solid Snake&message=Snake? Snake? SNAAAAKE!";
             var parsedBip21 = new BitcoinUrlBuilder(bip21, Network.RegTest);
@@ -2257,7 +2257,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
 
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
-            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+            s.Driver.FindElement(By.Id($"{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-view")).Click();
             s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
@@ -2267,7 +2267,7 @@ namespace BTCPayServer.Tests
 
             s.FindAlertMessage();
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
-            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+            s.Driver.FindElement(By.Id($"{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view")).Click();
 
             s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
             if (!s.Driver.PageSource.Contains(bolt))
@@ -2277,7 +2277,7 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-mark-paid")).Click();
-                s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+                s.Driver.FindElement(By.Id($"{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view")).Click();
 
                 s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
                 Assert.Contains(bolt, s.Driver.PageSource);
@@ -2889,6 +2889,7 @@ namespace BTCPayServer.Tests
         public async Task CanUseLNURL()
         {
             using var s = CreateSeleniumTester();
+            s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -3028,7 +3029,7 @@ namespace BTCPayServer.Tests
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
-            Assert.Equal(new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"))).GetAttribute("value")));
+            Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"))).GetAttribute("value")));
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
@@ -3053,7 +3054,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             var payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
             payouts[0].Click();
-            s.Driver.FindElement(By.Id("BTC_LightningLike-view")).Click();
+            s.Driver.FindElement(By.Id("BTC-LN-view")).Click();
             Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
             s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
@@ -3164,14 +3165,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, invoices.Length);
             foreach (var i in invoices)
             {
-                var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));
-                var paymentMethodDetails =
-                    lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                var prompt = i.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
+                var handlers = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
+                var details = (LNURLPayPaymentMethodDetails)handlers.ParsePaymentPromptDetails(prompt);
                 Assert.Contains(
-                    paymentMethodDetails.ConsumedLightningAddress,
+                    details.ConsumedLightningAddress,
                     new[] { lnaddress1, lnaddress2 });
 
-                if (paymentMethodDetails.ConsumedLightningAddress == lnaddress2)
+                if (details.ConsumedLightningAddress == lnaddress2)
                 {
                     Assert.Equal("lol", i.Metadata.AdditionalData["test"].Value<string>());
                 }

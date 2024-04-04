@@ -20,7 +20,7 @@ namespace BTCPayServer.Data
 #pragma warning disable CS0618 // Type or member is obsolete
             if (Currency is not null)
                 return;
-            if (Blob is not null)
+            if (Blob is not (null or { Length: 0 }))
             {
                 Blob2 = MigrationExtensions.Unzip(Blob);
                 Blob = null;

@@ -21,6 +21,7 @@ namespace BTCPayServer.Data
         {
             if (blob.Metadata is null)
                 blob.Metadata = new InvoiceMetadata();
+            invoiceData.Created = blob.InvoiceTime;
             invoiceData.Currency = blob.Currency;
             invoiceData.Amount = blob.Price;
             invoiceData.HasTypedBlob<InvoiceEntity>().SetBlob(blob, DefaultSerializer);
@@ -41,7 +42,7 @@ namespace BTCPayServer.Data
             {
                 entity.Price = price;
             }
-
+            entity.InvoiceTime = invoiceData.Created;
             entity.StoreId = invoiceData.StoreDataId;
             entity.ExceptionStatus = state.ExceptionStatus;
             entity.Status = state.Status;

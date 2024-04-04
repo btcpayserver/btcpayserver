@@ -82,7 +82,6 @@
           "destination": "39mWwvUDoZ5CxXa6CmgaUda19qYj9LpQD1"
         }
       },
-      "invoiceTime": 1538395793,
       "redirectURL": "https://example.com/thanksyou",
       "receiptOptions": {},
       "internalTags": [],
@@ -202,7 +201,6 @@
         }
       },
       "receiptOptions": {},
-      "invoiceTime": 1709806449,
       "redirectURL": "https://test/",
       "speedPolicy": 1,
       "internalTags": [],
@@ -437,7 +435,6 @@
           "details": {}
         }
       },
-      "invoiceTime": 1709864059,
       "speedPolicy": 1,
       "expirationTime": 1709864959,
       "receiptOptions": {},
@@ -574,7 +571,6 @@
           }
         }
       },
-      "invoiceTime": 1697828706,
       "speedPolicy": 1,
       "internalTags": [],
       "expirationTime": 1697829606,

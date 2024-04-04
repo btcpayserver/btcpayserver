@@ -88,7 +88,7 @@ namespace BTCPayServer.Controllers
             DerivationSchemeSettings strategy = null;
             PaymentMethodId paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
             BitcoinLikePaymentHandler handler = (BitcoinLikePaymentHandler)_handlers[paymentMethodId];
-            var wallet = _WalletProvider.GetWallet(network);
+            var wallet = _walletProvider.GetWallet(network);
             if (wallet == null)
             {
                 return NotFound();
@@ -185,8 +185,8 @@ namespace BTCPayServer.Controllers
                     ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid derivation scheme");
                     return View(vm.ViewName, vm);
                 }
-                await _Repo.UpdateStore(store);
-                _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
+                await _storeRepo.UpdateStore(store);
+                _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
 
                 TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
 
@@ -198,11 +198,11 @@ namespace BTCPayServer.Controllers
 
         private string ProtectString(string str)
         {
-            return Convert.ToBase64String(DataProtector.Protect(Encoding.UTF8.GetBytes(str)));
+            return Convert.ToBase64String(_dataProtector.Protect(Encoding.UTF8.GetBytes(str)));
         }
         private string UnprotectString(string str)
         {
-            return Encoding.UTF8.GetString(DataProtector.Unprotect(Convert.FromBase64String(str)));
+            return Encoding.UTF8.GetString(_dataProtector.Unprotect(Convert.FromBase64String(str)));
         }
 
         [HttpGet("{storeId}/onchain/{cryptoCode}/generate/{method?}")]
@@ -264,7 +264,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             var handler = _handlers.GetBitcoinHandler(cryptoCode);
-            var client = _ExplorerProvider.GetExplorerClient(cryptoCode);
+            var client = _explorerProvider.GetExplorerClient(cryptoCode);
             var isImport = method == WalletSetupMethod.Seed;
             var vm = new WalletSetupViewModel
             {
@@ -351,7 +351,7 @@ namespace BTCPayServer.Controllers
                     IsStored = request.SavePrivateKeys,
                     ReturnUrl = Url.Action(nameof(GenerateWalletConfirm), new { storeId, cryptoCode })
                 };
-                if (_BTCPayEnv.IsDeveloping)
+                if (_btcPayEnv.IsDeveloping)
                 {
                     GenerateWalletResponse = response;
                 }
@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers
             var storeBlob = store.GetStoreBlob();
             var excludeFilters = storeBlob.GetExcludedPaymentMethods();
             (bool canUseHotWallet, bool rpcImport) = await CanUseHotWallet();
-            var client = _ExplorerProvider.GetExplorerClient(network);
+            var client = _explorerProvider.GetExplorerClient(network);
 
             var handler = _handlers.GetBitcoinHandler(cryptoCode);
             var vm = new WalletSettingsViewModel
@@ -546,14 +546,14 @@ namespace BTCPayServer.Controllers
             {
                 store.SetPaymentMethodConfig(handler, derivation);
 
-                await _Repo.UpdateStore(store);
+                await _storeRepo.UpdateStore(store);
 
                 if (string.IsNullOrEmpty(errorMessage))
                 {
                     var successMessage = "Wallet settings successfully updated.";
                     if (enabledChanged)
                     {
-                        _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
+                        _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                         successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                     }
 
@@ -599,7 +599,7 @@ namespace BTCPayServer.Controllers
 
             if (needUpdate)
             {
-                await _Repo.UpdateStore(store);
+                await _storeRepo.UpdateStore(store);
 
                 TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
 
@@ -644,7 +644,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var client = _ExplorerProvider.GetExplorerClient(network);
+            var client = _explorerProvider.GetExplorerClient(network);
             if (await GetSeed(client, derivation) != null)
             {
                 var mnemonic = await client.GetMetadataAsync<string>(derivation.AccountDerivation,
@@ -746,8 +746,8 @@ namespace BTCPayServer.Controllers
 
             store.SetPaymentMethodConfig(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), null);
 
-            await _Repo.UpdateStore(store);
-            _EventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(storeId, cryptoCode) });
+            await _storeRepo.UpdateStore(store);
+            _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(storeId, cryptoCode) });
 
             TempData[WellKnownTempData.SuccessMessage] =
                 $"On-Chain payment for {network.CryptoCode} has been removed.";
@@ -785,7 +785,7 @@ namespace BTCPayServer.Controllers
         private ActionResult IsAvailable(string cryptoCode, out StoreData store, out BTCPayNetwork network)
         {
             store = HttpContext.GetStoreData();
-            network = cryptoCode == null ? null : _ExplorerProvider.GetNetwork(cryptoCode);
+            network = cryptoCode == null ? null : _explorerProvider.GetNetwork(cryptoCode);
 
             return store == null || network == null ? NotFound() : null;
         }
@@ -820,9 +820,9 @@ namespace BTCPayServer.Controllers
                 ? ""
                 : " or imported it into an external wallet. If you no longer have access to your private key (recovery seed), immediately replace the wallet";
             return
-                $"<p class=\"text-danger fw-bold\">Please note that this is a <strong>{Html.Encode(walletType)} wallet</strong>!</p>" +
-                $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{Html.Encode(additionalText)}.</p>" +
-                $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {Html.Encode(info)}</p>";
+                $"<p class=\"text-danger fw-bold\">Please note that this is a <strong>{_html.Encode(walletType)} wallet</strong>!</p>" +
+                $"<p class=\"text-danger fw-bold\">Do not proceed if you have not backed up the wallet{_html.Encode(additionalText)}.</p>" +
+                $"<p class=\"text-start mb-0\">This action will erase the current wallet data from the server. {_html.Encode(info)}</p>";
         }
 
         private string WalletReplaceWarning(bool isHotWallet)

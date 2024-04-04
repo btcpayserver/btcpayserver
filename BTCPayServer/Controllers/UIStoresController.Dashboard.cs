@@ -35,16 +35,16 @@ namespace BTCPayServer.Controllers
 
             var walletEnabled = derivationSchemes.Any(scheme => !string.IsNullOrEmpty(scheme.Value) && scheme.Enabled);
             var lightningEnabled = lightningNodes.Any(ln => !string.IsNullOrEmpty(ln.Address) && ln.Enabled);
-            var cryptoCode = _NetworkProvider.DefaultNetwork.CryptoCode;
+            var cryptoCode = _networkProvider.DefaultNetwork.CryptoCode;
             var vm = new StoreDashboardViewModel
             {
                 WalletEnabled = walletEnabled,
                 LightningEnabled = lightningEnabled,
-                LightningSupported = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode)?.SupportLightning is true,
+                LightningSupported = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode)?.SupportLightning is true,
                 StoreId = CurrentStore.Id,
                 StoreName = CurrentStore.StoreName,
                 CryptoCode = cryptoCode,
-                Network = _NetworkProvider.DefaultNetwork,
+                Network = _networkProvider.DefaultNetwork,
                 IsSetUp = walletEnabled || lightningEnabled
             };
 

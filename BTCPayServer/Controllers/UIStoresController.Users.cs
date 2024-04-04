@@ -36,16 +36,16 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
 
-            var roles = await _Repo.GetStoreRoles(CurrentStore.Id);
+            var roles = await _storeRepo.GetStoreRoles(CurrentStore.Id);
             if (roles.All(role => role.Id != vm.Role))
             {
                 ModelState.AddModelError(nameof(vm.Role), "Invalid role");
                 return View(vm);
             }
             
-            var user = await _UserManager.FindByEmailAsync(vm.Email);
+            var user = await _userManager.FindByEmailAsync(vm.Email);
             var isExistingUser = user is not null;
-            var isExistingStoreUser = isExistingUser && await _Repo.GetStoreUser(storeId, user!.Id) is not null;
+            var isExistingStoreUser = isExistingUser && await _storeRepo.GetStoreUser(storeId, user!.Id) is not null;
             var successInfo = string.Empty;
             if (user == null)
             {
@@ -58,11 +58,11 @@ namespace BTCPayServer.Controllers
                     Created = DateTimeOffset.UtcNow
                 };
 
-                var result = await _UserManager.CreateAsync(user);
+                var result = await _userManager.CreateAsync(user);
                 if (result.Succeeded)
                 {
                     var tcs = new TaskCompletionSource<Uri>();
-                    var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
+                    var currentUser = await _userManager.GetUserAsync(HttpContext.User);
 
                     _eventAggregator.Publish(new UserRegisteredEvent
                     {
@@ -87,11 +87,11 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var roleId = await _Repo.ResolveStoreRoleId(storeId, vm.Role);
+            var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
             var action = isExistingUser
                 ? isExistingStoreUser ? "updated" : "added"
                 : "invited";
-            if (await _Repo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId))
+            if (await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId))
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
@@ -110,14 +110,14 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> UpdateStoreUser(string storeId, string userId, StoreUsersViewModel.StoreUserViewModel vm)
         {
-            var roleId = await _Repo.ResolveStoreRoleId(storeId, vm.Role);
-            var storeUsers = await _Repo.GetStoreUsers(storeId);
+            var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
+            var storeUsers = await _storeRepo.GetStoreUsers(storeId);
             var user = storeUsers.First(user => user.Id == userId);
             var isOwner = user.StoreRole.Id == StoreRoleId.Owner.Id;
             var isLastOwner = isOwner && storeUsers.Count(u => u.StoreRole.Id == StoreRoleId.Owner.Id) == 1;
             if (isLastOwner && roleId != StoreRoleId.Owner)
                 TempData[WellKnownTempData.ErrorMessage] = $"User {user.Email} is the last owner. Their role cannot be changed.";
-            else if (await _Repo.AddOrUpdateStoreUser(storeId, userId, roleId))
+            else if (await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId))
                 TempData[WellKnownTempData.SuccessMessage] = $"The role of {user.Email} has been changed to {vm.Role}.";
             return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
         }
@@ -126,7 +126,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> DeleteStoreUser(string storeId, string userId)
         {
-            if (await _Repo.RemoveStoreUser(storeId, userId))
+            if (await _storeRepo.RemoveStoreUser(storeId, userId))
                 TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
             else
                 TempData[WellKnownTempData.ErrorMessage] = "Removing this user would result in the store having no owner.";
@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
 
         private async Task FillUsers(StoreUsersViewModel vm)
         {
-            var users = await _Repo.GetStoreUsers(CurrentStore.Id);
+            var users = await _storeRepo.GetStoreUsers(CurrentStore.Id);
             vm.StoreId = CurrentStore.Id;
             vm.Users = users.Select(u => new StoreUsersViewModel.StoreUserViewModel()
             {

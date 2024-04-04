@@ -19,13 +19,13 @@ namespace BTCPayServer.Controllers
     {
         private async Task<Data.WebhookDeliveryData?> LastDeliveryForWebhook(string webhookId)
         {
-            return (await _Repo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 1)).ToList().FirstOrDefault();
+            return (await _storeRepo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 1)).ToList().FirstOrDefault();
         }
 
         [HttpGet("{storeId}/webhooks")]
         public async Task<IActionResult> Webhooks()
         {
-            var webhooks = await _Repo.GetWebhooks(CurrentStore.Id);
+            var webhooks = await _storeRepo.GetWebhooks(CurrentStore.Id);
             return View(nameof(Webhooks), new WebhooksViewModel()
             {
                 Webhooks = webhooks.Select(async w =>
@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> DeleteWebhook(string webhookId)
         {
-            var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
+            var webhook = await _storeRepo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
 
@@ -74,11 +74,11 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> DeleteWebhookPost(string webhookId)
         {
-            var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
+            var webhook = await _storeRepo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
 
-            await _Repo.DeleteWebhook(CurrentStore.Id, webhookId);
+            await _storeRepo.DeleteWebhook(CurrentStore.Id, webhookId);
             TempData[WellKnownTempData.SuccessMessage] = "Webhook successfully deleted";
             return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
         }
@@ -90,7 +90,7 @@ namespace BTCPayServer.Controllers
             if (!ModelState.IsValid)
                 return View(nameof(ModifyWebhook), viewModel);
 
-            await _Repo.CreateWebhook(CurrentStore.Id, viewModel.CreateBlob());
+            await _storeRepo.CreateWebhook(CurrentStore.Id, viewModel.CreateBlob());
             TempData[WellKnownTempData.SuccessMessage] = "The webhook has been created";
             return RedirectToAction(nameof(Webhooks), new { storeId });
         }
@@ -99,12 +99,12 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ModifyWebhook(string webhookId)
         {
-            var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
+            var webhook = await _storeRepo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
 
             var blob = webhook.GetBlob();
-            var deliveries = await _Repo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 20);
+            var deliveries = await _storeRepo.GetWebhookDeliveries(CurrentStore.Id, webhookId, 20);
             return View(nameof(ModifyWebhook), new EditWebhookViewModel(blob)
             {
                 Deliveries = deliveries
@@ -116,13 +116,13 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ModifyWebhook(string webhookId, EditWebhookViewModel viewModel)
         {
-            var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
+            var webhook = await _storeRepo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
             if (!ModelState.IsValid)
                 return View(nameof(ModifyWebhook), viewModel);
 
-            await _Repo.UpdateWebhook(CurrentStore.Id, webhookId, viewModel.CreateBlob());
+            await _storeRepo.UpdateWebhook(CurrentStore.Id, webhookId, viewModel.CreateBlob());
             TempData[WellKnownTempData.SuccessMessage] = "The webhook has been updated";
             return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
         }
@@ -131,7 +131,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> TestWebhook(string webhookId)
         {
-            var webhook = await _Repo.GetWebhook(CurrentStore.Id, webhookId);
+            var webhook = await _storeRepo.GetWebhook(CurrentStore.Id, webhookId);
             if (webhook is null)
                 return NotFound();
 
@@ -142,7 +142,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> TestWebhook(string webhookId, TestWebhookViewModel viewModel, CancellationToken cancellationToken)
         {
-            var result = await WebhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type, cancellationToken);
+            var result = await _webhookNotificationManager.TestWebhook(CurrentStore.Id, webhookId, viewModel.Type, cancellationToken);
 
             if (result.Success)
             {
@@ -160,11 +160,11 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> RedeliverWebhook(string webhookId, string deliveryId)
         {
-            var delivery = await _Repo.GetWebhookDelivery(CurrentStore.Id, webhookId, deliveryId);
+            var delivery = await _storeRepo.GetWebhookDelivery(CurrentStore.Id, webhookId, deliveryId);
             if (delivery is null)
                 return NotFound();
 
-            var newDeliveryId = await WebhookNotificationManager.Redeliver(deliveryId);
+            var newDeliveryId = await _webhookNotificationManager.Redeliver(deliveryId);
             if (newDeliveryId is null)
                 return NotFound();
 
@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> WebhookDelivery(string webhookId, string deliveryId)
         {
-            var delivery = await _Repo.GetWebhookDelivery(CurrentStore.Id, webhookId, deliveryId);
+            var delivery = await _storeRepo.GetWebhookDelivery(CurrentStore.Id, webhookId, deliveryId);
             if (delivery is null)
                 return NotFound();
 

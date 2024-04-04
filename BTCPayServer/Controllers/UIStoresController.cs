@@ -33,10 +33,9 @@ namespace BTCPayServer.Controllers
     public partial class UIStoresController : Controller
     {
         public UIStoresController(
-            IServiceProvider serviceProvider,
             BTCPayServerOptions btcpayServerOptions,
             BTCPayServerEnvironment btcpayEnv,
-            StoreRepository repo,
+            StoreRepository storeRepo,
             TokenRepository tokenRepo,
             UserManager<ApplicationUser> userManager,
             BitpayAccessTokenController tokenController,
@@ -55,88 +54,78 @@ namespace BTCPayServer.Controllers
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             IOptions<ExternalServicesOptions> externalServiceOptions,
             IHtmlHelper html,
-            LightningClientFactoryService lightningClientFactoryService,
             EmailSenderFactory emailSenderFactory,
             WalletFileParsers onChainWalletParsers,
             SettingsRepository settingsRepository,
             EventAggregator eventAggregator)
         {
-            _RateFactory = rateFactory;
-            _Repo = repo;
-            _TokenRepository = tokenRepo;
-            _UserManager = userManager;
-            _LangService = langService;
-            _TokenController = tokenController;
-            _WalletProvider = walletProvider;
+            _rateFactory = rateFactory;
+            _storeRepo = storeRepo;
+            _tokenRepository = tokenRepo;
+            _userManager = userManager;
+            _langService = langService;
+            _tokenController = tokenController;
+            _walletProvider = walletProvider;
             _handlers = paymentMethodHandlerDictionary;
             _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
             _appService = appService;
             _fileService = fileService;
-            DataProtector = dataProtector.CreateProtector("ConfigProtector");
-            WebhookNotificationManager = webhookNotificationManager;
-            LightningNetworkOptions = lightningNetworkOptions.Value;
-            _EventAggregator = eventAggregator;
-            _NetworkProvider = networkProvider;
-            _ExplorerProvider = explorerProvider;
-            _ServiceProvider = serviceProvider;
-            _BtcpayServerOptions = btcpayServerOptions;
-            _BTCPayEnv = btcpayEnv;
+            _networkProvider = networkProvider;
+            _explorerProvider = explorerProvider;
+            _btcpayServerOptions = btcpayServerOptions;
+            _btcPayEnv = btcpayEnv;
             _externalServiceOptions = externalServiceOptions;
-            _lightningClientFactoryService = lightningClientFactoryService;
             _emailSenderFactory = emailSenderFactory;
             _onChainWalletParsers = onChainWalletParsers;
             _settingsRepository = settingsRepository;
             _eventAggregator = eventAggregator;
-            Html = html;
+            _html = html;
+            _dataProtector = dataProtector.CreateProtector("ConfigProtector");
+            _webhookNotificationManager = webhookNotificationManager;
+            _lightningNetworkOptions = lightningNetworkOptions.Value;
         }
 
-        readonly BTCPayServerOptions _BtcpayServerOptions;
-        readonly BTCPayServerEnvironment _BTCPayEnv;
-        readonly IServiceProvider _ServiceProvider;
-        readonly BTCPayNetworkProvider _NetworkProvider;
-        readonly BTCPayWalletProvider _WalletProvider;
-        readonly BitpayAccessTokenController _TokenController;
-        readonly StoreRepository _Repo;
-        readonly TokenRepository _TokenRepository;
-        readonly UserManager<ApplicationUser> _UserManager;
-        readonly RateFetcher _RateFactory;
-        readonly SettingsRepository _settingsRepository;
-        private readonly ExplorerClientProvider _ExplorerProvider;
-        private readonly LanguageService _LangService;
+        private readonly BTCPayServerOptions _btcpayServerOptions;
+        private readonly BTCPayServerEnvironment _btcPayEnv;
+        private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly BTCPayWalletProvider _walletProvider;
+        private readonly BitpayAccessTokenController _tokenController;
+        private readonly StoreRepository _storeRepo;
+        private readonly TokenRepository _tokenRepository;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RateFetcher _rateFactory;
+        private readonly SettingsRepository _settingsRepository;
+        private readonly ExplorerClientProvider _explorerProvider;
+        private readonly LanguageService _langService;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         private readonly AppService _appService;
         private readonly IFileService _fileService;
-        private readonly EventAggregator _EventAggregator;
         private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
-        private readonly LightningClientFactoryService _lightningClientFactoryService;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly WalletFileParsers _onChainWalletParsers;
         private readonly EventAggregator _eventAggregator;
+        private readonly IHtmlHelper _html;
+        private readonly WebhookSender _webhookNotificationManager;
+        private readonly LightningNetworkOptions _lightningNetworkOptions;
+        private readonly IDataProtector _dataProtector;
 
         public string? GeneratedPairingCode { get; set; }
-        public WebhookSender WebhookNotificationManager { get; }
-        public IHtmlHelper Html { get; }
-        public LightningNetworkOptions LightningNetworkOptions { get; }
-        public IDataProtector DataProtector { get; }
 
         [TempData]
-        public bool StoreNotConfigured
-        {
-            get; set;
-        }
+        private bool StoreNotConfigured { get; set; }
         
         [AllowAnonymous]
         [HttpGet("{storeId}/index")]
         public async Task<IActionResult> Index(string storeId)
         {
-            var userId = _UserManager.GetUserId(User);
+            var userId = _userManager.GetUserId(User);
             if (string.IsNullOrEmpty(userId))
                 return Forbid();
             
-            var store = await _Repo.FindStore(storeId);
+            var store = await _storeRepo.FindStore(storeId);
             if (store is null)
                 return NotFound();
 
@@ -171,7 +160,7 @@ namespace BTCPayServer.Controllers
         {
             if (User.Identity?.AuthenticationType != AuthenticationSchemes.Cookie)
                 return null;
-            return _UserManager.GetUserId(User);
+            return _userManager.GetUserId(User);
         }
     }
 }

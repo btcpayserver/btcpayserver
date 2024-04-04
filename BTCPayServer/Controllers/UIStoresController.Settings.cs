@@ -41,7 +41,7 @@ namespace BTCPayServer.Controllers
                 DefaultCurrency = storeBlob.DefaultCurrency,
                 BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
                 Archived = store.Archived,
-                CanDelete = _Repo.CanDeleteStores()
+                CanDelete = _storeRepo.CanDeleteStores()
             };
 
             return View(vm);
@@ -177,7 +177,7 @@ namespace BTCPayServer.Controllers
 
             if (needUpdate)
             {
-                await _Repo.UpdateStore(CurrentStore);
+                await _storeRepo.UpdateStore(CurrentStore);
 
                 TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
             }
@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ToggleArchive(string storeId)
         {
             CurrentStore.Archived = !CurrentStore.Archived;
-            await _Repo.UpdateStore(CurrentStore);
+            await _storeRepo.UpdateStore(CurrentStore);
 
             TempData[WellKnownTempData.SuccessMessage] = CurrentStore.Archived
                 ? "The store has been archived and will no longer appear in the stores list by default."
@@ -216,7 +216,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> DeleteStorePost(string storeId)
         {
-            await _Repo.DeleteStore(CurrentStore.Id);
+            await _storeRepo.DeleteStore(CurrentStore.Id);
             TempData[WellKnownTempData.SuccessMessage] = "Store successfully deleted.";
             return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }
@@ -264,7 +264,7 @@ namespace BTCPayServer.Controllers
             vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
             vm.ReceiptOptions = CheckoutAppearanceViewModel.ReceiptOptionsViewModel.Create(storeBlob.ReceiptOptions);
             vm.AutoDetectLanguage = storeBlob.AutoDetectLanguage;
-            vm.SetLanguages(_LangService, storeBlob.DefaultLang);
+            vm.SetLanguages(_langService, storeBlob.DefaultLang);
 
             return View(vm);
         }
@@ -282,7 +282,7 @@ namespace BTCPayServer.Controllers
                 CurrentStore.SetDefaultPaymentId(defaultPaymentMethodId);
             }
             SetCryptoCurrencies(model, CurrentStore);
-            model.SetLanguages(_LangService, model.DefaultLang);
+            model.SetLanguages(_langService, model.DefaultLang);
             model.PaymentMethodCriteria ??= new List<PaymentMethodCriteriaViewModel>();
             for (var index = 0; index < model.PaymentMethodCriteria.Count; index++)
             {
@@ -409,7 +409,7 @@ namespace BTCPayServer.Controllers
             }
             if (needUpdate)
             {
-                await _Repo.UpdateStore(CurrentStore);
+                await _storeRepo.UpdateStore(CurrentStore);
                 TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
             }
 
@@ -435,8 +435,8 @@ namespace BTCPayServer.Controllers
             var defaultChoice = defaultPaymentId is not null ? defaultPaymentId.FindNearest(enabled) : null;
             if (defaultChoice is null)
             {
-                defaultChoice = enabled.FirstOrDefault(e => e == PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode)) ??
-                                enabled.FirstOrDefault(e => e == PaymentTypes.LN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode)) ??
+                defaultChoice = enabled.FirstOrDefault(e => e == PaymentTypes.CHAIN.GetPaymentMethodId(_networkProvider.DefaultNetwork.CryptoCode)) ??
+                                enabled.FirstOrDefault(e => e == PaymentTypes.LN.GetPaymentMethodId(_networkProvider.DefaultNetwork.CryptoCode)) ??
                                 enabled.FirstOrDefault();
             }
             var choices = GetEnabledPaymentMethodChoices(storeData);

@@ -129,9 +129,9 @@ namespace BTCPayServer.Controllers
             return View("Confirm",
                 roleData.IsUsed is true
                     ? new ConfirmModel("Delete role",
-                        $"Unable to proceed: The role <strong>{Html.Encode(roleData.Role)}</strong> is currently assigned to one or more users, it cannot be removed.")
+                        $"Unable to proceed: The role <strong>{_html.Encode(roleData.Role)}</strong> is currently assigned to one or more users, it cannot be removed.")
                     : new ConfirmModel("Delete role",
-                        $"The role <strong>{Html.Encode(roleData.Role)}</strong> will be permanently deleted. Are you sure?",
+                        $"The role <strong>{_html.Encode(roleData.Role)}</strong> will be permanently deleted. Are you sure?",
                         "Delete"));
         }
 

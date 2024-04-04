@@ -27,8 +27,8 @@ namespace BTCPayServer.Controllers
             vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? storeBlob.GetRecommendedExchange());
             vm.Spread = (double)(storeBlob.Spread * 100m);
             vm.StoreId = CurrentStore.Id;
-            vm.Script = storeBlob.GetRateRules(_NetworkProvider).ToString();
-            vm.DefaultScript = storeBlob.GetDefaultRateRules(_NetworkProvider).ToString();
+            vm.Script = storeBlob.GetRateRules(_networkProvider).ToString();
+            vm.DefaultScript = storeBlob.GetDefaultRateRules(_networkProvider).ToString();
             vm.AvailableExchanges = exchanges;
             vm.DefaultCurrencyPairs = storeBlob.GetDefaultCurrencyPairString();
             vm.ShowScripting = storeBlob.RateScripting;
@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
                 model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
 
             var blob = CurrentStore.GetStoreBlob();
-            model.DefaultScript = blob.GetDefaultRateRules(_NetworkProvider).ToString();
+            model.DefaultScript = blob.GetDefaultRateRules(_networkProvider).ToString();
             model.AvailableExchanges = exchanges;
 
             blob.PreferredExchange = model.PreferredExchange;
@@ -102,7 +102,7 @@ namespace BTCPayServer.Controllers
                     model.Script = blob.RateScript;
                 }
             }
-            rules = blob.GetRateRules(_NetworkProvider);
+            rules = blob.GetRateRules(_networkProvider);
 
             if (command == "Test")
             {
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers
                     pairs.Add(currencyPair);
                 }
 
-                var fetchs = _RateFactory.FetchRates(pairs.ToHashSet(), rules, cancellationToken);
+                var fetchs = _rateFactory.FetchRates(pairs.ToHashSet(), rules, cancellationToken);
                 var testResults = new List<RatesViewModel.TestResultViewModel>();
                 foreach (var fetch in fetchs)
                 {
@@ -144,7 +144,7 @@ namespace BTCPayServer.Controllers
             {
                 if (CurrentStore.SetStoreBlob(blob))
                 {
-                    await _Repo.UpdateStore(CurrentStore);
+                    await _storeRepo.UpdateStore(CurrentStore);
                     TempData[WellKnownTempData.SuccessMessage] = "Rate settings updated";
                 }
                 return RedirectToAction(nameof(Rates), new
@@ -175,16 +175,16 @@ namespace BTCPayServer.Controllers
         {
             var blob = CurrentStore.GetStoreBlob();
             blob.RateScripting = scripting;
-            blob.RateScript = blob.GetDefaultRateRules(_NetworkProvider).ToString();
+            blob.RateScript = blob.GetDefaultRateRules(_networkProvider).ToString();
             CurrentStore.SetStoreBlob(blob);
-            await _Repo.UpdateStore(CurrentStore);
+            await _storeRepo.UpdateStore(CurrentStore);
             TempData[WellKnownTempData.SuccessMessage] = "Rate rules scripting " + (scripting ? "activated" : "deactivated");
             return RedirectToAction(nameof(Rates), new { storeId = CurrentStore.Id });
         }
 
         private IEnumerable<RateSourceInfo> GetSupportedExchanges()
         {
-            return _RateFactory.RateProviderFactory.AvailableRateProviders
+            return _rateFactory.RateProviderFactory.AvailableRateProviders
                 .OrderBy(s => s.DisplayName, StringComparer.OrdinalIgnoreCase);
         }
     }

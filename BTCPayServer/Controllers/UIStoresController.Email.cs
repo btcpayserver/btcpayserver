@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers
             blob.EmailRules = vm.Rules;
             if (store.SetStoreBlob(blob))
             {
-                await _Repo.UpdateStore(store);
+                await _storeRepo.UpdateStore(store);
                 message += "Store email rules saved. ";
             }
 
@@ -237,7 +237,7 @@ namespace BTCPayServer.Controllers
                 var storeBlob = store.GetStoreBlob();
                 storeBlob.EmailSettings.Password = null;
                 store.SetStoreBlob(storeBlob);
-                await _Repo.UpdateStore(store);
+                await _storeRepo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
             }
             if (useCustomSMTP)
@@ -255,7 +255,7 @@ namespace BTCPayServer.Controllers
                 }
                 storeBlob.EmailSettings = model.Settings;
                 store.SetStoreBlob(storeBlob);
-                await _Repo.UpdateStore(store);
+                await _storeRepo.UpdateStore(store);
                 TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
             }
             return RedirectToAction(nameof(StoreEmailSettings), new { storeId });

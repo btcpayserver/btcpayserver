@@ -23,7 +23,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ListTokens()
         {
             var model = new TokensViewModel();
-            var tokens = await _TokenRepository.GetTokensByStoreIdAsync(CurrentStore.Id);
+            var tokens = await _tokenRepository.GetTokensByStoreIdAsync(CurrentStore.Id);
             model.StoreNotConfigured = StoreNotConfigured;
             model.Tokens = tokens.Select(t => new TokenViewModel()
             {
@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers
                 Id = t.Value
             }).ToArray();
 
-            model.ApiKey = (await _TokenRepository.GetLegacyAPIKeys(CurrentStore.Id)).FirstOrDefault();
+            model.ApiKey = (await _tokenRepository.GetLegacyAPIKeys(CurrentStore.Id)).FirstOrDefault();
             if (model.ApiKey == null)
                 model.EncodedApiKey = "*API Key*";
             else
@@ -44,20 +44,20 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> RevokeToken(string tokenId)
         {
-            var token = await _TokenRepository.GetToken(tokenId);
+            var token = await _tokenRepository.GetToken(tokenId);
             if (token == null || token.StoreId != CurrentStore.Id)
                 return NotFound();
-            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{Html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
+            return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{_html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
         }
 
         [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> RevokeTokenConfirm(string tokenId)
         {
-            var token = await _TokenRepository.GetToken(tokenId);
+            var token = await _tokenRepository.GetToken(tokenId);
             if (token == null ||
                 token.StoreId != CurrentStore.Id ||
-               !await _TokenRepository.DeleteToken(tokenId))
+               !await _tokenRepository.DeleteToken(tokenId))
                 TempData[WellKnownTempData.ErrorMessage] = "Failure to revoke this token.";
             else
                 TempData[WellKnownTempData.SuccessMessage] = "Token revoked";
@@ -68,7 +68,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> ShowToken(string tokenId)
         {
-            var token = await _TokenRepository.GetToken(tokenId);
+            var token = await _tokenRepository.GetToken(tokenId);
             if (token == null || token.StoreId != CurrentStore.Id)
                 return NotFound();
             return View(token);
@@ -101,7 +101,7 @@ namespace BTCPayServer.Controllers
             var store = model.StoreId switch
             {
                 null => CurrentStore,
-                _ => await _Repo.FindStore(storeId, userId)
+                _ => await _storeRepo.FindStore(storeId, userId)
             };
             if (store == null)
                 return Challenge(AuthenticationSchemes.Cookie);
@@ -114,18 +114,18 @@ namespace BTCPayServer.Controllers
             string? pairingCode = null;
             if (model.PublicKey == null)
             {
-                tokenRequest.PairingCode = await _TokenRepository.CreatePairingCodeAsync();
-                await _TokenRepository.UpdatePairingCode(new PairingCodeEntity()
+                tokenRequest.PairingCode = await _tokenRepository.CreatePairingCodeAsync();
+                await _tokenRepository.UpdatePairingCode(new PairingCodeEntity()
                 {
                     Id = tokenRequest.PairingCode,
                     Label = model.Label,
                 });
-                await _TokenRepository.PairWithStoreAsync(tokenRequest.PairingCode, store.Id);
+                await _tokenRepository.PairWithStoreAsync(tokenRequest.PairingCode, store.Id);
                 pairingCode = tokenRequest.PairingCode;
             }
             else
             {
-                pairingCode = (await _TokenController.Tokens(tokenRequest)).Data[0].PairingCode;
+                pairingCode = (await _tokenController.Tokens(tokenRequest)).Data[0].PairingCode;
             }
 
             GeneratedPairingCode = pairingCode;
@@ -147,7 +147,7 @@ namespace BTCPayServer.Controllers
             ViewBag.HidePublicKey = true;
             ViewBag.ShowStores = true;
             ViewBag.ShowMenu = false;
-            var stores = (await _Repo.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
+            var stores = (await _storeRepo.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
 
             model.Stores = new SelectList(stores, nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));
             if (!model.Stores.Any())
@@ -174,12 +174,12 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             if (command == "revoke")
             {
-                await _TokenRepository.RevokeLegacyAPIKeys(CurrentStore.Id);
+                await _tokenRepository.RevokeLegacyAPIKeys(CurrentStore.Id);
                 TempData[WellKnownTempData.SuccessMessage] = "API Key revoked";
             }
             else
             {
-                await _TokenRepository.GenerateLegacyAPIKey(CurrentStore.Id);
+                await _tokenRepository.GenerateLegacyAPIKey(CurrentStore.Id);
                 TempData[WellKnownTempData.SuccessMessage] = "API Key re-generated";
             }
 
@@ -202,20 +202,20 @@ namespace BTCPayServer.Controllers
 
             if (selectedStore != null)
             {
-                var store = await _Repo.FindStore(selectedStore, userId);
+                var store = await _storeRepo.FindStore(selectedStore, userId);
                 if (store == null)
                     return NotFound();
                 HttpContext.SetStoreData(store);
             }
 
-            var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
+            var pairing = await _tokenRepository.GetPairingAsync(pairingCode);
             if (pairing == null)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Unknown pairing code";
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
 
-            var stores = (await _Repo.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
+            var stores = (await _storeRepo.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
             return View(new PairingModel
             {
                 Id = pairing.Id,
@@ -237,11 +237,11 @@ namespace BTCPayServer.Controllers
             if (pairingCode == null)
                 return NotFound();
             var store = CurrentStore;
-            var pairing = await _TokenRepository.GetPairingAsync(pairingCode);
+            var pairing = await _tokenRepository.GetPairingAsync(pairingCode);
             if (store == null || pairing == null)
                 return NotFound();
 
-            var pairingResult = await _TokenRepository.PairWithStoreAsync(pairingCode, store.Id);
+            var pairingResult = await _tokenRepository.PairWithStoreAsync(pairingCode, store.Id);
             if (pairingResult == PairingResult.Complete || pairingResult == PairingResult.Partial)
             {
                 var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();

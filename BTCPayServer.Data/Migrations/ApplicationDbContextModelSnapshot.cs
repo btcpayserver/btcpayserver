@@ -63,9 +63,6 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
-                    b.Property<DateTimeOffset?>("CreatedTime")
-                        .HasColumnType("timestamp with time zone");
-
                     b.Property<string>("InvoiceDataId")
                         .HasColumnType("text");
 

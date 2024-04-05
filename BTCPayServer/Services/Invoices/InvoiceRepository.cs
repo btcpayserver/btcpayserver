@@ -245,7 +245,6 @@ namespace BTCPayServer.Services.Invoices
                         await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                         {
                             InvoiceDataId = invoice.Id,
-                            CreatedTime = DateTimeOffset.UtcNow,
                             Address = trackedDestination
                         });
                     }
@@ -363,7 +362,6 @@ retry:
                         await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                         {
                             InvoiceDataId = invoiceId,
-                            CreatedTime = DateTimeOffset.UtcNow,
                             Address = tracked
                         });
                     }

@@ -111,7 +111,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
         {
-            return new CheckoutUIPaymentMethodSettings()
+            return new CheckoutUIPaymentMethodSettings
             {
                 ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
                 CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",

@@ -1,4 +1,4 @@
-#Checkout-v2 {
+#Checkout {
     --wrap-max-width: 400px;
 }
 body {
@@ -178,7 +178,7 @@ section dl > div dd {
 
 @media (max-width: 400px) {
     /* Pull it up if there's no store header */
-    #Checkout-v2 > main.tile:first-child {
+    #Checkout > main.tile:first-child {
         margin-top: calc(var(--wrap-padding-vertical) * -1);
     }
 }

@@ -53,9 +53,6 @@ namespace BTCPayServer.Tests
             // Top up/zero amount invoices
             var invoiceId = s.CreateInvoice(amount: null);
             s.GoToInvoiceCheckout(invoiceId);
-
-            // Ensure we are seeing Checkout v2
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Bitcoin", s.Driver.FindElement(By.CssSelector(".payment-method.active")).Text);
             Assert.Contains("LNURL", s.Driver.FindElement(By.CssSelector(".payment-method:nth-child(2)")).Text);
@@ -92,7 +89,6 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             invoiceId = s.CreateInvoice(21000, "SATS", defaultPaymentMethod: "BTC-LN");
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Equal(2, s.Driver.FindElements(By.CssSelector(".payment-method")).Count);
             Assert.Contains("Lightning", s.Driver.WaitForElement(By.CssSelector(".payment-method.active")).Text);
             Assert.Contains("Bitcoin", s.Driver.WaitForElement(By.CssSelector(".payment-method")).Text);
@@ -113,7 +109,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("save")).Click();
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
 
             // Details should not show exchange rate
@@ -152,8 +147,6 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             invoiceId = s.CreateInvoice(2100, "EUR");
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
-            
             await Task.Delay(200);
             address = s.Driver.FindElement(By.CssSelector("#Address_BTC-CHAIN .truncate-center-start")).Text;
             var amountFraction = "0.00001";
@@ -190,7 +183,6 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             invoiceId = s.CreateInvoice();
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
 
             // Details
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -265,7 +257,6 @@ namespace BTCPayServer.Tests
 
             invoiceId = s.CreateInvoice();
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             Assert.Contains("BTC", s.Driver.FindElement(By.Id("AmountDue")).Text);
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
@@ -298,7 +289,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Save")).Click();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
 
             // Check details
@@ -313,7 +303,6 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC-LN");
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
@@ -335,7 +324,6 @@ namespace BTCPayServer.Tests
             // BIP21 with top-up invoice
             invoiceId = s.CreateInvoice(amount: null);
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             qrValue = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-qr-value");
             clipboard = s.Driver.FindElement(By.CssSelector(".qr-container")).GetAttribute("data-clipboard");
@@ -385,7 +373,6 @@ namespace BTCPayServer.Tests
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             var paymentInfo = s.Driver.FindElement(By.Id("PaymentInfo"));
             Assert.False(paymentInfo.Displayed);
             Assert.DoesNotContain("This invoice will expire in", paymentInfo.Text);
@@ -416,7 +403,6 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             invoiceId = s.CreateInvoice(defaultPaymentMethod: "BTC-LN");
             s.GoToInvoiceCheckout(invoiceId);
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
             Assert.Empty(s.Driver.FindElements(By.CssSelector(".payment-method")));
             payUrl = s.Driver.FindElement(By.Id("PayInWallet")).GetAttribute("href");
             Assert.StartsWith("bitcoin:", payUrl);
@@ -459,7 +445,7 @@ namespace BTCPayServer.Tests
             var frameElement = s.Driver.FindElement(By.Name("btcpay"));
             Assert.True(frameElement.Displayed);
             var iframe = s.Driver.SwitchTo().Frame(frameElement);
-            iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+            iframe.WaitUntilAvailable(By.Id("Checkout"));
 
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(invoice
                     .GetPaymentPrompt(PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))

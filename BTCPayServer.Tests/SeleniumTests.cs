@@ -1301,7 +1301,7 @@ namespace BTCPayServer.Tests
                 var frameElement = s.Driver.FindElement(By.Name("btcpay"));
                 Assert.True(frameElement.Displayed);
                 var iframe = s.Driver.SwitchTo().Frame(frameElement);
-                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+                iframe.WaitUntilAvailable(By.Id("Checkout"));
                 
                 var closeButton = iframe.FindElement(By.Id("close"));
                 Assert.True(closeButton.Displayed);
@@ -1456,7 +1456,7 @@ namespace BTCPayServer.Tests
                 var frameElement = s.Driver.FindElement(By.Name("btcpay"));
                 Assert.True(frameElement.Displayed);
                 var iframe = s.Driver.SwitchTo().Frame(frameElement);
-                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+                iframe.WaitUntilAvailable(By.Id("Checkout"));
 
                 IWebElement closebutton = null;
                 TestUtils.Eventually(() =>
@@ -1498,7 +1498,7 @@ namespace BTCPayServer.Tests
                 var frameElement = s.Driver.FindElement(By.Name("btcpay"));
                 Assert.True(frameElement.Displayed);
                 var iframe = s.Driver.SwitchTo().Frame(frameElement);
-                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+                iframe.WaitUntilAvailable(By.Id("Checkout"));
 
                 // Pay full amount
                 s.PayInvoice();
@@ -2607,7 +2607,7 @@ namespace BTCPayServer.Tests
 
             // Pay
             s.Driver.FindElement(By.Id("pay-button")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            s.Driver.WaitUntilAvailable(By.Id("Checkout"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
             Assert.Contains("1 222,21 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
@@ -2662,7 +2662,7 @@ namespace BTCPayServer.Tests
 
             // Pay
             s.Driver.FindElement(By.Id("pay-button")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            s.Driver.WaitUntilAvailable(By.Id("Checkout"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
             Assert.Contains("4,23 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
@@ -2822,7 +2822,7 @@ namespace BTCPayServer.Tests
 
             // Check values on checkout page
             s.Driver.FindElement(By.Id("CartSubmit")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            s.Driver.WaitUntilAvailable(By.Id("Checkout"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
             Assert.Contains("9,90 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);

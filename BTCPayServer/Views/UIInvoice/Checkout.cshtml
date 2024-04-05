@@ -25,7 +25,7 @@
 <head>
     <partial name="LayoutHead"/>
     <meta name="robots" content="noindex,nofollow">
-    <link href="~/checkout-v2/checkout.css" asp-append-version="true" rel="stylesheet" />
+    <link href="~/checkout/checkout.css" asp-append-version="true" rel="stylesheet" />
     @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
     {
         <link rel="preload" href="@Model.PaymentSoundUrl" as="audio" />
@@ -40,7 +40,7 @@
     }
 </head>
 <body class="min-vh-100">
-    <div id="Checkout-v2" class="public-page-wrap" v-cloak>
+    <div id="Checkout" class="public-page-wrap" v-cloak>
 		@if (Model.ShowStoreHeader)
 		{
 			<partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
@@ -291,7 +291,7 @@
         </dl>
     </script>
     <script>
-	    const i18nUrl = @Safe.Json($"{Model.RootPath}misc/translations/checkout-v2/{{{{lng}}}}?v={Env.Version}");
+	    const i18nUrl = @Safe.Json($"{Model.RootPath}misc/translations/checkout/{{{{lng}}}}?v={Env.Version}");
         const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
         const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
         const availableLanguages = @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
@@ -311,16 +311,16 @@
     <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
     <script src="~/js/vue-utils.js" asp-append-version="true"></script>
     <script src="~/main/utils.js" asp-append-version="true"></script>
-    <script src="~/checkout-v2/checkout.js" asp-append-version="true"></script>
+    <script src="~/checkout/checkout.js" asp-append-version="true"></script>
     @if (Env.CheatMode)
     {
         <partial name="Checkout-Cheating" model="@Model" />
     }
 	@foreach (var extensionPartial in Model.ExtensionPartials)
     {
-		<partial name="@extensionPartial-v2" model="@Model" />
+		<partial name="@extensionPartial" model="@Model" />
     }
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
-    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-v2-end", model = Model })
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })
 </body>
 </html>

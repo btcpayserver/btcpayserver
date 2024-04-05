@@ -686,7 +686,8 @@ namespace BTCPayServer.Controllers
 
             if (view == "modal")
                 model.IsModal = true;
-            return View("CheckoutV2", model);
+
+            return View(model);
         }
 
         [HttpGet("invoice-noscript")]
@@ -963,10 +964,10 @@ namespace BTCPayServer.Controllers
             if (storeBlob.PlaySoundOnPayment)
             {
                 model.PaymentSoundUrl = string.IsNullOrEmpty(storeBlob.SoundFileId)
-                    ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout-v2/payment.mp3")
+                    ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
                     : await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storeBlob.SoundFileId);
-                model.ErrorSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout-v2/error.mp3");
-                model.NfcReadSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout-v2/nfcread.mp3");
+                model.ErrorSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/error.mp3");
+                model.NfcReadSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/nfcread.mp3");
             }
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);

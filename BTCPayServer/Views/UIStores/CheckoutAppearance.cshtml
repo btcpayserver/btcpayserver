@@ -156,7 +156,7 @@
                                     <input asp-for="SoundFile" type="file" class="form-control flex-grow">
                                     @{
                                         var soundUrl = string.IsNullOrEmpty(Model.SoundFileId)
-                                            ? string.Concat(Context.Request.GetAbsoluteRootUri().ToString(), "checkout-v2/payment.mp3")
+                                            ? string.Concat(Context.Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
                                             : await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId);
                                     }
                                     <audio controls src="@soundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>

@@ -77,7 +77,7 @@ const PaymentDetails = {
 function initApp() {
     return new Vue({
         i18n,
-        el: '#Checkout-v2',
+        el: '#Checkout',
         components: {
             'payment-details': PaymentDetails,
         },

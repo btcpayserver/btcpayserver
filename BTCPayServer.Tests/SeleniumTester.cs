@@ -468,6 +468,7 @@ retry:
             Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
+            Driver.WaitUntilAvailable(By.Id("Checkout"));
         }
 
         public void GoToInvoice(string id)

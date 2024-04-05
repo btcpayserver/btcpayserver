@@ -16,7 +16,6 @@ namespace BTCPayServer.Data
 
         public DateTimeOffset Created { get; set; }
         public List<PaymentData> Payments { get; set; }
-        public List<InvoiceEventData> Events { get; set; }
 
         [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }

@@ -103,7 +103,6 @@ namespace BTCPayServer.Controllers
                 InvoiceId = new[] { invoiceId },
                 UserId = GetUserId(),
                 IncludeAddresses = true,
-                IncludeEvents = true,
                 IncludeArchived = true,
                 IncludeRefunds = true,
             })).FirstOrDefault();
@@ -144,7 +143,7 @@ namespace BTCPayServer.Controllers
                 RedirectUrl = invoice.RedirectURL?.AbsoluteUri,
                 TypedMetadata = invoice.Metadata,
                 StatusException = invoice.ExceptionStatus,
-                Events = invoice.Events,
+                Events = await _InvoiceRepository.GetInvoiceLogs(invoice.Id),
                 Metadata = metaData,
                 Archived = invoice.Archived,
                 HasRefund = invoice.Refunds.Any(),
@@ -586,7 +585,6 @@ namespace BTCPayServer.Controllers
                 InvoiceId = new[] { invoiceId },
                 UserId = GetUserId(),
                 IncludeAddresses = false,
-                IncludeEvents = false,
                 IncludeArchived = true,
             })).FirstOrDefault();
             if (invoice == null)

@@ -33,7 +33,6 @@ public class ProductsReportProvider : ReportProvider
         {
             IncludeArchived = true,
             IncludeAddresses = false,
-            IncludeEvents = false,
             IncludeRefunds = false,
             StartDate = queryContext.From,
             EndDate = queryContext.To,

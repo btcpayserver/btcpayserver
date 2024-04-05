@@ -501,8 +501,6 @@ namespace BTCPayServer.Services.Invoices
         public HashSet<string> AvailableAddressHashes { get; set; }
         [JsonProperty]
         public bool ExtendedNotifications { get; set; }
-        [JsonIgnore]
-        public List<InvoiceEventData> Events { get; internal set; }
 
         [JsonProperty]
         public double PaymentTolerance { get; set; }

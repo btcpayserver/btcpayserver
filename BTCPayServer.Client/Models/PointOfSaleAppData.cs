@@ -36,7 +36,6 @@ namespace BTCPayServer.Client.Models
         public string Description { get; set; }
         public string EmbeddedCSS { get; set; }
         public bool? RedirectAutomatically { get; set; }
-        public bool? RequiresRefundEmail { get; set; }
     }
 
     public class CrowdfundAppData : AppDataBase

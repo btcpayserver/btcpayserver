@@ -24,14 +24,4 @@ namespace BTCPayServer.Services.Apps
     {
         Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
     }
-
-    public enum RequiresRefundEmail
-    {
-        [Display(Name = "Inherit from store settings")]
-        InheritFromStore,
-        [Display(Name = "On")]
-        On,
-        [Display(Name = "Off")]
-        Off
-    }
 }

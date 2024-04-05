@@ -67,7 +67,10 @@ namespace BTCPayServer.Data
             "archived",
             "isUnderPaid",
             "requiresRefundEmail",
-            "invoiceTime"
+            "invoiceTime",
+            "checkoutType",
+            "customLogo",
+            "customCSS"
         };
 
 #pragma warning disable CS0618 // Type or member is obsolete
@@ -134,7 +137,7 @@ namespace BTCPayServer.Data
                     blob.Move(["productInformation", prop.Name], ["metadata", prop.Name]);
             }
             blob.Move(["orderId"], ["metadata", "orderId"]);
-            foreach (string prop in new string[] { "posData", "checkoutType", "defaultLanguage", "notificationEmail", "notificationURL", "storeSupportUrl", "redirectURL" })
+            foreach (string prop in new string[] { "posData", "defaultLanguage", "notificationEmail", "notificationURL", "storeSupportUrl", "redirectURL" })
             {
                 blob.RemoveIfNull(prop);
             }

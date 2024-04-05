@@ -431,61 +431,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Altcoins", "Altcoins")]
-        [Trait("Lightning", "Lightning")]
-        [Trait("Integration", "Integration")]
-        public async Task CanUsePaymentMethodDropdown()
-        {
-            using (var s = CreateSeleniumTester())
-            {
-                s.Server.ActivateLTC();
-                s.Server.ActivateLightning();
-                await s.StartAsync();
-                s.GoToRegister();
-                s.RegisterNewUser(true);
-                s.CreateNewStore();
-                s.AddDerivationScheme("BTC");
-                s.EnableCheckout(Client.Models.CheckoutType.V1);
-                //check that there is no dropdown since only one payment method is set
-                var invoiceId = s.CreateInvoice(10, "USD", "a@g.com");
-                s.GoToInvoiceCheckout(invoiceId);
-                s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
-                s.GoToHome();
-                s.GoToStore();
-                s.AddDerivationScheme("LTC");
-                s.AddLightningNode(LightningConnectionType.CLightning);
-                //there should be three now
-                invoiceId = s.CreateInvoice(10, "USD", "a@g.com");
-                s.GoToInvoiceCheckout(invoiceId);
-                var currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
-                Assert.Contains("Bitcoin", currencyDropdownButton.Text);
-                currencyDropdownButton.Click();
-                IEnumerable<IWebElement> elements = null;
-                TestUtils.Eventually(() =>
-                {
-                    elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
-                    Assert.Equal(3, elements.Count());
-                    elements.Single(element => element.Text.Contains("Litecoin")).Click();
-                });
-                currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
-                Assert.Contains("Litecoin", currencyDropdownButton.Text);
-                currencyDropdownButton.Click();
-
-
-                TestUtils.Eventually(() =>
-                {
-                    elements = s.Driver.FindElement(By.ClassName("vex-content")).FindElements(By.ClassName("vexmenuitem"));
-                    elements.Single(element => element.Text.Contains("Lightning")).Click();
-                });
-
-                currencyDropdownButton = s.Driver.FindElement(By.ClassName("payment__currencies"));
-                Assert.Contains("Lightning", currencyDropdownButton.Text);
-
-                s.Driver.Quit();
-            }
-        }
-
-        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         [Trait("Altcoins", "Altcoins")]
         public async Task CanPayWithTwoCurrencies()

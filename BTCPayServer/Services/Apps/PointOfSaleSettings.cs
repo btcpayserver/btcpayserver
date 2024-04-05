@@ -80,7 +80,6 @@ namespace BTCPayServer.Services.Apps
             ShowSearch = true;
             ShowCategories = true;
             EnableTips = false;
-            RequiresRefundEmail = RequiresRefundEmail.InheritFromStore;
         }
         public string Title { get; set; }
         public string Currency { get; set; }
@@ -93,7 +92,6 @@ namespace BTCPayServer.Services.Apps
         public bool ShowSearch { get; set; } = true;
         public bool ShowCategories { get; set; } = true;
         public bool EnableTips { get; set; }
-        public RequiresRefundEmail RequiresRefundEmail { get; set; }
 
         public string FormId { get; set; } = null;
 

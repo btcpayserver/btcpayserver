@@ -464,14 +464,6 @@
                         "default": false,
                         "description": "If true, then no authentication is needed to create invoices on this store."
                     },
-                    "requiresRefundEmail": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
-                    },
-                    "checkoutType": {
-                        "$ref": "#/components/schemas/CheckoutType"
-                    },
                     "receipt": {
                         "nullable": true,
                         "description": "Additional settings to customize the public receipt",
@@ -515,16 +507,6 @@
                         "type": "string",
                         "default": "en",
                         "description": "The default language to use in the checkout page. (The different translations available are listed [here](https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer/wwwroot/locales)"
-                    },
-                    "customLogo": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "URL to a logo to include in the checkout page."
-                    },
-                    "customCSS": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "URL to a CSS stylesheet to include in the checkout page"
                     },
                     "htmlTitle": {
                         "type": "string",

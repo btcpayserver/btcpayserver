@@ -15,8 +15,6 @@ namespace BTCPayServer.Plugins.NFC
 
         public override void Execute(IServiceCollection applicationBuilder)
         {
-            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/CheckoutEnd",
-                "checkout-end"));
             applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/LNURLNFCPostContent",
                 "checkout-lightning-post-content"));
             applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("NFC/CheckoutEnd",

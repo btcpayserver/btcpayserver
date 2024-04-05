@@ -250,7 +250,6 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser(true);
             var receiver = s.CreateNewStore();
-            s.EnableCheckout(CheckoutType.V1);
             s.GenerateWallet("BTC", "", true, true, ScriptPubKeyType.Segwit);
             var receiverWalletId = new WalletId(receiver.storeId, "BTC");
 
@@ -305,7 +304,6 @@ namespace BTCPayServer.Tests
             {
                 var cryptoCode = "BTC";
                 var receiver = s.CreateNewStore();
-                s.EnableCheckout(CheckoutType.V1);
                 s.GenerateWallet(cryptoCode, "", true, true, format);
                 var receiverWalletId = new WalletId(receiver.storeId, cryptoCode);
 

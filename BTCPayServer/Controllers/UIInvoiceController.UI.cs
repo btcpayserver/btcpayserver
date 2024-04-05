@@ -686,9 +686,7 @@ namespace BTCPayServer.Controllers
 
             if (view == "modal")
                 model.IsModal = true;
-
-            var viewName = model.CheckoutType == CheckoutType.V2 ? "CheckoutV2" : nameof(Checkout);
-            return View(viewName, model);
+            return View("CheckoutV2", model);
         }
 
         [HttpGet("invoice-noscript")]
@@ -876,9 +874,6 @@ namespace BTCPayServer.Controllers
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
                 StoreBranding = new StoreBrandingViewModel(storeBlob),
-                CustomCSSLink = storeBlob.CustomCSS,
-                CustomLogoLink = storeBlob.CustomLogo,
-                CheckoutType = invoice.CheckoutType ?? storeBlob.CheckoutType,
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CelebratePayment = storeBlob.CelebratePayment,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
@@ -890,7 +885,6 @@ namespace BTCPayServer.Controllers
                 OrderAmount = accounting.ShowMoney(accounting.TotalDue - accounting.PaymentMethodFee),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 CustomerEmail = invoice.Metadata.BuyerEmail,
-                RequiresRefundEmail = invoice.RequiresRefundEmail ?? storeBlob.RequiresRefundEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
                 DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalSeconds,
                 MaxTimeSeconds = (int)(invoice.ExpirationTime - invoice.InvoiceTime).TotalSeconds,
@@ -1198,7 +1192,6 @@ namespace BTCPayServer.Controllers
             {
                 StoreId = model.StoreId,
                 Currency = storeBlob.DefaultCurrency,
-                CheckoutType = storeBlob.CheckoutType,
                 AvailablePaymentMethods = GetPaymentMethodsSelectList(store)
             };
 
@@ -1218,7 +1211,6 @@ namespace BTCPayServer.Controllers
             }
 
             var storeBlob = store.GetStoreBlob();
-            model.CheckoutType = storeBlob.CheckoutType;
             model.AvailablePaymentMethods = GetPaymentMethodsSelectList(store);
 
             JObject? metadataObj = null;
@@ -1265,9 +1257,6 @@ namespace BTCPayServer.Controllers
                     {
                         RedirectURL = store.StoreWebsite,
                         DefaultPaymentMethod = model.DefaultPaymentMethod,
-                        RequiresRefundEmail = model.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                            ? storeBlob.RequiresRefundEmail
-                            : model.RequiresRefundEmail == RequiresRefundEmail.On,
                         PaymentMethods = model.SupportedTransactionCurrencies?.ToArray()
                     },
                 }, store, HttpContext.Request.GetAbsoluteRoot(),

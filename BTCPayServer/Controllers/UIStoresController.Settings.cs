@@ -246,18 +246,14 @@ public partial class UIStoresController
                     };
             }).ToList();
 
-        vm.UseClassicCheckout = storeBlob.CheckoutType == Client.Models.CheckoutType.V1;
         vm.CelebratePayment = storeBlob.CelebratePayment;
         vm.PlaySoundOnPayment = storeBlob.PlaySoundOnPayment;
         vm.OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback;
         vm.ShowPayInWalletButton = storeBlob.ShowPayInWalletButton;
         vm.ShowStoreHeader = storeBlob.ShowStoreHeader;
         vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
-        vm.RequiresRefundEmail = storeBlob.RequiresRefundEmail;
         vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
         vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
-        vm.CustomCSS = storeBlob.CustomCSS;
-        vm.CustomLogo = storeBlob.CustomLogo;
         vm.SoundFileId = storeBlob.SoundFileId;
         vm.HtmlTitle = storeBlob.HtmlTitle;
         vm.SupportUrl = storeBlob.StoreSupportUrl;
@@ -386,23 +382,18 @@ public partial class UIStoresController
 
         blob.ShowPayInWalletButton = model.ShowPayInWalletButton;
         blob.ShowStoreHeader = model.ShowStoreHeader;
-        blob.CheckoutType = model.UseClassicCheckout ? Client.Models.CheckoutType.V1 : Client.Models.CheckoutType.V2;
         blob.CelebratePayment = model.CelebratePayment;
         blob.PlaySoundOnPayment = model.PlaySoundOnPayment;
         blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
         blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
-        blob.RequiresRefundEmail = model.RequiresRefundEmail;
         blob.LazyPaymentMethods = model.LazyPaymentMethods;
         blob.RedirectAutomatically = model.RedirectAutomatically;
         blob.ReceiptOptions = model.ReceiptOptions.ToDTO();
-        blob.CustomLogo = model.CustomLogo;
-        blob.CustomCSS = model.CustomCSS;
         blob.HtmlTitle = string.IsNullOrWhiteSpace(model.HtmlTitle) ? null : model.HtmlTitle;
         blob.StoreSupportUrl = string.IsNullOrWhiteSpace(model.SupportUrl) ? null : model.SupportUrl.IsValidEmail() ? $"mailto:{model.SupportUrl}" : model.SupportUrl;
         blob.DisplayExpirationTimer = TimeSpan.FromMinutes(model.DisplayExpirationTimer);
         blob.AutoDetectLanguage = model.AutoDetectLanguage;
         blob.DefaultLang = model.DefaultLang;
-        blob.NormalizeToRelativeLinks(Request);
         if (CurrentStore.SetStoreBlob(blob))
         {
             needUpdate = true;

@@ -126,7 +126,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AppId = appId,
                 StoreId = store.Id,
                 Description = settings.Description,
-                RequiresRefundEmail = settings.RequiresRefundEmail
             });
         }
 
@@ -150,7 +149,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string choiceKey = null,
                                                         string posData = null,
                                                         string formResponse = null,
-                                                        RequiresRefundEmail requiresRefundEmail = RequiresRefundEmail.InheritFromStore,
                                                         CancellationToken cancellationToken = default)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
@@ -337,9 +335,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
                             : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
                             : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
-                        RequiresRefundEmail = requiresRefundEmail == RequiresRefundEmail.InheritFromStore
-                            ? storeBlob.RequiresRefundEmail
-                            : requiresRefundEmail == RequiresRefundEmail.On,
                         PaymentMethods = paymentMethods?.Where(p => p.Value.Enabled).Select(p => p.Key).ToArray()
                     },
                     AdditionalSearchTerms = new [] { AppService.GetAppSearchTerm(app) }

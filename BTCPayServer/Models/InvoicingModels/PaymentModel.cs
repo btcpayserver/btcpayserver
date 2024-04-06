@@ -18,8 +18,6 @@ namespace BTCPayServer.Models.InvoicingModels
             public bool Displayed { get; set; }
         }
         public StoreBrandingViewModel StoreBranding { get; set; }
-        public string CustomCSSLink { get; set; }
-        public string CustomLogoLink { get; set; }
         public string PaymentSoundUrl { get; set; }
         public string NfcReadSoundUrl { get; set; }
         public string ErrorSoundUrl { get; set; }
@@ -38,7 +36,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string BtcAddress { get; set; }
         public string BtcDue { get; set; }
         public string CustomerEmail { get; set; }
-        public bool RequiresRefundEmail { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public decimal FeeRate { get; set; }
         public int ExpirationSeconds { get; set; }
@@ -73,7 +70,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool Activated { get; set; }
         public string InvoiceCurrency { get; set; }
         public string ReceiptLink { get; set; }
-        public CheckoutType CheckoutType { get; set; }
         public int? RequiredConfirmations { get; set; }
         public long? ReceivedConfirmations { get; set; }
 

@@ -10,7 +10,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public void RegisterViews(PaymentMethodViewContext context)
         {
-            context.RegisterCheckoutUI(new CheckoutUIPaymentMethodSettings()
+            context.RegisterCheckoutUI(new CheckoutUIPaymentMethodSettings
             {
                 ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
                 CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",

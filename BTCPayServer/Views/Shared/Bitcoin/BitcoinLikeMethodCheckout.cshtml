@@ -1,169 +1,54 @@
 @using BTCPayServer.BIP78.Sender
-@using NBitcoin
+@using BTCPayServer.Components.TruncateCenter
+@using BTCPayServer.Abstractions.TagHelpers
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
-@inject BTCPayNetworkProvider BTCPayNetworkProvider
 
-<script type="text/x-template" id="bitcoin-method-checkout-template">
-    <div>
-        <div class="bp-views">
-            <div class="bp-view payment scan" id="scan" v-bind:class="{ 'active': currentTab == 'scan'}">
-                <div class="payment__scan">
-                    <img v-bind:src="srvModel.cryptoImage" class="qr_currency_icon" v-if="scanDisplayQr"/>
-                    <qrcode v-bind:value="scanDisplayQr" :options="{ width: 256, margin: 1, color: {dark:'#000', light:'#f5f5f7'} }" tag="svg" v-if="scanDisplayQr"></qrcode>
-                    <div class="payment__spinner qr_currency_icon" style="padding-right: 20px;">
-                        @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
-                    </div>
-                </div>
-                <div class="payment__details__instruction__open-wallet" v-if="srvModel.invoiceBitcoinUrl && srvModel.showPayInWalletButton">
-                    <a class="payment__details__instruction__open-wallet__btn action-button" target="_blank" v-bind:href="srvModel.invoiceBitcoinUrl">
-                        <span>{{$t("Open in wallet")}}</span>
-                    </a>
-                </div>
+<template id="bitcoin-method-checkout-template">
+    @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-bitcoin-pre-content", model = Model})
+    <div class="payment-box">
+        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Address_@Model.PaymentMethodId [data-clipboard]">
+            <div>
+                <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
             </div>
-            <div class="bp-view payment manual-flow" id="copy" v-bind:class="{ 'active': currentTab == 'copy'}">
-                <div class="manual__step-two__instructions" v-if="!srvModel.isUnsetTopUp">
-                    <span v-html="$t('CompletePay_Body', srvModel)"></span>
-                </div>
-                <div class="copyLabelPopup">
-                    <span>{{$t("Copied")}}</span>
-                </div>
-                <nav class="copyBox">
-                    <div class="copySectionBox bottomBorder" v-if="!srvModel.isUnsetTopUp">
-                        <label>{{$t("Amount")}}</label>
-                        <div class="copyAmountText copy-cursor _copySpan">
-                            <span>{{srvModel.btcDue}}</span> {{ srvModel.cryptoCode }}
-                        </div>
-                    </div>
-                    <div class="separatorGem"></div>
-                    <div class="copySectionBox bottomBorder">
-                        <label>{{$t("Address")}}</label>
-                        <div class="inputWithIcon _copyInput">
-                            <input type="text" class="checkoutTextbox" v-bind:value="srvModel.btcAddress" readonly="readonly"/>
-                            <img v-bind:src="srvModel.cryptoImage"/>
-                        </div>
-                    </div>
-                    <div class="separatorGem" v-if="srvModel.invoiceBitcoinUrl"></div>
-                    <div class="copySectionBox" v-if="srvModel.invoiceBitcoinUrl" :title="$t(hasPayjoin? 'BIP21 payment link' : 'BIP21 payment link with PayJoin support') " >
-                        <label v-if="srvModel.invoiceBitcoinUrl">{{$t(hasPayjoin? 'Payment link' : 'Payment link with PayJoin support')}}</label>
-                        <label v-else>{{$t('Payment link')}}</label>
-                        <div class="inputWithIcon _copyInput">
-                            <input type="text" class="checkoutTextbox" v-bind:value="srvModel.invoiceBitcoinUrl" readonly="readonly"/>
-                            <img v-bind:src="srvModel.cryptoImage" v-if="hasPayjoin"/>
-                            <i class="fa fa-user-secret" v-else/>
-                        </div>
-                    </div>
-                </nav>
+            <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
+        </div>
+        <div v-if="model.btcAddress" class="input-group mt-3">
+            <div class="form-floating" id="Address_@Model.PaymentMethodId">
+                <vc:truncate-center text="model.btcAddress" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <label v-t="{ path: 'address', args: { paymentMethod: model.paymentMethodName }}"></label>
             </div>
-            @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-content", model = Model})
         </div>
-        @if (Model.ShowRecommendedFee) {
-            <div id="recommended-fee" class="recommended-fee" v-bind:class="{ hide: !srvModel.feeRate }">
-                <span v-html="$t('Recommended_Fee', srvModel)"></span>
+        <div v-if="lightning" class="input-group mt-3">
+            <div class="form-floating" id="Lightning_@Model.PaymentMethodId">
+                <vc:truncate-center text="lightning" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <label v-t="'lightning'"></label>
             </div>
-        }
-    </div>          
-</script>
-
-<script type="text/x-template" id="bitcoin-method-checkout-header-template">
-    <div class="payment-tabs">
-        <div class="payment-tabs__tab " id="scan-tab" v-on:click="switchTab('scan')" v-bind:class="{ 'active': currentTab == 'scan'}" >
-            <span>{{$t("Scan")}}</span>
         </div>
-        <div class="payment-tabs__tab" id="copy-tab" v-on:click="switchTab('copy')" v-bind:class="{ 'active': currentTab == 'copy'}" >
-            <span>{{$t("Copy")}}</span>
-        </div>
-        @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-bitcoin-post-tabs", model = Model})
+        <a v-if="model.invoiceBitcoinUrl && model.showPayInWalletButton" class="btn btn-primary rounded-pill w-100 mt-4" id="PayInWallet" target="_blank"
+           :href="model.invoiceBitcoinUrl" :title="$t(hasPayjoin ? 'BIP21 payment link with PayJoin support' : 'BIP21 payment link')" v-t="'pay_in_wallet'"></a>
+        @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-bitcoin-post-content", model = Model})
     </div>
-</script>
+</template>
 
-<script type="text/javascript">
-    Vue.component('BitcoinLikeMethodCheckout',
-        {
-            props: ['srvModel', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
-            template: "#bitcoin-method-checkout-template",
-            components: {
-                qrcode: VueQrcode
-            },
-            data: function() {
-                return {
-                    currentTab: "scan"
-                }
-            },
-            computed: {
-                hasPayjoin: function(){
-                    return this.srvModel.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') === -1;
-                },
-                scanDisplayQr: function() {
-                    return this.srvModel.invoiceBitcoinUrlQR;
-                }
-            },
-            mounted: function() {
-                var self = this;
-                eventBus.$on("tab-switched",
-                    function(tab) {
-                        self.currentTab = tab;
-            });
-        }
-    });
-
-    Vue.component('BitcoinLikeMethodCheckoutHeader', {
-        props: ['srvModel', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
-        template: "#bitcoin-method-checkout-header-template",
-        data: function() {
-            return {
-                currentTab: "scan"
-            };
+<script>
+    Vue.component('BitcoinLikeMethodCheckout', {
+        props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
+        template: "#bitcoin-method-checkout-template",
+        components: {
+            qrcode: VueQrcode
         },
-        methods: {
-            switchTab: function(tab) {
-                this.currentTab = tab;
-                eventBus.$emit("tab-switched", tab);
+        data () {
+            // currentTab is needed for backwards-compatibility with old plugin versions
+            return { currentTab: undefined };
+        },
+        computed: {
+            hasPayjoin () {
+                return this.model.invoiceBitcoinUrl.indexOf('@PayjoinClient.BIP21EndpointKey=') !== -1;
+            },
+            lightning () {
+                const match = this.model.invoiceBitcoinUrl.match(/[&?]lightning=(.*)&?/i);
+                return match ? match[1].toLowerCase() : null;
             }
         }
-    });
-    $(document).ready(function() {
-        // Clipboard Copy
-        var copySpan = new ClipboardJS('._copySpan', {
-                target: function(trigger) {
-                    return copyElement(trigger, 0, 65).firstChild;
-                }
-        });
-        var copyInput = new ClipboardJS('._copyInput', {
-                target: function(trigger) {
-                    return copyElement(trigger, 4, 65).firstChild;
-                }
-        });
-
-        function copyElement(trigger, popupLeftModifier, popupTopModifier) {
-            var elm = $(trigger);
-            var position = elm.offset();
-            position.top -= popupLeftModifier + $(window).scrollTop();
-            position.left += (elm.width() / 2) - popupTopModifier;
-            $(".copyLabelPopup").css(position).addClass("copied");
-            elm.removeClass("copy-cursor").addClass("clipboardCopied");
-            setTimeout(clearSelection, 100);
-            setTimeout(function() {
-                    elm.removeClass("clipboardCopied").addClass("copy-cursor");
-                    $(".copyLabelPopup").removeClass("copied");
-                },
-                1000);
-            return trigger;
-        }
-
-        function clearSelection() {
-            if (window.getSelection) {
-                window.getSelection().removeAllRanges();
-            } else if (document.selection) {
-                document.selection.empty();
-            }
-        }
-        // Disable enter key
-        $(document).keypress(
-            function(event) {
-                if (event.which === '13') {
-                    event.preventDefault();
-                }
-            }
-        );
     });
 </script>

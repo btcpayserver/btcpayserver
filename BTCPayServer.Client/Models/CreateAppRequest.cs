@@ -39,7 +39,6 @@ namespace BTCPayServer.Client.Models
         public string NotificationUrl { get; set; } = null;
         public string RedirectUrl { get; set; } = null;
         public bool? RedirectAutomatically { get; set; } = null;
-        public bool? RequiresRefundEmail { get; set; } = null;
         public bool? Archived { get; set; } = null;
         public string FormId { get; set; } = null;
         public string EmbeddedCSS { get; set; } = null;

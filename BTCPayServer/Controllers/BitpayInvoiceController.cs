@@ -157,7 +157,6 @@ namespace BTCPayServer.Controllers
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
-            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             IPaymentFilter excludeFilter = null;
@@ -185,7 +184,6 @@ namespace BTCPayServer.Controllers
             {
                 entity.DefaultPaymentMethod = defaultPaymentMethod;
             }
-            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
 
             return await _InvoiceController.CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, entityManipulator);
         }

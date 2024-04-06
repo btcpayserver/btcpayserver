@@ -459,8 +459,6 @@ namespace BTCPayServer.Services.Invoices
             return GetPayments(accountedOnly).Where(p => p.Currency == currency).ToList();
         }
 #pragma warning restore CS0618
-        [JsonProperty]
-        public bool? RequiresRefundEmail { get; set; }
 
         [JsonProperty]
         public string StoreSupportUrl { get; set; }
@@ -521,9 +519,6 @@ namespace BTCPayServer.Services.Invoices
         [JsonProperty]
         public InvoiceDataBase.ReceiptOptions ReceiptOptions { get; set; }
 
-        [JsonConverter(typeof(StringEnumConverter))]
-        [JsonProperty]
-        public CheckoutType? CheckoutType { get; set; }
         [JsonProperty]
         public bool LazyPaymentMethods { get; set; }
 
@@ -638,7 +633,6 @@ namespace BTCPayServer.Services.Invoices
             dto.TaxIncluded = Metadata.TaxIncluded ?? 0m;
             dto.Price = Price;
             dto.Currency = Currency;
-            dto.CheckoutType = CheckoutType;
             dto.Buyer = new JObject();
             dto.Buyer.Add(new JProperty("name", Metadata.BuyerName));
             dto.Buyer.Add(new JProperty("address1", Metadata.BuyerAddress1));

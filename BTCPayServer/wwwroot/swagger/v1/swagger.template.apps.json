@@ -572,12 +572,6 @@
                                 "type": "boolean",
                                 "description": "Whether user is redirected to specified redirect URL automatically after the invoice is paid",
                                 "example": true
-                            },
-                            "requiresRefundEmail": {
-                                "type": "boolean",
-                                "description": "Whether refund email is required when paying the invoice. Defaults to `null` if not explicitly set.",
-                                "example": false,
-                                "nullable": true
                             }
                         }
                     }
@@ -904,11 +898,6 @@
                     "redirectAutomatically": {
                         "type": "boolean",
                         "description": "Whether to redirect user to redirect URL automatically once invoice is paid. Defaults to what is set in the store settings",
-                        "nullable": true
-                    },
-                    "requiresRefundEmail": {
-                        "type": "boolean",
-                        "description": "Whether refund email is required when paying the invoice. Defaults to what is set in the store settings",
                         "nullable": true
                     },
                     "formId": {

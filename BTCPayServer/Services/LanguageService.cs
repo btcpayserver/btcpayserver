@@ -36,7 +36,7 @@ namespace BTCPayServer.Services
         {
             _logger = logger;
             var path = environment.WebRootPath;
-            path = Path.Combine(path, "locales");
+            path = Path.Combine(path, "locales", "checkout");
             var files = Directory.GetFiles(path, "*.json");
             var result = new List<Language>();
             foreach (var file in files)

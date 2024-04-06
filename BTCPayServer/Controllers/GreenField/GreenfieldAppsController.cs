@@ -142,19 +142,6 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToPointOfSaleModel(app));
         }
 
-        private RequiresRefundEmail? BoolToRequiresRefundEmail(bool? requiresRefundEmail)
-        {
-            switch (requiresRefundEmail)
-            {
-                case true:
-                    return RequiresRefundEmail.On;
-                case false:
-                    return RequiresRefundEmail.Off;
-                default:
-                    return null;
-            }
-        }
-
         [HttpGet("~/api/v1/apps")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetAllApps()
@@ -291,7 +278,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = request.Description,
                 EmbeddedCSS = request.EmbeddedCSS,
                 RedirectAutomatically = request.RedirectAutomatically,
-                RequiresRefundEmail = BoolToRequiresRefundEmail(request.RequiresRefundEmail) ?? RequiresRefundEmail.InheritFromStore,
                 FormId = request.FormId
             };
         }
@@ -361,7 +347,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = settings.Description,
                 EmbeddedCSS = settings.EmbeddedCSS,
                 RedirectAutomatically = settings.RedirectAutomatically ?? false,
-                RequiresRefundEmail = settings.RequiresRefundEmail == RequiresRefundEmail.InheritFromStore ? null : settings.RequiresRefundEmail == RequiresRefundEmail.On,
             };
         }
 

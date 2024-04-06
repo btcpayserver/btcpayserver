@@ -671,8 +671,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     SpeedPolicy = entity.SpeedPolicy,
                     DefaultLanguage = entity.DefaultLanguage,
                     RedirectAutomatically = entity.RedirectAutomatically,
-                    RequiresRefundEmail = entity.RequiresRefundEmail,
-                    CheckoutType = entity.CheckoutType,
                     RedirectURL = entity.RedirectURLTemplate
                 },
                 Receipt = entity.ReceiptOptions

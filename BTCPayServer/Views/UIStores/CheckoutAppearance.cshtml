@@ -22,7 +22,6 @@
                 : ''
         });
 		delegate('click', '#Presets_InStore', e => {
-			$("#UseClassicCheckout").prop('checked', false);
 			$("#CheckoutV2Settings").addClass('show');
 			$("#ClassicCheckoutSettings").removeClass('show');
 			$("#CheckNFC").removeClass('d-none');
@@ -31,7 +30,6 @@
 			$("#ShowStoreHeader").prop('checked', false);
 		});
 		delegate('click', '#Presets_Online', e => {
-			$("#UseClassicCheckout").prop('checked', false);
 			$("#CheckoutV2Settings").addClass('show');
 			$("#ClassicCheckoutSettings").removeClass('show');
 			$("#CheckNFC").addClass('d-none');
@@ -118,15 +116,10 @@
 					</div>
 				</div>
 			</h3>
-            <div class="d-flex align-items-center mb-3">
-				<input asp-for="UseClassicCheckout" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target=".checkout-settings" aria-expanded="@(Model.UseClassicCheckout)" aria-controls="CheckoutV2Settings" />
-				<label asp-for="UseClassicCheckout" class="form-check-label"></label>
-                <span asp-validation-for="UseClassicCheckout" class="text-danger"></span>
-            </div>
             <div id="CheckNFC" class="form-group d-none">
                 <button type="button" class="btn btn-outline-secondary">Check if NFC is supported and enabled on this device</button>
             </div>
-			<div class="checkout-settings collapse @(Model.UseClassicCheckout ? "" : "show")" id="CheckoutV2Settings">
+			<div class="checkout-settings collapse show" id="CheckoutV2Settings">
                 <div class="form-group">
                     <label asp-for="DisplayExpirationTimer" class="form-label"></label>
                     <div class="input-group">
@@ -163,7 +156,7 @@
                                     <input asp-for="SoundFile" type="file" class="form-control flex-grow">
                                     @{
                                         var soundUrl = string.IsNullOrEmpty(Model.SoundFileId)
-                                            ? string.Concat(Context.Request.GetAbsoluteRootUri().ToString(), "checkout-v2/payment.mp3")
+                                            ? string.Concat(Context.Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
                                             : await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId);
                                     }
                                     <audio controls src="@soundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
@@ -197,35 +190,6 @@
             <div class="d-flex my-3">
                 <input asp-for="LightningAmountInSatoshi" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
-            </div>
-            <div class="checkout-settings collapse @(Model.UseClassicCheckout ? "show" : "")" id="ClassicCheckoutSettings">
-                <div class="d-flex mb-3">
-                    <input asp-for="RequiresRefundEmail" type="checkbox" class="btcpay-toggle me-3" />
-                    <label asp-for="RequiresRefundEmail" class="form-check-label"></label>
-                </div>
-                <div class="form-group">
-                    <label asp-for="CustomLogo" class="form-label"></label>
-                    <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
-                        <vc:icon symbol="info" />
-                    </a>
-                    <input asp-for="CustomLogo" class="form-control" />
-                    <span asp-validation-for="CustomLogo" class="text-danger"></span>
-                </div>
-                <div class="form-group mb-0">
-                    <label asp-for="CustomCSS" class="form-label"></label>
-                    <a href="https://docs.btcpayserver.org/Development/Theme/#checkout-page-themes" target="_blank" rel="noreferrer noopener">
-                        <vc:icon symbol="info" />
-                    </a>
-                    <input asp-for="CustomCSS" class="form-control" />
-                    <span asp-validation-for="CustomCSS" class="text-danger"></span>
-                    <div class="form-text">
-                        Bundled Themes:
-                        <a href="#" class="setTheme" data-theme="default">Default</a> |
-                        <a href="#" class="setTheme" data-theme="dark">Dark</a> |
-                        <a href="#" class="setTheme" data-theme="legacy">Legacy</a>
-                    </div>
-                    @await Component.InvokeAsync("UiExtensionPoint", new {location = "invoice-checkout-theme-options", model = Model})
-                </div>
             </div>
             <div class="form-group d-flex align-items-center">
                 <input asp-for="AutoDetectLanguage" type="checkbox" class="btcpay-toggle me-3" />

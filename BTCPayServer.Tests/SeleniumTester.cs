@@ -109,7 +109,7 @@ namespace BTCPayServer.Tests
 
         public void MineBlockOnInvoiceCheckout()
         {
-            retry:
+retry:
             try
             {
                 Driver.FindElement(By.CssSelector("#mine-block button")).Click();
@@ -205,23 +205,6 @@ namespace BTCPayServer.Tests
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
-        }
-        public void EnableCheckout(CheckoutType checkoutType, bool bip21 = false)
-        {
-            GoToStore(StoreNavPages.CheckoutAppearance);
-            if (checkoutType == CheckoutType.V2)
-            {
-                Driver.SetCheckbox(By.Id("UseClassicCheckout"), false);
-                Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
-                Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
-            }
-            else
-            {
-                Driver.SetCheckbox(By.Id("UseClassicCheckout"), true);
-            }
-            Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
-            Assert.Contains("Store successfully updated", FindAlertMessage().Text);
-            Assert.True(Driver.FindElement(By.Id("UseClassicCheckout")).Selected);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
@@ -407,7 +390,8 @@ namespace BTCPayServer.Tests
 
         public void Logout()
         {
-            if (!Driver.PageSource.Contains("id=\"Nav-Logout\"")) GoToUrl("/account");
+            if (!Driver.PageSource.Contains("id=\"Nav-Logout\""))
+                GoToUrl("/account");
             Driver.FindElement(By.Id("Nav-Account")).Click();
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
@@ -484,6 +468,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
+            Driver.WaitUntilAvailable(By.Id("Checkout"));
         }
 
         public void GoToInvoice(string id)
@@ -523,11 +508,10 @@ namespace BTCPayServer.Tests
             string currency = "USD",
             string refundEmail = "",
             string defaultPaymentMethod = null,
-            bool? requiresRefundEmail = null,
             StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
         )
         {
-            return CreateInvoice(null, amount, currency, refundEmail, defaultPaymentMethod, requiresRefundEmail, expectedSeverity);
+            return CreateInvoice(null, amount, currency, refundEmail, defaultPaymentMethod, expectedSeverity);
         }
 
         public string CreateInvoice(
@@ -536,7 +520,6 @@ namespace BTCPayServer.Tests
             string currency = "USD",
             string refundEmail = "",
             string defaultPaymentMethod = null,
-            bool? requiresRefundEmail = null,
             StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
         )
         {
@@ -551,8 +534,6 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
             if (defaultPaymentMethod is not null)
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
-            if (requiresRefundEmail is bool)
-                new SelectElement(Driver.FindElement(By.Name("RequiresRefundEmail"))).SelectByValue(requiresRefundEmail == true ? "1" : "2");
             Driver.FindElement(By.Id("Create")).Click();
 
             var statusElement = FindAlertMessage(expectedSeverity);
@@ -666,7 +647,8 @@ retry:
 
         public (string appName, string appId) CreateApp(string type, string name = null)
         {
-            if (string.IsNullOrEmpty(name)) name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
+            if (string.IsNullOrEmpty(name))
+                name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
             Driver.FindElement(By.Id($"StoreNav-Create{type}")).Click();
             Driver.FindElement(By.Name("AppName")).SendKeys(name);
             Driver.FindElement(By.Id("Create")).Click();

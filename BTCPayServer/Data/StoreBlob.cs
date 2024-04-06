@@ -33,17 +33,11 @@ namespace BTCPayServer.Data
             RecommendedFeeBlockTarget = 1;
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             ReceiptOptions = InvoiceDataBase.ReceiptOptions.CreateDefault();
-            CheckoutType = CheckoutType.V2;
         }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
-        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        [DefaultValue(CheckoutType.V2)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public CheckoutType CheckoutType { get; set; }
-        public bool RequiresRefundEmail { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
@@ -112,8 +106,6 @@ namespace BTCPayServer.Data
         public string PreferredExchange { get; set; }
 
         public List<PaymentMethodCriteria> PaymentMethodCriteria { get; set; }
-        public string CustomCSS { get; set; }
-        public string CustomLogo { get; set; }
         public string HtmlTitle { get; set; }
 
         public bool AutoDetectLanguage { get; set; }
@@ -273,30 +265,6 @@ namespace BTCPayServer.Data
                 methods.Remove(paymentMethodId.ToString());
             ExcludedPaymentMethods = methods.ToArray();
 #pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        // Replace absolute URL with relative to avoid this issue: https://github.com/btcpayserver/btcpayserver/discussions/4195
-        public void NormalizeToRelativeLinks(HttpRequest request)
-        {
-            var schemeAndHost = $"{request.Scheme}://{request.Host.ToString()}/";
-            this.CustomLogo = EnsureRelativeLinks(this.CustomLogo, schemeAndHost);
-            this.CustomCSS = EnsureRelativeLinks(this.CustomCSS, schemeAndHost);
-        }
-
-        /// <summary>
-        /// Make a link relative if possible
-        /// </summary>
-        /// <param name="value">Example: https://mystore.com/toto.png</param>
-        /// <param name="schemeAndHost">Example: https://mystore.com/</param>
-        /// <returns>/toto.png</returns>
-        private string EnsureRelativeLinks(string value, string schemeAndHost)
-        {
-            if (value is null)
-                return null;
-            value = value.Trim();
-            if (value.StartsWith(schemeAndHost, StringComparison.OrdinalIgnoreCase))
-                return value.Substring(schemeAndHost.Length - 1);
-            return value;
         }
     }
     public class PaymentMethodCriteria

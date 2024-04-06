@@ -1,21 +1,8 @@
 <template id="lnurl-withdraw-template">
     <div v-if="display" class="mt-4" id="NFC">
         <div v-if="nfcErrorMessage" class="alert alert-danger" v-text="nfcErrorMessage"></div>
-        <template v-if="isV2">
-            <button class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
-                    :disabled="nfcScanning || submitting" v-on:click="handleClick">{{btnText}}</button>
-        </template>
-        <template v-else>
-            <bp-loading-button>
-                <button class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important" :disabled="nfcScanning || submitting" v-on:click="handleClick" id="PayByNFC"
-                        :class="{ 'action-button': nfcSupported, 'btn btn-text w-100': !nfcSupported  }">
-                    <span class="button-text">{{btnText}}</span>
-                    <div class="loader-wrapper">
-                        @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
-                    </div>
-                </button>
-            </bp-loading-button>
-        </template>
+        <button class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
+                :disabled="nfcScanning || submitting" v-on:click="handleClick">{{btnText}}</button>
     </div>
 </template>
 <script>
@@ -23,7 +10,6 @@ Vue.component("lnurl-withdraw-checkout", {
     template: "#lnurl-withdraw-template",
     props: {
         model: Object,
-        isV2: Boolean,
         nfcSupported: Boolean,
         nfcScanning: Boolean,
         nfcErrorMessage: String
@@ -54,14 +40,14 @@ Vue.component("lnurl-withdraw-checkout", {
         btnText () {
             if (this.nfcSupported) {
                 if (this.submitting) {
-                    return this.isV2 ? this.$t('submitting_nfc') : 'Submitting NFC …'
+                    return this.$t('submitting_nfc')
                 } else if (this.nfcScanning) {
-                    return this.isV2 ? this.$t('scanning_nfc') : 'Scanning NFC …'
+                    return this.$t('scanning_nfc')
                 } else {
-                    return this.isV2 ? this.$t('pay_by_nfc') : 'Pay by NFC'
+                    return this.$t('pay_by_nfc')
                 }
             } else {
-                return this.isV2 ? this.$t('pay_by_lnurl') : 'Pay by LNURL-Withdraw'
+                return this.$t('pay_by_lnurl')
             }
         }
     },

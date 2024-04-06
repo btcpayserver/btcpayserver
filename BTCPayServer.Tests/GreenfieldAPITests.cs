@@ -1366,7 +1366,6 @@ namespace BTCPayServer.Tests
             //create store
             var newStore = await client.CreateStore(new CreateStoreRequest { Name = "A" });
             Assert.Equal("A", newStore.Name);
-            Assert.Equal(CheckoutType.V2, newStore.CheckoutType);
 
             //update store
             Assert.Empty(newStore.PaymentMethodCriteria);
@@ -1374,7 +1373,6 @@ namespace BTCPayServer.Tests
             var updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest
             {
                 Name = "B",
-                CheckoutType = CheckoutType.V1,
                 PaymentMethodCriteria = new List<PaymentMethodCriteriaData>
             {
                 new()
@@ -1387,7 +1385,6 @@ namespace BTCPayServer.Tests
              }
             });
             Assert.Equal("B", updatedStore.Name);
-            Assert.Equal(CheckoutType.V1, updatedStore.CheckoutType);
             var s = (await client.GetStore(newStore.Id));
             Assert.Equal("B", s.Name);
             var pmc = Assert.Single(s.PaymentMethodCriteria);
@@ -2197,13 +2194,11 @@ namespace BTCPayServer.Tests
                     Metadata = JObject.Parse($"{{\"itemCode\": \"testitem\", \"orderId\": \"{origOrderId}\"}}"),
                     Checkout = new CreateInvoiceRequest.CheckoutOptions()
                     {
-                        RedirectAutomatically = true,
-                        RequiresRefundEmail = true,
+                        RedirectAutomatically = true
                     },
                     AdditionalSearchTerms = new string[] { "Banana" }
                 });
             Assert.True(newInvoice.Checkout.RedirectAutomatically);
-            Assert.True(newInvoice.Checkout.RequiresRefundEmail);
             Assert.Equal(user.StoreId, newInvoice.StoreId);
             //list 
             var invoices = await viewOnly.GetInvoices(user.StoreId);

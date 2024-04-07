@@ -50,7 +50,7 @@ namespace BTCPayServer.Data
         public DbSet<PairingCodeData> PairingCodes { get; set; }
         public DbSet<PayjoinLock> PayjoinLocks { get; set; }
         public DbSet<PaymentRequestData> PaymentRequests { get; set; }
-        public DbSet<PaymentData> Payments { get; set; }
+        public DbSet<PaymentDetails> Payments { get; set; }
         public DbSet<PayoutData> Payouts { get; set; }
         public DbSet<PendingInvoiceData> PendingInvoices { get; set; }
         public DbSet<PlannedTransaction> PlannedTransactions { get; set; }
@@ -104,7 +104,7 @@ namespace BTCPayServer.Data
             PairingCodeData.OnModelCreating(builder);
             //PayjoinLock.OnModelCreating(builder);
             PaymentRequestData.OnModelCreating(builder, Database);
-            PaymentData.OnModelCreating(builder, Database);
+            PaymentDetails.OnModelCreating(builder, Database);
             PayoutData.OnModelCreating(builder, Database);
             PendingInvoiceData.OnModelCreating(builder);
             //PlannedTransaction.OnModelCreating(builder);

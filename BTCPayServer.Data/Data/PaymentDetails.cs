@@ -10,7 +10,7 @@ namespace BTCPayServer.Data
         Settled,
         Unaccounted
     }
-    public partial class PaymentData : IHasBlobUntyped
+    public partial class PaymentDetails : IHasBlobUntyped
     {
         /// <summary>
         /// The date of creation of the payment
@@ -33,20 +33,20 @@ namespace BTCPayServer.Data
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
-            builder.Entity<PaymentData>()
+            builder.Entity<PaymentDetails>()
                    .HasOne(o => o.InvoiceData)
                    .WithMany(i => i.Payments).OnDelete(DeleteBehavior.Cascade);
-            builder.Entity<PaymentData>()
+            builder.Entity<PaymentDetails>()
                    .HasIndex(o => o.InvoiceDataId);
-            builder.Entity<PaymentData>()
+            builder.Entity<PaymentDetails>()
                    .Property(o => o.Status)
                    .HasConversion<string>();
             if (databaseFacade.IsNpgsql())
             {
-                builder.Entity<PaymentData>()
+                builder.Entity<PaymentDetails>()
                     .Property(o => o.Blob2)
                     .HasColumnType("JSONB");
-                builder.Entity<PaymentData>()
+                builder.Entity<PaymentDetails>()
                         .Property(o => o.Amount)
                         .HasColumnType("NUMERIC");
             }

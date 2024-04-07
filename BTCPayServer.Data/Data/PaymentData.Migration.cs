@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
-    public partial class PaymentData
+    public partial class PaymentDetails
     {
         public void Migrate()
         {

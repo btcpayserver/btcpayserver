@@ -32,9 +32,9 @@ namespace BTCPayServer.Data
                 {
                     invoiceData.Migrate();
                 }
-                else if (entity is PaymentData paymentData)
+                else if (entity is PaymentDetails paymentDetail)
                 {
-                    paymentData.Migrate();
+                    paymentDetail.Migrate();
                 }
                 return entity;
             }

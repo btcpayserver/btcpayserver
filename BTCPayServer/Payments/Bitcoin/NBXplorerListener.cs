@@ -173,7 +173,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                             var handler = _handlers[pmi];
                                             var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath);
 
-                                            var paymentData = new Data.PaymentData()
+                                            var paymentData = new Data.PaymentDetails()
                                             {
                                                 Id = output.outPoint.ToString(),
                                                 Created = DateTimeOffset.UtcNow,
@@ -425,7 +425,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                     var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
 
-                    var paymentData = new Data.PaymentData()
+                    var paymentData = new Data.PaymentDetails()
                     {
                         Id = coin.OutPoint.ToString(),
                         Created = DateTimeOffset.UtcNow,

@@ -36,24 +36,24 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         /// <param name="invoiceId"></param>
         /// <param name="date"></param>
-        /// <param name="paymentData"></param>
+        /// <param name="paymentDetails"></param>
         /// <param name="cryptoCode"></param>
         /// <param name="accounted"></param>
         /// <returns>The PaymentEntity or null if already added</returns>
-        public async Task<PaymentEntity> AddPayment(Data.PaymentData paymentData, HashSet<string> searchTerms = null)
+        public async Task<PaymentEntity> AddPayment(Data.PaymentDetails paymentDetails, HashSet<string> searchTerms = null)
         {
             InvoiceEntity invoiceEntity;
             await using (var context = _applicationDbContextFactory.CreateContext())
             {
-                var invoice = await context.Invoices.FindAsync(paymentData.InvoiceDataId);
+                var invoice = await context.Invoices.FindAsync(paymentDetails.InvoiceDataId);
                 if (invoice == null)
                     return null;
                 invoiceEntity = invoice.GetBlob();
-                var pmi = PaymentMethodId.Parse(paymentData.Type);
+                var pmi = PaymentMethodId.Parse(paymentDetails.Type);
                 PaymentPrompt paymentMethod = invoiceEntity.GetPaymentPrompt(pmi);
                 if (paymentMethod is null || !_handlers.TryGetValue(pmi, out var handler))
                     return null;
-                await context.Payments.AddAsync(paymentData);
+                await context.Payments.AddAsync(paymentDetails);
 
                 if (searchTerms is not null)
                     InvoiceRepository.AddToTextSearch(context, invoice, searchTerms.ToArray());
@@ -69,9 +69,9 @@ namespace BTCPayServer.Services.Invoices
                     return null;
                 }
             }
-            invoiceEntity = await _invoiceRepository.GetInvoice(paymentData.InvoiceDataId);
-            var entity = invoiceEntity.GetPayments(false).Single(p => p.Id == paymentData.Id);
-            if (paymentData.Status is PaymentStatus.Settled)
+            invoiceEntity = await _invoiceRepository.GetInvoice(paymentDetails.InvoiceDataId);
+            var entity = invoiceEntity.GetPayments(false).Single(p => p.Id == paymentDetails.Id);
+            if (paymentDetails.Status is PaymentStatus.Settled)
             {
                 _eventAggregator.Publish(new InvoiceEvent(invoiceEntity, InvoiceEvent.PaymentSettled) { Payment = entity });
             }

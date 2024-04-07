@@ -115,7 +115,7 @@ retry:
                     {
                         entry.State = EntityState.Modified;
                     }
-                    foreach (var entry in ctx.ChangeTracker.Entries<PaymentData>())
+                    foreach (var entry in ctx.ChangeTracker.Entries<PaymentDetails>())
                     {
                         entry.State = EntityState.Modified;
                     }

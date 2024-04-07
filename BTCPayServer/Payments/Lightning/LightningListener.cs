@@ -589,7 +589,7 @@ retry:
 
             var handler = _handlers[paymentMethodId];
             var paymentHash = BOLT11PaymentRequest.Parse(notification.BOLT11, _network.NBitcoinNetwork).PaymentHash;
-            var paymentData = new PaymentData()
+            var paymentDetails = new PaymentDetails()
             {
                 Id = paymentHash?.ToString() ?? notification.BOLT11,
                 Created = notification.PaidAt.Value,
@@ -603,7 +603,7 @@ retry:
                 Preimage = string.IsNullOrEmpty(notification.Preimage) ? null : uint256.Parse(notification.Preimage),
             });
 
-            var payment = await _paymentService.AddPayment(paymentData, [notification.BOLT11]);
+            var payment = await _paymentService.AddPayment(paymentDetails, [notification.BOLT11]);
             if (payment != null)
             {
                 if (notification.Preimage is not null)

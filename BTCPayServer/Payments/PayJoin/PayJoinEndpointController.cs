@@ -511,7 +511,7 @@ namespace BTCPayServer.Payments.PayJoin
 
             if (invoice is not null)
             {
-                var originalPaymentData = new Data.PaymentData()
+                var originalPaymentDetails = new Data.PaymentDetails()
                 {
                     Id = outpoint.ToString(),
                     Created = DateTimeOffset.UtcNow,
@@ -519,7 +519,7 @@ namespace BTCPayServer.Payments.PayJoin
                     Amount = ((Money)originalPaymentOutput.Value).ToDecimal(MoneyUnit.BTC),
                     Currency = network.CryptoCode
                 }.Set(invoice, handler, details);
-                var payment = await _paymentService.AddPayment(originalPaymentData, [outpoint.Hash.ToString()]);
+                var payment = await _paymentService.AddPayment(originalPaymentDetails, [outpoint.Hash.ToString()]);
                 if (payment is null)
                 {
                     return UnprocessableEntity(CreatePayjoinError("already-paid",

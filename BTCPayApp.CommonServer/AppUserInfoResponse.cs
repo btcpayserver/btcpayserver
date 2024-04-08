@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 
-namespace BTCPayServer.App;
 
 public class AppUserInfoResponse
 {

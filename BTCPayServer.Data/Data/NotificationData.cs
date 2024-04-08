@@ -30,12 +30,9 @@ namespace BTCPayServer.Data
                 .HasOne(o => o.ApplicationUser)
                 .WithMany(n => n.Notifications)
                 .HasForeignKey(k => k.ApplicationUserId).OnDelete(DeleteBehavior.Cascade);
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<NotificationData>()
-                    .Property(o => o.Blob2)
-                    .HasColumnType("JSONB");
-            }
+            builder.Entity<NotificationData>()
+                .Property(o => o.Blob2)
+                .HasColumnType("JSONB");
         }
     }
 }

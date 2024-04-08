@@ -52,26 +52,13 @@ namespace BTCPayServer.Data
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<StoreData>()
-                    .Property(o => o.StoreBlob)
-                    .HasColumnType("JSONB");
+            builder.Entity<StoreData>()
+                .Property(o => o.StoreBlob)
+                .HasColumnType("JSONB");
 
-                builder.Entity<StoreData>()
-                    .Property(o => o.DerivationStrategies)
-                    .HasColumnType("JSONB");
-            }
-            else if (databaseFacade.IsMySql())
-            {
-                builder.Entity<StoreData>()
-                    .Property(o => o.StoreBlob)
-                    .HasConversion(new ValueConverter<string, byte[]>
-                    (
-                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
-                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
-                    ));
-            }
+            builder.Entity<StoreData>()
+                .Property(o => o.DerivationStrategies)
+                .HasColumnType("JSONB");
         }
     }
 }

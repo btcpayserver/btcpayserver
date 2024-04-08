@@ -38,22 +38,9 @@ namespace BTCPayServer.Data
             .HasOne(o => o.StoreData)
                 .WithMany(o => o.PullPayments).OnDelete(DeleteBehavior.Cascade);
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<PullPaymentData>()
-                    .Property(o => o.Blob)
-                    .HasColumnType("JSONB");
-            }
-            else if (databaseFacade.IsMySql())
-            {
-                builder.Entity<PullPaymentData>()
-                    .Property(o => o.Blob)
-                    .HasConversion(new ValueConverter<string, byte[]>
-                    (
-                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
-                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
-                    ));
-            }
+            builder.Entity<PullPaymentData>()
+                .Property(o => o.Blob)
+                .HasColumnType("JSONB");
         }
 
         public (DateTimeOffset Start, DateTimeOffset? End)? GetPeriod(DateTimeOffset now)

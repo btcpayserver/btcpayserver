@@ -35,12 +35,10 @@ namespace BTCPayServer.Data
             builder.Entity<ApplicationUser>()
                 .HasMany<IdentityUserRole<string>>(user => user.UserRoles)
                 .WithOne().HasForeignKey(role => role.UserId);
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<ApplicationUser>()
-                    .Property(o => o.Blob2)
-                    .HasColumnType("JSONB");
-            }
+
+            builder.Entity<ApplicationUser>()
+                .Property(o => o.Blob2)
+                .HasColumnType("JSONB");
         }
     }
 

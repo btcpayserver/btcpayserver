@@ -26,13 +26,12 @@ namespace BTCPayServer.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.CreateTable(
+                        migrationBuilder.CreateTable(
                 name: "OpenIddictApplications",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: maxLength),
-                    ApplicationUserId = table.Column<string>(type: "TEXT", nullable: true, maxLength: maxLength),
+                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: null),
+                    ApplicationUserId = table.Column<string>(type: "TEXT", nullable: true, maxLength: null),
                     ClientId = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
                     ClientSecret = table.Column<string>(type: "TEXT", nullable: true),
                     ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
@@ -60,7 +59,7 @@ namespace BTCPayServer.Migrations
                 name: "OpenIddictScopes",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: null),
                     ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     Description = table.Column<string>(type: "TEXT", nullable: true),
                     DisplayName = table.Column<string>(type: "TEXT", nullable: true),
@@ -77,8 +76,8 @@ namespace BTCPayServer.Migrations
                 name: "OpenIddictAuthorizations",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: maxLength),
-                    ApplicationId = table.Column<string>(type: "TEXT", nullable: true, maxLength: maxLength),
+                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: null),
+                    ApplicationId = table.Column<string>(type: "TEXT", nullable: true, maxLength: null),
                     ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     Properties = table.Column<string>(type: "TEXT", nullable: true),
                     Scopes = table.Column<string>(type: "TEXT", nullable: true),
@@ -101,9 +100,9 @@ namespace BTCPayServer.Migrations
                 name: "OpenIddictTokens",
                 columns: table => new
                 {
-                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: maxLength),
-                    ApplicationId = table.Column<string>(type: "TEXT", nullable: true, maxLength: maxLength),
-                    AuthorizationId = table.Column<string>(type: "TEXT", nullable: true, maxLength: maxLength),
+                    Id = table.Column<string>(type: "TEXT", nullable: false, maxLength: null),
+                    ApplicationId = table.Column<string>(type: "TEXT", nullable: true, maxLength: null),
+                    AuthorizationId = table.Column<string>(type: "TEXT", nullable: true, maxLength: null),
                     ConcurrencyToken = table.Column<string>(type: "TEXT", maxLength: 50, nullable: true),
                     CreationDate = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),
                     ExpirationDate = table.Column<DateTimeOffset>(type: "TEXT", nullable: true),

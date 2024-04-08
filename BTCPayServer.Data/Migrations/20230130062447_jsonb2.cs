@@ -16,10 +16,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql("ALTER TABLE \"Stores\" ALTER COLUMN \"DerivationStrategies\" TYPE JSONB USING \"DerivationStrategies\"::JSONB");
-            }
+            migrationBuilder.Sql("ALTER TABLE \"Stores\" ALTER COLUMN \"DerivationStrategies\" TYPE JSONB USING \"DerivationStrategies\"::JSONB");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

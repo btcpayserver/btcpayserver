@@ -335,8 +335,6 @@ namespace BTCPayServer.Services.Stores
         public async Task CleanUnreachableStores()
         {
             await using var ctx = _ContextFactory.CreateContext();
-            if (!ctx.Database.SupportDropForeignKey())
-                return;
             var events = new List<Events.StoreRemovedEvent>();
             foreach (var store in await ctx.Stores.Include(data => data.UserStores)
                          .ThenInclude(store => store.StoreRole).Where(s =>
@@ -368,17 +366,14 @@ namespace BTCPayServer.Services.Stores
         private async Task DeleteStoreIfOrphan(string storeId)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            if (ctx.Database.SupportDropForeignKey())
+            if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)).AnyAsync())
             {
-                if (!await ctx.UserStore.Where(u => u.StoreDataId == storeId && u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)).AnyAsync())
+                var store = await ctx.Stores.FindAsync(storeId);
+                if (store != null)
                 {
-                    var store = await ctx.Stores.FindAsync(storeId);
-                    if (store != null)
-                    {
-                        ctx.Stores.Remove(store);
-                        await ctx.SaveChangesAsync();
-                        _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
-                    }
+                    ctx.Stores.Remove(store);
+                    await ctx.SaveChangesAsync();
+                    _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
                 }
             }
         }
@@ -559,8 +554,6 @@ namespace BTCPayServer.Services.Stores
         {
             int retry = 0;
             using var ctx = _ContextFactory.CreateContext();
-            if (!ctx.Database.SupportDropForeignKey())
-                return false;
             var store = await ctx.Stores.FindAsync(storeId);
             if (store == null)
                 return false;
@@ -640,12 +633,6 @@ retry:
         private static bool IsDeadlock(DbUpdateException ex)
         {
             return ex.InnerException is Npgsql.PostgresException postgres && postgres.SqlState == "40P01";
-        }
-
-        public bool CanDeleteStores()
-        {
-            using var ctx = _ContextFactory.CreateContext();
-            return ctx.Database.SupportDropForeignKey();
         }
     }
 

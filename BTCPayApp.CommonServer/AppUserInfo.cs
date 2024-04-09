@@ -1,7 +1,8 @@
 using System.Collections.Generic;
 
+namespace BTCPayApp.CommonServer;
 
-public class AppUserInfoResponse
+public class AppUserInfo
 {
     public string UserId { get; set; }
     public string Email { get; set; }

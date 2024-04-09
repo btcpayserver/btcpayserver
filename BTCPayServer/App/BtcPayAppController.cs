@@ -123,13 +123,13 @@ public class BtcPayAppController(
     }
 
     [HttpGet("info")]
-    public async Task<Results<Ok<AppUserInfoResponse>, ValidationProblem, NotFound>> Info()
+    public async Task<Results<Ok<AppUserInfo>, ValidationProblem, NotFound>> Info()
     {
         var user = await userManager.GetUserAsync(User);
         if (user == null) return TypedResults.NotFound();
 
         var userStores = await storeRepository.GetStoresByUserId(user.Id);
-        return TypedResults.Ok(new AppUserInfoResponse
+        return TypedResults.Ok(new AppUserInfo
         {
             UserId = user.Id,
             Email = await userManager.GetEmailAsync(user),

@@ -1227,7 +1227,6 @@ namespace BTCPayServer.Controllers
             {
                 StoreId = store.Id,
                 Name = store.StoreName,
-                PreferredExchange = blob.PreferredExchange,
                 DefaultCurrency = blob.DefaultCurrency,
                 Exchanges = GetExchangesSelectList(null)
             };

@@ -1,21 +1,24 @@
 @model BTCPayServer.Models.StoreViewModels.EditStoreViewModel
+@{
+    ViewData.SetActivePage(ServerNavPages.General, "General");
+}
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script>
-	  const exchanges = @Safe.Json(StoreBlob.RecommendedExchanges);
-	  const recommended = document.querySelector("#PreferredExchange option[value='']")
-	  const updateRecommended = currency => {
-		  const source = exchanges[currency] || 'coingecko'
-		  const name = source.charAt(0).toUpperCase() + source.slice(1)
-		  recommended.innerText = `${name} (Recommended)`
-	  }
-	  updateRecommended(@Safe.Json(Model.DefaultCurrency))
-	  delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))
-	</script>
+        const exchanges = @Safe.Json(StoreBlob.RecommendedExchanges);
+        const recommended = document.querySelector("#PreferredExchange option[value='']")
+        const updateRecommended = currency => {
+            const source = exchanges[currency] || 'coingecko'
+            const name = source.charAt(0).toUpperCase() + source.slice(1)
+            recommended.innerText = `${name} (Recommended)`
+        }
+        updateRecommended(@Safe.Json(Model.DefaultCurrency))
+        delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))
+    </script>
 }
 
-<h4 class="mt-1 mb-4">@ViewData["Title"]</h4>
+<h4 class="mt-1 mb-4">Update Store Currency</h4>
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <form asp-action="EditStore">

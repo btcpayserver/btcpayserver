@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Common;
@@ -43,9 +44,77 @@ public class BtcPayAppController(
     UserManager<ApplicationUser> userManager,
     TimeProvider timeProvider,
     PaymentMethodHandlerDictionary handlers,
+    IFileService fileService,
+    ISettingsRepository settingsRepository,
     IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
     : Controller
 {
+    [AllowAnonymous]
+    [HttpGet("instance")]
+    public async Task<Results<Ok<AppInstanceInfo>, NotFound>> Instance()
+    {
+        var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+        var policiesSettings = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+        var themeSettings = await settingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+
+        return TypedResults.Ok(new AppInstanceInfo
+        {
+            BaseUrl = Request.GetAbsoluteRoot(),
+            ServerName = serverSettings.ServerName,
+            ContactUrl = serverSettings.ContactUrl,
+            RegistrationEnabled = policiesSettings.EnableRegistration,
+            CustomThemeExtension = themeSettings.CustomTheme ? themeSettings.CustomThemeExtension.ToString() : null,
+            CustomThemeCssUrl = themeSettings.CustomTheme && !string.IsNullOrEmpty(themeSettings.CustomThemeFileId)
+                ? await fileService.GetFileUrl(Request.GetAbsoluteRootUri(), themeSettings.CustomThemeFileId)
+                : null,
+            LogoUrl = !string.IsNullOrEmpty(themeSettings.LogoFileId)
+                ? await fileService.GetFileUrl(Request.GetAbsoluteRootUri(), themeSettings.LogoFileId)
+                : null
+        });
+    }
+    
+    [AllowAnonymous]
+    [HttpPost("register")]
+    [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
+    public async Task<Results<Ok<SignupResult>, ValidationProblem, ProblemHttpResult>> Register(SignupRequest signup)
+    {
+        var policiesSettings = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+        if (policiesSettings.LockSubscription)
+            return TypedResults.Problem("This instance does not allow public user registration", statusCode: 406);
+            
+        var errorMessage = "Invalid signup attempt.";
+        if (ModelState.IsValid)
+        {
+            var user = new ApplicationUser
+            {
+                UserName = signup.Email,
+                Email = signup.Email,
+                RequiresEmailConfirmation = policiesSettings.RequiresConfirmedEmail,
+                RequiresApproval = policiesSettings.RequiresUserApproval,
+                Created = DateTimeOffset.UtcNow
+            };
+            var result = await userManager.CreateAsync(user, signup.Password);
+            if (result.Succeeded)
+            {
+                eventAggregator.Publish(new UserRegisteredEvent
+                {
+                    RequestUri = Request.GetAbsoluteRootUri(),
+                    User = user
+                });
+
+                var response = new SignupResult
+                {
+                    Email = user.Email,
+                    RequiresConfirmedEmail = policiesSettings.RequiresConfirmedEmail && !user.EmailConfirmed,
+                    RequiresUserApproval = policiesSettings.RequiresUserApproval && !user.Approved
+                };
+                return TypedResults.Ok(response);
+            }
+            errorMessage = result.ToString();
+        }
+        return TypedResults.Problem(errorMessage, statusCode: 400);
+    }
+    
     [AllowAnonymous]
     [HttpPost("login")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
@@ -122,8 +191,8 @@ public class BtcPayAppController(
         return Results.Unauthorized();
     }
 
-    [HttpGet("info")]
-    public async Task<Results<Ok<AppUserInfo>, ValidationProblem, NotFound>> Info()
+    [HttpGet("user")]
+    public async Task<Results<Ok<AppUserInfo>, NotFound>> UserInfo()
     {
         var user = await userManager.GetUserAsync(User);
         if (user == null) return TypedResults.NotFound();

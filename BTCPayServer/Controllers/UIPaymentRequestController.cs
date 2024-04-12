@@ -277,6 +277,10 @@ namespace BTCPayServer.Controllers
                 if (FormDataService.Validate(form, ModelState))
                 {
                     prBlob.FormResponse = FormDataService.GetValues(form);
+                    if(string.IsNullOrEmpty(prBlob.Email) && form.GetFieldByFullName("buyerEmail") is { } emailField)
+                    {
+                        prBlob.Email = emailField.Value;
+                    }
                     result.SetBlob(prBlob);
                     await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
                     return RedirectToAction("PayPaymentRequest", new { payReqId });

@@ -109,14 +109,19 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 new SelectListItem(
                     $"{account.AccountIndex} - {(string.IsNullOrEmpty(account.Label) ? "No label" : account.Label)}",
                     account.AccountIndex.ToString(CultureInfo.InvariantCulture)));
-            var settlementThresholdChoice = settings.InvoiceSettledConfirmationThreshold switch
+
+            var settlementThresholdChoice = MoneroLikeSettlementThresholdChoice.StoreSpeedPolicy;
+            if (settings != null && settings.InvoiceSettledConfirmationThreshold is { } confirmations)
             {
-                null => MoneroLikeSettlementThresholdChoice.StoreSpeedPolicy,
-                0 => MoneroLikeSettlementThresholdChoice.ZeroConfirmation,
-                1 => MoneroLikeSettlementThresholdChoice.AtLeastOne,
-                10 => MoneroLikeSettlementThresholdChoice.AtLeastTen,
-                _ => MoneroLikeSettlementThresholdChoice.Custom
-            };
+                settlementThresholdChoice = confirmations switch
+                {
+                    0 => MoneroLikeSettlementThresholdChoice.ZeroConfirmation,
+                    1 => MoneroLikeSettlementThresholdChoice.AtLeastOne,
+                    10 => MoneroLikeSettlementThresholdChoice.AtLeastTen,
+                    _ => MoneroLikeSettlementThresholdChoice.Custom
+                };
+            }
+
             return new MoneroLikePaymentMethodViewModel()
             {
                 WalletFileFound = System.IO.File.Exists(fileAddress),
@@ -129,9 +134,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 Accounts = accounts == null ? null : new SelectList(accounts, nameof(SelectListItem.Value),
                     nameof(SelectListItem.Text)),
                 SettlementConfirmationThresholdChoice = settlementThresholdChoice,
-                CustomSettlementConfirmationThreshold = settlementThresholdChoice is MoneroLikeSettlementThresholdChoice.Custom
-                    ? settings.InvoiceSettledConfirmationThreshold
-                    : null
+                CustomSettlementConfirmationThreshold =
+                    settings != null &&
+                    settlementThresholdChoice is MoneroLikeSettlementThresholdChoice.Custom
+                        ? settings.InvoiceSettledConfirmationThreshold
+                        : null
             };
         }
 

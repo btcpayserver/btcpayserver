@@ -7,8 +7,6 @@
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
 @inject IEnumerable<IPayoutHandler> PayoutHandlers;
-@inject PayoutProcessorService _payoutProcessorService;
-@inject IEnumerable<IPayoutProcessorFactory> _payoutProcessorFactories;
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
     ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
@@ -24,15 +22,16 @@
             return;
         stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
     }
+
     switch (Model.PayoutState)
     {
         case PayoutState.AwaitingApproval:
+            if (!Model.HasPayoutProcessor) stateActions.Add(("approve-pay", "Approve & Send"));
             stateActions.Add(("approve", "Approve"));
-            stateActions.Add(("approve-pay", "Approve & Send"));
             stateActions.Add(("cancel", "Cancel"));
             break;
         case PayoutState.AwaitingPayment:
-            stateActions.Add(("pay", "Send"));
+            if (!Model.HasPayoutProcessor) stateActions.Add(("pay", "Send"));
             stateActions.Add(("cancel", "Cancel"));
             stateActions.Add(("mark-paid", "Mark as already paid"));
             break;
@@ -87,11 +86,7 @@
 
 <partial name="_StatusMessage" />
 
-@if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
-{
-    Stores = new[] { storeId },
-    PaymentMethods = new[] { PaymentMethodId.Parse(Model.PaymentMethodId) }
-})).Any())
+@if (!Model.HasPayoutProcessor)
 {
     <div class="alert alert-info mb-5" role="alert" permission="@Policies.CanModifyStoreSettings">
         <strong>Pro tip:</strong> There are supported but unconfigured Payout Processors for this payout payment method.<br/>

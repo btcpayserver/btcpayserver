@@ -345,11 +345,6 @@
                     }
                 }
             },
-            "PaymentMethodId": {
-                "type": "string",
-                "description": "The payment method id (`BTC-CHAIN`, `BTC-LN`, `BTC-LNURL`)",
-                "example": "BTC-CHAIN"
-            },
             "GenericPaymentMethodData": {
                 "type": "object",
                 "additionalProperties": false,

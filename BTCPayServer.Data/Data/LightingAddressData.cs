@@ -27,12 +27,9 @@ public class LightningAddressData : IHasBlob<LightningAddressDataBlob>
             .IsRequired()
             .OnDelete(DeleteBehavior.Cascade);
         builder.Entity<LightningAddressData>().HasKey(o => o.Username);
-        if (databaseFacade.IsNpgsql())
-        {
-            builder.Entity<LightningAddressData>()
-                .Property(o => o.Blob2)
-                .HasColumnType("JSONB");
-        }
+        builder.Entity<LightningAddressData>()
+            .Property(o => o.Blob2)
+            .HasColumnType("JSONB");
     }
 }
 

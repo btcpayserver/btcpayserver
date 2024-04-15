@@ -17,19 +17,18 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             migrationBuilder.AddColumn<string>(
-                name: "StoreDataId",
-                table: "Payouts",
-                nullable: true,
-                maxLength: maxLength);
+    name: "StoreDataId",
+    table: "Payouts",
+    nullable: true,
+    maxLength: null);
 
             migrationBuilder.CreateTable(
                 name: "PayoutProcessors",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
-                    StoreId = table.Column<string>(nullable: true, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
+                    StoreId = table.Column<string>(nullable: true, maxLength: null),
                     PaymentMethod = table.Column<string>(nullable: true),
                     Processor = table.Column<string>(nullable: true),
                     Blob = table.Column<byte[]>(nullable: true)
@@ -54,40 +53,31 @@ namespace BTCPayServer.Migrations
                 name: "IX_PayoutProcessors_StoreId",
                 table: "PayoutProcessors",
                 column: "StoreId");
-            if (this.SupportAddForeignKey(ActiveProvider))
-            {
-                migrationBuilder.AddForeignKey(
-                    name: "FK_Payouts_Stores_StoreDataId",
-                    table: "Payouts",
-                    column: "StoreDataId",
-                    principalTable: "Stores",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            }
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_Payouts_Stores_StoreDataId",
+                table: "Payouts",
+                column: "StoreDataId",
+                principalTable: "Stores",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropForeignKey(ActiveProvider))
-            {
+            migrationBuilder.DropForeignKey(
+                name: "FK_Payouts_Stores_StoreDataId",
+                table: "Payouts");
 
-                migrationBuilder.DropForeignKey(
-                    name: "FK_Payouts_Stores_StoreDataId",
-                    table: "Payouts");
-   
             migrationBuilder.DropTable(
                 name: "PayoutProcessors");
 
             migrationBuilder.DropIndex(
                 name: "IX_Payouts_StoreDataId",
                 table: "Payouts");
-            }
-            if(this.SupportDropColumn(ActiveProvider))
-            {
             migrationBuilder.DropColumn(
                     name: "StoreDataId",
                     table: "Payouts");
-            }
         }
     }
 }

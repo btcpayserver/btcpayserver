@@ -10,12 +10,11 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.CreateTable(
+                        migrationBuilder.CreateTable(
                 name: "Wallets",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     Blob = table.Column<byte[]>(nullable: true)
                 },
                 constraints: table =>
@@ -27,8 +26,8 @@ namespace BTCPayServer.Migrations
                 name: "WalletTransactions",
                 columns: table => new
                 {
-                    WalletDataId = table.Column<string>(nullable: false, maxLength: maxLength),
-                    TransactionId = table.Column<string>(nullable: false, maxLength: maxLength),
+                    WalletDataId = table.Column<string>(nullable: false, maxLength: null),
+                    TransactionId = table.Column<string>(nullable: false, maxLength: null),
                     Labels = table.Column<string>(nullable: true),
                     Blob = table.Column<byte[]>(nullable: true)
                 },

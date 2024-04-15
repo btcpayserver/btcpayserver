@@ -40,8 +40,7 @@ public partial class UIStoresController
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
-            Archived = store.Archived,
-            CanDelete = _storeRepo.CanDeleteStores()
+            Archived = store.Archived
         };
 
         return View(vm);

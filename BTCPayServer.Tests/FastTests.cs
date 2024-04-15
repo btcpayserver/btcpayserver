@@ -1271,17 +1271,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         }
 
         [Fact]
-        public async Task CanCreateSqlitedb()
-        {
-            if (File.Exists("temp.db"))
-                File.Delete("temp.db");
-            // This test sqlite can migrate
-            var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
-            builder.UseSqlite("Data Source=temp.db");
-            await new ApplicationDbContext(builder.Options).Database.MigrateAsync();
-        }
-
-        [Fact]
         public void CanUsePermission()
         {
             Assert.True(Permission.Create(Policies.CanModifyServerSettings)

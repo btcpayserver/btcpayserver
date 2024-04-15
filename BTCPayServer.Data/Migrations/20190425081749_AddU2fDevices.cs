@@ -10,25 +10,21 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropColumn(
-                    name: "Facade",
-                    table: "PairedSINData");
-            }
+            migrationBuilder.DropColumn(
+                name: "Facade",
+                table: "PairedSINData");
 
             migrationBuilder.CreateTable(
                 name: "U2FDevices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     Name = table.Column<string>(nullable: true),
                     KeyHandle = table.Column<byte[]>(nullable: false),
                     PublicKey = table.Column<byte[]>(nullable: false),
                     AttestationCert = table.Column<byte[]>(nullable: false),
                     Counter = table.Column<int>(nullable: false),
-                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: maxLength)
+                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -52,13 +48,10 @@ namespace BTCPayServer.Migrations
             migrationBuilder.DropTable(
                 name: "U2FDevices");
             //if it did not support dropping it, then it is still here and re-adding it would throw
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.AddColumn<string>(
-                    name: "Facade",
-                    table: "PairedSINData",
-                    nullable: true);
-            }
+            migrationBuilder.AddColumn<string>(
+                name: "Facade",
+                table: "PairedSINData",
+                nullable: true);
         }
     }
 }

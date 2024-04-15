@@ -18,11 +18,9 @@ public class StoreSettingData
         builder.Entity<StoreSettingData>()
             .HasOne(o => o.Store)
             .WithMany(o => o.Settings).OnDelete(DeleteBehavior.Cascade);
-        if (databaseFacade.IsNpgsql())
-        {
-            builder.Entity<StoreSettingData>()
-                .Property(o => o.Value)
-                .HasColumnType("JSONB");
-        }
+
+        builder.Entity<StoreSettingData>()
+            .Property(o => o.Value)
+            .HasColumnType("JSONB");
     }
 }

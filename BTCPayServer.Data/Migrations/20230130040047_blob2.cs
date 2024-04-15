@@ -14,76 +14,75 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            var type = migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT";
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "Webhooks",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "WebhookDeliveries",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "PaymentRequests",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "Notifications",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "LightningAddresses",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "Fido2Credentials",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "AspNetUsers",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "ApiKeys",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "Invoices",
-                type: type,
+                type: "JSONB",
                 nullable: true);
             migrationBuilder.AddColumn<string>(
               name: "Blob2",
               table: "Payments",
-              type: type,
+              type: "JSONB",
               nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "PayoutProcessors",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(
                 name: "Blob2",
                 table: "CustodianAccount",
-                type: type,
+                type: "JSONB",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(

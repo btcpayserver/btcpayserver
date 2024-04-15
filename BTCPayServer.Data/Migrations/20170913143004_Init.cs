@@ -11,12 +11,11 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
                     Name = table.Column<string>(maxLength: 256, nullable: true),
                     NormalizedName = table.Column<string>(maxLength: 256, nullable: true)
@@ -30,7 +29,7 @@ namespace BTCPayServer.Migrations
                 name: "AspNetUsers",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     AccessFailedCount = table.Column<int>(nullable: false),
                     ConcurrencyStamp = table.Column<string>(nullable: true),
                     Email = table.Column<string>(maxLength: 256, nullable: true),
@@ -55,7 +54,7 @@ namespace BTCPayServer.Migrations
                 name: "Stores",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     DerivationStrategy = table.Column<string>(nullable: true),
                     SpeedPolicy = table.Column<int>(nullable: false),
                     StoreCertificate = table.Column<byte[]>(nullable: true),
@@ -75,7 +74,7 @@ namespace BTCPayServer.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     ClaimType = table.Column<string>(nullable: true),
                     ClaimValue = table.Column<string>(nullable: true),
-                    RoleId = table.Column<string>(nullable: false, maxLength: maxLength)
+                    RoleId = table.Column<string>(nullable: false, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -96,7 +95,7 @@ namespace BTCPayServer.Migrations
                         .Annotation("Sqlite:Autoincrement", true),
                     ClaimType = table.Column<string>(nullable: true),
                     ClaimValue = table.Column<string>(nullable: true),
-                    UserId = table.Column<string>(nullable: false, maxLength: maxLength)
+                    UserId = table.Column<string>(nullable: false, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -116,7 +115,7 @@ namespace BTCPayServer.Migrations
                     LoginProvider = table.Column<string>(nullable: false, maxLength: 255),
                     ProviderKey = table.Column<string>(nullable: false, maxLength: 255),
                     ProviderDisplayName = table.Column<string>(nullable: true),
-                    UserId = table.Column<string>(nullable: false, maxLength: maxLength)
+                    UserId = table.Column<string>(nullable: false, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -133,8 +132,8 @@ namespace BTCPayServer.Migrations
                 name: "AspNetUserRoles",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(nullable: false, maxLength: maxLength),
-                    RoleId = table.Column<string>(nullable: false, maxLength: maxLength)
+                    UserId = table.Column<string>(nullable: false, maxLength: null),
+                    RoleId = table.Column<string>(nullable: false, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -157,7 +156,7 @@ namespace BTCPayServer.Migrations
                 name: "AspNetUserTokens",
                 columns: table => new
                 {
-                    UserId = table.Column<string>(nullable: false, maxLength: maxLength),
+                    UserId = table.Column<string>(nullable: false, maxLength: null),
                     LoginProvider = table.Column<string>(nullable: false, maxLength: 64),
                     Name = table.Column<string>(nullable: false, maxLength: 64),
                     Value = table.Column<string>(nullable: true)
@@ -177,7 +176,7 @@ namespace BTCPayServer.Migrations
                 name: "Invoices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     Blob = table.Column<byte[]>(nullable: true),
                     Created = table.Column<DateTimeOffset>(nullable: false),
                     CustomerEmail = table.Column<string>(nullable: true),
@@ -185,7 +184,7 @@ namespace BTCPayServer.Migrations
                     ItemCode = table.Column<string>(nullable: true),
                     OrderId = table.Column<string>(nullable: true),
                     Status = table.Column<string>(nullable: true),
-                    StoreDataId = table.Column<string>(nullable: true, maxLength: maxLength)
+                    StoreDataId = table.Column<string>(nullable: true, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -202,8 +201,8 @@ namespace BTCPayServer.Migrations
                 name: "UserStore",
                 columns: table => new
                 {
-                    ApplicationUserId = table.Column<string>(nullable: false, maxLength: maxLength),
-                    StoreDataId = table.Column<string>(nullable: false, maxLength: maxLength),
+                    ApplicationUserId = table.Column<string>(nullable: false, maxLength: null),
+                    StoreDataId = table.Column<string>(nullable: false, maxLength: null),
                     Role = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -227,9 +226,9 @@ namespace BTCPayServer.Migrations
                 name: "Payments",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     Blob = table.Column<byte[]>(nullable: true),
-                    InvoiceDataId = table.Column<string>(nullable: true, maxLength: maxLength)
+                    InvoiceDataId = table.Column<string>(nullable: true, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -246,9 +245,9 @@ namespace BTCPayServer.Migrations
                 name: "RefundAddresses",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     Blob = table.Column<byte[]>(nullable: true),
-                    InvoiceDataId = table.Column<string>(nullable: true, maxLength: maxLength)
+                    InvoiceDataId = table.Column<string>(nullable: true, maxLength: null)
                 },
                 constraints: table =>
                 {

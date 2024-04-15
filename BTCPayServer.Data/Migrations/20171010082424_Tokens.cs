@@ -11,18 +11,17 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.CreateTable(
+                        migrationBuilder.CreateTable(
                 name: "PairedSINData",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     Facade = table.Column<string>(nullable: true),
                     Label = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
                     PairingTime = table.Column<DateTimeOffset>(nullable: false),
-                    SIN = table.Column<string>(nullable: true, maxLength: maxLength),
-                    StoreDataId = table.Column<string>(nullable: true, maxLength: maxLength)
+                    SIN = table.Column<string>(nullable: true, maxLength: null),
+                    StoreDataId = table.Column<string>(nullable: true, maxLength: null)
                 },
                 constraints: table =>
                 {
@@ -33,14 +32,14 @@ namespace BTCPayServer.Migrations
                 name: "PairingCodes",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     DateCreated = table.Column<DateTime>(nullable: false),
                     Expiration = table.Column<DateTimeOffset>(nullable: false),
                     Facade = table.Column<string>(nullable: true),
                     Label = table.Column<string>(nullable: true),
                     Name = table.Column<string>(nullable: true),
                     SIN = table.Column<string>(nullable: true),
-                    StoreDataId = table.Column<string>(nullable: true, maxLength: maxLength),
+                    StoreDataId = table.Column<string>(nullable: true, maxLength: null),
                     TokenValue = table.Column<string>(nullable: true)
                 },
                 constraints: table =>

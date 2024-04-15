@@ -10,38 +10,32 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropForeignKey(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropForeignKey(
-                    name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
-                    table: "U2FDevices");
+            migrationBuilder.DropForeignKey(
+                name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
+                table: "U2FDevices");
 
-                migrationBuilder.AddForeignKey(
-                    name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
-                    table: "U2FDevices",
-                    column: "ApplicationUserId",
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            }
+            migrationBuilder.AddForeignKey(
+                name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
+                table: "U2FDevices",
+                column: "ApplicationUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropForeignKey(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropForeignKey(
-                    name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
-                    table: "U2FDevices");
+            migrationBuilder.DropForeignKey(
+                name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
+                table: "U2FDevices");
 
-                migrationBuilder.AddForeignKey(
-                    name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
-                    table: "U2FDevices",
-                    column: "ApplicationUserId",
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Restrict);
-            }
+            migrationBuilder.AddForeignKey(
+                name: "FK_U2FDevices_AspNetUsers_ApplicationUserId",
+                table: "U2FDevices",
+                column: "ApplicationUserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Restrict);
         }
     }
 }

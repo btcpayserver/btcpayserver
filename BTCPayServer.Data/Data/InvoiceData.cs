@@ -44,15 +44,12 @@ namespace BTCPayServer.Data
             builder.Entity<InvoiceData>().HasIndex(o => o.StoreDataId);
             builder.Entity<InvoiceData>().HasIndex(o => o.OrderId);
             builder.Entity<InvoiceData>().HasIndex(o => o.Created);
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<InvoiceData>()
-                        .Property(o => o.Blob2)
-                        .HasColumnType("JSONB");
-                builder.Entity<InvoiceData>()
-                        .Property(o => o.Amount)
-                        .HasColumnType("NUMERIC");
-            }
+            builder.Entity<InvoiceData>()
+                    .Property(o => o.Blob2)
+                    .HasColumnType("JSONB");
+            builder.Entity<InvoiceData>()
+                    .Property(o => o.Amount)
+                    .HasColumnType("NUMERIC");
         }
     }
 }

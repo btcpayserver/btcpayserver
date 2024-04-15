@@ -29,12 +29,9 @@ public class PayoutProcessorData : IHasBlobUntyped
             .HasOne(o => o.Store)
             .WithMany(data => data.PayoutProcessors).OnDelete(DeleteBehavior.Cascade);
 
-        if (databaseFacade.IsNpgsql())
-        {
-            builder.Entity<PayoutProcessorData>()
-                .Property(o => o.Blob2)
-                .HasColumnType("JSONB");
-        }
+        builder.Entity<PayoutProcessorData>()
+            .Property(o => o.Blob2)
+            .HasColumnType("JSONB");
     }
 
     public override string ToString()

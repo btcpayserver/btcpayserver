@@ -10,22 +10,18 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropColumn(
-                    name: "Name",
-                    table: "PairingCodes");
+            migrationBuilder.DropColumn(
+                name: "Name",
+                table: "PairingCodes");
 
-                migrationBuilder.DropColumn(
-                    name: "Name",
-                    table: "PairedSINData");
-            }
+            migrationBuilder.DropColumn(
+                name: "Name",
+                table: "PairedSINData");
             migrationBuilder.CreateTable(
                 name: "PendingInvoices",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength)
+                    Id = table.Column<string>(nullable: false, maxLength: null)
                 },
                 constraints: table =>
                 {

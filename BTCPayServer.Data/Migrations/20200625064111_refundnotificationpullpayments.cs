@@ -11,8 +11,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-
+            
             migrationBuilder.DropTable(
                 name: "RefundAddresses");
 
@@ -20,7 +19,7 @@ namespace BTCPayServer.Migrations
                 name: "CurrentRefundId",
                 table: "Invoices",
                 nullable: true,
-        maxLength: maxLength);
+        maxLength: null);
 
             migrationBuilder.CreateTable(
                 name: "Notifications",
@@ -76,7 +75,7 @@ namespace BTCPayServer.Migrations
                     PullPaymentDataId = table.Column<string>(maxLength: 30, nullable: true),
                     State = table.Column<string>(maxLength: 20, nullable: false),
                     PaymentMethodId = table.Column<string>(maxLength: 20, nullable: false),
-                    Destination = table.Column<string>(maxLength: maxLength, nullable: true),
+                    Destination = table.Column<string>(maxLength: null, nullable: true),
                     Blob = table.Column<byte[]>(nullable: true),
                     Proof = table.Column<byte[]>(nullable: true)
                 },
@@ -95,8 +94,8 @@ namespace BTCPayServer.Migrations
                 name: "Refunds",
                 columns: table => new
                 {
-                    InvoiceDataId = table.Column<string>(maxLength: maxLength, nullable: false),
-                    PullPaymentDataId = table.Column<string>(maxLength: maxLength, nullable: false)
+                    InvoiceDataId = table.Column<string>(maxLength: null, nullable: false),
+                    PullPaymentDataId = table.Column<string>(maxLength: null, nullable: false)
                 },
                 constraints: table =>
                 {
@@ -151,14 +150,13 @@ namespace BTCPayServer.Migrations
                 table: "Refunds",
                 column: "PullPaymentDataId");
 
-            if (this.SupportAddForeignKey(this.ActiveProvider))
-                migrationBuilder.AddForeignKey(
-                    name: "FK_Invoices_Refunds_Id_CurrentRefundId",
-                    table: "Invoices",
-                    columns: new[] { "Id", "CurrentRefundId" },
-                    principalTable: "Refunds",
-                    principalColumns: new[] { "InvoiceDataId", "PullPaymentDataId" },
-                    onDelete: ReferentialAction.Restrict);
+            migrationBuilder.AddForeignKey(
+                name: "FK_Invoices_Refunds_Id_CurrentRefundId",
+                table: "Invoices",
+                columns: new[] { "Id", "CurrentRefundId" },
+                principalTable: "Refunds",
+                principalColumns: new[] { "InvoiceDataId", "PullPaymentDataId" },
+                onDelete: ReferentialAction.Restrict);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

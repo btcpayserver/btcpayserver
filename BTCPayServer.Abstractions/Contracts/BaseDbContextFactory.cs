@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Options;
+using Npgsql;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
 
@@ -84,10 +85,9 @@ namespace BTCPayServer.Abstractions.Contracts
                         {
                             o.EnableRetryOnFailure(10);
                             o.SetPostgresVersion(12, 0);
-                            if (!string.IsNullOrEmpty(_schemaPrefix))
-                            {
-                                o.MigrationsHistoryTable(_schemaPrefix);
-                            }
+                            var mainSearchPath = GetSearchPath(_options.Value.ConnectionString);
+                            var schemaPrefix = string.IsNullOrEmpty(_schemaPrefix) ? "__EFMigrationsHistory" : _schemaPrefix;
+                            o.MigrationsHistoryTable(schemaPrefix, mainSearchPath);
                         })
                         .ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
                     break;
@@ -107,5 +107,11 @@ namespace BTCPayServer.Abstractions.Contracts
             }
         }
 
+        private string GetSearchPath(string connectionString)
+        {
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+            var searchPaths = connectionStringBuilder.SearchPath?.Split(',');
+            return searchPaths is not { Length: > 0 } ? null : searchPaths[0];
+        }
     }
 }

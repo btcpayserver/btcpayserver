@@ -1,29 +1,20 @@
-﻿using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
-namespace BTCPayApp.CommonServer
+namespace BTCPayApp.CommonServer;
+
+public interface IBTCPayAppServerClient
 {
-    public interface IBTCPayAppServerClient
-    {
-        Task TransactionDetected(string txid);
-        Task NewBlock(string block);
-    }
+    Task TransactionDetected(string txid);
+    Task NewBlock(string block);
+}
     
-    public interface IBTCPayAppServerHub
-    {
-        Task Handshake(AppHandshake handshake);
-        Task GetTransactions();
+public interface IBTCPayAppServerHub
+{
+    Task Handshake(AppHandshake handshake);
+    Task GetTransactions();
+}
 
-    }
-
-    public class AppHandshake
-    {
-        public string DerivationScheme { get; set; }
-        
-    }
-    
-    
-    
-    
-
+public class AppHandshake
+{
+    public string? DerivationScheme { get; set; }
 }

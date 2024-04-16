@@ -9,7 +9,6 @@ namespace BTCPayServer.Data
         public string Address { get; set; }
         public InvoiceData InvoiceData { get; set; }
         public string InvoiceDataId { get; set; }
-        public DateTimeOffset? CreatedTime { get; set; }
 
 
         internal static void OnModelCreating(ModelBuilder builder)

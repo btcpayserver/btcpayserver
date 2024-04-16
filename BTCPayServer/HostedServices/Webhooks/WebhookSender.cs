@@ -258,6 +258,7 @@ namespace BTCPayServer.HostedServices.Webhooks
             request.RequestUri = uri;
             request.Method = HttpMethod.Post;
             byte[] bytes = ToBytes(ctx.WebhookEvent);
+            _logger.LogInformation("Send webhook " + ctx.WebhookEvent.Type);
             var content = new ByteArrayContent(bytes);
             content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
             using var hmac =

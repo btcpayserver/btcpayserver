@@ -154,6 +154,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
+                                Logs.PayServer.LogInformation("New Transaction " + evt.TransactionData.TransactionHash);
                                 if (evt.DerivationStrategy != null)
                                 {
                                     wallet.InvalidateCache(evt.DerivationStrategy);
@@ -186,7 +187,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 .GetPayments(false).Any(c => c.Id == paymentData.Id && c.PaymentMethodId == pmi);
                                             if (!alreadyExist)
                                             {
-                                                
+                                                Logs.PayServer.LogInformation("New payment");
                                                 var prompt = invoice.GetPaymentPrompt(pmi);
                                                 var payment = await _paymentService.AddPayment(paymentData, [output.outPoint.Hash.ToString()]);
                                                 if (payment != null)
@@ -195,6 +196,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                             }
                                             else
                                             {
+                                                Logs.PayServer.LogInformation("Update existing");
                                                 await UpdatePaymentStates(wallet, invoice.Id);
                                             }
                                         }
@@ -457,15 +459,20 @@ namespace BTCPayServer.Payments.Bitcoin
             var prompt = invoice.GetPaymentPrompt(payment.PaymentMethodId);
             if (!_handlers.TryGetValue(prompt.PaymentMethodId, out var handler))
                 return null;
+            Logs.PayServer.LogInformation("ReceivedPayment");
             var bitcoinPaymentMethod = (Payments.Bitcoin.BitcoinPaymentPromptDetails)_handlers.ParsePaymentPromptDetails(prompt);
             if (bitcoinPaymentMethod.FeeMode == NetworkFeeMode.MultiplePaymentsOnly &&
                 prompt.PaymentMethodFee == 0.0m)
             {
+                Logs.PayServer.LogInformation("MultiplePaymentsOnly");
                 prompt.PaymentMethodFee = bitcoinPaymentMethod.PaymentMethodFeeRate.GetFee(100).ToDecimal(MoneyUnit.BTC); // assume price for 100 bytes
                 await this._InvoiceRepository.UpdatePrompt(invoice.Id, prompt);
                 invoice = await _InvoiceRepository.GetInvoice(invoice.Id);
             }
             wallet.InvalidateCache(strategy);
+            var p = invoice.GetPaymentPrompt(payment.PaymentMethodId);
+            var calc = p.Calculate();
+            Logs.PayServer.LogInformation("Still due: " + calc.DueUncapped);
             _Aggregator.Publish(new InvoiceEvent(invoice, InvoiceEvent.ReceivedPayment) { Payment = payment });
             return invoice;
         }

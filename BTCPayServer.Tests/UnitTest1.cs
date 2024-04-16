@@ -1975,19 +1975,23 @@ namespace BTCPayServer.Tests
                 Amount = 0.01m,
                 Currency = "BTC"
             });
+            TestLogs.LogInformation("Invoice created " + invoice.Id);
 
             var invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethodId) ==
                     PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
                 .PaymentLink, tester.ExplorerNode.Network);
             var halfPaymentTx = await tester.ExplorerNode.SendToAddressAsync(invoicePaymentRequest.Address, Money.Coins(invoicePaymentRequest.Amount.ToDecimal(MoneyUnit.BTC)/2m));
-            
+            TestLogs.LogInformation("1 Paying to " + invoicePaymentRequest.Address + " in " + halfPaymentTx);
+
             invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
                     PaymentMethodId.Parse(model.PaymentMethodId) ==
                     PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
                 .PaymentLink, tester.ExplorerNode.Network);
+
             var remainingPaymentTx = await tester.ExplorerNode.SendToAddressAsync(invoicePaymentRequest.Address, Money.Coins(invoicePaymentRequest.Amount.ToDecimal(MoneyUnit.BTC)));
-            
+            TestLogs.LogInformation("2 Paying to " + invoicePaymentRequest.Address + " in " + remainingPaymentTx);
+
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceProcessing,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,

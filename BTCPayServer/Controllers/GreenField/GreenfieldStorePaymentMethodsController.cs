@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (request?.Enabled is { } enabled)
             {
                 var storeBlob = Store.GetStoreBlob();
-                storeBlob.SetExcluded(paymentMethodId, enabled);
+                storeBlob.SetExcluded(paymentMethodId, !enabled);
                 Store.SetStoreBlob(storeBlob);
             }
             await _storeRepository.UpdateStore(Store);

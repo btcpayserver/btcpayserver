@@ -310,6 +310,7 @@ namespace BTCPayServer.Tests
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal(firstPayment, invoice.CryptoInfo[0].Paid);
+                    Assert.Equal("paidPartial", invoice.ExceptionStatus?.ToString());
                 });
 
                 Assert.Single(invoice.CryptoInfo); // Only BTC should be presented

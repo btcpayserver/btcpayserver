@@ -927,21 +927,25 @@ WHERE cte.""Id""=p.""Id""
 
         private async Task Migrate(CancellationToken cancellationToken)
         {
-            using (CancellationTokenSource timeout = new CancellationTokenSource(10_000))
+            int cancellationTimeout = 60 * 60 * 24;
+            using (CancellationTokenSource timeout = new CancellationTokenSource(cancellationTimeout))
             using (CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
             {
 retry:
                 try
                 {
-                    var db = _DBContextFactory.CreateContext();
-                    await db.Database.MigrateAsync();
+                    _logger.LogInformation("Running the migration scripts...");
+                    var db = _DBContextFactory.CreateContext(o => o.CommandTimeout(cancellationTimeout + 1));
+                    await db.Database.MigrateAsync(timeout.Token);
+                    _logger.LogInformation("All migration scripts ran successfully");
                 }
                 // Starting up
                 catch (ConfigException) { throw; }
-                catch when (!cts.Token.IsCancellationRequested)
+                catch (Exception ex) when (!cts.Token.IsCancellationRequested)
                 {
                     try
                     {
+                        _logger.LogWarning(ex, "Error while running migration scripts, retrying...");
                         await Task.Delay(1000, cts.Token);
                     }
                     catch { }

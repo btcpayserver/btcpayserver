@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Options;
 using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
 
@@ -21,7 +22,8 @@ namespace BTCPayServer.Abstractions.Contracts
             _migrationTableName = migrationTableName;
         }
 
-        public abstract T CreateContext();
+        public T CreateContext() => CreateContext(null);
+        public abstract T CreateContext(Action<NpgsqlDbContextOptionsBuilder> npgsqlOptionsAction = null);
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
 #pragma warning disable EF1001 // Internal EF Core API usage.
@@ -66,16 +68,18 @@ namespace BTCPayServer.Abstractions.Contracts
             }
         }
 
-        public void ConfigureBuilder(DbContextOptionsBuilder builder)
+        public void ConfigureBuilder(DbContextOptionsBuilder builder) => ConfigureBuilder(builder, null);
+        public void ConfigureBuilder(DbContextOptionsBuilder builder, Action<NpgsqlDbContextOptionsBuilder> npgsqlOptionsAction = null)
         {
             builder
             .UseNpgsql(_options.Value.ConnectionString, o =>
             {
                 o.EnableRetryOnFailure(10);
                 o.SetPostgresVersion(12, 0);
-				var mainSearchPath = GetSearchPath(_options.Value.ConnectionString);
-				var schemaPrefix = string.IsNullOrEmpty(_migrationTableName) ? "__EFMigrationsHistory" : _migrationTableName;
-				o.MigrationsHistoryTable(schemaPrefix, mainSearchPath);
+                npgsqlOptionsAction?.Invoke(o);
+                var mainSearchPath = GetSearchPath(_options.Value.ConnectionString);
+                var schemaPrefix = string.IsNullOrEmpty(_migrationTableName) ? "__EFMigrationsHistory" : _migrationTableName;
+                o.MigrationsHistoryTable(schemaPrefix, mainSearchPath);
             })
             .ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
         }

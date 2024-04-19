@@ -224,8 +224,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 await _userManager.AddToRoleAsync(user, Roles.ServerAdmin);
                 if (!anyAdmin)
                 {
-                    var settings = await _settingsRepository.GetSettingAsync<ThemeSettings>();
-                    if (settings != null)
+                    var settings = await _settingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+                    if (settings.FirstRun)
                     {
                         settings.FirstRun = false;
                         await _settingsRepository.UpdateSetting(settings);

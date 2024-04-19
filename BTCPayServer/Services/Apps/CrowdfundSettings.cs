@@ -40,8 +40,6 @@ namespace BTCPayServer.Services.Apps
         public bool AnimationsEnabled { get; set; }
         public int ResetEveryAmount { get; set; } = 1;
         public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
-        [Obsolete("Use AppData.TagAllInvoices instead")]
-        public bool UseAllStoreInvoices { get; set; }
         public bool DisplayPerksRanking { get; set; }
         public bool DisplayPerksValue { get; set; }
         public bool SortPerksByPopularity { get; set; }

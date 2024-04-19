@@ -30,7 +30,7 @@ public class ThemeSettings
 
     public string LogoFileId { get; set; }
 
-    public bool FirstRun { get; set; }
+    public bool FirstRun { get; set; } = true;
 
     public override string ToString()
     {

@@ -7,12 +7,6 @@ namespace BTCPayServer.Services
         [JsonProperty("MigrateHotwalletProperty2")]
         public bool MigrateHotwalletProperty { get; set; }
         public bool MigrateU2FToFIDO2 { get; set; }
-        public bool DeprecatedLightningConnectionStringCheck { get; set; }
-        public bool ConvertMultiplierToSpread { get; set; }
-        public bool ConvertNetworkFeeProperty { get; set; }
-        public bool ConvertCrowdfundOldSettings { get; set; }
-        public bool ConvertWalletKeyPathRoots { get; set; }
-        public bool CheckedFirstRun { get; set; }
         public bool PaymentMethodCriteria { get; set; }
         public bool TransitionToStoreBlobAdditionalData { get; set; }
         public bool TransitionInternalNodeConnectionString { get; set; }

@@ -14,7 +14,6 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Logging;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Security;
@@ -29,7 +28,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Bcpg.OpenPgp;
 using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -49,7 +47,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IAuthorizationService _authorizationService;
         private readonly SettingsRepository _settingsRepository;
         private readonly BTCPayServerEnvironment _env;
-        private readonly Logs _logs;
 
         public GreenfieldPullPaymentController(PullPaymentHostedService pullPaymentService,
             LinkGenerator linkGenerator,
@@ -60,7 +57,7 @@ namespace BTCPayServer.Controllers.Greenfield
             BTCPayNetworkProvider btcPayNetworkProvider,
             IAuthorizationService authorizationService,
             SettingsRepository settingsRepository,
-            BTCPayServerEnvironment env, Logs logs)
+            BTCPayServerEnvironment env)
         {
             _pullPaymentService = pullPaymentService;
             _linkGenerator = linkGenerator;
@@ -72,7 +69,6 @@ namespace BTCPayServer.Controllers.Greenfield
             _authorizationService = authorizationService;
             _settingsRepository = settingsRepository;
             _env = env;
-            _logs = logs;
         }
 
         [HttpGet("~/api/v1/stores/{storeId}/pull-payments")]
@@ -212,8 +208,6 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (pullPaymentId is null)
                 return PullPaymentNotFound();
-            this._logs.PayServer.LogInformation($"RegisterBoltcard: onExisting queryParam: {onExisting}");
-            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
             var pp = await _pullPaymentService.GetPullPayment(pullPaymentId, false);
             if (pp is null)
                 return PullPaymentNotFound();
@@ -259,13 +253,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 _ => request.OnExisting
             };
 
-            this._logs.PayServer.LogInformation($"After");
-            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(request)}");
-
             var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
-            this._logs.PayServer.LogInformation($"Version: " + version);
-            this._logs.PayServer.LogInformation($"ID: " + Encoders.Hex.EncodeData(issuerKey.GetId(request.UID)));
-
             var keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
 
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");
@@ -282,9 +270,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 K3 = Encoders.Hex.EncodeData(keys.K3.ToBytes()).ToUpperInvariant(),
                 K4 = Encoders.Hex.EncodeData(keys.K4.ToBytes()).ToUpperInvariant(),
             };
-            this._logs.PayServer.LogInformation($"Response");
-            this._logs.PayServer.LogInformation($"{JsonConvert.SerializeObject(resp)}");
-
             return Ok(resp);
         }
 

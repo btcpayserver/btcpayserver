@@ -41,12 +41,9 @@ namespace BTCPayServer.Data
             builder.Entity<APIKeyData>()
                 .HasIndex(o => o.StoreId);
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<APIKeyData>()
-                    .Property(o => o.Blob2)
-                    .HasColumnType("JSONB");
-            }
+            builder.Entity<APIKeyData>()
+                .Property(o => o.Blob2)
+                .HasColumnType("JSONB");
         }
     }
 

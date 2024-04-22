@@ -24,15 +24,12 @@ namespace BTCPayServer.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropColumn(
-                    name: "Archived",
-                    table: "Invoices");
-                migrationBuilder.DropColumn(
-                   name: "Archived",
-                   table: "PaymentRequests");
-            }
+            migrationBuilder.DropColumn(
+                name: "Archived",
+                table: "Invoices");
+            migrationBuilder.DropColumn(
+                name: "Archived",
+                table: "PaymentRequests");
         }
     }
 }

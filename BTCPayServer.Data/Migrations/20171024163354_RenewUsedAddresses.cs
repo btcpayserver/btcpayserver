@@ -11,7 +11,6 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "CreatedTime",
                 table: "AddressInvoices",
@@ -21,8 +20,8 @@ namespace BTCPayServer.Migrations
                 name: "HistoricalAddressInvoices",
                 columns: table => new
                 {
-                    InvoiceDataId = table.Column<string>(nullable: false, maxLength: maxLength),
-                    Address = table.Column<string>(nullable: false, maxLength: this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)512 : null),
+                    InvoiceDataId = table.Column<string>(nullable: false, maxLength: null),
+                    Address = table.Column<string>(nullable: false, maxLength: null),
                     Assigned = table.Column<DateTimeOffset>(nullable: false),
                     UnAssigned = table.Column<DateTimeOffset>(nullable: true)
                 },

@@ -47,32 +47,12 @@ namespace BTCPayServer.Data
             builder.Entity<PayoutData>()
                 .HasIndex(x => new { DestinationId = x.Destination, x.State });
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<PayoutData>()
-                    .Property(o => o.Blob)
-                    .HasColumnType("JSONB");
-                builder.Entity<PayoutData>()
-                    .Property(o => o.Proof)
-                    .HasColumnType("JSONB");
-            }
-            else if (databaseFacade.IsMySql())
-            {
-                builder.Entity<PayoutData>()
-                    .Property(o => o.Blob)
-                    .HasConversion(new ValueConverter<string, byte[]>
-                    (
-                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
-                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
-                    ));
-                builder.Entity<PayoutData>()
-                    .Property(o => o.Proof)
-                    .HasConversion(new ValueConverter<string, byte[]>
-                    (
-                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
-                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
-                    ));
-            }
+            builder.Entity<PayoutData>()
+                .Property(o => o.Blob)
+                .HasColumnType("JSONB");
+            builder.Entity<PayoutData>()
+                .Property(o => o.Proof)
+                .HasColumnType("JSONB");
         }
 
         // utility methods

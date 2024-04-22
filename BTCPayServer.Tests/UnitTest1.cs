@@ -1982,29 +1982,27 @@ namespace BTCPayServer.Tests
                 .PaymentLink, tester.ExplorerNode.Network);
             var halfPaymentTx = await tester.ExplorerNode.SendToAddressAsync(invoicePaymentRequest.Address, Money.Coins(invoicePaymentRequest.Amount.ToDecimal(MoneyUnit.BTC)/2m));
             
-            invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
-                    PaymentMethodId.Parse(model.PaymentMethodId) ==
-                    PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
-                .PaymentLink, tester.ExplorerNode.Network);
-            var remainingPaymentTx = await tester.ExplorerNode.SendToAddressAsync(invoicePaymentRequest.Address, Money.Coins(invoicePaymentRequest.Amount.ToDecimal(MoneyUnit.BTC)));
-            
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceCreated,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
-            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceProcessing,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {
                     Assert.Equal(invoice.Id, x.InvoiceId);
                     Assert.Contains(halfPaymentTx.ToString(), x.Payment.Id);
                 });
-            await  user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
+            invoicePaymentRequest = new BitcoinUrlBuilder((await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id)).Single(model =>
+                    PaymentMethodId.Parse(model.PaymentMethodId) ==
+                    PaymentTypes.CHAIN.GetPaymentMethodId("BTC"))
+                            .PaymentLink, tester.ExplorerNode.Network);
+            var remainingPaymentTx = await tester.ExplorerNode.SendToAddressAsync(invoicePaymentRequest.Address, Money.Coins(invoicePaymentRequest.Amount.ToDecimal(MoneyUnit.BTC)));
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceReceivedPayment,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {
                     Assert.Equal(invoice.Id, x.InvoiceId);
                     Assert.Contains(remainingPaymentTx.ToString(), x.Payment.Id);
                 });
-
+            await user.AssertHasWebhookEvent(WebhookEventType.InvoiceProcessing, (WebhookInvoiceEvent x) => Assert.Equal(invoice.Id, x.InvoiceId));
             await tester.ExplorerNode.GenerateAsync(1);
-            
+
             await  user.AssertHasWebhookEvent(WebhookEventType.InvoicePaymentSettled,
                 (WebhookInvoiceReceivedPaymentEvent x) =>
                 {

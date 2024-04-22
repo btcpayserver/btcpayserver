@@ -372,12 +372,21 @@ namespace BTCPayServer.Hosting
         private async Task FixSeqAfterSqliteMigration()
         {
             await using var ctx = _DBContextFactory.CreateContext();
-            if (!ctx.Database.IsNpgsql())
-                return;
-            var state = await ToPostgresMigrationStartupTask.GetMigrationState(ctx);
+            var state = await GetMigrationState(ctx);
             if (state != "complete")
                 return;
-            await ToPostgresMigrationStartupTask.UpdateSequenceInvoiceSearch(ctx);
+            await UpdateSequenceInvoiceSearch(ctx);
+        }
+        static async Task<string> GetMigrationState(ApplicationDbContext postgresContext)
+        {
+            var o = (await postgresContext.Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
+            if (o is null)
+                return null;
+            return JObject.Parse(o)["state"]?.Value<string>();
+        }
+        static async Task UpdateSequenceInvoiceSearch(ApplicationDbContext postgresContext)
+        {
+            await postgresContext.Database.ExecuteSqlRawAsync("SELECT SETVAL('\"InvoiceSearches_Id_seq\"', (SELECT max(\"Id\") FROM \"InvoiceSearches\"));");
         }
         private async Task MigrateAppYmlToJson()
         {
@@ -646,9 +655,7 @@ namespace BTCPayServer.Hosting
         {
             await using var ctx = _DBContextFactory.CreateContext();
 
-            if (ctx.Database.IsNpgsql())
-            {
-                await ctx.Database.ExecuteSqlRawAsync(@"
+            await ctx.Database.ExecuteSqlRawAsync(@"
 WITH cte AS (
 SELECT DISTINCT p.""Id"", pp.""StoreId"" FROM ""Payouts"" p
 JOIN ""PullPayments"" pp  ON pp.""Id"" = p.""PullPaymentDataId""
@@ -659,22 +666,6 @@ SET ""StoreDataId""=cte.""StoreId""
 FROM cte
 WHERE cte.""Id""=p.""Id""
 ");
-            }
-            else
-            {
-                var queryable = ctx.Payouts.Where(data => data.StoreDataId == null);
-                var count = await queryable.CountAsync();
-                _logger.LogInformation($"Migrating {count} payouts to have a store id explicitly");
-                for (int i = 0; i < count; i += 1000)
-                {
-                    await queryable.Include(data => data.PullPaymentData).Skip(i).Take(1000)
-                        .ForEachAsync(data => data.StoreDataId = data.PullPaymentData.StoreId);
-
-                    await ctx.SaveChangesAsync();
-
-                    _logger.LogInformation($"Migrated {i + 1000}/{count} payouts to have a store id explicitly");
-                }
-            }
         }
 
         private async Task AddInitialUserBlob()
@@ -944,11 +935,6 @@ retry:
                 {
                     var db = _DBContextFactory.CreateContext();
                     await db.Database.MigrateAsync();
-                    if (db.Database.IsNpgsql())
-                    {
-                        if (await db.GetMigrationState() == "pending")
-                            throw new ConfigException("This database hasn't been completely migrated, please retry migration by setting the BTCPAY_SQLITEFILE or BTCPAY_MYSQL setting on top of BTCPAY_POSTGRES");
-                    }
                 }
                 // Starting up
                 catch (ConfigException) { throw; }

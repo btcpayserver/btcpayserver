@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.13.1
+
+### Bug fixes
+
+* Fix: CSV exports from the Reports were exporting dates in 12-hour format instead of 24-hour format. (#5915, #5922) @TChukwuleta
+* Fix: Crash when configuring BTCPay Server with a non-default Postgres schema (Fix #5901) @NicolasDorier
+* Fix: A payment request with an amount of 0 no longer causes the payment request's page to crash (#5926) @Kukks
+
+### Improvements
+
+* Prevent unintentional double payouts (#5931, #5913) @dennisreimann
+* The `buyerEmail` field in a Payment Request's form will now set the email for the payment request (#5926) @Kukks
+* Added Tether as a supporter to the BTCPay Server Foundation (#5891) @rockstardev
+
 ## 1.13.0
 
 ### New feature

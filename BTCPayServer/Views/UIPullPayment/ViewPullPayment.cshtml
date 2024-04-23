@@ -48,14 +48,18 @@
                                         </button>
                                     }
                                     <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
-                                    @if (Model.PaymentMethods.Length == 1)
+                                    @if (Model.BitcoinOnly)
+									{
+										<span class="input-group-text">BTC</span>
+									}
+									else if (Model.PayoutMethodIds.Length == 1)
                                     {
-                                        <input type="hidden" asp-for="SelectedPaymentMethod">
-                                        <span class="input-group-text">@Model.PaymentMethods.First().ToString()</span>
+                                        <input type="hidden" asp-for="SelectedPayoutMethod">
+                                        <span class="input-group-text">@Model.PayoutMethodIds.First().ToString()</span>
                                     }
-                                    else if (!Model.BitcoinOnly)
+                                    else
                                     {
-                                        <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
+                                        <select class="form-select w-auto" asp-for="SelectedPayoutMethod" asp-items="Model.PayoutMethodIds.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
                                     }
                                     <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan destination with camera" id="scandestination-button">
                                         <vc:icon symbol="scan-qr"/>

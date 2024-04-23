@@ -19,6 +19,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payouts;
 using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
@@ -48,12 +49,12 @@ namespace BTCPayServer
     {
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
+        private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly LinkGenerator _linkGenerator;
         private readonly LightningAddressService _lightningAddressService;
-        private readonly LightningLikePayoutHandler _lightningLikePayoutHandler;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly IPluginHookService _pluginHookService;
@@ -62,13 +63,13 @@ namespace BTCPayServer
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
+            PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository,
             AppService appService,
             UIInvoiceController invoiceController,
             LinkGenerator linkGenerator,
             LightningAddressService lightningAddressService,
-            LightningLikePayoutHandler lightningLikePayoutHandler,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             IPluginHookService pluginHookService,
@@ -76,13 +77,13 @@ namespace BTCPayServer
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
+            _payoutHandlers = payoutHandlers;
             _handlers = handlers;
             _storeRepository = storeRepository;
             _appService = appService;
             _invoiceController = invoiceController;
             _linkGenerator = linkGenerator;
             _lightningAddressService = lightningAddressService;
-            _lightningLikePayoutHandler = lightningLikePayoutHandler;
             _pullPaymentHostedService = pullPaymentHostedService;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _pluginHookService = pluginHookService;
@@ -101,10 +102,11 @@ namespace BTCPayServer
             {
                 return NotFound();
             }
-
-            var pmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+            
+            var pmi = PayoutTypes.LN.GetPayoutMethodId(cryptoCode);
+            var paymentMethodId = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
             var pp = await _pullPaymentHostedService.GetPullPayment(pullPaymentId, true);
-            if (!pp.IsRunning() || !pp.IsSupported(pmi))
+            if (!pp.IsRunning() || !pp.IsSupported(pmi) || !_payoutHandlers.TryGetValue(pmi, out var payoutHandler))
             {
                 return NotFound();
             }
@@ -126,7 +128,7 @@ namespace BTCPayServer
                 CurrentBalance = LightMoney.FromUnit(remaining, unit),
                 MinWithdrawable =
                     LightMoney.FromUnit(
-                        Math.Min(await _lightningLikePayoutHandler.GetMinimumPayoutAmount(pmi, null), remaining),
+                        Math.Min(await payoutHandler.GetMinimumPayoutAmount(null), remaining),
                         unit),
                 Tag = "withdrawRequest",
                 Callback = new Uri(Request.GetCurrentUrl()),
@@ -147,7 +149,7 @@ namespace BTCPayServer
             if (result.MinimumAmount < request.MinWithdrawable || result.MinimumAmount > request.MaxWithdrawable)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = $"Payment request was not within bounds ({request.MinWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} - {request.MaxWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} sats)" });
             var store = await _storeRepository.FindStore(pp.StoreId);
-            var pm = store!.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, _handlers);
+            var pm = store!.GetPaymentMethodConfig<LightningPaymentMethodConfig>(paymentMethodId, _handlers);
             if (pm is null)
             {
                 return NotFound();
@@ -156,7 +158,7 @@ namespace BTCPayServer
             var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),
-                PaymentMethodId = pmi,
+                PayoutMethodId = pmi,
                 PullPaymentId = pullPaymentId,
                 StoreId = pp.StoreId,
                 Value = result.MinimumAmount.ToDecimal(unit)
@@ -174,7 +176,7 @@ namespace BTCPayServer
                             lightningHandler.CreateLightningClient(pm);
                         var payResult = await UILightningLikePayoutController.TrypayBolt(client,
                             claimResponse.PayoutData.GetBlob(_btcPayNetworkJsonSerializerSettings),
-                            claimResponse.PayoutData, result, pmi, cancellationToken);
+                            claimResponse.PayoutData, result, payoutHandler.Currency, cancellationToken);
 
                         switch (payResult.Result)
                         {

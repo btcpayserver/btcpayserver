@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services.Rates;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 
@@ -21,9 +22,9 @@ namespace BTCPayServer.Models
             Id = data.Id;
             StoreId = data.StoreId;
             var blob = data.GetBlob();
-            PaymentMethods = blob.SupportedPaymentMethods;
-            BitcoinOnly = blob.SupportedPaymentMethods.All(p => p.CryptoCode == "BTC");
-            SelectedPaymentMethod = PaymentMethods.First().ToString();
+            PayoutMethodIds = blob.SupportedPaymentMethods;
+            BitcoinOnly = blob.SupportedPaymentMethods.All(p => p == PayoutTypes.CHAIN.GetPayoutMethodId("BTC") || p == PayoutTypes.LN.GetPayoutMethodId("BTC"));
+            SelectedPayoutMethod = PayoutMethodIds.First().ToString();
             Archived = data.Archived;
             AutoApprove = blob.AutoApproveClaims;
             Title = blob.View.Title;
@@ -67,9 +68,9 @@ namespace BTCPayServer.Models
 
         public string StoreId { get; set; }
 
-        public string SelectedPaymentMethod { get; set; }
+        public string SelectedPayoutMethod { get; set; }
 
-        public PaymentMethodId[] PaymentMethods { get; set; }
+        public PayoutMethodId[] PayoutMethodIds { get; set; }
 
         public string SetupDeepLink { get; set; }
         public string ResetDeepLink { get; set; }

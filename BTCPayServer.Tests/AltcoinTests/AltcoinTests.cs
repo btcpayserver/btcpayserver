@@ -363,7 +363,10 @@ namespace BTCPayServer.Tests
                     if (multiCurrency)
                         user.RegisterDerivationScheme("LTC");
                     foreach (var rateSelection in new[] { "FiatOption", "CurrentRateOption", "RateThenOption", "CustomOption" })
+                    {
+                        TestLogs.LogInformation((multiCurrency, rateSelection).ToString());
                         await CanCreateRefundsCore(s, user, multiCurrency, rateSelection);
+                    }
                 }
             }
         }
@@ -399,11 +402,10 @@ namespace BTCPayServer.Tests
             if (multiCurrency)
             {
                 s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
-                s.Driver.WaitUntilAvailable(By.Id("SelectedPaymentMethod"), TimeSpan.FromSeconds(1));
-                s.Driver.FindElement(By.Id("SelectedPaymentMethod")).SendKeys("BTC" + Keys.Enter);
+                s.Driver.WaitUntilAvailable(By.Id("SelectedPayoutMethod"), TimeSpan.FromSeconds(1));
+                s.Driver.FindElement(By.Id("SelectedPayoutMethod")).SendKeys("BTC" + Keys.Enter);
                 s.Driver.FindElement(By.Id("ok")).Click();
             }
-
             s.Driver.WaitUntilAvailable(By.Id("RefundForm"), TimeSpan.FromSeconds(1));
             Assert.Contains("5,500.00 USD", s.Driver.PageSource); // Should propose reimburse in fiat
             Assert.Contains("1.10000000 BTC", s.Driver.PageSource); // Should propose reimburse in BTC at the rate of before

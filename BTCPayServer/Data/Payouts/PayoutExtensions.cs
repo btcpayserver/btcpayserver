@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -28,9 +29,9 @@ namespace BTCPayServer.Data
             return payout;
         }
 
-        public static PaymentMethodId GetPaymentMethodId(this PayoutData data)
+        public static PayoutMethodId GetPayoutMethodId(this PayoutData data)
         {
-            return PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) ? paymentMethodId : null;
+            return PayoutMethodId.TryParse(data.PaymentMethodId, out var pmi) ? pmi : null;
         }
 
         public static string GetPayoutSource(this PayoutData data, BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)
@@ -44,13 +45,13 @@ namespace BTCPayServer.Data
 
         public static PayoutBlob GetBlob(this PayoutData data, BTCPayNetworkJsonSerializerSettings serializers)
         {
-            var result =  JsonConvert.DeserializeObject<PayoutBlob>(data.Blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode));
+            var result =  JsonConvert.DeserializeObject<PayoutBlob>(data.Blob, serializers.GetSerializer(data.GetPayoutMethodId()));
             result.Metadata ??= new JObject();
             return result;
         }
         public static void SetBlob(this PayoutData data, PayoutBlob blob, BTCPayNetworkJsonSerializerSettings serializers)
         {
-            data.Blob = JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPaymentMethodId().CryptoCode)).ToString();
+            data.Blob = JsonConvert.SerializeObject(blob, serializers.GetSerializer(data.GetPayoutMethodId())).ToString();
         }
 
         public static JObject GetProofBlobJson(this PayoutData data)
@@ -83,10 +84,9 @@ namespace BTCPayServer.Data
             }
         }
 
-        public static async Task<List<PaymentMethodId>> GetSupportedPaymentMethods(
-            this IEnumerable<IPayoutHandler> payoutHandlers, StoreData storeData)
+        public static HashSet<PayoutMethodId> GetSupportedPayoutMethods(this PayoutMethodHandlerDictionary payoutHandlers, StoreData storeData)
         {
-            return (await Task.WhenAll(payoutHandlers.Select(handler => handler.GetSupportedPaymentMethods(storeData)))).SelectMany(ids => ids).ToList();
+            return payoutHandlers.Where(handler => handler.IsSupported(storeData)).Select(p => p.PayoutMethodId).ToHashSet();
         }
     }
 }

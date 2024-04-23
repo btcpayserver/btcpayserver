@@ -15,6 +15,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
+using BTCPayServer.Payouts;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Models;
@@ -47,7 +48,7 @@ namespace BTCPayServer.Hosting
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly SettingsRepository _Settings;
         private readonly AppService _appService;
-        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
+        private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly LightningAddressService _lightningAddressService;
         private readonly ILogger<MigrationStartupTask> _logger;
@@ -62,7 +63,7 @@ namespace BTCPayServer.Hosting
             IOptions<LightningNetworkOptions> lightningOptions,
             SettingsRepository settingsRepository,
             AppService appService,
-            IEnumerable<IPayoutHandler> payoutHandlers,
+            PayoutMethodHandlerDictionary payoutHandlers,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             LightningAddressService lightningAddressService,
             ILogger<MigrationStartupTask> logger,
@@ -238,7 +239,7 @@ namespace BTCPayServer.Hosting
             var processors = await ctx.PayoutProcessors.ToArrayAsync();
             foreach (var processor in processors)
             {
-                processor.PaymentMethod = processor.GetPaymentMethodId().ToString();
+                processor.PaymentMethod = processor.GetPayoutMethodId().ToString();
             }
             await ctx.SaveChangesAsync();
         }
@@ -641,18 +642,18 @@ WHERE cte.""Id""=p.""Id""
             await using var ctx = _DBContextFactory.CreateContext();
             foreach (var payoutData in await ctx.Payouts.AsQueryable().ToArrayAsync())
             {
-                var pmi = payoutData.GetPaymentMethodId();
+                var pmi = payoutData.GetPayoutMethodId();
                 if (pmi is null)
                 {
                     continue;
                 }
                 var handler = _payoutHandlers
-                    .FindPayoutHandler(pmi);
+                    .TryGet(pmi);
                 if (handler is null)
                 {
                     continue;
                 }
-                var claim = await handler?.ParseClaimDestination(pmi, payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, default);
+                var claim = await handler?.ParseClaimDestination(payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, default);
                 payoutData.Destination = claim.destination?.Id;
             }
             await ctx.SaveChangesAsync();

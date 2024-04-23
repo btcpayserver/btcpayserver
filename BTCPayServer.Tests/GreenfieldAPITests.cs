@@ -3450,7 +3450,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(connStr, methods.FirstOrDefault(m => m.PaymentMethodId == "BTC-LN")?.Config["connectionString"].Value<string>());
             methods = await adminClient.GetStorePaymentMethods(store.Id);
             Assert.Null(methods.FirstOrDefault(m => m.PaymentMethodId == "BTC-LN").Config);
-            await this.AssertValidationError(["paymentMethodId"], () => adminClient.RemoveStorePaymentMethod(store.Id, "LOL"));
+            await this.AssertAPIError("paymentmethod-not-found", () => adminClient.RemoveStorePaymentMethod(store.Id, "LOL"));
             await adminClient.RemoveStorePaymentMethod(store.Id, "BTC-LN");
 
             // Alternative way of setting the connection string
@@ -3948,7 +3948,7 @@ namespace BTCPayServer.Tests
                 txid = await tester.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create((await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
                     tester.ExplorerClient.Network.NBitcoinNetwork), Money.Coins(0.01m) + fee);
             }, correctEvent: ev => ev.NewTransactionEvent.TransactionData.TransactionHash == txid);
-            await tester.PayTester.GetService<PayoutProcessorService>().Restart(new PayoutProcessorService.PayoutProcessorQuery(admin.StoreId, PaymentMethodId.Parse("BTC")));
+            await tester.PayTester.GetService<PayoutProcessorService>().Restart(new PayoutProcessorService.PayoutProcessorQuery(admin.StoreId, Payouts.PayoutMethodId.Parse("BTC")));
             await TestUtils.EventuallyAsync(async () =>
             {
                 Assert.Equal(4, (await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC")).Count());

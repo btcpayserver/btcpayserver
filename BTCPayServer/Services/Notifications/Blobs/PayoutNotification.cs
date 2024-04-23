@@ -44,7 +44,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 };
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),
                     "UIStorePullPayments",
-                    new { storeId = notification.StoreId, paymentMethodId = notification.PaymentMethod }, _options.RootPath);
+                    new { storeId = notification.StoreId, payoutMethodId = notification.PaymentMethod }, _options.RootPath);
             }
         }
 

@@ -34,6 +34,7 @@ using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 using Serilog.Filters;
 using PeterO.Numbers;
+using BTCPayServer.Payouts;
 
 namespace BTCPayServer.Controllers
 {
@@ -49,6 +50,7 @@ namespace BTCPayServer.Controllers
         private readonly DisplayFormatter _displayFormatter;
         readonly EventAggregator _EventAggregator;
         readonly BTCPayNetworkProvider _NetworkProvider;
+        private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
@@ -77,6 +79,7 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             ContentSecurityPolicies csp,
             BTCPayNetworkProvider networkProvider,
+            PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             ApplicationDbContextFactory dbContextFactory,
             PullPaymentHostedService paymentHostedService,
@@ -102,6 +105,7 @@ namespace BTCPayServer.Controllers
             _UserManager = userManager;
             _EventAggregator = eventAggregator;
             _NetworkProvider = networkProvider;
+            this._payoutHandlers = payoutHandlers;
             _handlers = paymentMethodHandlerDictionary;
             _dbContextFactory = dbContextFactory;
             _paymentHostedService = paymentHostedService;

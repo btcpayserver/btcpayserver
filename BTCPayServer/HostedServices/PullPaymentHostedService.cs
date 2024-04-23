@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
@@ -39,7 +40,7 @@ namespace BTCPayServer.HostedServices
         public string Currency { get; set; }
         public string CustomCSSLink { get; set; }
         public string EmbeddedCSS { get; set; }
-        public PaymentMethodId[] PaymentMethodIds { get; set; }
+        public PayoutMethodId[] PayoutMethodIds { get; set; }
         public TimeSpan? Period { get; set; }
         public bool AutoApproveClaims { get; set; }
         public TimeSpan? BOLT11Expiration { get; set; }
@@ -131,7 +132,7 @@ namespace BTCPayServer.HostedServices
                 Currency = create.Currency,
                 Limit = create.Amount,
                 Period = o.Period is long periodSeconds ? (TimeSpan?)TimeSpan.FromSeconds(periodSeconds) : null,
-                SupportedPaymentMethods = create.PaymentMethodIds,
+                SupportedPaymentMethods = create.PayoutMethodIds,
                 AutoApproveClaims = create.AutoApproveClaims,
                 View = new PullPaymentBlob.PullPaymentView()
                 {
@@ -153,7 +154,7 @@ namespace BTCPayServer.HostedServices
             public PayoutState[] States { get; set; }
             public string[] PullPayments { get; set; }
             public string[] PayoutIds { get; set; }
-            public string[] PaymentMethods { get; set; }
+            public string[] PayoutMethods { get; set; }
             public string[] Stores { get; set; }
             public bool IncludeArchived { get; set; }
             public bool IncludeStoreData { get; set; }
@@ -203,16 +204,16 @@ namespace BTCPayServer.HostedServices
                 }
             }
 
-            if (payoutQuery.PaymentMethods is not null)
+            if (payoutQuery.PayoutMethods is not null)
             {
-                if (payoutQuery.PaymentMethods.Length == 1)
+                if (payoutQuery.PayoutMethods.Length == 1)
                 {
-                    var pm = payoutQuery.PaymentMethods[0];
+                    var pm = payoutQuery.PayoutMethods[0];
                     query = query.Where(data => pm == data.PaymentMethodId);
                 }
                 else
                 {
-                    query = query.Where(data => payoutQuery.PaymentMethods.Contains(data.PaymentMethodId));
+                    query = query.Where(data => payoutQuery.PayoutMethods.Contains(data.PaymentMethodId));
                 }
             }
 
@@ -284,10 +285,9 @@ namespace BTCPayServer.HostedServices
             BTCPayNetworkJsonSerializerSettings jsonSerializerSettings,
             EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
-            PaymentMethodHandlerDictionary handlers,
+            PayoutMethodHandlerDictionary handlers,
             NotificationSender notificationSender,
             RateFetcher rateFetcher,
-            IEnumerable<IPayoutHandler> payoutHandlers,
             ILogger<PullPaymentHostedService> logger,
             Logs logs,
             DisplayFormatter displayFormatter,
@@ -300,7 +300,6 @@ namespace BTCPayServer.HostedServices
             _handlers = handlers;
             _notificationSender = notificationSender;
             _rateFetcher = rateFetcher;
-            _payoutHandlers = payoutHandlers;
             _logger = logger;
             _currencyNameTable = currencyNameTable;
             _displayFormatter = displayFormatter;
@@ -311,10 +310,9 @@ namespace BTCPayServer.HostedServices
         private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _networkProvider;
-        private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly PayoutMethodHandlerDictionary _handlers;
         private readonly NotificationSender _notificationSender;
         private readonly RateFetcher _rateFetcher;
-        private readonly IEnumerable<IPayoutHandler> _payoutHandlers;
         private readonly ILogger<PullPaymentHostedService> _logger;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly DisplayFormatter _displayFormatter;
@@ -323,7 +321,7 @@ namespace BTCPayServer.HostedServices
         internal override Task[] InitializeTasks()
         {
             _Channel = Channel.CreateUnbounded<object>();
-            foreach (IPayoutHandler payoutHandler in _payoutHandlers)
+            foreach (IPayoutHandler payoutHandler in _handlers)
             {
                 payoutHandler.StartBackgroundCheck(Subscribe);
             }
@@ -363,7 +361,7 @@ namespace BTCPayServer.HostedServices
                     await HandleMarkPaid(paid);
                 }
 
-                foreach (IPayoutHandler payoutHandler in _payoutHandlers)
+                foreach (IPayoutHandler payoutHandler in _handlers)
                 {
                     try
                     {
@@ -380,7 +378,7 @@ namespace BTCPayServer.HostedServices
         public bool SupportsLNURL(PullPaymentBlob blob)
         {
             var pms = blob.SupportedPaymentMethods.FirstOrDefault(id => 
-                PaymentTypes.LN.GetPaymentMethodId(_networkProvider.DefaultNetwork.CryptoCode)
+                PayoutTypes.LN.GetPayoutMethodId(_networkProvider.DefaultNetwork.CryptoCode)
                 == id);
             return pms is not null && _lnurlSupportedCurrencies.Contains(blob.Currency);
         }
@@ -388,7 +386,7 @@ namespace BTCPayServer.HostedServices
         public Task<RateResult> GetRate(PayoutData payout, string explicitRateRule, CancellationToken cancellationToken)
         {
             var ppBlob = payout.PullPaymentData?.GetBlob();
-            var payoutPaymentMethod = payout.GetPaymentMethodId();
+            var payoutPaymentMethod = payout.GetPayoutMethodId();
             var cryptoCode = _handlers.TryGetNetwork(payoutPaymentMethod)?.NBXplorerNetwork.CryptoCode;
             var currencyPair = new Rating.CurrencyPair(cryptoCode,
                 ppBlob?.Currency ?? cryptoCode);
@@ -450,7 +448,7 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                if (!PaymentMethodId.TryParse(payout.PaymentMethodId, out var paymentMethod))
+                if (!PayoutMethodId.TryParse(payout.PaymentMethodId, out var paymentMethod))
                 {
                     req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.NotFound, null));
                     return;
@@ -468,12 +466,12 @@ namespace BTCPayServer.HostedServices
                     cryptoCode == payout.PullPaymentData.GetBlob().Currency)
                     req.Rate = 1.0m;
                 var cryptoAmount = payoutBlob.Amount / req.Rate;
-                var payoutHandler = _payoutHandlers.FindPayoutHandler(paymentMethod);
+                var payoutHandler = _handlers.TryGet(paymentMethod);
                 if (payoutHandler is null)
                     throw new InvalidOperationException($"No payout handler for {paymentMethod}");
-                var dest = await payoutHandler.ParseClaimDestination(paymentMethod, payoutBlob.Destination, default);
+                var dest = await payoutHandler.ParseClaimDestination(payoutBlob.Destination, default);
                 decimal minimumCryptoAmount =
-                    await payoutHandler.GetMinimumPayoutAmount(paymentMethod, dest.destination);
+                    await payoutHandler.GetMinimumPayoutAmount(dest.destination);
                 if (cryptoAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.TooLowAmount, null));
@@ -572,7 +570,7 @@ namespace BTCPayServer.HostedServices
 
                     ppBlob = pp.GetBlob();
 
-                    if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PaymentMethodId))
+                    if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PayoutMethodId))
                     {
                         req.Completion.TrySetResult(
                             new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.PaymentMethodNotSupported));
@@ -581,7 +579,7 @@ namespace BTCPayServer.HostedServices
                 }
 
                 var payoutHandler =
-                    _payoutHandlers.FindPayoutHandler(req.ClaimRequest.PaymentMethodId);
+                    _handlers.TryGet(req.ClaimRequest.PayoutMethodId);
                 if (payoutHandler is null)
                 {
                     req.Completion.TrySetResult(
@@ -602,8 +600,7 @@ namespace BTCPayServer.HostedServices
                 }
 
                 if (req.ClaimRequest.Value <
-                    await payoutHandler.GetMinimumPayoutAmount(req.ClaimRequest.PaymentMethodId,
-                        req.ClaimRequest.Destination))
+                    await payoutHandler.GetMinimumPayoutAmount(req.ClaimRequest.Destination))
                 {
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.AmountTooLow));
                     return;
@@ -636,7 +633,7 @@ namespace BTCPayServer.HostedServices
                     Date = now,
                     State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
-                    PaymentMethodId = req.ClaimRequest.PaymentMethodId.ToString(),
+                    PaymentMethodId = req.ClaimRequest.PayoutMethodId.ToString(),
                     Destination = req.ClaimRequest.Destination.Id,
                     StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId
                 };
@@ -683,7 +680,7 @@ namespace BTCPayServer.HostedServices
                         new PayoutNotification()
                         {
                             StoreId = payout.StoreDataId,
-                            Currency = ppBlob?.Currency ?? _handlers.TryGetNetwork(req.ClaimRequest.PaymentMethodId)?.NBXplorerNetwork.CryptoCode,
+                            Currency = ppBlob?.Currency ?? _handlers.TryGetNetwork(req.ClaimRequest.PayoutMethodId)?.NBXplorerNetwork.CryptoCode,
                             Status = payout.State,
                             PaymentMethod = payout.PaymentMethodId,
                             PayoutId = payout.Id
@@ -961,7 +958,7 @@ namespace BTCPayServer.HostedServices
             PaymentMethodNotSupported,
         }
 
-        public PaymentMethodId PaymentMethodId { get; set; }
+        public PayoutMethodId PayoutMethodId { get; set; }
         public string PullPaymentId { get; set; }
         public decimal? Value { get; set; }
         public IClaimDestination Destination { get; set; }

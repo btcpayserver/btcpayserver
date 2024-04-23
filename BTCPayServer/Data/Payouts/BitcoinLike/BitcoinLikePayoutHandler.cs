@@ -14,6 +14,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
@@ -31,10 +32,11 @@ using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using StoreData = BTCPayServer.Data.StoreData;
 
-public class BitcoinLikePayoutHandler : IPayoutHandler
+public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 {
+    public string Currency { get; }
     private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-    private readonly PaymentMethodHandlerDictionary _handlers;
+    private readonly PaymentMethodHandlerDictionary _paymentHandlers;
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
     private readonly ApplicationDbContextFactory _dbContextFactory;
@@ -43,9 +45,15 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     private readonly EventAggregator _eventAggregator;
     private readonly TransactionLinkProviders _transactionLinkProviders;
 
+    PayoutMethodId IHandler<PayoutMethodId>.Id => PayoutMethodId;
+    public PayoutMethodId PayoutMethodId { get; }
+    public PaymentMethodId PaymentMethodId { get; }
+    public BTCPayNetwork Network { get; }
     public WalletRepository WalletRepository { get; }
 
     public BitcoinLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
+        PayoutMethodId payoutMethodId,
+        BTCPayNetwork network,
         PaymentMethodHandlerDictionary handlers,
         WalletRepository walletRepository,
         ExplorerClientProvider explorerClientProvider,
@@ -57,51 +65,46 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         TransactionLinkProviders transactionLinkProviders)
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
-        _handlers = handlers;
+        PayoutMethodId = payoutMethodId;
+        PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+        Network = network;
+        _paymentHandlers = handlers;
         WalletRepository = walletRepository;
         _explorerClientProvider = explorerClientProvider;
         _jsonSerializerSettings = jsonSerializerSettings;
         _dbContextFactory = dbContextFactory;
         _notificationSender = notificationSender;
+        Currency = network.CryptoCode;
         this.Logs = logs;
         _eventAggregator = eventAggregator;
         _transactionLinkProviders = transactionLinkProviders;
     }
 
-
-    public bool CanHandle(PaymentMethodId paymentMethod)
-    {
-        return _handlers.TryGetValue(paymentMethod, out var h) &&
-                h is BitcoinLikePaymentHandler { Network: { ReadonlyWallet: false } };
-    }
-
     public async Task TrackClaim(ClaimRequest claimRequest, PayoutData payoutData)
     {
-        var network = _handlers.GetNetwork(claimRequest.PaymentMethodId);
-        var explorerClient = _explorerClientProvider.GetExplorerClient(network);
+        var explorerClient = _explorerClientProvider.GetExplorerClient(Network);
         if (claimRequest.Destination is IBitcoinLikeClaimDestination bitcoinLikeClaimDestination)
         {
 
             await explorerClient.TrackAsync(TrackedSource.Create(bitcoinLikeClaimDestination.Address));
             await WalletRepository.AddWalletTransactionAttachment(
-                new WalletId(claimRequest.StoreId, network.CryptoCode),
+                new WalletId(claimRequest.StoreId, Network.CryptoCode),
                 bitcoinLikeClaimDestination.Address.ToString(),
                 Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id), WalletObjectData.Types.Address);
         }
     }
 
-    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken)
+    public Task<(IClaimDestination destination, string error)> ParseClaimDestination(string destination, CancellationToken cancellationToken)
     {
-        var network = _handlers.GetNetwork(paymentMethodId);
         destination = destination.Trim();
         try
         {
-            if (destination.StartsWith($"{network.NBitcoinNetwork.UriScheme}:", StringComparison.OrdinalIgnoreCase))
+            if (destination.StartsWith($"{Network.NBitcoinNetwork.UriScheme}:", StringComparison.OrdinalIgnoreCase))
             {
-                return Task.FromResult<(IClaimDestination, string)>((new UriClaimDestination(new BitcoinUrlBuilder(destination, network.NBitcoinNetwork)), null));
+                return Task.FromResult<(IClaimDestination, string)>((new UriClaimDestination(new BitcoinUrlBuilder(destination, Network.NBitcoinNetwork)), null));
             }
 
-            return Task.FromResult<(IClaimDestination, string)>((new AddressClaimDestination(BitcoinAddress.Create(destination, network.NBitcoinNetwork)), null));
+            return Task.FromResult<(IClaimDestination, string)>((new AddressClaimDestination(BitcoinAddress.Create(destination, Network.NBitcoinNetwork)), null));
         }
         catch
         {
@@ -119,18 +122,16 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
     {
         if (payout?.Proof is null)
             return null;
-        var paymentMethodId = payout.GetPaymentMethodId();
-        if (paymentMethodId is null)
+        var payoutMethodId = payout.GetPayoutMethodId();
+        if (payoutMethodId is null)
             return null;
-        var cryptoCode = _handlers.TryGetNetwork(paymentMethodId)?.CryptoCode;
-        if (cryptoCode is null)
-            return null;
+        var cryptoCode = Network.CryptoCode;
         ParseProofType(payout.Proof, out var raw, out var proofType);
         if (proofType == PayoutTransactionOnChainBlob.Type)
         {
 
             var res = raw.ToObject<PayoutTransactionOnChainBlob>(
-                JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(cryptoCode)));
+                JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(payoutMethodId)));
             if (res == null)
                 return null;
             res.LinkTemplate = _transactionLinkProviders.GetBlockExplorerLink(cryptoCode);
@@ -184,10 +185,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         }
     }
 
-    public Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
+    public Task<decimal> GetMinimumPayoutAmount(IClaimDestination claimDestination)
     {
-        var network = _handlers.TryGetNetwork(paymentMethodId);
-        if (network?
+        if (Network
                 .NBitcoinNetwork?
                 .Consensus?
                 .ConsensusFactory?
@@ -226,8 +226,8 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                         Stores = new[] { storeId },
                         PayoutIds = payoutIds
                     }, context)).Where(data =>
-                        PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
-                        CanHandle(paymentMethodId))
+                        PayoutMethodId.TryParse(data.PaymentMethodId, out var payoutMethodId) &&
+                        payoutMethodId == PayoutMethodId)
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == false);
                     foreach (var valueTuple in payouts)
                     {
@@ -251,8 +251,8 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                         Stores = new[] { storeId },
                         PayoutIds = payoutIds
                     }, context)).Where(data =>
-                        PaymentMethodId.TryParse(data.PaymentMethodId, out var paymentMethodId) &&
-                        CanHandle(paymentMethodId))
+                        PayoutMethodId.TryParse(data.PaymentMethodId, out var payoutMethodId) &&
+                        payoutMethodId == PayoutMethodId)
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == true);
                     foreach (var valueTuple in payouts)
                     {
@@ -273,25 +273,23 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
         return null;
     }
 
-    public Task<IEnumerable<PaymentMethodId>> GetSupportedPaymentMethods(StoreData storeData)
+    public bool IsSupported(StoreData storeData)
     {
-        return Task.FromResult(storeData.GetPaymentMethodConfigs<DerivationSchemeSettings>(_handlers, true).Select(c => c.Key));
+        return storeData.GetDerivationSchemeSettings(_paymentHandlers, Network.CryptoCode, true)?.AccountDerivation is not null;
     }
 
-    public async Task<IActionResult> InitiatePayment(PaymentMethodId paymentMethodId, string[] payoutIds)
+    public async Task<IActionResult> InitiatePayment(string[] payoutIds)
     {
         await using var ctx = this._dbContextFactory.CreateContext();
         ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
-        var pmi = paymentMethodId;
         var payouts = await ctx.Payouts.Include(data => data.PullPaymentData)
             .Where(data => payoutIds.Contains(data.Id)
-                           && pmi.ToString() == data.PaymentMethodId
+                           && PayoutMethodId.ToString() == data.PaymentMethodId
                            && data.State == PayoutState.AwaitingPayment)
             .ToListAsync();
 
         var pullPaymentIds = payouts.Select(data => data.PullPaymentDataId).Distinct().Where(s => s != null).ToArray();
         var storeId = payouts.First().StoreDataId;
-        var network = _handlers.GetNetwork(paymentMethodId);
         List<string> bip21 = new List<string>();
         foreach (var payout in payouts)
         {
@@ -300,9 +298,9 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 continue;
             }
             var blob = payout.GetBlob(_jsonSerializerSettings);
-            if (payout.GetPaymentMethodId() != paymentMethodId)
+            if (payout.GetPayoutMethodId() != PayoutMethodId)
                 continue;
-            var claim = await ParseClaimDestination(paymentMethodId, blob.Destination, default);
+            var claim = await ParseClaimDestination(blob.Destination, default);
             switch (claim.destination)
             {
                 case UriClaimDestination uriClaimDestination:
@@ -312,17 +310,17 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                     bip21.Add(newUri.Uri.ToString());
                     break;
                 case AddressClaimDestination addressClaimDestination:
-                    var bip21New = network.GenerateBIP21(addressClaimDestination.Address.ToString(), blob.CryptoAmount.Value);
+                    var bip21New = Network.GenerateBIP21(addressClaimDestination.Address.ToString(), blob.CryptoAmount.Value);
                     bip21New.QueryParams.Add("payout", payout.Id);
                     bip21.Add(bip21New.ToString());
                     break;
             }
         }
         if (bip21.Any())
-            return new RedirectToActionResult("WalletSend", "UIWallets", new { walletId = new WalletId(storeId, network.CryptoCode).ToString(), bip21 });
+            return new RedirectToActionResult("WalletSend", "UIWallets", new { walletId = new WalletId(storeId, Network.CryptoCode).ToString(), bip21 });
         return new RedirectToActionResult("Payouts", "UIWallets", new
         {
-            walletId = new WalletId(storeId, network.CryptoCode).ToString(),
+            walletId = new WalletId(storeId, Network.CryptoCode).ToString(),
             pullPaymentId = pullPaymentIds.Length == 1 ? pullPaymentIds.First() : null
         });
     }
@@ -347,7 +345,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 }
                 foreach (var txid in proof.Candidates.ToList())
                 {
-                    var explorer = _explorerClientProvider.GetExplorerClient(payout.GetPaymentMethodId().CryptoCode);
+                    var explorer = _explorerClientProvider.GetExplorerClient(Network.CryptoCode);
                     var tx = await explorer.GetTransactionAsync(txid);
                     if (tx is null)
                     {
@@ -447,7 +445,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
                 return;
 
             var derivationSchemeSettings = payout.StoreData
-                .GetDerivationSchemeSettings(_handlers, newTransaction.CryptoCode)?.AccountDerivation;
+                .GetDerivationSchemeSettings(_paymentHandlers, newTransaction.CryptoCode)?.AccountDerivation;
             if (derivationSchemeSettings is null)
                 return;
 
@@ -494,7 +492,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler
 
     public void SetProofBlob(PayoutData data, PayoutTransactionOnChainBlob blob)
     {
-        data.SetProofBlob(blob, _jsonSerializerSettings.GetSerializer(data.GetPaymentMethodId().CryptoCode));
+        data.SetProofBlob(blob, _jsonSerializerSettings.GetSerializer(data.GetPayoutMethodId()));
 
     }
 }

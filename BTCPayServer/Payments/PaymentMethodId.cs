@@ -4,8 +4,6 @@ using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using BTCPayServer.Services.Altcoins.Monero.Payments;
-using BTCPayServer.Services.Altcoins.Zcash.Payments;
 
 namespace BTCPayServer.Payments
 {
@@ -15,24 +13,53 @@ namespace BTCPayServer.Payments
     /// </summary>
     public class PaymentMethodId
     {
-        public PaymentMethodId? FindNearest(IEnumerable<PaymentMethodId> others)
+        public T? FindNearest<T>(IEnumerable<T> others)
         {
             ArgumentNullException.ThrowIfNull(others);
-            return others.FirstOrDefault(f => f == this) ??
-                   others.FirstOrDefault(f => f._CryptoCode == _CryptoCode);
+            return 
+                GetSimilarities([this], others)
+                .OrderByDescending(o => o.similarity)
+                .Select(o => o.b)
+                .FirstOrDefault();
         }
-        public PaymentMethodId(string cryptoCode, string paymentType)
+
+        /// <summary>
+        /// Returns the carthesian product of the two enumerables with the similarity between each pair's strings.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="U"></typeparam>
+        /// <param name="aItems"></param>
+        /// <param name="bItems"></param>
+        /// <returns></returns>
+        public static IEnumerable<(T a, U b, int similarity)> GetSimilarities<T, U>(IEnumerable<T> aItems, IEnumerable<U> bItems)
         {
-            ArgumentNullException.ThrowIfNull(cryptoCode);
-            ArgumentNullException.ThrowIfNull(paymentType);
-			_CryptoCode = cryptoCode.ToUpperInvariant();
-			_Id = $"{_CryptoCode}-{paymentType}";
+            return from a in aItems
+                   from b in bItems
+                   select (a, b, CalculateDistance(a.ToString()!, b.ToString()!));
+        }
+
+        private static int CalculateDistance(string a, string b)
+        {
+            int similarity = 0;
+            for (int i = 0; i < Math.Min(a.Length, b.Length); i++)
+            {
+                if (a[i] == b[i])
+                    similarity++;
+                else
+                    break;
+            }
+            if (a.Length == b.Length)
+                similarity++;
+            return similarity;
+        }
+
+        public PaymentMethodId(string id)
+        {
+            ArgumentNullException.ThrowIfNull(id);
+			_Id = id;
         }
 
 		string _Id;
-        string _CryptoCode;
-        public string CryptoCode => _CryptoCode;
-
 
         public override bool Equals(object? obj)
         {
@@ -93,6 +120,11 @@ namespace BTCPayServer.Payments
         {
             str ??= "";
             str = str.Trim();
+            if (str.Length == 0)
+            {
+                paymentMethodId = null;
+                return false;
+            }
             paymentMethodId = null;
             var parts = str.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
 
@@ -101,7 +133,7 @@ namespace BTCPayServer.Payments
                 {
                     if (LegacySupportedCryptos.Contains(cryptoCode))
                     {
-                        paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode.ToUpperInvariant());
+                        paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
                         return true;
                     }
                 }
@@ -118,13 +150,14 @@ namespace BTCPayServer.Payments
 							paymentMethodId = type.GetPaymentMethodId(cryptoCode);
 							return true;
 						}
-                        paymentMethodId = new PaymentMethodId(cryptoCode, paymentType);
+                        paymentMethodId = new PaymentMethodId($"{cryptoCode.ToUpperInvariant()}-{paymentType}");
                         return true;
                     }
                 }
             }
 
-            return false;
+            paymentMethodId = new PaymentMethodId(str);
+            return true;
         }
 
         private static PaymentType? GetPaymentType(string paymentType)

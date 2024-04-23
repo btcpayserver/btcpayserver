@@ -10,6 +10,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.OnChain;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -39,14 +40,14 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetStoreOnChainAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
-            var paymentMethodId = !string.IsNullOrEmpty(paymentMethod) ? PaymentMethodId.Parse(paymentMethod) : null;
+            var paymentMethodId = !string.IsNullOrEmpty(paymentMethod) ? PayoutMethodId.Parse(paymentMethod) : null;
             var configured =
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
-                        PaymentMethods = paymentMethodId is null ? null : new[] { paymentMethodId }
+                        PayoutMethodIds = paymentMethodId is null ? null : new[] { paymentMethodId }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -86,20 +87,20 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.FeeBlockTarget), "The feeBlockTarget should be between 1 and 1000");
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            var paymentMethodId = PaymentMethodId.Parse(paymentMethod);
+            var payoutMethodId = PayoutMethodId.Parse(paymentMethod);
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
-                        PaymentMethods = new[] { paymentMethodId }
+                        PayoutMethodIds = new[] { payoutMethodId }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
             activeProcessor.HasTypedBlob<OnChainAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
-            activeProcessor.PaymentMethod = paymentMethodId.ToString();
+            activeProcessor.PaymentMethod = payoutMethodId.ToString();
             activeProcessor.Processor = OnChainAutomatedPayoutSenderFactory.ProcessorName;
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()

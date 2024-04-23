@@ -38,10 +38,10 @@ namespace BTCPayServer
             return permissionSet.Contains(permission, storeId);
         }
         
-        public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, PaymentMethodHandlerDictionary handlers, string cryptoCode)
+        public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, PaymentMethodHandlerDictionary handlers, string cryptoCode, bool onlyEnabled = false)
         {
             var pmi = Payments.PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
-            return store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
+            return store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers, onlyEnabled);
         }
     }
 }

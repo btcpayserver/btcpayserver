@@ -10,41 +10,10 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Invoices
 {
-    public class PaymentMethodHandlerDictionary : IEnumerable<IPaymentMethodHandler>
+    public class PaymentMethodHandlerDictionary : HandlersDictionary<PaymentMethodId, IPaymentMethodHandler>
     {
-        private readonly Dictionary<PaymentMethodId, IPaymentMethodHandler> _mappedHandlers =
-            new Dictionary<PaymentMethodId, IPaymentMethodHandler>();
-
-        public PaymentMethodHandlerDictionary(IEnumerable<IPaymentMethodHandler> paymentMethodHandlers)
+        public PaymentMethodHandlerDictionary(IEnumerable<IPaymentMethodHandler> paymentMethodHandlers) : base(paymentMethodHandlers)
         {
-            foreach (var paymentMethodHandler in paymentMethodHandlers)
-            {
-				_mappedHandlers.Add(paymentMethodHandler.PaymentMethodId, paymentMethodHandler);
-			}
-        }
-
-        public bool TryGetValue(PaymentMethodId paymentMethodId, [MaybeNullWhen(false)] out IPaymentMethodHandler value)
-        {
-            ArgumentNullException.ThrowIfNull(paymentMethodId);
-            return _mappedHandlers.TryGetValue(paymentMethodId, out value);
-        }
-		public IPaymentMethodHandler? TryGet(PaymentMethodId paymentMethodId)
-		{
-			ArgumentNullException.ThrowIfNull(paymentMethodId);
-			_mappedHandlers.TryGetValue(paymentMethodId, out var value);
-			return value;
-		}
-
-		public IPaymentMethodHandler this[PaymentMethodId index] => _mappedHandlers[index];
-        public bool Support(PaymentMethodId paymentMethod) => _mappedHandlers.ContainsKey(paymentMethod);
-        public IEnumerator<IPaymentMethodHandler> GetEnumerator()
-        {
-            return _mappedHandlers.Values.GetEnumerator();
-        }
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator();
         }
 
         public object? ParsePaymentPromptDetails(PaymentPrompt prompt)

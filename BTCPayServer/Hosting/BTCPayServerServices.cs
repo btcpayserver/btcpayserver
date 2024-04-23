@@ -70,6 +70,8 @@ using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
+using BTCPayServer.Payouts;
+
 
 
 
@@ -369,10 +371,6 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<PayoutsReportProvider>();
             services.AddReportProvider<LegacyInvoiceExportReportProvider>();
             services.AddWebhooks();
-            services.AddSingleton<BitcoinLikePayoutHandler>();
-            services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<BitcoinLikePayoutHandler>());
-            services.AddSingleton<IPayoutHandler>(provider => provider.GetRequiredService<LightningLikePayoutHandler>());
-            services.AddSingleton<LightningLikePayoutHandler>();
 
             services.AddSingleton<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(o => 
             o.GetRequiredService<IEnumerable<IPaymentMethodBitpayAPIExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
@@ -397,7 +395,9 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
             services.AddSingleton<PaymentMethodViewProvider>();
-            
+
+            services.AddSingleton<PayoutMethodHandlerDictionary>();
+
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
 
@@ -580,6 +580,13 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 (IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodBitpayAPIExtension), new object[] { pmi }));
                 services.AddSingleton<IPaymentMethodViewExtension>(provider =>
 (IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodViewExtension), new object[] { pmi }));
+
+                if (!network.ReadonlyWallet && network.WalletSupported)
+                {
+                    var payoutMethodId = PayoutTypes.CHAIN.GetPayoutMethodId(network.CryptoCode);
+                    services.AddSingleton<IPayoutHandler>(provider =>
+    (IPayoutHandler)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinLikePayoutHandler), new object[] { payoutMethodId, network }));
+                }
             }
             if (network.NBitcoinNetwork.Consensus.SupportSegwit && network.SupportLightning)
             {
@@ -596,6 +603,9 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 (IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentMethodViewExtension), new object[] { pmi }));
                     services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
 (IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentMethodBitpayAPIExtension), new object[] { pmi }));
+                    var payoutMethodId = PayoutTypes.LN.GetPayoutMethodId(network.CryptoCode);
+                    services.AddSingleton<IPayoutHandler>(provider =>
+    (IPayoutHandler)ActivatorUtilities.CreateInstance(provider, typeof(LightningLikePayoutHandler), new object[] { payoutMethodId, network }));
                 }
                 // LNURL
                 {

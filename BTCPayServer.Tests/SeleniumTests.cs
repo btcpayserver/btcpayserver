@@ -2094,6 +2094,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePullPaymentsViaUI()
         {
             using var s = CreateSeleniumTester();
+			s.Server.DeleteStore = false;
             s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -2274,7 +2275,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(newStore.storeId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
 
-            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"));
+            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PayoutMethods']"));
             Assert.Equal(2, paymentMethodOptions.Count);
 
             s.Driver.FindElement(By.Id("Name")).SendKeys("Lightning Test");
@@ -2287,7 +2288,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
             
             // Bitcoin-only, SelectedPaymentMethod should not be displayed
-            s.Driver.ElementDoesNotExist(By.Id("SelectedPaymentMethod"));
+            s.Driver.ElementDoesNotExist(By.Id("SelectedPayoutMethod"));
 
             var bolt = (await s.Server.CustomerLightningD.CreateInvoice(
                 payoutAmount,
@@ -3072,7 +3073,7 @@ namespace BTCPayServer.Tests
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
-            Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"))).GetAttribute("value")));
+            Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PayoutMethods']"))).GetAttribute("value")));
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");

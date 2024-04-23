@@ -1,23 +1,24 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Payments
+@using BTCPayServer.Payouts
 @using BTCPayServer.Views.Stores
 @using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
 @using BTCPayServer.PayoutProcessors
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
-@inject IEnumerable<IPayoutHandler> PayoutHandlers;
+@inject PayoutMethodHandlerDictionary PayoutHandlers;
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
     ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
-    Model.PaginationQuery.Add("paymentMethodId", Model.PaymentMethodId);
+    Model.PaginationQuery.Add("payoutMethodId", Model.PayoutMethodId);
     Model.PaginationQuery.Add("payoutState", Model.PayoutState);
     var stateActions = new List<(string Action, string Text)>();
-    if (PaymentMethodId.TryParse(Model.PaymentMethodId, out var paymentMethodId))
+    if (PayoutMethodId.TryParse(Model.PayoutMethodId, out var payoutMethodId))
     {
-        var payoutHandler = PayoutHandlers.FindPayoutHandler(paymentMethodId);
+		var payoutHandler = PayoutHandlers.TryGet(payoutMethodId);
         if (payoutHandler is null)
             return;
         stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
@@ -96,22 +97,22 @@
 }
 
 <form method="post" id="Payouts">
-    <input type="hidden" asp-for="PaymentMethodId" />
+    <input type="hidden" asp-for="PayoutMethodId" />
     <input type="hidden" asp-for="PayoutState" />
     <div class="d-flex justify-content-between mb-4">
         <ul class="nav mb-1 gap-2">
-            @foreach (var state in Model.PaymentMethods)
+            @foreach (var state in Model.PayoutMethods)
             {
                 <li class="nav-item py-0">
                     <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"
                        asp-route-payoutState="@Model.PayoutState"
-                       asp-route-paymentMethodId="@state.ToString()"
+                       asp-route-payoutMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
-                       class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PayoutMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">
                         @state.ToString()
-                        @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
+                        @if (Model.PayoutMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
                         {
                             <span class="badge rounded-pill fw-semibold pe-0">@count</span>
                         }
@@ -129,7 +130,7 @@
                    asp-route-storeId="@Context.GetRouteValue("storeId")"
                    asp-route-payoutState="@state.Key"
                    asp-route-pullPaymentId="@Model.PullPaymentId"
-                   asp-route-paymentMethodId="@Model.PaymentMethodId"
+                   asp-route-payoutMethodId="@Model.PayoutMethodId"
                    class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">
                     @state.Key.GetStateString()
                     @if (state.Value > 0)

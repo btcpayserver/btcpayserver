@@ -4179,20 +4179,20 @@ namespace BTCPayServer.Tests
             Assert.Single(testObj.Links.Where(l => l.Id == "test1" && l.LinkData["testData"]?.Value<string>() == "lol"));
             Assert.Single(testObj.Links.Where(l => l.Id == "test1" && l.ObjectData is null));
 
-            async Task TestWalletRepository(bool useInefficient)
+            async Task TestWalletRepository()
             {
                 // We should have 4 nodes, two `test` type and one `newtype`
                 // Only the node `test` `test` is connected to `test1`
                 var wid = new WalletId(admin.StoreId, "BTC");
                 var repo = tester.PayTester.GetService<WalletRepository>();
-                var allObjects = await repo.GetWalletObjects(new(wid) { UseInefficientPath = useInefficient });
-                var allObjectsNoWallet = await repo.GetWalletObjects((new() { UseInefficientPath = useInefficient }));
-                var allObjectsNoWalletAndType = await repo.GetWalletObjects((new() { Type = "test", UseInefficientPath = useInefficient }));
-                var allTests = await repo.GetWalletObjects((new(wid, "test") { UseInefficientPath = useInefficient }));
-                var twoTests2 = await repo.GetWalletObjects((new(wid, "test", new[] { "test1", "test2", "test-unk" }) { UseInefficientPath = useInefficient }));
-                var oneTest = await repo.GetWalletObjects((new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient }));
-                var oneTestWithoutData = await repo.GetWalletObjects((new(wid, "test", new[] { "test" }) { UseInefficientPath = useInefficient, IncludeNeighbours = false }));
-                var idsTypes = await repo.GetWalletObjects((new(wid) { TypesIds = new[] { new ObjectTypeId("test", "test1"), new ObjectTypeId("test", "test2") }, UseInefficientPath = useInefficient }));
+                var allObjects = await repo.GetWalletObjects(new(wid));
+                var allObjectsNoWallet = await repo.GetWalletObjects((new()));
+                var allObjectsNoWalletAndType = await repo.GetWalletObjects((new() { Type = "test" }));
+                var allTests = await repo.GetWalletObjects((new(wid, "test")));
+                var twoTests2 = await repo.GetWalletObjects((new(wid, "test", new[] { "test1", "test2", "test-unk" })));
+                var oneTest = await repo.GetWalletObjects((new(wid, "test", new[] { "test" })));
+                var oneTestWithoutData = await repo.GetWalletObjects((new(wid, "test", new[] { "test" }) { IncludeNeighbours = false }));
+                var idsTypes = await repo.GetWalletObjects((new(wid) { TypesIds = new[] { new ObjectTypeId("test", "test1"), new ObjectTypeId("test", "test2") }}));
 
                 Assert.Equal(4, allObjects.Count);
                 // We are reusing a db in this test, as such we may have other wallets here.
@@ -4206,8 +4206,7 @@ namespace BTCPayServer.Tests
                 Assert.Null(oneTestWithoutData.First().Value.GetNeighbours().Select(n => n.Data).FirstOrDefault());
                 Assert.Equal(2, idsTypes.Count);
             }
-            await TestWalletRepository(false);
-            await TestWalletRepository(true);
+            await TestWalletRepository();
 
             {
                 var allObjects = await client.GetOnChainWalletObjects(admin.StoreId, "BTC");

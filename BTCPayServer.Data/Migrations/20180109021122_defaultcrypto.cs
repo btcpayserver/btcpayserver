@@ -10,8 +10,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.AddColumn<string>(
+                        migrationBuilder.AddColumn<string>(
                 name: "DefaultCrypto",
                 table: "Stores",
                 nullable: true);

@@ -31,44 +31,37 @@ namespace BTCPayServer.Migrations
                 name: "IX_ApiKeys_UserId",
                 table: "ApiKeys",
                 column: "UserId");
-            if (this.SupportAddForeignKey(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.AddForeignKey(
-                    name: "FK_ApiKeys_AspNetUsers_UserId",
-                    table: "ApiKeys",
-                    column: "UserId",
-                    principalTable: "AspNetUsers",
-                    principalColumn: "Id",
-                    onDelete: ReferentialAction.Cascade);
-            }
+
+            migrationBuilder.AddForeignKey(
+                name: "FK_ApiKeys_AspNetUsers_UserId",
+                table: "ApiKeys",
+                column: "UserId",
+                principalTable: "AspNetUsers",
+                principalColumn: "Id",
+                onDelete: ReferentialAction.Cascade);
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropForeignKey(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropForeignKey(
-                    name: "FK_ApiKeys_AspNetUsers_UserId",
-                    table: "ApiKeys");
-            }
+            migrationBuilder.DropForeignKey(
+                name: "FK_ApiKeys_AspNetUsers_UserId",
+                table: "ApiKeys");
 
             migrationBuilder.DropIndex(
                 name: "IX_ApiKeys_UserId",
                 table: "ApiKeys");
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropColumn(
-                    name: "Permissions",
-                    table: "ApiKeys");
 
-                migrationBuilder.DropColumn(
-                    name: "Type",
-                    table: "ApiKeys");
+            migrationBuilder.DropColumn(
+                name: "Permissions",
+                table: "ApiKeys");
 
-                migrationBuilder.DropColumn(
-                    name: "UserId",
-                    table: "ApiKeys");
-            }
+            migrationBuilder.DropColumn(
+                name: "Type",
+                table: "ApiKeys");
+
+            migrationBuilder.DropColumn(
+                name: "UserId",
+                table: "ApiKeys");
         }
     }
 }

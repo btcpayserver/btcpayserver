@@ -33,8 +33,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public IFormFile CssFile { get; set; }
         public string CssFileId { get; set; }
 
-        public bool CanDelete { get; set; }
-
         public bool Archived { get; set; }
 
         [Display(Name = "Allow anyone to create invoice")]

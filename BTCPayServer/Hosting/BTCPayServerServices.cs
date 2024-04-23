@@ -145,9 +145,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<InvoicePaymentNotification>();
             services.TryAddSingleton<BTCPayServerOptions>(o =>
                 o.GetRequiredService<IOptions<BTCPayServerOptions>>().Value);
-            // Don't move this StartupTask, we depend on it being right here
-            if (configuration["POSTGRES"] != null && (configuration["SQLITEFILE"] != null || configuration["MYSQL"] != null))
-                services.AddStartupTask<ToPostgresMigrationStartupTask>();
+
             services.AddStartupTask<MigrationStartupTask>();
 
             //
@@ -184,23 +182,9 @@ namespace BTCPayServer.Hosting
                 (options, datadirs) =>
                 {
                     var postgresConnectionString = configuration["postgres"];
-                    var mySQLConnectionString = configuration["mysql"];
-                    var sqliteFileName = configuration["sqlitefile"];
-
                     if (!string.IsNullOrEmpty(postgresConnectionString))
                     {
-                        options.DatabaseType = DatabaseType.Postgres;
                         options.ConnectionString = postgresConnectionString;
-                    }
-                    else if (!string.IsNullOrEmpty(mySQLConnectionString))
-                    {
-                        options.DatabaseType = DatabaseType.MySQL;
-                        options.ConnectionString = mySQLConnectionString;
-                    }
-                    else if (!string.IsNullOrEmpty(sqliteFileName))
-                    {
-                        options.DatabaseType = DatabaseType.Sqlite;
-                        options.ConnectionString = "Data Source=" + datadirs.Value.ToDatadirFullPath(sqliteFileName);
                     }
                     else
                     {

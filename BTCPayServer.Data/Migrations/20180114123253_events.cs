@@ -11,13 +11,12 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.CreateTable(
+                        migrationBuilder.CreateTable(
                 name: "InvoiceEvents",
                 columns: table => new
                 {
-                    InvoiceDataId = table.Column<string>(nullable: false, maxLength: maxLength),
-                    UniqueId = table.Column<string>(nullable: false, maxLength: maxLength),
+                    InvoiceDataId = table.Column<string>(nullable: false, maxLength: null),
+                    UniqueId = table.Column<string>(nullable: false, maxLength: null),
                     Message = table.Column<string>(nullable: true),
                     Timestamp = table.Column<DateTimeOffset>(nullable: false)
                 },

@@ -176,10 +176,7 @@
                         }
                     </button>
                 </form>
-                @if (Model.CanDelete)
-                {
-                    <a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
-                }
+                <a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
             </div>
         </div>
     </div>

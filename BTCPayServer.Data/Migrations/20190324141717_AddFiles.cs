@@ -11,16 +11,15 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.CreateTable(
+                        migrationBuilder.CreateTable(
                 name: "Files",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     FileName = table.Column<string>(nullable: true),
                     StorageFileName = table.Column<string>(nullable: true),
                     Timestamp = table.Column<DateTime>(nullable: false),
-                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: maxLength)
+                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: null)
                 },
                 constraints: table =>
                 {

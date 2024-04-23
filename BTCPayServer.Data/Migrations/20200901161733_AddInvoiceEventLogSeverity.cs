@@ -20,13 +20,9 @@ namespace BTCPayServer.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropColumn(
-                    name: "Severity",
-                    table: "InvoiceEvents");
-
-            }
+            migrationBuilder.DropColumn(
+                name: "Severity",
+                table: "InvoiceEvents");
         }
     }
 }

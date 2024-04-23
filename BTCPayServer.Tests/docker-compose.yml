@@ -149,7 +149,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.02.2
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -157,6 +157,7 @@ services:
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=customer_lightningd:9735
@@ -176,13 +177,14 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.02.2
     stop_signal: SIGKILL
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=merchant_lightningd:9735

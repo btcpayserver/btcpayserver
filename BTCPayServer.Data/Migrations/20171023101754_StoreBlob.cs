@@ -10,8 +10,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.AddColumn<byte[]>(
+                        migrationBuilder.AddColumn<byte[]>(
                 name: "StoreBlob",
                 table: "Stores",
                 nullable: true);

@@ -116,6 +116,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
+                BrandColor = storeBlob.BrandColor,
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToString(),
@@ -192,6 +193,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
+            blob.BrandColor = restModel.BrandColor;
             if (restModel.AutoDetectLanguage.HasValue)
                 blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
             if (restModel.ShowPayInWalletButton.HasValue)
@@ -236,6 +238,10 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!string.IsNullOrEmpty(request.Website) && !Uri.TryCreate(request.Website, UriKind.Absolute, out _))
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
+            }
+            if (!string.IsNullOrEmpty(request.BrandColor) && !ColorPalette.IsValid(request.BrandColor))
+            {
+                ModelState.AddModelError(nameof(request.BrandColor), "Brand color is not a valid HEX Color (e.g. #F7931A)");
             }
             if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");

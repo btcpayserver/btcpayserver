@@ -16,6 +16,8 @@ namespace BTCPayServer.Client.Models
 
         public string Website { get; set; }
 
+        public string BrandColor { get; set; }
+
         public string SupportUrl { get; set; }
 
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]

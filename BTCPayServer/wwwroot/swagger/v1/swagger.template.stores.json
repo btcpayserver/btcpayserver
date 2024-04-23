@@ -411,6 +411,12 @@
                         "description": "The support URI of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`. Can be any valid URI, such as a website, email, and nostr.",
                         "format": "uri"
                     },
+                    "brandColor": {
+                        "type": "string",
+                        "description": "The brand color of the store in HEX format",
+                        "nullable": true,
+                        "example": "#F7931A"
+                    },
                     "defaultCurrency": {
                         "type": "string",
                         "description": "The default currency of the store",

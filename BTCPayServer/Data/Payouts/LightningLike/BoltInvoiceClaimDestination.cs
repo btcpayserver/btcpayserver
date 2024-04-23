@@ -11,7 +11,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             Bolt11 = bolt11 ?? throw new ArgumentNullException(nameof(bolt11));
             PaymentRequest = paymentRequest;
             PaymentHash = paymentRequest.Hash;
-            Amount = paymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
+            Amount =  paymentRequest.MinimumAmount.MilliSatoshi == LightMoney.Zero ? null:  paymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
         }
 
         public override string ToString()

@@ -35,9 +35,7 @@ namespace BTCPayServer.Data
         {
             public string Title { get; set; }
             public string Description { get; set; }
-            public string EmbeddedCSS { get; set; }
             public string Email { get; set; }
-            public string CustomCSSLink { get; set; }
         }
     }
 }

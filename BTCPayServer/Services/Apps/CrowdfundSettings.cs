@@ -28,11 +28,9 @@ namespace BTCPayServer.Services.Apps
         }
 
         public bool EnforceTargetAmount { get; set; }
-        public string CustomCSSLink { get; set; }
         public string MainImageUrl { get; set; }
         public string NotificationUrl { get; set; }
         public string Tagline { get; set; }
-        public string EmbeddedCSS { get; set; }
         public string PerksTemplate { get; set; }
         public bool DisqusEnabled { get; set; }
         public bool SoundsEnabled { get; set; }

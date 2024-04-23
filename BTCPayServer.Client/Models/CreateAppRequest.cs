@@ -35,13 +35,11 @@ namespace BTCPayServer.Client.Models
         public string CustomAmountPayButtonText { get; set; } = null;
         public string FixedAmountPayButtonText { get; set; } = null;
         public string TipText { get; set; } = null;
-        public string CustomCSSLink { get; set; } = null;
         public string NotificationUrl { get; set; } = null;
         public string RedirectUrl { get; set; } = null;
         public bool? RedirectAutomatically { get; set; } = null;
         public bool? Archived { get; set; } = null;
         public string FormId { get; set; } = null;
-        public string EmbeddedCSS { get; set; } = null;
     }
 
     public enum CrowdfundResetEvery
@@ -65,9 +63,7 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? EndDate { get; set; } = null;
         public decimal? TargetAmount { get; set; } = null;
-        public string CustomCSSLink { get; set; } = null;
         public string MainImageUrl { get; set; } = null;
-        public string EmbeddedCSS { get; set; } = null;
         public string NotificationUrl { get; set; } = null;
         public string Tagline { get; set; } = null;
         public string PerksTemplate { get; set; } = null;

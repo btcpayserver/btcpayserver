@@ -43,17 +43,6 @@
 {
     <link href="@cssUrl" asp-append-version="true" rel="stylesheet" />
 }
-@* Deprecated, but added for backwards-compatibility *@
-@if (!string.IsNullOrEmpty(Model.CustomCSSLink))
-{
-    <link href="@Model.CustomCSSLink" asp-append-version="true" rel="stylesheet" />
-}
-@if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-{
-    <style>
-        @Safe.Raw(Model.EmbeddedCSS)
-    </style>
-}
 @if (!string.IsNullOrEmpty(logoUrl))
 {
     <link rel="icon" href="@logoUrl">

@@ -7,8 +7,6 @@ public class StoreBrandingViewModel
     public string BrandColor { get; set; }
     public string LogoFileId { get; set; }
     public string CssFileId { get; set; }
-    public string CustomCSSLink { get; set; }
-    public string EmbeddedCSS { get; set; }
     
     public StoreBrandingViewModel()
     {

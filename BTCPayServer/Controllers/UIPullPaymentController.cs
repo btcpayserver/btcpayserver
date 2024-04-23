@@ -121,11 +121,7 @@ namespace BTCPayServer.Controllers
                 }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
-            vm.StoreBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                EmbeddedCSS = blob.View.EmbeddedCSS,
-                CustomCSSLink = blob.View.CustomCSSLink
-            };
+            vm.StoreBranding = new StoreBrandingViewModel(storeBlob);
             
             if (_pullPaymentHostedService.SupportsLNURL(blob))
             {
@@ -185,13 +181,11 @@ namespace BTCPayServer.Controllers
             var blob = pp.GetBlob();
             blob.Description = viewModel.Description ?? string.Empty;
             blob.Name = viewModel.Name ?? string.Empty;
-            blob.View = new PullPaymentBlob.PullPaymentView()
+            blob.View = new PullPaymentBlob.PullPaymentView
             {
                 Title = viewModel.Name ?? string.Empty,
                 Description = viewModel.Description ?? string.Empty,
-                CustomCSSLink = viewModel.CustomCSSLink,
-                Email = null,
-                EmbeddedCSS = viewModel.EmbeddedCSS,
+                Email = null
             };
 
             pp.SetBlob(blob);

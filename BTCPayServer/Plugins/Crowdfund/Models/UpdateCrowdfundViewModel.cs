@@ -86,13 +86,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         [Display(Name = "Contribution Perks Template")]
         public string PerksTemplate { get; set; }
 
-        [MaxLength(500)]
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-
-        [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
-
         [Display(Name = "Count all invoices created on the store as part of the goal")]
         public bool UseAllStoreInvoices { get; set; }
 

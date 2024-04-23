@@ -551,11 +551,6 @@
                                 "description": "Prompt which appears next to the tip amount field if tipping is enabled",
                                 "example": "Do you want to leave a tip?"
                             },
-                            "customCSSLink": {
-                                "type": "string",
-                                "description": "Link to a custom CSS stylesheet to be used in the app",
-                                "example": "https://bootswatch.com/4/slate/bootstrap.min.css"
-                            },
                             "notificationUrl": {
                                 "type": "string",
                                 "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations"
@@ -563,10 +558,6 @@
                             "redirectUrl": {
                                 "type": "string",
                                 "description": "URL user is redirected to once invoice is paid"
-                            },
-                            "embeddedCSS": {
-                                "type": "string",
-                                "description": "Custom CSS embedded into the app"
                             },
                             "redirectAutomatically": {
                                 "type": "boolean",
@@ -627,17 +618,9 @@
                                 "description": "Target amount for the crowdfund",
                                 "example": 420.69
                             },
-                            "customCSSLink": {
-                                "type": "string",
-                                "description": "Link to a custom CSS stylesheet to be used in the app"
-                            },
                             "mainImageUrl": {
                                 "type": "string",
                                 "description": "URL for image used as a cover image for the app"
-                            },
-                            "embeddedCSS": {
-                                "type": "string",
-                                "description": "Custom CSS embedded into the app"
                             },
                             "perks": {
                                 "type": "object",
@@ -875,16 +858,6 @@
                         "default": "Do you want to leave a tip?",
                         "nullable": true
                     },
-                    "customCSSLink": {
-                        "type": "string",
-                        "description": "Link to a custom CSS stylesheet to be used in the app",
-                        "nullable": true
-                    },
-                    "embeddedCSS": {
-                        "type": "string",
-                        "description": "Custom CSS to embed into the app",
-                        "nullable": true
-                    },
                     "notificationUrl": {
                         "type": "string",
                         "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
@@ -966,19 +939,9 @@
                         "example": 420,
                         "nullable": true
                     },
-                    "customCSSLink": {
-                        "type": "string",
-                        "description": "Link to a custom CSS stylesheet to be used in the app",
-                        "nullable": true
-                    },
                     "mainImageUrl": {
                         "type": "string",
                         "description": "URL for image to be used as a cover image for the app",
-                        "nullable": true
-                    },
-                    "embeddedCSS": {
-                        "type": "string",
-                        "description": "Custom CSS to embed into the app",
                         "nullable": true
                     },
                     "perksTemplate": {

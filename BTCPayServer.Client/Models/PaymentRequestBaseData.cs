@@ -17,9 +17,6 @@ namespace BTCPayServer.Client.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public string Email { get; set; }
-
-        public string EmbeddedCSS { get; set; }
-        public string CustomCSSLink { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
 
         [JsonExtensionData]

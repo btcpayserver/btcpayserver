@@ -191,8 +191,6 @@ namespace BTCPayServer.Controllers
             blob.Amount = viewModel.Amount;
             blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
             blob.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
-            blob.EmbeddedCSS = viewModel.EmbeddedCSS;
-            blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
             blob.FormId = viewModel.FormId;
 
@@ -229,11 +227,7 @@ namespace BTCPayServer.Controllers
             vm.HubPath = PaymentRequestHub.GetHubPath(Request);
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
-            vm.StoreBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                EmbeddedCSS = vm.EmbeddedCSS,
-                CustomCSSLink = vm.CustomCSSLink
-            };
+            vm.StoreBranding = new StoreBrandingViewModel(storeBlob);
 
             return View(vm);
         }
@@ -290,11 +284,8 @@ namespace BTCPayServer.Controllers
             viewModel.Form = form;
             
             var storeBlob = result.StoreData.GetStoreBlob();
-            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                EmbeddedCSS = prBlob.EmbeddedCSS,
-                CustomCSSLink = prBlob.CustomCSSLink
-            };
+            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob);
+            
             return View("Views/UIForms/View", viewModel);
         }
 

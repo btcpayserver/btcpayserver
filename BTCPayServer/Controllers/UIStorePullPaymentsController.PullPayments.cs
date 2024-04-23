@@ -95,8 +95,6 @@ namespace BTCPayServer.Controllers
             {
                 Name = "",
                 Currency = CurrentStore.GetStoreBlob().DefaultCurrency,
-                CustomCSSLink = "",
-                EmbeddedCSS = "",
                 PayoutMethodsItem =
                     paymentMethods.Select(id => new SelectListItem(id.ToString(), id.ToString(), true))
             });
@@ -145,7 +143,7 @@ namespace BTCPayServer.Controllers
                 return View(model);
             model.AutoApproveClaims = model.AutoApproveClaims &&  (await
                 _authorizationService.AuthorizeAsync(User, storeId, Policies.CanCreatePullPayments)).Succeeded;
-            await _pullPaymentService.CreatePullPayment(new HostedServices.CreatePullPayment()
+            await _pullPaymentService.CreatePullPayment(new CreatePullPayment
             {
                 Name = model.Name,
                 Description = model.Description,
@@ -153,17 +151,15 @@ namespace BTCPayServer.Controllers
                 Currency = model.Currency,
                 StoreId = storeId,
                 PayoutMethodIds = selectedPaymentMethodIds,
-                EmbeddedCSS = model.EmbeddedCSS,
-                CustomCSSLink = model.CustomCSSLink,
                 BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration),
                 AutoApproveClaims = model.AutoApproveClaims
             });
-            this.TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Message = "Pull payment request created",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
-            return RedirectToAction(nameof(PullPayments), new { storeId = storeId });
+            return RedirectToAction(nameof(PullPayments), new { storeId });
         }
 
         [Authorize(Policy = Policies.CanViewPullPayments, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

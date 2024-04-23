@@ -55,11 +55,6 @@ namespace BTCPayServer.Models.WalletViewModels
         [Required]
         [ReadOnly(true)]
         public string Currency { get; set; }
-        [MaxLength(500)]
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-        [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
 
         [Display(Name = "Payout Methods")]
         public IEnumerable<string> PayoutMethods { get; set; }
@@ -91,8 +86,6 @@ namespace BTCPayServer.Models.WalletViewModels
             var blob = data.GetBlob();
             Name = blob.Name;
             Description = blob.Description;
-            CustomCSSLink = blob.View.CustomCSSLink;
-            EmbeddedCSS = blob.View.EmbeddedCSS;
         }
 
         [MaxLength(30)]
@@ -100,11 +93,5 @@ namespace BTCPayServer.Models.WalletViewModels
 
         [Display(Name = "Memo")]
         public string Description { get; set; }
-
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-
-        [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
     }
 }

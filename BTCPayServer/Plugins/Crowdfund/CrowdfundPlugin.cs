@@ -180,11 +180,7 @@ namespace BTCPayServer.Plugins.Crowdfund
 
             var store = appData.StoreData;
             var storeBlob = store.GetStoreBlob();
-            var storeBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                CustomCSSLink = settings.CustomCSSLink,
-                EmbeddedCSS = settings.EmbeddedCSS
-            };
+            var storeBranding = new StoreBrandingViewModel(storeBlob);
             var formUrl = settings.FormId != null
                 ? _linkGenerator.GetPathByAction(nameof(UICrowdfundController.CrowdfundForm), "UICrowdfund",
                     new { appId = appData.Id }, _options.Value.RootPath)

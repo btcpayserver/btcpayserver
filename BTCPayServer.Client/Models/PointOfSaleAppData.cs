@@ -30,11 +30,9 @@ namespace BTCPayServer.Client.Models
         public string FixedAmountPayButtonText { get; set; }
         public string CustomAmountPayButtonText { get; set; }
         public string TipText { get; set; }
-        public string CustomCSSLink { get; set; }
         public string NotificationUrl { get; set; }
         public string RedirectUrl { get; set; }
         public string Description { get; set; }
-        public string EmbeddedCSS { get; set; }
         public bool? RedirectAutomatically { get; set; }
     }
 
@@ -50,9 +48,7 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? EndDate { get; set; }
         public decimal? TargetAmount { get; set; }
-        public string CustomCSSLink { get; set; }
         public string MainImageUrl { get; set; }
-        public string EmbeddedCSS { get; set; }
         public string NotificationUrl { get; set; }
         public string Tagline { get; set; }
         public object Perks { get; set; }

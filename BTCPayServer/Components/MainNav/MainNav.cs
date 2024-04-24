@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Lightning;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -69,6 +70,26 @@ namespace BTCPayServer.Components.MainNav
                 // Wallets
                 _storesController.AddPaymentMethods(store, storeBlob,
                     out var derivationSchemes, out var lightningNodes);
+
+                foreach (var lnNode in lightningNodes)
+                {
+                    var pmi = PaymentTypes.LN.GetPaymentMethodId(lnNode.CryptoCode);
+                    if (_paymentMethodHandlerDictionary.TryGet(pmi) is not LightningLikePaymentHandler handler)
+                        continue;
+                    
+                    try
+                    {
+                        var paymentMethodDetails = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, _paymentMethodHandlerDictionary);
+                        await handler.GetNodeInfo(paymentMethodDetails, null, throws: true);
+                        // if we came here without exception, this means the node is available
+                        lnNode.Available = true;
+                    }
+                    catch (Exception)
+                    {
+                        // ignored, node won't be marked as available
+                    }
+                }
+                
                 vm.DerivationSchemes = derivationSchemes;
                 vm.LightningNodes = lightningNodes;
 

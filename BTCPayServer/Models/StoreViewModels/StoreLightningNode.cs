@@ -8,5 +8,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public PaymentMethodId PaymentMethodId { get; set; }
         public string Address { get; set; }
         public bool Enabled { get; set; }
+        public bool Available { get; set; }
     }
 }

@@ -162,10 +162,10 @@ namespace BTCPayServer.Controllers
             model.Overpaid = details.Overpaid;
             model.StillDue = details.StillDue;
             model.HasRates = details.HasRates;
-            
-            if (additionalData.ContainsKey("receiptData"))
+
+            if (additionalData.TryGetValue("receiptData", out object? receiptData))
             {
-                model.ReceiptData = (Dictionary<string, object>)additionalData["receiptData"];
+                model.ReceiptData = (Dictionary<string, object>)receiptData;
                 additionalData.Remove("receiptData");
             }
             
@@ -226,15 +226,40 @@ namespace BTCPayServer.Controllers
             {
                 return View(vm);
             }
-
-            JToken? receiptData = null;
-            i.Metadata?.AdditionalData?.TryGetValue("receiptData", out receiptData);
+            
+            var metaData = PosDataParser.ParsePosData(i.Metadata?.ToJObject());
+            var additionalData = metaData
+                .Where(dict => !InvoiceAdditionalDataExclude.Contains(dict.Key))
+                .ToDictionary(dict => dict.Key, dict => dict.Value);
+                
+            // Split receipt data into cart and additional data 
+            if (additionalData.TryGetValue("receiptData", out object? combinedReceiptData))
+            {
+                var receiptData = new Dictionary<string, object>((Dictionary<string, object>)combinedReceiptData, StringComparer.OrdinalIgnoreCase);
+                string[] cartKeys = ["cart", "subtotal", "discount", "tip", "total"];
+                // extract cart data and lowercase keys to handle data uniformly in PosData partial
+                if (receiptData.Keys.Any(key => cartKeys.Contains(key.ToLowerInvariant())))
+                {
+                    vm.CartData = new Dictionary<string, object>();
+                    foreach (var key in cartKeys)
+                    {
+                        if (!receiptData.ContainsKey(key)) continue;
+                        // add it to cart data and remove it from the general data
+                        vm.CartData.Add(key.ToLowerInvariant(), receiptData[key]);
+                        receiptData.Remove(key);
+                    }
+                }
+                // assign the rest to additional data
+                if (receiptData.Any())
+                {
+                    vm.AdditionalData = receiptData;
+                }
+            }
 
             var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(i, _displayFormatter, _transactionLinkProviders);
 
             vm.Amount = i.PaidAmount.Net;
             vm.Payments = receipt.ShowPayments is false ? null : payments;
-            vm.AdditionalData = PosDataParser.ParsePosData(receiptData);
 
             return View(print ? "InvoiceReceiptPrint" : "InvoiceReceipt", vm);
         }

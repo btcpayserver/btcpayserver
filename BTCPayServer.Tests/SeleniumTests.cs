@@ -2620,9 +2620,9 @@ namespace BTCPayServer.Tests
 
             // Receipt
             s.Driver.WaitForElement(By.Id("ReceiptLink")).Click();
-            var additionalData = s.Driver.FindElement(By.CssSelector("#AdditionalData table"));
-            var items = additionalData.FindElements(By.CssSelector("tbody tr"));
-            var sums = additionalData.FindElements(By.CssSelector("tfoot tr"));
+            var cartData = s.Driver.FindElement(By.CssSelector("#CartData table"));
+            var items = cartData.FindElements(By.CssSelector("tbody tr"));
+            var sums = cartData.FindElements(By.CssSelector("tfoot tr"));
             Assert.Equal(2, items.Count);
             Assert.Equal(4, sums.Count);
             Assert.Contains("Manual entry 1", items[0].FindElement(By.CssSelector("th")).Text);
@@ -2676,21 +2676,19 @@ namespace BTCPayServer.Tests
             // Receipt
             s.Driver.WaitForElement(By.Id("ReceiptLink")).Click();
 
-            additionalData = s.Driver.FindElement(By.CssSelector("#AdditionalData table"));
-            items = additionalData.FindElements(By.CssSelector("tbody tr"));
-            sums = additionalData.FindElements(By.CssSelector("tfoot tr"));
+            cartData = s.Driver.FindElement(By.CssSelector("#CartData table"));
+            items = cartData.FindElements(By.CssSelector("tbody tr"));
+            sums = cartData.FindElements(By.CssSelector("tfoot tr"));
             Assert.Equal(3, items.Count);
-            Assert.Equal(2, sums.Count);
+            Assert.Single(sums);
             Assert.Contains("Black Tea", items[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1 x 1,00 € = 1,00 €", items[0].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Green Tea", items[1].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("2 x 1,00 € = 2,00 €", items[1].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Manual entry 1", items[2].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1,23 €", items[2].FindElement(By.CssSelector("td")).Text);
-            Assert.Contains("Subtotal", sums[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("Total", sums[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("4,23 €", sums[0].FindElement(By.CssSelector("td")).Text);
-            Assert.Contains("Total", sums[1].FindElement(By.CssSelector("th")).Text);
-            Assert.Contains("4,23 €", sums[1].FindElement(By.CssSelector("td")).Text);
             
             // Guest user can access recent transactions
             s.GoToHome();
@@ -2837,9 +2835,9 @@ namespace BTCPayServer.Tests
 
             // Receipt
             s.Driver.WaitForElement(By.Id("ReceiptLink")).Click();
-            var additionalData = s.Driver.FindElement(By.CssSelector("#AdditionalData table"));
-            var items = additionalData.FindElements(By.CssSelector("tbody tr"));
-            var sums = additionalData.FindElements(By.CssSelector("tfoot tr"));
+            var cartData = s.Driver.FindElement(By.CssSelector("#CartData table"));
+            var items = cartData.FindElements(By.CssSelector("tbody tr"));
+            var sums = cartData.FindElements(By.CssSelector("tfoot tr"));
             Assert.Equal(7, items.Count);
             Assert.Equal(4, sums.Count);
             Assert.Contains("Black Tea", items[0].FindElement(By.CssSelector("th")).Text);

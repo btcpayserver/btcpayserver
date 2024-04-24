@@ -1,11 +1,11 @@
 @model BTCPayServer.Models.InvoicingModels.InvoiceReceiptViewModel
 
 @functions {
-    public bool IsManualEntryCart(object data)
+	public bool IsManualEntryCart(Dictionary<string, object> additionalData)
     {
-        if (data is Dictionary<string, object>)
+		_ = additionalData.TryGetValue("cart", out var data) || additionalData.TryGetValue("Cart", out data);
+        if (data is Dictionary<string, object> cart)
         {
-            Dictionary<string, object> cart = (Dictionary<string, object>)data;
             return cart.Count == 1 && cart.ContainsKey("Manual entry 1");
         }
 
@@ -103,6 +103,7 @@
         }
         else
         {
+            var hasCart = Model.CartData?.Any() is true;
             <div id="PaymentDetails">
                 <div class="my-2 text-center small">
                     @if (!string.IsNullOrEmpty(Model.OrderId))
@@ -112,20 +113,29 @@
                     @Model.Timestamp.ToBrowserDate()
                 </div>
                 <table class="table table-borderless table-sm small my-0">
-                    <tr>
-                        <td class="text-nowrap text-secondary">Total</td>
-                        <td class="text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
-                    </tr>
-                    <tr>
-                        <td colspan="2"><hr class="w-100 my-0"/></td>
-                    </tr>
-                    @if (Model.AdditionalData?.Any() is true &&
-                        ((Model.AdditionalData.ContainsKey("Cart") && !IsManualEntryCart(Model.AdditionalData["Cart"])) 
-                            || Model.AdditionalData.ContainsKey("Discount") || Model.AdditionalData.ContainsKey("Tip")))
+                    @if (Model.AdditionalData?.Any() is true)
                     {
-                        @if (Model.AdditionalData.ContainsKey("Cart"))
+                        @foreach (var (key, value) in Model.AdditionalData)
                         {
-                            @foreach (var (key, value) in (Dictionary<string, object>)Model.AdditionalData["Cart"])
+                            <tr>
+                                <td class="text-secondary">@key</td>
+                                <td class="text-end">@value</td>
+                            </tr>
+                        }
+                        <tr>
+                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                        </tr>
+                    }
+					@if (hasCart && !IsManualEntryCart(Model.AdditionalData))
+                    {
+						_ = Model.CartData.TryGetValue("cart", out var cart) || Model.CartData.TryGetValue("Cart", out cart);
+                        var hasTotal = Model.CartData.TryGetValue("total", out var total) || Model.CartData.TryGetValue("Total", out total);
+                        var hasSubtotal = Model.CartData.TryGetValue("subtotal", out var subtotal) || Model.CartData.TryGetValue("subTotal", out subtotal) || Model.CartData.TryGetValue("Subtotal", out subtotal);
+                        var hasDiscount = Model.CartData.TryGetValue("discount", out var discount) || Model.CartData.TryGetValue("Discount", out discount);
+                        var hasTip = Model.CartData.TryGetValue("tip", out var tip) || Model.CartData.TryGetValue("Tip", out tip);
+                        if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict) 
+                        {
+                            @foreach (var (key, value) in cartDict)
                             {
                                 <tr>
                                     <td class="text-secondary">@key</td>
@@ -133,33 +143,62 @@
                                 </tr>
                             }
                         }
-                        @if (Model.AdditionalData.ContainsKey("Subtotal"))
+                        else if (cart is ICollection<object> { Count: > 0 } cartCollection) 
+                        { 
+                            @foreach (var value in cartCollection)
+                            {
+                                <tr>
+                                    <td class="text-end">@value</td>
+                                </tr>
+                            }
+                        }
+                        if (hasSubtotal && (hasDiscount || hasTip))
                         {
                             <tr>
+                                <td colspan="2"><hr class="w-100 my-0"/></td>
+                            </tr>
+                            <tr>
                                 <td class="text-secondary">Subtotal</td>
-                                <td class="text-end">@Model.AdditionalData["Subtotal"]</td>
+                                <td class="text-end">@subtotal</td>
                             </tr>
                         }
-                        @if (Model.AdditionalData.ContainsKey("Discount"))
+                        if (hasDiscount)
                         {
                             <tr>
                                 <td class="text-secondary">Discount</td>
-                                <td class="text-end">@Model.AdditionalData["Discount"]</td>
+                                <td class="text-end">@discount</td>
                             </tr>
                         }
-                        @if (Model.AdditionalData.ContainsKey("Tip"))
+                        if (hasTip)
                         {
                             <tr>
                                 <td class="text-secondary">Tip</td>
-                                <td class="text-end">@Model.AdditionalData["Tip"]</td>
+                                <td class="text-end">@tip</td>
                             </tr>
                         }
+                        if (hasTotal)
+                        {
+                            <tr>
+                                <td colspan="2"><hr class="w-100 my-0"/></td>
+                            </tr>
+                            <tr>
+                                <th class="text-secondary">Total</th>
+                                <td class="text-end fw-semibold">@total</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
                         <tr>
-                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                            <td class="text-nowrap text-secondary">Total</td>
+                            <td class="text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                         </tr>
                     }
                     @if (Model.Payments?.Any() is true)
                     {
+                        <tr>
+                            <td colspan="2"><hr class="w-100 my-0"/></td>
+                        </tr>
                         @for (var i = 0; i < Model.Payments.Count; i++)
                         {
                             var payment = Model.Payments[i];
@@ -230,7 +269,9 @@
     <hr class="w-100 my-0 bg-none"/>
 </center>
 </body>
+<script src="~/main/utils.js" asp-append-version="true"></script>
 <script>
+    formatDateTimes();
     window.print();
 </script>
 </html>

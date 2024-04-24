@@ -23,18 +23,16 @@ namespace BTCPayServer.Controllers
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
         private readonly PaymentMethodHandlerDictionary _handlers;
-        private readonly LightningLikePaymentHandler _LightningLikePaymentHandler;
         private readonly StoreRepository _StoreRepository;
 
         public UIPublicLightningNodeInfoController(BTCPayNetworkProvider btcPayNetworkProvider,
             Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
             PaymentMethodHandlerDictionary handlers,
-            LightningLikePaymentHandler lightningLikePaymentHandler, StoreRepository storeRepository)
+            StoreRepository storeRepository)
         {
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _paymentModelExtensions = paymentModelExtensions;
             _handlers = handlers;
-            _LightningLikePaymentHandler = lightningLikePaymentHandler;
             _StoreRepository = storeRepository;
         }
 
@@ -43,7 +41,8 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ShowLightningNodeInfo(string storeId, string cryptoCode)
         {
             var store = await _StoreRepository.FindStore(storeId);
-            if (store == null)
+            var pmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+            if (store == null || _handlers.TryGet(pmi) is not LightningLikePaymentHandler handler)
                 return NotFound();
 
             var storeBlob = store.GetStoreBlob();
@@ -55,10 +54,9 @@ namespace BTCPayServer.Controllers
             };
             try
             {
-                var pmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
                 var paymentMethodDetails = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, _handlers);
                 var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-                var nodeInfo = await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, null, throws: true);
+                var nodeInfo = await handler.GetNodeInfo(paymentMethodDetails, null, throws: true);
 
                 vm.Available = true;
                 vm.CryptoImage = GetImage(pmi);

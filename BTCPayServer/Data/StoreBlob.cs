@@ -20,7 +20,7 @@ namespace BTCPayServer.Data
 {
     public class StoreBlob
     {
-        public static string StandardDefaultCurrency = "NGN";
+        public static string StandardDefaultCurrency = "USD";
 
         public StoreBlob()
         {

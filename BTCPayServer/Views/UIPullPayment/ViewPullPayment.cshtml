@@ -58,7 +58,7 @@
                                         <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
                                     }
                                     <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan destination with camera" id="scandestination-button">
-                                        <i class="fa fa-camera"></i>
+                                        <vc:icon symbol="scan-qr"/>
                                     </button>
                                 </div>
                             </div>
@@ -202,7 +202,7 @@
             </p>
 			@if (Model.LnurlEndpoint is not null)
 			{
-				<p id="BoltcardActions" style="visibility:hidden">
+				<p id="BoltcardActions">
 					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
 						Setup Boltcard
 					</a>
@@ -229,11 +229,10 @@
 			const isAndroid = /(android)/i.test(navigator.userAgent);
 			if (isAndroid) {
 				document.getElementById("SetupBoltcard").setAttribute('target', '_blank');
-				document.getElementById("SetupBoltcard").setAttribute('href', @Safe.Json(@Model.SetupDeepLink));
+				document.getElementById("SetupBoltcard").setAttribute('href', @Safe.Json(Model.SetupDeepLink));
 				document.getElementById("ResetBoltcard").setAttribute('target', '_blank');
-				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(@Model.ResetDeepLink));
+				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(Model.ResetDeepLink));
 			}
-			document.getElementById("BoltcardActions").style.visibility = "visible";
 
             window.qrApp = initQRShow({});
             delegate('click', 'button[page-qr]', event => {

@@ -1,6 +1,7 @@
 @using BTCPayServer.Client
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Models.ServerViewModels
 @model BTCPayServer.Models.EmailsViewModel
 
 <div class="row">
@@ -44,7 +45,7 @@
             <div class="form-text">For many email providers (like Gmail) your login is your email address.</div>
             <span asp-validation-for="Settings.Login" class="text-danger"></span>
         </div>
-        <div class="form-group" permission="@Policies.CanModifyStoreSettings">
+        <div class="form-group" permission="@(Model is ServerEmailsViewModel ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)">
             @if (!Model.PasswordSet)
             {
                 <label asp-for="Settings.Password" class="form-label"></label>
@@ -81,7 +82,6 @@
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
-
         delegate('click', '#quick-fill .dropdown-menu a', function (e) {
             e.preventDefault();
             

@@ -422,7 +422,7 @@
                     </table>
                 </div>
             }
-            @if (Model.ReceiptData != null && Model.ReceiptData.Any())
+            @if (Model.ReceiptData?.Any() is true)
             {
                 <div>
                     <h3 class="mb-3">
@@ -434,7 +434,7 @@
                     <partial name="PosData" model="(Model.ReceiptData, 1)" />
                 </div>
             }
-            @if (Model.AdditionalData != null && Model.AdditionalData.Any())
+            @if (Model.AdditionalData?.Any() is true)
             {
                 <div>
                     <h3 class="mb-3">

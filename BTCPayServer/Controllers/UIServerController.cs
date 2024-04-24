@@ -23,7 +23,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -67,7 +66,6 @@ namespace BTCPayServer.Controllers
         private readonly IFileService _fileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
         private readonly LinkGenerator _linkGenerator;
-        private readonly RateFetcher _rateFactory;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
 
@@ -92,13 +90,11 @@ namespace BTCPayServer.Controllers
             Logs logs,
             LinkGenerator linkGenerator,
             EmailSenderFactory emailSenderFactory,
-            RateFetcher rateFactory,
             IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
             TransactionLinkProviders transactionLinkProviders
         )
         {
-            _rateFactory = rateFactory;
             _policiesSettings = policiesSettings;
             _Options = options;
             _StoredFileRepository = storedFileRepository;
@@ -1192,69 +1188,6 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        [HttpGet("server/generalsetting")]
-        public async Task<IActionResult> ServerGeneralSetting()
-        {
-            var stores = await _StoreRepository.GetStores();
-            var vm = new ListStoresViewModel
-            {
-                Stores = stores
-                    .Select(s => new ListStoresViewModel.StoreViewModel
-                    {
-                        StoreId = s.Id,
-                        StoreName = s.StoreName,
-                        Archived = s.Archived,
-                        Users = s.UserStores
-                    })
-                    .OrderBy(s => !s.Archived)
-                    .ToList()
-            };
-            return View(vm);
-        }
-
-
-
-        [HttpGet("edit/{storeId}")]
-        public async Task<IActionResult> EditStore(string storeId)
-        {
-            var store = await _StoreRepository.FindStore(storeId);
-            if (store is null)
-                return NotFound();
-
-            var blob = store.GetStoreBlob();
-
-            var vm = new EditStoreViewModel
-            {
-                StoreId = store.Id,
-                Name = store.StoreName,
-                DefaultCurrency = blob.DefaultCurrency,
-                Exchanges = GetExchangesSelectList(null)
-            };
-            return View(vm);
-        }
-
-        [HttpPost("edit/{storeId}")]
-        public async Task<IActionResult> EditStore(string storeId, EditStoreViewModel vm)
-        {
-            if (!ModelState.IsValid)
-            {
-                vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
-                return View(vm);
-            }
-
-            var store = await _StoreRepository.FindStore(storeId);
-            if (store is null)
-                return NotFound();
-
-            var blob = store.GetStoreBlob();
-            blob.DefaultCurrency = vm.DefaultCurrency;
-            blob.PreferredExchange = vm.PreferredExchange;
-            store.SetStoreBlob(blob);
-            await _StoreRepository.UpdateStore(store);
-            TempData[WellKnownTempData.SuccessMessage] = "Store successfully updated";
-            return RedirectToAction(nameof(UIServerController.ServerGeneralSetting), "UIServer");
-        }
-
         [HttpGet("server/emails")]
         public async Task<IActionResult> Emails()
         {
@@ -1392,17 +1325,6 @@ namespace BTCPayServer.Controllers
             }
 
             return View("Logs", vm);
-        }
-
-        private SelectList GetExchangesSelectList(string selected)
-        {
-            var exchanges = _rateFactory.RateProviderFactory
-                .AvailableRateProviders
-                .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            exchanges.Insert(0, new(null, "Recommended", ""));
-            var chosen = exchanges.FirstOrDefault(f => f.Id == selected) ?? exchanges.First();
-            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
         }
     }
 }

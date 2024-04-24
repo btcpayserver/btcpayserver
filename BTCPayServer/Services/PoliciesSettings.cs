@@ -72,6 +72,8 @@ namespace BTCPayServer.Services
 
         [Display(Name = "Show plugins in pre-release")]
         public bool PluginPreReleases { get; set; }
+        [Display(Name = "Select default currency for store creation")]
+        public string DefaultCurrency { get; set; }
 
         public bool DisableSSHService { get; set; }
 

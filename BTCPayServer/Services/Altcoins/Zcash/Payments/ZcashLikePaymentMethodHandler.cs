@@ -26,7 +26,6 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
 {
     public class ZcashLikePaymentMethodHandler : IPaymentMethodHandler
     {
-        internal static PaymentType ZcashLike => ZcashPaymentType.Instance;
         private readonly ZcashLikeSpecificBtcPayNetwork _network;
         public ZcashLikeSpecificBtcPayNetwork Network => _network;
         public JsonSerializer Serializer { get; }
@@ -35,7 +34,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         public ZcashLikePaymentMethodHandler(BTCPayNetworkBase network, ZcashRPCProvider ZcashRpcProvider)
         {
             _network = (ZcashLikeSpecificBtcPayNetwork)network;
-            PaymentMethodId = ZcashLike.GetPaymentMethodId(_network.CryptoCode);
+            PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(_network.CryptoCode);
             Serializer = BlobSerializer.CreateSerializer().Serializer;
             _ZcashRpcProvider = ZcashRpcProvider;
         }

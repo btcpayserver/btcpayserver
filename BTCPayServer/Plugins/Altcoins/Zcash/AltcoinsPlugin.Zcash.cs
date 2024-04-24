@@ -80,7 +80,7 @@ public partial class AltcoinsPlugin
         foreach (var ZcashLikeSpecificBtcPayNetwork in supportedNetworks)
         {
             var daemonUri =
-                configuration.GetOrDefault<Uri>($"{ZcashLikeSpecificBtcPayNetwork.CryptoCode}_daemon_uri",
+                configuration.GetOrDefault<Uri?>($"{ZcashLikeSpecificBtcPayNetwork.CryptoCode}_daemon_uri",
                     null);
             var walletDaemonUri =
                 configuration.GetOrDefault<Uri?>(

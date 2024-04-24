@@ -28,7 +28,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 {
     public class MoneroLikePaymentMethodHandler : IPaymentMethodHandler
     {
-        internal static PaymentType MoneroLike => MoneroPaymentType.Instance;
         private readonly MoneroLikeSpecificBtcPayNetwork _network;
         public MoneroLikeSpecificBtcPayNetwork Network => _network;
         public JsonSerializer Serializer { get; }
@@ -38,7 +37,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public MoneroLikePaymentMethodHandler(MoneroLikeSpecificBtcPayNetwork network, MoneroRPCProvider moneroRpcProvider)
         {
-            PaymentMethodId = MoneroLike.GetPaymentMethodId(network.CryptoCode);
+            PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
             _network = network;
             Serializer = BlobSerializer.CreateSerializer().Serializer;
             _moneroRpcProvider = moneroRpcProvider;

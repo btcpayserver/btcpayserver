@@ -157,7 +157,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
             var moneroWalletRpcClient = _moneroRpcProvider.WalletRpcClients[cryptoCode];
             var network = _networkProvider.GetNetwork(cryptoCode);
-            var paymentId = MoneroPaymentType.Instance.GetPaymentMethodId(network.CryptoCode);
+            var paymentId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
             var handler = (MoneroLikePaymentMethodHandler)_handlers[paymentId];
 
             //get all the required data in one list (invoice, its existing payments and the current payment method details)
@@ -273,7 +273,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
         private async Task OnTransactionUpdated(string cryptoCode, string transactionHash)
         {
-            var paymentMethodId = MoneroPaymentType.Instance.GetPaymentMethodId(cryptoCode);
+            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             var transfer = await _moneroRpcProvider.WalletRpcClients[cryptoCode]
                 .SendCommandAsync<GetTransferByTransactionIdRequest, GetTransferByTransactionIdResponse>(
                     "get_transfer_by_txid",
@@ -324,7 +324,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
         {
             var network = _networkProvider.GetNetwork(cryptoCode);
-            var pmi = MoneroPaymentType.Instance.GetPaymentMethodId(network.CryptoCode);
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
             var handler = (MoneroLikePaymentMethodHandler)_handlers[pmi];
             var promptDetails = handler.ParsePaymentPromptDetails(invoice.GetPaymentPrompt(pmi).Details);
             var details = new MoneroLikePaymentData()
@@ -397,7 +397,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             var invoices = await _invoiceRepository.GetPendingInvoices();
             if (!invoices.Any())
                 return;
-            var paymentMethodId = MoneroPaymentType.Instance.GetPaymentMethodId(cryptoCode);
+            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             invoices = invoices.Where(entity => entity.GetPaymentPrompt(paymentMethodId)?.Activated is true).ToArray();
             await UpdatePaymentStates(cryptoCode, invoices);
         }
@@ -405,7 +405,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         private IEnumerable<PaymentEntity> GetAllMoneroLikePayments(InvoiceEntity invoice, string cryptoCode)
         {
             return invoice.GetPayments(false)
-                .Where(p => p.PaymentMethodId == MoneroPaymentType.Instance.GetPaymentMethodId(cryptoCode));
+                .Where(p => p.PaymentMethodId == PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode));
         }
     }
 }

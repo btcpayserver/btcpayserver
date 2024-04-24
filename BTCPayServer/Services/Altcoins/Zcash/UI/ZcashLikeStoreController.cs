@@ -106,7 +106,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
                 WalletFileFound = System.IO.File.Exists(fileAddress),
                 Enabled =
                     settings != null &&
-                    !excludeFilters.Match(ZcashPaymentType.Instance.GetPaymentMethodId(cryptoCode)),
+                    !excludeFilters.Match(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode)),
                 Summary = summary,
                 CryptoCode = cryptoCode,
                 AccountIndex = settings?.AccountIndex ?? accountsResponse?.SubaddressAccounts?.FirstOrDefault()?.AccountIndex ?? 0,
@@ -249,13 +249,13 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
 
             var storeData = StoreData;
             var blob = storeData.GetStoreBlob();
-            var pmi = ZcashPaymentType.Instance.GetPaymentMethodId(cryptoCode);
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             storeData.SetPaymentMethodConfig(_handlers[pmi], new ZcashPaymentMethodConfig()
             {
                 AccountIndex = viewModel.AccountIndex
             });
 
-            blob.SetExcluded(ZcashPaymentType.Instance.GetPaymentMethodId(viewModel.CryptoCode), !viewModel.Enabled);
+            blob.SetExcluded(PaymentTypes.CHAIN.GetPaymentMethodId(viewModel.CryptoCode), !viewModel.Enabled);
             storeData.SetStoreBlob(blob);
             await _StoreRepository.UpdateStore(storeData);
             return RedirectToAction("GetStoreZcashLikePaymentMethods",

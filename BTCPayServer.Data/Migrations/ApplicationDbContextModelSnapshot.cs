@@ -302,28 +302,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("Invoices");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.InvoiceEventData", b =>
-                {
-                    b.Property<string>("InvoiceDataId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("UniqueId")
-                        .HasColumnType("text");
-
-                    b.Property<string>("Message")
-                        .HasColumnType("text");
-
-                    b.Property<int>("Severity")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("Timestamp")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("InvoiceDataId", "UniqueId");
-
-                    b.ToTable("InvoiceEvents");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.InvoiceSearchData", b =>
                 {
                     b.Property<int>("Id")
@@ -1241,17 +1219,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("StoreData");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.InvoiceEventData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
-                        .WithMany("Events")
-                        .HasForeignKey("InvoiceDataId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InvoiceData");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.InvoiceSearchData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
@@ -1596,8 +1563,6 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.InvoiceData", b =>
                 {
                     b.Navigation("AddressInvoices");
-
-                    b.Navigation("Events");
 
                     b.Navigation("InvoiceSearchData");
 

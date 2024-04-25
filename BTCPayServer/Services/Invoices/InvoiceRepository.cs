@@ -16,6 +16,7 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Npgsql;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 using InvoiceData = BTCPayServer.Data.InvoiceData;
 
@@ -140,7 +141,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task UpdateInvoice(string invoiceId, UpdateCustomerModel data)
         {
-            retry:
+retry:
             using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
@@ -169,7 +170,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
         {
-            retry:
+retry:
             await using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
@@ -199,7 +200,7 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task ExtendInvoiceMonitor(string invoiceId)
         {
-            retry:
+retry:
             using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
@@ -275,28 +276,33 @@ namespace BTCPayServer.Services.Invoices
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            foreach (var log in logs.ToList())
+            var db = context.Database.GetDbConnection();
+            var data = logs.ToList().Select(log => new InvoiceEventData()
             {
-                await context.InvoiceEvents.AddAsync(new InvoiceEventData()
-                {
-                    Severity = log.Severity,
-                    InvoiceDataId = invoiceId,
-                    Message = log.Log,
-                    Timestamp = log.Timestamp,
-                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-                });
-            }
-            await context.SaveChangesAsync().ConfigureAwait(false);
+                Severity = log.Severity,
+                InvoiceDataId = invoiceId,
+                Message = log.Log,
+                Timestamp = log.Timestamp
+            }).ToArray();
+
+            await db.ExecuteAsync(InsertInvoiceEvent, data);
+        }
+
+        public async Task<InvoiceEventData[]> GetInvoiceLogs(string invoiceId)
+        {
+            await using var context = _applicationDbContextFactory.CreateContext();
+            var db = context.Database.GetDbConnection();
+            return (await db.QueryAsync<InvoiceEventData>("SELECT * FROM \"InvoiceEvents\" WHERE \"InvoiceDataId\"=@InvoiceDataId ORDER BY \"Timestamp\"", new { InvoiceDataId = invoiceId })).ToArray();
         }
 
         public Task UpdatePaymentDetails(string invoiceId, IPaymentMethodHandler handler, object details)
         {
             return UpdatePaymentDetails(invoiceId, handler.PaymentMethodId, details is null ? null : JToken.FromObject(details, handler.Serializer));
-        
+
         }
         public async Task UpdatePaymentDetails(string invoiceId, PaymentMethodId paymentMethodId, JToken details)
         {
-            retry:
+retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 try
@@ -346,7 +352,7 @@ retry:
         public async Task NewPaymentPrompt(string invoiceId, PaymentMethodContext paymentPromptContext)
         {
             var prompt = paymentPromptContext.Prompt;
-            retry:
+retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoice = await context.Invoices.FindAsync(invoiceId);
@@ -397,22 +403,27 @@ retry:
             }
         }
 
+        const string InsertInvoiceEvent = "INSERT INTO \"InvoiceEvents\" (\"InvoiceDataId\", \"Severity\", \"Message\", \"Timestamp\") VALUES (@InvoiceDataId, @Severity, @Message, @Timestamp)";
+
         public async Task AddInvoiceEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            await context.InvoiceEvents.AddAsync(new InvoiceEventData()
-            {
-                Severity = severity,
-                InvoiceDataId = invoiceId,
-                Message = evt.ToString(),
-                Timestamp = DateTimeOffset.UtcNow,
-                UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-            });
+            var conn = context.Database.GetDbConnection();
             try
             {
-                await context.SaveChangesAsync();
+                await conn.ExecuteAsync(InsertInvoiceEvent,
+                    new InvoiceEventData()
+                    {
+                        Severity = severity,
+                        InvoiceDataId = invoiceId,
+                        Message = evt.ToString(),
+                        Timestamp = DateTimeOffset.UtcNow
+                    });
             }
-            catch (DbUpdateException) { } // Probably the invoice does not exists anymore
+            catch (Npgsql.NpgsqlException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+            {
+                // Invoice does not exists
+            }
         }
 
         public static void AddToTextSearch(ApplicationDbContext context, InvoiceData invoice, params string[] terms)
@@ -446,7 +457,7 @@ retry:
         }
         internal async Task UpdateInvoicePrice(string invoiceId, decimal price)
         {
-            retry:
+retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
@@ -742,7 +753,7 @@ retry:
 
             if (queryObject.Take != null)
                 query = query.Take(queryObject.Take.Value);
-            
+
             return query;
         }
         public Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
@@ -756,8 +767,6 @@ retry:
             query = query.Include(o => o.Payments);
             if (queryObject.IncludeAddresses)
                 query = query.Include(o => o.AddressInvoices);
-            if (queryObject.IncludeEvents)
-                query = query.Include(o => o.Events);
             if (queryObject.IncludeRefunds)
                 query = query.Include(o => o.Refunds).ThenInclude(refundData => refundData.PullPaymentData);
             var data = await query.AsNoTracking().ToArrayAsync(cancellationToken).ConfigureAwait(false);
@@ -961,8 +970,6 @@ retry:
             set;
         }
         public bool IncludeAddresses { get; set; }
-
-        public bool IncludeEvents { get; set; }
         public bool IncludeArchived { get; set; } = true;
         public bool IncludeRefunds { get; set; }
         public bool OrderByDesc { get; set; } = true;

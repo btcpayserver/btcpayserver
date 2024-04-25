@@ -50,10 +50,6 @@ namespace BTCPayServer.Data
             {
                 entity.AvailableAddressHashes = invoiceData.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId()).ToHashSet();
             }
-            if (invoiceData.Events != null)
-            {
-                entity.Events = invoiceData.Events.OrderBy(c => c.Timestamp).ToList();
-            }
             if (invoiceData.Refunds != null)
             {
                 entity.Refunds = invoiceData.Refunds.OrderBy(c => c.PullPaymentData.StartDate).ToList();

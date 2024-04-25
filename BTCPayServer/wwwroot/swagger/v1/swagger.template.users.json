@@ -92,7 +92,7 @@
                     "Users"
                 ],
                 "summary": "Create user",
-                "description": "Create a new user.\n\nThis operation can be called without authentication in any of this cases:\n* There is not any administrator yet on the server,\n* The subscriptions are not disabled in the server's policies.\n\nIf the first administrator is created by this call, subscriptions are automatically disabled.",
+                "description": "Create a new user.\n\nThis operation can be called without authentication in any of this cases:\n* There is not any administrator yet on the server,\n* User registrations are not disabled in the server's policies.\n\nIf the first administrator is created by this call, user registrations are automatically disabled.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -149,7 +149,7 @@
                         "description": "If you need to authenticate for this endpoint (ie. the server settings policies lock subscriptions and that an admin already exists)"
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the `unrestricted` permission on a server administrator or if you are not administrator and registrations are disabled in the server's policies)"
+                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the `unrestricted` permission on a server administrator or if you are not administrator and user registrations are disabled in the server's policies)"
                     },
                     "429": {
                         "description": "DDoS protection if you are creating more than 2 accounts every minutes (non-admin only)"

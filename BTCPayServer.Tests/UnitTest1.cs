@@ -2738,17 +2738,6 @@ namespace BTCPayServer.Tests
                             Multiplier = 2
                         }
                 })));
-            blob.AdditionalData.Add("walletKeyPathRoots", JToken.Parse(
-                serializer.ToString(new Dictionary<string, string>()
-                {
-                        {
-                            PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString(),
-                            new KeyPath("44'/0'/0'").ToString()
-                        }
-                })));
-
-            blob.AdditionalData.Add("networkFeeDisabled", JToken.Parse(
-                serializer.ToString((bool?)true)));
 
             blob.AdditionalData.Add("onChainMinValue", JToken.Parse(
                 serializer.ToString(new CurrencyValue()
@@ -2775,12 +2764,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(blob.PaymentMethodCriteria,
                 criteria => criteria.PaymentMethod == PaymentTypes.CHAIN.GetPaymentMethodId("BTC") &&
                             criteria.Above && criteria.Value.Value == 5m && criteria.Value.Currency == "USD");
-            Assert.Equal(NetworkFeeMode.Never, blob.NetworkFeeMode);
             var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
-            Assert.Contains(store.GetPaymentMethodConfigs(handlers), method =>
-                method.Value is DerivationSchemeSettings dss &&
-                method.Key == PaymentTypes.CHAIN.GetPaymentMethodId("BTC") &&
-                dss.AccountKeySettings[0].AccountKeyPath == new KeyPath("44'/0'/0'"));
 
             await acc.ImportOldInvoices();
             var dbContext = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();

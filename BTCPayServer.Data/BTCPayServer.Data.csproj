@@ -14,4 +14,7 @@
     <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
     <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="DBScripts\*.sql" />
+  </ItemGroup>
 </Project>

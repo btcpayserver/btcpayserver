@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 
 namespace BTCPayServer.Data
 {
@@ -14,11 +15,11 @@ namespace BTCPayServer.Data
         {
         }
 
-        public override ApplicationDbContext CreateContext()
+        public override ApplicationDbContext CreateContext(Action<NpgsqlDbContextOptionsBuilder> npgsqlOptionsAction = null)
         {
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
             builder.AddInterceptors(Data.InvoiceData.MigrationInterceptor.Instance);
-            ConfigureBuilder(builder);
+            ConfigureBuilder(builder, npgsqlOptionsAction);
             return new ApplicationDbContext(builder.Options);
         }
     }

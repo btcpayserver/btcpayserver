@@ -978,9 +978,9 @@ namespace BTCPayServer.Controllers
 
             if (storeBlob.PlaySoundOnPayment)
             {
-                model.PaymentSoundUrl = string.IsNullOrEmpty(storeBlob.SoundFileId)
+                model.PaymentSoundUrl = string.IsNullOrEmpty(storeBlob.PaymentSoundUrl)
                     ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
-                    : await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storeBlob.SoundFileId);
+                    : storeBlob.PaymentSoundUrl;
                 model.ErrorSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/error.mp3");
                 model.NfcReadSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/nfcread.mp3");
             }

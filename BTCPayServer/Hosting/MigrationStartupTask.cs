@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Common;
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
@@ -26,17 +24,14 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using Fido2NetLib.Objects;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
 using YamlDotNet.RepresentationModel;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
-using Serializer = NBXplorer.Serializer;
 
 namespace BTCPayServer.Hosting
 {
@@ -53,6 +48,7 @@ namespace BTCPayServer.Hosting
         private readonly LightningAddressService _lightningAddressService;
         private readonly ILogger<MigrationStartupTask> _logger;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
+        private readonly IFileService _fileService;
 
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
 
@@ -67,6 +63,7 @@ namespace BTCPayServer.Hosting
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             LightningAddressService lightningAddressService,
             ILogger<MigrationStartupTask> logger,
+            IFileService fileService,
             LightningClientFactoryService lightningClientFactoryService)
         {
             _handlers = handlers;
@@ -78,6 +75,7 @@ namespace BTCPayServer.Hosting
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _lightningAddressService = lightningAddressService;
             _logger = logger;
+            _fileService = fileService;
             _lightningClientFactoryService = lightningClientFactoryService;
             LightningOptions = lightningOptions;
         }
@@ -219,12 +217,80 @@ namespace BTCPayServer.Hosting
                     settings.MigratePayoutProcessors = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateFileIdsToUrls)
+                {
+                    await MigrateFileIdsToUrls();
+                    settings.MigrateFileIdsToUrls = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task<string> GetRelativeFilePath(string fileId)
+        {
+            return (await _fileService.GetFileUrl(new Uri("/"), fileId))?.Replace("file://", "");
+        }
+
+        private async Task MigrateFileIdsToUrls()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            
+#pragma warning disable CS0618 // Type or member is obsolete
+            // Server
+            var settings = await _Settings.GetSettingAsync<ThemeSettings>();
+            if (!string.IsNullOrEmpty(settings?.LogoFileId) || !string.IsNullOrEmpty(settings?.CustomThemeFileId))
+            {
+                if (!string.IsNullOrEmpty(settings.LogoFileId))
+                {
+                    settings.LogoUrl = await GetRelativeFilePath(settings.LogoFileId);
+                    settings.LogoFileId = null;
+                }
+
+                if (!string.IsNullOrEmpty(settings.CustomThemeFileId))
+                {
+                    settings.CustomThemeCssUrl = await GetRelativeFilePath(settings.CustomThemeFileId);
+                    settings.CustomThemeFileId = null;
+                }
+
+                await _Settings.UpdateSetting(settings);
+            }
+
+            // Stores
+            var stores = await ctx.Stores.ToArrayAsync();
+            foreach (var store in stores)
+            {
+                var changed = false;
+                var storeBlob = store.GetStoreBlob();
+                if (!string.IsNullOrEmpty(storeBlob.LogoFileId))
+                {
+                    storeBlob.LogoUrl = await GetRelativeFilePath(storeBlob.LogoFileId);
+                    storeBlob.LogoFileId = null;
+                    changed = true;
+                }
+                if (!string.IsNullOrEmpty(storeBlob.CssFileId))
+                {
+                    storeBlob.CssUrl = await GetRelativeFilePath(storeBlob.CssFileId);
+                    storeBlob.CssFileId = null;
+                    changed = true;
+                }
+                if (!string.IsNullOrEmpty(storeBlob.SoundFileId))
+                {
+                    storeBlob.PaymentSoundUrl = await GetRelativeFilePath(storeBlob.SoundFileId);
+                    storeBlob.SoundFileId = null;
+                    changed = true;
+                }
+                if (changed)
+                {
+                    store.SetStoreBlob(storeBlob);
+                }
+#pragma warning restore CS0618 // Type or member is obsolete
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigratePayoutProcessors()

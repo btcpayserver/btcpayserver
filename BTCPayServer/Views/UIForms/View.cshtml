@@ -15,7 +15,7 @@
 <body class="min-vh-100">
     <div id="FormView" class="public-page-wrap">
         <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData) { { "Margin", "mb-4" } })" />
-        @if (!string.IsNullOrEmpty(Model.StoreName) || !string.IsNullOrEmpty(Model.StoreBranding.LogoFileId))
+        @if (!string.IsNullOrEmpty(Model.StoreName) || !string.IsNullOrEmpty(Model.StoreBranding.LogoUrl))
         {
             <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
         }

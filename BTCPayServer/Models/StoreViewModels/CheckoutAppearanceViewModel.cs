@@ -59,7 +59,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Custom sound file for successful payment")]
         public IFormFile SoundFile { get; set; }
-        public string SoundFileId { get; set; }
+        public string PaymentSoundUrl { get; set; }
 
         [Display(Name = "Custom HTML title to display on Checkout page")]
         public string HtmlTitle { get; set; }

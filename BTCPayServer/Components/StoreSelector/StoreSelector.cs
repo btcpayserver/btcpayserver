@@ -50,7 +50,7 @@ namespace BTCPayServer.Components.StoreSelector
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
                 CurrentDisplayName = currentStore?.StoreName,
-                CurrentStoreLogoFileId = blob?.LogoFileId,
+                CurrentStoreLogoUrl = blob?.LogoUrl,
                 ArchivedCount = archivedCount
             };
 

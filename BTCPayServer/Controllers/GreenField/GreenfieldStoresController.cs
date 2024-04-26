@@ -117,6 +117,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
                 BrandColor = storeBlob.BrandColor,
+                CssUrl = storeBlob.CssUrl,
+                LogoUrl = storeBlob.LogoUrl,
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToString(),
@@ -194,6 +196,8 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
             blob.BrandColor = restModel.BrandColor;
+            blob.LogoUrl = restModel.LogoUrl;
+            blob.CssUrl = restModel.CssUrl;
             if (restModel.AutoDetectLanguage.HasValue)
                 blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
             if (restModel.ShowPayInWalletButton.HasValue)
@@ -238,6 +242,14 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!string.IsNullOrEmpty(request.Website) && !Uri.TryCreate(request.Website, UriKind.Absolute, out _))
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
+            }
+            if (!string.IsNullOrEmpty(request.LogoUrl) && !Uri.TryCreate(request.LogoUrl, UriKind.Absolute, out _))
+            {
+                ModelState.AddModelError(nameof(request.LogoUrl), "Logo is not a valid url");
+            }
+            if (!string.IsNullOrEmpty(request.CssUrl) && !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out _))
+            {
+                ModelState.AddModelError(nameof(request.CssUrl), "CSS is not a valid url");
             }
             if (!string.IsNullOrEmpty(request.BrandColor) && !ColorPalette.IsValid(request.BrandColor))
             {

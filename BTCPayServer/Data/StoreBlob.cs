@@ -215,7 +215,6 @@ namespace BTCPayServer.Data
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
         public string BrandColor { get; set; }
-        
         public string LogoUrl { get; set; }
         public string CssUrl { get; set; }
         

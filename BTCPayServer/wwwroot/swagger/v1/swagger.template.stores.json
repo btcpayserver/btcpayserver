@@ -411,6 +411,18 @@
                         "description": "The support URI of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`. Can be any valid URI, such as a website, email, and nostr.",
                         "format": "uri"
                     },
+                    "logoUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Absolute URL to a logo file",
+                        "format": "uri"
+                    },
+                    "cssUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Absolute URL to CSS file to customize the public/customer-facing pages of the store. (Invoice, Payment Request, Pull Payment, etc.)",
+                        "format": "uri"
+                    },
                     "brandColor": {
                         "type": "string",
                         "description": "The brand color of the store in HEX format",

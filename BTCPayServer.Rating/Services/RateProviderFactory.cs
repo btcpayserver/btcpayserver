@@ -72,10 +72,18 @@ namespace BTCPayServer.Services.Rates
         {
             foreach (var provider in Providers.ToArray())
             {
-                var prov = new BackgroundFetcherRateProvider(Providers[provider.Key]);
-                prov.RefreshRate = TimeSpan.FromMinutes(1.0);
-                prov.ValidatyTime = TimeSpan.FromMinutes(5.0);
-                Providers[provider.Key] = prov;
+                var prov = Providers[provider.Key];
+                if (prov is IContextualRateProvider)
+                {
+                    Providers[provider.Key] = prov;
+                }
+                else
+                {
+                    var prov2 = new BackgroundFetcherRateProvider(prov);
+                    prov2.RefreshRate = TimeSpan.FromMinutes(1.0);
+                    prov2.ValidatyTime = TimeSpan.FromMinutes(5.0);
+                    Providers[provider.Key] = prov2;
+                }
                 var rsi = provider.Value.RateSourceInfo;
                 AvailableRateProviders.Add(new(rsi.Id, rsi.DisplayName, rsi.Url));
             }

@@ -1121,25 +1121,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, new StoreIdRateContext("hello"), default);
             Assert.Empty(result.Errors);
             Assert.Equal(SpyContextualRateProvider.ExpectedBidAsk, result.BidAsk);
-
-			// Even if there is no context, it should work because the background fetcher remember the context
-			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
-			Assert.Empty(result.Errors);
-			Assert.Equal(SpyContextualRateProvider.ExpectedBidAsk, result.BidAsk);
-
-			var backgroundProv = (BackgroundFetcherRateProvider)factory.Providers["spy"];
-			backgroundProv.RefreshRate = TimeSpan.Zero; // Refresh now
-			await backgroundProv.UpdateIfNecessary(default);
-
-			// Refreshing use the previous working context.
-			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
-			Assert.Empty(result.Errors);
-			Assert.Equal(SpyContextualRateProvider.ExpectedBidAsk, result.BidAsk);
-
-			// Losing the previous working context will result in subsequent failure.
-			backgroundProv.InvalidateCache();
-			result = await fetcher.FetchRate(CurrencyPair.Parse("BTC_USD"), rule, null, default);
-			Assert.Single(result.Errors);
 		}
 
         [Fact]

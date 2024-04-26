@@ -1,13 +1,8 @@
 #nullable enable
-using System;
-using System.Linq;
 #if ALTCOINS
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Altcoins.Zcash.Payments;
 #endif
-using BTCPayServer.Services.Invoices;
-using NBitcoin;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
 {

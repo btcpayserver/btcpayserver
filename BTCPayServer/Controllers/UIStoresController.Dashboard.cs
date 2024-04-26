@@ -1,6 +1,9 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Security.Cryptography;
+using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
@@ -15,6 +18,7 @@ using BTCPayServer.Payments.Lightning;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Controllers;
 
@@ -161,10 +165,19 @@ public partial class UIStoresController
                     CryptoCode = lnNetwork.CryptoCode,
                     PaymentMethodId = handler.PaymentMethodId,
                     Address = lightning?.GetDisplayableConnectionString(),
-                    Enabled = isEnabled
-                });
+                    Enabled = isEnabled,
+                    CacheKey = GetCacheKey(lightning)
+            });
             }
         }
     }
 
+    private string? GetCacheKey(LightningPaymentMethodConfig? lightning)
+    {
+        if (lightning is null)
+            return null;
+        var connStr = lightning.IsInternalNode ? lightning.InternalNodeRef : lightning.ConnectionString;
+        connStr ??= string.Empty;
+        return "LN-INFO-" + Encoders.Hex.EncodeData(SHA256.HashData(Encoding.UTF8.GetBytes(connStr))[0..4]);
+    }
 }

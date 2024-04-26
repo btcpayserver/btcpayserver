@@ -79,8 +79,11 @@
                                     <li class="nav-item">
                                         @if (isSetUp)
                                         {
+                                            var status = scheme.Enabled
+                                                ? scheme.Available ? "enabled" : "disabled"
+                                                : "pending";
                                             <a asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Lightning) @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
-                                                <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
+                                                <span class="me-2 btcpay-status btcpay-status--@status"></span>
 												<span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
                                         }

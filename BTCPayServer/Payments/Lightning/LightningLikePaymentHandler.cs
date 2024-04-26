@@ -1,11 +1,8 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -13,17 +10,12 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.LndHub;
-using BTCPayServer.Logging;
-using BTCPayServer.Models;
-using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitcoin.Protocol;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -41,7 +33,6 @@ namespace BTCPayServer.Payments.Lightning
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly BTCPayNetwork _Network;
         private readonly SocketFactory _socketFactory;
-        private readonly DisplayFormatter _displayFormatter;
         private readonly ISettingsAccessor<PoliciesSettings> _policies;
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
 
@@ -51,7 +42,6 @@ namespace BTCPayServer.Payments.Lightning
             LightningClientFactoryService lightningClientFactory,
             BTCPayNetwork network,
             SocketFactory socketFactory,
-            DisplayFormatter displayFormatter,
             IOptions<LightningNetworkOptions> options,
             ISettingsAccessor<PoliciesSettings> policies,
             IOptions<LightningNetworkOptions> lightningNetworkOptions)
@@ -61,7 +51,6 @@ namespace BTCPayServer.Payments.Lightning
             _lightningClientFactory = lightningClientFactory;
             _Network = network;
             _socketFactory = socketFactory;
-            _displayFormatter = displayFormatter;
             Options = options;
             _policies = policies;
             _lightningNetworkOptions = lightningNetworkOptions;
@@ -155,7 +144,7 @@ namespace BTCPayServer.Payments.Lightning
             var synced = _Dashboard.IsFullySynched(_Network.CryptoCode, out var summary);
             if (supportedPaymentMethod.IsInternalNode && !synced)
                 throw new PaymentMethodUnavailableException("Full node not available");
-            ;
+
             try
             {
                 using var cts = new CancellationTokenSource(LightningTimeout);

@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
-using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -55,7 +54,6 @@ namespace BTCPayServer.Controllers
             try
             {
                 var paymentMethodDetails = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, _handlers);
-                var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
                 var nodeInfo = await handler.GetNodeInfo(paymentMethodDetails, null, throws: true);
 
                 vm.Available = true;

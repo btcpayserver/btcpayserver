@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Lightning;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
@@ -14,6 +16,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 using NBitcoin.Secp256k1;
 
@@ -28,6 +31,8 @@ namespace BTCPayServer.Components.MainNav
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly SettingsRepository _settingsRepository;
+        private readonly IMemoryCache _cache;
+
         public PoliciesSettings PoliciesSettings { get; }
 
         public MainNav(
@@ -38,6 +43,7 @@ namespace BTCPayServer.Components.MainNav
             UserManager<ApplicationUser> userManager,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
+            IMemoryCache cache,
             PoliciesSettings policiesSettings)
         {
             _storeRepo = storeRepo;
@@ -47,6 +53,7 @@ namespace BTCPayServer.Components.MainNav
             _storesController = storesController;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _settingsRepository = settingsRepository;
+            _cache = cache;
             PoliciesSettings = policiesSettings;
         }
 
@@ -69,6 +76,38 @@ namespace BTCPayServer.Components.MainNav
                 // Wallets
                 _storesController.AddPaymentMethods(store, storeBlob,
                     out var derivationSchemes, out var lightningNodes);
+
+                foreach (var lnNode in lightningNodes)
+                {
+                    var pmi = PaymentTypes.LN.GetPaymentMethodId(lnNode.CryptoCode);
+                    if (_paymentMethodHandlerDictionary.TryGet(pmi) is not LightningLikePaymentHandler handler)
+                        continue;
+
+                    if (lnNode.CacheKey is not null)
+                    {
+						using var cts = new CancellationTokenSource(5000);
+						try
+						{
+							lnNode.Available = await _cache.GetOrCreateAsync(lnNode.CacheKey, async entry =>
+							{
+								entry.SetAbsoluteExpiration(TimeSpan.FromMinutes(5));
+								try
+								{
+									var paymentMethodDetails = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, _paymentMethodHandlerDictionary);
+									await handler.GetNodeInfo(paymentMethodDetails, null, throws: true);
+									// if we came here without exception, this means the node is available
+									return true;
+								}
+								catch (Exception)
+								{
+									return false;
+								}
+							}).WithCancellation(cts.Token);
+						}
+						catch when (cts.IsCancellationRequested) { }
+                    }
+                }
+                
                 vm.DerivationSchemes = derivationSchemes;
                 vm.LightningNodes = lightningNodes;
 

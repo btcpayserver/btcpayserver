@@ -9,5 +9,6 @@ namespace BTCPayServer.Models.StoreViewModels
         public string Address { get; set; }
         public bool Enabled { get; set; }
         public bool Available { get; set; }
+        public string CacheKey { get; set; }
     }
 }

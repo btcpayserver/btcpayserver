@@ -45,6 +45,12 @@ namespace BTCPayServer
 #endif
                 conf = confBuilder.Build();
 
+
+                var confirm = conf.GetOrDefault<bool>("EXPERIMENTALV2_CONFIRM", false);
+                if(!confirm)
+                {
+                    throw new ConfigException("You are running an experimental version of BTCPay Server that is the basis for v2. Many things will change and break, including irreversible database migrations. THERE IS NO WAY BACK. Please confirm you understand this by setting the setting EXPERIMENTALV2_CONFIRM=true");
+                }
                 var builder = new WebHostBuilder()
                     .UseKestrel()
                     .UseConfiguration(conf)

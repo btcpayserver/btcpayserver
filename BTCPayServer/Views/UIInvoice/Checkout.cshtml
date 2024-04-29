@@ -59,7 +59,7 @@
                     }
                     else
                     {
-                        <h2 id="AmountDue" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="srvModel.btcDue" data-clipboard-hover :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                        <h2 id="AmountDue" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="asNumber(srvModel.btcDue)" data-clipboard-hover :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
                     }
                 </div>
                 <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
@@ -256,37 +256,37 @@
         <dl>
             <div v-if="orderAmount > 0" id="PaymentDetails-TotalPrice" key="TotalPrice">
                 <dt v-t="'total_price'"></dt>
-                <dd :data-clipboard="srvModel.orderAmount" data-clipboard-hover="start">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+                <dd :data-clipboard="asNumber(srvModel.orderAmount)" data-clipboard-hover="start">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
             </div>
             <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat" key="TotalFiat">
                 <dt v-t="'total_fiat'"></dt>
-                <dd :data-clipboard="srvModel.orderAmountFiat" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
+                <dd :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
             </div>
             <div v-if="srvModel.rate && srvModel.cryptoCode" id="PaymentDetails-ExchangeRate" key="ExchangeRate">
                 <dt v-t="'exchange_rate'"></dt>
-                <dd :data-clipboard="srvModel.rate" data-clipboard-hover="start">
+                <dd :data-clipboard="asNumber(srvModel.rate)" data-clipboard-hover="start">
                     <template v-if="srvModel.cryptoCode === 'sats'">1 sat = {{ srvModel.rate }}</template>
                     <template v-else>1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}</template>
                 </dd>
             </div>
             <div v-if="srvModel.networkFee" id="PaymentDetails-NetworkCost" key="NetworkCost">
                 <dt v-t="'network_cost'"></dt>
-                <dd :data-clipboard="srvModel.networkFee" data-clipboard-hover="start">
+                <dd :data-clipboard="asNumber(srvModel.networkFee)" data-clipboard-hover="start">
                     <div v-if="srvModel.txCountForFee > 0" v-t="{ path: 'tx_count', args: { count: srvModel.txCount } }"></div>
                     <div v-text="`${srvModel.networkFee} ${srvModel.cryptoCode}`"></div>
                 </dd>
             </div>
             <div v-if="btcPaid > 0" id="PaymentDetails-AmountPaid" key="AmountPaid">
                 <dt v-t="'amount_paid'"></dt>
-                <dd :data-clipboard="srvModel.btcPaid" data-clipboard-hover="start" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
+                <dd :data-clipboard="asNumber(srvModel.btcPaid)" data-clipboard-hover="start" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
             </div>
             <div v-if="btcDue > 0" id="PaymentDetails-AmountDue" key="AmountDue">
                 <dt v-t="'amount_due'"></dt>
-                <dd :data-clipboard="srvModel.btcDue" data-clipboard-hover="start" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
+                <dd :data-clipboard="asNumber(srvModel.btcDue)" data-clipboard-hover="start" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
             </div>
             <div v-if="showRecommendedFee" id="PaymentDetails-RecommendedFee" key="RecommendedFee">
                 <dt v-t="'recommended_fee'"></dt>
-                <dd :data-clipboard="srvModel.feeRate" data-clipboard-hover="start" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
+                <dd :data-clipboard="asNumber(srvModel.feeRate)" data-clipboard-hover="start" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
             </div>
         </dl>
     </script>

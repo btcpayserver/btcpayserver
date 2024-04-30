@@ -75,7 +75,7 @@ namespace BTCPayServer.HostedServices
                     await Task.WhenAll(usedProviders
                                     .Select(p => p.Fetcher.UpdateIfNecessary(timeout.Token).ContinueWith(t =>
                                     {
-                                        if (t.Result.Exception != null)
+                                        if (t.Result.Exception != null && t.Result.Exception is not NotSupportedException)
                                         {
                                             Logs.PayServer.LogWarning($"Error while contacting exchange {p.ExchangeName}: {t.Result.Exception.Message}");
                                         }

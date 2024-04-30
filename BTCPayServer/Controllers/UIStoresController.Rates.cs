@@ -11,6 +11,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -124,7 +125,7 @@ public partial class UIStoresController
                 pairs.Add(currencyPair);
             }
 
-            var fetchs = _rateFactory.FetchRates(pairs.ToHashSet(), rules, cancellationToken);
+            var fetchs = _rateFactory.FetchRates(pairs.ToHashSet(), rules, new StoreIdRateContext(model.StoreId), cancellationToken);
             var testResults = new List<RatesViewModel.TestResultViewModel>();
             foreach (var fetch in fetchs)
             {

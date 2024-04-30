@@ -163,7 +163,7 @@ namespace BTCPayServer.Payments
         public async Task FetchingRates(RateFetcher rateFetcher, RateRules rateRules, CancellationToken cancellationToken)
         {
             var currencyPairsToFetch = GetCurrenciesToFetch();
-            var fetchingRates = rateFetcher.FetchRates(currencyPairsToFetch, rateRules, cancellationToken);
+            var fetchingRates = rateFetcher.FetchRates(currencyPairsToFetch, rateRules, new StoreIdRateContext(InvoiceEntity.StoreId), cancellationToken);
             HashSet<CurrencyPair> failedRates = new HashSet<CurrencyPair>();
             foreach (var fetching in fetchingRates)
             {

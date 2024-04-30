@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers.GreenField
             var rules = blob.GetRateRules(_btcPayNetworkProvider);
 
 
-            var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, CancellationToken.None);
+            var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, new StoreIdRateContext(data.Id), CancellationToken.None);
             await Task.WhenAll(rateTasks.Values);
             var result = new List<StoreRateResult>();
             foreach (var rateTask in rateTasks)

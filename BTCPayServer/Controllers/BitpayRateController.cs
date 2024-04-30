@@ -137,7 +137,7 @@ namespace BTCPayServer.Controllers
                 pairs.Add(pair);
             }
 
-            var fetching = _rateProviderFactory.FetchRates(pairs, rules, cancellationToken);
+            var fetching = _rateProviderFactory.FetchRates(pairs, rules, new StoreIdRateContext(storeId), cancellationToken);
             await Task.WhenAll(fetching.Select(f => f.Value).ToArray());
             return Json(pairs
                             .Select(r => (Pair: r, Value: fetching[r].GetAwaiter().GetResult().BidAsk?.Bid))

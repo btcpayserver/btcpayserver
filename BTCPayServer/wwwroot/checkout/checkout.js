@@ -56,6 +56,10 @@ function updateLanguage(lang) {
     }
 }
 
+function asNumber(val) {
+    return val && parseFloat(val.toString().replace(/\s/g, '')); // e.g. sats are formatted with spaces: 1 000 000
+}
+
 Vue.use(VueI18next);
 
 const fallbackLanguage = 'en';
@@ -71,6 +75,9 @@ const PaymentDetails = {
         orderAmount: Number,
         btcPaid: Number,
         btcDue: Number
+    },
+    methods: {
+        asNumber
     }
 }
 
@@ -242,6 +249,7 @@ function initApp() {
             }
         },
         methods: {
+            asNumber,
             changePaymentMethod (id) { // payment method or plugin id
                 if (this.pmId !== id) {
                     this.paymentMethodId = id;
@@ -250,9 +258,6 @@ function initApp() {
             },
             changeLanguage (e) {
                 updateLanguage(e.target.value);
-            },
-            asNumber (val) {
-                return parseFloat(val.replace(/\s/g, '')); // e.g. sats are formatted with spaces: 1 000 000
             },
             padTime (val) {
                 return val.toString().padStart(2, '0');

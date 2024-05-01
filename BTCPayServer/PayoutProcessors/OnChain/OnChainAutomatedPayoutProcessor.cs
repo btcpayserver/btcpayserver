@@ -182,8 +182,11 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     TaskCompletionSource<bool> tcs = new();
                     var cts = new CancellationTokenSource();
                     cts.CancelAfter(TimeSpan.FromSeconds(20));
-                    var task = _eventAggregator.WaitNext<NewOnChainTransactionEvent>(
-                        e => e.NewTransactionEvent.TransactionData.TransactionHash == txHash,
+                    var task = _eventAggregator.WaitNext<NewOnChainTransactionEvent>((e) =>
+                        {
+                            Logs.PayServer.LogInformation($"PAYOUT WAITING {e.NewTransactionEvent.TransactionData.TransactionHash} == {txHash}");
+                        return e.NewTransactionEvent.TransactionData.TransactionHash == txHash;
+                        },
                         cts.Token);
                     var broadcastResult = await explorerClient.BroadcastAsync(workingTx, cts.Token);
                     if (!broadcastResult.Success)

@@ -154,6 +154,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
+                                Logs.PayServer.LogInformation($"TX EVT: " + evt.TransactionData.BlockId);
                                 if (evt.DerivationStrategy != null)
                                 {
                                     wallet.InvalidateCache(evt.DerivationStrategy);

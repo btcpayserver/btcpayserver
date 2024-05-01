@@ -567,7 +567,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = ppBlob.Name,
                 Description = ppBlob.Description,
                 Currency = ppBlob.Currency,
-                Period = ppBlob.Period,
                 Archived = pp.Archived,
                 AutoApproveClaims = ppBlob.AutoApproveClaims,
                 BOLT11Expiration = ppBlob.BOLT11Expiration,

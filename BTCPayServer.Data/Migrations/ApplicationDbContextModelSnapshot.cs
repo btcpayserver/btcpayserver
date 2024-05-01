@@ -675,9 +675,6 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset?>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<long?>("Period")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTimeOffset>("StartDate")
                         .HasColumnType("timestamp with time zone");
 

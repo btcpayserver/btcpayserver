@@ -20,7 +20,6 @@ namespace BTCPayServer.Models.WalletViewModels
                 public string CompletedFormatted { get; set; }
                 public string AwaitingFormatted { get; set; }
                 public string LimitFormatted { get; set; }
-                public string ResetIn { get; set; }
                 public string EndIn { get; set; }
                 public decimal Awaiting { get; set; }
                 public decimal Completed { get; set; }

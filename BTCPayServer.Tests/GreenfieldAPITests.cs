@@ -872,7 +872,6 @@ namespace BTCPayServer.Tests
             {
                 Assert.Equal("Test", result.Name);
                 Assert.Equal("Test description", result.Description);
-                Assert.Null(result.Period);
                 // If it contains ? it means that we are resolving an unknown route with the link generator
                 Assert.DoesNotContain("?", result.ViewLink);
                 Assert.False(result.Archived);

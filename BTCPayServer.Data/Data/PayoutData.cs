@@ -54,17 +54,5 @@ namespace BTCPayServer.Data
                 .Property(o => o.Proof)
                 .HasColumnType("JSONB");
         }
-
-        // utility methods
-        public bool IsInPeriod(PullPaymentData pp, DateTimeOffset now)
-        {
-            var period = pp.GetPeriod(now);
-            if (period is { } p)
-            {
-                return p.Start <= Date && (p.End is not { } end || Date < end);
-            }
-
-            return false;
-        }
     }
 }

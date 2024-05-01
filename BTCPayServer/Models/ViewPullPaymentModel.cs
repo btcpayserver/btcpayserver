@@ -35,17 +35,16 @@ namespace BTCPayServer.Models
             ExpiryDate = data.EndDate is DateTimeOffset dt ? (DateTime?)dt.UtcDateTime : null;
             Email = blob.View.Email;
             MinimumClaim = blob.MinimumClaim;
-            IsPending = !data.IsExpired();
-            var period = data.GetPeriod(now);
+            IsPending = !data.IsExpired(now);
             if (data.Archived)
             {
                 Status = "Archived";
             }
-            else if (data.IsExpired())
+            else if (data.IsExpired(now))
             {
                 Status = "Expired";
             }
-            else if (period is null)
+            else if (!data.HasStarted(now))
             {
                 Status = "Not yet started";
             }
@@ -54,13 +53,10 @@ namespace BTCPayServer.Models
                 Status = string.Empty;
             }
 
-            ResetIn = string.Empty;
-            if (period?.End is DateTimeOffset pe)
+            EndsIn = string.Empty;
+            if (data.EndsIn(now) is TimeSpan e)
             {
-                var resetIn = (pe - DateTimeOffset.UtcNow);
-                if (resetIn < TimeSpan.Zero)
-                    resetIn = TimeSpan.Zero;
-                ResetIn = resetIn.TimeString();
+                EndsIn = e.TimeString();
             }
         }
 
@@ -76,7 +72,7 @@ namespace BTCPayServer.Models
         public string ResetDeepLink { get; set; }
 
         public string HubPath { get; set; }
-        public string ResetIn { get; set; }
+        public string EndsIn { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }
         public bool IsPending { get; set; }

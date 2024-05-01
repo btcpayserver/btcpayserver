@@ -195,13 +195,6 @@
                                         "example": "BTC",
                                         "description": "The currency of the amount."
                                     },
-                                    "period": {
-                                        "type": "integer",
-                                        "format": "decimal",
-                                        "example": 604800,
-                                        "nullable": true,
-                                        "description": "The length of each period in seconds."
-                                    },
                                     "BOLT11Expiration": {
                                         "type": "string",
                                         "example": 30,
@@ -1178,12 +1171,6 @@
                         "format": "decimal",
                         "example": "1.12000000",
                         "description": "The amount in the currency of this pull payment as a decimal string"
-                    },
-                    "period": {
-                        "type": "integer",
-                        "example": 604800,
-                        "nullable": true,
-                        "description": "The length of each period in seconds"
                     },
                     "BOLT11Expiration": {
                         "type": "string",

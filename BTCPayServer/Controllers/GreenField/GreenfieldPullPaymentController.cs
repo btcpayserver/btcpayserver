@@ -127,10 +127,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.ExpiresAt), $"expiresAt should be higher than startAt");
             }
-            if (request.Period <= TimeSpan.Zero)
-            {
-                ModelState.AddModelError(nameof(request.Period), $"The period should be positive");
-            }
             if (request.BOLT11Expiration < TimeSpan.Zero)
             {
                 ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
@@ -162,7 +158,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 StartsAt = request.StartsAt,
                 ExpiresAt = request.ExpiresAt,
-                Period = request.Period,
                 BOLT11Expiration = request.BOLT11Expiration,
                 Name = request.Name,
                 Description = request.Description,
@@ -188,7 +183,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = ppBlob.Name,
                 Description = ppBlob.Description,
                 Currency = ppBlob.Currency,
-                Period = ppBlob.Period,
                 Archived = pp.Archived,
                 AutoApproveClaims = ppBlob.AutoApproveClaims,
                 BOLT11Expiration = ppBlob.BOLT11Expiration,

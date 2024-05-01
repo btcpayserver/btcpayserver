@@ -41,7 +41,6 @@ namespace BTCPayServer.HostedServices
         public string CustomCSSLink { get; set; }
         public string EmbeddedCSS { get; set; }
         public PayoutMethodId[] PayoutMethodIds { get; set; }
-        public TimeSpan? Period { get; set; }
         public bool AutoApproveClaims { get; set; }
         public TimeSpan? BOLT11Expiration { get; set; }
     }
@@ -121,7 +120,6 @@ namespace BTCPayServer.HostedServices
                 ? date
                 : DateTimeOffset.UtcNow - TimeSpan.FromSeconds(1.0);
             o.EndDate = create.ExpiresAt is DateTimeOffset date2 ? new DateTimeOffset?(date2) : null;
-            o.Period = create.Period is TimeSpan period ? (long?)period.TotalSeconds : null;
             o.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
             o.StoreId = create.StoreId;
 
@@ -131,7 +129,6 @@ namespace BTCPayServer.HostedServices
                 Description = create.Description ?? string.Empty,
                 Currency = create.Currency,
                 Limit = create.Amount,
-                Period = o.Period is long periodSeconds ? (TimeSpan?)TimeSpan.FromSeconds(periodSeconds) : null,
                 SupportedPaymentMethods = create.PayoutMethodIds,
                 AutoApproveClaims = create.AutoApproveClaims,
                 View = new PullPaymentBlob.PullPaymentView()
@@ -608,7 +605,7 @@ namespace BTCPayServer.HostedServices
 
                 var payoutsRaw = withoutPullPayment
                     ? null
-                    : await ctx.Payouts.GetPayoutInPeriod(pp, now)
+                    : await ctx.Payouts.Where(p => p.PullPaymentDataId == pp.Id)
                         .Where(p => p.State != PayoutState.Cancelled).ToListAsync();
 
                 var payouts = payoutsRaw?.Select(o => new { Entity = o, Blob = o.GetBlob(_jsonSerializerSettings) });
@@ -801,15 +798,15 @@ namespace BTCPayServer.HostedServices
 
             var ni = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
             var nfi = _currencyNameTable.GetNumberFormatInfo(ppBlob.Currency, true);
-            var totalCompleted = pp.Payouts.Where(p => (p.State == PayoutState.Completed ||
-                                                        p.State == PayoutState.InProgress) && p.IsInPeriod(pp, now))
+            var totalCompleted = pp.Payouts
+                .Where(p => (p.State == PayoutState.Completed ||
+                                                        p.State == PayoutState.InProgress))
                 .Select(o => o.GetBlob(_jsonSerializerSettings).Amount).Sum().RoundToSignificant(ni.Divisibility);
-            var period = pp.GetPeriod(now);
-            var totalAwaiting = pp.Payouts.Where(p => (p.State == PayoutState.AwaitingPayment ||
-                                                       p.State == PayoutState.AwaitingApproval) &&
-                                                      p.IsInPeriod(pp, now)).Select(o =>
+            var totalAwaiting = pp.Payouts
+                .Where(p => (p.State == PayoutState.AwaitingPayment ||
+                                                       p.State == PayoutState.AwaitingApproval)).Select(o =>
                 o.GetBlob(_jsonSerializerSettings).Amount).Sum().RoundToSignificant(ni.Divisibility);
-            ;
+
             var currencyData = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
             return new PullPaymentsModel.PullPaymentModel.ProgressModel()
             {
@@ -821,8 +818,7 @@ namespace BTCPayServer.HostedServices
                 CompletedFormatted = totalCompleted.ToString("C", nfi),
                 Limit = ppBlob.Limit.RoundToSignificant(currencyData.Divisibility),
                 LimitFormatted = _displayFormatter.Currency(ppBlob.Limit, ppBlob.Currency),
-                ResetIn = period?.End is { } nr ? ZeroIfNegative(nr - now).TimeString() : null,
-                EndIn = pp.EndDate is { } end ? ZeroIfNegative(end - now).TimeString() : null,
+                EndIn = pp.EndsIn() is { } end ? end.TimeString() : null,
             };
         }
 

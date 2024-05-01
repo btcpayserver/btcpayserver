@@ -111,12 +111,12 @@
                                     <span class="fa fa-qrcode"></span> Show QR
                                 </button>
                             </div>
-                            @if (!string.IsNullOrEmpty(Model.ResetIn))
+                            @if (!string.IsNullOrEmpty(Model.EndsIn))
                             {
                                 <p>
-                                    <span class="text-muted text-nowrap">Reset in</span>
+                                    <span class="text-muted text-nowrap">Ends in</span>
                                     &nbsp;
-                                    <span class="text-nowrap">@Model.ResetIn</span>
+                                    <span class="text-nowrap">@Model.EndsIn</span>
                                 </p>
                             }
                             @if (!string.IsNullOrEmpty(Model.Description))

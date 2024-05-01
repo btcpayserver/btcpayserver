@@ -718,43 +718,6 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public void CanCalculatePeriod()
-        {
-            Data.PullPaymentData data = new Data.PullPaymentData();
-            data.StartDate = Date(0);
-            data.EndDate = null;
-            var period = data.GetPeriod(Date(1)).Value;
-            Assert.Equal(Date(0), period.Start);
-            Assert.Null(period.End);
-            data.EndDate = Date(7);
-            period = data.GetPeriod(Date(1)).Value;
-            Assert.Equal(Date(0), period.Start);
-            Assert.Equal(Date(7), period.End);
-            data.Period = (long)TimeSpan.FromDays(2).TotalSeconds;
-            period = data.GetPeriod(Date(1)).Value;
-            Assert.Equal(Date(0), period.Start);
-            Assert.Equal(Date(2), period.End);
-            period = data.GetPeriod(Date(2)).Value;
-            Assert.Equal(Date(2), period.Start);
-            Assert.Equal(Date(4), period.End);
-            period = data.GetPeriod(Date(6)).Value;
-            Assert.Equal(Date(6), period.Start);
-            Assert.Equal(Date(7), period.End);
-            Assert.Null(data.GetPeriod(Date(7)));
-            Assert.Null(data.GetPeriod(Date(8)));
-            data.EndDate = null;
-            period = data.GetPeriod(Date(6)).Value;
-            Assert.Equal(Date(6), period.Start);
-            Assert.Equal(Date(8), period.End);
-            Assert.Null(data.GetPeriod(Date(-1)));
-        }
-
-        private DateTimeOffset Date(int days)
-        {
-            return new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero) + TimeSpan.FromDays(days);
-        }
-
-        [Fact]
         public void CanDetectFileType()
         {
             Assert.True(FileTypeDetector.IsPicture(new byte[] { 0x42, 0x4D }, "test.bmp"));

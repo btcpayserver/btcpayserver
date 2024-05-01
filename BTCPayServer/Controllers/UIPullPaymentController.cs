@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var storeBlob = store.GetStoreBlob();
-            var payouts = (await ctx.Payouts.GetPayoutInPeriod(pp)
+            var payouts = (await ctx.Payouts.Where(p => p.PullPaymentDataId == pp.Id)
                     .OrderByDescending(o => o.Date)
                     .ToListAsync())
                 .Select(o => new

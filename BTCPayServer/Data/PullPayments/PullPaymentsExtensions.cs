@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text;
+using BTCPayServer.Payouts;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 
@@ -19,7 +20,7 @@ namespace BTCPayServer.Data
             data.Blob = JsonConvert.SerializeObject(blob).ToString();
         }
 
-        public static bool IsSupported(this PullPaymentData data, Payments.PaymentMethodId paymentId)
+        public static bool IsSupported(this PullPaymentData data, PayoutMethodId paymentId)
         {
             return data.GetBlob().SupportedPaymentMethods.Contains(paymentId);
         }

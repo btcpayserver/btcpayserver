@@ -21,6 +21,7 @@ using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -761,14 +762,14 @@ namespace BTCPayServer.Controllers
             CreatePSBTResponse psbtResponse;
             if (command == "schedule")
             {
-                var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
+                var pmi = PayoutTypes.CHAIN.GetPayoutMethodId(walletId.CryptoCode);
                 var claims =
                     vm.Outputs.Where(output => string.IsNullOrEmpty(output.PayoutId)).Select(output => new ClaimRequest()
                     {
                         Destination = new AddressClaimDestination(
                             BitcoinAddress.Create(output.DestinationAddress, network.NBitcoinNetwork)),
                         Value = output.Amount,
-                        PaymentMethodId = pmi,
+                        PayoutMethodId = pmi,
                         StoreId = walletId.StoreId,
                         PreApprove = true,
                     }).ToArray();

@@ -31,8 +31,9 @@ namespace BTCPayServer.Payments
     /// <summary>
     /// This class customize invoice creation by the creation of payment details for the PaymentMethod during invoice creation
     /// </summary>
-    public interface IPaymentMethodHandler
+    public interface IPaymentMethodHandler : IHandler<PaymentMethodId>
     {
+        PaymentMethodId IHandler<PaymentMethodId>.Id => PaymentMethodId;
         PaymentMethodId PaymentMethodId { get; }
         /// <summary>
         /// The creation of the prompt details and prompt data

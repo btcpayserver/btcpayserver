@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -45,9 +46,9 @@ public class UIPayoutProcessorsController : Controller
         return View(_payoutProcessorFactories.Select(factory =>
         {
             var conf = activeProcessors.FirstOrDefault(datas => datas.Key == factory.Processor)
-                           ?.ToDictionary(data => data.GetPaymentMethodId(), data => data) ??
-                       new Dictionary<PaymentMethodId, PayoutProcessorData>();
-            foreach (PaymentMethodId supportedPaymentMethod in factory.GetSupportedPaymentMethods())
+                           ?.ToDictionary(data => data.GetPayoutMethodId(), data => data) ??
+                       new Dictionary<PayoutMethodId, PayoutProcessorData>();
+            foreach (var supportedPaymentMethod in factory.GetSupportedPayoutMethods())
             {
                 conf.TryAdd(supportedPaymentMethod, null);
             }
@@ -80,7 +81,7 @@ public class UIPayoutProcessorsController : Controller
 
     public class StorePayoutProcessorsView
     {
-        public Dictionary<PaymentMethodId, PayoutProcessorData> Configured { get; set; }
+        public Dictionary<PayoutMethodId, PayoutProcessorData> Configured { get; set; }
         public IPayoutProcessorFactory Factory { get; set; }
     }
 }

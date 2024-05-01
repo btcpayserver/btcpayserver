@@ -25,6 +25,7 @@ using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payouts;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Reporting;
@@ -336,13 +337,6 @@ namespace BTCPayServer
             return transactions.Select(t => t.Result).Where(t => t != null).ToDictionary(o => o.Transaction.GetHash());
         }
 
-#nullable enable
-        public static IPayoutHandler? FindPayoutHandler(this IEnumerable<IPayoutHandler> handlers, PaymentMethodId paymentMethodId)
-        {
-            return handlers.FirstOrDefault(h => h.CanHandle(paymentMethodId));
-        }
-#nullable restore
-
         public static async Task<PSBT> UpdatePSBT(this ExplorerClientProvider explorerClientProvider, DerivationSchemeSettings derivationSchemeSettings, PSBT psbt)
         {
             var result = await explorerClientProvider.GetExplorerClient(psbt.Network.NetworkSet.CryptoCode).UpdatePSBTAsync(new UpdatePSBTRequest()
@@ -436,19 +430,23 @@ namespace BTCPayServer
             var h = (BitcoinLikePaymentHandler)handlers[pmi];
             return h;
         }
-        public static BTCPayNetwork? TryGetNetwork(this PaymentMethodHandlerDictionary handlers, PaymentMethodId paymentMethodId)
+        public static BTCPayNetwork? TryGetNetwork<TId, THandler>(this HandlersDictionary<TId, THandler> handlers, TId id) 
+                                                                           where THandler : IHandler<TId>
+                                                                           where TId : notnull
         {
-            if (paymentMethodId is not null &&
-                handlers.TryGetValue(paymentMethodId, out var value) &&
+            if (id is not null &&
+                handlers.TryGetValue(id, out var value) &&
                 value is IHasNetwork { Network: var n })
             {
                 return n;
             }
             return null;
         }
-        public static BTCPayNetwork GetNetwork(this PaymentMethodHandlerDictionary handlers, PaymentMethodId paymentMethodId)
+        public static BTCPayNetwork GetNetwork<TId, THandler>(this HandlersDictionary<TId, THandler> handlers, TId id)
+                                                                           where THandler : IHandler<TId>
+                                                                           where TId : notnull
         {
-            return TryGetNetwork(handlers, paymentMethodId) ?? throw new KeyNotFoundException($"Network for {paymentMethodId} is not found");
+            return TryGetNetwork(handlers, id) ?? throw new KeyNotFoundException($"Network for {id} is not found");
         }
         public static LightningPaymentMethodConfig? GetLightningConfig(this PaymentMethodHandlerDictionary handlers, Data.StoreData store, BTCPayNetwork network)
         {

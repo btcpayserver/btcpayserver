@@ -19,6 +19,10 @@ namespace BTCPayServer.Payments
         {
             _paymentType = paymentType;
         }
-        public PaymentMethodId GetPaymentMethodId(string cryptoCode) => new (cryptoCode, _paymentType);
+        public PaymentMethodId GetPaymentMethodId(string cryptoCode) => new ($"{cryptoCode.ToUpperInvariant()}-{_paymentType}");
+        public override string ToString()
+        {
+            return _paymentType;
+        }
     }
 }

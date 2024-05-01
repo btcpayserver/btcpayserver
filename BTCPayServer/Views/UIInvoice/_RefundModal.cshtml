@@ -26,9 +26,9 @@
             if (Model.AvailablePaymentMethods != null && Model.AvailablePaymentMethods.Any())
             {
                 <div class="form-group">
-                    <label asp-for="SelectedPaymentMethod" class="form-label"></label>
-                    <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPaymentMethod" class="form-select"></select>
-                    <span asp-validation-for="SelectedPaymentMethod" class="text-danger"></span>
+                    <label asp-for="SelectedPayoutMethod" class="form-label"></label>
+                    <select asp-items="Model.AvailablePaymentMethods" asp-for="SelectedPayoutMethod" class="form-select"></select>
+                    <span asp-validation-for="SelectedPayoutMethod" class="text-danger"></span>
                 </div>
             
                 <button id="ok" type="submit" class="btn btn-primary w-100">Next</button>
@@ -36,7 +36,7 @@
             break;
             
         case RefundSteps.SelectRate:
-            <input type="hidden" asp-for="SelectedPaymentMethod"/>
+            <input type="hidden" asp-for="SelectedPayoutMethod"/>
             <input type="hidden" asp-for="CryptoAmountThen"/>
             <input type="hidden" asp-for="FiatAmount"/>        
             <input type="hidden" asp-for="OverpaidAmount"/>

@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -34,18 +35,18 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory")]
-        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}")]
+        [HttpGet("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}")]
         public async Task<IActionResult> GetStoreLightningAutomatedPayoutProcessors(
-            string storeId, string? paymentMethod)
+            string storeId, string? payoutMethodId)
         {
-            var paymentMethodId = !string.IsNullOrEmpty(paymentMethod) ? PaymentMethodId.Parse(paymentMethod) : null;
+            var paymentMethodId = !string.IsNullOrEmpty(payoutMethodId) ? PayoutMethodId.Parse(payoutMethodId) : null;
             var configured =
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
-                        PaymentMethods = paymentMethodId is null ? null : new[] { paymentMethodId }
+                        PayoutMethodIds = paymentMethodId is null ? null : new[] { paymentMethodId }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -73,27 +74,27 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}")]
+        [HttpPut("~/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}")]
         public async Task<IActionResult> UpdateStoreLightningAutomatedPayoutProcessor(
-            string storeId, string paymentMethod, LightningAutomatedPayoutSettings request)
+            string storeId, string payoutMethodId, LightningAutomatedPayoutSettings request)
         {
             AutomatedPayoutConstants.ValidateInterval(ModelState, request.IntervalSeconds, nameof(request.IntervalSeconds));
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            var paymentMethodId = PaymentMethodId.Parse(paymentMethod);
+            var pmi = PayoutMethodId.Parse(payoutMethodId);
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
-                        PaymentMethods = new[] { paymentMethodId }
+                        PayoutMethodIds = new[] { pmi }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
             activeProcessor.HasTypedBlob<LightningAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
-            activeProcessor.PaymentMethod = paymentMethodId.ToString();
+            activeProcessor.PaymentMethod = pmi.ToString();
             activeProcessor.Processor = LightningAutomatedPayoutSenderFactory.ProcessorName;
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()

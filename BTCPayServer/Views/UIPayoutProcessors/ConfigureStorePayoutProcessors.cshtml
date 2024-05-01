@@ -48,7 +48,7 @@
                                     @if (await processorsView.Factory.CanRemove())
                                     {
                                         <span>-</span>
-                                        <a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @Html.Encode(processorsView.Factory.FriendlyName) for @Html.Encode(conf.Key.CryptoCode) will be removed from your store.">Remove</a>
+											<a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @Html.Encode(processorsView.Factory.FriendlyName) (@Html.Encode(conf.Key.ToString())) will be removed from your store.">Remove</a>
                                     }
                                 }
                             </td>

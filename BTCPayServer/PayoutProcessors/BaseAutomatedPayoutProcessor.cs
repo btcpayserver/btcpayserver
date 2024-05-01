@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
@@ -39,25 +40,28 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     protected readonly StoreRepository _storeRepository;
     protected readonly PayoutProcessorData PayoutProcessorSettings;
     protected readonly ApplicationDbContextFactory _applicationDbContextFactory;
-    private readonly PaymentMethodHandlerDictionary _handlers;
+    private readonly PaymentMethodHandlerDictionary _paymentHandlers;
+    protected readonly PayoutMethodId PayoutMethodId;
     protected readonly PaymentMethodId PaymentMethodId;
     private readonly IPluginHookService _pluginHookService;
     protected readonly EventAggregator _eventAggregator;
 
     protected BaseAutomatedPayoutProcessor(
+        PaymentMethodId paymentMethodId,
         ILoggerFactory logger,
         StoreRepository storeRepository,
         PayoutProcessorData payoutProcessorSettings,
         ApplicationDbContextFactory applicationDbContextFactory,
-        PaymentMethodHandlerDictionary handlers,
+        PaymentMethodHandlerDictionary paymentHandlers,
         IPluginHookService pluginHookService,
         EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PaymentMethod}"))
     {
+        PaymentMethodId = paymentMethodId;
         _storeRepository = storeRepository;
         PayoutProcessorSettings = payoutProcessorSettings;
-        PaymentMethodId = PayoutProcessorSettings.GetPaymentMethodId();
+        PayoutMethodId = PayoutProcessorSettings.GetPayoutMethodId();
         _applicationDbContextFactory = applicationDbContextFactory;
-        _handlers = handlers;
+        _paymentHandlers = paymentHandlers;
         _pluginHookService = pluginHookService;
         _eventAggregator = eventAggregator;
         this.NoLogsOnExit = true;
@@ -80,7 +84,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     {
         if (arg.Type == PayoutEvent.PayoutEventType.Approved && 
             PayoutProcessorSettings.StoreId == arg.Payout.StoreDataId &&
-            arg.Payout.GetPaymentMethodId() == PaymentMethodId &&
+            arg.Payout.GetPayoutMethodId() == PayoutMethodId &&
             GetBlob(PayoutProcessorSettings).ProcessNewPayoutsInstantly)
         {
             SkipInterval();
@@ -100,7 +104,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
 	private async Task Act()
     {
         var store = await _storeRepository.FindStore(PayoutProcessorSettings.StoreId);
-        var paymentMethod = store?.GetPaymentMethodConfig(PaymentMethodId, _handlers, true);
+        var paymentMethod = store?.GetPaymentMethodConfig(PaymentMethodId, _paymentHandlers, true);
 
         var blob = GetBlob(PayoutProcessorSettings);
         if (paymentMethod is not null)
@@ -110,7 +114,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 new PullPaymentHostedService.PayoutQuery()
                 {
                     States = new[] { PayoutState.AwaitingPayment },
-                    PaymentMethods = new[] { PayoutProcessorSettings.PaymentMethod },
+                    PayoutMethods = new[] { PayoutProcessorSettings.PaymentMethod },
                     Stores = new[] {PayoutProcessorSettings.StoreId}
                 }, context, CancellationToken);
 

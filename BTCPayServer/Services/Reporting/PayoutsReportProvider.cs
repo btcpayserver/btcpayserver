@@ -1,13 +1,16 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Reporting;
@@ -17,12 +20,12 @@ public class PayoutsReportProvider : ReportProvider
     private readonly PullPaymentHostedService _pullPaymentHostedService;
     private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
     private readonly DisplayFormatter _displayFormatter;
-    private readonly PaymentMethodHandlerDictionary _handlers;
+    private readonly PayoutMethodHandlerDictionary _handlers;
 
     public PayoutsReportProvider(
         PullPaymentHostedService pullPaymentHostedService,
         DisplayFormatter displayFormatter,
-        PaymentMethodHandlerDictionary handlers,
+        PayoutMethodHandlerDictionary handlers,
         BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
     {
         _displayFormatter = displayFormatter;
@@ -51,23 +54,27 @@ public class PayoutsReportProvider : ReportProvider
             data.Add(payout.Date);
             data.Add(payout.GetPayoutSource(_btcPayNetworkJsonSerializerSettings));
             data.Add(payout.State.ToString());
-            if (PaymentMethodId.TryParse(payout.PaymentMethodId, out var pmi))
+            string? payoutCurrency;
+            if (PayoutMethodId.TryParse(payout.PaymentMethodId, out var pmi))
             {
                 var handler = _handlers.TryGet(pmi);
-                if (handler is ILightningPaymentHandler)
+                if (handler is LightningLikePayoutHandler)
                     data.Add("Lightning");
-                else if (handler is BitcoinLikePaymentHandler)
+                else if (handler is BitcoinLikePayoutHandler)
                     data.Add("On-Chain");
                 else
                     data.Add(pmi.ToString());
+                payoutCurrency = handler?.Currency;
             }
             else
                 continue;
 
             var ppBlob = payout.PullPaymentData?.GetBlob();
-            var currency = ppBlob?.Currency ?? pmi.CryptoCode;
-            data.Add(pmi.CryptoCode);
-            data.Add(blob.CryptoAmount.HasValue ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, pmi.CryptoCode) : null);
+            var currency = ppBlob?.Currency ?? payoutCurrency;
+            if (currency is null)
+                continue;
+            data.Add(payoutCurrency);
+            data.Add(blob.CryptoAmount.HasValue && payoutCurrency is not null ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, payoutCurrency) : null);
             data.Add(currency);
             data.Add(_displayFormatter.ToFormattedAmount(blob.Amount, currency));
             data.Add(blob.Destination);

@@ -14,8 +14,8 @@ namespace BTCPayServer.Models.InvoicingModels
         public string Title { get; set; }
         public SelectList AvailablePaymentMethods { get; set; }
 
-        [Display(Name = "Select the payment method used for refund")]
-        public string SelectedPaymentMethod { get; set; }
+        [Display(Name = "Select the payout method used for refund")]
+        public string SelectedPayoutMethod { get; set; }
         public RefundSteps RefundStep { get; set; }
         public string SelectedRefundOption { get; set; }
         public decimal CryptoAmountNow { get; set; }

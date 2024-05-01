@@ -12,6 +12,7 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payouts;
 using BTCPayServer.Rating;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
@@ -46,6 +47,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly IAuthorizationService _authorizationService;
         private readonly Dictionary<PaymentMethodId, IPaymentLinkExtension> _paymentLinkExtensions;
+        private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly PaymentMethodHandlerDictionary _handlers;
 
         public LanguageService LanguageService { get; }
@@ -58,6 +60,7 @@ namespace BTCPayServer.Controllers.Greenfield
             ApplicationDbContextFactory dbContextFactory, 
             IAuthorizationService authorizationService,
             Dictionary<PaymentMethodId, IPaymentLinkExtension> paymentLinkExtensions,
+            PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers)
         {
             _invoiceController = invoiceController;
@@ -71,6 +74,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _dbContextFactory = dbContextFactory;
             _authorizationService = authorizationService;
             _paymentLinkExtensions = paymentLinkExtensions;
+            _payoutHandlers = payoutHandlers;
             _handlers = handlers;
             LanguageService = languageService;
         }
@@ -206,10 +210,13 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 for (int i = 0; i < request.Checkout.PaymentMethods.Length; i++)
                 {
-                    if (!PaymentMethodId.TryParse(request.Checkout.PaymentMethods[i], out _))
+                    if (
+                        request.Checkout.PaymentMethods[i] is not { } pm ||
+                        !PaymentMethodId.TryParse(pm, out var pm1) ||
+                        _handlers.TryGet(pm1) is null)
                     {
                         request.AddModelError(invoiceRequest => invoiceRequest.Checkout.PaymentMethods[i],
-                            "Invalid payment method", this);
+                            "Invalid PaymentMethodId", this);
                     }
                 }
             }
@@ -394,10 +401,18 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError("non-refundable", "Cannot refund this invoice");
             }
             PaymentPrompt? paymentPrompt = null;
-            PaymentMethodId? paymentMethodId = null;
-            if (request.PaymentMethod is not null && PaymentMethodId.TryParse(request.PaymentMethod, out paymentMethodId))
+            PayoutMethodId? payoutMethodId = null;
+            if (request.PaymentMethod is not null && PayoutMethodId.TryParse(request.PaymentMethod, out payoutMethodId))
             {
-                paymentPrompt = invoice.GetPaymentPrompt(paymentMethodId);
+                var supported = _payoutHandlers.GetSupportedPayoutMethods(store);
+                if (supported.Contains(payoutMethodId))
+                {
+                    var paymentMethodId = PaymentMethodId.GetSimilarities([payoutMethodId], invoice.GetPayments(false).Select(p => p.PaymentMethodId))
+                        .OrderByDescending(o => o.similarity)
+                        .Select(o => o.b)
+                        .FirstOrDefault();
+                    paymentPrompt = paymentMethodId is null ? null : invoice.GetPaymentPrompt(paymentMethodId);
+                }
             }
             if (paymentPrompt is null)
             {
@@ -405,7 +420,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (request.RefundVariant is null)
                 ModelState.AddModelError(nameof(request.RefundVariant), "`refundVariant` is mandatory");
-            if (!ModelState.IsValid || paymentPrompt is null || paymentMethodId is null)
+            if (!ModelState.IsValid || paymentPrompt is null || payoutMethodId is null)
                 return this.CreateValidationError(ModelState);
 
             var accounting = paymentPrompt.Calculate();
@@ -425,7 +440,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = request.Name ?? $"Refund {invoice.Id}",
                 Description = request.Description,
                 StoreId = storeId,
-                PaymentMethodIds = new[] { paymentMethodId },
+                PayoutMethodIds = new[] { payoutMethodId },
             };
 
             if (request.RefundVariant != RefundVariant.Custom)

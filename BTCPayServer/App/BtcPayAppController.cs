@@ -34,7 +34,6 @@ namespace BTCPayServer.App;
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.Bearer)]
 [Route("btcpayapp")]
 public class BtcPayAppController(
-    BtcPayAppService appService,
     APIKeyRepository apiKeyRepository,
     StoreRepository storeRepository,
     BTCPayNetworkProvider btcPayNetworkProvider,
@@ -254,63 +253,5 @@ public class BtcPayAppController(
         }
         return result.Succeeded ? TypedResults.Ok() : TypedResults.Problem(result.ToString().Split(": ").Last(), statusCode: 401);
     }
-
-    [HttpGet("pair/{code}")]
-    public async Task<IActionResult> StartPair(string code)
-    {
-        var res = appService.ConsumePairingCode(code);
-        if (res is null)
-        {
-            return Unauthorized();
-        }
-
-        StoreData? store = null;
-        if (res.StoreId is not null)
-        {
-            store = await storeRepository.FindStore(res.StoreId, res.UserId);
-            if (store is null)
-            {
-                return NotFound();
-            }
-        }
-        
-        var key = new APIKeyData
-        {
-            Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
-            Type = APIKeyType.Permanent,
-            UserId = res.UserId,
-            Label = "BTCPay App Pairing"
-        };
-        key.SetBlob(new APIKeyBlob {Permissions = [Policies.Unrestricted] });
-        await apiKeyRepository.CreateKey(key);
-        
-        var onchain = store?.GetDerivationSchemeSettings(handlers, "BTC");
-        string? onchainSeed = null;
-        if (onchain is not null)
-        {
-            var explorerClient = explorerClientProvider.GetExplorerClient("BTC");
-            onchainSeed = await GetSeed(explorerClient, onchain);
-        }
-
-        var nBitcoinNetwork = btcPayNetworkProvider.GetNetwork<BTCPayNetwork>("BTC").NBitcoinNetwork;
-        return Ok(new PairSuccessResult
-        {
-            Key = key.Id,
-            StoreId = store?.Id,
-            UserId = res.UserId,
-            ExistingWallet = onchain?.AccountDerivation?.GetExtPubKeys()?.FirstOrDefault()?.ToString(nBitcoinNetwork),
-            ExistingWalletSeed = onchainSeed,
-            Network = nBitcoinNetwork.Name
-        });
-    }
-
-    private async Task<string?> GetSeed(ExplorerClient client, DerivationSchemeSettings derivation)
-    {
-        return derivation.IsHotWallet &&
-               await client.GetMetadataAsync<string>(derivation.AccountDerivation, WellknownMetadataKeys.Mnemonic) is
-                   { } seed &&
-               !string.IsNullOrEmpty(seed)
-            ? seed
-            : null;
-    }
+    
 }

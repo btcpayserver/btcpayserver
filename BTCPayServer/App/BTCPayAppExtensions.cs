@@ -7,7 +7,6 @@ public static class BTCPayAppExtensions
 {
     public static IServiceCollection AddBTCPayApp(this IServiceCollection serviceCollection)
     {
-        serviceCollection.AddSingleton<BtcPayAppService>();
         serviceCollection.AddSingleton<BTCPayAppState>();
         serviceCollection.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<BTCPayAppState>());
         return serviceCollection;

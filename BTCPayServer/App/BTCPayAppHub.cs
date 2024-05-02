@@ -1,160 +1,265 @@
 ﻿#nullable enable
 using System;
-using System.Collections.Concurrent;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Data;
+using BTCPayServer.HostedServices;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBXplorer;
+using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
-using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers;
 
-public class BTCPayAppState : IHostedService
+
+public class GetBlockchainInfoResponse
 {
-    private readonly IHubContext<BTCPayAppHub, IBTCPayAppServerClient> _hubContext;
-    private readonly ILogger<BTCPayAppState> _logger;
-    private readonly ExplorerClientProvider _explorerClientProvider;
-    private readonly BTCPayNetworkProvider _networkProvider;
-    private readonly EventAggregator _eventAggregator;
-    private CompositeDisposable? _compositeDisposable;
-    public ExplorerClient ExplorerClient { get; private set; }
-    private DerivationSchemeParser _derivationSchemeParser;
-    private readonly ConcurrentDictionary<string, TrackedSource> _connectionScheme = new();
-
-    public BTCPayAppState(
-        IHubContext<BTCPayAppHub, IBTCPayAppServerClient> hubContext,
-        ILogger<BTCPayAppState> logger,
-        ExplorerClientProvider explorerClientProvider,
-        BTCPayNetworkProvider networkProvider,
-        EventAggregator eventAggregator)
+    [JsonProperty("headers")]
+    public int Headers
     {
-        _hubContext = hubContext;
-        _logger = logger;
-        _explorerClientProvider = explorerClientProvider;
-        _networkProvider = networkProvider;
-        _eventAggregator = eventAggregator;
+        get; set;
+    }
+    [JsonProperty("blocks")]
+    public int Blocks
+    {
+        get; set;
+    }
+    [JsonProperty("verificationprogress")]
+    public double VerificationProgress
+    {
+        get; set;
     }
 
-    public Task StartAsync(CancellationToken cancellationToken)
+    [JsonProperty("mediantime")]
+    public long? MedianTime
     {
-        ExplorerClient = _explorerClientProvider.GetExplorerClient("BTC");
-        _derivationSchemeParser = new DerivationSchemeParser(_networkProvider.BTC);
-        _compositeDisposable = new();
-        _compositeDisposable.Add(
-            _eventAggregator.Subscribe<NewBlockEvent>(OnNewBlock));
-        _compositeDisposable.Add(
-            _eventAggregator.Subscribe<NewTransactionEvent>(OnNewTransaction));
-        return Task.CompletedTask;
+        get; set;
     }
 
-    private void OnNewTransaction(NewTransactionEvent obj)
+    [JsonProperty("initialblockdownload")]
+    public bool? InitialBlockDownload
     {
-        if (obj.CryptoCode != "BTC")
-            return;
-
-        _connectionScheme.Where(pair => pair.Value == obj.TrackedSource)
-            .Select(pair => pair.Key)
-            .ToList()
-            .ForEach(connectionId =>
-            {
-                _hubContext.Clients.Client(connectionId)
-                    .TransactionDetected(obj.TransactionData.TransactionHash.ToString());
-            });
+        get; set;
     }
+    [JsonProperty("bestblockhash")]
+    [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
+    public uint256 BestBlockHash { get; set; }
+}
 
-    private void OnNewBlock(NewBlockEvent obj)
-    {
-        if (obj.CryptoCode != "BTC")
-            return;
-        _hubContext.Clients.All.NewBlock(obj.Hash.ToString());
-    }
 
-    public Task StopAsync(CancellationToken cancellationToken)
+public record RPCBlockHeader(uint256 Hash, uint256? Previous, int Height, DateTimeOffset Time, uint256 MerkleRoot)
+{
+    public SlimChainedBlock ToSlimChainedBlock() => new(Hash, Previous, Height);
+}
+public class BlockHeaders : IEnumerable<RPCBlockHeader>
+{
+    public readonly Dictionary<uint256, RPCBlockHeader> ByHashes;
+    public readonly Dictionary<int, RPCBlockHeader> ByHeight;
+    public BlockHeaders(IList<RPCBlockHeader> headers)
     {
-        _compositeDisposable?.Dispose();
-        return Task.CompletedTask;
-    }
-
-    public TrackedSource? GetConnectionState(string connectionId)
-    {
-        _connectionScheme.TryGetValue(connectionId, out var res);
-        return res;
-    }
-
-    public async Task Handshake(string contextConnectionId, AppHandshake handshake)
-    {
-        try
+        ByHashes = new Dictionary<uint256, RPCBlockHeader>(headers.Count);
+        ByHeight = new Dictionary<int, RPCBlockHeader>(headers.Count);
+        foreach (var header in headers)
         {
-            var ts =
-                TrackedSource.Create(_derivationSchemeParser.Parse(handshake.DerivationScheme));
-            await ExplorerClient.TrackAsync(ts);
-            _connectionScheme.AddOrReplace(contextConnectionId, ts);
-        }
-        catch (Exception e)
-        {
-            _logger.LogError(e, "Error during handshake");
-            throw;
+            ByHashes.TryAdd(header.Hash, header);
+            ByHeight.TryAdd(header.Height, header);
         }
     }
-
-    public void RemoveConnection(string contextConnectionId)
+    public IEnumerator<RPCBlockHeader> GetEnumerator()
     {
-        _connectionScheme.TryRemove(contextConnectionId, out _);
+        return ByHeight.Values.GetEnumerator();
+    }
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
     }
 }
 
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-public class BTCPayAppHub : Hub<IBTCPayAppServerClient>, IBTCPayAppServerHub
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.Bearer)]
+public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 {
+    private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+    private readonly NBXplorerDashboard _nbXplorerDashboard;
     private readonly BTCPayAppState _appState;
-    private readonly BTCPayWallet _wallet;
+    private readonly ExplorerClientProvider _explorerClientProvider;
+    private readonly IFeeProviderFactory _feeProviderFactory;
 
-
-    public BTCPayAppHub(BTCPayAppState appState, BTCPayWalletProvider walletProvider)
+    public BTCPayAppHub(BTCPayNetworkProvider btcPayNetworkProvider,
+        NBXplorerDashboard nbXplorerDashboard,
+        BTCPayAppState appState,
+        ExplorerClientProvider explorerClientProvider,
+        IFeeProviderFactory feeProviderFactory)
     {
+        _btcPayNetworkProvider = btcPayNetworkProvider;
+        _nbXplorerDashboard = nbXplorerDashboard;
         _appState = appState;
-        _wallet = walletProvider.GetWallet("BTC");
+        _explorerClientProvider = explorerClientProvider;
+        _feeProviderFactory = feeProviderFactory;
     }
 
 
     public override async Task OnConnectedAsync()
     {
-    }
-
-    public override Task OnDisconnectedAsync(Exception? exception)
-    {
-        _appState.RemoveConnection(Context.ConnectionId);
-        return base.OnDisconnectedAsync(exception);
-    }
-
-    public Task Handshake(AppHandshake handshake)
-    {
-        return _appState.Handshake(Context.ConnectionId, handshake);
-    }
-
-    public async Task GetTransactions()
-    {
-       var deriv =  _appState.GetConnectionState(Context.ConnectionId);
-        if(deriv is null)
-            throw new InvalidOperationException("Handshake not done");
-        var txs = await _appState.ExplorerClient.GetTransactionsAsync(deriv);
-        if (txs is null)
+        //TODO: this needs to happen BEFORE connection is established
+        if (!_nbXplorerDashboard.IsFullySynched(_btcPayNetworkProvider.BTC.CryptoCode, out _))
         {
-            throw new InvalidOperationException("NBXplorer failed to get transactions");
+            Context.Abort();
+            return;
         }
-
+        await Clients.Client(Context.ConnectionId).NotifyNetwork(_btcPayNetworkProvider.BTC.NBitcoinNetwork.ToString());
         
 
+    }
+
+    public async Task<bool> BroadcastTransaction(string tx)
+    {
+       var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+       Transaction txObj = Transaction.Parse(tx, explorerClient.Network.NBitcoinNetwork);
+       var result = await explorerClient.BroadcastAsync(txObj);
+       return result.Success;
+    }
+
+    public async Task<decimal> GetFeeRate(int blockTarget)
+    {
+       
+      var feeProvider =  _feeProviderFactory.CreateFeeProvider( _btcPayNetworkProvider.BTC);
+      return (await feeProvider.GetFeeRateAsync(blockTarget)).SatoshiPerByte;
+    }
+
+    public async Task<BestBlockResponse> GetBestBlock()
+    {
+        
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+        var bcInfo = await explorerClient.RPCClient.GetBlockchainInfoAsyncEx();
+        var bh = await explorerClient.RPCClient.GetBlockHeaderAsync(bcInfo.BestBlockHash);
+        
+        return new BestBlockResponse()
+        {
+            BlockHash = bcInfo.BestBlockHash.ToString(),
+            BlockHeight = bcInfo.Blocks,
+            BlockHeader = bh.ToString()
+        };
+    }
+
+    public async Task<string> GetBlockHeader(string hash)
+    {
+        
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+        var bh = await explorerClient.RPCClient.GetBlockHeaderAsync(uint256.Parse(hash));
+        return bh.ToString();
+    }
+
+    public async Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds)
+    { 
+        
+        var cancellationToken = Context.ConnectionAborted;
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+        var uints = txIds.Select(uint256.Parse).ToArray();
+        var txsFetch = await Task.WhenAll(uints.Select(
+            uint256 =>
+                explorerClient.GetTransactionAsync(uint256, cancellationToken)));
+
+        var batch = explorerClient.RPCClient.PrepareBatch();
+        var headersTask = txsFetch.Where(result => result.BlockId is not null && result.BlockId != uint256.Zero)
+            .Distinct().ToDictionary(result => result.BlockId, result =>
+                batch.GetBlockHeaderAsync(result.BlockId, cancellationToken));
+        await batch.SendBatchAsync(cancellationToken);
+
+        
+        
+        var headerToHeight = (await Task.WhenAll(headersTask.Values)).ToDictionary(header => header.GetHash(),
+            header => txsFetch.First(result => result.BlockId == header.GetHash()).Height!);
+        
+        return new TxInfoResponse()
+        {
+            Txs = txsFetch.ToDictionary(tx => tx.TransactionHash.ToString(), tx => new TransactionResponse()
+            {
+                BlockHash = tx.BlockId?.ToString(),
+                BlockHeight = (int?) tx.Height,
+                Transaction = tx.Transaction.ToString()
+            }),
+            Blocks = txsFetch.Where(tx => tx.BlockId is not null).ToDictionary(tx => tx.BlockId.ToString(), tx => tx.BlockId.ToString()),
+            BlockHeghts = headerToHeight.ToDictionary(kv => kv.Key.ToString(), kv =>(int) kv.Value!)
+        };
+    }
+    public async Task<string> DeriveScript(string identifier)
+    {
+        var cancellationToken = Context.ConnectionAborted;
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+        var ts = TrackedSource.Parse(identifier,explorerClient.Network ) as DerivationSchemeTrackedSource;
+        var kpi = await explorerClient.GetUnusedAsync(ts.DerivationStrategy, DerivationFeature.Deposit, 0, true, cancellationToken);
+        return kpi.ScriptPubKey.ToHex();
+    }
+
+    public async Task TrackScripts(string identifier, string[] scripts)
+    {
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+        
+        var ts = TrackedSource.Parse(identifier,explorerClient.Network ) as GroupTrackedSource;
+        var s = scripts.Select(Script.FromHex).Select(script => script.GetDestinationAddress(explorerClient.Network.NBitcoinNetwork)).Select(address => address.ToString()).ToArray();
+        await explorerClient.AddGroupAddressAsync(explorerClient.CryptoCode,ts.GroupId, s);
+    }
+
+    public async Task<string> UpdatePsbt(string[] identifiers, string psbt)
+    {
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
+        foreach (string identifier in identifiers)
+        {
+            var ts = TrackedSource.Parse(identifier,explorerClient.Network);
+            if (ts is not DerivationSchemeTrackedSource derivationSchemeTrackedSource)
+                continue;
+            var res = await explorerClient.UpdatePSBTAsync(new UpdatePSBTRequest()
+            {
+                PSBT = resultPsbt, DerivationScheme = derivationSchemeTrackedSource.DerivationStrategy,
+            });   
+            resultPsbt = resultPsbt.Combine(res.PSBT);
+        }
+        return resultPsbt.ToHex();
+    }
+
+    public async Task<CoinResponse[]> GetUTXOs(string[] identifiers)
+    {
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+        var result = new List<CoinResponse>();
+        foreach (string identifier in identifiers)
+        {
+            var ts = TrackedSource.Parse(identifier,explorerClient.Network);
+            if (ts is not DerivationSchemeTrackedSource derivationSchemeTrackedSource)
+                continue;
+            var utxos = await explorerClient.GetUTXOsAsync(derivationSchemeTrackedSource.DerivationStrategy);
+            result.AddRange(utxos.GetUnspentUTXOs(0).Select(utxo => new CoinResponse()
+            {
+                Identifier = identifier,
+                Confirmed = utxo.Confirmations >0,
+                Script = utxo.ScriptPubKey.ToHex(),
+                Outpoint = utxo.Outpoint.ToString(),
+                Value = utxo.Value.GetValue(_btcPayNetworkProvider.BTC),
+                Path = utxo.KeyPath.ToString()
+            }));
+        }
+        return result.ToArray();
+    }
+
+
+    public async Task<Dictionary<string, string>> Pair(PairRequest request)
+    {
+        return await _appState.Pair(Context.ConnectionId, request);
+        
+        
+    }
+
+    public async Task<AppHandshakeResponse> Handshake(AppHandshake request)
+    {
+        
+        return await _appState.Handshake(Context.ConnectionId, request);
     }
 }

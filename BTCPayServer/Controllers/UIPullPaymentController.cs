@@ -227,6 +227,7 @@ namespace BTCPayServer.Controllers
             var supported = ppBlob.SupportedPaymentMethods;
             PaymentMethodId paymentMethodId = null;
             IClaimDestination destination = null;
+            string error = null;
             if (string.IsNullOrEmpty(vm.SelectedPaymentMethod))
             {
                 foreach (var pmId in supported)
@@ -235,6 +236,7 @@ namespace BTCPayServer.Controllers
                     (IClaimDestination dst, string err) = handler == null
                         ? (null, "No payment handler found for this payment method")
                         : await handler.ParseAndValidateClaimDestination(pmId, vm.Destination, ppBlob, cancellationToken);
+                    error = err;
                     if (dst is not null && err is null)
                     {
                         paymentMethodId = pmId;
@@ -247,12 +249,15 @@ namespace BTCPayServer.Controllers
             {
                 paymentMethodId = supported.FirstOrDefault(id => vm.SelectedPaymentMethod == id.ToString());
                 var payoutHandler = paymentMethodId is null ? null : _payoutHandlers.FindPayoutHandler(paymentMethodId);
-                destination = payoutHandler is null ? null : (await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, vm.Destination, ppBlob, cancellationToken)).destination;
+                if (payoutHandler is not null)
+                {
+                    (destination, error) = await payoutHandler.ParseAndValidateClaimDestination(paymentMethodId, vm.Destination, ppBlob, cancellationToken);
+                }
             }
 
             if (destination is null)
             {
-                ModelState.AddModelError(nameof(vm.Destination), "Invalid destination or payment method");
+                ModelState.AddModelError(nameof(vm.Destination), error ?? "Invalid destination or payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
 

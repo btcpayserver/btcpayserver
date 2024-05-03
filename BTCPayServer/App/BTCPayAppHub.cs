@@ -139,13 +139,13 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         
         var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
         var bcInfo = await explorerClient.RPCClient.GetBlockchainInfoAsyncEx();
-        var bh = await explorerClient.RPCClient.GetBlockHeaderAsync(bcInfo.BestBlockHash);
+        var bh = await GetBlockHeader(bcInfo.BestBlockHash.ToString());
         
         return new BestBlockResponse()
         {
             BlockHash = bcInfo.BestBlockHash.ToString(),
             BlockHeight = bcInfo.Blocks,
-            BlockHeader = bh.ToString()
+            BlockHeader = bh
         };
     }
 
@@ -154,7 +154,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         
         var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
         var bh = await explorerClient.RPCClient.GetBlockHeaderAsync(uint256.Parse(hash));
-        return bh.ToString();
+        return Convert.ToHexString(bh.ToBytes());
     }
 
     public async Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds)
@@ -186,7 +186,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
                 BlockHeight = (int?) tx.Height,
                 Transaction = tx.Transaction.ToString()
             }),
-            Blocks = txsFetch.Where(tx => tx.BlockId is not null).ToDictionary(tx => tx.BlockId.ToString(), tx => tx.BlockId.ToString()),
+            Blocks = headersTask.ToDictionary(kv => kv.Key.ToString(), kv => Convert.ToHexString(kv.Value.Result.ToBytes())),
             BlockHeghts = headerToHeight.ToDictionary(kv => kv.Key.ToString(), kv =>(int) kv.Value!)
         };
     }

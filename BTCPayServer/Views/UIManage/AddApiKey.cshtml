@@ -25,13 +25,16 @@
     </script>
 }
 
-<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<form method="post" asp-action="AddApiKey" id="Permissions">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <button type="submit" class="btn btn-primary" id="Generate">Generate API Key</button>
+    </div>
 
-<div class="row">
-    <div class="col-xl-10 col-xxl-constrain">
-        <p>Generate a new api key to use BTCPay through its API.</p>
-        
-        <form method="post" asp-action="AddApiKey" id="Permissions">
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            <p>Generate a new api key to use BTCPay through its API.</p>
+            
             <div asp-validation-summary="All"></div>
         
             <div class="form-group">
@@ -133,8 +136,6 @@
                     }
                 }
             </div>
-        
-            <button type="submit" class="btn btn-primary" id="Generate">Generate API Key</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>

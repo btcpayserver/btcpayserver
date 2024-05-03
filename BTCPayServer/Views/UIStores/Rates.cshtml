@@ -7,15 +7,18 @@
     ViewData.SetActivePage(StoreNavPages.Rates, "Rates", Context.GetStoreData().Id);
 }
 
-<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
-<partial name="_StatusMessage" />
-<div class="row">
-    <div class="col-xxl-constrain col-xl-8">
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All"></div>
-        }
-        <form method="post" permissioned="@Policies.CanModifyStoreSettings">
+<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <button name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <input type="hidden" asp-for="ShowScripting" />
             @if (Model.ShowScripting)
             {
@@ -184,11 +187,9 @@ X_X = kraken(X_X);</code></pre>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
-            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save">Save</button>
-        </form>
+        </div>
     </div>
-</div>
-
+</form>
 <partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageHeadContent {

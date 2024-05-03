@@ -55,12 +55,17 @@
         });
     </script>
 }
-<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
-<partial name="_StatusMessage" />
 
-<div class="row">
-    <div class="col-xxl-constrain col-xl-8">
-        <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
+
+<form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <button type="submit" class="btn btn-primary" id="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All"></div>
@@ -234,7 +239,6 @@
                 <input asp-for="ReceiptOptions.ShowQR" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="ReceiptOptions.ShowQR" class="form-check-label"></label>
             </div>
-            <button type="submit" class="btn btn-primary mt-4" id="Save">Save</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>

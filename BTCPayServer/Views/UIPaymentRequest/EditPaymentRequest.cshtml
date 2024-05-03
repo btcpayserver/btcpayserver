@@ -22,9 +22,9 @@
 }
 
 <form method="post" action="@Url.Action("EditPaymentRequest", "UIPaymentRequest", new { storeId = Model.StoreId, payReqId = Model.Id }, Context.Request.Scheme)">
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
                 <button type="submit" class="btn btn-primary" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Create</button>

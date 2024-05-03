@@ -14,29 +14,25 @@
 }
 
 <form asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id" permissioned="@Policies.CanModifyStoreSettings">
-    <div class="row">
-        <div class="col-xxl-constrain">
-            <div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
-                <h3 class="mb-0">@ViewData["Title"]</h3>
-                <div class="d-flex gap-3" permission="@Policies.CanModifyStoreSettings">
-                    @if (Model.Rules.Any())
-                    {
-                        <button class="btn btn-primary" name="command" type="submit" value="save" id="SaveEmailRules">
-                            Save
-                        </button>
-                    }
-                    <button class="btn btn-primary" name="command" type="submit" value="add" id="CreateEmailRule">
-                        Create
-                    </button>
-                </div>
-            </div>
-            <partial name="_StatusMessage" />
-            <p>
-                <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id">Email rules</a>
-                allow BTCPay Server to send customized emails from your store based on events.
-            </p>
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <div class="d-flex gap-3" permission="@Policies.CanModifyStoreSettings">
+            @if (Model.Rules.Any())
+            {
+            <button class="btn btn-primary" name="command" type="submit" value="save" id="SaveEmailRules">
+                Save
+            </button>
+            }
+            <button class="btn btn-primary" name="command" type="submit" value="add" id="CreateEmailRule">
+                Create
+            </button>
         </div>
     </div>
+    <partial name="_StatusMessage" />
+    <p>
+        <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id">Email rules</a>
+        allow BTCPay Server to send customized emails from your store based on events.
+    </p>
     <div class="row">
         <div class="col-xxl-constrain">
             @if (!ViewContext.ModelState.IsValid)

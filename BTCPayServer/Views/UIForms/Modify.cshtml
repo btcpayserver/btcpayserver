@@ -192,23 +192,23 @@
 }
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
+    <div class="sticky-header">
+        <h2>
+            <span>@ViewData["Title"]</span>
+            <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+                <vc:icon symbol="info" />
+            </a>
+        </h2>
+        <div class="d-flex gap-3 mt-3 mt-sm-0">
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+            @if (!isNew)
+            {
+                <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
+            }
+        </div>
+    </div>
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
-                <h2 class="mb-0">
-                    <span>@ViewData["Title"]</span>
-                    <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info" />
-                    </a>
-                </h2>
-                <div class="d-flex gap-3 mt-3 mt-sm-0">
-                    <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
-                    @if (!isNew)
-                    {
-                        <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
-                    }
-                </div>
-            </div>
             <div asp-validation-summary="All"></div>
             <div class="form-group" style="max-width: 27rem;">
                 <label asp-for="Name" class="form-label" data-required></label>

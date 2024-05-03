@@ -24,8 +24,8 @@
     var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
 }
 
-<div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
-    <h3 class="mb-0">@ViewData["Title"]</h3>
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
     <a class="btn btn-primary" role="button" id="CreateRole" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
 </div>
 <partial name="_StatusMessage" />
@@ -50,7 +50,7 @@
             <th>Permissions</th>
             @if (showInUseColumn)
             {
-                <th class="text-center">In use</th>
+                <th class="text-center w-75px">In use</th>
             }
             <th class="actions-col" permission="@permission">Actions</th>
         </tr>

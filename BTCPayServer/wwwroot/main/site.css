@@ -290,7 +290,8 @@ h2 .icon.icon-info {
     .card {
         page-break-inside: avoid;
     }
-    .actions-col {
+    .actions-col,
+    .sticky-header > div {
         display: none;
     }
 }
@@ -1192,6 +1193,10 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .table-responsive{
     --sticky-header-height: 0;
 }
+.sticky-header + .table-responsive {
+    margin-top: 0 !important;
+}
+
 @media (max-width: 575.98px) {
     .table-responsive-sm {
         --sticky-header-height: 0;

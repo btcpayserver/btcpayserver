@@ -14,34 +14,35 @@
     var storeId = Context.GetRouteValue("storeId") as string;
     if (storeId is null)
         ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update role");
-
     else
     {
         ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update role");
     }
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
-
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<form method="post">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <button id="Save" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+    </div>
 
-<div class="row">
-    <div class="col-xxl-constrain">
-        <form method="post">
+    <div class="row">
+        <div class="col-xxl-constrain">
             <div asp-validation-summary="ModelOnly"></div>
 
             <div class="form-group" style="max-width:320px">
                 <label asp-for="Role" class="form-label"></label>
-				@if (role == null)
-				{
-					<input asp-for="Role" required="required" class="form-control" />
-				}
-				else
-				{
-				    <input type="hidden" asp-for="Role"/>
-					<input  required="required" class="form-control" disabled value="@Model.Role" />					
-				}
-				<span asp-validation-for="Role" class="text-danger"></span>
+                @if (role == null)
+                {
+                    <input asp-for="Role" required="required" class="form-control" />
+                }
+                else
+                {
+                    <input type="hidden" asp-for="Role" />
+                    <input required="required" class="form-control" disabled value="@Model.Role" />
+                }
+                <span asp-validation-for="Role" class="text-danger"></span>
             </div>
 
             <h4 class="mt-4 mb-3">Permissions</h4>
@@ -62,10 +63,9 @@
                 }
             </div>
             <span asp-validation-for="Policies" class="text-danger"></span>
-            <button id="Save" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
 @{
     void RenderTree(KeyValuePair<string, HashSet<string>> policy, KeyValuePair<string, HashSet<string>>[] storePolicyMap, bool isChecked)

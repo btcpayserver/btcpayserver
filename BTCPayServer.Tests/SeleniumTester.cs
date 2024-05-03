@@ -329,10 +329,11 @@ retry:
             Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
 
             var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
-            if (enabled.Text == "Enable")
+            if (enabled.Selected == false)
             {
                 enabled.Click();
-                Assert.Contains($"{cryptoCode} Lightning payments are now enabled for this store.", FindAlertMessage().Text);
+                Driver.FindElement(By.Id("save")).Click();
+                Assert.Contains($"{cryptoCode} Lightning settings successfully updated", FindAlertMessage().Text);
             }
         }
 

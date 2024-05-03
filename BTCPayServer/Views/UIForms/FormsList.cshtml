@@ -7,19 +7,20 @@
     var storeId = Context.GetCurrentStoreId();
 }
 
+<div class="sticky-header">
+    <h2>
+        <span>@ViewData["Title"]</span>
+        <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+            <vc:icon symbol="info" />
+        </a>
+    </h2>
+    <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm" permission="@Policies.CanModifyStoreSettings">
+        Create Form
+    </a>
+</div>
+
 <div class="row">
     <div class="col-xxl-constrain col-xl-10">
-        <div class="d-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
-			<h2 class="mb-0">
-				<span>@ViewData["Title"]</span>
-				<a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-					<vc:icon symbol="info" />
-				</a>
-			</h2>
-            <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm" permission="@Policies.CanModifyStoreSettings">
-                Create Form
-            </a>
-        </div>
         @if (Model.Any())
         {
             <table class="table table-hover table-responsive-md">

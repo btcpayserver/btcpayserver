@@ -229,6 +229,7 @@ namespace BTCPayServer.Controllers
             PayoutMethodId payoutMethodId = null;
             IClaimDestination destination = null;
             IPayoutHandler payoutHandler = null;
+            string error = null;
             if (string.IsNullOrEmpty(vm.SelectedPayoutMethod))
             {
                 foreach (var pmId in supported)
@@ -237,6 +238,7 @@ namespace BTCPayServer.Controllers
                     (IClaimDestination dst, string err) = handler == null
                         ? (null, "No payment handler found for this payment method")
                         : await handler.ParseAndValidateClaimDestination(vm.Destination, ppBlob, cancellationToken);
+                    error = err;
                     if (dst is not null && err is null)
                     {
                         payoutMethodId = pmId;
@@ -250,12 +252,15 @@ namespace BTCPayServer.Controllers
             {
                 payoutMethodId = supported.FirstOrDefault(id => vm.SelectedPayoutMethod == id.ToString());
                 payoutHandler = payoutMethodId is null ? null : _payoutHandlers.TryGet(payoutMethodId);
-                destination = payoutHandler is null ? null : (await payoutHandler.ParseAndValidateClaimDestination(vm.Destination, ppBlob, cancellationToken)).destination;
+                if (payoutHandler is not null)
+                {
+                    (destination, error) = await payoutHandler.ParseAndValidateClaimDestination(vm.Destination, ppBlob, cancellationToken);
+                }
             }
 
             if (destination is null)
             {
-                ModelState.AddModelError(nameof(vm.Destination), "Invalid destination or payment method");
+                ModelState.AddModelError(nameof(vm.Destination), error ?? "Invalid destination or payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
             var amtError = ClaimRequest.IsPayoutAmountOk(destination, vm.ClaimedAmount == 0 ? null : vm.ClaimedAmount, payoutHandler.Currency, ppBlob.Currency);

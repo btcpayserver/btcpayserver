@@ -16,10 +16,12 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using ExchangeSharp;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
+using NLog.Layouts;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
@@ -170,6 +172,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var txHash = workingTx.GetHash();
                     foreach (var payoutData in transfersProcessing)
                     {
+                        Logs.PayServer.LogInformation("Processing Payout " + payoutData.Key.Id);
                         payoutData.Key.State = PayoutState.InProgress;
                         _bitcoinLikePayoutHandler.SetProofBlob(payoutData.Key,
                             new PayoutTransactionOnChainBlob()

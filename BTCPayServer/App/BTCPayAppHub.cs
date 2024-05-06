@@ -108,6 +108,9 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public override async Task OnConnectedAsync()
     {
+        
+        await _appState.Connected(Context.ConnectionId);
+        
         //TODO: this needs to happen BEFORE connection is established
         if (!_nbXplorerDashboard.IsFullySynched(_btcPayNetworkProvider.BTC.CryptoCode, out _))
         {
@@ -118,6 +121,14 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         
 
     }
+
+
+    public override async Task OnDisconnectedAsync(Exception? exception)
+    {
+        await _appState.Disconnected(Context.ConnectionId);
+        await base.OnDisconnectedAsync(exception);
+    }
+
 
     public async Task<bool> BroadcastTransaction(string tx)
     {
@@ -247,6 +258,12 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
             }));
         }
         return result.ToArray();
+    }
+
+
+    public async Task MasterNodePong(string group, bool active)
+    {
+        await _appState.MasterNodePong(group, Context.ConnectionId, active);
     }
 
 

@@ -13,6 +13,8 @@ public interface IBTCPayAppHubClient
 //methods available on the hub in the server
 public interface IBTCPayAppHubServer
 {
+    Task MasterNodePong(string group, bool active);
+    
     Task<Dictionary<string,string>> Pair(PairRequest request);
     Task<AppHandshakeResponse> Handshake(AppHandshake request);
     Task<bool> BroadcastTransaction(string tx);

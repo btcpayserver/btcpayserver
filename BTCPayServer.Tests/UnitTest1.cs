@@ -2985,7 +2985,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        [Trait("Selenium", "Selenium")]
+        [Trait("Integration", "Integration")]
         public async Task CanCreateReports()
         {
             using var tester = CreateServerTester(newDb: true);
@@ -3093,6 +3093,48 @@ namespace BTCPayServer.Tests
             var invoiceIdIndex = report.GetIndex("InvoiceId");
             var oldPaymentsCount = report.Data.Count(d => d[invoiceIdIndex].Value<string>() == "Q7RqoHLngK9svM4MgRyi9y");
             Assert.Equal(8, oldPaymentsCount); // 10 payments, but 2 unaccounted
+
+            var addr = await tester.ExplorerNode.GetNewAddressAsync();
+            // Two invoices get refunded
+            for (int i = 0; i < 2; i++)
+            {
+                var inv = await client.CreateInvoice(acc.StoreId, new CreateInvoiceRequest() { Amount = 10m, Currency = "USD" });
+                await acc.PayInvoice(inv.Id);
+                await client.MarkInvoiceStatus(acc.StoreId, inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled });
+                var refund = await client.RefundInvoice(acc.StoreId, inv.Id, new RefundInvoiceRequest() { RefundVariant = RefundVariant.Fiat, PaymentMethod = "BTC-CHAIN" });
+
+                async Task AssertData(string currency, decimal awaiting, decimal limit, decimal completed, bool fullyPaid)
+                {
+                    report = await GetReport(acc, new() { ViewName = "Refunds" });
+                    var currencyIndex = report.GetIndex("Currency");
+                    var awaitingIndex = report.GetIndex("Awaiting");
+                    var fullyPaidIndex = report.GetIndex("FullyPaid");
+                    var completedIndex = report.GetIndex("Completed");
+                    var limitIndex = report.GetIndex("Limit");
+                    var d = Assert.Single(report.Data.Where(d => d[report.GetIndex("InvoiceId")].Value<string>() == inv.Id));
+                    Assert.Equal(fullyPaid, (bool)d[fullyPaidIndex]);
+                    Assert.Equal(currency, d[currencyIndex].Value<string>());
+                    Assert.Equal(completed, (((JObject)d[completedIndex])["v"]).Value<decimal>());
+                    Assert.Equal(awaiting, (((JObject)d[awaitingIndex])["v"]).Value<decimal>());
+                    Assert.Equal(limit, (((JObject)d[limitIndex])["v"]).Value<decimal>());
+                }
+
+                await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
+                var payout = await client.CreatePayout(refund.Id, new CreatePayoutRequest() { Destination = addr.ToString(), PaymentMethod = "BTC-CHAIN" });
+                await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
+                await client.ApprovePayout(acc.StoreId, payout.Id, new ApprovePayoutRequest());
+                await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
+                if (i == 0)
+                {
+                    await client.MarkPayoutPaid(acc.StoreId, payout.Id);
+                    await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 10.0m, fullyPaid: true);
+                }
+                if (i == 1)
+                {
+                    await client.CancelPayout(acc.StoreId, payout.Id);
+                    await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
+                }
+            }
         }
 
         private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)

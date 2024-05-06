@@ -370,6 +370,7 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<ProductsReportProvider>();
             services.AddReportProvider<PayoutsReportProvider>();
             services.AddReportProvider<LegacyInvoiceExportReportProvider>();
+            services.AddReportProvider<RefundsReportProvider>();
             services.AddWebhooks();
 
             services.AddSingleton<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(o => 

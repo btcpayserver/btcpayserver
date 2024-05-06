@@ -64,7 +64,27 @@ public partial class UIReportsController
             decimal randomValue = ((decimal)rand.NextDouble() * range) + from;
             return decimal.Round(randomValue, precision);
         }
-
+        JObject GetFormattedAmount()
+        {
+            string? curr = null;
+            decimal value = 0m;
+            int offset = 0;
+            while (curr is null)
+            {
+                curr = row[fi - 1 - offset]?.ToString();
+                value = curr switch
+                {
+                    "USD" or "EUR" or "CHF" => GenerateDecimal(30_000m, 60_000, 2),
+                    "JPY" => GenerateDecimal(400_0000m, 1000_0000m, 0),
+                    _ => 0.0m
+                };
+                if (value != 0.0m)
+                    break;
+                curr = null;
+                offset++;
+            }
+            return DisplayFormatter.ToFormattedAmount(value, curr);
+        }
         var fiatCurrency = rand.NextSingle() > 0.2 ? "USD" : TakeOne("JPY", "EUR", "CHF");
         var cryptoCurrency = rand.NextSingle() > 0.2 ? "BTC" : TakeOne("LTC", "DOGE", "DASH");
         
@@ -116,14 +136,11 @@ public partial class UIReportsController
             return Encoders.Hex.EncodeData(GenerateBytes(32));
         if (f.Name == "Rate")
         {
-            var curr = row[fi - 1]?.ToString();
-            var value = curr switch
-            {
-                "USD" or "EUR" or "CHF" => GenerateDecimal(30_000m, 60_000, 2),
-                "JPY" => GenerateDecimal(400_0000m, 1000_0000m, 0),
-                _ => GenerateDecimal(30_000m, 60_000, 2)
-            };
-            return DisplayFormatter.ToFormattedAmount(value, curr);
+            return GetFormattedAmount();
+        }
+        if (f.Type == "amount")
+        {
+            return GetFormattedAmount();
         }
         return null;
     }

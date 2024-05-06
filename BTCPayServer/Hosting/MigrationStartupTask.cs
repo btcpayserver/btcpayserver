@@ -196,12 +196,6 @@ namespace BTCPayServer.Hosting
                     settings.FileSystemStorageAsDefault = true;
                     await _Settings.UpdateSetting(settings);
                 }
-                if (!settings.FixSeqAfterSqliteMigration)
-                {
-                    await FixSeqAfterSqliteMigration();
-                    settings.FixSeqAfterSqliteMigration = true;
-                    await _Settings.UpdateSetting(settings);
-                }
                 if (!settings.FixMappedDomainAppType)
                 {
                     await FixMappedDomainAppType();
@@ -325,16 +319,6 @@ namespace BTCPayServer.Hosting
             }
             setting.Value = data.ToString();
             await ctx.SaveChangesAsync();
-        }
-
-
-        private async Task FixSeqAfterSqliteMigration()
-        {
-            await using var ctx = _DBContextFactory.CreateContext();
-            var state = await GetMigrationState(ctx);
-            if (state != "complete")
-                return;
-            await UpdateSequenceInvoiceSearch(ctx);
         }
         static async Task<string> GetMigrationState(ApplicationDbContext postgresContext)
         {

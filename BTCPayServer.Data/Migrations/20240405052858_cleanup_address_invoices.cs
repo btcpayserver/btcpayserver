@@ -15,13 +15,10 @@ namespace BTCPayServer.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql(@"
+            migrationBuilder.Sql(@"
 DELETE FROM ""AddressInvoices"" WHERE ""Address"" LIKE '%_LightningLike';
 ALTER TABLE ""AddressInvoices"" DROP COLUMN IF EXISTS ""CreatedTime"";
 VACUUM (FULL, ANALYZE) ""AddressInvoices"";", true);
-            }
         }
 
         /// <inheritdoc />

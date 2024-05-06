@@ -1,7 +1,10 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayApp.CommonServer;
+
+
 
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
@@ -9,6 +12,8 @@ public interface IBTCPayAppHubClient
     Task NotifyNetwork(string network);
     Task TransactionDetected(string identifier, string txId);
     Task NewBlock(string block);
+
+    Task<LightningPayment> CreateInvoice(CreateLightningInvoiceRequest createLightningInvoiceRequest);
 }
 //methods available on the hub in the server
 public interface IBTCPayAppHubServer
@@ -27,6 +32,9 @@ public interface IBTCPayAppHubServer
     Task TrackScripts(string identifier, string[] scripts);
     Task<string> UpdatePsbt(string[] identifiers, string psbt);
     Task<CoinResponse[]> GetUTXOs(string[] identifiers);
+
+
+    Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment);
 }
 
 public class CoinResponse

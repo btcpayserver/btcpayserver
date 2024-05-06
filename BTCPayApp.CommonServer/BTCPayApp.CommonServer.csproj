@@ -6,4 +6,8 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
+    </ItemGroup>
+
 </Project>

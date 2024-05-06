@@ -3,10 +3,12 @@ using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Lightning;
 using Microsoft.AspNetCore.SignalR;
 using NBitcoin;
+using LightningPayment = BTCPayServer.Lightning.LightningPayment;
 
 namespace BTCPayServer.App;
 
@@ -114,9 +116,18 @@ public class BTCPayAppLightningClient:ILightningClient
 
     public async Task<LightningInvoice> CreateInvoice(CreateInvoiceParams createInvoiceRequest, CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+        var lp = await HubClient.CreateInvoice(new CreateLightningInvoiceRequest(createInvoiceRequest.Amount, createInvoiceRequest.Description, createInvoiceRequest.Expiry)
+        {
+            DescriptionHashOnly = createInvoiceRequest.DescriptionHashOnly,
+            PrivateRouteHints = createInvoiceRequest.PrivateRouteHints,
+            
+        });
+
+
+        return null;
     }
 
+    
     public async Task<ILightningInvoiceListener> Listen(CancellationToken cancellation = new CancellationToken())
     {
         throw new NotImplementedException();

@@ -260,6 +260,11 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
         return result.ToArray();
     }
 
+    public async Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment)
+    {
+        throw new NotImplementedException();
+    }
+
 
     public async Task MasterNodePong(string group, bool active)
     {
@@ -273,6 +278,7 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
         
         
     }
+    
 
     public async Task<AppHandshakeResponse> Handshake(AppHandshake request)
     {

@@ -178,9 +178,9 @@
                                         @if (payment.Destination.Length > 69)
                                         {
                                             <span>
-                                                <span>@payment.Destination[..30]</span>
+                                                <span>@payment.Destination[..19]</span>
                                                 <span>...</span>
-                                                <span>@payment.Destination.Substring(payment.Destination.Length - 30, 30)</span>
+                                                <span>@payment.Destination.Substring(payment.Destination.Length - 20, 20)</span>
                                             </span>
                                         }
                                         else

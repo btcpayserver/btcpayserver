@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
             migrationBuilder.AddColumn<decimal>(
                 name: "Amount",
                 table: "Payments",
-                type: migrationBuilder.IsNpgsql() ? "NUMERIC" : "TEXT",
+                type: "NUMERIC",
                 nullable: true);
 
             migrationBuilder.AddColumn<DateTimeOffset>(
@@ -37,13 +37,11 @@ namespace BTCPayServer.Migrations
                 table: "Payments",
                 type: "TEXT",
                 nullable: true);
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.AlterColumn<bool?>(
-                    name: "Accounted",
-                    table: "Payments",
-                    nullable: true);
-            }
+
+            migrationBuilder.AlterColumn<bool?>(
+                name: "Accounted",
+                table: "Payments",
+                nullable: true);
         }
 
         /// <inheritdoc />

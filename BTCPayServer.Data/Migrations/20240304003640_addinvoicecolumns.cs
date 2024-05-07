@@ -18,7 +18,7 @@ namespace BTCPayServer.Migrations
             migrationBuilder.AddColumn<decimal>(
                 name: "Amount",
                 table: "Invoices",
-                type: migrationBuilder.IsNpgsql() ? "NUMERIC" : "TEXT",
+                type: "NUMERIC",
                 nullable: true);
 
             migrationBuilder.AddColumn<string>(

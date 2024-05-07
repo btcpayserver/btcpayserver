@@ -13,10 +13,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql("ALTER TABLE \"Apps\" ALTER COLUMN \"Settings\" TYPE JSONB USING \"Settings\"::JSONB");
-            }
+            migrationBuilder.Sql("ALTER TABLE \"Apps\" ALTER COLUMN \"Settings\" TYPE JSONB USING \"Settings\"::JSONB");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

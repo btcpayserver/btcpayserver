@@ -13,10 +13,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql("DELETE FROM \"WalletObjects\" WHERE \"WalletId\"='';");
-            }
+            migrationBuilder.Sql("DELETE FROM \"WalletObjects\" WHERE \"WalletId\"='';");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

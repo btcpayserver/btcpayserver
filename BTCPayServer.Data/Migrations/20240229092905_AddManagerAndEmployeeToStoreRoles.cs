@@ -1,4 +1,4 @@
-﻿using BTCPayServer.Data;
+using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
@@ -11,25 +11,17 @@ namespace BTCPayServer.Migrations
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20240229092905_AddManagerAndEmployeeToStoreRoles")]
     public partial class AddManagerAndEmployeeToStoreRoles : Migration
-    {
-        object GetPermissionsData(MigrationBuilder migrationBuilder, string[] permissions)
-        {
-            return migrationBuilder.IsNpgsql()
-                ? permissions
-                : JsonConvert.SerializeObject(permissions);
-        }
-        
+    {   
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            var permissionsType = migrationBuilder.IsNpgsql() ? "TEXT[]" : "TEXT";
             migrationBuilder.InsertData(
                 "StoreRoles",
                 columns: new[] { "Id", "Role", "Permissions" },
-                columnTypes: new[] { "TEXT", "TEXT", permissionsType },
+                columnTypes: new[] { "TEXT", "TEXT", "TEXT[]" },
                 values: new object[,]
                 {
                     {
-                        "Manager", "Manager", GetPermissionsData(migrationBuilder, new[]
+                        "Manager", "Manager", new[]
                         {
                             "btcpay.store.canviewstoresettings",
                             "btcpay.store.canmodifyinvoices",
@@ -37,17 +29,17 @@ namespace BTCPayServer.Migrations
                             "btcpay.store.canmodifypaymentrequests",
                             "btcpay.store.canmanagepullpayments",
                             "btcpay.store.canmanagepayouts"
-                        })
+                        }
                     },
                     {
-                        "Employee", "Employee", GetPermissionsData(migrationBuilder, new[]
+                        "Employee", "Employee", new[]
                         {
                             "btcpay.store.canmodifyinvoices",
                             "btcpay.store.canmodifypaymentrequests",
                             "btcpay.store.cancreatenonapprovedpullpayments",
                             "btcpay.store.canviewpayouts",
                             "btcpay.store.canviewpullpayments"
-                        })
+                        }
                     }
                 });
             
@@ -57,16 +49,16 @@ namespace BTCPayServer.Migrations
                 keyColumnTypes: new[] { "TEXT" },
                 keyValues: new[] { "Guest" },
                 columns: new[] { "Permissions" },
-                columnTypes: new[] { permissionsType },
+                columnTypes: new[] { "TEXT[]" },
                 values: new object[]
                 {
-                    GetPermissionsData(migrationBuilder, new[]
+                    new[]
                     {
                         "btcpay.store.canmodifyinvoices",
                         "btcpay.store.canviewpaymentrequests",
                         "btcpay.store.canviewpullpayments",
                         "btcpay.store.canviewpayouts"
-                    })
+                    }
                 });
         }
 
@@ -75,23 +67,22 @@ namespace BTCPayServer.Migrations
             migrationBuilder.DeleteData("StoreRoles", "Id", "Manager");
             migrationBuilder.DeleteData("StoreRoles", "Id", "Employee");
             
-            var permissionsType = migrationBuilder.IsNpgsql() ? "TEXT[]" : "TEXT";
             migrationBuilder.UpdateData(
                 "StoreRoles",
                 keyColumns: new[] { "Id" },
                 keyColumnTypes: new[] { "TEXT" },
                 keyValues: new[] { "Guest" },
                 columns: new[] { "Permissions" },
-                columnTypes: new[] { permissionsType },
+                columnTypes: new[] { "TEXT[]" },
                 values: new object[]
                 {
-                    GetPermissionsData(migrationBuilder, new[]
+                    new[]
                     {
                         "btcpay.store.canviewstoresettings",
                         "btcpay.store.canmodifyinvoices",
                         "btcpay.store.canviewcustodianaccounts",
                         "btcpay.store.candeposittocustodianaccount"
-                    })
+                    }
                 });
         }
     }

@@ -1,4 +1,17 @@
 @model BTCPayServer.Models.InvoicingModels.InvoiceReceiptViewModel
+
+@functions {
+    public bool IsManualEntryCart(object data)
+    {
+        if (data is Dictionary<string, object>)
+        {
+            Dictionary<string, object> cart = (Dictionary<string, object>)data;
+            return cart.Count == 1 && cart.ContainsKey("Manual entry 1");
+        }
+
+        return false;
+    }
+}
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Components.QRCode
 @using BTCPayServer.Services
@@ -107,7 +120,8 @@
                         <td colspan="2"><hr class="w-100 my-0"/></td>
                     </tr>
                     @if (Model.AdditionalData?.Any() is true &&
-                        (Model.AdditionalData.ContainsKey("Cart") || Model.AdditionalData.ContainsKey("Discount") || Model.AdditionalData.ContainsKey("Tip")))
+                        ((Model.AdditionalData.ContainsKey("Cart") && !IsManualEntryCart(Model.AdditionalData["Cart"])) 
+                            || Model.AdditionalData.ContainsKey("Discount") || Model.AdditionalData.ContainsKey("Tip")))
                     {
                         @if (Model.AdditionalData.ContainsKey("Cart"))
                         {

@@ -2509,6 +2509,51 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanMigrateFileIds()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var f = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            
+            // upload file to get a working fileId
+            var controller = tester.PayTester.GetController<UIServerController>(user.UserId, user.StoreId);
+            Assert.IsType<FileSystemStorageConfiguration>(Assert.IsType<ViewResult>(await controller.StorageProvider(StorageProvider.FileSystem.ToString())).Model);
+            var fileId = await CanUploadFile(controller);
+            
+            // attach file id as logo to store
+            var store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
+            var blob = store!.GetStoreBlob();
+            blob.LogoFileId = fileId;
+            blob.LogoUrl = null;
+            blob.CssFileId = null;
+            store.SetStoreBlob(blob);
+            await tester.PayTester.StoreRepository.UpdateStore(store);
+            
+            // create legacy theme setting that needs migration
+            var settingsRepo = tester.PayTester.GetService<SettingsRepository>();
+            await settingsRepo.UpdateSetting(new ThemeSettings { LogoFileId = fileId, CustomThemeFileId = null });
+
+            // migrate and check
+            await RestartMigration(tester);
+            var settings = await settingsRepo.GetSettingAsync<ThemeSettings>();
+            Assert.NotNull(settings);
+            Assert.Null(settings.LogoFileId);
+            Assert.Null(settings.CustomThemeFileId);
+            Assert.Null(settings.CustomThemeCssUrl);
+            Assert.StartsWith("/LocalStorage/", settings.LogoUrl);
+            
+            store = await tester.PayTester.StoreRepository.FindStore(user.StoreId);
+            blob = store!.GetStoreBlob();
+            Assert.Null(blob.CssFileId);
+            Assert.Null(blob.LogoFileId);
+            Assert.Null(blob.CssUrl);
+            Assert.StartsWith("/LocalStorage/", blob.LogoUrl);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanDoLightningInternalNodeMigration()
         {
             using var tester = CreateServerTester(newDb: true);
@@ -2943,14 +2988,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(StorageProvider.FileSystem,
                 shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
 
-            await CanUploadRemoveFiles(controller);
+            var fileId = await CanUploadFile(controller);
+            await CanRemoveFile(controller, fileId);
         }
 
-        internal static async Task CanUploadRemoveFiles(UIServerController controller)
+        internal static async Task<string> CanUploadFile(UIServerController controller)
         {
             var fileContent = "content";
-            List<IFormFile> fileList = new List<IFormFile>();
-            fileList.Add(TestUtils.GetFormFile("uploadtestfile1.txt", fileContent));
+            var fileList = new List<IFormFile> { TestUtils.GetFormFile("uploadtestfile1.txt", fileContent) };
 
             var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFiles(fileList));
             Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileIds"));
@@ -2965,7 +3010,6 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(viewFilesViewModel.Files);
             Assert.True(viewFilesViewModel.DirectUrlByFiles.ContainsKey(fileId));
             Assert.NotEmpty(viewFilesViewModel.DirectUrlByFiles[fileId]);
-
 
             //verify file is available and the same
             using var net = new HttpClient();
@@ -2991,17 +3035,20 @@ namespace BTCPayServer.Tests
             data = await net.GetStringAsync(new Uri(url));
             Assert.Equal(fileContent, data);
 
+            return fileId;
+        }
 
+        internal static async Task CanRemoveFile(UIServerController controller, string fileId)
+        {
             //delete file
             Assert.IsType<RedirectToActionResult>(await controller.DeleteFile(fileId));
-            statusMessageModel = controller.TempData.GetStatusMessageModel();
+            var statusMessageModel = controller.TempData.GetStatusMessageModel();
             Assert.NotNull(statusMessageModel);
-
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
 
             //attempt to fetch deleted file
-            viewFilesViewModel =
-                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
+            var viewFilesViewModel =
+                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files([fileId])).Model);
             Assert.Null(viewFilesViewModel.DirectUrlByFiles);
         }
 

@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Services.Apps
 {

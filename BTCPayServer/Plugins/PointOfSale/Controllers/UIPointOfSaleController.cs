@@ -47,6 +47,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             AppService appService,
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
+            UriResolver uriResolver,
             InvoiceRepository invoiceRepository,
             UIInvoiceController invoiceController,
             FormDataService formDataService,
@@ -55,6 +56,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _currencies = currencies;
             _appService = appService;
             _storeRepository = storeRepository;
+            _uriResolver = uriResolver;
             _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _displayFormatter = displayFormatter;
@@ -64,6 +66,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly CurrencyNameTable _currencies;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly StoreRepository _storeRepository;
+        private readonly UriResolver _uriResolver;
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
@@ -86,7 +89,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
-            var storeBranding = new StoreBrandingViewModel(storeBlob);
+            var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
 
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
@@ -460,7 +463,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var vm = new FormViewModel
             {
                 StoreName = store.StoreName,
-                StoreBranding = new StoreBrandingViewModel(storeBlob),
+                StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob),
                 FormName = formData.Name,
                 Form = form,
                 AspController = controller,
@@ -523,7 +526,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
             viewModel.FormParameters = formParameters;
-            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob);
+            viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             return View("Views/UIForms/View", viewModel);
         }
         

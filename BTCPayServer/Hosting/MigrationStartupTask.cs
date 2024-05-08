@@ -217,80 +217,12 @@ namespace BTCPayServer.Hosting
                     settings.MigratePayoutProcessors = true;
                     await _Settings.UpdateSetting(settings);
                 }
-                if (!settings.MigrateFileIdsToUrls)
-                {
-                    await MigrateFileIdsToUrls();
-                    settings.MigrateFileIdsToUrls = true;
-                    await _Settings.UpdateSetting(settings);
-                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
-        }
-
-        private async Task<string> GetRelativeFilePath(string fileId)
-        {
-            return (await _fileService.GetFileUrl(new Uri("/"), fileId))?.Replace("file://", "");
-        }
-
-        private async Task MigrateFileIdsToUrls()
-        {
-            await using var ctx = _DBContextFactory.CreateContext();
-            
-#pragma warning disable CS0618 // Type or member is obsolete
-            // Server
-            var settings = await _Settings.GetSettingAsync<ThemeSettings>();
-            if (!string.IsNullOrEmpty(settings?.LogoFileId) || !string.IsNullOrEmpty(settings?.CustomThemeFileId))
-            {
-                if (!string.IsNullOrEmpty(settings.LogoFileId))
-                {
-                    settings.LogoUrl = await GetRelativeFilePath(settings.LogoFileId);
-                    settings.LogoFileId = null;
-                }
-
-                if (!string.IsNullOrEmpty(settings.CustomThemeFileId))
-                {
-                    settings.CustomThemeCssUrl = await GetRelativeFilePath(settings.CustomThemeFileId);
-                    settings.CustomThemeFileId = null;
-                }
-
-                await _Settings.UpdateSetting(settings);
-            }
-
-            // Stores
-            var stores = await ctx.Stores.ToArrayAsync();
-            foreach (var store in stores)
-            {
-                var changed = false;
-                var storeBlob = store.GetStoreBlob();
-                if (!string.IsNullOrEmpty(storeBlob.LogoFileId))
-                {
-                    storeBlob.LogoUrl = await GetRelativeFilePath(storeBlob.LogoFileId);
-                    storeBlob.LogoFileId = null;
-                    changed = true;
-                }
-                if (!string.IsNullOrEmpty(storeBlob.CssFileId))
-                {
-                    storeBlob.CssUrl = await GetRelativeFilePath(storeBlob.CssFileId);
-                    storeBlob.CssFileId = null;
-                    changed = true;
-                }
-                if (!string.IsNullOrEmpty(storeBlob.SoundFileId))
-                {
-                    storeBlob.PaymentSoundUrl = await GetRelativeFilePath(storeBlob.SoundFileId);
-                    storeBlob.SoundFileId = null;
-                    changed = true;
-                }
-                if (changed)
-                {
-                    store.SetStoreBlob(storeBlob);
-                }
-#pragma warning restore CS0618 // Type or member is obsolete
-            }
-            await ctx.SaveChangesAsync();
         }
 
         private async Task MigratePayoutProcessors()

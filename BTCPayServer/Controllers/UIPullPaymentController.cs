@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly UriResolver _uriResolver;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
@@ -51,6 +52,7 @@ namespace BTCPayServer.Controllers
         public UIPullPaymentController(ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
             DisplayFormatter displayFormatter,
+            UriResolver uriResolver,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkProvider networkProvider,
             BTCPayNetworkJsonSerializerSettings serializerSettings,
@@ -62,6 +64,7 @@ namespace BTCPayServer.Controllers
             _dbContextFactory = dbContextFactory;
             _currencyNameTable = currencyNameTable;
             _displayFormatter = displayFormatter;
+            _uriResolver = uriResolver;
             _pullPaymentHostedService = pullPaymentHostedService;
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
@@ -121,7 +124,7 @@ namespace BTCPayServer.Controllers
                 }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
-            vm.StoreBranding = new StoreBrandingViewModel(storeBlob);
+            vm.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             
             if (_pullPaymentHostedService.SupportsLNURL(blob))
             {

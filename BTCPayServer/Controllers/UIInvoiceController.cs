@@ -65,6 +65,7 @@ namespace BTCPayServer.Controllers
         private readonly PaymentMethodViewProvider _viewProvider;
         private readonly AppService _appService;
         private readonly IFileService _fileService;
+        private readonly UriResolver _uriResolver;
 
         public WebhookSender WebhookNotificationManager { get; }
 
@@ -91,6 +92,7 @@ namespace BTCPayServer.Controllers
             LinkGenerator linkGenerator,
             AppService appService,
             IFileService fileService,
+            UriResolver uriResolver,
             IAuthorizationService authorizationService,
             TransactionLinkProviders transactionLinkProviders,
             Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
@@ -120,6 +122,7 @@ namespace BTCPayServer.Controllers
             _paymentModelExtensions = paymentModelExtensions;
             _viewProvider = viewProvider;
             _fileService = fileService;
+            _uriResolver = uriResolver;
             _appService = appService;
         }
 

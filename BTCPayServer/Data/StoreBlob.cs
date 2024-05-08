@@ -215,16 +215,10 @@ namespace BTCPayServer.Data
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
         public string BrandColor { get; set; }
-        public string LogoUrl { get; set; }
-        public string CssUrl { get; set; }
-        
-        // Leave these in here post-2.0, because we need them for the migration
-        [Obsolete("Use LogoUrl instead")]
-        public string LogoFileId { get; set; }
-        [Obsolete("Use CssUrl instead")]
-        public string CssFileId { get; set; }
-        [Obsolete("Use PaymentSoundUrl instead")]
-        public string SoundFileId { get; set; }
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri LogoUrl { get; set; }
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri CssUrl { get; set; }
 
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -242,7 +236,8 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool PlaySoundOnPayment { get; set; }
 
-        public string PaymentSoundUrl { get; set; }
+		[JsonConverter(typeof(UnresolvedUriJsonConverter))]
+		public UnresolvedUri PaymentSoundUrl { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

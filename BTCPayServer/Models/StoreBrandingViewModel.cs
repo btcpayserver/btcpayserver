@@ -1,4 +1,9 @@
+using System;
+using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Models;
 
@@ -11,12 +16,17 @@ public class StoreBrandingViewModel
     public StoreBrandingViewModel()
     {
     }
-    
-    public StoreBrandingViewModel(StoreBlob storeBlob)
+    public static async Task<StoreBrandingViewModel> CreateAsync(HttpRequest request, UriResolver uriResolver, StoreBlob storeBlob)
     {
-        if (storeBlob == null) return;
+        if (storeBlob == null)
+            return new StoreBrandingViewModel();
+        var result = new StoreBrandingViewModel(storeBlob);
+        result.LogoUrl = await uriResolver.Resolve(request.GetAbsoluteRootUri(), storeBlob.LogoUrl);
+        result.CssUrl = await uriResolver.Resolve(request.GetAbsoluteRootUri(), storeBlob.CssUrl);
+        return result;
+    }
+    private StoreBrandingViewModel(StoreBlob storeBlob)
+    {
         BrandColor = storeBlob.BrandColor;
-        LogoUrl = storeBlob.LogoUrl;
-        CssUrl = storeBlob.CssUrl;
     }
 }

@@ -64,6 +64,11 @@ namespace BTCPayServer.Tests
             get;
             set;
         }
+        public Uri ServerUriWithIP
+        {
+            get;
+            set;
+        }
 
         public string MySQL
         {
@@ -164,6 +169,7 @@ namespace BTCPayServer.Tests
             await File.WriteAllTextAsync(confPath, config.ToString());
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
+            ServerUriWithIP = new Uri("http://127.0.0.1:" + Port + "/");
             HttpClient = new HttpClient();
             HttpClient.BaseAddress = ServerUri;
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");

@@ -18,6 +18,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using Ganss.Xss;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
@@ -180,7 +181,6 @@ namespace BTCPayServer.Plugins.Crowdfund
 
             var store = appData.StoreData;
             var storeBlob = store.GetStoreBlob();
-            var storeBranding = new StoreBrandingViewModel(storeBlob);
             var formUrl = settings.FormId != null
                 ? _linkGenerator.GetPathByAction(nameof(UICrowdfundController.CrowdfundForm), "UICrowdfund",
                     new { appId = appData.Id }, _options.Value.RootPath)
@@ -192,7 +192,6 @@ namespace BTCPayServer.Plugins.Crowdfund
                 Description = settings.Description,
                 MainImageUrl = settings.MainImageUrl,
                 StoreName = store.StoreName,
-                StoreBranding = storeBranding,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
                 StartDate = settings.StartDate?.ToUniversalTime(),

@@ -1,5 +1,7 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.JsonConverters;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services;
 
@@ -21,14 +23,11 @@ public class ThemeSettings
     [Display(Name = "Custom Theme Extension Type")]
     public ThemeExtension CustomThemeExtension { get; set; }
 
-    public string CustomThemeCssUrl { get; set; }
+    [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+    public UnresolvedUri CustomThemeCssUrl { get; set; }
 
-    public string LogoUrl { get; set; }
-
-    [Obsolete("Use CustomThemeCssUrl instead")]
-    public string CustomThemeFileId { get; set; }
-    [Obsolete("Use LogoUrl instead")]
-    public string LogoFileId { get; set; }
+    [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+    public UnresolvedUri LogoUrl { get; set; }
 
     public bool FirstRun { get; set; } = true;
 

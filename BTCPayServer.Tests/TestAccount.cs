@@ -146,7 +146,7 @@ namespace BTCPayServer.Tests
         public async Task ModifyPayment(Action<GeneralSettingsViewModel> modify)
         {
             var storeController = GetController<UIStoresController>();
-            var response = storeController.GeneralSettings();
+            var response = await storeController.GeneralSettings();
             GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model;
             modify(settings);
             await storeController.GeneralSettings(settings);

@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly StoreRepository _storeRepository;
+        private readonly UriResolver _uriResolver;
         private readonly BTCPayNetworkProvider _networkProvider;
 
         private FormComponentProviders FormProviders { get; }
@@ -55,6 +56,7 @@ namespace BTCPayServer.Controllers
             CurrencyNameTable currencies,
             DisplayFormatter displayFormatter,
             StoreRepository storeRepository,
+            UriResolver uriResolver,
             InvoiceRepository invoiceRepository,
             FormComponentProviders formProviders,
             FormDataService formDataService,
@@ -68,6 +70,7 @@ namespace BTCPayServer.Controllers
             _Currencies = currencies;
             _displayFormatter = displayFormatter;
             _storeRepository = storeRepository;
+            _uriResolver = uriResolver;
             _InvoiceRepository = invoiceRepository;
             FormProviders = formProviders;
             FormDataService = formDataService;
@@ -227,7 +230,7 @@ namespace BTCPayServer.Controllers
             vm.HubPath = PaymentRequestHub.GetHubPath(Request);
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
-            vm.StoreBranding = new StoreBrandingViewModel(storeBlob);
+            vm.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
 
             return View(vm);
         }
@@ -284,7 +287,7 @@ namespace BTCPayServer.Controllers
             viewModel.Form = form;
             
             var storeBlob = result.StoreData.GetStoreBlob();
-            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob);
+            viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             
             return View("Views/UIForms/View", viewModel);
         }

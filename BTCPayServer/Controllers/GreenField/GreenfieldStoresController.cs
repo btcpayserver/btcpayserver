@@ -117,8 +117,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
                 BrandColor = storeBlob.BrandColor,
-                CssUrl = storeBlob.CssUrl,
-                LogoUrl = storeBlob.LogoUrl,
+                CssUrl = storeBlob.CssUrl?.ToString(),
+                LogoUrl = storeBlob.LogoUrl?.ToString(),
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToString(),
@@ -196,8 +196,8 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
             blob.BrandColor = restModel.BrandColor;
-            blob.LogoUrl = restModel.LogoUrl;
-            blob.CssUrl = restModel.CssUrl;
+            blob.LogoUrl = restModel.LogoUrl is null ? null : UnresolvedUri.Create(restModel.LogoUrl);
+            blob.CssUrl = restModel.CssUrl is null ? null : UnresolvedUri.Create(restModel.CssUrl);
             if (restModel.AutoDetectLanguage.HasValue)
                 blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
             if (restModel.ShowPayInWalletButton.HasValue)

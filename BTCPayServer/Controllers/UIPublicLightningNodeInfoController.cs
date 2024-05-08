@@ -8,6 +8,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -21,16 +22,19 @@ namespace BTCPayServer.Controllers
     {
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
         private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
+        private readonly UriResolver _uriResolver;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly StoreRepository _StoreRepository;
 
         public UIPublicLightningNodeInfoController(BTCPayNetworkProvider btcPayNetworkProvider,
             Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
+            UriResolver uriResolver,
             PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository)
         {
             _BtcPayNetworkProvider = btcPayNetworkProvider;
             _paymentModelExtensions = paymentModelExtensions;
+            _uriResolver = uriResolver;
             _handlers = handlers;
             _StoreRepository = storeRepository;
         }
@@ -49,7 +53,7 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = cryptoCode,
                 StoreName = store.StoreName,
-                StoreBranding = new StoreBrandingViewModel(storeBlob)
+                StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob)
             };
             try
             {

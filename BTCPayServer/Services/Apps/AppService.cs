@@ -17,6 +17,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Dapper;
 using Ganss.Xss;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Lightning;
 
 namespace BTCPayApp.CommonServer;
 
@@ -14,6 +15,10 @@ public interface IBTCPayAppHubClient
     Task NewBlock(string block);
 
     Task<LightningPayment> CreateInvoice(CreateLightningInvoiceRequest createLightningInvoiceRequest);
+    Task<LightningPayment?> GetLightningInvoice(string paymentHash);
+    Task<LightningPayment?> GetLightningPayment(string paymentHash);
+    Task<List<LightningPayment>> GetLightningPayments(ListPaymentsParams request);
+    Task<List<LightningPayment>> GetLightningInvoices(ListInvoicesParams request);
 }
 //methods available on the hub in the server
 public interface IBTCPayAppHubServer

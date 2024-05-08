@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
+using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Client.Models;
@@ -8,7 +10,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Lightning;
 using Microsoft.AspNetCore.SignalR;
 using NBitcoin;
-using LightningPayment = BTCPayServer.Lightning.LightningPayment;
+using LightningPayment = BTCPayApp.CommonServer.LightningPayment;
 
 namespace BTCPayServer.App;
 
@@ -46,7 +48,7 @@ public class BTCPayAppLightningConnectionStringHandler:ILightningConnectionStrin
             return null;
         }
         error = null;
-        return new BTCPayAppLightningClient(_hubContext, _appState, key);
+        return new BTCPayAppLightningClient(_hubContext, _appState, key, network );
     }
     
     
@@ -57,12 +59,14 @@ public class BTCPayAppLightningClient:ILightningClient
     private readonly IHubContext<BTCPayAppHub, IBTCPayAppHubClient> _hubContext;
     private readonly BTCPayAppState _appState;
     private readonly string _key;
+    private readonly Network _network;
 
-    public BTCPayAppLightningClient(IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext, BTCPayAppState appState, string key)
+    public BTCPayAppLightningClient(IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext, BTCPayAppState appState, string key, Network network)
     {
         _hubContext = hubContext;
         _appState = appState;
         _key = key;
+        _network = network;
     }
 
     public override string ToString()
@@ -80,7 +84,8 @@ public class BTCPayAppLightningClient:ILightningClient
 
     public async Task<LightningInvoice> GetInvoice(uint256 paymentHash, CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+        var lp = await HubClient.GetLightningInvoice(paymentHash.ToString());
+        return ToLightningInvoice(lp, _network);
     }
 
     public async Task<LightningInvoice[]> ListInvoices(CancellationToken cancellation = new CancellationToken())
@@ -90,22 +95,38 @@ public class BTCPayAppLightningClient:ILightningClient
 
     public async Task<LightningInvoice[]> ListInvoices(ListInvoicesParams request, CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+        var invs = await HubClient.GetLightningInvoices(request);
+        return invs.Select(i => ToLightningInvoice(i, _network)).ToArray();
     }
 
-    public async Task<LightningPayment> GetPayment(string paymentHash, CancellationToken cancellation = new CancellationToken())
+    public async Task<Lightning.LightningPayment> GetPayment(string paymentHash, CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+
+        return ToLightningPayment(await HubClient.GetLightningPayment(paymentHash));
     }
 
-    public async Task<LightningPayment[]> ListPayments(CancellationToken cancellation = new CancellationToken())
+    private static Lightning.LightningPayment ToLightningPayment(LightningPayment lightningPayment)
+    {
+        return new Lightning.LightningPayment()
+        {
+            Id = lightningPayment.PaymentHash,
+            Amount = LightMoney.MilliSatoshis(lightningPayment.Value),
+            PaymentHash = lightningPayment.PaymentHash,
+            Preimage = lightningPayment.Preimage,
+            BOLT11 = lightningPayment.PaymentRequests.FirstOrDefault(),
+            Status = lightningPayment.Status
+        };
+    }
+
+    public async Task<Lightning.LightningPayment[]> ListPayments(CancellationToken cancellation = new CancellationToken())
     {
         return await ListPayments(new ListPaymentsParams(), cancellation);
     }
 
-    public async Task<LightningPayment[]> ListPayments(ListPaymentsParams request, CancellationToken cancellation = new CancellationToken())
+    public async Task<Lightning.LightningPayment[]> ListPayments(ListPaymentsParams request, CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+        var invs = await HubClient.GetLightningPayments(request);
+        return invs.Select(ToLightningPayment).ToArray();
     }
 
     public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry,
@@ -122,20 +143,61 @@ public class BTCPayAppLightningClient:ILightningClient
             PrivateRouteHints = createInvoiceRequest.PrivateRouteHints,
             
         });
-
-
-        return null;
+        return ToLightningInvoice(lp, _network);
     }
 
+    private static LightningInvoice ToLightningInvoice(LightningPayment lightningPayment, Network _network)
+    {
+        var paymenRequest = BOLT11PaymentRequest.Parse(lightningPayment.PaymentRequests.First(), _network);
+        return new LightningInvoice()
+        {
+            Id = lightningPayment.PaymentHash,
+            Amount = LightMoney.MilliSatoshis(lightningPayment.Value),
+            PaymentHash = lightningPayment.PaymentHash,
+            Preimage = lightningPayment.Preimage,
+            BOLT11 = lightningPayment.PaymentRequests.FirstOrDefault(),
+            Status = lightningPayment.Status == LightningPaymentStatus.Complete? LightningInvoiceStatus.Paid: paymenRequest.ExpiryDate < DateTimeOffset.UtcNow? LightningInvoiceStatus.Expired: LightningInvoiceStatus.Unpaid
+        };
+    }
     
     public async Task<ILightningInvoiceListener> Listen(CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+        return new Listener(_appState, _network);
+    }
+
+    public class Listener:ILightningInvoiceListener
+    {
+        private readonly BTCPayAppState _btcPayAppState;
+        private readonly Network _network;
+        private readonly Channel<LightningPayment> _channel = Channel.CreateUnbounded<LightningPayment>();
+
+        public Listener(BTCPayAppState btcPayAppState, Network network)
+        {
+            _btcPayAppState = btcPayAppState;
+            _network = network;
+            _btcPayAppState.OnPaymentUpdate += BtcPayAppStateOnOnPaymentUpdate;
+        }
+
+        private void BtcPayAppStateOnOnPaymentUpdate(object sender, (string, LightningPayment) e)
+        {
+            _channel.Writer.TryWrite(e.Item2);
+        }
+
+        public void Dispose()
+        {
+            _btcPayAppState.OnPaymentUpdate -= BtcPayAppStateOnOnPaymentUpdate;
+            _channel.Writer.Complete();
+        }
+
+        public async Task<LightningInvoice> WaitInvoice(CancellationToken cancellation)
+        {
+            return ToLightningInvoice(await _channel.Reader.ReadAsync(cancellation), _network);
+        }
     }
 
     public async Task<LightningNodeInformation> GetInfo(CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+        throw new NotSupportedException();
     }
 
     public async Task<LightningNodeBalance> GetBalance(CancellationToken cancellation = new CancellationToken())

@@ -25,26 +25,25 @@ public class BTCPayAppState : IHostedService
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly EventAggregator _eventAggregator;
-    private readonly HubLifetimeManager<BTCPayAppHub> _lifetimeManager;
     private CompositeDisposable? _compositeDisposable;
     public ExplorerClient ExplorerClient { get; private set; }
+    
     private DerivationSchemeParser _derivationSchemeParser;
     // private readonly ConcurrentDictionary<string, TrackedSource> _connectionScheme = new();
 
+    public event EventHandler<(string,LightningPayment)>? OnPaymentUpdate;
     public BTCPayAppState(
         IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext,
         ILogger<BTCPayAppState> logger,
         ExplorerClientProvider explorerClientProvider,
         BTCPayNetworkProvider networkProvider,
-        EventAggregator eventAggregator,
-        HubLifetimeManager<BTCPayAppHub> lifetimeManager)
+        EventAggregator eventAggregator)
     {
         _hubContext = hubContext;
         _logger = logger;
         _explorerClientProvider = explorerClientProvider;
         _networkProvider = networkProvider;
         _eventAggregator = eventAggregator;
-        _lifetimeManager = lifetimeManager;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
@@ -152,4 +151,11 @@ public class BTCPayAppState : IHostedService
     public async Task Connected(string contextConnectionId)
     {
     }
+
+    public async Task PaymentUpdate(string identifier, LightningPayment lightningPayment)
+    {
+        OnPaymentUpdate?.Invoke(this, (identifier, lightningPayment));
+    }
+    
+    
 }

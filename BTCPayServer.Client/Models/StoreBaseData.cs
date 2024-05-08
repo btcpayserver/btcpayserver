@@ -19,6 +19,7 @@ namespace BTCPayServer.Client.Models
         public string BrandColor { get; set; }
         public string LogoUrl { get; set; }
         public string CssUrl { get; set; }
+        public string PaymentSoundUrl { get; set; }
 
         public string SupportUrl { get; set; }
 

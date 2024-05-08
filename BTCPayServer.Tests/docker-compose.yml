@@ -168,6 +168,7 @@ services:
         dev-bitcoind-poll=1
     ports:
       - "30992:9835" # api port
+      - "30892:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -196,6 +197,7 @@ services:
         dev-bitcoind-poll=1
     ports:
       - "30993:9835" # api port
+      - "30893:9735" # api port
     expose:
       - "9735" # server port
       - "9835" # api port

@@ -14,6 +14,9 @@ public partial class LightningPayment
     public DateTimeOffset Timestamp { get; set; }
     public long Value { get; set; }
     public LightningPaymentStatus Status { get; set; }
+
+    //you can have multiple requests generated for the same payment hash, but once you reveal the preimage, you should reject any attempt to pay the same payment hash
+    public List<string> PaymentRequests { get; set; }
 }
 
 public class AppUserInfo

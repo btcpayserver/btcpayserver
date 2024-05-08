@@ -262,7 +262,7 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
 
     public async Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment)
     {
-        throw new NotImplementedException();
+        await _appState.PaymentUpdate(identifier, lightningPayment);
     }
 
 

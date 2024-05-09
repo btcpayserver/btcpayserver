@@ -10,6 +10,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -26,16 +27,16 @@ namespace BTCPayServer.Controllers.GreenField
     public class GreenfieldStoreRateConfigurationController : ControllerBase
     {
         private readonly RateFetcher _rateProviderFactory;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly IEnumerable<DefaultRates> _defaultRates;
         private readonly StoreRepository _storeRepository;
 
         public GreenfieldStoreRateConfigurationController(
             RateFetcher rateProviderFactory,
-            BTCPayNetworkProvider btcPayNetworkProvider,
+			IEnumerable<DefaultRates> defaultRates,
             StoreRepository storeRepository)
         {
             _rateProviderFactory = rateProviderFactory;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+			_defaultRates = defaultRates;
             _storeRepository = storeRepository;
         }
 
@@ -48,7 +49,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             return Ok(new StoreRateConfiguration()
             {
-                EffectiveScript = blob.GetRateRules(_btcPayNetworkProvider, out var preferredExchange).ToString(),
+                EffectiveScript = blob.GetRateRules(_defaultRates, out var preferredExchange).ToString(),
                 Spread = blob.Spread * 100.0m,
                 IsCustomScript = blob.RateScripting,
                 PreferredSource = preferredExchange ? blob.PreferredExchange : null
@@ -117,7 +118,7 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
             PopulateBlob(configuration, blob);
 
-            var rules = blob.GetRateRules(_btcPayNetworkProvider);
+            var rules = blob.GetRateRules(_defaultRates);
 
 
             var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, new StoreIdRateContext(data.Id), CancellationToken.None);
@@ -155,7 +156,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 if (string.IsNullOrEmpty(configuration.EffectiveScript))
                 {
-                    configuration.EffectiveScript = storeBlob.GetDefaultRateRules(_btcPayNetworkProvider).ToString();
+                    configuration.EffectiveScript = storeBlob.GetDefaultRateRules(_defaultRates).ToString();
                 }
 
                 if (!RateRules.TryParse(configuration.EffectiveScript, out var r))

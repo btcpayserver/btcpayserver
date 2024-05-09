@@ -563,11 +563,13 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
         }
         public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetworkBase network)
         {
+            services.AddSingleton(new DefaultRates(network.DefaultRateRules));
             services.AddSingleton<BTCPayNetworkBase>(network);
             return services;
         }
         public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetwork network)
         {
+            services.AddSingleton(new DefaultRates(network.DefaultRateRules));
             // BTC
             {
                 var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);

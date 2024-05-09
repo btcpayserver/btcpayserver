@@ -10,6 +10,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -134,18 +135,18 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public double PaymentTolerance { get; set; }
 
-        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
+        public BTCPayServer.Rating.RateRules GetRateRules(IEnumerable<DefaultRates> defaultRates)
         {
-            return GetRateRules(networkProvider, out _);
+            return GetRateRules(defaultRates, out _);
         }
-        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider, out bool preferredSource)
+        public BTCPayServer.Rating.RateRules GetRateRules(IEnumerable<DefaultRates> defaultRates, out bool preferredSource)
         {
             if (!RateScripting ||
                 string.IsNullOrEmpty(RateScript) ||
                 !BTCPayServer.Rating.RateRules.TryParse(RateScript, out var rules))
             {
                 preferredSource = true;
-                return GetDefaultRateRules(networkProvider);
+                return GetDefaultRateRules(defaultRates);
             }
             else
             {
@@ -155,15 +156,14 @@ namespace BTCPayServer.Data
             }
         }
 
-        public RateRules GetDefaultRateRules(BTCPayNetworkProvider networkProvider)
+        public RateRules GetDefaultRateRules(IEnumerable<DefaultRates> defaultRates)
         {
             var builder = new StringBuilder();
-            foreach (var network in networkProvider.GetAll())
+            foreach (var rates in defaultRates)
             {
-                if (network.DefaultRateRules.Length != 0)
+                if (rates.Rates is { Length: > 0 } r)
                 {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"// Default rate rules for {network.CryptoCode}");
-                    foreach (var line in network.DefaultRateRules)
+                    foreach (var line in r)
                     {
                         builder.AppendLine(line);
                     }

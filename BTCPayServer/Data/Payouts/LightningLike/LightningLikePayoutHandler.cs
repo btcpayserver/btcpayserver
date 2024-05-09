@@ -34,6 +34,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         private PaymentMethodHandlerDictionary _paymentHandlers;
 
         public BTCPayNetwork Network { get; }
+        public string[] DefaultRateRules => Network.DefaultRateRules;
 
         public const string LightningLikePayoutHandlerOnionNamedClient =
             nameof(LightningLikePayoutHandlerOnionNamedClient);

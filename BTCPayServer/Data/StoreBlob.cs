@@ -158,24 +158,9 @@ namespace BTCPayServer.Data
 
         public RateRules GetDefaultRateRules(IEnumerable<DefaultRates> defaultRates)
         {
-            var builder = new StringBuilder();
-            foreach (var rates in defaultRates)
-            {
-                if (rates.Rates is { Length: > 0 } r)
-                {
-                    foreach (var line in r)
-                    {
-                        builder.AppendLine(line);
-                    }
-                    builder.AppendLine("////////");
-                    builder.AppendLine();
-                }
-            }
-
             var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? GetRecommendedExchange() : PreferredExchange;
-            builder.AppendLine(CultureInfo.InvariantCulture, $"X_X = {preferredExchange}(X_X);");
-
-            RateRules.TryParse(builder.ToString(), out var rules);
+            var preferredExchangeRule = RateRules.Parse($"X_X = {preferredExchange}(X_X);");
+            var rules = RateRules.Combine(defaultRates.Select(r => r.Rules).Concat([preferredExchangeRule]).ToArray());
             rules.Spread = Spread;
             return rules;
         }

@@ -1,14 +1,4 @@
 @model StoreBrandingViewModel
-@using BTCPayServer.Abstractions.Contracts
-@inject IFileService FileService
-@{
-   var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
-       ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
-       : null;
-    var cssUrl = !string.IsNullOrEmpty(Model.CssFileId)
-        ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CssFileId)
-        : null;
-}
 @if (!string.IsNullOrEmpty(Model.BrandColor))
 {
     var brand = Model.BrandColor;
@@ -39,23 +29,12 @@
     </style>
     <meta name="theme-color" content="@brand">
 }
-@if (!string.IsNullOrEmpty(cssUrl))
+@if (!string.IsNullOrEmpty(Model.CssUrl))
 {
-    <link href="@cssUrl" asp-append-version="true" rel="stylesheet" />
+    <link href="@Model.CssUrl!" asp-append-version="true" rel="stylesheet" />
 }
-@* Deprecated, but added for backwards-compatibility *@
-@if (!string.IsNullOrEmpty(Model.CustomCSSLink))
+@if (!string.IsNullOrEmpty(Model.LogoUrl))
 {
-    <link href="@Model.CustomCSSLink" asp-append-version="true" rel="stylesheet" />
-}
-@if (!string.IsNullOrEmpty(Model.EmbeddedCSS))
-{
-    <style>
-        @Safe.Raw(Model.EmbeddedCSS)
-    </style>
-}
-@if (!string.IsNullOrEmpty(logoUrl))
-{
-    <link rel="icon" href="@logoUrl">
-    <link rel="apple-touch-icon" href="@logoUrl">
+    <link rel="icon" href="@Model.LogoUrl">
+    <link rel="apple-touch-icon" href="@Model.LogoUrl">
 }

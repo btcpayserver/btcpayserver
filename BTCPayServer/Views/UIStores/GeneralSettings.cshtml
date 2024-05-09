@@ -46,7 +46,7 @@
             <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="LogoFile" class="form-label"></label>
-                    @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                    @if (!string.IsNullOrEmpty(Model.LogoUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
                             <span class="fa fa-times"></span> Remove
@@ -57,9 +57,9 @@
                 {
                     <div class="d-flex align-items-center gap-3">
                         <input asp-for="LogoFile" type="file" class="form-control flex-grow">
-                        @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                        @if (!string.IsNullOrEmpty(Model.LogoUrl))
                         {
-                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName Logo" style="height:2.1rem;max-width:10.5rem;"/>
+                            <img src="@Model.LogoUrl" alt="@Model.StoreName Logo" style="height:2.1rem;max-width:10.5rem;"/>
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
@@ -73,7 +73,7 @@
             <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="CssFile" class="form-label"></label>
-                    @if (!string.IsNullOrEmpty(Model.CssFileId))
+                    @if (!string.IsNullOrEmpty(Model.CssUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCssFile" value="true">
                             <span class="fa fa-times"></span> Remove
@@ -84,9 +84,9 @@
                 {
                     <div class="d-flex align-items-center gap-3">
                         <input asp-for="CssFile" type="file" class="form-control flex-grow">
-                        @if (!string.IsNullOrEmpty(Model.CssFileId))
+                        @if (!string.IsNullOrEmpty(Model.CssUrl))
                         {
-                            <a href="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CssFileId))" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
+                            <a href="@Model.CssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>

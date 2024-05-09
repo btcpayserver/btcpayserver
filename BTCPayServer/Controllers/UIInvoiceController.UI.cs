@@ -219,7 +219,7 @@ namespace BTCPayServer.Controllers
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,
                 StoreName = store.StoreName,
-                StoreBranding = new StoreBrandingViewModel(storeBlob),
+                StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob),
                 ReceiptOptions = receipt
             };
 
@@ -889,7 +889,7 @@ namespace BTCPayServer.Controllers
                 DefaultLang = lang ?? invoice.DefaultLanguage ?? storeBlob.DefaultLang ?? "en",
                 ShowPayInWalletButton = storeBlob.ShowPayInWalletButton,
                 ShowStoreHeader = storeBlob.ShowStoreHeader,
-                StoreBranding = new StoreBrandingViewModel(storeBlob),
+                StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob),
                 HtmlTitle = storeBlob.HtmlTitle ?? "BTCPay Invoice",
                 CelebratePayment = storeBlob.CelebratePayment,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
@@ -978,9 +978,9 @@ namespace BTCPayServer.Controllers
 
             if (storeBlob.PlaySoundOnPayment)
             {
-                model.PaymentSoundUrl = string.IsNullOrEmpty(storeBlob.SoundFileId)
+                model.PaymentSoundUrl = storeBlob.PaymentSoundUrl is null
                     ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
-                    : await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storeBlob.SoundFileId);
+                    : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.PaymentSoundUrl);
                 model.ErrorSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/error.mp3");
                 model.NfcReadSoundUrl = string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/nfcread.mp3");
             }

@@ -233,9 +233,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = request.Description?.Trim(),
                 EndDate = request.EndDate?.UtcDateTime,
                 TargetAmount = request.TargetAmount,
-                CustomCSSLink = request.CustomCSSLink?.Trim(),
                 MainImageUrl = request.MainImageUrl?.Trim(),
-                EmbeddedCSS = request.EmbeddedCSS?.Trim(),
                 NotificationUrl = request.NotificationUrl?.Trim(),
                 Tagline = request.Tagline?.Trim(),
                 PerksTemplate = request.PerksTemplate is not null ? AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim())) : null,
@@ -272,11 +270,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 ButtonText = request.FixedAmountPayButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
                 CustomButtonText = request.CustomAmountPayButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = request.TipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
-                CustomCSSLink = request.CustomCSSLink,
                 NotificationUrl = request.NotificationUrl,
                 RedirectUrl = request.RedirectUrl,
                 Description = request.Description,
-                EmbeddedCSS = request.EmbeddedCSS,
                 RedirectAutomatically = request.RedirectAutomatically,
                 FormId = request.FormId
             };
@@ -341,11 +337,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 FixedAmountPayButtonText = settings.ButtonText,
                 CustomAmountPayButtonText = settings.CustomButtonText,
                 TipText = settings.CustomTipText,
-                CustomCSSLink = settings.CustomCSSLink,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
                 Description = settings.Description,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 RedirectAutomatically = settings.RedirectAutomatically ?? false,
             };
         }
@@ -399,9 +393,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = settings.Description,
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
-                CustomCSSLink = settings.CustomCSSLink,
                 MainImageUrl = settings.MainImageUrl,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
                 Perks = JsonConvert.DeserializeObject(

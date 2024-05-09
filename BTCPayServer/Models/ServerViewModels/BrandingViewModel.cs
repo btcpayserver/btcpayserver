@@ -21,20 +21,15 @@ public class BrandingViewModel
     [Display(Name = "Custom Theme Extension Type")]
     public ThemeExtension CustomThemeExtension { get; set; }
 
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-    [MaxLength(500)]
-    [Display(Name = "Custom Theme CSS URL")]
-    public string CustomThemeCssUri { get; set; }
-
     [Display(Name = "Custom Theme File")]
     [JsonIgnore]
     public IFormFile CustomThemeFile { get; set; }
 
-    public string CustomThemeFileId { get; set; }
+    public string CustomThemeCssUrl { get; set; }
 
     [Display(Name = "Logo")]
     [JsonIgnore]
     public IFormFile LogoFile { get; set; }
 
-    public string LogoFileId { get; set; }
+    public string LogoUrl { get; set; }
 }

@@ -47,6 +47,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             AppService appService,
             CurrencyNameTable currencies,
             StoreRepository storeRepository,
+            UriResolver uriResolver,
             InvoiceRepository invoiceRepository,
             UIInvoiceController invoiceController,
             FormDataService formDataService,
@@ -55,6 +56,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _currencies = currencies;
             _appService = appService;
             _storeRepository = storeRepository;
+            _uriResolver = uriResolver;
             _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _displayFormatter = displayFormatter;
@@ -64,6 +66,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly CurrencyNameTable _currencies;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly StoreRepository _storeRepository;
+        private readonly UriResolver _uriResolver;
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
@@ -86,13 +89,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             viewType ??= settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
-
-            var storeBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                EmbeddedCSS = settings.EmbeddedCSS,
-                CustomCSSLink = settings.CustomCSSLink
-            };
-            // Check if the currency is COP or ARS (exclude decimal places)
+            var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
 
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
@@ -466,7 +463,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var vm = new FormViewModel
             {
                 StoreName = store.StoreName,
-                StoreBranding = new StoreBrandingViewModel(storeBlob),
+                StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob),
                 FormName = formData.Name,
                 Form = form,
                 AspController = controller,
@@ -529,7 +526,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
             viewModel.FormParameters = formParameters;
-            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob);
+            viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             return View("Views/UIForms/View", viewModel);
         }
         
@@ -598,8 +595,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
-                CustomCSSLink = settings.CustomCSSLink,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
@@ -689,11 +684,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = vm.CustomButtonText,
                 CustomTipText = vm.CustomTipText,
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
-                CustomCSSLink = vm.CustomCSSLink,
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
                 Description = vm.Description,
-                EmbeddedCSS = vm.EmbeddedCSS,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
             };

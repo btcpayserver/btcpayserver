@@ -48,8 +48,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Description = blob.Description;
             ExpiryDate = blob.ExpiryDate?.UtcDateTime;
             Email = blob.Email;
-            CustomCSSLink = blob.CustomCSSLink;
-            EmbeddedCSS = blob.EmbeddedCSS;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             FormResponse = blob.FormResponse is null
                 ? null
@@ -85,13 +83,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [MailboxAddress]
         public string Email { get; set; }
-
-        [MaxLength(500)]
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-
-        [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
         
         [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
@@ -115,8 +106,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Description = blob.Description;
             ExpiryDate = blob.ExpiryDate?.UtcDateTime;
             Email = blob.Email;
-            EmbeddedCSS = blob.EmbeddedCSS;
-            CustomCSSLink = blob.CustomCSSLink;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             switch (data.Status)
             {
@@ -154,8 +143,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public string Description { get; set; }
         public string StoreName { get; set; }
         public string StoreWebsite { get; set; }
-        public string EmbeddedCSS { get; set; }
-        public string CustomCSSLink { get; set; }
 
 #nullable enable
         public class InvoiceList : List<PaymentRequestInvoice>

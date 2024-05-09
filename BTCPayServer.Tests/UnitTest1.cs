@@ -1,4 +1,5 @@
 using System;
+using Dapper;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -53,7 +54,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using BTCPayServer.Storage.ViewModels;
-using ExchangeSharp;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -79,6 +79,7 @@ using CreatePaymentRequestRequest = BTCPayServer.Client.Models.CreatePaymentRequ
 using MarkPayoutRequest = BTCPayServer.Client.Models.MarkPayoutRequest;
 using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace BTCPayServer.Tests
 {
@@ -297,7 +298,7 @@ namespace BTCPayServer.Tests
 
             // Set tolerance to 50%
             var stores = user.GetController<UIStoresController>();
-            var response = stores.GeneralSettings();
+            var response = await stores.GeneralSettings();
             var vm = Assert.IsType<GeneralSettingsViewModel>(Assert.IsType<ViewResult>(response).Model);
             Assert.Equal(0.0, vm.PaymentTolerance);
             vm.PaymentTolerance = 50.0;
@@ -439,7 +440,7 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
             var storeController = user.GetController<UIStoresController>();
-            var storeResponse = storeController.GeneralSettings();
+            var storeResponse = await storeController.GeneralSettings();
             Assert.IsType<ViewResult>(storeResponse);
             Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
 
@@ -838,7 +839,7 @@ namespace BTCPayServer.Tests
 
             var time = invoice.InvoiceTime;
             AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
-            AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToStringLowerInvariant()}");
+            AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString().ToLowerInvariant()}");
             AssertSearchInvoice(acc, false, invoice.Id,
                 $"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
             AssertSearchInvoice(acc, false, invoice.Id,
@@ -1499,8 +1500,7 @@ namespace BTCPayServer.Tests
             var btcMethod = PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString();
 
             // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
-            var vm = Assert.IsType<CheckoutAppearanceViewModel>(Assert
-                .IsType<ViewResult>(user.GetController<UIStoresController>().CheckoutAppearance()).Model);
+            var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
             Assert.Equal(2, vm.PaymentMethodCriteria.Count);
             var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
             Assert.Equal(PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString(), criteria.PaymentMethod);
@@ -1527,8 +1527,7 @@ namespace BTCPayServer.Tests
             // Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
             // We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default
             // payment method should be LN.
-            vm = Assert.IsType<CheckoutAppearanceViewModel>(Assert
-                .IsType<ViewResult>(user.GetController<UIStoresController>().CheckoutAppearance()).Model);
+            vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
             vm.DefaultPaymentMethod = lnMethod;
             criteria = vm.PaymentMethodCriteria.First();
             criteria.Value = "150 USD";
@@ -1640,7 +1639,7 @@ namespace BTCPayServer.Tests
             user.GrantAccess(true);
             user.RegisterLightningNode(cryptoCode);
             user.SetLNUrl(cryptoCode, false);
-            var vm = user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
+            var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
             var criteria = Assert.Single(vm.PaymentMethodCriteria);
             Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);
             criteria.Value = "2 USD";
@@ -1660,7 +1659,7 @@ namespace BTCPayServer.Tests
             // Activating LNUrl, we should still have only 1 payment criteria that can be set.
             user.RegisterLightningNode(cryptoCode);
             user.SetLNUrl(cryptoCode, true);
-            vm = user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModel<CheckoutAppearanceViewModel>();
+            vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
             criteria = Assert.Single(vm.PaymentMethodCriteria);
             Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);
             Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm).Result);
@@ -2509,6 +2508,90 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanMigrateFileIds()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            tester.DeleteStore = false;
+            await tester.StartAsync();
+            
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+
+            using (var ctx = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext())
+            {
+                var storeConfig = """
+                    {
+                        "spread": 0.0,
+                        "cssFileId": "2a51c49a-9d54-4013-80a2-3f6e69d08523",
+                        "logoFileId": "8f890691-87f9-4c65-80e5-3b7ffaa3551f",
+                        "soundFileId": "62bc4757-b92b-4a3b-a8ab-0e9b693d6a29",
+                        "networkFeeMode": "MultiplePaymentsOnly",
+                        "defaultCurrency": "USD",
+                        "showStoreHeader": true,
+                        "celebratePayment": true,
+                        "paymentTolerance": 0.0,
+                        "invoiceExpiration": 15,
+                        "preferredExchange": "kraken",
+                        "showRecommendedFee": true,
+                        "monitoringExpiration": 1440,
+                        "showPayInWalletButton": true,
+                        "displayExpirationTimer": 5,
+                        "excludedPaymentMethods": null,
+                        "recommendedFeeBlockTarget": 1
+                    }
+                    """;
+                var serverConfig = """
+                    {
+                        "CssUri": null,
+                        "FirstRun": false,
+                        "LogoFileId": "ce71d90a-dd90-40a3-b1f0-96d00c9abb52",
+                        "CustomTheme": true,
+                        "CustomThemeCssUri": null,
+                        "CustomThemeFileId": "9b00f4ed-914b-437b-abd2-9a90c1b22c34",
+                        "CustomThemeExtension": 0
+                    }
+                    """;
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    UPDATE "Stores" SET "StoreBlob"=@storeConfig::JSONB WHERE "Id"=@storeId;
+                    """, new { storeId = user.StoreId, storeConfig });
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    UPDATE "Settings" SET "Value"=@serverConfig::JSONB WHERE "Id"='BTCPayServer.Services.ThemeSettings';
+                    """, new { serverConfig });
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    INSERT INTO "Files" VALUES (@id, @fileName, @id || '-' || @fileName, NOW(), @userId);
+                    """,
+                    new[]
+                    {
+                        new { id = "2a51c49a-9d54-4013-80a2-3f6e69d08523", fileName = "store.css", userId = user.UserId },
+                        new { id = "8f890691-87f9-4c65-80e5-3b7ffaa3551f", fileName = "store.png", userId = user.UserId },
+                        new { id = "ce71d90a-dd90-40a3-b1f0-96d00c9abb52", fileName = "admin.png", userId = user.UserId },
+                        new { id = "9b00f4ed-914b-437b-abd2-9a90c1b22c34", fileName = "admin.css", userId = user.UserId },
+                        new { id = "62bc4757-b92b-4a3b-a8ab-0e9b693d6a29", fileName = "store.mp3", userId = user.UserId },
+                    });
+                await ctx.Database.GetDbConnection().ExecuteAsync("""
+                    DELETE FROM "__EFMigrationsHistory" WHERE "MigrationId"='20240508015052_fileid'
+                    """);
+                await ctx.Database.MigrateAsync();
+                ((MemoryCache)tester.PayTester.GetService<IMemoryCache>()).Clear();
+            }
+
+            var controller = tester.PayTester.GetController<UIStoresController>(user.UserId, user.StoreId);
+            var vm = await controller.GeneralSettings().AssertViewModelAsync<GeneralSettingsViewModel>();
+            Assert.Equal(tester.PayTester.ServerUriWithIP + "LocalStorage/8f890691-87f9-4c65-80e5-3b7ffaa3551f-store.png", vm.LogoUrl);
+            Assert.Equal(tester.PayTester.ServerUriWithIP + "LocalStorage/2a51c49a-9d54-4013-80a2-3f6e69d08523-store.css", vm.CssUrl);
+
+            var vm2 = await controller.CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
+            Assert.Equal(tester.PayTester.ServerUriWithIP + "LocalStorage/62bc4757-b92b-4a3b-a8ab-0e9b693d6a29-store.mp3", vm2.PaymentSoundUrl);
+
+            var serverController = tester.PayTester.GetController<UIServerController>();
+            var branding = await serverController.Branding().AssertViewModelAsync<BrandingViewModel>();
+
+            Assert.Equal(tester.PayTester.ServerUriWithIP + "LocalStorage/ce71d90a-dd90-40a3-b1f0-96d00c9abb52-admin.png", branding.LogoUrl);
+            Assert.Equal(tester.PayTester.ServerUriWithIP + "LocalStorage/9b00f4ed-914b-437b-abd2-9a90c1b22c34-admin.css", branding.CustomThemeCssUrl);
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanDoLightningInternalNodeMigration()
         {
             using var tester = CreateServerTester(newDb: true);
@@ -2943,14 +3026,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(StorageProvider.FileSystem,
                 shouldBeRedirectingToLocalStorageConfigPage.RouteValues["provider"]);
 
-            await CanUploadRemoveFiles(controller);
+            var fileId = await CanUploadFile(controller);
+            await CanRemoveFile(controller, fileId);
         }
 
-        internal static async Task CanUploadRemoveFiles(UIServerController controller)
+        internal static async Task<string> CanUploadFile(UIServerController controller)
         {
             var fileContent = "content";
-            List<IFormFile> fileList = new List<IFormFile>();
-            fileList.Add(TestUtils.GetFormFile("uploadtestfile1.txt", fileContent));
+            var fileList = new List<IFormFile> { TestUtils.GetFormFile("uploadtestfile1.txt", fileContent) };
 
             var uploadFormFileResult = Assert.IsType<RedirectToActionResult>(await controller.CreateFiles(fileList));
             Assert.True(uploadFormFileResult.RouteValues.ContainsKey("fileIds"));
@@ -2965,7 +3048,6 @@ namespace BTCPayServer.Tests
             Assert.NotEmpty(viewFilesViewModel.Files);
             Assert.True(viewFilesViewModel.DirectUrlByFiles.ContainsKey(fileId));
             Assert.NotEmpty(viewFilesViewModel.DirectUrlByFiles[fileId]);
-
 
             //verify file is available and the same
             using var net = new HttpClient();
@@ -2991,17 +3073,20 @@ namespace BTCPayServer.Tests
             data = await net.GetStringAsync(new Uri(url));
             Assert.Equal(fileContent, data);
 
+            return fileId;
+        }
 
+        internal static async Task CanRemoveFile(UIServerController controller, string fileId)
+        {
             //delete file
             Assert.IsType<RedirectToActionResult>(await controller.DeleteFile(fileId));
-            statusMessageModel = controller.TempData.GetStatusMessageModel();
+            var statusMessageModel = controller.TempData.GetStatusMessageModel();
             Assert.NotNull(statusMessageModel);
-
             Assert.Equal(StatusMessageModel.StatusSeverity.Success, statusMessageModel.Severity);
 
             //attempt to fetch deleted file
-            viewFilesViewModel =
-                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files(new string[] { fileId })).Model);
+            var viewFilesViewModel =
+                Assert.IsType<ViewFilesViewModel>(Assert.IsType<ViewResult>(await controller.Files([fileId])).Model);
             Assert.Null(viewFilesViewModel.DirectUrlByFiles);
         }
 

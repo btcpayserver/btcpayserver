@@ -1,8 +1,11 @@
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
@@ -14,13 +17,16 @@ namespace BTCPayServer.Components.StoreSelector
     public class StoreSelector : ViewComponent
     {
         private readonly StoreRepository _storeRepo;
+        private readonly UriResolver _uriResolver;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public StoreSelector(
             StoreRepository storeRepo,
+            UriResolver uriResolver,
             UserManager<ApplicationUser> userManager)
         {
             _storeRepo = storeRepo;
+            _uriResolver = uriResolver;
             _userManager = userManager;
         }
 
@@ -50,7 +56,7 @@ namespace BTCPayServer.Components.StoreSelector
                 Options = options,
                 CurrentStoreId = currentStore?.Id,
                 CurrentDisplayName = currentStore?.StoreName,
-                CurrentStoreLogoFileId = blob?.LogoFileId,
+                CurrentStoreLogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), blob?.LogoUrl),
                 ArchivedCount = archivedCount
             };
 

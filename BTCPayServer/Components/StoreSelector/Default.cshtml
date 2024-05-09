@@ -1,11 +1,8 @@
-@using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Client
 @using BTCPayServer.Components.MainLogo
 @using BTCPayServer.Services
 @using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
 @inject BTCPayServerEnvironment Env
-@inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @functions {
     @* ReSharper disable once CSharpWarnings::CS1998 *@
@@ -39,9 +36,9 @@ else
     <div id="StoreSelector">
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
             <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "empty-state" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoFileId))
+                @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoUrl))
                 {
-                    <img class="logo" src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CurrentStoreLogoFileId))" alt="@Model.CurrentDisplayName" />
+                    <img class="logo" src="@Model.CurrentStoreLogoUrl" alt="@Model.CurrentDisplayName" />
                 }
                 else
                 {

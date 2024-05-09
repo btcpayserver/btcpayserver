@@ -38,8 +38,6 @@ namespace BTCPayServer.HostedServices
         public string Description { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; }
-        public string CustomCSSLink { get; set; }
-        public string EmbeddedCSS { get; set; }
         public PayoutMethodId[] PayoutMethodIds { get; set; }
         public bool AutoApproveClaims { get; set; }
         public TimeSpan? BOLT11Expiration { get; set; }
@@ -131,13 +129,11 @@ namespace BTCPayServer.HostedServices
                 Limit = create.Amount,
                 SupportedPaymentMethods = create.PayoutMethodIds,
                 AutoApproveClaims = create.AutoApproveClaims,
-                View = new PullPaymentBlob.PullPaymentView()
+                View = new PullPaymentBlob.PullPaymentView
                 {
                     Title = create.Name ?? string.Empty,
                     Description = create.Description ?? string.Empty,
-                    CustomCSSLink = create.CustomCSSLink,
-                    Email = null,
-                    EmbeddedCSS = create.EmbeddedCSS,
+                    Email = null
                 },
                 BOLT11Expiration = create.BOLT11Expiration ?? TimeSpan.FromDays(30.0)
             });

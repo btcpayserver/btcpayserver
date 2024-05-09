@@ -143,7 +143,7 @@
                         <div class="form-group mb-0 py-3">
                             <div class="d-flex align-items-center justify-content-between gap-2">
                                 <label asp-for="SoundFile" class="form-label"></label>
-                                @if (!string.IsNullOrEmpty(Model.SoundFileId))
+                                @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
                                 {
                                     <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true" permission="@Policies.CanModifyStoreSettings">
                                         <span class="fa fa-times"></span> Remove
@@ -154,12 +154,7 @@
                             {
                                 <div class="d-flex align-items-center gap-3">
                                     <input asp-for="SoundFile" type="file" class="form-control flex-grow">
-                                    @{
-                                        var soundUrl = string.IsNullOrEmpty(Model.SoundFileId)
-                                            ? string.Concat(Context.Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
-                                            : await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.SoundFileId);
-                                    }
-                                    <audio controls src="@soundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
+                                    <audio controls src="@Model.PaymentSoundUrl" style="height:2.1rem;max-width:10.5rem;"></audio>
                                 </div>
                                 <span asp-validation-for="SoundFile" class="text-danger"></span>
                             }

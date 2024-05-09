@@ -56,6 +56,7 @@ public partial class UIStoresController : Controller
         IHtmlHelper html,
         EmailSenderFactory emailSenderFactory,
         WalletFileParsers onChainWalletParsers,
+        UriResolver uriResolver,
         SettingsRepository settingsRepository,
         EventAggregator eventAggregator)
     {
@@ -78,6 +79,7 @@ public partial class UIStoresController : Controller
         _externalServiceOptions = externalServiceOptions;
         _emailSenderFactory = emailSenderFactory;
         _onChainWalletParsers = onChainWalletParsers;
+        _uriResolver = uriResolver;
         _settingsRepository = settingsRepository;
         _eventAggregator = eventAggregator;
         _html = html;
@@ -106,6 +108,7 @@ public partial class UIStoresController : Controller
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly WalletFileParsers _onChainWalletParsers;
+    private readonly UriResolver _uriResolver;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;
     private readonly WebhookSender _webhookNotificationManager;

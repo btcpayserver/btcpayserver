@@ -40,6 +40,7 @@ namespace BTCPayServer.Controllers
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly CurrencyNameTable _currencyNameTable;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly UriResolver _uriResolver;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly BTCPayNetworkJsonSerializerSettings _serializerSettings;
@@ -51,6 +52,7 @@ namespace BTCPayServer.Controllers
         public UIPullPaymentController(ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
             DisplayFormatter displayFormatter,
+            UriResolver uriResolver,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkProvider networkProvider,
             BTCPayNetworkJsonSerializerSettings serializerSettings,
@@ -62,6 +64,7 @@ namespace BTCPayServer.Controllers
             _dbContextFactory = dbContextFactory;
             _currencyNameTable = currencyNameTable;
             _displayFormatter = displayFormatter;
+            _uriResolver = uriResolver;
             _pullPaymentHostedService = pullPaymentHostedService;
             _serializerSettings = serializerSettings;
             _payoutHandlers = payoutHandlers;
@@ -121,11 +124,7 @@ namespace BTCPayServer.Controllers
                 }).ToList()
             };
             vm.IsPending &= vm.AmountDue > 0.0m;
-            vm.StoreBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                EmbeddedCSS = blob.View.EmbeddedCSS,
-                CustomCSSLink = blob.View.CustomCSSLink
-            };
+            vm.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             
             if (_pullPaymentHostedService.SupportsLNURL(blob))
             {
@@ -185,13 +184,11 @@ namespace BTCPayServer.Controllers
             var blob = pp.GetBlob();
             blob.Description = viewModel.Description ?? string.Empty;
             blob.Name = viewModel.Name ?? string.Empty;
-            blob.View = new PullPaymentBlob.PullPaymentView()
+            blob.View = new PullPaymentBlob.PullPaymentView
             {
                 Title = viewModel.Name ?? string.Empty,
                 Description = viewModel.Description ?? string.Empty,
-                CustomCSSLink = viewModel.CustomCSSLink,
-                Email = null,
-                EmbeddedCSS = viewModel.EmbeddedCSS,
+                Email = null
             };
 
             pp.SetBlob(blob);

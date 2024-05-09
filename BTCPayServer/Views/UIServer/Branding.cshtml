@@ -36,7 +36,7 @@
             <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="LogoFile" class="form-label"></label>
-                    @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                    @if (!string.IsNullOrEmpty(Model.LogoUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
                             <span class="fa fa-times"></span> Remove
@@ -47,9 +47,9 @@
                 {
                     <div class="d-flex align-items-center gap-3">
                         <input asp-for="LogoFile" type="file" class="form-control flex-grow">
-                        @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                        @if (!string.IsNullOrEmpty(Model.LogoUrl))
                         {
-                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="Logo" style="height:2.1rem;max-width:10.5rem;"/>
+                            <img src="@Model.LogoUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;"/>
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
@@ -75,48 +75,37 @@
                 </div>
             </div>
             <div class="collapse @(Model.CustomTheme ? "show" : "")" id="CustomThemeSettings">
-                @if (!string.IsNullOrEmpty(Model.CustomThemeCssUri))
-                {
-                    <div class="form-group mb-0 pt-2">
-                        <label asp-for="CustomThemeCssUri" class="form-label" data-required></label>
-                        <input asp-for="CustomThemeCssUri" class="form-control"/>
-                        <span asp-validation-for="CustomThemeCssUri" class="text-danger"></span>
+                <div class="form-group pt-2">
+                    <label asp-for="CustomThemeExtension" class="form-label" data-required></label>
+                    <select asp-for="CustomThemeExtension" asp-items="@themeExtension" class="form-select w-auto"></select>
+                </div>
+                <div class="form-group mb-0">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <label asp-for="CustomThemeFile" class="form-label" data-required></label>
+                        @if (!string.IsNullOrEmpty(Model.CustomThemeCssUrl))
+                        {
+                            <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCustomThemeFile" value="true">
+                                <span class="fa fa-times"></span> Remove
+                            </button>
+                        }
                     </div>
-                }
-                else
-                {
-                    <div class="form-group pt-2">
-                        <label asp-for="CustomThemeExtension" class="form-label" data-required></label>
-                        <select asp-for="CustomThemeExtension" asp-items="@themeExtension" class="form-select w-auto"></select>
-                    </div>
-                    <div class="form-group mb-0">
-                        <div class="d-flex align-items-center justify-content-between gap-2">
-                            <label asp-for="CustomThemeFile" class="form-label" data-required></label>
-                            @if (!string.IsNullOrEmpty(Model.CustomThemeFileId))
+                    @if (canUpload)
+                    {
+                        <div class="d-flex align-items-center gap-3">
+                            <input asp-for="CustomThemeFile" type="file" class="form-control flex-grow">
+                            @if (!string.IsNullOrEmpty(Model.CustomThemeCssUrl))
                             {
-                                <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCustomThemeFile" value="true">
-                                    <span class="fa fa-times"></span> Remove
-                                </button>
+                                <a href="@Model.CustomThemeCssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
                             }
                         </div>
-                        @if (canUpload)
-                        {
-                            <div class="d-flex align-items-center gap-3">
-                                <input asp-for="CustomThemeFile" type="file" class="form-control flex-grow">
-                                @if (!string.IsNullOrEmpty(Model.CustomThemeFileId))
-                                {
-                                    <a href="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CustomThemeFileId))" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
-                                }
-                            </div>
-                            <span asp-validation-for="CustomThemeFile" class="text-danger"></span>
-                        }
-                        else
-                        {
-                            <input asp-for="CustomThemeFile" type="file" class="form-control" disabled>
-                            <p class="form-text text-muted">In order to upload a theme file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
-                        }
-                    </div>
-                }
+                        <span asp-validation-for="CustomThemeFile" class="text-danger"></span>
+                    }
+                    else
+                    {
+                        <input asp-for="CustomThemeFile" type="file" class="form-control" disabled>
+                        <p class="form-text text-muted">In order to upload a theme file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
+                    }
+                </div>
             </div>
             
             <button type="submit" class="btn btn-primary mt-2" name="command" value="Save">Save</button>

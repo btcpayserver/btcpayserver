@@ -16,6 +16,7 @@ using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
@@ -41,6 +42,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             AppService appService,
             CurrencyNameTable currencies,
             EventAggregator eventAggregator,
+            UriResolver uriResolver,
             StoreRepository storeRepository,
             UIInvoiceController invoiceController,
             UserManager<ApplicationUser> userManager,
@@ -53,11 +55,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             _app = app;
             _storeRepository = storeRepository;
             _eventAggregator = eventAggregator;
+            _uriResolver = uriResolver;
             _invoiceController = invoiceController;
             FormDataService = formDataService;
         }
 
         private readonly EventAggregator _eventAggregator;
+        private readonly UriResolver _uriResolver;
         private readonly CurrencyNameTable _currencies;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
@@ -315,7 +319,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             var vm = new FormViewModel
             {
                 StoreName = store.StoreName,
-                StoreBranding = new StoreBrandingViewModel(storeBlob),
+                StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob),
                 FormName = formData.Name,
                 Form = form,
                 AspController = controller,
@@ -403,10 +407,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 TargetCurrency = settings.TargetCurrency,
                 Description = settings.Description,
                 MainImageUrl = settings.MainImageUrl,
-                EmbeddedCSS = settings.EmbeddedCSS,
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
-                CustomCSSLink = settings.CustomCSSLink,
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
                 PerksTemplate = settings.PerksTemplate,
@@ -518,9 +520,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,
-                CustomCSSLink = vm.CustomCSSLink,
                 MainImageUrl = vm.MainImageUrl,
-                EmbeddedCSS = vm.EmbeddedCSS,
                 NotificationUrl = vm.NotificationUrl,
                 Tagline = vm.Tagline,
                 PerksTemplate = vm.PerksTemplate,
@@ -580,6 +580,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 return null;
             }
             var info = (ViewCrowdfundViewModel)await _app.GetInfo(app);
+            info.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, app.StoreData.GetStoreBlob());
             info.HubPath = AppHub.GetHubPath(Request);
             info.SimpleDisplay = Request.Query.ContainsKey("simple");
             return info;

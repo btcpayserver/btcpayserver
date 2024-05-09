@@ -168,6 +168,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<EventAggregator>();
             services.TryAddSingleton<PaymentRequestService>();
             services.TryAddSingleton<UserService>();
+            services.TryAddSingleton<UriResolver>();
             services.TryAddSingleton<WalletHistogramService>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(

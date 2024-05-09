@@ -11,8 +11,6 @@ using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Services.Rates;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -217,8 +215,10 @@ namespace BTCPayServer.Data
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
         public string BrandColor { get; set; }
-        public string LogoFileId { get; set; }
-        public string CssFileId { get; set; }
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri LogoUrl { get; set; }
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri CssUrl { get; set; }
 
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -236,7 +236,8 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public bool PlaySoundOnPayment { get; set; }
 
-        public string SoundFileId { get; set; }
+		[JsonConverter(typeof(UnresolvedUriJsonConverter))]
+		public UnresolvedUri PaymentSoundUrl { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {

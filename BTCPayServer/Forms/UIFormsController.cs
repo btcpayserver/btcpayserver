@@ -14,6 +14,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -26,15 +27,18 @@ namespace BTCPayServer.Forms;
 public class UIFormsController : Controller
 {
     private readonly FormDataService _formDataService;
+    private readonly UriResolver _uriResolver;
     private readonly IAuthorizationService _authorizationService;
     private readonly StoreRepository _storeRepository;
     private FormComponentProviders FormProviders { get; }
 
     public UIFormsController(FormComponentProviders formProviders, FormDataService formDataService,
+        UriResolver uriResolver,
         StoreRepository storeRepository, IAuthorizationService authorizationService)
     {
         FormProviders = formProviders;
         _formDataService = formDataService;
+        _uriResolver = uriResolver;
         _authorizationService = authorizationService;
         _storeRepository = storeRepository;
     }
@@ -169,7 +173,7 @@ public class UIFormsController : Controller
             FormName = formData.Name,
             Form = form,
             StoreName = store?.StoreName,
-            StoreBranding = new StoreBrandingViewModel(storeBlob)
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob)
         });
     }
 

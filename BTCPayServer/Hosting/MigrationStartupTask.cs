@@ -4,9 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Common;
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
@@ -26,17 +24,14 @@ using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
 using Fido2NetLib.Objects;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PeterO.Cbor;
 using YamlDotNet.RepresentationModel;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
-using Serializer = NBXplorer.Serializer;
 
 namespace BTCPayServer.Hosting
 {
@@ -53,6 +48,7 @@ namespace BTCPayServer.Hosting
         private readonly LightningAddressService _lightningAddressService;
         private readonly ILogger<MigrationStartupTask> _logger;
         private readonly LightningClientFactoryService _lightningClientFactoryService;
+        private readonly IFileService _fileService;
 
         public IOptions<LightningNetworkOptions> LightningOptions { get; }
 
@@ -67,6 +63,7 @@ namespace BTCPayServer.Hosting
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             LightningAddressService lightningAddressService,
             ILogger<MigrationStartupTask> logger,
+            IFileService fileService,
             LightningClientFactoryService lightningClientFactoryService)
         {
             _handlers = handlers;
@@ -78,6 +75,7 @@ namespace BTCPayServer.Hosting
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _lightningAddressService = lightningAddressService;
             _logger = logger;
+            _fileService = fileService;
             _lightningClientFactoryService = lightningClientFactoryService;
             LightningOptions = lightningOptions;
         }

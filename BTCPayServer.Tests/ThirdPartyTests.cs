@@ -57,7 +57,6 @@ namespace BTCPayServer.Tests
             Assert.IsType<ViewResult>(
                 await controller.EditAzureBlobStorageStorageProvider(azureBlobStorageConfiguration));
 
-
             var shouldBeRedirectingToAzureStorageConfigPage =
                 Assert.IsType<RedirectToActionResult>(await controller.Storage());
             Assert.Equal(nameof(StorageProvider), shouldBeRedirectingToAzureStorageConfigPage.ActionName);
@@ -72,9 +71,8 @@ namespace BTCPayServer.Tests
                         await controller.StorageProvider(StorageProvider.AzureBlobStorage.ToString()))
                     .Model).ConnectionString);
 
-
-
-            await UnitTest1.CanUploadRemoveFiles(controller);
+            var fileId = await UnitTest1.CanUploadFile(controller);
+            await UnitTest1.CanRemoveFile(controller, fileId);
         }
 
         [Fact(Skip = "Fail on CI")]

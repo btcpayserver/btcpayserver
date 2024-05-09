@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -19,20 +20,19 @@ namespace BTCPayServer.Controllers;
 public partial class UIStoresController
 {
     [HttpGet("{storeId}/settings")]
-    public IActionResult GeneralSettings()
+    public async Task<IActionResult> GeneralSettings()
     {
         var store = HttpContext.GetStoreData();
         if (store == null)
             return NotFound();
-
         var storeBlob = store.GetStoreBlob();
         var vm = new GeneralSettingsViewModel
         {
             Id = store.Id,
             StoreName = store.StoreName,
             StoreWebsite = store.StoreWebsite,
-            LogoFileId = storeBlob.LogoFileId,
-            CssFileId = storeBlob.CssFileId,
+            LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
+            CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
             BrandColor = storeBlob.BrandColor,
             NetworkFeeMode = storeBlob.NetworkFeeMode,
             AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
@@ -104,16 +104,11 @@ public partial class UIStoresController
                 else
                 {
                     model.LogoFile = formFile;
-                    // delete existing file
-                    if (!string.IsNullOrEmpty(blob.LogoFileId))
-                    {
-                        await _fileService.RemoveFile(blob.LogoFileId, userId);
-                    }
                     // add new image
                     try
                     {
                         var storedFile = await _fileService.AddFile(model.LogoFile, userId);
-                        blob.LogoFileId = storedFile.Id;
+                        blob.LogoUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
                     }
                     catch (Exception e)
                     {
@@ -122,10 +117,9 @@ public partial class UIStoresController
                 }
             }
         }
-        else if (RemoveLogoFile && !string.IsNullOrEmpty(blob.LogoFileId))
+        else if (RemoveLogoFile && blob.LogoUrl is not null)
         {
-            await _fileService.RemoveFile(blob.LogoFileId, userId);
-            blob.LogoFileId = null;
+            blob.LogoUrl = null;
             needUpdate = true;
         }
 
@@ -145,16 +139,11 @@ public partial class UIStoresController
             }
             else
             {
-                // delete existing file
-                if (!string.IsNullOrEmpty(blob.CssFileId))
-                {
-                    await _fileService.RemoveFile(blob.CssFileId, userId);
-                }
                 // add new file
                 try
                 {
                     var storedFile = await _fileService.AddFile(model.CssFile, userId);
-                    blob.CssFileId = storedFile.Id;
+                    blob.CssUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
                 }
                 catch (Exception e)
                 {
@@ -162,10 +151,9 @@ public partial class UIStoresController
                 }
             }
         }
-        else if (RemoveCssFile && !string.IsNullOrEmpty(blob.CssFileId))
+        else if (RemoveCssFile && blob.CssUrl is not null)
         {
-            await _fileService.RemoveFile(blob.CssFileId, userId);
-            blob.CssFileId = null;
+            blob.CssUrl = null;
             needUpdate = true;
         }
 
@@ -221,7 +209,7 @@ public partial class UIStoresController
     }
         
     [HttpGet("{storeId}/checkout")]
-    public IActionResult CheckoutAppearance()
+    public async Task<IActionResult> CheckoutAppearance()
     {
         var storeBlob = CurrentStore.GetStoreBlob();
         var vm = new CheckoutAppearanceViewModel();
@@ -253,7 +241,9 @@ public partial class UIStoresController
         vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
         vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
         vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
-        vm.SoundFileId = storeBlob.SoundFileId;
+        vm.PaymentSoundUrl = storeBlob.PaymentSoundUrl is null
+            ? string.Concat(Request.GetAbsoluteRootUri().ToString(), "checkout/payment.mp3")
+            : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.PaymentSoundUrl);
         vm.HtmlTitle = storeBlob.HtmlTitle;
         vm.SupportUrl = storeBlob.StoreSupportUrl;
         vm.DisplayExpirationTimer = (int)storeBlob.DisplayExpirationTimer.TotalMinutes;
@@ -316,17 +306,11 @@ public partial class UIStoresController
                 else
                 {
                     model.SoundFile = formFile;
-                    // delete existing file
-                    if (!string.IsNullOrEmpty(blob.SoundFileId))
-                    {
-                        await _fileService.RemoveFile(blob.SoundFileId, userId);
-                    }
-
                     // add new file
                     try
                     {
                         var storedFile = await _fileService.AddFile(model.SoundFile, userId);
-                        blob.SoundFileId = storedFile.Id;
+                        blob.PaymentSoundUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
                         needUpdate = true;
                     }
                     catch (Exception e)
@@ -336,10 +320,9 @@ public partial class UIStoresController
                 }
             }
         }
-        else if (RemoveSoundFile && !string.IsNullOrEmpty(blob.SoundFileId))
+        else if (RemoveSoundFile && blob.PaymentSoundUrl is not null)
         {
-            await _fileService.RemoveFile(blob.SoundFileId, userId);
-            blob.SoundFileId = null;
+            blob.PaymentSoundUrl = null;
             needUpdate = true;
         }
 

@@ -28,8 +28,8 @@ public partial class UIStoresController
         vm.SetExchangeRates(exchanges, storeBlob.PreferredExchange ?? storeBlob.GetRecommendedExchange());
         vm.Spread = (double)(storeBlob.Spread * 100m);
         vm.StoreId = CurrentStore.Id;
-        vm.Script = storeBlob.GetRateRules(_networkProvider).ToString();
-        vm.DefaultScript = storeBlob.GetDefaultRateRules(_networkProvider).ToString();
+        vm.Script = storeBlob.GetRateRules(_defaultRates).ToString();
+        vm.DefaultScript = storeBlob.GetDefaultRateRules(_defaultRates).ToString();
         vm.AvailableExchanges = exchanges;
         vm.DefaultCurrencyPairs = storeBlob.GetDefaultCurrencyPairString();
         vm.ShowScripting = storeBlob.RateScripting;
@@ -72,7 +72,7 @@ public partial class UIStoresController
             model.PreferredExchange = model.PreferredExchange.Trim().ToLowerInvariant();
 
         var blob = CurrentStore.GetStoreBlob();
-        model.DefaultScript = blob.GetDefaultRateRules(_networkProvider).ToString();
+        model.DefaultScript = blob.GetDefaultRateRules(_defaultRates).ToString();
         model.AvailableExchanges = exchanges;
 
         blob.PreferredExchange = model.PreferredExchange;
@@ -103,7 +103,7 @@ public partial class UIStoresController
                 model.Script = blob.RateScript;
             }
         }
-        rules = blob.GetRateRules(_networkProvider);
+        rules = blob.GetRateRules(_defaultRates);
 
         if (command == "Test")
         {
@@ -175,7 +175,7 @@ public partial class UIStoresController
     {
         var blob = CurrentStore.GetStoreBlob();
         blob.RateScripting = scripting;
-        blob.RateScript = blob.GetDefaultRateRules(_networkProvider).ToString();
+        blob.RateScript = blob.GetDefaultRateRules(_defaultRates).ToString();
         CurrentStore.SetStoreBlob(blob);
         await _storeRepo.UpdateStore(CurrentStore);
         TempData[WellKnownTempData.SuccessMessage] = "Rate rules scripting " + (scripting ? "activated" : "deactivated");

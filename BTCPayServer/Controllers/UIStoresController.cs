@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -54,6 +55,7 @@ public partial class UIStoresController : Controller
         IOptions<LightningNetworkOptions> lightningNetworkOptions,
         IOptions<ExternalServicesOptions> externalServiceOptions,
         IHtmlHelper html,
+        IEnumerable<DefaultRates> defaultRates,
         EmailSenderFactory emailSenderFactory,
         WalletFileParsers onChainWalletParsers,
         UriResolver uriResolver,
@@ -83,6 +85,7 @@ public partial class UIStoresController : Controller
         _settingsRepository = settingsRepository;
         _eventAggregator = eventAggregator;
         _html = html;
+        _defaultRates = defaultRates;
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
         _webhookNotificationManager = webhookNotificationManager;
         _lightningNetworkOptions = lightningNetworkOptions.Value;
@@ -101,6 +104,7 @@ public partial class UIStoresController : Controller
     private readonly ExplorerClientProvider _explorerProvider;
     private readonly LanguageService _langService;
     private readonly PaymentMethodHandlerDictionary _handlers;
+    private readonly IEnumerable<DefaultRates> _defaultRates;
     private readonly PoliciesSettings _policiesSettings;
     private readonly IAuthorizationService _authorizationService;
     private readonly AppService _appService;

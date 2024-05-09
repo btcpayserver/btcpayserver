@@ -18,6 +18,8 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.AspNetCore.Mvc.ViewComponents;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
 using NBitcoin;
 using NBitcoin.Secp256k1;
 
@@ -29,29 +31,31 @@ namespace BTCPayServer.Components.WalletNav
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly UIWalletsController _walletsController;
         private readonly CurrencyNameTable _currencies;
-        private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly IEnumerable<DefaultRates> _defaultRates;
         private readonly RateFetcher _rateFetcher;
 
         public WalletNav(
             BTCPayWalletProvider walletProvider,
             PaymentMethodHandlerDictionary handlers,
-            BTCPayNetworkProvider networkProvider,
             UIWalletsController walletsController,
             CurrencyNameTable currencies,
+            IEnumerable<DefaultRates> defaultRates,
             RateFetcher rateFetcher)
         {
             _walletProvider = walletProvider;
             _handlers = handlers;
-            _networkProvider = networkProvider;
             _walletsController = walletsController;
             _currencies = currencies;
+            _defaultRates = defaultRates;
             _rateFetcher = rateFetcher;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(WalletId walletId)
         {
             var store = ViewContext.HttpContext.GetStoreData();
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            var network = _handlers.TryGetNetwork(PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode));
+            if (network is null)
+                return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
             var wallet = _walletProvider.GetWallet(network);
             var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
             var derivation = store.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
@@ -72,7 +76,7 @@ namespace BTCPayServer.Components.WalletNav
 
             if (defaultCurrency != network.CryptoCode)
             {
-                var rule = store.GetStoreBlob().GetRateRules(_networkProvider)?.GetRuleFor(new Rating.CurrencyPair(network.CryptoCode, defaultCurrency));
+                var rule = store.GetStoreBlob().GetRateRules(_defaultRates)?.GetRuleFor(new Rating.CurrencyPair(network.CryptoCode, defaultCurrency));
                 var bid = rule is null ? null : (await _rateFetcher.FetchRate(rule, new StoreIdRateContext(walletId.StoreId), HttpContext.RequestAborted)).BidAsk?.Bid;
                 if (bid is decimal b)
                 {

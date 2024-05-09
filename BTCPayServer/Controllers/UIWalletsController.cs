@@ -73,6 +73,7 @@ namespace BTCPayServer.Controllers
         private readonly PayjoinClient _payjoinClient;
         private readonly LabelService _labelService;
         private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly IEnumerable<DefaultRates> _defaultRates;
         private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
@@ -99,12 +100,14 @@ namespace BTCPayServer.Controllers
                                  IServiceProvider serviceProvider,
                                  PullPaymentHostedService pullPaymentHostedService,
                                  LabelService labelService,
+                                 IEnumerable<DefaultRates> defaultRates,
                                  PaymentMethodHandlerDictionary handlers,
                                  Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
                                  TransactionLinkProviders transactionLinkProviders)
         {
             _currencyTable = currencyTable;
             _labelService = labelService;
+            _defaultRates = defaultRates;
             _handlers = handlers;
             _paymentModelExtensions = paymentModelExtensions;
             _transactionLinkProviders = transactionLinkProviders;
@@ -456,7 +459,7 @@ namespace BTCPayServer.Controllers
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
             var storeData = store.GetStoreBlob();
-            var rateRules = store.GetStoreBlob().GetRateRules(NetworkProvider);
+            var rateRules = store.GetStoreBlob().GetRateRules(_defaultRates);
             rateRules.Spread = 0.0m;
             var currencyPair = new Rating.CurrencyPair(walletId.CryptoCode, storeData.DefaultCurrency);
             double.TryParse(defaultAmount, out var amount);

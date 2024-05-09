@@ -356,13 +356,13 @@ retry:
         {
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
-            var provider = CreateNetworkProvider(ChainName.Mainnet);
+            var provider = CreateDefaultRates(ChainName.Mainnet);
             var b = new StoreBlob();
             string[] temporarilyBroken = Array.Empty<string>();
             foreach (var k in StoreBlob.RecommendedExchanges)
             {
                 b.DefaultCurrency = k.Key;
-                var rules = b.GetDefaultRateRules(provider);
+                var rules = b.GetDefaultRateRules(provider.Select(p => p.DefaultRates));
                 var pairs = new[] { CurrencyPair.Parse($"BTC_{k.Key}") }.ToHashSet();
                 var result = fetcher.FetchRates(pairs, rules, null, default);
                 foreach ((CurrencyPair key, Task<RateResult> value) in result)
@@ -389,11 +389,11 @@ retry:
         public async Task CanGetRateCryptoCurrenciesByDefault()
         {
             using var cts = new CancellationTokenSource(60_000);
-            var provider = CreateNetworkProvider(ChainName.Mainnet);
+            var provider = CreateDefaultRates(ChainName.Mainnet);
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =
-                provider.GetAll()
+                provider
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
@@ -408,7 +408,7 @@ retry:
                 }
             }
 
-            var rules = new StoreBlob().GetDefaultRateRules(provider);
+            var rules = new StoreBlob().GetDefaultRateRules(provider.Select(p => p.DefaultRates));
             var result = fetcher.FetchRates(pairs, rules, null, cts.Token);
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
@@ -416,6 +416,17 @@ retry:
                 TestLogs.LogInformation($"Testing {key}");
                 Assert.True(rateResult.BidAsk != null, $"Impossible to get the rate {rateResult.EvaluatedRule}");
             }
+        }
+
+        private IEnumerable<(string CryptoCode, DefaultRates DefaultRates)> CreateDefaultRates(ChainName chainName)
+        {
+            var results = new List<(string CryptoCode, DefaultRates DefaultRates)>();
+            var prov = CreateNetworkProvider(chainName);
+            foreach (var network in prov.GetAll())
+            {
+                results.Add((network.CryptoCode, new DefaultRates(network.DefaultRateRules)));
+            }
+            return results;
         }
 
         [Fact]

@@ -49,6 +49,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
     public PayoutMethodId PayoutMethodId { get; }
     public PaymentMethodId PaymentMethodId { get; }
     public BTCPayNetwork Network { get; }
+    public string[] DefaultRateRules => Network.DefaultRateRules;
     public WalletRepository WalletRepository { get; }
 
     public BitcoinLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,

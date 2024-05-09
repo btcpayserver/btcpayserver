@@ -11,7 +11,7 @@ namespace BTCPayApp.CommonServer;
 public interface IBTCPayAppHubClient
 {
     Task NotifyNetwork(string network);
-    Task TransactionDetected(string identifier, string txId);
+    Task TransactionDetected(string identifier, string txId, string[] relatedScripts, bool confirmed);
     Task NewBlock(string block);
 
     Task<LightningPayment> CreateInvoice(CreateLightningInvoiceRequest createLightningInvoiceRequest);

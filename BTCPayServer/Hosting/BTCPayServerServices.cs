@@ -403,6 +403,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
 
+            services.AddSingleton<DefaultRulesCollection>();
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
             services.AddSingleton<IHostedService, BitpayIPNSender>();
@@ -563,13 +564,13 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
         }
         public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetworkBase network)
         {
-            services.AddSingleton(new DefaultRates(network.DefaultRateRules));
+            services.AddSingleton(new DefaultRules(network.DefaultRateRules));
             services.AddSingleton<BTCPayNetworkBase>(network);
             return services;
         }
         public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetwork network)
         {
-            services.AddSingleton(new DefaultRates(network.DefaultRateRules));
+            services.AddSingleton(new DefaultRules(network.DefaultRateRules));
             // BTC
             {
                 var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);

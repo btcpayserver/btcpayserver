@@ -52,7 +52,7 @@ namespace BTCPayServer.Controllers
         readonly BTCPayNetworkProvider _NetworkProvider;
         private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly PaymentMethodHandlerDictionary _handlers;
-        private readonly IEnumerable<DefaultRates> _defaultRates;
+        private readonly DefaultRulesCollection _defaultRules;
         private readonly ApplicationDbContextFactory _dbContextFactory;
         private readonly PullPaymentHostedService _paymentHostedService;
         private readonly LanguageService _languageService;
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
             AppService appService,
             IFileService fileService,
             UriResolver uriResolver,
-            IEnumerable<DefaultRates> defaultRates,
+            DefaultRulesCollection defaultRules,
             IAuthorizationService authorizationService,
             TransactionLinkProviders transactionLinkProviders,
             Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
@@ -125,7 +125,7 @@ namespace BTCPayServer.Controllers
             _viewProvider = viewProvider;
             _fileService = fileService;
             _uriResolver = uriResolver;
-            _defaultRates = defaultRates;
+            _defaultRules = defaultRules;
             _appService = appService;
         }
 
@@ -297,7 +297,7 @@ namespace BTCPayServer.Controllers
 
         private async Task FetchRates(InvoiceCreationContext context, CancellationToken cancellationToken)
         {
-            var rateRules = context.StoreBlob.GetRateRules(_defaultRates);
+            var rateRules = context.StoreBlob.GetRateRules(_defaultRules);
             await context.FetchingRates(_RateProvider, rateRules, cancellationToken);
         }
     }

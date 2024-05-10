@@ -357,12 +357,13 @@ retry:
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var provider = CreateDefaultRates(ChainName.Mainnet);
+            var defaultRules = new DefaultRulesCollection(provider.Select(p => p.DefaultRates));
             var b = new StoreBlob();
             string[] temporarilyBroken = Array.Empty<string>();
-            foreach (var k in StoreBlob.RecommendedExchanges)
+            foreach (var k in defaultRules.RecommendedExchanges)
             {
                 b.DefaultCurrency = k.Key;
-                var rules = b.GetDefaultRateRules(provider.Select(p => p.DefaultRates));
+                var rules = b.GetDefaultRateRules(defaultRules);
                 var pairs = new[] { CurrencyPair.Parse($"BTC_{k.Key}") }.ToHashSet();
                 var result = fetcher.FetchRates(pairs, rules, null, default);
                 foreach ((CurrencyPair key, Task<RateResult> value) in result)
@@ -390,6 +391,7 @@ retry:
         {
             using var cts = new CancellationTokenSource(60_000);
             var provider = CreateDefaultRates(ChainName.Mainnet);
+            var defaultRules = new DefaultRulesCollection(provider.Select(p => p.DefaultRates));
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =
@@ -408,7 +410,7 @@ retry:
                 }
             }
 
-            var rules = new StoreBlob().GetDefaultRateRules(provider.Select(p => p.DefaultRates));
+            var rules = new StoreBlob().GetDefaultRateRules(defaultRules);
             var result = fetcher.FetchRates(pairs, rules, null, cts.Token);
             foreach ((CurrencyPair key, Task<RateResult> value) in result)
             {
@@ -418,13 +420,13 @@ retry:
             }
         }
 
-        private IEnumerable<(string CryptoCode, DefaultRates DefaultRates)> CreateDefaultRates(ChainName chainName)
+        private IEnumerable<(string CryptoCode, DefaultRules DefaultRates)> CreateDefaultRates(ChainName chainName)
         {
-            var results = new List<(string CryptoCode, DefaultRates DefaultRates)>();
+            var results = new List<(string CryptoCode, DefaultRules DefaultRates)>();
             var prov = CreateNetworkProvider(chainName);
             foreach (var network in prov.GetAll())
             {
-                results.Add((network.CryptoCode, new DefaultRates(network.DefaultRateRules)));
+                results.Add((network.CryptoCode, new DefaultRules(network.DefaultRateRules)));
             }
             return results;
         }

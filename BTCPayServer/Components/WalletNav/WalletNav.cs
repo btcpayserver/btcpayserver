@@ -31,7 +31,7 @@ namespace BTCPayServer.Components.WalletNav
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly UIWalletsController _walletsController;
         private readonly CurrencyNameTable _currencies;
-        private readonly IEnumerable<DefaultRates> _defaultRates;
+        private readonly DefaultRulesCollection _defaultRules;
         private readonly RateFetcher _rateFetcher;
 
         public WalletNav(
@@ -39,14 +39,14 @@ namespace BTCPayServer.Components.WalletNav
             PaymentMethodHandlerDictionary handlers,
             UIWalletsController walletsController,
             CurrencyNameTable currencies,
-            IEnumerable<DefaultRates> defaultRates,
+            DefaultRulesCollection defaultRules,
             RateFetcher rateFetcher)
         {
             _walletProvider = walletProvider;
             _handlers = handlers;
             _walletsController = walletsController;
             _currencies = currencies;
-            _defaultRates = defaultRates;
+            _defaultRules = defaultRules;
             _rateFetcher = rateFetcher;
         }
 
@@ -76,7 +76,7 @@ namespace BTCPayServer.Components.WalletNav
 
             if (defaultCurrency != network.CryptoCode)
             {
-                var rule = store.GetStoreBlob().GetRateRules(_defaultRates)?.GetRuleFor(new Rating.CurrencyPair(network.CryptoCode, defaultCurrency));
+                var rule = store.GetStoreBlob().GetRateRules(_defaultRules)?.GetRuleFor(new Rating.CurrencyPair(network.CryptoCode, defaultCurrency));
                 var bid = rule is null ? null : (await _rateFetcher.FetchRate(rule, new StoreIdRateContext(walletId.StoreId), HttpContext.RequestAborted)).BidAsk?.Bid;
                 if (bid is decimal b)
                 {

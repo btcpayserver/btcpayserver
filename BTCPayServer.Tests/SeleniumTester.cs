@@ -196,7 +196,7 @@ retry:
             TestLogs.LogInformation($"Created store {name}");
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             var rateSource = new SelectElement(Driver.FindElement(By.Id("PreferredExchange")));
-            Assert.Equal("Kraken (Recommended)", rateSource.SelectedOption.Text);
+            Assert.Equal("Recommendation (Kraken)", rateSource.SelectedOption.Text);
             rateSource.SelectByText("CoinGecko");
             Driver.WaitForElement(By.Id("Create")).Click();
             Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();

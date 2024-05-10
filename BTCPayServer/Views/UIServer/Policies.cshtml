@@ -187,7 +187,7 @@
             <h4 class="mt-5">Customization</h4>
             <div class="form-group mb-3">
                 <label asp-for="DefaultCurrency" class="form-label"></label>
-                <input asp-for="DefaultCurrency" placeholder="Default Store Currency" class="form-control" currency-selection  />
+				<input asp-for="DefaultCurrency" placeholder="@StoreBlob.StandardDefaultCurrency" class="form-control" currency-selection />
             </div>
             <div class="form-group mb-5">
                 <label asp-for="RootAppId" class="form-label"></label>

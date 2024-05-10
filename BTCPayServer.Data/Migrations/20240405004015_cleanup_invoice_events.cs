@@ -19,8 +19,8 @@ namespace BTCPayServer.Migrations
                 ALTER TABLE ""InvoiceEvents"" DROP CONSTRAINT IF EXISTS ""PK_InvoiceEvents"";
                 ALTER TABLE ""InvoiceEvents"" DROP COLUMN IF EXISTS ""UniqueId"";
                 CREATE INDEX IF NOT EXISTS ""IX_InvoiceEvents_InvoiceDataId"" ON ""InvoiceEvents""(""InvoiceDataId"");
-                VACUUM (FULL, ANALYZE) ""InvoiceEvents"";
-            ", true);
+            ");
+            migrationBuilder.Sql(@"VACUUM (FULL, ANALYZE) ""InvoiceEvents"";", true);
         }
 
         /// <inheritdoc />

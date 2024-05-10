@@ -205,7 +205,7 @@ services:
       - bitcoind
 
   postgres:
-    image:  postgres:13.4
+    image:  postgres:13.13
     environment:
         POSTGRES_HOST_AUTH_METHOD: trust
     ports:

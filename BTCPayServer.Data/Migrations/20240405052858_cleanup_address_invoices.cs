@@ -18,7 +18,8 @@ namespace BTCPayServer.Migrations
             migrationBuilder.Sql(@"
 DELETE FROM ""AddressInvoices"" WHERE ""Address"" LIKE '%_LightningLike';
 ALTER TABLE ""AddressInvoices"" DROP COLUMN IF EXISTS ""CreatedTime"";
-VACUUM (FULL, ANALYZE) ""AddressInvoices"";", true);
+");
+            migrationBuilder.Sql(@"VACUUM (FULL, ANALYZE) ""AddressInvoices"";", true);
         }
 
         /// <inheritdoc />

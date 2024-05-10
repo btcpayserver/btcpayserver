@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
+using BTCPayServer.Hosting;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Rating;
@@ -390,12 +391,13 @@ retry:
         public async Task CanGetRateCryptoCurrenciesByDefault()
         {
             using var cts = new CancellationTokenSource(60_000);
-            var provider = CreateDefaultRates(ChainName.Mainnet);
+            var provider = CreateDefaultRates(ChainName.Mainnet, exchangeRecommendation: true);
             var defaultRules = new DefaultRulesCollection(provider.Select(p => p.DefaultRates));
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
             var pairs =
                 provider
+                    .Where(c => c.CryptoCode is not null)
                     .Select(c => new CurrencyPair(c.CryptoCode, "USD"))
                     .ToHashSet();
 
@@ -420,13 +422,22 @@ retry:
             }
         }
 
-        private IEnumerable<(string CryptoCode, DefaultRules DefaultRates)> CreateDefaultRates(ChainName chainName)
+        private IEnumerable<(string CryptoCode, DefaultRules DefaultRates)> CreateDefaultRates(ChainName chainName, bool exchangeRecommendation = false)
         {
             var results = new List<(string CryptoCode, DefaultRules DefaultRates)>();
             var prov = CreateNetworkProvider(chainName);
             foreach (var network in prov.GetAll())
             {
                 results.Add((network.CryptoCode, new DefaultRules(network.DefaultRateRules)));
+            }
+            if (exchangeRecommendation)
+            {
+                ServiceCollection services = new ServiceCollection();
+                BTCPayServerServices.RegisterExchangeRecommendations(services);
+                foreach (var rule in services.BuildServiceProvider().GetRequiredService<IEnumerable<DefaultRules>>())
+                {
+                    results.Add((null, rule));
+                }
             }
             return results;
         }

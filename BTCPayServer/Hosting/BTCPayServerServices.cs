@@ -374,7 +374,7 @@ namespace BTCPayServer.Hosting
             services.AddReportProvider<RefundsReportProvider>();
             services.AddWebhooks();
 
-            services.AddSingleton<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(o => 
+            services.AddSingleton<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(o =>
             o.GetRequiredService<IEnumerable<IPaymentMethodBitpayAPIExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
             services.AddSingleton<Dictionary<PaymentMethodId, IPaymentLinkExtension>>(o =>
 o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.PaymentMethodId, o => o));
@@ -403,6 +403,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<NotificationManager>();
             services.AddScoped<NotificationSender>();
 
+            RegisterExchangeRecommendations(services);
             services.AddSingleton<DefaultRulesCollection>();
             services.AddSingleton<IHostedService, NBXplorerWaiters>();
             services.AddSingleton<IHostedService, InvoiceEventSaverService>();
@@ -503,6 +504,30 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             }
 
             return services;
+        }
+
+        public static void RegisterExchangeRecommendations(IServiceCollection services)
+        {
+            foreach (var rule in new Dictionary<string, string>()
+            {
+                { "EUR", "kraken" },
+                { "USD", "kraken" },
+                { "GBP", "kraken" },
+                { "CHF", "kraken" },
+                { "GTQ", "bitpay" },
+                { "COP", "yadio" },
+                { "ARS", "yadio" },
+                { "JPY", "bitbank" },
+                { "TRY", "btcturk" },
+                { "UGX", "yadio"},
+                { "RSD", "bitpay"},
+                { "NGN", "bitnob"}
+            })
+            {
+                var r = new DefaultRules.Recommendation(rule.Key, rule.Value);
+                r.Order = DefaultRules.HardcodedRecommendedExchangeOrder;
+                services.AddSingleton<DefaultRules>(r);
+            }
         }
 
         public static void AddOnchainWalletParsers(IServiceCollection services)

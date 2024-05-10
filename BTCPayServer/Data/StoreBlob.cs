@@ -107,7 +107,7 @@ namespace BTCPayServer.Data
         /// </summary>
         public string PreferredExchange { get; set; }
         /// <summary>
-        /// Use the preferred exchange of the store, or the recommended exchange from the currency
+        /// Use the preferred exchange of the store, or the recommended exchange from the default currency
         /// </summary>
         /// <param name="defaultRules"></param>
         /// <returns></returns>
@@ -170,7 +170,7 @@ namespace BTCPayServer.Data
 
         public RateRules GetDefaultRateRules(DefaultRulesCollection defaultRules)
         {
-            var rules = defaultRules.WithPreferredExchange(GetPreferredExchange(defaultRules));
+            var rules = defaultRules.WithPreferredExchange(PreferredExchange);
             rules.Spread = Spread;
             return rules;
         }

@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -20,6 +21,7 @@ namespace BTCPayServer.Controllers
     public class UIUserStoresController : Controller
     {
         private readonly StoreRepository _repo;
+        private readonly SettingsRepository _settingsRepository;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly RateFetcher _rateFactory;
         public string CreatedStoreId { get; set; }
@@ -27,11 +29,13 @@ namespace BTCPayServer.Controllers
         public UIUserStoresController(
             UserManager<ApplicationUser> userManager,
             StoreRepository storeRepository,
-            RateFetcher rateFactory)
+            RateFetcher rateFactory,
+            SettingsRepository settingsRepository)
         {
             _repo = storeRepository;
             _userManager = userManager;
             _rateFactory = rateFactory;
+            _settingsRepository = settingsRepository;
         }
 
         [HttpGet]
@@ -62,7 +66,7 @@ namespace BTCPayServer.Controllers
             var vm = new CreateStoreViewModel
             {
                 IsFirstStore = !(stores.Any() || skipWizard),
-                DefaultCurrency = StoreBlob.StandardDefaultCurrency,
+                DefaultCurrency = (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency,
                 Exchanges = GetExchangesSelectList(null)
             };
 

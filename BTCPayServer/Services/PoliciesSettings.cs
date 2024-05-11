@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services
@@ -74,6 +75,8 @@ namespace BTCPayServer.Services
         public bool PluginPreReleases { get; set; }
         [Display(Name = "Select the Default Currency during Store Creation")]
         public string DefaultCurrency { get; set; }
+        [Display(Name = "Select the Default Exchange Provider during Store Creation")]
+        public string DefaultExchangeProvider { get; set; }
 
         public bool DisableSSHService { get; set; }
 
@@ -90,6 +93,9 @@ namespace BTCPayServer.Services
         
         [Display(Name = "Default role for users on a new store")]
         public string DefaultRole { get; set; }
+
+        [JsonIgnore]
+        public SelectList Exchanges { get; set; }
 
         public class BlockExplorerOverrideItem
         {

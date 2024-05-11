@@ -23,6 +23,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -68,6 +69,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
+        private readonly RateFetcher _rateFactory;
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -93,7 +95,8 @@ namespace BTCPayServer.Controllers
             EmailSenderFactory emailSenderFactory,
             IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
-            TransactionLinkProviders transactionLinkProviders
+            TransactionLinkProviders transactionLinkProviders,
+            RateFetcher rateFactory
         )
         {
             _policiesSettings = policiesSettings;
@@ -120,6 +123,7 @@ namespace BTCPayServer.Controllers
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
+            _rateFactory = rateFactory;
         }
 
         [HttpGet("server/stores")]
@@ -328,12 +332,18 @@ namespace BTCPayServer.Controllers
         {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
+
+            var exchanges = _rateFactory.RateProviderFactory
+                .AvailableRateProviders.OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase).ToList();
+            exchanges.Insert(0, new(null, "Select a Default Provider", ""));
+            var defaultExchange = exchanges.First();
+            _policiesSettings.Exchanges = new SelectList(exchanges, nameof(defaultExchange.Id), nameof(defaultExchange.DisplayName), defaultExchange.Id);
             return View(_policiesSettings);
         }
 
         [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
-        {
+        {   
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
 

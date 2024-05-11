@@ -187,7 +187,11 @@
             <h4 class="mt-5">Customization</h4>
             <div class="form-group mb-3">
                 <label asp-for="DefaultCurrency" class="form-label"></label>
-                <input asp-for="DefaultCurrency" placeholder="Default Store Currency" class="form-control" currency-selection  />
+                <input asp-for="DefaultCurrency" placeholder="Default Store Currency" class="form-control" id="currencyInput" currency-selection />
+            </div>
+            <div class="form-group mb-3" id="exchangeProviderDiv" style="display: none;">
+                <label asp-for="DefaultExchangeProvider" class="form-label"></label>
+                <select asp-for="DefaultExchangeProvider" asp-items="@Model.Exchanges" placeholder="Default Store Exchange Provider" class="form-control"></select>
             </div>
             <div class="form-group mb-5">
                 <label asp-for="RootAppId" class="form-label"></label>
@@ -274,5 +278,12 @@
                 element.classList.remove("show");
             }    
         }
+        function toggleExchangeProviderVisibility() {
+            var currencyInput = document.getElementById("currencyInput");
+            var exchangeDiv = document.getElementById("exchangeProviderDiv");
+            exchangeDiv.style.display = currencyInput.value.trim() !== "" || '@Model.DefaultCurrency' !== "" ? "block" : "none";
+        }
+        toggleExchangeProviderVisibility();
+        document.getElementById("currencyInput").addEventListener("input", toggleExchangeProviderVisibility);
     </script>
 }

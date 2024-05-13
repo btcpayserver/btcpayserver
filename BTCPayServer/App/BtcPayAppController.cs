@@ -63,11 +63,11 @@ public class BtcPayAppController(
             ContactUrl = serverSettings.ContactUrl,
             RegistrationEnabled = policiesSettings.EnableRegistration,
             CustomThemeExtension = themeSettings.CustomTheme ? themeSettings.CustomThemeExtension.ToString() : null,
-            CustomThemeCssUrl = themeSettings.CustomTheme && !string.IsNullOrEmpty(themeSettings.CustomThemeFileId)
-                ? await fileService.GetFileUrl(Request.GetAbsoluteRootUri(), themeSettings.CustomThemeFileId)
+            CustomThemeCssUrl = themeSettings.CustomTheme && !string.IsNullOrEmpty(themeSettings.CustomThemeCssUrl?.ToString())
+                ? themeSettings.CustomThemeCssUrl.ToString()
                 : null,
-            LogoUrl = !string.IsNullOrEmpty(themeSettings.LogoFileId)
-                ? await fileService.GetFileUrl(Request.GetAbsoluteRootUri(), themeSettings.LogoFileId)
+            LogoUrl = !string.IsNullOrEmpty(themeSettings.LogoUrl?.ToString())
+                ? themeSettings.LogoUrl.ToString()
                 : null
         });
     }

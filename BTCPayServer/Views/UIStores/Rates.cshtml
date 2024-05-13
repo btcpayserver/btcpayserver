@@ -138,7 +138,7 @@ X_X = kraken(X_X);</code></pre>
                     <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                     <div id="PreferredExchangeHelpBlock" class="form-text">
-                        Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredExchange</a>.
+                        Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredResolvedExchange</a>.
                     </div>
                 </div>
             }

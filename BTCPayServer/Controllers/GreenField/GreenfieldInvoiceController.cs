@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly Dictionary<PaymentMethodId, IPaymentLinkExtension> _paymentLinkExtensions;
         private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly PaymentMethodHandlerDictionary _handlers;
-        private readonly IEnumerable<DefaultRates> _defaultRates;
+        private readonly DefaultRulesCollection _defaultRules;
 
         public LanguageService LanguageService { get; }
 
@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers.Greenfield
             Dictionary<PaymentMethodId, IPaymentLinkExtension> paymentLinkExtensions,
             PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers,
-            IEnumerable<DefaultRates> defaultRates)
+            DefaultRulesCollection defaultRules)
         {
             _invoiceController = invoiceController;
             _invoiceRepository = invoiceRepository;
@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _paymentLinkExtensions = paymentLinkExtensions;
             _payoutHandlers = payoutHandlers;
             _handlers = handlers;
-            _defaultRates = defaultRates;
+            _defaultRules = defaultRules;
             LanguageService = languageService;
         }
 
@@ -430,7 +430,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var paidCurrency = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
                 new CurrencyPair(paymentPrompt.Currency, invoice.Currency),
-                store.GetStoreBlob().GetRateRules(_defaultRates), new StoreIdRateContext(storeId),
+                store.GetStoreBlob().GetRateRules(_defaultRules), new StoreIdRateContext(storeId),
 
 				cancellationToken
             );

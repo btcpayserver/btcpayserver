@@ -23,17 +23,20 @@ namespace BTCPayServer.Controllers
         private readonly StoreRepository _repo;
         private readonly SettingsRepository _settingsRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly DefaultRulesCollection _defaultRules;
         private readonly RateFetcher _rateFactory;
         public string CreatedStoreId { get; set; }
 
         public UIUserStoresController(
             UserManager<ApplicationUser> userManager,
+			DefaultRulesCollection defaultRules,
             StoreRepository storeRepository,
             RateFetcher rateFactory,
             SettingsRepository settingsRepository)
         {
             _repo = storeRepository;
             _userManager = userManager;
+            _defaultRules = defaultRules;
             _rateFactory = rateFactory;
             _settingsRepository = settingsRepository;
         }
@@ -81,7 +84,7 @@ namespace BTCPayServer.Controllers
             {
                 var stores = await _repo.GetStoresByUserId(GetUserId());
                 vm.IsFirstStore = !stores.Any();
-                vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
+                vm.Exchanges = GetExchangesSelectList(null);
                 return View(vm);
             }
 
@@ -124,15 +127,20 @@ namespace BTCPayServer.Controllers
 
         private string GetUserId() => _userManager.GetUserId(User);
 
-        private SelectList GetExchangesSelectList(string selected)
-        {
-            var exchanges = _rateFactory.RateProviderFactory
-                .AvailableRateProviders
-                .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            exchanges.Insert(0, new (null, "Recommended", ""));
-            var chosen = exchanges.FirstOrDefault(f => f.Id == selected) ?? exchanges.First();
-            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
-        }
-    }
+		private SelectList GetExchangesSelectList(StoreBlob storeBlob) => GetExchangesSelectList(_rateFactory, _defaultRules, storeBlob);
+		internal static SelectList GetExchangesSelectList(RateFetcher rateFetcher, DefaultRulesCollection defaultRules, StoreBlob storeBlob)
+		{
+			if (storeBlob is null)
+				storeBlob = new StoreBlob();
+			var defaultExchange = defaultRules.GetRecommendedExchange(storeBlob.DefaultCurrency);
+			var exchanges = rateFetcher.RateProviderFactory
+				.AvailableRateProviders
+				.OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
+				.ToList();
+			var exchange = exchanges.First(e => e.Id == defaultExchange);
+			exchanges.Insert(0, new(null, $"Recommendation ({exchange.DisplayName})", ""));
+			var chosen = exchanges.FirstOrDefault(f => f.Id == storeBlob.PreferredExchange) ?? exchanges.First();
+			return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
+		}
+	}
 }

@@ -4284,7 +4284,7 @@ namespace BTCPayServer.Tests
             config = await clientBasic.GetStoreRateConfiguration(user.StoreId);
             Assert.Equal("X_X = coingecko(X_X);", config.EffectiveScript);
 
-            await AssertValidationError(new[] { "EffectiveScript", "PreferredSource" }, () =>
+            await AssertValidationError(new[] { "EffectiveScript" }, () =>
             clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, EffectiveScript = "BTC_XYZ = 1;" }));
 
             await AssertValidationError(new[] { "EffectiveScript" }, () =>

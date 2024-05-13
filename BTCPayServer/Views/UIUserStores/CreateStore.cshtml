@@ -1,4 +1,5 @@
-﻿@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
+@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
+@inject DefaultRulesCollection DefaultRules
 @{
     Layout = Model.IsFirstStore ? "_LayoutWizard" : "_Layout";
     ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? "Create your first store" : "Create a new store");
@@ -7,12 +8,12 @@
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script>
-	  const exchanges = @Safe.Json(StoreBlob.RecommendedExchanges);
+	  const exchanges = @Safe.Json(DefaultRules.RecommendedExchanges);
 	  const recommended = document.querySelector("#PreferredExchange option[value='']")
 	  const updateRecommended = currency => {
 		  const source = exchanges[currency] || 'coingecko'
 		  const name = source.charAt(0).toUpperCase() + source.slice(1)
-		  recommended.innerText = `${name} (Recommended)`
+		  recommended.innerText = `Recommendation (${name})`
 	  }
 	  updateRecommended(@Safe.Json(Model.DefaultCurrency))
 	  delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))

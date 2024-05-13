@@ -382,7 +382,7 @@ namespace BTCPayServer.Controllers
                     var paidCurrency = Math.Round(cryptoPaid * paymentMethod.Rate, cdCurrency.Divisibility);
                     model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethod.Divisibility);
                     model.RateThenText = _displayFormatter.Currency(model.CryptoAmountThen, paymentMethodCurrency);
-                    rules = store.GetStoreBlob().GetRateRules(_defaultRates);
+                    rules = store.GetStoreBlob().GetRateRules(_defaultRules);
                     rateResult = await _RateProvider.FetchRate(
                         new CurrencyPair(paymentMethodCurrency, invoice.Currency), rules, new StoreIdRateContext(store.Id),
                         cancellationToken);
@@ -491,7 +491,7 @@ namespace BTCPayServer.Controllers
                                 return View("_RefundModal", model);
                             }
 
-                            rules = store.GetStoreBlob().GetRateRules(_defaultRates);
+                            rules = store.GetStoreBlob().GetRateRules(_defaultRules);
                             rateResult = await _RateProvider.FetchRate(
                                 new CurrencyPair(paymentMethodCurrency, model.CustomCurrency), rules, new StoreIdRateContext(store.Id),
                                 cancellationToken);

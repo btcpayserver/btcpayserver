@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers
             public record OtherIssuer() : CardOrigin;
             public record ThisIssuerReset(BoltcardRegistration Registration) : ThisIssuer(Registration);
         }
-        [HttpGet]
+
         [Route("pull-payments/{pullPaymentId}/nfc/bridge")]
         public async Task<IActionResult> VaultNFCBridgeConnection(string pullPaymentId)
         {

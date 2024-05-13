@@ -34,8 +34,6 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
         }
 
-
-        [HttpGet]
         [Route("{cryptoCode}/xpub")]
         [Route("wallets/{walletId}/xpub")]
         public async Task<IActionResult> VaultBridgeConnection(string cryptoCode = null,

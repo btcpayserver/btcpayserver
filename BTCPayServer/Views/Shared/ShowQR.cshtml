@@ -22,7 +22,7 @@
                     <div class="input-group input-group-sm mt-3" v-if="currentFragment && currentMode.showData">
                         <input type="text" class="form-control" readonly :value="currentFragment" id="qr-code-data-input">
                         <button type="button" class="btn btn-outline-secondary px-3" data-clipboard-target="#qr-code-data-input">
-                            <vc:icon symbol="copy" />
+                            <vc:icon symbol="actions-copy" />
                         </button>
                     </div>
                     <div v-if="note" v-html="note" class="text-muted mt-3" id="scan-qr-modal-note"></div>

@@ -53,7 +53,7 @@
     padding-top: var(--btcpay-space-m);
 }
 
-#mainNav .nav-item svg.icon {
+#mainNav .nav-item .icon {
     width: var(--icon-size);
     height: var(--icon-size);
     margin-right: var(--btcpay-space-xs);
@@ -191,7 +191,7 @@
 }
 
 #StoreSelectorToggle .logo,
-#StoreSelectorToggle .icon.icon-store {
+#StoreSelectorToggle .icon.icon-nav-store {
     margin-right: var(--btcpay-space-s);
 }
 

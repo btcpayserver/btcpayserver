@@ -122,7 +122,7 @@
                     <div class="top">
                         <span class="icn">
                             <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
-                            <vc:icon symbol="payment-sent" />
+                            <vc:icon symbol="checkout-sent" />
                         </span>
                         <h4 v-t="'payment_received'" class="mb-4"></h4>
                         <p class="text-center" v-t="'payment_received_body'"></p>
@@ -161,7 +161,7 @@
                     <div class="top">
                         <span class="icn">
                             <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
-                            <vc:icon symbol="payment-complete" />
+                            <vc:icon symbol="checkout-complete" />
                         </span>
                         <h4 v-t="'invoice_paid'"></h4>
                         <div id="PaymentDetails" class="payment-details">
@@ -194,7 +194,7 @@
                 <div v-if="isInvalid" id="unpaid" key="unpaid">
                     <div class="top">
                         <span class="icn">
-                            <vc:icon symbol="invoice-expired" />
+                            <vc:icon symbol="checkout-expired" />
                         </span>
                         <h4 v-t="'invoice_expired'"></h4>
                         <div id="PaymentDetails" class="payment-details">

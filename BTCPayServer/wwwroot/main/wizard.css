@@ -38,8 +38,8 @@ body {
     background-color: transparent;
 }
 
-#wizard-navbar a svg.icon,
-#wizard-navbar button svg.icon{
+#wizard-navbar a .icon,
+#wizard-navbar button .icon {
     width: 19px;
     height: 16px;
 }

@@ -31,13 +31,13 @@
                         <ul class="navbar-nav">
                             <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
                                 <a asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Dashboard)" id="StoreNav-Dashboard">
-                                    <vc:icon symbol="home"/>
+                                    <vc:icon symbol="nav-dashboard"/>
                                     <span>Dashboard</span>
                                 </a>
                             </li>
                             <li class="nav-item" permission="@Policies.CanViewStoreSettings">
                                 <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
-                                    <vc:icon symbol="settings"/>
+                                    <vc:icon symbol="nav-store-settings"/>
                                     <span>Settings</span>
                                 </a>
                             </li>
@@ -113,25 +113,25 @@
                                 <ul class="navbar-nav">
                                     <li class="nav-item" permission="@Policies.CanViewInvoices">
                                         <a asp-area="" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
-                                            <vc:icon symbol="invoice"/>
+                                            <vc:icon symbol="nav-invoices"/>
                                             <span>Invoices</span>
                                         </a>
                                     </li>
 									<li class="nav-item" permission="@Policies.CanViewReports">
 										<a asp-area="" asp-controller="UIReports" asp-action="StoreReports" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Reporting)" id="SectionNav-Reporting">
-											<vc:icon symbol="invoice" />
+											<vc:icon symbol="nav-reporting" />
 											<span>Reporting</span>
 										</a>
 									</li>
                                     <li class="nav-item" permission="@Policies.CanViewPaymentRequests">
                                         <a asp-area="" asp-controller="UIPaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
-                                            <vc:icon symbol="payment-requests"/>
+                                            <vc:icon symbol="nav-payment-requests"/>
                                             <span>Requests</span>
                                         </a>
                                     </li>
                                     <li class="nav-item" permission="@Policies.CanViewPullPayments">
                                         <a asp-area="" asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-PullPayments">
-                                            <vc:icon symbol="pull-payments"/>
+                                            <vc:icon symbol="nav-pull-payments"/>
                                             <span>Pull Payments</span>
                                         </a>
                                     </li>
@@ -140,7 +140,7 @@
                                            asp-controller="UIStorePullPayments" asp-action="Payouts" 
                                            asp-route-pullPaymentId=""
                                            asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-Payouts">
-                                            <vc:icon symbol="payouts"/>
+                                            <vc:icon symbol="nav-payouts"/>
                                             <span>Payouts</span>
                                         </a>
                                     </li>
@@ -175,7 +175,7 @@
                                     }
                                     else
                                     {
-                                        <vc:icon symbol="manage-plugins" />
+                                        <vc:icon symbol="nav-plugins-manage" />
                                     }
                                     <span>Manage Plugins</span>
                                 </a>
@@ -235,13 +235,13 @@
         <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
                 <a asp-area="" asp-controller="UIServer" asp-action="ListUsers" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Branding) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
-                    <vc:icon symbol="server-settings"/>
+                    <vc:icon symbol="nav-server-settings"/>
                     <span>Server Settings</span>
                 </a>
             </li>
             <li class="nav-item dropup">
                 <a class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
-                    <vc:icon symbol="account"/>
+                    <vc:icon symbol="nav-account"/>
                     <span>Account</span>
                 </a>   
                 <ul class="dropdown-menu py-0 w-100" aria-labelledby="Nav-Account">
@@ -283,7 +283,7 @@
             {
                 <li class="nav-item">
                     <a href="@Model.ContactUrl" class="nav-link" id="Nav-ContactUs">
-                    <vc:icon symbol="contact"/>
+                    <vc:icon symbol="nav-contact"/>
                         <span>Contact Us</span>
                     </a>
                 </li>

@@ -60,7 +60,7 @@
 }
 
 .editor .control.remove .icon {
-    --btn-icon-size: 1.75rem;
+    --icon-size: 1.75rem;
 }
 
 .editor .field .form-group:last-child {

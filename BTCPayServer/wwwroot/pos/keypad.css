@@ -14,7 +14,7 @@ button[data-bs-toggle]:hover {
     color: var(--btcpay-header-link-accent);
 }
 button[data-bs-toggle] .icon {
-    --btn-icon-size: 1.75em;
+    --icon-size: 1.75em;
 }
 #ItemsListToggle {
     right: var(--btcpay-space-m);

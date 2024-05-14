@@ -41,7 +41,7 @@
                         <span id="CartBadge" class="badge rounded-pill bg-danger p-1 ms-1" v-text="cartCount" v-if="cartCount !== 0"></span>
                     </button>
                     <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
-                        <vc:icon symbol="invoice-2 "/>
+                        <vc:icon symbol="nav-invoice"/>
                     </button>
                 </div>
                 @if (Model.ShowSearch)

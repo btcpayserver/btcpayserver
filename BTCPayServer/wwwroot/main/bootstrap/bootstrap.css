@@ -1,6 +1,6 @@
 /*!
-   * Bootstrap  v5.3.2 (https://getbootstrap.com/)
-   * Copyright 2011-2023 The Bootstrap Authors
+   * Bootstrap  v5.3.3 (https://getbootstrap.com/)
+   * Copyright 2011-2024 The Bootstrap Authors
    * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
    */
 :root,
@@ -3008,6 +3008,10 @@ textarea.form-control-lg {
   box-shadow: var(--btcpay-btn-focus-box-shadow);
 }
 
+.btn-check:checked:focus-visible + .btn {
+  box-shadow: var(--btcpay-btn-focus-box-shadow);
+}
+
 .btn:disabled, .btn.disabled,
 fieldset:disabled .btn {
   color: var(--btcpay-btn-disabled-color);
@@ -4597,7 +4601,6 @@ fieldset:disabled .btn {
   --btcpay-accordion-btn-icon-transform: rotate(-180deg);
   --btcpay-accordion-btn-icon-transition: transform 0.2s ease-in-out;
   --btcpay-accordion-btn-active-icon: none;
-  --btcpay-accordion-btn-focus-border-color: transparent;
   --btcpay-accordion-btn-focus-box-shadow: none;
   --btcpay-accordion-body-padding-x: 0;
   --btcpay-accordion-body-padding-y: 1rem;
@@ -4650,7 +4653,6 @@ fieldset:disabled .btn {
 
 .accordion-button:focus {
   z-index: 3;
-  border-color: var(--btcpay-accordion-btn-focus-border-color);
   outline: 0;
   box-shadow: var(--btcpay-accordion-btn-focus-box-shadow);
 }
@@ -4670,7 +4672,7 @@ fieldset:disabled .btn {
   border-top-right-radius: var(--btcpay-accordion-border-radius);
 }
 
-.accordion-item:first-of-type .accordion-button {
+.accordion-item:first-of-type > .accordion-header .accordion-button {
   border-top-left-radius: var(--btcpay-accordion-inner-border-radius);
   border-top-right-radius: var(--btcpay-accordion-inner-border-radius);
 }
@@ -4684,12 +4686,12 @@ fieldset:disabled .btn {
   border-bottom-left-radius: var(--btcpay-accordion-border-radius);
 }
 
-.accordion-item:last-of-type .accordion-button.collapsed {
+.accordion-item:last-of-type > .accordion-header .accordion-button.collapsed {
   border-bottom-right-radius: var(--btcpay-accordion-inner-border-radius);
   border-bottom-left-radius: var(--btcpay-accordion-inner-border-radius);
 }
 
-.accordion-item:last-of-type .accordion-collapse {
+.accordion-item:last-of-type > .accordion-collapse {
   border-bottom-right-radius: var(--btcpay-accordion-border-radius);
   border-bottom-left-radius: var(--btcpay-accordion-border-radius);
 }
@@ -4698,25 +4700,25 @@ fieldset:disabled .btn {
   padding: var(--btcpay-accordion-body-padding-y) var(--btcpay-accordion-body-padding-x);
 }
 
-.accordion-flush .accordion-collapse {
-  border-width: 0;
-}
-
-.accordion-flush .accordion-item {
+.accordion-flush > .accordion-item {
   border-right: 0;
   border-left: 0;
   border-radius: 0;
 }
 
-.accordion-flush .accordion-item:first-child {
+.accordion-flush > .accordion-item:first-child {
   border-top: 0;
 }
 
-.accordion-flush .accordion-item:last-child {
+.accordion-flush > .accordion-item:last-child {
   border-bottom: 0;
 }
 
-.accordion-flush .accordion-item .accordion-button, .accordion-flush .accordion-item .accordion-button.collapsed {
+.accordion-flush > .accordion-item > .accordion-header .accordion-button, .accordion-flush > .accordion-item > .accordion-header .accordion-button.collapsed {
+  border-radius: 0;
+}
+
+.accordion-flush > .accordion-item > .accordion-collapse {
   border-radius: 0;
 }
 
@@ -5619,7 +5621,6 @@ fieldset:disabled .btn {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  justify-content: space-between;
   padding: var(--btcpay-modal-header-padding);
   border-bottom: var(--btcpay-modal-header-border-width) solid var(--btcpay-modal-header-border-color);
   border-top-left-radius: var(--btcpay-modal-inner-border-radius);
@@ -6208,20 +6209,12 @@ fieldset:disabled .btn {
   background-size: 100% 100%;
 }
 
-/* rtl:options: {
-  "autoRename": true,
-  "stringMap":[ {
-    "name"    : "prev-next",
-    "search"  : "prev",
-    "replace" : "next"
-  } ]
-} */
 .carousel-control-prev-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e") /*rtl:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e")*/;
 }
 
 .carousel-control-next-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") /*rtl:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e")*/;
 }
 
 .carousel-indicators {
@@ -6797,15 +6790,12 @@ fieldset:disabled .btn {
 .offcanvas-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: var(--btcpay-offcanvas-padding-y) var(--btcpay-offcanvas-padding-x);
 }
 
 .offcanvas-header .btn-close {
   padding: calc(var(--btcpay-offcanvas-padding-y) * .5) calc(var(--btcpay-offcanvas-padding-x) * .5);
-  margin-top: calc(-.5 * var(--btcpay-offcanvas-padding-y));
-  margin-right: calc(-.5 * var(--btcpay-offcanvas-padding-x));
-  margin-bottom: calc(-.5 * var(--btcpay-offcanvas-padding-y));
+  margin: calc(-.5 * var(--btcpay-offcanvas-padding-y)) calc(-.5 * var(--btcpay-offcanvas-padding-x)) calc(-.5 * var(--btcpay-offcanvas-padding-y)) auto;
 }
 
 .offcanvas-title {
@@ -12108,13 +12098,7 @@ fieldset:disabled .btn {
   }
 }
 
-.form-select,
-.form-control {
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
-}
-
 .form-check-input {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -12273,7 +12257,7 @@ ul:not([class]) li {
   content: none;
 }
 
-.accordion-button svg.icon {
+.accordion-button .icon {
   flex-shrink: 0;
   width: 24px;
   height: 24px;
@@ -12281,7 +12265,7 @@ ul:not([class]) li {
   transition: transform 0.2s ease-in-out;
 }
 
-.accordion-button:not(.collapsed) svg.icon {
+.accordion-button:not(.collapsed) .icon {
   transform: rotate(-180deg);
 }
 
@@ -12314,7 +12298,19 @@ ul:not([class]) li {
   padding: 1rem;
 }
 
+/* Icons */
+.icon {
+    display: inline-block;
+    width: var(--icon-size, 1rem);
+    height: var(--icon-size, 1rem);
+    flex-shrink: 0 !important;
+}
+
 /* Button */
+.btn .icon {
+  --icon-size: 1.25em;
+}
+
 .btn-outline-secondary {
   --btcpay-btn-color: var(--btcpay-secondary-text);
 }
@@ -12326,12 +12322,6 @@ ul:not([class]) li {
 
 .btn-outline-secondary:active {
   --btcpay-btn-color: var(--btcpay-secondary-text-active);
-}
-
-.btn .icon {
-  --btn-icon-size: 1.25em;
-  height: var(--btn-icon-size);
-  width: var(--btn-icon-size);
 }
 
 .btn.rounded-circle {
@@ -12357,8 +12347,8 @@ ul:not([class]) li {
   position: relative;
   top: -0.4rem;
   display: inline-block;
-  width: 1rem;
-  height: 1rem;
+  width: var(--icon-size, 1rem);
+  height: var(--icon-size, 1rem);
 }
 
 .dropdown-toggle-split {

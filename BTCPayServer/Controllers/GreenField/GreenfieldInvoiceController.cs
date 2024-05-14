@@ -670,7 +670,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Type = entity.Type,
                 Id = entity.Id,
                 CheckoutLink = request is null ? null : linkGenerator.CheckoutLink(entity.Id, request.Scheme, request.Host, request.PathBase),
-                Status = entity.Status.ToModernStatus(),
+                Status = entity.Status,
                 AdditionalStatus = entity.ExceptionStatus,
                 Currency = entity.Currency,
                 Archived = entity.Archived,

@@ -336,7 +336,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", invoice.Status);
                     checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id)
                         .GetAwaiter().GetResult()).Value;
-                    Assert.Equal("paid", checkout.Status);
+                    Assert.Equal("Processing", checkout.Status);
                 });
             }
         }

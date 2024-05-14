@@ -95,8 +95,8 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                     data.Add(invoiceEntity.Metadata.ItemDesc);
                     data.Add(invoiceEntity.GetInvoiceState().ToString());
 #pragma warning disable CS0618 // Type or member is obsolete
-                    data.Add(invoiceEntity.StatusString);
-                    data.Add(invoiceEntity.ExceptionStatusString);
+                    data.Add(invoiceEntity.Status.ToLegacyStatusString());
+                    data.Add(invoiceEntity.ExceptionStatus.ToLegacyExceptionStatusString());
 #pragma warning restore CS0618 // Type or member is obsolete
                     data.Add(invoiceEntity.Metadata.BuyerEmail);
                     data.Add(payment.Accounted);
@@ -128,10 +128,8 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 data.Add(invoiceEntity.Metadata.ItemCode);
                 data.Add(invoiceEntity.Metadata.ItemDesc);
                 data.Add(invoiceEntity.GetInvoiceState().ToString());
-#pragma warning disable CS0618 // Type or member is obsolete
-                data.Add(invoiceEntity.StatusString);
-                data.Add(invoiceEntity.ExceptionStatusString);
-#pragma warning restore CS0618 // Type or member is obsolete
+                data.Add(invoiceEntity.Status.ToLegacyStatusString());
+                data.Add(invoiceEntity.ExceptionStatus.ToLegacyExceptionStatusString());
                 data.Add(invoiceEntity.Metadata.BuyerEmail);
                 data.Add(null); // Accounted
             }

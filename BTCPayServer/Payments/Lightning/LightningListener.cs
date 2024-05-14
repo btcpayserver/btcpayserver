@@ -202,7 +202,7 @@ retry:
                     _CheckInvoices.Writer.TryWrite(inv.Invoice.Id);
                 }
 
-                if (inv.Name == InvoiceEvent.ReceivedPayment && inv.Invoice.Status == InvoiceStatusLegacy.New && inv.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
+                if (inv.Name == InvoiceEvent.ReceivedPayment && inv.Invoice.Status == InvoiceStatus.New && inv.Invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                 {
                     var pm = inv.Invoice.GetPaymentPrompts().First();
                     if (pm.Calculate().Due > 0m)
@@ -213,7 +213,7 @@ retry:
             }));
             leases.Add(_Aggregator.SubscribeAsync<Events.InvoiceDataChangedEvent>(async inv =>
             {
-                if (inv.State.Status == InvoiceStatusLegacy.New &&
+                if (inv.State.Status == InvoiceStatus.New &&
                     inv.State.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
                 {
                     var invoice = await _InvoiceRepository.GetInvoice(inv.InvoiceId);

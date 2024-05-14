@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
@@ -230,9 +231,7 @@ retry:
                     StoreDataId = invoice.StoreId,
                     Id = invoice.Id,
                     OrderId = invoice.Metadata.OrderId,
-#pragma warning disable CS0618 // Type or member is obsolete
-                    Status = invoice.StatusString,
-#pragma warning restore CS0618 // Type or member is obsolete
+                    Status = invoice.Status.ToString(),
                     ItemCode = invoice.Metadata.ItemCode,
                     Archived = false
                 };
@@ -451,8 +450,8 @@ retry:
                 new
                 {
                     id = invoiceId,
-                    status = InvoiceState.ToString(invoiceState.Status),
-                    exstatus = InvoiceState.ToString(invoiceState.ExceptionStatus)
+                    status = invoiceState.Status.ToString(),
+                    exstatus = invoiceState.ExceptionStatus is InvoiceExceptionStatus.None ? string.Empty : invoiceState.ExceptionStatus.ToString()
                 });
         }
         internal async Task UpdateInvoicePrice(string invoiceId, decimal price)
@@ -559,7 +558,6 @@ retry:
 
                 context.Attach(invoiceData);
                 string eventName;
-                string legacyStatus;
                 switch (status)
                 {
                     case InvoiceStatus.Settled:
@@ -569,7 +567,6 @@ retry:
                         }
 
                         eventName = InvoiceEvent.MarkedCompleted;
-                        legacyStatus = InvoiceStatusLegacy.Complete.ToString();
                         break;
                     case InvoiceStatus.Invalid:
                         if (!invoiceData.GetInvoiceState().CanMarkInvalid())
@@ -577,14 +574,13 @@ retry:
                             return false;
                         }
                         eventName = InvoiceEvent.MarkedInvalid;
-                        legacyStatus = InvoiceStatusLegacy.Invalid.ToString();
                         break;
                     default:
                         return false;
                 }
 
-                invoiceData.Status = legacyStatus.ToLowerInvariant();
-                invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString().ToLowerInvariant();
+                invoiceData.Status = status.ToString();
+                invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString();
                 try
                 {
                     await context.SaveChangesAsync();
@@ -705,42 +701,50 @@ retry:
             }
 
             var statusSet = queryObject.Status is { Length: > 0 }
-                ? queryObject.Status.Select(s => s.ToLowerInvariant()).ToHashSet()
+                ? queryObject.Status.Select(NormalizeStatus).Where(n => n is not null).ToHashSet()
                 : new HashSet<string>();
             var exceptionStatusSet = queryObject.ExceptionStatus is { Length: > 0 }
-                ? queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).ToHashSet()
+                ? queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).Where(n => n is not null).ToHashSet()
                 : new HashSet<string>();
-
-            // We make sure here that the old filters still work
-            if (statusSet.Contains("paid"))
-                statusSet.Add("processing");
-            if (statusSet.Contains("processing"))
-                statusSet.Add("paid");
-            if (statusSet.Contains("confirmed"))
-            {
-                statusSet.Add("complete");
-                statusSet.Add("settled");
-            }
-            if (statusSet.Contains("settled"))
-            {
-                statusSet.Add("complete");
-                statusSet.Add("confirmed");
-            }
-            if (statusSet.Contains("complete"))
-            {
-                statusSet.Add("settled");
-                statusSet.Add("confirmed");
-            }
 
             if (statusSet.Any() || exceptionStatusSet.Any())
             {
-                query = query.Where(i => statusSet.Contains(i.Status) || exceptionStatusSet.Contains(i.ExceptionStatus));
+                Expression<Func<InvoiceData, bool>> statusExpression = null;
+                Expression<Func<InvoiceData, bool>> exceptionStatusExpression = null;
+                if (statusSet.Count is 1)
+                {
+                    var status = statusSet.First();
+                    statusExpression = i => i.Status == status;
+                }
+                else if (statusSet.Count is > 1)
+                {
+                    statusExpression = i => statusSet.Contains(i.Status);
+                }
+
+                if (exceptionStatusSet.Count is 1)
+                {
+                    var exceptionStatus = exceptionStatusSet.First();
+                    exceptionStatusExpression = i => i.ExceptionStatus == exceptionStatus;
+                }
+                else if (exceptionStatusSet.Count is > 1)
+                {
+                    exceptionStatusExpression = i => exceptionStatusSet.Contains(i.ExceptionStatus);
+                }
+                (Expression predicate, ParameterExpression parameter) = (statusExpression, exceptionStatusExpression) switch
+                {
+                    ({ } a, { } b) => ((Expression)Expression.Or(a.Body, b.Body), a.Parameters[0]),
+                    ({ } a, null) => (a.Body, a.Parameters[0]),
+                    (null, { } b) => (b.Body, b.Parameters[0]),
+                    _ => throw new NotSupportedException()
+                };
+                var expression = Expression.Lambda<Func<InvoiceData, bool>>(predicate, parameter);
+                query = query.Where(expression);
             }
 
             if (queryObject.Unusual != null)
             {
                 var unusual = queryObject.Unusual.Value;
-                query = query.Where(i => unusual == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
+                query = query.Where(i => unusual == (i.Status == "Invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
             if (queryObject.OrderByDesc)
@@ -795,27 +799,31 @@ retry:
             return await GetInvoiceQuery(context, queryObject).CountAsync();
         }
 
+        private string NormalizeStatus(string status)
+        {
+            status = status.ToLowerInvariant();
+            return status switch
+            {
+                "new" => "New",
+                "paid" or "processing" => "Processing",
+                "complete" or "confirmed" => "Settled",
+                "expired" => "Expired",
+                "invalid" => "Invalid",
+                _ => null
+            };
+        }
+
         private string NormalizeExceptionStatus(string status)
         {
             status = status.ToLowerInvariant();
-            switch (status)
+            return status switch
             {
-                case "paidover":
-                case "over":
-                case "overpaid":
-                    status = "paidOver";
-                    break;
-                case "paidlate":
-                case "late":
-                    status = "paidLate";
-                    break;
-                case "paidpartial":
-                case "underpaid":
-                case "partial":
-                    status = "paidPartial";
-                    break;
-            }
-            return status;
+                "paidover" or "over" or "overpaid" => "PaidOver",
+                "paidlate" or "late" => "PaidLate",
+                "paidpartial" or "underpaid" or "partial" => "PaidPartial",
+                "none" or "" => "",
+                _ => null
+            };
         }
 
         public static T FromBytes<T>(byte[] blob, BTCPayNetworkBase network = null)
@@ -846,7 +854,7 @@ retry:
                     contribution.Value = contribution.CurrencyValue;
 
                     // For hardcap, we count newly created invoices as part of the contributions
-                    if (!softcap && p.Status == InvoiceStatusLegacy.New)
+                    if (!softcap && p.Status == InvoiceStatus.New)
                         return new[] { contribution };
 
                     // If the user get a donation via other mean, he can register an invoice manually for such amount
@@ -854,7 +862,7 @@ retry:
                     var payments = p.GetPayments(true);
                     if (payments.Count == 0 &&
                         p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
-                        p.Status == InvoiceStatusLegacy.Complete)
+                        p.Status == InvoiceStatus.Settled)
                         return new[] { contribution };
 
                     contribution.CurrencyValue = 0m;
@@ -862,7 +870,7 @@ retry:
 
                     // If an invoice has been marked invalid, remove the contribution
                     if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
-                        p.Status == InvoiceStatusLegacy.Invalid)
+                        p.Status == InvoiceStatus.Invalid)
                         return new[] { contribution };
 
                     // Else, we just sum the payments

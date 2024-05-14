@@ -5,6 +5,7 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
@@ -101,11 +102,11 @@ namespace BTCPayServer.HostedServices
             // So here, we just override the status expressed by the notification
             if (invoiceEvent.Name == InvoiceEvent.Confirmed)
             {
-                notification.Data.Status = InvoiceState.ToString(InvoiceStatusLegacy.Confirmed);
+                notification.Data.Status = "confirmed";
             }
             if (invoiceEvent.Name == InvoiceEvent.PaidInFull)
             {
-                notification.Data.Status = InvoiceState.ToString(InvoiceStatusLegacy.Paid);
+                notification.Data.Status = "paid";
             }
             //////////////////
 

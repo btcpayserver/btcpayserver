@@ -437,13 +437,9 @@ namespace BTCPayServer.Services.Invoices
         public decimal PaidFee { get; set; }
 
         [JsonIgnore]
-        public InvoiceStatusLegacy Status { get; set; }
-        [JsonIgnore]
-        public string StatusString => InvoiceState.ToString(Status);
+        public InvoiceStatus Status { get; set; }
         [JsonIgnore]
         public InvoiceExceptionStatus ExceptionStatus { get; set; }
-        [JsonIgnore]
-        public string ExceptionStatusString => InvoiceState.ToString(ExceptionStatus);
 
         [Obsolete("Use GetPayments instead")]
         [JsonIgnore]
@@ -541,10 +537,8 @@ namespace BTCPayServer.Services.Invoices
                 CurrentTime = DateTimeOffset.UtcNow,
                 InvoiceTime = InvoiceTime,
                 ExpirationTime = ExpirationTime,
-#pragma warning disable CS0618 // Type or member is obsolete
-                Status = StatusString,
-                ExceptionStatus = ExceptionStatus == InvoiceExceptionStatus.None ? new JValue(false) : new JValue(ExceptionStatusString),
-#pragma warning restore CS0618 // Type or member is obsolete
+                Status = Status.ToLegacyStatusString(),
+                ExceptionStatus = ExceptionStatus == InvoiceExceptionStatus.None ? new JValue(false) : new JValue(ExceptionStatus.ToLegacyExceptionStatusString()),
                 Currency = Currency,
                 PaymentSubtotals = new Dictionary<string, decimal>(),
                 PaymentTotals = new Dictionary<string, decimal>(),
@@ -739,160 +733,76 @@ namespace BTCPayServer.Services.Invoices
 
     public enum InvoiceStatusLegacy
     {
-        New,
-        Paid,
-        Expired,
-        Invalid,
-        Complete,
-        Confirmed
     }
     public static class InvoiceStatusLegacyExtensions
     {
-        public static InvoiceStatus ToModernStatus(this InvoiceStatusLegacy legacy)
-        {
-            switch (legacy)
+        public static string ToLegacyStatusString(this InvoiceStatus status) =>
+            status switch
             {
-                case InvoiceStatusLegacy.Complete:
-                case InvoiceStatusLegacy.Confirmed:
-                    return InvoiceStatus.Settled;
-                case InvoiceStatusLegacy.Expired:
-                    return InvoiceStatus.Expired;
-                case InvoiceStatusLegacy.Invalid:
-                    return InvoiceStatus.Invalid;
-                case InvoiceStatusLegacy.Paid:
-                    return InvoiceStatus.Processing;
-                case InvoiceStatusLegacy.New:
-                    return InvoiceStatus.New;
-                default:
-                    throw new NotSupportedException();
-            }
-        }
+                InvoiceStatus.Settled => "complete",
+                InvoiceStatus.Expired => "expired",
+                InvoiceStatus.Invalid => "invalid",
+                InvoiceStatus.Processing => "paid",
+                InvoiceStatus.New => "new",
+                _ => throw new NotSupportedException(status.ToString())
+            };
+        public static string ToLegacyExceptionStatusString(this InvoiceExceptionStatus status) =>
+            status switch
+            {
+                InvoiceExceptionStatus.None => string.Empty,
+                InvoiceExceptionStatus.PaidLate => "paidLater",
+                InvoiceExceptionStatus.PaidPartial => "paidPartial",
+                InvoiceExceptionStatus.PaidOver => "paidOver",
+                InvoiceExceptionStatus.Marked => "marked",
+                _ => throw new NotSupportedException(status.ToString())
+            };
     }
-    public class InvoiceState
+    public record InvoiceState(InvoiceStatus Status, InvoiceExceptionStatus ExceptionStatus)
     {
-        static readonly Dictionary<string, InvoiceStatusLegacy> _StringToInvoiceStatus;
-        static readonly Dictionary<InvoiceStatusLegacy, string> _InvoiceStatusToString;
-
-        static readonly Dictionary<string, InvoiceExceptionStatus> _StringToExceptionStatus;
-        static readonly Dictionary<InvoiceExceptionStatus, string> _ExceptionStatusToString;
-
-        static InvoiceState()
+        public InvoiceState(string status, string exceptionStatus):
+            this(Enum.Parse<InvoiceStatus>(status), exceptionStatus switch { "None" or "" or null => InvoiceExceptionStatus.None, _ => Enum.Parse<InvoiceExceptionStatus>(exceptionStatus) })
         {
-            _StringToInvoiceStatus = new Dictionary<string, InvoiceStatusLegacy>();
-            _StringToInvoiceStatus.Add("paid", InvoiceStatusLegacy.Paid);
-            _StringToInvoiceStatus.Add("expired", InvoiceStatusLegacy.Expired);
-            _StringToInvoiceStatus.Add("invalid", InvoiceStatusLegacy.Invalid);
-            _StringToInvoiceStatus.Add("complete", InvoiceStatusLegacy.Complete);
-            _StringToInvoiceStatus.Add("new", InvoiceStatusLegacy.New);
-            _StringToInvoiceStatus.Add("confirmed", InvoiceStatusLegacy.Confirmed);
-            _InvoiceStatusToString = _StringToInvoiceStatus.ToDictionary(kv => kv.Value, kv => kv.Key);
-
-            _StringToExceptionStatus = new Dictionary<string, InvoiceExceptionStatus>();
-            _StringToExceptionStatus.Add(string.Empty, InvoiceExceptionStatus.None);
-            _StringToExceptionStatus.Add("paidPartial", InvoiceExceptionStatus.PaidPartial);
-            _StringToExceptionStatus.Add("paidLate", InvoiceExceptionStatus.PaidLate);
-            _StringToExceptionStatus.Add("paidOver", InvoiceExceptionStatus.PaidOver);
-            _StringToExceptionStatus.Add("marked", InvoiceExceptionStatus.Marked);
-            _ExceptionStatusToString = _StringToExceptionStatus.ToDictionary(kv => kv.Value, kv => kv.Key);
-            _StringToExceptionStatus.Add("false", InvoiceExceptionStatus.None);
-        }
-        public InvoiceState(string status, string exceptionStatus)
-        {
-            Status = _StringToInvoiceStatus[status];
-            ExceptionStatus = _StringToExceptionStatus[exceptionStatus ?? string.Empty];
-        }
-        public InvoiceState(InvoiceStatusLegacy status, InvoiceExceptionStatus exceptionStatus)
-        {
-            Status = status;
-            ExceptionStatus = exceptionStatus;
-        }
-
-        public InvoiceStatusLegacy Status { get; }
-        public InvoiceExceptionStatus ExceptionStatus { get; }
-
-        public static string ToString(InvoiceStatusLegacy status)
-        {
-            return _InvoiceStatusToString[status];
-        }
-
-        public static string ToString(InvoiceExceptionStatus exceptionStatus)
-        {
-            return _ExceptionStatusToString[exceptionStatus];
         }
 
         public bool CanMarkComplete()
         {
-            return Status is InvoiceStatusLegacy.New or InvoiceStatusLegacy.Paid or InvoiceStatusLegacy.Expired or InvoiceStatusLegacy.Invalid ||
-                   (Status != InvoiceStatusLegacy.Complete && ExceptionStatus == InvoiceExceptionStatus.Marked);
+            return Status is InvoiceStatus.New or InvoiceStatus.Processing or InvoiceStatus.Expired or InvoiceStatus.Invalid ||
+                   (Status != InvoiceStatus.Settled && ExceptionStatus == InvoiceExceptionStatus.Marked);
         }
 
         public bool CanMarkInvalid()
         {
-            return Status is InvoiceStatusLegacy.New or InvoiceStatusLegacy.Paid or InvoiceStatusLegacy.Expired ||
-                   (Status != InvoiceStatusLegacy.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
+            return Status is InvoiceStatus.New or InvoiceStatus.Processing or InvoiceStatus.Expired ||
+                   (Status != InvoiceStatus.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
         }
 
         public bool CanRefund()
         {
-            return Status == InvoiceStatusLegacy.Confirmed ||
-                Status == InvoiceStatusLegacy.Complete ||
-                (Status == InvoiceStatusLegacy.Expired &&
+            return
+                Status == InvoiceStatus.Settled ||
+                (Status == InvoiceStatus.Expired &&
                 (ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
                 ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
                 ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
-                Status == InvoiceStatusLegacy.Invalid;
+                Status == InvoiceStatus.Invalid;
         }
 
         public bool IsSettled()
         {
-            return Status == InvoiceStatusLegacy.Confirmed ||
-                   Status == InvoiceStatusLegacy.Complete ||
-                   (Status == InvoiceStatusLegacy.Expired &&
+            return
+                   Status == InvoiceStatus.Settled ||
+                   (Status == InvoiceStatus.Expired &&
                     ExceptionStatus is InvoiceExceptionStatus.PaidLate or InvoiceExceptionStatus.PaidOver);
         }
 
-        public override int GetHashCode()
-        {
-            return HashCode.Combine(Status, ExceptionStatus);
-        }
-
-        public static bool operator ==(InvoiceState a, InvoiceState b)
-        {
-            if (a is null && b is null)
-                return true;
-            if (a is null)
-                return false;
-            return a.Equals(b);
-        }
-
-        public static bool operator !=(InvoiceState a, InvoiceState b)
-        {
-            return !(a == b);
-        }
-
-        public bool Equals(InvoiceState o)
-        {
-            if (o is null)
-                return false;
-            return o.Status == Status && o.ExceptionStatus == ExceptionStatus;
-        }
-        public override bool Equals(object obj)
-        {
-            if (obj is InvoiceState o)
-            {
-                return this.Equals(o);
-            }
-            return false;
-        }
         public override string ToString()
         {
-            return Status.ToModernStatus() + ExceptionStatus switch
+            return Status + ExceptionStatus switch
             {
                 InvoiceExceptionStatus.PaidOver => " (paid over)",
                 InvoiceExceptionStatus.PaidLate => " (paid late)",
                 InvoiceExceptionStatus.PaidPartial => " (paid partial)",
                 InvoiceExceptionStatus.Marked => " (marked)",
-                InvoiceExceptionStatus.Invalid => " (invalid)",
                 _ => ""
             };
         }

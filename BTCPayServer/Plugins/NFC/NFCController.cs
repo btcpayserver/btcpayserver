@@ -48,7 +48,7 @@ namespace BTCPayServer.Plugins.NFC
         public async Task<IActionResult> SubmitLNURLWithdrawForInvoice([FromBody] SubmitRequest request)
         {
             var invoice = await _invoiceRepository.GetInvoice(request.InvoiceId);
-            if (invoice?.Status is not InvoiceStatusLegacy.New)
+            if (invoice?.Status is not InvoiceStatus.New)
             {
                 return NotFound();
             }

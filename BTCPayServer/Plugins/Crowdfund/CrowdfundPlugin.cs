@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -113,10 +114,10 @@ namespace BTCPayServer.Plugins.Crowdfund
         public override async Task<object?> GetInfo(AppData appData)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
-            var resetEvery = settings.StartDate.HasValue ? settings.ResetEvery : CrowdfundResetEvery.Never;
+            var resetEvery = settings.StartDate.HasValue ? settings.ResetEvery : Services.Apps.CrowdfundResetEvery.Never;
             DateTime? lastResetDate = null;
             DateTime? nextResetDate = null;
-            if (resetEvery != CrowdfundResetEvery.Never && settings.StartDate is not null)
+            if (resetEvery != Services.Apps.CrowdfundResetEvery.Never && settings.StartDate is not null)
             {
                 lastResetDate = settings.StartDate.Value;
 
@@ -126,16 +127,16 @@ namespace BTCPayServer.Plugins.Crowdfund
                     lastResetDate = nextResetDate;
                     switch (resetEvery)
                     {
-                        case CrowdfundResetEvery.Hour:
+                        case Services.Apps.CrowdfundResetEvery.Hour:
                             nextResetDate = lastResetDate.Value.AddHours(settings.ResetEveryAmount);
                             break;
-                        case CrowdfundResetEvery.Day:
+                        case Services.Apps.CrowdfundResetEvery.Day:
                             nextResetDate = lastResetDate.Value.AddDays(settings.ResetEveryAmount);
                             break;
-                        case CrowdfundResetEvery.Month:
+                        case Services.Apps.CrowdfundResetEvery.Month:
                             nextResetDate = lastResetDate.Value.AddMonths(settings.ResetEveryAmount);
                             break;
-                        case CrowdfundResetEvery.Year:
+                        case Services.Apps.CrowdfundResetEvery.Year:
                             nextResetDate = lastResetDate.Value.AddYears(settings.ResetEveryAmount);
                             break;
                     }
@@ -206,11 +207,11 @@ namespace BTCPayServer.Plugins.Crowdfund
                 DisqusShortname = settings.DisqusShortname,
                 AnimationsEnabled = settings.AnimationsEnabled,
                 ResetEveryAmount = settings.ResetEveryAmount,
-                ResetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery),
+                ResetEvery = Enum.GetName(typeof(Services.Apps.CrowdfundResetEvery), settings.ResetEvery),
                 DisplayPerksRanking = settings.DisplayPerksRanking,
                 PerkCount = perkCount,
                 PerkValue = perkValue,
-                NeverReset = settings.ResetEvery == CrowdfundResetEvery.Never,
+                NeverReset = settings.ResetEvery == Services.Apps.CrowdfundResetEvery.Never,
                 FormUrl = formUrl,
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
@@ -264,17 +265,17 @@ namespace BTCPayServer.Plugins.Crowdfund
 
         private static bool IsPaid(InvoiceEntity entity)
         {
-            return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed || entity.Status == InvoiceStatusLegacy.Paid;
+            return entity.Status == InvoiceStatus.Settled || entity.Status == InvoiceStatus.Processing;
         }
 
         private static bool IsPending(InvoiceEntity entity)
         {
-            return !(entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed);
+            return entity.Status != InvoiceStatus.Settled;
         }
 
         private static bool IsComplete(InvoiceEntity entity)
         {
-            return entity.Status == InvoiceStatusLegacy.Complete || entity.Status == InvoiceStatusLegacy.Confirmed;
+            return entity.Status == InvoiceStatus.Settled;
         }
     }
 }

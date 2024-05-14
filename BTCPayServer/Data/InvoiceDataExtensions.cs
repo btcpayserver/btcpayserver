@@ -60,7 +60,7 @@ namespace BTCPayServer.Data
         }
         public static InvoiceState GetInvoiceState(this InvoiceData invoiceData)
         {
-            return new InvoiceState(invoiceData.Status ?? "new", invoiceData.ExceptionStatus);
+            return new InvoiceState(invoiceData.Status, invoiceData.ExceptionStatus);
         }
     }
 }

@@ -397,3 +397,9 @@
         </ul>
     }
 </nav>
+<script>
+    (function () {
+        const activeEl = document.querySelector('#mainNav .nav-link.active')
+        if (activeEl) activeEl.scrollIntoView({ block: 'center', inline: 'center' })
+    })()
+</script>

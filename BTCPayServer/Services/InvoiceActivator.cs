@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
@@ -40,7 +41,7 @@ namespace BTCPayServer.Services
         public async Task<bool> ActivateInvoicePaymentMethod(string invoiceId, PaymentMethodId paymentMethodId, bool forceNew = false)
         {
             var invoice = await _invoiceRepository.GetInvoice(invoiceId);
-            if (invoice?.GetInvoiceState().Status is not InvoiceStatusLegacy.New)
+            if (invoice?.GetInvoiceState().Status is not InvoiceStatus.New)
                 return false;
             var store = await _storeRepository.FindStore(invoice.StoreId);
             if (store is null)

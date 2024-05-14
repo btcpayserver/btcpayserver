@@ -7,6 +7,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
@@ -93,9 +94,8 @@ namespace BTCPayServer.Services.Apps
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData,
                 null, new[]
                 {
-                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Complete)
+                    InvoiceStatus.Processing.ToString(),
+                    InvoiceStatus.Settled.ToString()
                 });
             return await salesType.GetItemStats(appData, paidInvoices);
         }
@@ -141,9 +141,8 @@ namespace BTCPayServer.Services.Apps
             var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays),
                 new[]
                 {
-                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Complete)
+                    InvoiceStatus.Processing.ToString(),
+                    InvoiceStatus.Settled.ToString()
                 });
 
             return await salesType.GetSalesStats(app, paidInvoices, numberOfDays);
@@ -185,7 +184,7 @@ namespace BTCPayServer.Services.Apps
                 {
                     res.Add(new InvoiceStatsItem
                     {
-                        ItemCode = e.Metadata.ItemCode ?? typeof(PosViewType).DisplayName(PosViewType.Light.ToString()),
+                        ItemCode = e.Metadata.ItemCode ?? typeof(Plugins.PointOfSale.PosViewType).DisplayName(Plugins.PointOfSale.PosViewType.Light.ToString()),
                         FiatPrice = e.PaidAmount.Net,
                         Date = e.InvoiceTime.Date
                     });
@@ -220,11 +219,7 @@ namespace BTCPayServer.Services.Apps
             {
                 StoreId = new[] { appData.StoreDataId },
                 TextSearch = appData.TagAllInvoices ? null : GetAppSearchTerm(appData),
-                Status = status ?? new[]{
-                    InvoiceState.ToString(InvoiceStatusLegacy.New),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Complete)},
+                Status = status,
                 StartDate = startDate
             });
 
@@ -297,8 +292,8 @@ namespace BTCPayServer.Services.Apps
             {
                 case PointOfSaleAppType.AppType:
                     var settings = app.GetSettings<PointOfSaleSettings>();
-                    string posViewStyle = (settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView).ToString();
-                    style = typeof(PosViewType).DisplayName(posViewStyle);
+                    string posViewStyle = (settings.EnableShoppingCart ? Plugins.PointOfSale.PosViewType.Cart : settings.DefaultView).ToString();
+                    style = typeof(Plugins.PointOfSale.PosViewType).DisplayName(posViewStyle);
                     break;
 
                 default:

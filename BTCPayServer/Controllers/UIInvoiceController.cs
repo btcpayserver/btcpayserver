@@ -235,7 +235,7 @@ namespace BTCPayServer.Controllers
             }
 
             var getAppsTaggingStore = _InvoiceRepository.GetAppsTaggingStore(store.Id);
-            entity.Status = InvoiceStatusLegacy.New;
+            entity.Status = InvoiceStatus.New;
             entity.UpdateTotals();
 
 

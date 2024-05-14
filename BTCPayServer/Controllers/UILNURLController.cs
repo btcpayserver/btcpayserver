@@ -656,7 +656,7 @@ namespace BTCPayServer
             if (store is null)
                 return NotFound();
 
-            if (i.Status == InvoiceStatusLegacy.New)
+            if (i.Status == InvoiceStatus.New)
             {
                 var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out var lnurlSupportedPaymentMethod);
                 if (pmi is null)

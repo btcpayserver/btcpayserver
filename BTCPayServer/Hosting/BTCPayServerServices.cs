@@ -48,7 +48,6 @@ using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using ExchangeSharp;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -71,6 +70,8 @@ using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
 using BTCPayServer.Payouts;
+using ExchangeSharp;
+
 
 
 
@@ -658,7 +659,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
         {
             services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(cryptoCode, provider));
         }
-        public static void AddRateProviderExchangeSharp<T>(this IServiceCollection services, RateSourceInfo rateInfo) where T : ExchangeAPI
+        public static void AddRateProviderExchangeSharp<T>(this IServiceCollection services, RateSourceInfo rateInfo) where T : ExchangeSharp.ExchangeAPI
         {
             services.AddSingleton<IRateProvider, ExchangeSharpRateProvider<T>>(o =>
             {

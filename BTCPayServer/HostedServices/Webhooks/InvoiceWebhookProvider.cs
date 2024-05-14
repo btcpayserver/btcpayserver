@@ -97,8 +97,8 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                 return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoiceReceivedPayment, storeId)
                 {
                     AfterExpiration =
-                        invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired ||
-                        invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
+                        invoiceEvent.Invoice.Status == InvoiceStatus.Expired ||
+                        invoiceEvent.Invoice.Status == InvoiceStatus.Invalid,
                     PaymentMethodId = invoiceEvent.Payment.PaymentMethodId.ToString(),
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
                     StoreId = invoiceEvent.Invoice.StoreId
@@ -107,8 +107,8 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
                 return new WebhookInvoiceReceivedPaymentEvent(WebhookEventType.InvoicePaymentSettled, storeId)
                 {
                     AfterExpiration =
-                        invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Expired ||
-                        invoiceEvent.Invoice.Status.ToModernStatus() == InvoiceStatus.Invalid,
+                        invoiceEvent.Invoice.Status == InvoiceStatus.Expired ||
+                        invoiceEvent.Invoice.Status == InvoiceStatus.Invalid,
                     PaymentMethodId = invoiceEvent.Payment.PaymentMethodId.ToString(),
                     Payment = GreenfieldInvoiceController.ToPaymentModel(invoiceEvent.Invoice, invoiceEvent.Payment),
                     StoreId = invoiceEvent.Invoice.StoreId

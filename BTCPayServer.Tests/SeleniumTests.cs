@@ -2988,7 +2988,7 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 var inv = await s.Server.PayTester.InvoiceRepository.GetInvoice(i);
-                Assert.Equal(InvoiceStatusLegacy.Complete, inv.Status);
+                Assert.Equal(InvoiceStatus.Settled, inv.Status);
             });
             var greenfield = await s.AsTestAccount().CreateClient();
             var paymentMethods = await greenfield.GetInvoicePaymentMethods(s.StoreId, i);
@@ -3110,7 +3110,7 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 var inv = await s.Server.PayTester.InvoiceRepository.GetInvoice(invForPP);
-                Assert.Equal(InvoiceStatusLegacy.Complete, inv.Status);
+                Assert.Equal(InvoiceStatus.Settled, inv.Status);
 
                 await using var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                 var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();

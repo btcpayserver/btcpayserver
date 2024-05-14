@@ -101,7 +101,7 @@ namespace BTCPayServer.PaymentRequest
             var paymentStats = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
             var amountDue = blob.Amount - paymentStats.TotalCurrency;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
-                .FirstOrDefault(entity => entity.Status == InvoiceStatusLegacy.New);
+                .FirstOrDefault(entity => entity.Status == InvoiceStatus.New);
             
             return new ViewPaymentRequestViewModel(pr)
             {
@@ -123,8 +123,8 @@ namespace BTCPayServer.PaymentRequest
                     var state = entity.GetInvoiceState();
                     var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(entity, _displayFormatter, _transactionLinkProviders, _handlers);
 
-                    if (state.Status == InvoiceStatusLegacy.Invalid ||
-                        state.Status == InvoiceStatusLegacy.Expired && !payments.Any())
+                    if (state.Status == InvoiceStatus.Invalid ||
+                        state.Status == InvoiceStatus.Expired && !payments.Any())
                         return null;
 
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoice

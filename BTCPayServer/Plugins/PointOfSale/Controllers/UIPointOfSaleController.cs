@@ -539,15 +539,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return NotFound();
 
             var from = DateTimeOffset.UtcNow - TimeSpan.FromDays(3);
-            var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, app, from, new[]
-                {
-                    InvoiceState.ToString(InvoiceStatusLegacy.New),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Paid),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Confirmed),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Complete),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Expired),
-                    InvoiceState.ToString(InvoiceStatusLegacy.Invalid)
-                });
+            var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, app, from);
             var recent = invoices
                 .Take(10)
                 .Select(i => new JObject
@@ -555,7 +547,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     ["id"] = i.Id,
                     ["date"] = i.InvoiceTime,
                     ["price"] = _displayFormatter.Currency(i.Price, i.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                    ["status"] = i.GetInvoiceState().Status.ToModernStatus().ToString(),
+                    ["status"] = i.GetInvoiceState().Status.ToString(),
                     ["url"] = Url.Action(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
                 });
             return Json(recent);

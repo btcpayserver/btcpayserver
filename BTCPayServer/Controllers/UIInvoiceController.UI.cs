@@ -1026,11 +1026,11 @@ namespace BTCPayServer.Controllers
             return Json(model);
         }
 
-        [HttpGet("i/{invoiceId}/status/ws")]
-        [HttpGet("i/{invoiceId}/{paymentMethodId}/status/ws")]
-        [HttpGet("invoice/{invoiceId}/status/ws")]
-        [HttpGet("invoice/{invoiceId}/{paymentMethodId}/status")]
-        [HttpGet("invoice/status/ws")]
+        [Route("i/{invoiceId}/status/ws")]
+        [Route("i/{invoiceId}/{paymentMethodId}/status/ws")]
+        [Route("invoice/{invoiceId}/status/ws")]
+        [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/status/ws")]
         public async Task<IActionResult> GetStatusWebSocket(string invoiceId, CancellationToken cancellationToken)
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)

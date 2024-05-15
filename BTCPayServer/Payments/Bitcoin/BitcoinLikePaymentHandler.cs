@@ -138,7 +138,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         ? null
                         : _FeeRateProviderFactory.CreateFeeProvider(_Network).GetFeeRateAsync(),
                     ReserveAddress = _WalletProvider.GetWallet(_Network)
-                        .ReserveAddressAsync(store.Id, settings.AccountDerivation, "invoice"),
+                        .ReserveAddressAsync(store.Id, settings, "invoice"),
                     DerivationSchemeSettings = settings
                 };
             }

@@ -146,6 +146,8 @@ namespace BTCPayServer
             return null;
         }
         public BitcoinExtPubKey AccountKey { get; set; }
+        public BitcoinExtKey MwebScanKey { get; set; }
+        public BitcoinExtPubKey MwebSpendPubKey { get; set; }
         public bool IsFullySetup()
         {
             return AccountKeyPath != null && RootFingerprint is HDFingerprint;

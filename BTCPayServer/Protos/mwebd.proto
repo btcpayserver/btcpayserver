@@ -1,0 +1,164 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcMwebdClient";
+
+service Rpc {
+    // Get the sync status of the daemon. The block headers are
+    // synced first, followed by a subset of MWEB headers, and
+    // finally the MWEB utxo set.
+    rpc Status(StatusRequest) returns (StatusResponse);
+
+    // Get a continuous stream of unspent MWEB outputs (utxos)
+    // for an account.
+    rpc Utxos(UtxosRequest) returns (stream Utxo);
+
+    // Get a batch of MWEB addresses for an account.
+    rpc Addresses(AddressRequest) returns (AddressResponse);
+
+    // Check whether MWEB outputs are in the unspent set or not.
+    // This is used to determine when outputs have been spent by
+    // either this or another wallet using the same seed, and to
+    // determine when MWEB transactions have confirmed by checking
+    // the output IDs of the MWEB inputs and outputs.
+    rpc Spent(SpentRequest) returns (SpentResponse);
+
+    // Create the MWEB portion of a transaction.
+    rpc Create(CreateRequest) returns (CreateResponse);
+
+    // Broadcast a transaction to the network. This is provided as
+    // existing broadcast services may not support MWEB transactions.
+    rpc Broadcast(BroadcastRequest) returns (BroadcastResponse);
+}
+
+message StatusRequest {
+}
+
+message StatusResponse {
+    // The height of the latest block.
+    int32 block_header_height = 1;
+
+    // The height of the latest MWEB header.
+    int32 mweb_header_height = 2;
+
+    // The height at which the MWEB utxo set is synced to.
+    int32 mweb_utxos_height = 3;
+
+    // The timestamp of the latest block.
+    uint32 block_time = 4;
+}
+
+message UtxosRequest {
+    // The block height from which to start fetching utxos from.
+    // After all mined utxos have been streamed, unconfirmed and
+    // newly confirmed utxos will also be streamed. If this is set
+    // to 0 then all utxos belonging to the account will be fetched.
+    int32 from_height = 1;
+
+    // The scan secret or view key represents the account for
+    // which utxos should be streamed.
+    bytes scan_secret = 2;
+}
+
+message Utxo {
+    // The block height of the utxo, or 0 for unconfirmed.
+    int32 height = 1;
+
+    // The value of the utxo in litoshis.
+    uint64 value = 2;
+
+    // The MWEB address that the utxo was received on.
+    string address = 3;
+
+    // The output ID. This functions like a transaction hash,
+    // but is unique to every utxo.
+    string output_id = 4;
+
+    // The timestamp of the block the utxo was mined in.
+    uint32 block_time = 5;
+}
+
+message AddressRequest {
+    // The starting index of the range.
+    uint32 from_index = 1;
+
+    // The ending index of the range. The result will contain all
+    // addresses up to but not including this index.
+    uint32 to_index = 2;
+
+    // The scan secret or view key represents the account for
+    // which addresses should be returned.
+    bytes scan_secret = 3;
+
+    // The public key of the spend secret for the account. The spend
+    // key is required for spending utxos but is also required
+    // for generating addresses.
+    bytes spend_pubkey = 4;
+}
+
+message AddressResponse {
+    // An array of MWEB addresses within the requested range.
+    repeated string address = 1;
+}
+
+message SpentRequest {
+    // An array of output IDs to perform checks for.
+    repeated string output_id = 1;
+}
+
+message SpentResponse {
+    // An array of the output IDs that were not found in the
+    // unspent set. This means that the outputs are either
+    // unconfirmed or were spent.
+    repeated string output_id = 1;
+}
+
+message CreateRequest {
+    // The raw bytes of the serialized transaction. This will be
+    // a template where the non-MWEB inputs will remain unchanged,
+    // and the MWEB inputs are specified by TxIns with the outpoint
+    // hash set to the output ID of the utxo being spent, and the
+    // outpoint index set to the index of the address that the utxo
+    // was received on. MWEB outputs are specified by TxOuts with
+    // the script pubkey set to the serialized scan and spend pubkeys
+    // of the destination MWEB address. Any non-MWEB outputs will be
+    // transformed into MWEB peg-outs. If the transaction doesn't
+    // contain any MWEB i/o then the result will be unchanged.
+    bytes raw_tx = 1;
+
+    // The scan secret or view key represents the account that
+    // the utxos being spent belong to.
+    bytes scan_secret = 2;
+
+    // The spend secret is the private key necessary for spending
+    // the utxos belonging to the account.
+    bytes spend_secret = 3;
+
+    // The fee rate per KB in litoshis.
+    uint64 fee_rate_per_kb = 4;
+
+    // Whether to skip MWEB transaction creation. This is useful
+    // for fee estimation.
+    bool dry_run = 5;
+}
+
+message CreateResponse {
+    // The raw bytes of the serialized transaction. It will contain
+    // a single TxOut representing the peg-in required. From this
+    // it is possible to determine the addtional fee that was added
+    // by the MWEB transaction.
+    bytes raw_tx = 1;
+
+    // The output IDs of any utxos created by the transaction,
+    // in the same order as in the template.
+    repeated string output_id = 2;
+}
+
+message BroadcastRequest {
+    // The raw bytes of the serialized transaction.
+    bytes raw_tx = 1;
+}
+
+message BroadcastResponse {
+    // The transaction ID.
+    string txid = 1;
+}

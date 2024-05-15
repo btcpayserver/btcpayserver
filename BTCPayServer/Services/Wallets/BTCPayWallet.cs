@@ -15,6 +15,10 @@ using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
+using ExchangeSharp;
+using Google.Protobuf;
+using Grpc.Net.Client;
+using GrpcMwebdClient;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -77,10 +81,24 @@ namespace BTCPayServer.Services.Wallets
 
         public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(5);
 
-        public async Task<KeyPathInformation> ReserveAddressAsync(string storeId, DerivationStrategyBase derivationStrategy, string generatedBy)
+        private class BitcoinRawAddress : BitcoinAddress
+        {
+            public BitcoinRawAddress(string address, Network network)
+                    : base(address, network)
+            {
+            }
+
+            protected override Script GeneratePaymentScript()
+            {
+                return new Script(_Str.ToBytesUTF8());
+            }
+        }
+
+        public async Task<KeyPathInformation> ReserveAddressAsync(string storeId, DerivationSchemeSettings derivationScheme, string generatedBy)
         {
             if (storeId != null)
                 ArgumentNullException.ThrowIfNull(generatedBy);
+            var derivationStrategy = derivationScheme.AccountDerivation;
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             // Might happen on some broken install
@@ -89,6 +107,17 @@ namespace BTCPayServer.Services.Wallets
                 await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
+
+            using var channel = GrpcChannel.ForAddress("http://localhost:12345");
+            var client = new Rpc.RpcClient(channel);
+            var response = await client.AddressesAsync(new AddressRequest {
+                FromIndex = pathInfo.KeyPath.Indexes.Last() + 1,
+                ToIndex = pathInfo.KeyPath.Indexes.Last() + 2,
+                ScanSecret = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebScanKey.PrivateKey.ToBytes()),
+                SpendPubkey = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebSpendPubKey.GetPublicKey().ToBytes()),
+            });
+            pathInfo.Address = new BitcoinRawAddress(response.Address[0], pathInfo.Address.Network);
+
             if (storeId != null)
             {
                 await WalletRepository.EnsureWalletObject(

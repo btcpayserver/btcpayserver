@@ -78,7 +78,7 @@ namespace BTCPayServer.Services.Wallets
                 return null;
             }
 
-            var reserve = (await wallet.ReserveAddressAsync(walletId.StoreId, derivationScheme.AccountDerivation, "receive"));
+            var reserve = (await wallet.ReserveAddressAsync(walletId.StoreId, derivationScheme, "receive"));
             Set(walletId, reserve);
             return reserve;
         }

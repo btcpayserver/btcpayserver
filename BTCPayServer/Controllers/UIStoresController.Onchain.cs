@@ -327,6 +327,12 @@ public partial class UIStoresController
         accountSettings.RootFingerprint = response.AccountKeyPath.MasterFingerprint;
         derivationSchemeSettings.AccountOriginal = response.DerivationScheme.ToString();
 
+        var indexes = response.AccountKeyPath.KeyPath.Indexes;
+        indexes[0] = 1000 | 0x80000000;
+        var mwebKey = response.MasterHDKey.Derive(new KeyPath(indexes));
+        accountSettings.MwebScanKey = mwebKey.Derive(0x80000000);
+        accountSettings.MwebSpendPubKey = mwebKey.Derive(0x80000001).Neuter();
+
         // Set wallet properties from generate response
         vm.RootFingerprint = response.AccountKeyPath.MasterFingerprint.ToString();
         vm.AccountKey = response.AccountHDKey.Neuter().ToWif();

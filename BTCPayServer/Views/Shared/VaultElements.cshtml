@@ -1,25 +1,32 @@
-<script id="VaultConnection" type="text/template">
-    <div class="vault-feedback vault-feedback1 mb-2 d-flex">
-        <span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-grow"></span>
+<template id="VaultConnection">
+    <div class="vault-feedback vault-feedback1 mb-2 d-flex align-items-center">
+        <vc:icon symbol="dots" css-class="vault-feedback-icon d-none"/>
+        <span class="vault-feedback-content flex-grow"></span>
     </div>
-    <div class="vault-feedback vault-feedback2 mb-2 d-flex">
-        <span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-grow"></span>
+    <div class="vault-feedback vault-feedback2 mb-2 d-flex align-items-center">
+        <vc:icon symbol="dots" css-class="vault-feedback-icon d-none"/>
+        <span class="vault-feedback-content flex-grow"></span>
     </div>
-    <div class="vault-feedback vault-feedback3 mb-2 d-flex">
-        <span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-grow"></span>
+    <div class="vault-feedback vault-feedback3 mb-2 d-flex align-items-center">
+        <vc:icon symbol="dots" css-class="vault-feedback-icon d-none"/>
+        <span class="vault-feedback-content flex-grow"></span>
     </div>
-	<div class="vault-feedback vault-feedback4 mb-2 d-flex">
-        <span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-grow"></span>
+    <div class="vault-feedback vault-feedback4 mb-2 d-flex align-items-center">
+        <vc:icon symbol="dots" css-class="vault-feedback-icon d-none"/>
+        <span class="vault-feedback-content flex-grow"></span>
     </div>
-	<div class="vault-feedback vault-feedback5 mb-2 d-flex">
-		<span class="vault-feedback-icon mt-1 me-2"></span> <span class="vault-feedback-content flex-grow"></span>
+	<div class="vault-feedback vault-feedback5 mb-2 d-flex align-items-center">
+        <vc:icon symbol="dots" css-class="vault-feedback-icon d-none"/>
+        <span class="vault-feedback-content flex-grow"></span>
 	</div>
     <div id="pin-input" class="mt-4" style="display: none;">
         <div class="row">
             <div class="col">
                 <div class="input-group mb-2">
                     <input id="pin-display" type="text" class="form-control" readonly>
-                    <div id="pin-display-delete" class="input-group-text cursor-pointer"><span class="fa fa-remove"></span></div>
+                    <div id="pin-display-delete" class="input-group-text cursor-pointer">
+                        <vc:icon symbol="actions-remove" />
+                    </div>
                 </div>
             </div>
         </div>
@@ -41,16 +48,22 @@
     </div>
     <div id="passphrase-input" class="mt-4" style="display: none;">
         <div class="form-group">
-			<div class="input-group">
-				<label for="Password" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-				<input id="Password" type="password" class="form-control" placeholder="Passphrase (Leave empty if there isn't any passphrase)" />
-			</div>
+            <label for="Password" class="form-label">Passphrase (Leave empty if there isn't any passphrase)</label>
+            <div class="input-group">
+                <input id="Password" type="password" class="form-control">
+                <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle passphrase visibility" data-toggle-password="#Password">
+                    <vc:icon symbol="actions-show" />
+                </button>
+            </div>
         </div>
         <div class="form-group">
+            <label for="PasswordConfirmation" class="form-label">Passphrase confirmation</label>
             <div class="input-group">
-                <label for="PasswordConfirmation" class="input-group-text"><span class="input-group-addon fa fa-lock"></span></label>
-                <input id="PasswordConfirmation" type="password" class="form-control" placeholder="Passphrase confirmation" />
+                <input id="PasswordConfirmation" type="password" class="form-control">
+                <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle passphrase visibility" data-toggle-password="#PasswordConfirmation">
+                    <vc:icon symbol="actions-show" />
+                </button>
             </div>
         </div>
     </div>
-</script>
+</template>

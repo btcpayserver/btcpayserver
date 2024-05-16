@@ -49,7 +49,7 @@ public partial class AltcoinsPlugin
                 : "http://explorer.litecointools.com/tx/{0}";
         services.AddBTCPayNetwork(network)
                 .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(blockExplorerLinks));
-        services.AddHostedService<MwebScanner>();
+        services.AddHostedService<MwebScannerService>();
     }
 }
 

@@ -26,15 +26,23 @@
             else
             {
                 <div class="form-group @(Model.Removed ? "" : "collapse")">
-                    <div class="input-group">
-                        <label asp-for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ms-2">Seed</span></label>
-                        <textarea asp-for="Seed" class="form-control" readonly rows="3"></textarea>
+                    <div class="form-group">
+                        <label asp-for="Seed" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="Seed" type="password" class="form-control" value="@Model.Seed">
+                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle seed visibility" data-toggle-password="#Seed">
+                                <vc:icon symbol="actions-show" />
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group collapse">
-                    <div class="input-group">
-                        <label asp-for="WalletPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span><span class="ms-2">Password</span></label>
-                        <input asp-for="WalletPassword" class="form-control" readonly />
+                    <div class="form-group">
+                        <label asp-for="WalletPassword" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input asp-for="WalletPassword" type="password" class="form-control" value="@Model.WalletPassword">
+                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle password visibility" data-toggle-password="#WalletPassword">
+                                <vc:icon symbol="actions-show" />
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group collapse">

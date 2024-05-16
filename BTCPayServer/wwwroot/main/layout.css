@@ -313,13 +313,12 @@
     min-width: 1.75em;
 }
 
-#NotificationsHandle svg {
-    width: 1.25rem;
-    height: 1.25rem;
+#NotificationsHandle .icon {
+    --icon-size: 1.625rem;
     color: var(--btcpay-header-link);
 }
 
-#NotificationsHandle:hover svg {
+#NotificationsHandle:hover .icon {
     color: var(--btcpay-header-link-accent);
 }
 
@@ -334,9 +333,8 @@
     border: 1px solid var(--btcpay-body-border-medium);
 }
 
-#NotificationsList svg {
-    width: 1.5rem;
-    height: 1.5rem;
+#NotificationsList .icon {
+    --icon-size: 1.5rem;
 }
 
 /* Section Navigation / Subnav */

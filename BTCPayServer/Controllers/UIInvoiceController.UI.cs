@@ -1111,7 +1111,7 @@ namespace BTCPayServer.Controllers
                     storeIds.Add(i);
             }
             model.Search = fs;
-            model.SearchText = fs.TextSearch;
+            model.SearchText = fs.TextCombined;
 
             var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);

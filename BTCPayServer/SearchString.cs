@@ -9,7 +9,8 @@ namespace BTCPayServer
     {
         private const char FilterSeparator = ',';
         private const char ValueSeparator = ':';
-        
+        private static readonly string[] StripFilters = ["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate"];
+
         private readonly string _originalString;
         private readonly int _timezoneOffset;
 
@@ -27,12 +28,17 @@ namespace BTCPayServer
                     .Where(kv => kv.Length == 2)
                     .Select(kv => new KeyValuePair<string, string>(UnifyKey(kv[0]), kv[1]))
                     .ToMultiValueDictionary(o => o.Key, o => o.Value);
-
-            var val = splitted.FirstOrDefault(a => a.IndexOf(ValueSeparator, StringComparison.OrdinalIgnoreCase) == -1);
-            TextSearch = val != null ? val.Trim() : string.Empty;
+            // combine raw search term and filters which don't have a special UI (e.g. orderid)
+            TextSearch = splitted.FirstOrDefault(a => a.IndexOf(ValueSeparator, StringComparison.OrdinalIgnoreCase) == -1)?.Trim();
+            TextFilters = string.Join(FilterSeparator, Filters
+                .Where(f => !StripFilters.Contains(f.Key))
+                .Select(f => string.Join(FilterSeparator, f.Value.Select(v => $"{f.Key}{ValueSeparator}{v}"))));
         }
 
         public string TextSearch { get; private set; }
+        public string TextFilters { get; private set; }
+
+        public string TextCombined => string.Join(FilterSeparator, new []{ TextFilters, TextSearch }.Where(x => !string.IsNullOrEmpty(x)));
 
         public MultiValueDictionary<string, string> Filters { get; }
 
@@ -82,9 +88,10 @@ namespace BTCPayServer
 
         public string WithoutSearchText()
         {
-            return string.IsNullOrEmpty(TextSearch)
-                ? Finalize(ToString())
-                : Finalize(ToString()).Replace(TextSearch, string.Empty);
+            var txt = ToString();
+            if (!string.IsNullOrEmpty(TextSearch)) txt = txt.Replace(TextSearch, string.Empty);
+            if (!string.IsNullOrEmpty(TextFilters)) txt = txt.Replace(TextFilters, string.Empty);
+            return Finalize(txt).Trim();
         }
 
         public string[] GetFilterArray(string key)

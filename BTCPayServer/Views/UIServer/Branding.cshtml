@@ -39,7 +39,7 @@
                     @if (!string.IsNullOrEmpty(Model.LogoUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
-                            <span class="fa fa-times"></span> Remove
+                            <vc:icon symbol="cross" /> Remove
                         </button>
                     }
                 </div>
@@ -85,7 +85,7 @@
                         @if (!string.IsNullOrEmpty(Model.CustomThemeCssUrl))
                         {
                             <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCustomThemeFile" value="true">
-                                <span class="fa fa-times"></span> Remove
+                                <vc:icon symbol="cross" /> Remove
                             </button>
                         }
                     </div>

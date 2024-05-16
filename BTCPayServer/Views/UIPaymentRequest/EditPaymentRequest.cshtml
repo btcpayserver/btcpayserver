@@ -78,7 +78,7 @@
                            value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
                            class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />
                     <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                        <span class="fa fa-times"></span>
+                        <vc:icon symbol="close" />
                     </button>
                 </div>
                 <span asp-validation-for="ExpiryDate" class="text-danger"></span>

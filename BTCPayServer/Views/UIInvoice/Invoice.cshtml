@@ -196,7 +196,7 @@
                 }
                 else
                 {
-                    <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default"><i class="fa fa-archive me-1"></i> Archive</span>
+                    <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive</span>
                 }
             </button>
         </form>
@@ -480,14 +480,16 @@
                                               method="post">
                                         <td>
                                             <span>
-                                                    @if (delivery.Success)
-                                                    {
-                                                    <span class="fa fa-check text-success" title="Success"></span>
-                                                    }
-                                                    else
-                                                    {
-                                                    <span class="fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
-                                                    }
+                                                @if (delivery.Success)
+                                                {
+                                                    <vc:icon symbol="checkmark" css-class="text-success" />
+                                                }
+                                                else
+                                                {
+                                                    <span title="@delivery.ErrorMessage">
+                                                        <vc:icon symbol="cross" css-class="text-danger"/>
+                                                    </span>
+                                                }
                                             </span>
                                         </td>
                                         <td>

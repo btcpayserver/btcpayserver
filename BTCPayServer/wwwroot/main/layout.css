@@ -184,8 +184,9 @@
 
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
-    max-width: 1.5rem;
-    max-height: 1.5rem;
+    --icon-size: 1.5rem;
+    max-width: var(--icon-size);
+    max-height: var(--icon-size);
     /* Fixes seemingly delayed icon animation */
     -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }

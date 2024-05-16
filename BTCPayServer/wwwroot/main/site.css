@@ -656,8 +656,7 @@ label.btcpay-list-select-item:hover {
     }
 }
 .btcpay-list-select-item .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    --icon-size: 1.5rem;
     margin: 0 var(--btcpay-space-s);
 }
 input:checked + label.btcpay-list-select-item {
@@ -1128,6 +1127,9 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 .blazor-status .btn-close .icon {
     --icon-size: .75rem;
 }
+.btn.btn-lg .icon {
+    --icon-size: 1.75rem;
+}
 
 /* Tables */
 .date-col {
@@ -1177,7 +1179,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     font-weight: var(--btcpay-font-weight-semibold);
 }
 .mass-action > .mass-action-actions button .icon {
-    --icon-size: 1.75rem;
+    margin-right: var(--btcpay-space-xs);
 }
 .mass-action .mass-action-select-col {
     width: 2rem;

@@ -97,7 +97,7 @@
                         @if (Model.Outputs.Count > 1)
                         {
                             <button type="submit" name="command" value="@($"remove-output:{index}")" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
-                                <span class="fa fa-times"></span> Remove Destination
+                                <vc:icon symbol="cross" /> Remove Destination
                             </button>
                         }
                     </div>

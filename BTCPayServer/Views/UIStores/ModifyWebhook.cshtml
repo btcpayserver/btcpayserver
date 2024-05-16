@@ -91,11 +91,13 @@
                                 <span class="d-flex align-items-center flex-fill me-3">
                                     @if (delivery.Success)
                                     {
-                                        <span class="d-flex align-items-center fa fa-check text-success" title="Success"></span>
+                                        <vc:icon symbol="checkmark" css-class="text-success" />
                                     }
                                     else
                                     {
-                                        <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                        <span title="@delivery.ErrorMessage">
+                                            <vc:icon symbol="cross" css-class="text-danger" />
+                                        </span>
                                     }
                                     @if (!delivery.Pruned) {
                                     <span class="ms-3">

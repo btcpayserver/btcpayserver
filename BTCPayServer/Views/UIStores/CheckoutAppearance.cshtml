@@ -146,7 +146,7 @@
                                 @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
                                 {
                                     <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true" permission="@Policies.CanModifyStoreSettings">
-                                        <span class="fa fa-times"></span> Remove
+                                        <vc:icon symbol="cross" /> Remove
                                     </button>
                                 }
                             </div>

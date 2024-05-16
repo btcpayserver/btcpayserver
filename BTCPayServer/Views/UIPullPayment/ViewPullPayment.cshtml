@@ -43,8 +43,8 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button">
-                                            <span class="fa fa-qrcode fa-2x" title="LNURL-Withdraw"></span>
+                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button" title="LNURL-Withdraw">
+                                            <vc:icon symbol="qr-code" />
                                         </button>
                                     }
                                     <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
@@ -108,7 +108,7 @@
                                     Copy Link
                                 </button>
                                 <button type="button" class="btn btn-link fw-semibold d-print-none p-0" page-qr>
-                                    <span class="fa fa-qrcode"></span> Show QR
+                                    <vc:icon symbol="qr-code" /> Show QR
                                 </button>
                             </div>
                             @if (!string.IsNullOrEmpty(Model.EndsIn))

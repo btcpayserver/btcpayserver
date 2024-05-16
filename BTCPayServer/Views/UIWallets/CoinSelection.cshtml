@@ -55,7 +55,7 @@
                     </span>
                 </div>
                 <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="min-width:2em">
-                    <span class="fa fa-info"></span>
+                    <vc:icon symbol="info" />
                 </span>
                 <span class="text-muted text-nowrap flex-shrink-0 ms-2">{{item.amount}} @Model.CryptoCode</span>
                 <span :class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"

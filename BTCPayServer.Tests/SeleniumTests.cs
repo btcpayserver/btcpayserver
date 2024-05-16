@@ -1672,8 +1672,8 @@ namespace BTCPayServer.Tests
             var elements = s.Driver.FindElements(By.ClassName("redeliver"));
 
             // One worked, one failed
-            s.Driver.FindElement(By.ClassName("fa-times"));
-            s.Driver.FindElement(By.ClassName("fa-check"));
+            s.Driver.FindElement(By.ClassName("icon-cross"));
+            s.Driver.FindElement(By.ClassName("icon-checkmark"));
             elements[0].Click();
 
             s.FindAlertMessage();

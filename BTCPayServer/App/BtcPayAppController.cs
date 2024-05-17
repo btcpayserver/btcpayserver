@@ -45,6 +45,7 @@ public class BtcPayAppController(
     PaymentMethodHandlerDictionary handlers,
     IFileService fileService,
     ISettingsRepository settingsRepository,
+    UriResolver uriResolver,
     IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
     : Controller
 {
@@ -64,10 +65,10 @@ public class BtcPayAppController(
             RegistrationEnabled = policiesSettings.EnableRegistration,
             CustomThemeExtension = themeSettings.CustomTheme ? themeSettings.CustomThemeExtension.ToString() : null,
             CustomThemeCssUrl = themeSettings.CustomTheme && !string.IsNullOrEmpty(themeSettings.CustomThemeCssUrl?.ToString())
-                ? themeSettings.CustomThemeCssUrl.ToString()
+                ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), themeSettings.CustomThemeCssUrl)
                 : null,
             LogoUrl = !string.IsNullOrEmpty(themeSettings.LogoUrl?.ToString())
-                ? themeSettings.LogoUrl.ToString()
+                ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), themeSettings.LogoUrl)
                 : null
         });
     }

@@ -56,6 +56,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                 });
                 await foreach (var utxo in call.ResponseStream.ReadAllAsync(_service._cts.Token))
                 {
+                    if (utxo.OutputId == "") continue;
                     Utxos[utxo.OutputId] = utxo;
                     await _service.CheckInvoice(DerivationScheme, utxo);
                 }

@@ -6,6 +6,7 @@ using BTCPayServer.Services.Altcoins.Litecoin.Services;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBXplorer;
 
@@ -51,6 +52,7 @@ public partial class AltcoinsPlugin
         services.AddBTCPayNetwork(network)
                 .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(blockExplorerLinks));
         services.TryAddSingleton<MwebScannerService>();
+        services.AddSingleton<IHostedService>(provider => provider.GetService<MwebScannerService>());
     }
 }
 

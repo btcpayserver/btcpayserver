@@ -394,13 +394,22 @@ namespace BTCPayServer.Services.Wallets
             var mwebScannerService = _Services.GetService<MwebScannerService>();
             if (mwebScannerService != null)
             {
+                result = new GetBalanceResponse()
+                {
+                    Unconfirmed = result.Unconfirmed,
+                    Confirmed = result.Confirmed,
+                    Total = result.Total,
+                    Immature = result.Immature,
+                    Available = result.Available,
+                };
                 foreach (var coin in await mwebScannerService.GetUnspentCoins(derivationStrategy))
                 {
                     if (coin.Confirmations > 0)
-                        result.Confirmed.Add(coin.Value);
+                        result.Confirmed = result.Confirmed.Add(coin.Value);
                     else
-                        result.Unconfirmed.Add(coin.Value);
-                    result.Available.Add(coin.Value);
+                        result.Unconfirmed = result.Unconfirmed.Add(coin.Value);
+                    result.Total = result.Total.Add(coin.Value);
+                    result.Available = result.Available.Add(coin.Value);
                 }
             }
             return result;

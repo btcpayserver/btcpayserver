@@ -15,10 +15,11 @@ using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
-using ExchangeSharp;
 using Google.Protobuf;
 using Grpc.Net.Client;
 using GrpcMwebdClient;
+using BTCPayServer.Services.Altcoins.Litecoin;
+using BTCPayServer.Services.Altcoins.Litecoin.Services;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -52,8 +53,10 @@ namespace BTCPayServer.Services.Wallets
 
         private readonly ExplorerClient _Client;
         private readonly IMemoryCache _MemoryCache;
+        private readonly MwebScannerService _MwebScannerService;
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
             WalletRepository walletRepository,
+            MwebScannerService mwebScannerService,
             ApplicationDbContextFactory dbContextFactory, NBXplorerConnectionFactory nbxplorerConnectionFactory, Logs logs)
         {
             ArgumentNullException.ThrowIfNull(client);
@@ -62,6 +65,7 @@ namespace BTCPayServer.Services.Wallets
             _Client = client;
             _Network = network;
             WalletRepository = walletRepository;
+            _MwebScannerService = mwebScannerService;
             _dbContextFactory = dbContextFactory;
             NbxplorerConnectionFactory = nbxplorerConnectionFactory;
             _MemoryCache = memoryCache;
@@ -80,19 +84,6 @@ namespace BTCPayServer.Services.Wallets
         }
 
         public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(5);
-
-        private class BitcoinRawAddress : BitcoinAddress
-        {
-            public BitcoinRawAddress(string address, Network network)
-                    : base(address, network)
-            {
-            }
-
-            protected override Script GeneratePaymentScript()
-            {
-                return new Script(_Str.ToBytesUTF8());
-            }
-        }
 
         public async Task<KeyPathInformation> ReserveAddressAsync(string storeId, DerivationSchemeSettings derivationScheme, string generatedBy)
         {
@@ -116,7 +107,7 @@ namespace BTCPayServer.Services.Wallets
                 ScanSecret = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebScanKey.PrivateKey.ToBytes()),
                 SpendPubkey = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebSpendPubKey.GetPublicKey().ToBytes()),
             });
-            pathInfo.Address = new BitcoinRawAddress(response.Address[0], pathInfo.Address.Network);
+            pathInfo.Address = new BitcoinMwebAddress(response.Address[0], pathInfo.Address.Network);
 
             if (storeId != null)
             {
@@ -369,6 +360,7 @@ namespace BTCPayServer.Services.Wallets
         )
         {
             ArgumentNullException.ThrowIfNull(derivationStrategy);
+            var mwebCoins = await _MwebScannerService.GetUnspentCoins(derivationStrategy, excludeUnconfirmed);
             return (await GetUTXOChanges(derivationStrategy, cancellation))
                           .GetUnspentUTXOs(excludeUnconfirmed)
                           .Select(c => new ReceivedCoin()
@@ -382,17 +374,26 @@ namespace BTCPayServer.Services.Wallets
                               Confirmations = c.Confirmations,
                               // Some old version of NBX doesn't have Address in this call
                               Address = c.Address ?? c.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)
-                          }).ToArray();
+                          }).Concat(mwebCoins).ToArray();
         }
 
-        public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
+            var result = await _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
             {
                 var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return result;
             });
+            foreach (var coin in await _MwebScannerService.GetUnspentCoins(derivationStrategy))
+            {
+                if (coin.Confirmations > 0)
+                    result.Confirmed.Add(coin.Value);
+                else
+                    result.Unconfirmed.Add(coin.Value);
+                result.Available.Add(coin.Value);
+            }
+            return result;
         }
     }
 

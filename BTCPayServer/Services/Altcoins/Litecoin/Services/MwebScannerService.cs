@@ -51,7 +51,8 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             {
                 using var channel = GrpcChannel.ForAddress("http://localhost:12345");
                 var client = new Rpc.RpcClient(channel);
-                using var call = client.Utxos(new UtxosRequest {
+                using var call = client.Utxos(new UtxosRequest
+                {
                     ScanSecret = ByteString.CopyFrom(DerivationScheme.GetSigningAccountKeySettings().MwebScanKey.PrivateKey.ToBytes())
                 });
                 await foreach (var utxo in call.ResponseStream.ReadAllAsync(_service._cts.Token))
@@ -92,8 +93,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
         {
             using var channel = GrpcChannel.ForAddress("http://localhost:12345");
             var client = new Rpc.RpcClient(channel);
-            var response = await client.StatusAsync(new StatusRequest());
-            return response.BlockHeaderHeight;
+            return (await client.StatusAsync(new StatusRequest())).BlockHeaderHeight;
         }
 
         public async Task<ReceivedCoin[]> GetUnspentCoins(
@@ -101,7 +101,17 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             bool excludeUnconfirmed = false)
         {
             if (!_scanners.TryGetValue(derivationStrategy, out var scanner)) return [];
-            var height = await GetHeight();
+            using var channel = GrpcChannel.ForAddress("http://localhost:12345");
+            var client = new Rpc.RpcClient(channel);
+            var response = await client.SpentAsync(new SpentRequest
+            {
+                OutputId = {scanner.Utxos.Keys}
+            });
+            foreach (var outputId in response.OutputId)
+            {
+                scanner.Utxos.Remove(outputId, out _);
+            }
+            var height = (await client.StatusAsync(new StatusRequest())).BlockHeaderHeight;
             var coins = new List<ReceivedCoin>();
             foreach (var utxo in scanner.Utxos.Values)
             {

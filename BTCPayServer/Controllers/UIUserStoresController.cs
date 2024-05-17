@@ -71,7 +71,7 @@ namespace BTCPayServer.Controllers
             {
                 IsFirstStore = !(stores.Any() || skipWizard),
                 DefaultCurrency = policySettings?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency,
-                Exchanges = GetExchangesSelectList(policySettings?.DefaultExchangeProvider)
+                Exchanges = GetExchangesSelectList(null)
             };
 
             return View(vm);

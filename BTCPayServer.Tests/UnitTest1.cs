@@ -409,7 +409,7 @@ namespace BTCPayServer.Tests
             }, evt => evt.InvoiceId == invoice.Id);
 
             var fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Equal(fetchedInvoice.Status, InvoiceStatus.Settled);
+            Assert.Equal(InvoiceStatus.Settled, fetchedInvoice.Status);
             Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
 
             //BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios

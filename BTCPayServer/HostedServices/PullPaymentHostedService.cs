@@ -7,11 +7,13 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Rates;
@@ -279,7 +281,7 @@ namespace BTCPayServer.HostedServices
 
             return await query.FirstOrDefaultAsync(data => data.Id == pullPaymentId);
         }
-
+        record TopUpRequest(string PullPaymentId, InvoiceEntity InvoiceEntity);
         class PayoutRequest
         {
             public PayoutRequest(TaskCompletionSource<ClaimRequest.ClaimResponse> completionSource,
@@ -343,6 +345,17 @@ namespace BTCPayServer.HostedServices
             return new[] { Loop() };
         }
 
+        private void TopUpInvoice(InvoiceEvent evt)
+        {
+            if (evt.EventCode == InvoiceEventCode.Completed || evt.EventCode == InvoiceEventCode.MarkedCompleted)
+            {
+                foreach (var pullPaymentId in evt.Invoice.GetInternalTags("PULLPAY#"))
+                {
+                    _Channel.Writer.TryWrite(new TopUpRequest(pullPaymentId, evt.Invoice));
+                }
+            }
+        }
+
         private void Subscribe(params Type[] events)
         {
             foreach (Type @event in events)
@@ -355,6 +368,11 @@ namespace BTCPayServer.HostedServices
         {
             await foreach (var o in _Channel.Reader.ReadAllAsync())
             {
+                if (o is TopUpRequest topUp)
+                {
+                    await HandleTopUp(topUp);
+                }
+
                 if (o is PayoutRequest req)
                 {
                     await HandleCreatePayout(req);
@@ -387,6 +405,40 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
+        }
+
+        private async Task HandleTopUp(TopUpRequest topUp)
+        {
+            var pp = await this.GetPullPayment(topUp.PullPaymentId, false);
+            var currency = pp.GetBlob().Currency;
+            using var ctx = _dbContextFactory.CreateContext();
+
+            var payout = new Data.PayoutData()
+            {
+                Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20)),
+                Date = DateTimeOffset.UtcNow,
+                State = PayoutState.Completed,
+                PullPaymentDataId = pp.Id,
+                PaymentMethodId = new PaymentMethodId("BTC", PaymentTypes.LightningLike).ToString(),
+                Destination = null,
+                StoreDataId = pp.StoreId
+            };
+            if (topUp.InvoiceEntity.Currency != currency ||
+                currency is not ("SATS" or "BTC"))
+                return;
+            var paidAmount = topUp.InvoiceEntity.Price;
+            var cryptoAmount = paidAmount;
+
+            var payoutBlob = new PayoutBlob()
+            {
+                CryptoAmount = -cryptoAmount,
+                Amount = -paidAmount,
+                Destination = topUp.InvoiceEntity.Id,
+                Metadata = new JObject(),
+            };
+            payout.SetBlob(payoutBlob, _jsonSerializerSettings);
+            await ctx.Payouts.AddAsync(payout);
+            await ctx.SaveChangesAsync();
         }
 
         public bool SupportsLNURL(PullPaymentBlob blob)
@@ -842,6 +894,10 @@ namespace BTCPayServer.HostedServices
             return time;
         }
 
+        public static string GetInternalTag(string id)
+        {
+            return $"PULLPAY#{id}";
+        }
 
         class InternalPayoutPaidRequest
         {

@@ -29,10 +29,11 @@ namespace BTCPayServer
                     .Select(kv => new KeyValuePair<string, string>(UnifyKey(kv[0]), kv[1]))
                     .ToMultiValueDictionary(o => o.Key, o => o.Value);
             // combine raw search term and filters which don't have a special UI (e.g. orderid)
-            TextSearch = splitted.FirstOrDefault(a => a.IndexOf(ValueSeparator, StringComparison.OrdinalIgnoreCase) == -1)?.Trim();
-            TextFilters = string.Join(FilterSeparator, Filters
+            var textFilters = Filters
                 .Where(f => !StripFilters.Contains(f.Key))
-                .Select(f => string.Join(FilterSeparator, f.Value.Select(v => $"{f.Key}{ValueSeparator}{v}"))));
+                .Select(f => string.Join(FilterSeparator, f.Value.Select(v => $"{f.Key}{ValueSeparator}{v}"))).ToList();
+            TextFilters = textFilters.Any() ? string.Join(FilterSeparator, textFilters) : null;
+            TextSearch = splitted.FirstOrDefault(a => a.IndexOf(ValueSeparator, StringComparison.OrdinalIgnoreCase) == -1)?.Trim();
         }
 
         public string TextSearch { get; private set; }
@@ -89,8 +90,8 @@ namespace BTCPayServer
         public string WithoutSearchText()
         {
             var txt = ToString();
-            if (!string.IsNullOrEmpty(TextSearch)) txt = txt.Replace(TextSearch, string.Empty);
-            if (!string.IsNullOrEmpty(TextFilters)) txt = txt.Replace(TextFilters, string.Empty);
+            if (!string.IsNullOrEmpty(TextSearch)) txt = Finalize(txt.Replace(TextSearch, string.Empty));
+            if (!string.IsNullOrEmpty(TextFilters)) txt = Finalize(txt.Replace(TextFilters, string.Empty));
             return Finalize(txt).Trim();
         }
 
@@ -151,7 +152,7 @@ namespace BTCPayServer
         
         private static string Finalize(string str)
         {
-            var value = str.TrimStart(FilterSeparator).TrimEnd(FilterSeparator);
+            var value = str.Trim().TrimStart(FilterSeparator).TrimEnd(FilterSeparator);
             return string.IsNullOrEmpty(value) ? " " : value;
         }
     }

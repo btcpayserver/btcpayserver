@@ -18,7 +18,10 @@
             @RenderBody()
         </div>
     </section>
-    <partial name="_Footer"/>
+    @if (ViewData["ShowFooter"] is not false)
+    {
+        <partial name="_Footer"/>
+    }
     <partial name="LayoutFoot" />
     @await RenderSectionAsync("PageFootContent", false)
 </body>

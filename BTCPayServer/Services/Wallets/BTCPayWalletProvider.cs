@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Logging;
-using BTCPayServer.Services.Altcoins.Litecoin.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Options;
 
@@ -17,12 +16,12 @@ namespace BTCPayServer.Services.Wallets
         readonly BTCPayNetworkProvider _NetworkProvider;
         readonly IOptions<MemoryCacheOptions> _Options;
         public BTCPayWalletProvider(ExplorerClientProvider client,
+                                    IServiceProvider services,
                                     IOptions<MemoryCacheOptions> memoryCacheOption,
                                     Data.ApplicationDbContextFactory dbContextFactory,
                                     BTCPayNetworkProvider networkProvider,
                                     NBXplorerConnectionFactory nbxplorerConnectionFactory,
                                     WalletRepository walletRepository,
-                                    MwebScannerService mwebScannerService,
                                     Logs logs)
         {
             ArgumentNullException.ThrowIfNull(client);
@@ -37,7 +36,7 @@ namespace BTCPayServer.Services.Wallets
                 var explorerClient = _Client.GetExplorerClient(network.CryptoCode);
                 if (explorerClient == null)
                     continue;
-                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, WalletRepository, mwebScannerService, dbContextFactory, nbxplorerConnectionFactory, Logs));
+                _Wallets.Add(network.CryptoCode.ToUpperInvariant(), new BTCPayWallet(explorerClient, new MemoryCache(_Options), network, services, WalletRepository, dbContextFactory, nbxplorerConnectionFactory, Logs));
             }
         }
 

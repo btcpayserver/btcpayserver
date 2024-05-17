@@ -9,6 +9,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin
     {
         public override byte[] Decode(string addr, out byte witnessVerion)
         {
+            StrictLength = false;
             var data = DecodeDataCore(addr, out _);
             witnessVerion = data[0];
             return ConvertBits(data.Skip(1), 5, 8, false);

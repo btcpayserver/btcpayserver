@@ -9,6 +9,7 @@ using BTCPayServer.Logging;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
@@ -53,10 +54,10 @@ namespace BTCPayServer.Services.Wallets
 
         private readonly ExplorerClient _Client;
         private readonly IMemoryCache _MemoryCache;
-        private readonly MwebScannerService _MwebScannerService;
+        private readonly IServiceProvider _Services;
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
+            IServiceProvider services,
             WalletRepository walletRepository,
-            MwebScannerService mwebScannerService,
             ApplicationDbContextFactory dbContextFactory, NBXplorerConnectionFactory nbxplorerConnectionFactory, Logs logs)
         {
             ArgumentNullException.ThrowIfNull(client);
@@ -64,8 +65,8 @@ namespace BTCPayServer.Services.Wallets
             Logs = logs;
             _Client = client;
             _Network = network;
+            _Services = services;
             WalletRepository = walletRepository;
-            _MwebScannerService = mwebScannerService;
             _dbContextFactory = dbContextFactory;
             NbxplorerConnectionFactory = nbxplorerConnectionFactory;
             _MemoryCache = memoryCache;
@@ -360,8 +361,7 @@ namespace BTCPayServer.Services.Wallets
         )
         {
             ArgumentNullException.ThrowIfNull(derivationStrategy);
-            var mwebCoins = await _MwebScannerService.GetUnspentCoins(derivationStrategy, excludeUnconfirmed);
-            return (await GetUTXOChanges(derivationStrategy, cancellation))
+            var result = (await GetUTXOChanges(derivationStrategy, cancellation))
                           .GetUnspentUTXOs(excludeUnconfirmed)
                           .Select(c => new ReceivedCoin()
                           {
@@ -374,7 +374,13 @@ namespace BTCPayServer.Services.Wallets
                               Confirmations = c.Confirmations,
                               // Some old version of NBX doesn't have Address in this call
                               Address = c.Address ?? c.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)
-                          }).Concat(mwebCoins).ToArray();
+                          });
+            var mwebScannerService = _Services.GetService<MwebScannerService>();
+            if (mwebScannerService != null)
+            {
+                result = result.Concat(await mwebScannerService.GetUnspentCoins(derivationStrategy, excludeUnconfirmed));
+            }
+            return result.ToArray();
         }
 
         public async Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
@@ -385,13 +391,17 @@ namespace BTCPayServer.Services.Wallets
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return result;
             });
-            foreach (var coin in await _MwebScannerService.GetUnspentCoins(derivationStrategy))
+            var mwebScannerService = _Services.GetService<MwebScannerService>();
+            if (mwebScannerService != null)
             {
-                if (coin.Confirmations > 0)
-                    result.Confirmed.Add(coin.Value);
-                else
-                    result.Unconfirmed.Add(coin.Value);
-                result.Available.Add(coin.Value);
+                foreach (var coin in await mwebScannerService.GetUnspentCoins(derivationStrategy))
+                {
+                    if (coin.Confirmations > 0)
+                        result.Confirmed.Add(coin.Value);
+                    else
+                        result.Unconfirmed.Add(coin.Value);
+                    result.Available.Add(coin.Value);
+                }
             }
             return result;
         }

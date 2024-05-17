@@ -15,7 +15,12 @@
     <h1>Choose your import method</h1>
     <p class="lead text-secondary mt-3">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
 </header>
-
+<style>
+    .icon.icon-wallet-xpub,
+    .icon.icon-scan-qr {
+        --icon-size: 2.5rem !important;
+    }
+</style>
 @if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode).VaultSupported)
 {
     <div class="mt-5">

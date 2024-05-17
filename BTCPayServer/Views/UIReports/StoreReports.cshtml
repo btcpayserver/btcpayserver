@@ -1,10 +1,5 @@
-@using BTCPayServer.Abstractions.Extensions;
-@using BTCPayServer.Client.Models;
 @using BTCPayServer.Models.StoreReportsViewModels;
-@using BTCPayServer.Views.Invoice;
 @using BTCPayServer.Views.Stores;
-@using BTCPayServer.Abstractions.Services;
-@using Microsoft.AspNetCore.Routing;
 @inject Safe Safe
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model StoreReportsViewModel
@@ -111,12 +106,14 @@
                 <tr>
                     <th v-for="field in srv.result.fields" :class="{ 'text-end': ['integer', 'decimal', 'amount'].includes(field.type) }">
                         <a class="text-nowrap sort-column"
+                           ref="sort"
                            href="#"
                            :data-field="field.name"
-                           @@click.prevent="srv.sortBy(field.name)"
+                           :data-sort="srv.fieldViews[field.name].sortBy"
+                           @@click.prevent="srv.sortBy(field.name, $event)"
                            :title="srv.fieldViews[field.name].sortByTitle">
                             {{ titleCase(field.name) }}
-                            <span :class="srv.fieldViews[field.name].sortIconClass" />
+                            <vc:icon symbol="actions-sort" />
                         </a>
                     </th>
                 </tr>

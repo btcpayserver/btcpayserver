@@ -20,14 +20,8 @@
         _ => null
     };
 
-    var sortIconClass = "fa-sort";
-    if (roleSortOrder != null)
-    {
-        sortIconClass = $"fa-sort-alpha-{roleSortOrder}";
-    }
-
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    const string sortByDesc = "Sort by name descending...";
+    const string sortByAsc = "Sort by name ascending...";
     var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
 }
 
@@ -49,7 +43,7 @@
                     class="text-nowrap"
                     title="@(nextRoleSortOrder == "desc" ? sortByAsc : sortByDesc)">
                     Role
-                    <i class="fa @(sortIconClass)"></i>
+                    <vc:icon symbol="actions-sort-alpha-@(roleSortOrder ?? nextRoleSortOrder ?? "desc")" />
                 </a>
             </th>
             <th>Scope</th>

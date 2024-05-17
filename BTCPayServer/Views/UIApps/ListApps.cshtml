@@ -5,11 +5,29 @@
 @inject AppService AppService
 @{
     ViewData.SetActivePage(AppsNavPages.Index, "Apps");
-    var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
-    var appNameSortOrder = (string)ViewData["AppNameSortOrder"];
-    var appTypeSortOrder = (string)ViewData["AppTypeSortOrder"];
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    var nextAppNameSortOrder = (string)ViewData["AppNameNextSortOrder"];
+    var nextAppTypeSortOrder = (string)ViewData["AppTypeNextSortOrder"];
+    var nextStoreNameSortOrder = (string)ViewData["StoreNameNextSortOrder"];
+    var appNameSortOrder = nextAppNameSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    var appTypeSortOrder = nextAppTypeSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    var storeNameSortOrder = nextStoreNameSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    const string sortByDesc = "Sort by descending...";
+    const string sortByAsc = "Sort by ascending...";
 }
 
 <partial name="_StatusMessage" />
@@ -37,39 +55,39 @@
                         <a
                             asp-action="ListApps"
                             asp-route-storeId="@Context.GetStoreData().Id"
-                            asp-route-sortOrder="@(appNameSortOrder ?? "asc")"
+                            asp-route-sortOrder="@(nextAppNameSortOrder ?? "asc")"
                             asp-route-sortOrderColumn="AppName"
                             class="text-nowrap"
                             title="@(appNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
                         >
                             Name
-                            <span class="fa @(appNameSortOrder == "asc" ? "fa-sort-alpha-desc" : appNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                            <vc:icon symbol="actions-sort-alpha-@(appNameSortOrder ?? nextAppNameSortOrder ?? "desc")" />
                         </a>
                     </th>
                     <th>
                         <a
                             asp-action="ListApps"
                             asp-route-storeId="@Context.GetStoreData().Id"
-                            asp-route-sortOrder="@(appTypeSortOrder ?? "asc")"
+                            asp-route-sortOrder="@(nextAppTypeSortOrder ?? "asc")"
                             asp-route-sortOrderColumn="AppType"
                             class="text-nowrap"
                             title="@(appTypeSortOrder == "desc" ? sortByDesc : sortByAsc)"
                         >
                             App Type
-                            <span class="fa @(appTypeSortOrder == "asc" ? "fa-sort-alpha-desc" : appTypeSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                            <vc:icon symbol="actions-sort-alpha-@(appTypeSortOrder ?? nextAppTypeSortOrder ?? "desc")" />
                         </a>
                     </th>
                     <th>
                         <a
                             asp-action="ListApps"
                             asp-route-storeId="@Context.GetStoreData().Id"
-                            asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
+                            asp-route-sortOrder="@(nextStoreNameSortOrder ?? "asc")"
                             asp-route-sortOrderColumn="StoreName"
                             class="text-nowrap"
                             title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
                         >
                             Store
-                            <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
+                            <vc:icon symbol="actions-sort-alpha-@(storeNameSortOrder ?? nextStoreNameSortOrder ?? "desc")" />
                         </a>
                     </th>
                 </tr>

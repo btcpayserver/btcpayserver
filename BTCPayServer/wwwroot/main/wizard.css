@@ -81,8 +81,7 @@ body {
 }
 
 .list-group-item .image .icon {
-    width: 32px;
-    height: 32px;
+    --icon-size: 2rem;
 }
 
 .list-group-item .content {

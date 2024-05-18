@@ -215,7 +215,16 @@ namespace BTCPayServer.Services
         {
             var wos = await GetWalletObjects(
                 new GetWalletObjectsQuery(walletId, WalletObjectData.Types.Tx, transactionIds));
-            return GetWalletTransactionsInfoCore(walletId, wos);
+            var result = GetWalletTransactionsInfoCore(walletId, wos);
+            if (walletId.CryptoCode == "MWEB")
+            {
+                walletId = new WalletId(walletId.StoreId, "LTC");
+                foreach (var (id, info) in await GetWalletTransactionsInfo(walletId, transactionIds))
+                {
+                    result[id] = info;
+                }
+            }
+            return result;
         }
 
         public async Task<Dictionary<string, WalletTransactionInfo>> GetWalletTransactionsInfo(WalletId walletId,
@@ -224,7 +233,16 @@ namespace BTCPayServer.Services
             var wos = await GetWalletObjects(
                 new GetWalletObjectsQuery(walletId, transactionIds));
 
-            return GetWalletTransactionsInfoCore(walletId, wos);
+            var result = GetWalletTransactionsInfoCore(walletId, wos);
+            if (walletId.CryptoCode == "MWEB")
+            {
+                walletId = new WalletId(walletId.StoreId, "LTC");
+                foreach (var (id, info) in await GetWalletTransactionsInfo(walletId, transactionIds))
+                {
+                    result[id] = info;
+                }
+            }
+            return result;
         }
 
         public WalletTransactionInfo Merge(params WalletTransactionInfo[] infos)
@@ -280,9 +298,15 @@ namespace BTCPayServer.Services
 
         public async Task<(string Label, string Color)[]> GetWalletLabels(WalletId walletId)
         {
-            return await GetWalletLabels(w =>
+            var result = await GetWalletLabels(w =>
                 w.WalletId == walletId.ToString() &&
                 w.Type == WalletObjectData.Types.Label);
+            if (walletId.CryptoCode == "MWEB")
+            {
+                walletId = new WalletId(walletId.StoreId, "LTC");
+                result = [.. result, .. await GetWalletLabels(walletId)];
+            }
+            return result;
         }
 
         public async Task<(string Label, string Color)[]> GetWalletLabels(WalletObjectId objectId)

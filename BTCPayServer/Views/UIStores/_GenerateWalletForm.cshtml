@@ -32,20 +32,24 @@
     <div class="form-group">
         <label asp-for="ScriptPubKeyType" class="form-label" text-translate="true">Address type</label>
         <select class="form-select w-auto" asp-for="ScriptPubKeyType">
-            @if (ViewData["SupportSegwit"] is true)
+            @if (Context.GetRouteValue("cryptoCode") is "MWEB")
+            {
+                <option value="@ScriptPubKeyType.Segwit">MWEB</option>
+            }
+            else if (ViewData["SupportSegwit"] is true)
             {
                 <option value="@ScriptPubKeyType.Segwit" text-translate="true">Segwit (Recommended)</option>
                 <option value="@ScriptPubKeyType.SegwitP2SH" text-translate="true">Segwit wrapped (Compatible with old wallets)</option>
                 <option value="@ScriptPubKeyType.Legacy" text-translate="true">Legacy (Not recommended)</option>
+
+                @if (ViewData["SupportTaproot"] is true)
+                {
+                    <option value="@ScriptPubKeyType.TaprootBIP86" text-translate="true">Taproot (For advanced users)</option>
+                }
             }
             else
             {
                 <option value="@ScriptPubKeyType.Legacy" text-translate="true">Legacy</option>
-            }
-
-            @if (ViewData["SupportTaproot"] is true)
-            {
-                <option value="@ScriptPubKeyType.TaprootBIP86" text-translate="true">Taproot (For advanced users)</option>
             }
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>

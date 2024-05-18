@@ -60,6 +60,8 @@ namespace BTCPayServer
         public string LightningImagePath { get; set; }
         public BTCPayDefaultSettings DefaultSettings { get; set; }
         public KeyPath CoinType { get; set; }
+        private string _Currency;
+        public string Currency { get => _Currency ?? CryptoCode; set { _Currency = value; } }
 
         public Dictionary<uint, DerivationType> ElectrumMapping = new Dictionary<uint, DerivationType>();
         public BTCPayNetwork SetDefaultElectrumMapping(ChainName chainName)

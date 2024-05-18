@@ -122,7 +122,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public Task BeforeFetchingRates(PaymentMethodContext paymentMethodContext)
         {
-            paymentMethodContext.Prompt.Currency = _Network.CryptoCode;
+            paymentMethodContext.Prompt.Currency = _Network.Currency;
             paymentMethodContext.Prompt.Divisibility = _Network.Divisibility;
             if (paymentMethodContext.Prompt.Activated)
             {

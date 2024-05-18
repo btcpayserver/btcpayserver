@@ -100,15 +100,18 @@ namespace BTCPayServer.Services.Wallets
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
 
-            using var channel = GrpcChannel.ForAddress("http://localhost:12345");
-            var client = new Rpc.RpcClient(channel);
-            var response = await client.AddressesAsync(new AddressRequest {
-                FromIndex = pathInfo.KeyPath.Indexes.Last() + 1,
-                ToIndex = pathInfo.KeyPath.Indexes.Last() + 2,
-                ScanSecret = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebScanKey.PrivateKey.ToBytes()),
-                SpendPubkey = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebSpendPubKey.GetPublicKey().ToBytes()),
-            });
-            pathInfo.Address = new BitcoinMwebAddress(response.Address[0], pathInfo.Address.Network);
+            if (Network.CryptoCode == "MWEB")
+            {
+                using var channel = GrpcChannel.ForAddress("http://localhost:12345");
+                var client = new Rpc.RpcClient(channel);
+                var response = await client.AddressesAsync(new AddressRequest {
+                    FromIndex = pathInfo.KeyPath.Indexes.Last() + 1,
+                    ToIndex = pathInfo.KeyPath.Indexes.Last() + 2,
+                    ScanSecret = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebScanKey.PrivateKey.ToBytes()),
+                    SpendPubkey = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebSpendPubKey.GetPublicKey().ToBytes()),
+                });
+                pathInfo.Address = new BitcoinMwebAddress(response.Address[0], pathInfo.Address.Network);
+            }
 
             if (storeId != null)
             {

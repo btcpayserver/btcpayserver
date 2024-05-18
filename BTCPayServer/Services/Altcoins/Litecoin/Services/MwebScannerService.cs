@@ -68,7 +68,8 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
         {
             foreach (var store in await storeRepository.GetStores())
             {
-                var derivationScheme = store.GetDerivationSchemeSettings(handlers, "LTC");
+                var derivationScheme = store.GetDerivationSchemeSettings(handlers, "MWEB");
+                if (derivationScheme == null) continue;
                 if (_scanners.ContainsKey(derivationScheme.AccountDerivation)) continue;
                 _scanners[derivationScheme.AccountDerivation] = new Scanner(this, derivationScheme);
             }
@@ -125,7 +126,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
         private ReceivedCoin CoinFromUtxo(DerivationSchemeSettings derivationScheme,
                                           Utxo utxo, int height)
         {
-            var network = networks.GetNetwork<BTCPayNetwork>("LTC");
+            var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
             var bech32 = new MwebBech32Encoder();
             return new ReceivedCoin
             {
@@ -141,7 +142,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
 
         private async Task CheckInvoice(DerivationSchemeSettings derivationScheme, Utxo utxo)
         {
-            var network = networks.GetNetwork<BTCPayNetwork>("LTC");
+            var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
             var coin = CoinFromUtxo(derivationScheme, utxo, await GetHeight());
             if (coin == null) return;
             var key = network.GetTrackedDestination(coin.ScriptPubKey);
@@ -195,7 +196,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
 
         async Task<InvoiceEntity> UpdatePaymentStates(string invoiceId, bool fireEvents = true)
         {
-            var network = networks.GetNetwork<BTCPayNetwork>("LTC");
+            var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
             var invoice = await invoiceRepository.GetInvoice(invoiceId);
             if (invoice == null) return null;
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);

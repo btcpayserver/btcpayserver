@@ -13,6 +13,7 @@ using GrpcMwebdClient;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using NBXplorer.Models;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -60,6 +61,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                     if (utxo.OutputId == "") continue;
                     Utxos[utxo.OutputId] = utxo;
                     await _service.CheckInvoice(DerivationScheme, utxo);
+                    await _service.PublishEvent(DerivationScheme, utxo);
                 }
             }
         }
@@ -181,6 +183,38 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                     await UpdatePaymentStates(invoice.Id);
                 }
             }
+        }
+
+        private async Task PublishEvent(DerivationSchemeSettings derivationScheme, Utxo utxo)
+        {
+            var coin = CoinFromUtxo(derivationScheme, utxo, await GetHeight());
+            if (coin == null) return;
+            var transaction = Transaction.Create(coin.Address.Network);
+            transaction.Outputs.Add((Money)coin.Value, coin.ScriptPubKey);
+            eventAggregator.Publish(new NewOnChainTransactionEvent
+            {
+                CryptoCode = "MWEB",
+                NewTransactionEvent = new NewTransactionEvent
+                {
+                    DerivationStrategy = derivationScheme.AccountDerivation,
+                    TransactionData = new TransactionResult
+                    {
+                        Confirmations = coin.Confirmations,
+                        TransactionHash = coin.OutPoint.Hash,
+                        Transaction = transaction,
+                        Height = utxo.Height > 0 ? utxo.Height : null,
+                        Timestamp = coin.Timestamp,
+                    },
+                    Outputs = [new MatchedOutput
+                    {
+                        KeyPath = coin.KeyPath,
+                        ScriptPubKey = coin.ScriptPubKey,
+                        Index = 0,
+                        Value = coin.Value,
+                        Address = coin.Address,
+                    }],
+                }
+            });
         }
 
         private async Task<InvoiceEntity> ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)

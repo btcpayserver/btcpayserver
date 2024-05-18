@@ -101,6 +101,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             DerivationStrategyBase derivationStrategy,
             bool excludeUnconfirmed = false)
         {
+            await StartAsync(_cts.Token);
             if (!_scanners.TryGetValue(derivationStrategy, out var scanner)) return [];
             using var channel = GrpcChannel.ForAddress("http://localhost:12345");
             var client = new Rpc.RpcClient(channel);
@@ -161,7 +162,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                     Created = DateTimeOffset.UtcNow,
                     Status = NBXplorerListener.IsSettled(invoice, details) ? PaymentStatus.Settled : PaymentStatus.Processing,
                     Amount = ((Money)coin.Value).ToDecimal(MoneyUnit.BTC),
-                    Currency = network.CryptoCode
+                    Currency = network.Currency
                 }.Set(invoice, handlers[pmi], details);
 
                 var alreadyExist = invoice.GetPayments(false).Any(c => c.Id == paymentData.Id && c.PaymentMethodId == pmi);

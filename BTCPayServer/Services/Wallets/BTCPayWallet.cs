@@ -251,7 +251,7 @@ namespace BTCPayServer.Services.Wallets
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
             // * Sometimes we can't query the DB or the given network need to do additional filtering. In such case, we can't really filter at the DB level, and we need to fetch all transactions in memory.
             var needAdditionalFiltering = _Network.FilterValidTransactions(dummy) != dummy;
-            if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering)
+            if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering || Network.CryptoCode == "MWEB")
             {
                 var txs = await FetchTransactions(derivationStrategyBase);
                 var txinfos = txs.UnconfirmedTransactions.Transactions.Concat(txs.ConfirmedTransactions.Transactions)
@@ -321,6 +321,28 @@ namespace BTCPayServer.Services.Wallets
         private async Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
         {
             var transactions = await _Client.GetTransactionsAsync(derivationStrategyBase);
+            var mwebScannerService = _Services.GetService<MwebScannerService>();
+            if (mwebScannerService != null)
+            {
+                foreach (var coin in await mwebScannerService.GetUnspentCoins(derivationStrategyBase))
+                {
+                    var transaction = new TransactionInformation
+                    {
+                        Confirmations = coin.Confirmations,
+                        TransactionId = coin.OutPoint.Hash,
+                        Timestamp = coin.Timestamp,
+                        BalanceChange = coin.Value,
+                    };
+                    if (coin.Confirmations > 0)
+                    {
+                        transactions.ConfirmedTransactions.Transactions.Add(transaction);
+                    }
+                    else
+                    {
+                        transactions.UnconfirmedTransactions.Transactions.Add(transaction);
+                    }
+                }
+            }
             return FilterValidTransactions(transactions);
         }
 

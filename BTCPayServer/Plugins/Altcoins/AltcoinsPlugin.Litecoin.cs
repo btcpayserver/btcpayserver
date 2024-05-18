@@ -61,14 +61,14 @@ public partial class AltcoinsPlugin
         {
             CryptoCode = "MWEB",
             Currency = "LTC",
-            DisplayName = "Litecoin (MWEB)",
+            DisplayName = "Litecoin MWEB",
             NBXplorerNetwork = nbxplorerNetwork,
             DefaultRateRules = new[]
             {
                 "LTC_X = LTC_BTC * BTC_X",
                 "LTC_BTC = coingecko(LTC_BTC)"
             },
-            CryptoImagePath = "imlegacy/litecoin.svg",
+            CryptoImagePath = "imlegacy/litecoin-mweb.png",
             LightningImagePath = "imlegacy/litecoin-lightning.svg",
             DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainName),
             CoinType = ChainName == ChainName.Mainnet ? new KeyPath("2'") : new KeyPath("1'"),

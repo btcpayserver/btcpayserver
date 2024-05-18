@@ -19,7 +19,7 @@
 			var network = handler.Network;
             var m = new OnchainPaymentViewModel();
             var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
-			m.Crypto = network.CryptoCode;
+			m.Crypto = network.Currency;
             try
             {
                 m.DepositAddress = BitcoinAddress.Create(payment.Destination, network.NBitcoinNetwork);

@@ -57,9 +57,22 @@ public class StoreRecentTransactions : ViewComponent
             var network = ((IHasNetwork)_handlers[pmi]).Network;
             var wallet = _walletProvider.GetWallet(network);
             var allTransactions = await wallet.FetchTransactionHistory(derivationSettings.AccountDerivation, 0, 5, TimeSpan.FromDays(31.0), cancellationToken: HttpContext.RequestAborted);
+            if (vm.CryptoCode == "LTC")
+            {
+                wallet = _walletProvider.GetWallet("MWEB");
+                derivationSettings = vm.Store.GetDerivationSchemeSettings(_handlers, "MWEB");
+                if (derivationSettings?.AccountDerivation is not null)
+                {
+                    foreach (var tx in await wallet.FetchTransactionHistory(derivationSettings.AccountDerivation, 0, 5, TimeSpan.FromDays(31.0), cancellationToken: HttpContext.RequestAborted))
+                    {
+                        allTransactions.Add(tx);
+                    }
+                }
+            }
             var walletTransactionsInfo = await _walletRepository.GetWalletTransactionsInfo(vm.WalletId, allTransactions.Select(t => t.TransactionId.ToString()).ToArray());
             
             transactions = allTransactions
+                .OrderByDescending(tx => tx.SeenAt)
                 .Select(tx =>
                 {
                     walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo);

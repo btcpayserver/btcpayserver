@@ -97,6 +97,11 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             return (await client.StatusAsync(new StatusRequest())).BlockHeaderHeight;
         }
 
+        public bool IsAddressUsed(DerivationStrategyBase derivationStrategy, string address)
+        {
+            return _scanners[derivationStrategy].Utxos.Values.Any(utxo => utxo.Address == address);
+        }
+
         public async Task<ReceivedCoin[]> GetUnspentCoins(
             DerivationStrategyBase derivationStrategy,
             bool excludeUnconfirmed = false)
@@ -195,7 +200,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             return invoice;
         }
 
-        async Task<InvoiceEntity> UpdatePaymentStates(string invoiceId, bool fireEvents = true)
+        private async Task<InvoiceEntity> UpdatePaymentStates(string invoiceId, bool fireEvents = true)
         {
             var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
             var invoice = await invoiceRepository.GetInvoice(invoiceId);

@@ -78,6 +78,16 @@ public class StoreWalletBalance : ViewComponent
             {
                 vm.MissingWalletConfig = true;
             }
+            if (walletId.CryptoCode == "LTC")
+            {
+                wallet = _walletProvider.GetWallet("MWEB");
+                derivation = store.GetDerivationSchemeSettings(_handlers, "MWEB");
+                if (derivation is not null)
+                {
+                    var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
+                    vm.Balance += balance.Available.GetValue(network);
+                }
+            }
         }
 
         return View(vm);

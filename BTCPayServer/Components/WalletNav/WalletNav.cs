@@ -67,7 +67,7 @@ namespace BTCPayServer.Components.WalletNav
 
             if (defaultCurrency != network.CryptoCode)
             {
-                var rule = store.GetStoreBlob().GetRateRules(_defaultRules)?.GetRuleFor(new Rating.CurrencyPair(network.CryptoCode, defaultCurrency));
+                var rule = store.GetStoreBlob().GetRateRules(_defaultRules)?.GetRuleFor(new Rating.CurrencyPair(network.Currency, defaultCurrency));
                 var bid = rule is null ? null : (await _rateFetcher.FetchRate(rule, new StoreIdRateContext(walletId.StoreId), HttpContext.RequestAborted)).BidAsk?.Bid;
                 if (bid is decimal b)
                 {

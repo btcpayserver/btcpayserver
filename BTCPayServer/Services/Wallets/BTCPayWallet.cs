@@ -111,6 +111,12 @@ namespace BTCPayServer.Services.Wallets
                     SpendPubkey = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebSpendPubKey.GetPublicKey().ToBytes()),
                 });
                 pathInfo.Address = new BitcoinMwebAddress(response.Address[0], pathInfo.Address.Network);
+
+                var mwebScannerService = _Services.GetRequiredService<MwebScannerService>();
+                if (mwebScannerService.IsAddressUsed(derivationStrategy, response.Address[0]))
+                {
+                    return await ReserveAddressAsync(storeId, derivationScheme, generatedBy);
+                }
             }
 
             if (storeId != null)

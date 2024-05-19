@@ -1,3 +1,6 @@
+FROM golang:1.22 AS mwebd
+RUN go install github.com/ltcmweb/mwebd/cmd/mwebd@latest
+
 FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/sdk:8.0.404-bookworm-slim AS builder
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 WORKDIR /source
@@ -36,5 +39,6 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 VOLUME /datadir
 
 COPY --from=builder "/app" .
+COPY --from=mwebd "/go/bin" .
 COPY docker-entrypoint.sh docker-entrypoint.sh
 ENTRYPOINT ["/app/docker-entrypoint.sh"]

@@ -26,10 +26,10 @@
             <div class="form-group">
                 <label asp-for="Secret" class="form-label"></label>
                 <div class="input-group">
-                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret" data-toggle="password">
-                    <span class="input-group-text">
-                        <i class="fa fa-eye"></i>
-                    </span>
+                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret">
+                    <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle password visibility" data-toggle-password="#Secret">
+                        <vc:icon symbol="actions-show" />
+                    </button>
                 </div>
                 <div class="form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</div>
             </div>
@@ -91,11 +91,13 @@
                                 <span class="d-flex align-items-center flex-fill me-3">
                                     @if (delivery.Success)
                                     {
-                                        <span class="d-flex align-items-center fa fa-check text-success" title="Success"></span>
+                                        <vc:icon symbol="checkmark" css-class="text-success" />
                                     }
                                     else
                                     {
-                                        <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                        <span title="@delivery.ErrorMessage">
+                                            <vc:icon symbol="cross" css-class="text-danger" />
+                                        </span>
                                     }
                                     @if (!delivery.Pruned) {
                                     <span class="ms-3">

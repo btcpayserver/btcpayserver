@@ -53,7 +53,7 @@
     padding-top: var(--btcpay-space-m);
 }
 
-#mainNav .nav-item svg.icon {
+#mainNav .nav-item .icon {
     width: var(--icon-size);
     height: var(--icon-size);
     margin-right: var(--btcpay-space-xs);
@@ -184,14 +184,15 @@
 
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
-    max-width: 1.5rem;
-    max-height: 1.5rem;
+    --icon-size: 1.5rem;
+    max-width: var(--icon-size);
+    max-height: var(--icon-size);
     /* Fixes seemingly delayed icon animation */
     -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }
 
 #StoreSelectorToggle .logo,
-#StoreSelectorToggle .icon.icon-store {
+#StoreSelectorToggle .icon.icon-nav-store {
     margin-right: var(--btcpay-space-s);
 }
 
@@ -312,13 +313,12 @@
     min-width: 1.75em;
 }
 
-#NotificationsHandle svg {
-    width: 1.25rem;
-    height: 1.25rem;
+#NotificationsHandle .icon {
+    --icon-size: 1.625rem;
     color: var(--btcpay-header-link);
 }
 
-#NotificationsHandle:hover svg {
+#NotificationsHandle:hover .icon {
     color: var(--btcpay-header-link-accent);
 }
 
@@ -333,9 +333,8 @@
     border: 1px solid var(--btcpay-body-border-medium);
 }
 
-#NotificationsList svg {
-    width: 1.5rem;
-    height: 1.5rem;
+#NotificationsList .icon {
+    --icon-size: 1.5rem;
 }
 
 /* Section Navigation / Subnav */

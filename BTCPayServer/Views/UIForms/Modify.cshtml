@@ -71,7 +71,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addOption($event)">
-                    <vc:icon symbol="new" />
+                    <vc:icon symbol="actions-add" />
                     Add Option
                 </button>
             </div>
@@ -108,7 +108,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addValueMap($event)">
-                    <vc:icon symbol="new" />
+                    <vc:icon symbol="actions-add" />
                     Add mapped value
                 </button>
             </div>
@@ -134,18 +134,18 @@
             <div class="fields list-group" :class="{ 'list-group-flush': path.length }" :data-path="path.join(',')" v-sortable="{ handle: '.drag', onUpdate (event) { const { path } = this.el.dataset; $emit('sort-fields', event, (path.indexOf(',') !== -1 ? path.split(',') : [])) } }">
                 <div v-for="(field, index) in fields" :key="field.name" class="d-flex align-items-start gap-2 list-group-item" :class="{ active: field === selectedField }" v-on:click.stop="$emit('select-field', $event, path, index)">
                     <button type="button" class="btn b-0 control drag" :disabled="fields.length === 1">
-                        <vc:icon symbol="drag" />
+                        <vc:icon symbol="actions-drag" />
                     </button>
                     <div class="field flex-grow-1">
                         <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" :selected-field="selectedField" v-on="$listeners" />
                     </div>
                     <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-field', $event, path, index)">
-                        <vc:icon symbol="remove" />
+                        <vc:icon symbol="actions-remove" />
                     </button>
                 </div>
             </div>
             <button type="button" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
-                <vc:icon symbol="new" />
+                <vc:icon symbol="actions-add" />
                 Add Form Field
             </button>
         </div>

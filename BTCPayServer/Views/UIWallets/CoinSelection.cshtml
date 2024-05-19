@@ -55,14 +55,14 @@
                     </span>
                 </div>
                 <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="min-width:2em">
-                    <span class="fa fa-info"></span>
+                    <vc:icon symbol="info" />
                 </span>
                 <span class="text-muted text-nowrap flex-shrink-0 ms-2">{{item.amount}} @Model.CryptoCode</span>
-                <span :class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"
-                      class="badge"
+                <span :class="{'bg-secondary' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"
+                      class="badge d-inline-flex align-items-center gap-1 py-1"
                       data-bs-toggle="tooltip"
                       v-tooltip="`${item.confirmations} confirmation${item.confirmations === 1 ? '' : 's'}`">
-                    {{item.confirmations}} <span class="fa fa-cube"></span>
+                    {{item.confirmations}} <vc:icon symbol="block" />
                 </span>
             </div>
         </li>

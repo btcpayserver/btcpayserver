@@ -91,7 +91,7 @@
                     <div class="input-group" data-clipboard="@Model.DerivationScheme">
                         <input asp-for="DerivationScheme" class="form-control" readonly />
                         <button type="button" class="btn btn-outline-secondary px-3">
-                            <vc:icon symbol="copy" />
+                            <vc:icon symbol="actions-copy" />
                         </button>
                     </div>
                 </div>
@@ -102,7 +102,7 @@
                         <div class="input-group" data-clipboard="@Model.DerivationSchemeInput">
                             <input asp-for="DerivationSchemeInput" class="form-control" readonly/>
                             <button type="button" class="btn btn-outline-secondary px-3">
-                                <vc:icon symbol="copy" />
+                                <vc:icon symbol="actions-copy" />
                             </button>
                         </div>
                     </div>
@@ -114,13 +114,13 @@
                         <div class="d-flex align-items-center justify-content-between">
                             <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
                             <button type="button" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" data-account-key="@i" title="">
-                                <span class="fa fa-qrcode"></span> Show export QR
+                                <vc:icon symbol="qr-code" /> Show export QR
                             </button>
                         </div>
                         <div class="input-group" data-clipboard="@Model.AccountKeys[i].AccountKey">
                             <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
                             <button type="button" class="btn btn-outline-secondary px-3">
-                                <vc:icon symbol="copy" />
+                                <vc:icon symbol="actions-copy" />
                             </button>
                         </div>
                     </div>

@@ -75,10 +75,10 @@
     </button>
     <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
     <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
-        <vc:icon symbol="invoice-2 "/>
+        <vc:icon symbol="nav-invoice"/>
     </button>
     <button type="button" class="btn btn-link p-1" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList" v-if="showItems">
-        <vc:icon symbol="menu"/>
+        <vc:icon symbol="nav-mobile-menu"/>
     </button>
     <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1"  id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
         <div class="offcanvas-header flex-wrap p-3">

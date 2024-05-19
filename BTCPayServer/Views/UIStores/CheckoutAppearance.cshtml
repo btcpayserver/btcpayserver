@@ -109,7 +109,7 @@
 							<span class="note">Enhance the checkout process for online purchases.<br />This assume the payment page will be displayed on the customer's device.</span>
 						</div>
 						<div id="Presets_InStore" class="btcpay-list-select-item dropdown-item">
-							<vc:icon symbol="store" />
+							<vc:icon symbol="nav-store" />
 							<span>In-store</span>
 							<span class="note">Enhance the checkout process for in-store purchases.<br />This assume the payment page will be displayed on the merchant's device.</span>
 						</div>
@@ -146,7 +146,7 @@
                                 @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
                                 {
                                     <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveSoundFile" value="true" permission="@Policies.CanModifyStoreSettings">
-                                        <span class="fa fa-times"></span> Remove
+                                        <vc:icon symbol="cross" /> Remove
                                     </button>
                                 }
                             </div>

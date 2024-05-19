@@ -9,25 +9,15 @@
     var storeId = Context.GetStoreData().Id;
     ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull Payments", storeId);
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
-    string startDateSortOrder = null;
-    switch (nextStartDateSortOrder)
+    var startDateSortOrder = nextStartDateSortOrder switch
     {
-        case "asc":
-            startDateSortOrder = "desc";
-            break;
-        case "desc":
-            startDateSortOrder = "asc";
-            break;
-    }
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
 
-    var sortIconClass = "fa-sort";
-    if (startDateSortOrder != null)
-    {
-        sortIconClass = $"fa-sort-alpha-{startDateSortOrder}";
-    }
-
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    const string sortByDesc = "Sort by date descending...";
+    const string sortByAsc = "Sort by date ascending...";
 }
 
 @section PageHeadContent {
@@ -106,9 +96,11 @@
                            class="text-nowrap"
                            title="@(nextStartDateSortOrder == "desc" ? sortByAsc : sortByDesc)">
                             Start
-                            <span class="fa @(sortIconClass)"></span>
+                            <vc:icon symbol="actions-sort-@(startDateSortOrder ?? nextStartDateSortOrder ?? "desc")" />
                         </a>
-                        <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                            <vc:icon symbol="time" />
+                        </button>
                     </div>
                 </th>
                 <th scope="col">Name</th>

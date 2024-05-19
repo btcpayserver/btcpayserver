@@ -88,7 +88,7 @@
         <div class="items list-group list-group-flush" v-sortable="{ handle: '.drag', onUpdate (event) { $emit('sort-items', event) } }">
             <div v-for="(item, index) of items" class="d-inline-flex align-items-center gap-3 list-group-item" :key="item.id" :class="{ active: item === selectedItem }" v-on:click.stop="$emit('select-item', $event, index)">
                 <button type="button" class="btn b-0 control drag" :disabled="items.length === 1">
-                    <vc:icon symbol="drag" />
+                    <vc:icon symbol="actions-drag" />
                 </button>
                 <div class="template-item d-flex align-items-start w-100 gap-3">
                     <div class="img">
@@ -106,12 +106,12 @@
                     </div>
                 </div>
                 <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-item', $event, index)">
-                    <vc:icon symbol="remove" />
+                    <vc:icon symbol="actions-remove" />
                 </button>
             </div>
         </div>
         <button type="button" id="btAddItem" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-item', $event)">
-            <vc:icon symbol="new" />
+            <vc:icon symbol="actions-add" />
             Add Item
         </button>
     </div>

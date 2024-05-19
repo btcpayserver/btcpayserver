@@ -33,18 +33,20 @@
                             <td class="align-baseline">
                                 @if (wh.LastDeliverySuccessful)
                                 {
-                                    <span class="fa fa-check text-success"
-                                          id="delivery-status-icon"
+                                    <span id="delivery-status-icon"
                                           data-bs-toggle="tooltip"
-                                          title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery " + @wh.LastDeliveryTimeStamp?.ToTimeAgo())"></span>
+                                          title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery " + @wh.LastDeliveryTimeStamp?.ToTimeAgo())">
+                                        <vc:icon symbol="checkmark" css-class="text-success" />
+                                    </span>
                                 }
                                 else
                                 {
-                                    <span class="fa fa-times text-danger"
-                                          id="delivery-status-icon"
+                                    <span id="delivery-status-icon"
                                           data-bs-toggle="tooltip"
                                           data-bs-html="true"
-                                          title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>"></span>
+                                          title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>">
+                                        <vc:icon symbol="cross" css-class="text-danger" />
+                                    </span>
                                 }
                             </td>
                             <td class="d-block text-break">@wh.Url</td>

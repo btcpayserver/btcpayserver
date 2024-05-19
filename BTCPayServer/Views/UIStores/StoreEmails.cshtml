@@ -50,11 +50,11 @@
                                 <label asp-for="Rules[index].Trigger" class="form-label" data-required></label>
                                 <div class="align-items-right">
                                     <button name="command" type="submit" value="test:@index" class="d-inline-block btn text-info btn-link p-0">
-                                        <span class="fa fa-send"></span> Test this email rule
+                                        <vc:icon symbol="actions-email" /> Test this email rule
                                     </button>
                                     &nbsp;
                                     <button name="command" type="submit" value="remove:@index" class="d-inline-block btn text-danger btn-link p-0">
-                                        <span class="fa fa-times"></span> Remove this email rule
+                                        <vc:icon symbol="actions-remove" /> Remove this email rule
                                     </button>
                                 </div>
                             </div>

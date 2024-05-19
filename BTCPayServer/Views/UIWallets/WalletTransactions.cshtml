@@ -171,7 +171,9 @@
                 <th class="date-col">
                     <div class="d-flex align-items-center gap-1">
                         Date
-                        <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                            <vc:icon symbol="time" />
+                        </button>
                     </div>
                 </th>
                 <th class="text-start">Label</th>
@@ -193,7 +195,7 @@
                         </div>
                         <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
                             <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
-                                <vc:icon symbol="send" />
+                                <vc:icon symbol="actions-send" />
                                 Bump fee
                             </button>
                         </form>

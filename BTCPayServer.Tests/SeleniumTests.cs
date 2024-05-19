@@ -267,7 +267,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("details")).Click();
             var seedEl = s.Driver.FindElement(By.Id("Seed"));
             Assert.True(seedEl.Displayed);
-            Assert.Contains("about over million", seedEl.Text, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("about over million", seedEl.GetAttribute("value"), StringComparison.OrdinalIgnoreCase);
             var passEl = s.Driver.FindElement(By.Id("WalletPassword"));
             Assert.True(passEl.Displayed);
             Assert.Contains(passEl.Text, "hellorockstar", StringComparison.OrdinalIgnoreCase);
@@ -1672,8 +1672,8 @@ namespace BTCPayServer.Tests
             var elements = s.Driver.FindElements(By.ClassName("redeliver"));
 
             // One worked, one failed
-            s.Driver.FindElement(By.ClassName("fa-times"));
-            s.Driver.FindElement(By.ClassName("fa-check"));
+            s.Driver.FindElement(By.ClassName("icon-cross"));
+            s.Driver.FindElement(By.ClassName("icon-checkmark"));
             elements[0].Click();
 
             s.FindAlertMessage();

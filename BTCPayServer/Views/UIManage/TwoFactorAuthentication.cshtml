@@ -23,7 +23,7 @@
             {
                 <div class="alert alert-danger">
                     <h4 class="alert-heading mb-3">
-                        <span class="fa fa-warning"></span>
+                        <vc:icon symbol="warning" />
                         You have no recovery codes left.
                     </h4>
                     <p class="mb-0">You must <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
@@ -33,7 +33,7 @@
             {
                 <div class="alert alert-danger">
                     <h4 class="alert-heading mb-3">
-                        <span class="fa fa-warning"></span>
+                        <vc:icon symbol="warning" />
                         You only have 1 recovery code left.
                     </h4>
                     <p class="mb-0">You can <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
@@ -43,7 +43,7 @@
             {
                 <div class="alert alert-warning">
                     <h4 class="alert-heading mb-3">
-                        <span class="fa fa-warning"></span>
+                        <vc:icon symbol="warning" />
                         You only have @Model.RecoveryCodesLeft recovery codes left.
                     </h4>
                     <p class="mb-0">You should <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>

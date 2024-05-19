@@ -71,11 +71,17 @@
                             <tr>
                                 @if (result.Error)
                                 {
-                                    <th class="small"><span class="text-danger fa fa-times"></span> @result.CurrencyPair</th>
+                                    <th class="small">
+                                        <vc:icon symbol="cross" css-class="text-danger" />
+                                        @result.CurrencyPair
+                                    </th>
                                 }
                                 else
                                 {
-                                    <th class="small"><span class="text-success fa fa-check"></span> @result.CurrencyPair</th>
+                                    <th class="small">
+                                        <vc:icon symbol="checkmark" css-class="text-success" />
+                                        @result.CurrencyPair
+                                    </th>
                                 }
                                 <td class="small">@result.Rule</td>
                             </tr>

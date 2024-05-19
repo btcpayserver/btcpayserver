@@ -70,7 +70,7 @@ hr.primary {
 }
 
 .input-group-clear .icon {
-    --btn-icon-size: .65rem;
+    --icon-size: .65rem;
 }
 
 .note-editable {
@@ -111,15 +111,13 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
-[aria-expanded] > svg.icon-caret-down {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+[aria-expanded] > .icon-caret-down {
+    --icon-size: 1.5rem;
     margin-left: auto;
     transition: transform 0.2s ease-in-out;
 }
 
-[aria-expanded="true"] > svg.icon-caret-down {
+[aria-expanded="true"] > .icon-caret-down {
     transform: rotate(-180deg);
 }
 
@@ -160,17 +158,17 @@ a.unobtrusive-link {
 }
 
 /* Info icons in main headline */
-svg.icon.icon-info {
+.icon.icon-info {
     position: relative;
     top: -.05em;
     color: var(--btcpay-neutral-500);
 }
 
-svg.icon.icon-info:hover {
+.icon.icon-info:hover {
     color: var(--btcpay-primary);
 }
 
-h2 svg.icon.icon-info {
+h2 .icon.icon-info {
     width: 1.2rem;
     height: 1.2rem;
     top: -.0125em;
@@ -308,14 +306,7 @@ h2 svg.icon.icon-info {
 }
 
 /* Icons */
-svg.icon {
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    flex-shrink: 0 !important;
-}
-
-svg.icon-note {
+.icon-note {
   color: var(--btcpay-neutral-500);
 }
 
@@ -665,8 +656,7 @@ label.btcpay-list-select-item:hover {
     }
 }
 .btcpay-list-select-item .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    --icon-size: 1.5rem;
     margin: 0 var(--btcpay-space-s);
 }
 input:checked + label.btcpay-list-select-item {
@@ -957,14 +947,14 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 }
 
 .transaction-label:focus a,
-.transaction-label:focus .transaction-label-info svg.icon,
-.transaction-label:focus .transaction-label-action svg.icon,
+.transaction-label:focus .transaction-label-info .icon,
+.transaction-label:focus .transaction-label-action .icon,
 .transaction-label:hover a,
-.transaction-label:hover .transaction-label-info svg.icon,
-.transaction-label:hover .transaction-label-action svg.icon,
+.transaction-label:hover .transaction-label-info .icon,
+.transaction-label:hover .transaction-label-action .icon,
 .transaction-label.active a,
-.transaction-label.active .transaction-label-info svg.icon,
-.transaction-label.active .transaction-label-action svg.icon {
+.transaction-label.active .transaction-label-info .icon,
+.transaction-label.active .transaction-label-action .icon {
     color: var(--label-fg);
 }
 
@@ -980,7 +970,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     flex: 0 0 var(--button-size);
 }
 
-.transaction-label svg.icon {
+.transaction-label .icon {
     display: block;
     position: static;
     width: 100%;
@@ -995,7 +985,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     padding: 0;
 }
 
-.transaction-label-action svg.icon {
+.transaction-label-action .icon {
     transform: scale(1.725);
 }
 
@@ -1051,7 +1041,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 }
 
 .truncate-center button.btn .icon {
-    --btn-icon-size: 1em;
+    --icon-size: 1em;
 }
 
 .truncate-center--elastic .truncate-center-truncated {
@@ -1067,7 +1057,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 }
 
 .truncate-center.form-control-plaintext button.btn .icon {
-    --btn-icon-size: 1.25em;
+    --icon-size: 1.25em;
 }
 
 @media screen {
@@ -1122,21 +1112,23 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 }
 .btn[data-clipboard]:hover,
 .btn[data-clipboard-target]:hover {
-    color: var(--btcpay-body-link-accent);
+    color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1));
 }
 .btn[data-clipboard-confirming] {
     color: var(--btcpay-success) !important;
 }
 
 .btn .icon-scan-qr {
-    --btn-icon-size: 1.1875rem;
+    --icon-size: 1.1875rem;
 }
 .btn .icon-qr-code {
-    --btn-icon-size: 1.5rem;
+    --icon-size: 1.5rem;
 }
 .blazor-status .btn-close .icon {
-    width: .75rem;
-    height: .75rem;
+    --icon-size: .75rem;
+}
+.btn.btn-lg .icon {
+    --icon-size: 1.75rem;
 }
 
 /* Tables */
@@ -1187,7 +1179,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     font-weight: var(--btcpay-font-weight-semibold);
 }
 .mass-action > .mass-action-actions button .icon {
-    --btn-icon-size: 1.75rem;
+    margin-right: var(--btcpay-space-xs);
 }
 .mass-action .mass-action-select-col {
     width: 2rem;

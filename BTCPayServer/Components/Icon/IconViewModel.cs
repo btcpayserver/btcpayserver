@@ -1,9 +1,7 @@
-using System.Collections.Generic;
+namespace BTCPayServer.Components.Icon;
 
-namespace BTCPayServer.Components.Icon
+public class IconViewModel
 {
-    public class IconViewModel
-    {
-        public string Symbol { get; set; }
-    }
+    public string Symbol { get; set; }
+    public string CssClass { get; set; }
 }

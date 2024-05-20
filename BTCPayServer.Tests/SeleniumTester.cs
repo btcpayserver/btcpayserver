@@ -602,10 +602,10 @@ retry:
             Driver.Navigate().GoToUrl(new Uri(ServerUri, relativeUrl));
         }
 
-        public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
+        public void GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
         {
             Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
-            if (navPages != ServerNavPages.Index)
+            if (navPages != ServerNavPages.Policies)
             {
                 Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
             }

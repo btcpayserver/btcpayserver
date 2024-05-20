@@ -287,12 +287,12 @@
     {
         <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                <a asp-area="" asp-controller="UIServer" asp-action="ListUsers" class="nav-link" id="Nav-ServerSettings">
+                <a asp-area="" asp-controller="UIServer" asp-action="Policies" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Policies)" id="Nav-ServerSettings">
                     <vc:icon symbol="nav-server-settings"/>
                     <span>Server Settings</span>
                 </a>
             </li>
-            @if (ViewData.IsActivePage(new[] { ServerNavPages.Users, ServerNavPages.Roles, ServerNavPages.Emails, ServerNavPages.Policies, ServerNavPages.Services, ServerNavPages.Branding, ServerNavPages.Maintenance, ServerNavPages.Logs, ServerNavPages.Files }))
+            @if (ViewData.IsActiveCategory(typeof(ServerNavPages)))
             {
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Users" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
@@ -302,9 +302,6 @@
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Emails" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Emails)" asp-action="Emails">Email</a>
-                </li>
-                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
-                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Policies" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Policies)" asp-action="Policies">Policies</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Services" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Services)" asp-action="Services">Services</a>
@@ -327,7 +324,7 @@
             }
             <vc:ui-extension-point location="server-nav" model="@Model"/>
             <li class="nav-item dropup">
-                <a class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
+                <a class="nav-link @ViewData.ActivePageClass(ManageNavPages.Index)" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="nav-account"/>
                     <span>Account</span>
                 </a>   
@@ -355,7 +352,7 @@
                         </script>
                     </li>
                     <li class="border-top py-1 px-3">
-                        <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link @ViewData.ActivePageClass(ManageNavPages.Index)" id="Nav-ManageAccount">
+                        <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link" id="Nav-ManageAccount">
                             <span>Manage Account</span>
                         </a>
                     </li>

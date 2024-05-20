@@ -63,9 +63,7 @@ namespace BTCPayServer.Tests
             s.GoToServer();
             s.Driver.AssertNoError();
             s.ClickOnAllSectionLinks();
-            s.GoToServer();
-            s.Driver.FindElement(By.LinkText("Services")).Click();
-
+            s.GoToServer(ServerNavPages.Services);
             TestLogs.LogInformation("Let's check if we can access the logs");
             s.Driver.FindElement(By.LinkText("Logs")).Click();
             s.Driver.FindElement(By.PartialLinkText(".log")).Click();
@@ -257,10 +255,8 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.GoToHome();
-            s.GoToServer();
+            s.GoToServer(ServerNavPages.Services);
             s.Driver.AssertNoError();
-            s.Driver.FindElement(By.LinkText("Services")).Click();
-
             TestLogs.LogInformation("Let's if we can access LND's seed");
             Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
             s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));

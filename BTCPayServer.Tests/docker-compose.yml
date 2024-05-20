@@ -163,7 +163,6 @@ services:
         developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        announce-addr=customer_lightningd:9735
         log-level=debug
         funding-confirms=1
         dev-fast-gossip
@@ -194,7 +193,6 @@ services:
         developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
-        announce-addr=merchant_lightningd:9735
         funding-confirms=1
         log-level=debug
         dev-fast-gossip

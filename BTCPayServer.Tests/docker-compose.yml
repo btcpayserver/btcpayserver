@@ -157,7 +157,8 @@ services:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
-      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1:30892"
+      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1"
+      LIGHTNINGD_PORT: "30892"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
@@ -187,7 +188,8 @@ services:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
-      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1:30893"
+      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1"
+      LIGHTNINGD_PORT: "30893"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin

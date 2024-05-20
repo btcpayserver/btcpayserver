@@ -67,12 +67,18 @@ public class BTCPayAppState : IHostedService
         var explorer = _explorerClientProvider.GetExplorerClient(obj.CryptoCode);
         var expandedTx = await explorer.GetTransactionAsync(obj.NewTransactionEvent.TrackedSource,
             obj.NewTransactionEvent.TransactionData.TransactionHash);
-        var scripts = expandedTx.Inputs.Concat(expandedTx.Outputs).Select(output => output.ScriptPubKey.ToHex()).Distinct().ToArray();
-        
+
         await _hubContext.Clients
             .Group(identifier)
-            .TransactionDetected(identifier, 
-                obj.NewTransactionEvent.TransactionData.TransactionHash.ToString(), scripts, obj.NewTransactionEvent.BlockId is not null && obj.NewTransactionEvent.BlockId != uint256.Zero);
+            .TransactionDetected(new TransactionDetectedRequest()
+            {
+                SpentScripts = expandedTx.Inputs.Select(input => input.ScriptPubKey.ToHex()).ToArray(),
+                ReceivedScripts = expandedTx.Outputs.Select(output => output.ScriptPubKey.ToHex()).ToArray(),
+                TxId = obj.NewTransactionEvent.TransactionData.TransactionHash.ToString(),
+                Confirmed = obj.NewTransactionEvent.BlockId is not null &&
+                            obj.NewTransactionEvent.BlockId != uint256.Zero,
+                Identifier = identifier
+            });
     }
 
     private void OnNewBlock(NewBlockEvent obj)

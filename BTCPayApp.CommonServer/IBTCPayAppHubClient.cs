@@ -20,6 +20,7 @@ public class TransactionDetectedRequest
 public interface IBTCPayAppHubClient
 {
     Task NotifyNetwork(string network);
+    Task NotifyServerNode(string nodeInfo);
     Task TransactionDetected(TransactionDetectedRequest request);
     Task NewBlock(string block);
 
@@ -32,7 +33,7 @@ public interface IBTCPayAppHubClient
 //methods available on the hub in the server
 public interface IBTCPayAppHubServer
 {
-    Task MasterNodePong(string group, bool active);
+    Task IdentifierActive(string group, bool active);
     
     Task<Dictionary<string,string>> Pair(PairRequest request);
     Task<AppHandshakeResponse> Handshake(AppHandshake request);

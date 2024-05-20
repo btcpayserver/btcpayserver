@@ -8,7 +8,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Events;
+using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -25,6 +28,7 @@ public class BTCPayAppState : IHostedService
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly EventAggregator _eventAggregator;
+    private readonly IServiceProvider _serviceProvider;
     private CompositeDisposable? _compositeDisposable;
     public ExplorerClient ExplorerClient { get; private set; }
     
@@ -37,17 +41,19 @@ public class BTCPayAppState : IHostedService
         ILogger<BTCPayAppState> logger,
         ExplorerClientProvider explorerClientProvider,
         BTCPayNetworkProvider networkProvider,
-        EventAggregator eventAggregator)
+        EventAggregator eventAggregator, IServiceProvider serviceProvider)
     {
         _hubContext = hubContext;
         _logger = logger;
         _explorerClientProvider = explorerClientProvider;
         _networkProvider = networkProvider;
         _eventAggregator = eventAggregator;
+        _serviceProvider = serviceProvider;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
+        _cts ??= new CancellationTokenSource();
         ExplorerClient = _explorerClientProvider.GetExplorerClient("BTC");
         _derivationSchemeParser = new DerivationSchemeParser(_networkProvider.BTC);
         _compositeDisposable = new();
@@ -55,7 +61,43 @@ public class BTCPayAppState : IHostedService
             _eventAggregator.Subscribe<NewBlockEvent>(OnNewBlock));
         _compositeDisposable.Add(
             _eventAggregator.SubscribeAsync<NewOnChainTransactionEvent>(OnNewTransaction));
+        _ = UpdateNodeInfo();
         return Task.CompletedTask;
+    }
+    
+    private string _nodeInfo = string.Empty;
+    private async Task UpdateNodeInfo()
+    {
+        while (!_cts.Token.IsCancellationRequested)
+        {
+
+
+            try
+            {
+                var res = await _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>().GetLightningHandler(ExplorerClient.CryptoCode).GetNodeInfo(
+                    new LightningPaymentMethodConfig() {InternalNodeRef = LightningPaymentMethodConfig.InternalNode},
+                    null,
+                    false, false);
+                if (res.Any())
+                {
+                    var newInf = res.First().ToString();
+                    if (newInf != _nodeInfo)
+                    {
+                        _nodeInfo = newInf;
+                        await _hubContext.Clients.All.NotifyServerNode(_nodeInfo);
+                    }
+
+                }
+                
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Error during node info update");
+               
+            }
+            await Task.Delay(TimeSpan.FromMinutes(string.IsNullOrEmpty(_nodeInfo)? 1:5), _cts.Token);
+        }
+
     }
 
     private async  Task OnNewTransaction(NewOnChainTransactionEvent obj)
@@ -137,9 +179,10 @@ public class BTCPayAppState : IHostedService
     }
 
     public readonly ConcurrentDictionary<string, string> GroupToConnectionId = new();
+    private CancellationTokenSource _cts;
 
 
-    public async Task MasterNodePong(string group, string contextConnectionId, bool active)
+    public async Task IdentifierActive(string group, string contextConnectionId, bool active)
     {
         if (active)
         {
@@ -162,6 +205,8 @@ public class BTCPayAppState : IHostedService
 
     public async Task Connected(string contextConnectionId)
     {
+        if(_nodeInfo.Length > 0)
+            await _hubContext.Clients.Client(contextConnectionId).NotifyServerNode(_nodeInfo);
     }
 
     public async Task PaymentUpdate(string identifier, LightningPayment lightningPayment)

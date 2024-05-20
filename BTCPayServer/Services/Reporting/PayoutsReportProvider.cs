@@ -54,7 +54,6 @@ public class PayoutsReportProvider : ReportProvider
             data.Add(payout.Date);
             data.Add(payout.GetPayoutSource(_btcPayNetworkJsonSerializerSettings));
             data.Add(payout.State.ToString());
-            string? payoutCurrency;
             if (PayoutMethodId.TryParse(payout.PaymentMethodId, out var pmi))
             {
                 var handler = _handlers.TryGet(pmi);
@@ -64,17 +63,16 @@ public class PayoutsReportProvider : ReportProvider
                     data.Add("On-Chain");
                 else
                     data.Add(pmi.ToString());
-                payoutCurrency = handler?.Currency;
             }
             else
                 continue;
 
             var ppBlob = payout.PullPaymentData?.GetBlob();
-            var currency = ppBlob?.Currency ?? payoutCurrency;
+            var currency = ppBlob?.Currency ?? payout.Currency;
             if (currency is null)
                 continue;
-            data.Add(payoutCurrency);
-            data.Add(blob.CryptoAmount.HasValue && payoutCurrency is not null ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, payoutCurrency) : null);
+            data.Add(payout.Currency);
+            data.Add(blob.CryptoAmount is decimal v ? _displayFormatter.ToFormattedAmount(v, payout.Currency) : null);
             data.Add(currency);
             data.Add(_displayFormatter.ToFormattedAmount(blob.Amount, currency));
             data.Add(blob.Destination);

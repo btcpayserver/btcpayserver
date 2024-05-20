@@ -563,7 +563,6 @@ namespace BTCPayServer.Controllers
                 {
                     payoutSourceLink = Url.Action("ViewPullPayment", "UIPullPayment", new { pullPaymentId = item.PullPayment?.Id });
                 }
-                var pCurrency = _payoutHandlers.TryGet(PayoutMethodId.Parse(item.Payout.PaymentMethodId))?.Currency;
 
                 var m = new PayoutsModel.PayoutModel
                 {
@@ -572,7 +571,7 @@ namespace BTCPayServer.Controllers
                     SourceLink = payoutSourceLink,
                     Date = item.Payout.Date,
                     PayoutId = item.Payout.Id,
-                    Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? pCurrency),
+                    Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? item.Payout.Currency),
                     Destination = payoutBlob.Destination
                 };
                 var handler = _payoutHandlers

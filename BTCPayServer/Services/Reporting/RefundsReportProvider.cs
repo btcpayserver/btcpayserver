@@ -67,7 +67,7 @@ namespace BTCPayServer.Services.Reporting
             var conn = ctx.Database.GetDbConnection();
             var rows = await conn.QueryAsync(
             """
-            SELECT i."Created", i."Id" AS "InvoiceId", p."State", p."PaymentMethodId", pp."Id" AS "PullPaymentId", pp."Blob" AS "ppBlob", p."Blob" AS "pBlob" FROM "Invoices" i
+            SELECT i."Created", i."Id" AS "InvoiceId", p."State", p."PaymentMethodId", p."Currency" AS "PayoutCurrency", pp."Id" AS "PullPaymentId", pp."Blob" AS "ppBlob", p."Blob" AS "pBlob" FROM "Invoices" i
             JOIN "Refunds" r ON r."InvoiceDataId"= i."Id"
             JOIN "PullPayments" pp ON r."PullPaymentDataId"=pp."Id"
             LEFT JOIN "Payouts" p ON p."PullPaymentDataId"=pp."Id"
@@ -105,6 +105,7 @@ namespace BTCPayServer.Services.Reporting
                 return null;
             Data.PayoutData p = new Data.PayoutData();
             p.PaymentMethodId = r.PaymentMethodId;
+            p.Currency = (string)r.PayoutCurrency;
             p.Blob = (string)r.pBlob;
             return p.GetBlob(_serializerSettings);
         }

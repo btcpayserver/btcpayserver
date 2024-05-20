@@ -567,6 +567,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Blob")
                         .HasColumnType("JSONB");
 
+                    b.Property<string>("Currency")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset>("Date")
                         .HasColumnType("timestamp with time zone");
 

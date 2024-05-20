@@ -646,7 +646,8 @@ namespace BTCPayServer.HostedServices
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
                     PaymentMethodId = req.ClaimRequest.PayoutMethodId.ToString(),
                     Destination = req.ClaimRequest.Destination.Id,
-                    StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId
+                    StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId,
+                    Currency = payoutHandler.Currency
                 };
                 var payoutBlob = new PayoutBlob()
                 {

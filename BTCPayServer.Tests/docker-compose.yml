@@ -157,6 +157,7 @@ services:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
+      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1:30892"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
@@ -186,6 +187,7 @@ services:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
+      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1:30893"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
@@ -197,7 +199,7 @@ services:
         dev-bitcoind-poll=1
     ports:
       - "30993:9835" # api port
-      - "30893:9735" # api port
+      - "30893:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -221,6 +223,8 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
+      LND_EXTERNALIP: "127.0.0.1"
+      LND_PORT: "30894"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://merchant_lnd:8080
@@ -243,6 +247,7 @@ services:
     ports:
       - "35531:8080"
       - "53280:10009"
+      - "30894:9735"
     expose:
       - "8080"
       - "9735"
@@ -258,6 +263,8 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
+      LND_EXTERNALIP: "127.0.0.1"
+      LND_PORT: "30895"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://customer_lnd:8080
@@ -279,6 +286,7 @@ services:
         no-rest-tls=1
     ports:
       - "35532:8080"
+      - "30895:9735"
     expose:
       - "8080"
       - "9735"

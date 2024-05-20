@@ -6,12 +6,21 @@ using BTCPayServer.Lightning;
 namespace BTCPayApp.CommonServer;
 
 
+public class TransactionDetectedRequest
+{
+    public string Identifier { get; set; }
+    public string TxId { get; set; }
+    public string[] SpentScripts { get; set; }
+    public string[] ReceivedScripts { get; set; }
+    public bool Confirmed { get; set; }
+}
+
 
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
 {
     Task NotifyNetwork(string network);
-    Task TransactionDetected(string identifier, string txId, string[] relatedScripts, bool confirmed);
+    Task TransactionDetected(TransactionDetectedRequest request);
     Task NewBlock(string block);
 
     Task<LightningPayment> CreateInvoice(CreateLightningInvoiceRequest createLightningInvoiceRequest);

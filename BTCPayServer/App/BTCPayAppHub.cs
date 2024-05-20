@@ -266,9 +266,9 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
     }
 
 
-    public async Task MasterNodePong(string group, bool active)
+    public async Task IdentifierActive(string group, bool active)
     {
-        await _appState.MasterNodePong(group, Context.ConnectionId, active);
+        await _appState.IdentifierActive(group, Context.ConnectionId, active);
     }
 
 

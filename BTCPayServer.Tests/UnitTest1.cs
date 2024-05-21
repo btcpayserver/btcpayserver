@@ -192,7 +192,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanStoreArbitrarySettingsWithStore()
+        public async Task CanStoreArbitrarySettingsWithStore()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -1097,7 +1097,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
-        public async void CheckCORSSetOnBitpayAPI()
+        public async Task CheckCORSSetOnBitpayAPI()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -2382,7 +2382,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
-        public async void CheckOnionlocationForNonOnionHtmlRequests()
+        public async Task CheckOnionlocationForNonOnionHtmlRequests()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -3006,7 +3006,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanUseLocalProviderFiles()
+        public async Task CanUseLocalProviderFiles()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();

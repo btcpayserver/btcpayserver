@@ -47,12 +47,12 @@
 
   <ItemGroup>
     <PackageReference Include="BTCPayServer.NTag424" Version="1.0.23" />
-    <PackageReference Include="YamlDotNet" Version="8.0.0" />
+    <PackageReference Include="YamlDotNet" Version="15.1.4" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.6.0" />
-    <PackageReference Include="CsvHelper" Version="15.0.5" />
-    <PackageReference Include="Dapper" Version="2.1.28" />
+    <PackageReference Include="CsvHelper" Version="32.0.3" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Fido2" Version="2.0.2" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
     <PackageReference Include="LNURL" Version="0.0.34" />
@@ -66,9 +66,9 @@
     <PackageReference Include="NicolasDorier.CommandLine.Configuration" Version="2.0.0" />
     <PackageReference Include="NicolasDorier.RateLimits" Version="1.2.3" />
     <PackageReference Include="Serilog" Version="3.1.1" />
-    <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
-    <PackageReference Include="SSH.NET" Version="2023.0.0" />
+    <PackageReference Include="SSH.NET" Version="2024.0.0" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -77,8 +77,8 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.5" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.5" />
   </ItemGroup>
 
 	<ItemGroup>

@@ -25,7 +25,7 @@ public class BearerAuthorizationHandler(IOptionsMonitor<IdentityOptions> identit
         if (string.IsNullOrEmpty(userId))
             return;
 
-        StoreData? store = null;
+        var permissionSet = new PermissionSet();
         var success = false;
         var isAdmin = context.User.IsInRole(Roles.ServerAdmin);
         var storeId = context.Resource as string;
@@ -35,29 +35,41 @@ public class BearerAuthorizationHandler(IOptionsMonitor<IdentityOptions> identit
         {
             policy = policy[..^1];
             requiredUnscoped = true;
+            storeId = null;
+        }
+
+        if (!string.IsNullOrEmpty(storeId))
+        {
+            var permissions = context.User.Claims.FirstOrDefault(c => c.Type == storeId)?.Value;
+            if (!string.IsNullOrEmpty(permissions))
+            {
+                permissionSet = new PermissionSet(permissions.Split(',')
+                    .Select(s => Permission.TryCreatePermission(s, storeId, out var permission) ? permission : null)
+                    .Where(s => s != null).ToArray());
+            }
         }
 
         if (Policies.IsServerPolicy(policy) && isAdmin)
         {
             success = true;
         }
-        else if (Policies.IsUserPolicy(policy) && userId is not null)
+        else if (Policies.IsUserPolicy(policy) && !string.IsNullOrEmpty(userId))
         {
             success = true;
         }
-        else if (Policies.IsStorePolicy(policy))
+        else if (Policies.IsStorePolicy(policy) && !string.IsNullOrEmpty(storeId))
         {
-            if (isAdmin && storeId is not null)
+            if (isAdmin && !string.IsNullOrEmpty(storeId))
             {
                 success = _serverAdminRolePermissions.HasPermission(policy, storeId);
             }
 
-            /*if (!success && store?.HasPermission(userId, policy) is true)
+            if (!success && permissionSet.HasPermission(policy, storeId))
             {
                 success = true;
-            }*/
+            }
 
-            if (!success && store is null && requiredUnscoped)
+            if (!success && requiredUnscoped && string.IsNullOrEmpty(storeId))
             {
                 success = true;
             }

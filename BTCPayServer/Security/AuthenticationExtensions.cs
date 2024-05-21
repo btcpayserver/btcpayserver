@@ -16,7 +16,7 @@ namespace BTCPayServer.Security
 
         public static AuthenticationBuilder AddBearerAuthentication(this AuthenticationBuilder builder)
         {
-            builder.AddBearerToken(AuthenticationSchemes.Bearer, options =>
+            builder.AddBearerToken(AuthenticationSchemes.GreenfieldBearer, options =>
             {
                 options.BearerTokenExpiration = TimeSpan.FromMinutes(30.0);
                 options.RefreshTokenExpiration = TimeSpan.FromDays(3.0);

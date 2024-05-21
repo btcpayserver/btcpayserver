@@ -6,14 +6,9 @@ using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Client;
-using BTCPayServer.Common;
-using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
@@ -23,27 +18,19 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
-using NBitcoin;
-using NBitcoin.DataEncoders;
-using NBXplorer;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.App;
 
 [ApiController]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.Bearer)]
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldBearer)]
 [Route("btcpayapp")]
 public class BtcPayAppController(
-    APIKeyRepository apiKeyRepository,
     StoreRepository storeRepository,
-    BTCPayNetworkProvider btcPayNetworkProvider,
-    IExplorerClientProvider explorerClientProvider,
     EventAggregator eventAggregator,
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
     TimeProvider timeProvider,
-    PaymentMethodHandlerDictionary handlers,
-    IFileService fileService,
     ISettingsRepository settingsRepository,
     UriResolver uriResolver,
     IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
@@ -130,7 +117,7 @@ public class BtcPayAppController(
                 return TypedResults.Problem(message, statusCode: 401);
             }
 
-            signInManager.AuthenticationScheme = AuthenticationSchemes.Bearer;
+            signInManager.AuthenticationScheme = AuthenticationSchemes.GreenfieldBearer;
             var signInResult = await signInManager.PasswordSignInAsync(login.Email, login.Password, true, true);
             if (signInResult.RequiresTwoFactor)
             {
@@ -154,7 +141,7 @@ public class BtcPayAppController(
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<Results<Ok<AccessTokenResponse>, UnauthorizedHttpResult, SignInHttpResult, ChallengeHttpResult>> Refresh(RefreshRequest refresh)
     {
-        const string scheme = AuthenticationSchemes.Bearer;
+        const string scheme = AuthenticationSchemes.GreenfieldBearer;
         var authenticationTicket = bearerTokenOptions.Get(scheme).RefreshTokenProtector.Unprotect(refresh.RefreshToken);
         var expiresUtc = authenticationTicket?.Properties.ExpiresUtc;
 

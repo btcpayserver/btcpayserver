@@ -81,6 +81,7 @@ using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
 
+[assembly: Xunit.TestFramework("BTCPayServer.Tests.CustomTestFramework", "BTCPayServer.Tests")]
 namespace BTCPayServer.Tests
 {
     [Collection(nameof(NonParallelizableCollectionDefinition))]

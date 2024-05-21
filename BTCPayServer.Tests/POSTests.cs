@@ -95,7 +95,7 @@ fruit tea:
         [Trait("Integration", "Integration")]
         public async Task CanUsePoSApp1()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();

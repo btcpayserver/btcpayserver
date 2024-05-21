@@ -23,7 +23,7 @@ using Xunit;
 
 namespace BTCPayServer.Tests
 {
-    public class SeleniumTester : IDisposable
+    public class SeleniumTester : IAsyncDisposable
     {
         public IWebDriver Driver { get; set; }
         public ServerTester Server { get; set; }
@@ -350,7 +350,7 @@ retry:
             }
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (Driver != null)
             {
@@ -366,7 +366,8 @@ retry:
                 Driver.Dispose();
             }
 
-            Server?.Dispose();
+            if (Server is not null)
+                await Server.DisposeAsync();
         }
 
         internal void AssertNotFound()

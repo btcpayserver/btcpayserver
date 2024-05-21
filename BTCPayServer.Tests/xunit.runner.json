@@ -1,5 +1,5 @@
 {
-    "maxParallelThreads": 4,
+    "maxParallelThreads": -1,
     "longRunningTestSeconds": 60,
     "diagnosticMessages": true,
     "methodDisplay": "method"

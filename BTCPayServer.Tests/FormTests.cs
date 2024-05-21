@@ -24,7 +24,7 @@ public class FormTests : UnitTestBase
     [Trait("Integration", "Integration")]  
     public async Task CanParseForm()
     {
-        using var tester = CreateServerTester();
+        await using var tester = CreateServerTester();
         await tester.StartAsync();
         var user = tester.NewAccount();
         user.GrantAccess();

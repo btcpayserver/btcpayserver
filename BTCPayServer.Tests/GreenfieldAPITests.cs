@@ -48,7 +48,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task LocalClientTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -82,7 +82,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task MissingPermissionTest()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             user.GrantAccess();
@@ -98,7 +98,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task ApiKeysControllerTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             user.GrantAccess();
@@ -125,7 +125,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseMiscAPIs()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var acc = tester.NewAccount();
@@ -147,7 +147,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task SpecificCanModifyStoreCantCreateNewStore()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var acc = tester.NewAccount();
             await acc.GrantAccessAsync();
@@ -170,7 +170,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteAPIKeyViaAPI()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var acc = tester.NewAccount();
             await acc.GrantAccessAsync();
@@ -237,7 +237,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateReadUpdateAndDeletePointOfSaleApp()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -367,7 +367,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateReadAndDeleteCrowdfundApp()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -532,7 +532,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanGetAllApps()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -594,7 +594,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanDeleteUsersViaApi()
         {
-            using var tester = CreateServerTester(newDb: true);
+            await using var tester = CreateServerTester(newDb: true);
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
             // Should not be authorized to perform this action
@@ -634,7 +634,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanViewUsersViaApi()
         {
-            using var tester = CreateServerTester(newDb: true);
+            await using var tester = CreateServerTester(newDb: true);
             await tester.StartAsync();
 
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
@@ -723,7 +723,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateUsersViaAPI()
         {
-            using var tester = CreateServerTester(newDb: true);
+            await using var tester = CreateServerTester(newDb: true);
             tester.PayTester.DisableRegistration = true;
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
@@ -850,7 +850,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePullPaymentViaAPI()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -1225,7 +1225,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanProcessPayoutsExternally()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var acc = tester.NewAccount();
             acc.Register();
@@ -1355,7 +1355,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StoresControllerTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -1492,7 +1492,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task UsersControllerTests()
         {
-            using var tester = CreateServerTester(newDb: true);
+            await using var tester = CreateServerTester(newDb: true);
             tester.PayTester.DisableRegistration = true;
             await tester.StartAsync();
             var user = tester.NewAccount();
@@ -1559,7 +1559,7 @@ namespace BTCPayServer.Tests
                 Assert.False(hook.AutomaticRedelivery);
                 Assert.Equal(fakeServer.ServerUri.AbsoluteUri, hook.Url);
             }
-            using var tester = CreateServerTester(newDb: true);
+            await using var tester = CreateServerTester(newDb: true);
             using var fakeServer = new FakeServer();
             await fakeServer.Start();
             await tester.StartAsync();
@@ -1662,7 +1662,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task HealthControllerTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
 
@@ -1675,7 +1675,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task ServerInfoControllerTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
             await AssertHttpError(401, async () => await unauthClient.GetServerInfo());
@@ -1698,7 +1698,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task PaymentControllerTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -1869,7 +1869,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceLegacyTests()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var user = tester.NewAccount();
@@ -1939,7 +1939,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanOverpayInvoice()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -1969,7 +1969,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanRefundInvoice()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
@@ -2176,7 +2176,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task InvoiceTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
@@ -2565,7 +2565,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningAPI()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -2713,7 +2713,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanAccessInvoiceLightningPaymentMethodDetails()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -2776,7 +2776,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLightningAPI2()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -2818,7 +2818,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task NotificationAPITests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
@@ -2857,7 +2857,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task OnChainPaymentMethodAPITests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             var user2 = tester.NewAccount();
@@ -2960,7 +2960,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task LightningNetworkPaymentMethodAPITests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -3139,7 +3139,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task WalletAPITests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
 
             var user = tester.NewAccount();
@@ -3403,7 +3403,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StorePaymentMethodsAPITests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             tester.ActivateLightning();
             await tester.StartAsync();
             await tester.EnsureChannelsSetup();
@@ -3482,7 +3482,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StoreLightningAddressesAPITests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
@@ -3526,7 +3526,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StoreUsersAPITest()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
 
             var user = tester.NewAccount();
@@ -3618,7 +3618,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StoreEmailTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
@@ -3649,7 +3649,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task DisabledEnabledUserTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
@@ -3688,7 +3688,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task ApproveUserTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
@@ -3762,7 +3762,7 @@ namespace BTCPayServer.Tests
         public async Task CanUseLNPayoutProcessor()
         {
             LightningPendingPayoutListener.SecondsDelay = 0;
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
 
             tester.ActivateLightning();
             await tester.StartAsync();
@@ -3848,7 +3848,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePayoutProcessorsThroughAPI()
         {
 
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
 
             var admin = tester.NewAccount();
@@ -4118,7 +4118,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseWalletObjectsAPI()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
 
             var admin = tester.NewAccount();
@@ -4242,7 +4242,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task StoreRateConfigTests()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
             await AssertHttpError(401, async () => await unauthClient.GetRateSources());

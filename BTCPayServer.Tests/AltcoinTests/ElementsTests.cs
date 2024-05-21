@@ -31,7 +31,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task OnlyShowSupportedWallets()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 tester.ActivateLBTC();
                 await tester.StartAsync();
@@ -49,7 +49,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task ElementsAssetsAreHandledCorrectly()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 tester.ActivateLBTC();
                 await tester.StartAsync();

@@ -37,7 +37,7 @@ namespace BTCPayServer.Tests
         MySQL,
     }
 
-    public class BTCPayServerTester : IDisposable
+    public class BTCPayServerTester : IAsyncDisposable
     {
         private readonly string _Directory;
 
@@ -341,10 +341,12 @@ namespace BTCPayServer.Tests
             return controller;
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             if (_Host != null)
+            {
                 _Host.Dispose();
+            }
         }
 
         public void ChangeRate(string pair, BidAsk bidAsk)

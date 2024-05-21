@@ -23,7 +23,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanConfigureCheckout()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             s.GoToRegister();
@@ -428,7 +428,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseCheckoutAsModal()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.GoToRegister();
             s.RegisterNewUser();

@@ -26,7 +26,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanPlayWithPSBT()
         {
-            using var s = CreateSeleniumTester(newDb: true);
+            await using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
 
             s.RegisterNewUser(true);

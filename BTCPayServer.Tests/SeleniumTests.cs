@@ -56,7 +56,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanNavigateServerSettings()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.GoToHome();
@@ -76,7 +76,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseForms()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -212,7 +212,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseCPFP()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -252,7 +252,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLndSeedBackup()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             s.RegisterNewUser(true);
@@ -283,7 +283,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanChangeUserMail()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
 
             var tester = s.Server;
@@ -320,7 +320,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task NewUserLogin()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             //Register & Log Out
             var email = s.RegisterNewUser();
@@ -410,7 +410,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanRequireApprovalForNewAccounts()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             
             var settings = s.Server.PayTester.GetService<SettingsRepository>();
@@ -547,7 +547,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseSSHService()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             var settings = s.Server.PayTester.GetService<SettingsRepository>();
             var policies = await settings.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
@@ -602,7 +602,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanSetupEmailServer()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -663,7 +663,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseDynamicDns()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(isAdmin: true);
             s.Driver.Navigate().GoToUrl(s.Link("/server/services"));
@@ -712,7 +712,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateInvoiceInUI()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -749,7 +749,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseInvoiceReceipts()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -810,7 +810,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanSetupStoreViaGuide()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser();
             s.GoToUrl("/");
@@ -839,7 +839,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateStores()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             var alice = s.RegisterNewUser(true);
@@ -1001,7 +1001,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUsePairing()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.Driver.Navigate().GoToUrl(s.Link("/api-access-request"));
             Assert.Contains("ReturnUrl", s.Driver.Url);
@@ -1044,7 +1044,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CookieReflectProperPermissions()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             var alice = s.Server.NewAccount();
             alice.Register(false);
@@ -1146,7 +1146,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateAppPoS()
         {
-            using var s = CreateSeleniumTester(newDb: true);
+            await using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -1257,7 +1257,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreateCrowdfundingApp()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser();
             s.CreateNewStore();
@@ -1393,7 +1393,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanCreatePayRequest()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser();
             s.CreateNewStore();
@@ -1536,7 +1536,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseCoinSelection()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             (_, string storeId) = s.CreateNewStore();
@@ -1595,7 +1595,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanUseWebhooks()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -1706,7 +1706,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanImportMnemonic()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             foreach (var isHotwallet in new[] { false, true })
@@ -1725,7 +1725,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanManageWallet()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             (_, string storeId) = s.CreateNewStore();
@@ -1971,7 +1971,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanManageLightningNode()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -2023,7 +2023,7 @@ namespace BTCPayServer.Tests
         [Fact(Timeout = TestTimeout)]
         public async Task CanImportWallet()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -2048,7 +2048,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanEditPullPaymentUI()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -2093,7 +2093,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePullPaymentsViaUI()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
 			s.Server.DeleteStore = false;
             s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
@@ -2546,7 +2546,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePOSPrint()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
 
@@ -2577,7 +2577,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanUsePOSKeypad()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             
             // Create users
@@ -2764,7 +2764,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanUsePOSCart()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             
             // Create users
@@ -2942,7 +2942,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNURL()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
             await s.StartAsync();
@@ -3123,7 +3123,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNAddress()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -3283,7 +3283,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanSigninWithLoginCode()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             var user = s.RegisterNewUser();
             s.GoToHome();
@@ -3326,7 +3326,7 @@ retry:
         [Trait("Selenium", "Selenium")]
         public async Task CanUseLNURLAuth()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             var user = s.RegisterNewUser(true);
             s.GoToHome();
@@ -3377,7 +3377,7 @@ retry:
         [Trait("Selenium", "Selenium")]
         public async Task CanUseRoleManager()
         {
-            using var s = CreateSeleniumTester(newDb: true);
+            await using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.GoToHome();
@@ -3536,7 +3536,7 @@ retry:
         [Trait("Lightning", "Lightning")]
         public async Task CanAccessUserStoreAsAdmin()
         {
-            using var s = CreateSeleniumTester(newDb: true);
+            await using var s = CreateSeleniumTester(newDb: true);
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -3589,7 +3589,7 @@ retry:
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePredefinedRoles()
         {
-            using var s = CreateSeleniumTester(newDb: true);
+            await using var s = CreateSeleniumTester(newDb: true);
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -3727,7 +3727,7 @@ retry:
         [Trait("Selenium", "Selenium")]
         public async Task CanChangeUserRoles()
         {
-            using var s = CreateSeleniumTester(newDb: true);
+            await using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
 
             // Setup users and store

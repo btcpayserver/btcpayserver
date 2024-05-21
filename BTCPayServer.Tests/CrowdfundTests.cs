@@ -33,7 +33,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanCreateAndDeleteCrowdfundApp()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -94,7 +94,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanContributeOnlyWhenAllowed()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -185,7 +185,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanComputeCrowdfundModel()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -312,7 +312,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CrowdfundWithFormNoPerk()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();
@@ -366,7 +366,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CrowdfundWithFormAndPerk()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var user = tester.NewAccount();
             await user.GrantAccessAsync();

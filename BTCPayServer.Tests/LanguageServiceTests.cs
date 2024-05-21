@@ -18,7 +18,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanAutoDetectLanguage()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var languageService = tester.PayTester.GetService<LanguageService>();
 

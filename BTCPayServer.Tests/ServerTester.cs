@@ -21,7 +21,7 @@ using NBXplorer;
 
 namespace BTCPayServer.Tests
 {
-    public class ServerTester : IDisposable
+    public class ServerTester : IAsyncDisposable
     {
         public List<IDisposable> Resources = new List<IDisposable>();
         readonly string _Directory;
@@ -253,7 +253,7 @@ namespace BTCPayServer.Tests
         public bool DeleteStore { get; set; } = true;
         public BTCPayNetworkBase DefaultNetwork => NetworkProvider.DefaultNetwork;
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             foreach (var r in this.Resources)
                 r.Dispose();
@@ -262,11 +262,11 @@ namespace BTCPayServer.Tests
             {
                 foreach (var store in Stores)
                 {
-                    Xunit.Assert.True(PayTester.StoreRepository.DeleteStore(store).GetAwaiter().GetResult());
+                    await PayTester.StoreRepository.DeleteStore(store);
                 }
             }
             if (PayTester != null)
-                PayTester.Dispose();
+                await PayTester.DisposeAsync();
             TestLogs.LogInformation("BTCPayTester disposed");
         }
     }

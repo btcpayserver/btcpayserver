@@ -48,7 +48,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUseTheDelayedBroadcaster()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
@@ -67,7 +67,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoinRepository()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var repo = tester.PayTester.GetService<UTXOLocker>();
@@ -105,7 +105,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task ChooseBestUTXOsForPayjoin()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var network = tester.NetworkProvider.GetNetwork<BTCPayNetwork>("BTC");
             var controller = tester.PayTester.GetService<PayJoinEndpointController>();
@@ -187,7 +187,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanOnlyUseCorrectAddressFormatsForPayjoin()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
             tester.PayTester.GetService<UTXOLocker>();
@@ -246,7 +246,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanUsePayjoinForTopUp()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             s.RegisterNewUser(true);
             var receiver = s.CreateNewStore();
@@ -294,7 +294,7 @@ namespace BTCPayServer.Tests
         [Trait("Selenium", "Selenium")]
         public async Task CanUsePayjoinViaUI()
         {
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
             s.RegisterNewUser(true);
@@ -419,7 +419,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoin2()
         {
-            using var tester = CreateServerTester();
+            await using var tester = CreateServerTester();
             await tester.StartAsync();
             var pjClient = tester.PayTester.GetService<PayjoinClient>();
             var nbx = tester.PayTester.GetService<ExplorerClientProvider>().GetExplorerClient("BTC");
@@ -643,7 +643,7 @@ namespace BTCPayServer.Tests
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoinFeeCornerCase()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
                 var broadcaster = tester.PayTester.GetService<DelayedTransactionBroadcaster>();
@@ -833,7 +833,7 @@ retry:
         [Trait("Integration", "Integration")]
         public async Task CanUsePayjoin()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 await tester.StartAsync();
 

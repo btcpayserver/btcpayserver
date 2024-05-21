@@ -44,7 +44,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanSetupWallet()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 tester.ActivateLightning();
@@ -242,7 +242,7 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanCreateInvoiceWithSpecificPaymentMethods()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 tester.ActivateLightning();
                 tester.ActivateLTC();
@@ -274,7 +274,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanHaveLTCOnlyStore()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 await tester.StartAsync();
@@ -347,7 +347,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanCreateRefunds()
         {
-            using (var s = CreateSeleniumTester())
+            await using (var s = CreateSeleniumTester())
             {
                 s.Server.ActivateLTC();
                 await s.StartAsync();
@@ -438,7 +438,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanPayWithTwoCurrencies()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 await tester.StartAsync();
@@ -575,7 +575,7 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanUsePoSApp()
         {
-            using (var tester = CreateServerTester())
+            await using (var tester = CreateServerTester())
             {
                 tester.ActivateLTC();
                 await tester.StartAsync();

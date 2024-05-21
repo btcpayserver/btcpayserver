@@ -12,7 +12,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Tests
 {
-    public class CustomServer : IDisposable
+    public class CustomServer : IAsyncDisposable
     {
         readonly IWebHost _Host = null;
         readonly CancellationTokenSource _Closed = new CancellationTokenSource();
@@ -59,9 +59,10 @@ namespace BTCPayServer.Tests
             }
         }
 
-        public void Dispose()
+        public async ValueTask DisposeAsync()
         {
             _Closed.Cancel();
+            await _Host.StopAsync();
             _Host.Dispose();
         }
     }

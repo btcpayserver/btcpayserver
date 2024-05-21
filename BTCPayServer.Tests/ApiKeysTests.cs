@@ -37,7 +37,7 @@ namespace BTCPayServer.Tests
             //as a user through your profile
             //as an external application requesting an api key from a user
 
-            using var s = CreateSeleniumTester();
+            await using var s = CreateSeleniumTester();
             await s.StartAsync();
             var tester = s.Server;
 

@@ -83,7 +83,7 @@ public class BlockHeaders : IEnumerable<RPCBlockHeader>
     }
 }
 
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.Bearer)]
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldBearer)]
 public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 {
     private readonly BTCPayNetworkProvider _btcPayNetworkProvider;

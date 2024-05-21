@@ -157,12 +157,11 @@ services:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
-      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1"
-      LIGHTNINGD_PORT: "30892"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
+        announce-addr=customer_lightningd:9735
         log-level=debug
         funding-confirms=1
         dev-fast-gossip
@@ -187,12 +186,11 @@ services:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
-      LIGHTNINGD_ANNOUNCEADDR: "127.0.0.1"
-      LIGHTNINGD_PORT: "30893"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
+        announce-addr=merchant_lightningd:9735
         funding-confirms=1
         log-level=debug
         dev-fast-gossip
@@ -223,8 +221,6 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_EXTERNALIP: "127.0.0.1"
-      LND_PORT: "30894"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://merchant_lnd:8080
@@ -263,8 +259,6 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_EXTERNALIP: "127.0.0.1"
-      LND_PORT: "30895"
       LND_ENVIRONMENT: "regtest"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://customer_lnd:8080

@@ -12,6 +12,7 @@ using Grpc.Net.Client;
 using GrpcMwebdClient;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using System;
@@ -33,6 +34,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
     {
         private readonly CancellationTokenSource _cts = new();
         private readonly ConcurrentDictionary<DerivationStrategyBase, Scanner> _scanners = [];
+        private readonly CompositeDisposable _leases = new();
 
         private class Scanner
         {
@@ -60,14 +62,20 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                 {
                     if (utxo.OutputId == "") continue;
                     Utxos[utxo.OutputId] = utxo;
-                    await _service.CheckInvoice(DerivationScheme, utxo);
-                    await _service.PublishEvent(DerivationScheme, utxo);
+                    var height = (await client.StatusAsync(new StatusRequest())).BlockHeaderHeight;
+                    await _service.CheckInvoice(DerivationScheme, utxo, height);
+                    _service.PublishEvent(DerivationScheme, utxo, height);
                 }
             }
         }
 
         public async Task StartAsync(CancellationToken cancellationToken)
         {
+            _leases.Add(eventAggregator.SubscribeAsync<Events.NewBlockEvent>(async evt =>
+            {
+                if (evt.CryptoCode == "LTC") await UpdatePaymentStates(((NBXplorer.Models.NewBlockEvent)evt.AdditionalInfo).Height);
+            }));
+
             foreach (var store in await storeRepository.GetStores())
             {
                 var derivationScheme = store.GetDerivationSchemeSettings(handlers, "MWEB");
@@ -79,6 +87,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
 
         public async Task StopAsync(CancellationToken cancellationToken)
         {
+            _leases.Dispose();
             _cts.Cancel();
             foreach (var scanner in _scanners.Values)
             {
@@ -90,13 +99,6 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                 {
                 }
             }
-        }
-
-        private static async Task<int> GetHeight()
-        {
-            using var channel = GrpcChannel.ForAddress("http://localhost:12345");
-            var client = new Rpc.RpcClient(channel);
-            return (await client.StatusAsync(new StatusRequest())).BlockHeaderHeight;
         }
 
         public bool IsAddressUsed(DerivationStrategyBase derivationStrategy, string address)
@@ -148,10 +150,10 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             };
         }
 
-        private async Task CheckInvoice(DerivationSchemeSettings derivationScheme, Utxo utxo)
+        private async Task CheckInvoice(DerivationSchemeSettings derivationScheme, Utxo utxo, int height)
         {
             var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
-            var coin = CoinFromUtxo(derivationScheme, utxo, await GetHeight());
+            var coin = CoinFromUtxo(derivationScheme, utxo, height);
             if (coin == null) return;
             var key = network.GetTrackedDestination(coin.ScriptPubKey);
             var invoice = (await invoiceRepository.GetInvoicesFromAddresses([key])).FirstOrDefault();
@@ -176,18 +178,18 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                 if (!alreadyExist)
                 {
                     var payment = await paymentService.AddPayment(paymentData, [coin.OutPoint.Hash.ToString()]);
-                    if (payment != null) await ReceivedPayment(invoice, payment);
+                    if (payment != null) await ReceivedPayment(invoice, payment, height);
                 }
                 else
                 {
-                    await UpdatePaymentStates(invoice.Id);
+                    await UpdatePaymentStates(invoice.Id, height);
                 }
             }
         }
 
-        private async Task PublishEvent(DerivationSchemeSettings derivationScheme, Utxo utxo)
+        private void PublishEvent(DerivationSchemeSettings derivationScheme, Utxo utxo, int height)
         {
-            var coin = CoinFromUtxo(derivationScheme, utxo, await GetHeight());
+            var coin = CoinFromUtxo(derivationScheme, utxo, height);
             if (coin == null) return;
             var transaction = Transaction.Create(coin.Address.Network);
             transaction.Outputs.Add((Money)coin.Value, coin.ScriptPubKey);
@@ -217,10 +219,10 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             });
         }
 
-        private async Task<InvoiceEntity> ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
+        private async Task<InvoiceEntity> ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment, int height)
         {
             // We want the invoice watcher to look at our invoice after we bumped the payment method fee, so fireEvent=false.
-            invoice = await UpdatePaymentStates(invoice.Id, fireEvents: false);
+            invoice = await UpdatePaymentStates(invoice.Id, height, fireEvents: false);
             if (invoice == null) return null;
             var prompt = invoice.GetPaymentPrompt(payment.PaymentMethodId);
             var bitcoinPaymentMethod = (BitcoinPaymentPromptDetails)handlers.ParsePaymentPromptDetails(prompt);
@@ -234,7 +236,13 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             return invoice;
         }
 
-        private async Task<InvoiceEntity> UpdatePaymentStates(string invoiceId, bool fireEvents = true)
+        private async Task UpdatePaymentStates(int height)
+        {
+            var invoices = await invoiceRepository.GetPendingInvoices(skipNoPaymentInvoices: true);
+            await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(i.Id, height)).ToArray());
+        }
+
+        private async Task<InvoiceEntity> UpdatePaymentStates(string invoiceId, int height, bool fireEvents = true)
         {
             var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
             var invoice = await invoiceRepository.GetInvoice(invoiceId);
@@ -243,12 +251,12 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             var handler = (BitcoinLikePaymentHandler)handlers[pmi];
             var strategy = handlers.GetDerivationStrategy(invoice, network);
             var updatedPaymentEntities = new List<PaymentEntity>();
-            var height = await GetHeight();
 
             foreach (var payment in invoice.GetPayments(false).Where(p => p.PaymentMethodId == pmi))
             {
                 var paymentData = handler.ParsePaymentDetails(payment.Details);
-                var utxo = _scanners[strategy].Utxos[paymentData.Outpoint.Hash.ToString()];
+                if (!_scanners.TryGetValue(strategy, out var scanner)) continue;
+                if (!scanner.Utxos.TryGetValue(paymentData.Outpoint.Hash.ToString(), out var utxo)) continue;
                 var confirmations = utxo.Height > 0 ? height - utxo.Height + 1 : 0;
                 bool updated = false;
                 if (paymentData.ConfirmationCount != confirmations)

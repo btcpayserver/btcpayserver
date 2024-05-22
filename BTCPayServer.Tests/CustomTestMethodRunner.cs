@@ -98,9 +98,11 @@ namespace BTCPayServer.Tests
                 ManualResetEvent stopped = new ManualResetEvent(false);
                 new Thread(o =>
                 {
+                    bool dumped = false;
 ctn:
-                    if (DateTimeOffset.UtcNow - started > TimeSpan.FromMinutes(1.5))
+                    if (DateTimeOffset.UtcNow - started > TimeSpan.FromMinutes(1.5) && !dumped)
                     {
+                        dumped = true;
                         _diagnosticMessageSink.OnMessage(new DiagnosticMessage($"WARNING: {test} has been running for more than 1.5 minutes"));
                         var solution = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "ConsoleApp1");
                         ProcessStartInfo process = new ProcessStartInfo("dotnet", ["run", "--", Process.GetCurrentProcess().Id.ToString()])

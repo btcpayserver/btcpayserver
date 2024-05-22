@@ -11,6 +11,8 @@ services:
       dockerfile: BTCPayServer.Tests/Dockerfile
       args:
         CONFIGURATION_NAME: Altcoins-Release
+    cap_add:
+      - SYS_PTRACE
     environment:
       TESTS_EXPERIMENTALV2_CONFIRM: "true"
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3

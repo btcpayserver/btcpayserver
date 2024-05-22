@@ -84,1606 +84,1614 @@ using Microsoft.Extensions.Caching.Memory;
 [assembly: Xunit.TestFramework("BTCPayServer.Tests.CustomTestFramework", "BTCPayServer.Tests")]
 namespace BTCPayServer.Tests
 {
-    [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class UnitTest1 : UnitTestBase
-    {
-        public const int LongRunningTestTimeout = 60_000; // 60s
+	[Collection(nameof(NonParallelizableCollectionDefinition))]
+	public class UnitTest1 : UnitTestBase
+	{
+		public const int LongRunningTestTimeout = 60_000; // 60s
 
-        public UnitTest1(ITestOutputHelper helper) : base(helper)
-        {
-        }
+		public UnitTest1(ITestOutputHelper helper) : base(helper)
+		{
+		}
 
-        class DockerImage
-        {
-            public string User { get; private set; }
-            public string Name { get; private set; }
-            public string Tag { get; private set; }
+		class DockerImage
+		{
+			public string User { get; private set; }
+			public string Name { get; private set; }
+			public string Tag { get; private set; }
 
-            public string Source { get; set; }
+			public string Source { get; set; }
 
-            public static DockerImage Parse(string str)
-            {
-                //${BTCPAY_IMAGE: -btcpayserver / btcpayserver:1.0.3.21}
-                var variableMatch = Regex.Match(str, @"\$\{[^-]+-([^\}]+)\}");
-                if (variableMatch.Success)
-                {
-                    str = variableMatch.Groups[1].Value;
-                }
-                DockerImage img = new DockerImage();
-                var match = Regex.Match(str, "([^/]*/)?([^:]+):?(.*)");
-                if (!match.Success)
-                    throw new FormatException();
-                img.User = match.Groups[1].Length == 0 ? string.Empty : match.Groups[1].Value.Substring(0, match.Groups[1].Value.Length - 1);
-                img.Name = match.Groups[2].Value;
-                img.Tag = match.Groups[3].Value;
-                if (img.Tag == string.Empty)
-                    img.Tag = "latest";
-                return img;
-            }
-            public override string ToString()
-            {
-                return ToString(true);
-            }
-            public string ToString(bool includeTag)
-            {
-                StringBuilder builder = new StringBuilder();
-                if (!String.IsNullOrWhiteSpace(User))
-                    builder.Append($"{User}/");
-                builder.Append($"{Name}");
-                if (includeTag)
-                {
-                    if (!String.IsNullOrWhiteSpace(Tag))
-                        builder.Append($":{Tag}");
-                }
-                return builder.ToString();
-            }
-        }
+			public static DockerImage Parse(string str)
+			{
+				//${BTCPAY_IMAGE: -btcpayserver / btcpayserver:1.0.3.21}
+				var variableMatch = Regex.Match(str, @"\$\{[^-]+-([^\}]+)\}");
+				if (variableMatch.Success)
+				{
+					str = variableMatch.Groups[1].Value;
+				}
+				DockerImage img = new DockerImage();
+				var match = Regex.Match(str, "([^/]*/)?([^:]+):?(.*)");
+				if (!match.Success)
+					throw new FormatException();
+				img.User = match.Groups[1].Length == 0 ? string.Empty : match.Groups[1].Value.Substring(0, match.Groups[1].Value.Length - 1);
+				img.Name = match.Groups[2].Value;
+				img.Tag = match.Groups[3].Value;
+				if (img.Tag == string.Empty)
+					img.Tag = "latest";
+				return img;
+			}
+			public override string ToString()
+			{
+				return ToString(true);
+			}
+			public string ToString(bool includeTag)
+			{
+				StringBuilder builder = new StringBuilder();
+				if (!String.IsNullOrWhiteSpace(User))
+					builder.Append($"{User}/");
+				builder.Append($"{Name}");
+				if (includeTag)
+				{
+					if (!String.IsNullOrWhiteSpace(Tag))
+						builder.Append($":{Tag}");
+				}
+				return builder.ToString();
+			}
+		}
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CheckSwaggerIsConformToSchema()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task CheckSwaggerIsConformToSchema()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
 
-            var sresp = Assert
-                .IsType<JsonResult>(await tester.PayTester.GetController<UIHomeController>(acc.UserId, acc.StoreId)
-                    .Swagger(tester.PayTester.GetService<IEnumerable<ISwaggerProvider>>())).Value.ToJson();
-            JObject swagger = JObject.Parse(sresp);
-            var schema = JSchema.Parse(File.ReadAllText(TestUtils.GetTestDataFullPath("OpenAPI-Specification-schema.json")));
-            IList<ValidationError> errors;
-            bool valid = swagger.IsValid(schema, out errors);
-            //the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas.
-            var matchedError = errors.Where(error =>
-                error.Path == "components.securitySchemes.Basic" && error.ErrorType == ErrorType.OneOf).ToList();
-            foreach (ValidationError validationError in matchedError)
-            {
-                errors.Remove(validationError);
-            }
-            valid = !errors.Any();
+			var sresp = Assert
+				.IsType<JsonResult>(await tester.PayTester.GetController<UIHomeController>(acc.UserId, acc.StoreId)
+					.Swagger(tester.PayTester.GetService<IEnumerable<ISwaggerProvider>>())).Value.ToJson();
+			JObject swagger = JObject.Parse(sresp);
+			var schema = JSchema.Parse(File.ReadAllText(TestUtils.GetTestDataFullPath("OpenAPI-Specification-schema.json")));
+			IList<ValidationError> errors;
+			bool valid = swagger.IsValid(schema, out errors);
+			//the schema is not fully compliant to the spec. We ARE allowed to have multiple security schemas.
+			var matchedError = errors.Where(error =>
+				error.Path == "components.securitySchemes.Basic" && error.ErrorType == ErrorType.OneOf).ToList();
+			foreach (ValidationError validationError in matchedError)
+			{
+				errors.Remove(validationError);
+			}
+			valid = !errors.Any();
 
-            Assert.Empty(errors);
-            Assert.True(valid);
-        }
+			Assert.Empty(errors);
+			Assert.True(valid);
+		}
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task EnsureSwaggerPermissionsDocumented()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task EnsureSwaggerPermissionsDocumented()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
 
-            var description = UtilitiesTests.GetSecuritySchemeDescription();
-            TestLogs.LogInformation(description);
+			var description = UtilitiesTests.GetSecuritySchemeDescription();
+			TestLogs.LogInformation(description);
 
-            var sresp = Assert
-                .IsType<JsonResult>(await tester.PayTester.GetController<UIHomeController>(acc.UserId, acc.StoreId)
-                    .Swagger(tester.PayTester.GetService<IEnumerable<ISwaggerProvider>>())).Value.ToJson();
+			var sresp = Assert
+				.IsType<JsonResult>(await tester.PayTester.GetController<UIHomeController>(acc.UserId, acc.StoreId)
+					.Swagger(tester.PayTester.GetService<IEnumerable<ISwaggerProvider>>())).Value.ToJson();
 
-            JObject json = JObject.Parse(sresp);
+			JObject json = JObject.Parse(sresp);
 
-            // If this test fail, run `UpdateSwagger` once.
-            if (description != json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>())
-            {
-                Assert.Fail("Please run manually the test `UpdateSwagger` once");
-            }
-        }
+			// If this test fail, run `UpdateSwagger` once.
+			if (description != json["components"]["securitySchemes"]["API_Key"]["description"].Value<string>())
+			{
+				Assert.Fail("Please run manually the test `UpdateSwagger` once");
+			}
+		}
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanStoreArbitrarySettingsWithStore()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreRepository>();
-            var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
-            Assert.Null(arbValue);
-            await settingsRepo.UpdateSetting(user.StoreId, "arbitrary", "saved");
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task CanStoreArbitrarySettingsWithStore()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			await user.GrantAccessAsync();
+			var settingsRepo = tester.PayTester.ServiceProvider.GetRequiredService<IStoreRepository>();
+			var arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
+			Assert.Null(arbValue);
+			await settingsRepo.UpdateSetting(user.StoreId, "arbitrary", "saved");
 
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
-            Assert.Equal("saved", arbValue);
+			arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
+			Assert.Equal("saved", arbValue);
 
-            await settingsRepo.UpdateSetting<TestData>(user.StoreId, "arbitrary", new TestData() { Name = "hello" });
-            var arbData = await settingsRepo.GetSettingAsync<TestData>(user.StoreId, "arbitrary");
-            Assert.Equal("hello", arbData.Name);
+			await settingsRepo.UpdateSetting<TestData>(user.StoreId, "arbitrary", new TestData() { Name = "hello" });
+			var arbData = await settingsRepo.GetSettingAsync<TestData>(user.StoreId, "arbitrary");
+			Assert.Equal("hello", arbData.Name);
 
-            var client = await user.CreateClient();
-            await client.RemoveStore(user.StoreId);
-            tester.Stores.Clear();
-            arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
-            Assert.Null(arbValue);
-        }
-        class TestData
-        {
-            public string Name { get; set; }
-        }
+			var client = await user.CreateClient();
+			await client.RemoveStore(user.StoreId);
+			tester.Stores.Clear();
+			arbValue = await settingsRepo.GetSettingAsync<string>(user.StoreId, "arbitrary");
+			Assert.Null(arbValue);
+		}
+		class TestData
+		{
+			public string Name { get; set; }
+		}
 
-        private async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)
-        {
-            List<Task> checkLinks = new List<Task>();
-            var text = await File.ReadAllTextAsync(file);
+		private async Task CheckDeadLinks(Regex regex, HttpClient httpClient, string file)
+		{
+			List<Task> checkLinks = new List<Task>();
+			var text = await File.ReadAllTextAsync(file);
 
-            var urlBlacklist = new string[]
-            {
-                "https://www.btse.com", // not allowing to be hit from circleci
+			var urlBlacklist = new string[]
+			{
+				"https://www.btse.com", // not allowing to be hit from circleci
                 "https://www.bitpay.com", // not allowing to be hit from circleci
                 "https://support.bitpay.com"
-            };
+			};
 
-            foreach (var match in regex.Matches(text).OfType<Match>())
-            {
-                var url = match.Groups[1].Value;
-                if (urlBlacklist.Any(a => url.StartsWith(a.ToLowerInvariant())))
-                    continue;
-                checkLinks.Add(AssertLinkNotDead(httpClient, url, file));
-            }
+			foreach (var match in regex.Matches(text).OfType<Match>())
+			{
+				var url = match.Groups[1].Value;
+				if (urlBlacklist.Any(a => url.StartsWith(a.ToLowerInvariant())))
+					continue;
+				checkLinks.Add(AssertLinkNotDead(httpClient, url, file));
+			}
 
-            await Task.WhenAll(checkLinks);
-        }
+			await Task.WhenAll(checkLinks);
+		}
 
-        private async Task AssertLinkNotDead(HttpClient httpClient, string url, string file)
-        {
-            var uri = new Uri(url);
+		private async Task AssertLinkNotDead(HttpClient httpClient, string url, string file)
+		{
+			var uri = new Uri(url);
 
-            try
-            {
-                using var request = new HttpRequestMessage(HttpMethod.Get, uri);
-                request.Headers.TryAddWithoutValidation("Accept",
-                    "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-                request.Headers.TryAddWithoutValidation("User-Agent",
-                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
-                var response = await httpClient.SendAsync(request);
-                if (response.StatusCode == HttpStatusCode.ServiceUnavailable) // Temporary issue
-                {
-                    TestLogs.LogInformation($"Unavailable: {url} ({file})");
-                    return;
-                }
-                Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-                if (uri.Fragment.Length != 0)
-                {
-                    var fragment = uri.Fragment.Substring(1);
-                    var contents = await response.Content.ReadAsStringAsync();
-                    Assert.Matches($"id=\"{fragment}\"", contents);
-                }
+			try
+			{
+				using var request = new HttpRequestMessage(HttpMethod.Get, uri);
+				request.Headers.TryAddWithoutValidation("Accept",
+					"text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
+				request.Headers.TryAddWithoutValidation("User-Agent",
+					"Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:75.0) Gecko/20100101 Firefox/75.0");
+				var response = await httpClient.SendAsync(request);
+				if (response.StatusCode == HttpStatusCode.ServiceUnavailable) // Temporary issue
+				{
+					TestLogs.LogInformation($"Unavailable: {url} ({file})");
+					return;
+				}
+				Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+				if (uri.Fragment.Length != 0)
+				{
+					var fragment = uri.Fragment.Substring(1);
+					var contents = await response.Content.ReadAsStringAsync();
+					Assert.Matches($"id=\"{fragment}\"", contents);
+				}
 
-                TestLogs.LogInformation($"OK: {url} ({file})");
-            }
-            catch (Exception ex) when (ex is MatchesException)
-            {
-                TestLogs.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
+				TestLogs.LogInformation($"OK: {url} ({file})");
+			}
+			catch (Exception ex) when (ex is MatchesException)
+			{
+				TestLogs.LogInformation($"FAILED: {url} ({file}) – anchor not found: {uri.Fragment}");
 
-                throw;
-            }
-            catch (Exception ex)
-            {
-                var details = ex.Message;
-                TestLogs.LogInformation($"FAILED: {url} ({file}) {details}");
+				throw;
+			}
+			catch (Exception ex)
+			{
+				var details = ex.Message;
+				TestLogs.LogInformation($"FAILED: {url} ({file}) {details}");
 
-                throw;
-            }
-        }
+				throw;
+			}
+		}
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanAcceptInvoiceWithTolerance2()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task CanAcceptInvoiceWithTolerance2()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			user.GrantAccess();
+			user.RegisterDerivationScheme("BTC");
 
-            // Set tolerance to 50%
-            var stores = user.GetController<UIStoresController>();
-            var response = await stores.GeneralSettings();
-            var vm = Assert.IsType<GeneralSettingsViewModel>(Assert.IsType<ViewResult>(response).Model);
-            Assert.Equal(0.0, vm.PaymentTolerance);
-            vm.PaymentTolerance = 50.0;
-            Assert.IsType<RedirectToActionResult>(stores.GeneralSettings(vm).Result);
+			// Set tolerance to 50%
+			var stores = user.GetController<UIStoresController>();
+			var response = await stores.GeneralSettings();
+			var vm = Assert.IsType<GeneralSettingsViewModel>(Assert.IsType<ViewResult>(response).Model);
+			Assert.Equal(0.0, vm.PaymentTolerance);
+			vm.PaymentTolerance = 50.0;
+			Assert.IsType<RedirectToActionResult>(stores.GeneralSettings(vm).Result);
 
-            var invoice = await user.BitPay.CreateInvoiceAsync(
-                new Invoice()
-                {
-                    Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
+			var invoice = await user.BitPay.CreateInvoiceAsync(
+				new Invoice()
+				{
+					Buyer = new Buyer() { email = "test@fwf.com" },
+					Price = 5000.0m,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
 
-            // Pays 75%
-            var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
-            await tester.ExplorerNode.SendToAddressAsync(invoiceAddress,
-                Money.Satoshis(invoice.BtcDue.Satoshi * 0.75m));
+			// Pays 75%
+			var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, tester.ExplorerNode.Network);
+			await tester.ExplorerNode.SendToAddressAsync(invoiceAddress,
+				Money.Satoshis(invoice.BtcDue.Satoshi * 0.75m));
 
-            TestUtils.Eventually(() =>
-            {
-                var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
-                Assert.Equal("paid", localInvoice.Status);
-            });
-        }
+			TestUtils.Eventually(() =>
+			{
+				var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
+				Assert.Equal("paid", localInvoice.Status);
+			});
+		}
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanThrowBitpay404Error()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task CanThrowBitpay404Error()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			user.GrantAccess();
+			user.RegisterDerivationScheme("BTC");
 
-            var invoice = user.BitPay.CreateInvoice(
-                new Invoice()
-                {
-                    Buyer = new Buyer() { email = "test@fwf.com" },
-                    Price = 5000.0m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
+			var invoice = user.BitPay.CreateInvoice(
+				new Invoice()
+				{
+					Buyer = new Buyer() { email = "test@fwf.com" },
+					Price = 5000.0m,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
 
-            try
-            {
-                user.BitPay.GetInvoice(invoice.Id + "123");
-            }
-            catch (BitPayException ex)
-            {
-                Assert.Equal("Object not found", ex.Errors.First());
-            }
-            var req = new HttpRequestMessage(HttpMethod.Get, "/invoices/Cy9jfK82eeEED1T3qhwF3Y");
-            req.Headers.TryAddWithoutValidation("Authorization", "Basic dGVzdA==");
-            req.Content = new StringContent("{}", Encoding.UTF8, "application/json");
-            var result = await tester.PayTester.HttpClient.SendAsync(req);
-            Assert.Equal(HttpStatusCode.Unauthorized, result.StatusCode);
-            Assert.Equal(0, result.Content.Headers.ContentLength.Value);
-        }
+			try
+			{
+				user.BitPay.GetInvoice(invoice.Id + "123");
+			}
+			catch (BitPayException ex)
+			{
+				Assert.Equal("Object not found", ex.Errors.First());
+			}
+			var req = new HttpRequestMessage(HttpMethod.Get, "/invoices/Cy9jfK82eeEED1T3qhwF3Y");
+			req.Headers.TryAddWithoutValidation("Authorization", "Basic dGVzdA==");
+			req.Content = new StringContent("{}", Encoding.UTF8, "application/json");
+			var result = await tester.PayTester.HttpClient.SendAsync(req);
+			Assert.Equal(HttpStatusCode.Unauthorized, result.StatusCode);
+			Assert.Equal(0, result.Content.Headers.ContentLength.Value);
+		}
 
-        [Fact(Timeout = 60 * 2 * 1000)]
-        [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
-        public async Task EnsureNewLightningInvoiceOnPartialPayment()
-        {
-            await using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            await tester.EnsureChannelsSetup();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
-            await user.RegisterDerivationSchemeAsync("BTC");
-            await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
-            await user.SetNetworkFeeMode(NetworkFeeMode.Never);
-            await user.ModifyOnchainPaymentSettings(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
-            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
-            await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
-            {
-                await tester.ExplorerNode.SendToAddressAsync(
-                    BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m), new NBitcoin.RPC.SendToAddressParameters()
-                    {
-                        Replaceable = false
-                    });
-            }, e => e.InvoiceId == invoice.Id && e.PaymentMethodId == PaymentTypes.LN.GetPaymentMethodId("BTC"));
-            Invoice newInvoice = null;
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                await Task.Delay(1000); // wait a bit for payment to process before fetching new invoice
-                newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
-                var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-                var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
-                Assert.NotEqual(newBolt11, oldBolt11);
-                Assert.Equal(newInvoice.BtcDue.ToDecimal(MoneyUnit.BTC),
-                    BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
-            }, 40000);
+		[Fact(Timeout = 60 * 2 * 1000)]
+		[Trait("Integration", "Integration")]
+		[Trait("Lightning", "Lightning")]
+		public async Task EnsureNewLightningInvoiceOnPartialPayment()
+		{
+			await using var tester = CreateServerTester();
+			tester.ActivateLightning();
+			await tester.StartAsync();
+			await tester.EnsureChannelsSetup();
+			var user = tester.NewAccount();
+			await user.GrantAccessAsync(true);
+			await user.RegisterDerivationSchemeAsync("BTC");
+			await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
+			await user.SetNetworkFeeMode(NetworkFeeMode.Never);
+			await user.ModifyOnchainPaymentSettings(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
+			var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
+			await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
+			{
+				await tester.ExplorerNode.SendToAddressAsync(
+					BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest), Money.Coins(0.00005m), new NBitcoin.RPC.SendToAddressParameters()
+					{
+						Replaceable = false
+					});
+			}, e => e.InvoiceId == invoice.Id && e.PaymentMethodId == PaymentTypes.LN.GetPaymentMethodId("BTC"));
+			Invoice newInvoice = null;
+			await TestUtils.EventuallyAsync(async () =>
+			{
+				await Task.Delay(1000); // wait a bit for payment to process before fetching new invoice
+				newInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+				var newBolt11 = newInvoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+				var oldBolt11 = invoice.CryptoInfo.First(o => o.PaymentUrls.BOLT11 != null).PaymentUrls.BOLT11;
+				Assert.NotEqual(newBolt11, oldBolt11);
+				Assert.Equal(newInvoice.BtcDue.ToDecimal(MoneyUnit.BTC),
+					BOLT11PaymentRequest.Parse(newBolt11, Network.RegTest).MinimumAmount.ToDecimal(LightMoneyUnit.BTC));
+			}, 40000);
 
-            TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue((BTCPayNetwork)tester.DefaultNetwork)} via lightning");
-            var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
-            {
-                await tester.SendLightningPaymentAsync(newInvoice);
-            }, evt => evt.InvoiceId == invoice.Id);
+			TestLogs.LogInformation($"Paying invoice {newInvoice.Id} remaining due amount {newInvoice.BtcDue.GetValue((BTCPayNetwork)tester.DefaultNetwork)} via lightning");
+			var evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+			{
+				await tester.SendLightningPaymentAsync(newInvoice);
+			}, evt => evt.InvoiceId == invoice.Id);
 
-            var fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            Assert.Equal(InvoiceStatus.Settled, fetchedInvoice.Status);
-            Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
+			var fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
+			Assert.Equal(InvoiceStatus.Settled, fetchedInvoice.Status);
+			Assert.Equal(InvoiceExceptionStatus.None, fetchedInvoice.ExceptionStatus);
 
-            //BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios
-            TestLogs.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice");
-            var res = await tester.SendLightningPaymentAsync(invoice);
-            Assert.Equal(PayResult.Error, res.Result);
+			//BTCPay will attempt to cancel previous bolt11 invoices so that there are less weird edge case scenarios
+			TestLogs.LogInformation($"Attempting to pay invoice {invoice.Id} original full amount bolt11 invoice");
+			var res = await tester.SendLightningPaymentAsync(invoice);
+			Assert.Equal(PayResult.Error, res.Result);
 
-            //NOTE: Eclair does not support cancelling invoice so the below test case would make sense for it
-            // TestLogs.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
-            // evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
-            // {
-            //     await tester.SendLightningPaymentAsync(invoice);
-            // }, evt => evt.InvoiceId == invoice.Id);
-            // Assert.Equal(evt.InvoiceId, invoice.Id);
-            // fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
-            // Assert.Equal(3, fetchedInvoice.Payments.Count);
-        }
+			//NOTE: Eclair does not support cancelling invoice so the below test case would make sense for it
+			// TestLogs.LogInformation($"Paying invoice {invoice.Id} original full amount bolt11 invoice ");
+			// evt = await tester.WaitForEvent<InvoiceDataChangedEvent>(async () =>
+			// {
+			//     await tester.SendLightningPaymentAsync(invoice);
+			// }, evt => evt.InvoiceId == invoice.Id);
+			// Assert.Equal(evt.InvoiceId, invoice.Id);
+			// fetchedInvoice = await tester.PayTester.InvoiceRepository.GetInvoice(evt.InvoiceId);
+			// Assert.Equal(3, fetchedInvoice.Payments.Count);
+		}
 
-        [Fact(Timeout = 60 * 2 * 1000)]
-        [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanSetLightningServer()
-        {
-            await using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            await tester.EnsureChannelsSetup();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
-            var storeController = user.GetController<UIStoresController>();
-            var storeResponse = await storeController.GeneralSettings();
-            Assert.IsType<ViewResult>(storeResponse);
-            Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
+		[Fact(Timeout = 60 * 2 * 1000)]
+		[Trait("Integration", "Integration")]
+		[Trait("Lightning", "Lightning")]
+		public async Task CanSetLightningServer()
+		{
+			await using var tester = CreateServerTester();
+			tester.ActivateLightning();
+			await tester.StartAsync();
+			await tester.EnsureChannelsSetup();
+			var user = tester.NewAccount();
+			await user.GrantAccessAsync(true);
+			var storeController = user.GetController<UIStoresController>();
+			var storeResponse = await storeController.GeneralSettings();
+			Assert.IsType<ViewResult>(storeResponse);
+			Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
 
-            storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
-            {
-                ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
-                SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
-            }, "test", "BTC").GetAwaiter().GetResult();
-            Assert.False(storeController.TempData.ContainsKey(WellKnownTempData.ErrorMessage));
-            storeController.TempData.Clear();
-            Assert.True(storeController.ModelState.IsValid);
+			storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
+			{
+				ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
+				SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
+			}, "test", "BTC").GetAwaiter().GetResult();
+			Assert.False(storeController.TempData.ContainsKey(WellKnownTempData.ErrorMessage));
+			storeController.TempData.Clear();
+			Assert.True(storeController.ModelState.IsValid);
 
-            Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
-                new LightningNodeViewModel
-                {
-                    ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true"
-                }, "save", "BTC").GetAwaiter().GetResult());
+			Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
+				new LightningNodeViewModel
+				{
+					ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true"
+				}, "save", "BTC").GetAwaiter().GetResult());
 
-            // Make sure old connection string format does not work
-            Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
-                new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
-                "save", "BTC").GetAwaiter().GetResult());
+			// Make sure old connection string format does not work
+			Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
+				new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
+				"save", "BTC").GetAwaiter().GetResult());
 
-            storeResponse = storeController.LightningSettings(user.StoreId, "BTC");
-            var storeVm =
-                Assert.IsType<LightningSettingsViewModel>(Assert
-                    .IsType<ViewResult>(storeResponse).Model);
-            Assert.NotEmpty(storeVm.ConnectionString);
-        }
+			storeResponse = storeController.LightningSettings(user.StoreId, "BTC");
+			var storeVm =
+				Assert.IsType<LightningSettingsViewModel>(Assert
+					.IsType<ViewResult>(storeResponse).Model);
+			Assert.NotEmpty(storeVm.ConnectionString);
+		}
 
-        [Fact(Timeout = 60 * 2 * 1000)]
-        [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanSendLightningPaymentCLightning()
-        {
-            await ProcessLightningPayment(LightningConnectionType.CLightning);
-        }
+		[Fact(Timeout = 60 * 2 * 1000)]
+		[Trait("Integration", "Integration")]
+		[Trait("Lightning", "Lightning")]
+		public async Task CanSendLightningPaymentCLightning()
+		{
+			await ProcessLightningPayment(LightningConnectionType.CLightning);
+		}
 
-        [Fact(Timeout = 60 * 2 * 1000)]
-        [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanSendLightningPaymentLnd()
-        {
-            await ProcessLightningPayment(LightningConnectionType.LndREST);
-        }
+		[Fact(Timeout = 60 * 2 * 1000)]
+		[Trait("Integration", "Integration")]
+		[Trait("Lightning", "Lightning")]
+		public async Task CanSendLightningPaymentLnd()
+		{
+			await ProcessLightningPayment(LightningConnectionType.LndREST);
+		}
 
-        async Task ProcessLightningPayment(string type)
-        {
-            // For easier debugging and testing
-            // LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
+		async Task ProcessLightningPayment(string type)
+		{
+			// For easier debugging and testing
+			// LightningLikePaymentHandler.LIGHTNING_TIMEOUT = int.MaxValue;
 
-            await using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            await tester.EnsureChannelsSetup();
-            var user = tester.NewAccount();
-            user.GrantAccess(true);
-            user.RegisterLightningNode("BTC", type);
-            user.RegisterDerivationScheme("BTC");
+			await using var tester = CreateServerTester();
+			tester.ActivateLightning();
+			await tester.StartAsync();
+			await tester.EnsureChannelsSetup();
+			var user = tester.NewAccount();
+			user.GrantAccess(true);
+			user.RegisterLightningNode("BTC", type);
+			user.RegisterDerivationScheme("BTC");
 
-            await CanSendLightningPaymentCore(tester, user);
+			await CanSendLightningPaymentCore(tester, user);
 
-            await Task.WhenAll(Enumerable.Range(0, 5)
-                .Select(_ => CanSendLightningPaymentCore(tester, user))
-                .ToArray());
-        }
-        async Task CanSendLightningPaymentCore(ServerTester tester, TestAccount user)
-        {
-            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
-            {
-                Price = 0.01m,
-                Currency = "USD",
-                PosData = "posData",
-                OrderId = "orderId",
-                ItemDesc = "Some description"
-            });
-            await Task.Delay(TimeSpan.FromMilliseconds(1000)); // Give time to listen the new invoices
-            TestLogs.LogInformation($"Trying to send Lightning payment to {invoice.Id}");
-            await tester.SendLightningPaymentAsync(invoice);
-            TestLogs.LogInformation($"Lightning payment to {invoice.Id} is sent");
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
-                Assert.Equal("complete", localInvoice.Status);
-                // C-Lightning may overpay for privacy
-                Assert.Contains(localInvoice.ExceptionStatus.ToString(), new[] { "False", "paidOver" });
-            });
-        }
+			await Task.WhenAll(Enumerable.Range(0, 5)
+				.Select(_ => CanSendLightningPaymentCore(tester, user))
+				.ToArray());
+		}
+		async Task CanSendLightningPaymentCore(ServerTester tester, TestAccount user)
+		{
+			var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice()
+			{
+				Price = 0.01m,
+				Currency = "USD",
+				PosData = "posData",
+				OrderId = "orderId",
+				ItemDesc = "Some description"
+			});
+			await Task.Delay(TimeSpan.FromMilliseconds(1000)); // Give time to listen the new invoices
+			TestLogs.LogInformation($"Trying to send Lightning payment to {invoice.Id}");
+			await tester.SendLightningPaymentAsync(invoice);
+			TestLogs.LogInformation($"Lightning payment to {invoice.Id} is sent");
+			await TestUtils.EventuallyAsync(async () =>
+			{
+				var localInvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+				Assert.Equal("complete", localInvoice.Status);
+				// C-Lightning may overpay for privacy
+				Assert.Contains(localInvoice.ExceptionStatus.ToString(), new[] { "False", "paidOver" });
+			});
+		}
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanUseServerInitiatedPairingCode()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            acc.Register();
-            acc.CreateStore();
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanUseServerInitiatedPairingCode()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
+			acc.Register();
+			acc.CreateStore();
 
-            var controller = acc.GetController<UIStoresController>();
-            var token = (RedirectToActionResult)await controller.CreateToken2(
-                new Models.StoreViewModels.CreateTokenViewModel()
-                {
-                    Label = "bla",
-                    PublicKey = null,
-                    StoreId = acc.StoreId
-                });
+			var controller = acc.GetController<UIStoresController>();
+			var token = (RedirectToActionResult)await controller.CreateToken2(
+				new Models.StoreViewModels.CreateTokenViewModel()
+				{
+					Label = "bla",
+					PublicKey = null,
+					StoreId = acc.StoreId
+				});
 
-            var pairingCode = (string)token.RouteValues["pairingCode"];
+			var pairingCode = (string)token.RouteValues["pairingCode"];
 
-            await acc.BitPay.AuthorizeClient(new PairingCode(pairingCode));
-            Assert.True(acc.BitPay.TestAccess(Facade.Merchant));
-        }
+			await acc.BitPay.AuthorizeClient(new PairingCode(pairingCode));
+			Assert.True(acc.BitPay.TestAccess(Facade.Merchant));
+		}
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanSendIPN()
-        {
-            await using var callbackServer = new CustomServer();
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            acc.GrantAccess();
-            acc.RegisterDerivationScheme("BTC");
-            await acc.ModifyOnchainPaymentSettings(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
-            var invoice = acc.BitPay.CreateInvoice(new Invoice
-            {
-                Price = 5.0m,
-                Currency = "USD",
-                PosData = "posData",
-                OrderId = "orderId",
-                NotificationURL = callbackServer.GetUri().AbsoluteUri,
-                ItemDesc = "Some description",
-                FullNotifications = true,
-                ExtendedNotifications = true
-            });
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanSendIPN()
+		{
+			await using var callbackServer = new CustomServer();
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
+			acc.GrantAccess();
+			acc.RegisterDerivationScheme("BTC");
+			await acc.ModifyOnchainPaymentSettings(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
+			var invoice = acc.BitPay.CreateInvoice(new Invoice
+			{
+				Price = 5.0m,
+				Currency = "USD",
+				PosData = "posData",
+				OrderId = "orderId",
+				NotificationURL = callbackServer.GetUri().AbsoluteUri,
+				ItemDesc = "Some description",
+				FullNotifications = true,
+				ExtendedNotifications = true
+			});
 #pragma warning disable CS0618
-            BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21,
-                tester.NetworkProvider.BTC.NBitcoinNetwork);
-            bool receivedPayment = false;
-            bool paid = false;
-            bool confirmed = false;
-            bool completed = false;
-            while (!completed || !confirmed || !receivedPayment)
-            {
-                var request = await callbackServer.GetNextRequest();
-                if (request.ContainsKey("event"))
-                {
-                    var evtName = request["event"]["name"].Value<string>();
-                    switch (evtName)
-                    {
-                        case InvoiceEvent.Created:
-                            tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
-                            break;
-                        case InvoiceEvent.ReceivedPayment:
-                            receivedPayment = true;
-                            break;
-                        case InvoiceEvent.PaidInFull:
-                            // TODO, we should check that ReceivedPayment is sent after PaidInFull
-                            // for now, we can't ensure this because the ReceivedPayment events isn't sent by the
-                            // InvoiceWatcher, contrary to all other events
-                            tester.ExplorerNode.Generate(6);
-                            paid = true;
-                            break;
-                        case InvoiceEvent.Confirmed:
-                            Assert.True(paid);
-                            confirmed = true;
-                            break;
-                        case InvoiceEvent.Completed:
-                            Assert.True(
-                                paid); //TODO: Fix, out of order event mean we can receive invoice_confirmed after invoice_complete
-                            completed = true;
-                            break;
-                        default:
-                            Assert.Fail($"{evtName} was not expected");
-                            break;
-                    }
-                }
-            }
-            var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
-            Assert.NotNull(invoice2);
-        }
+			BitcoinUrlBuilder url = new BitcoinUrlBuilder(invoice.PaymentUrls.BIP21,
+				tester.NetworkProvider.BTC.NBitcoinNetwork);
+			bool receivedPayment = false;
+			bool paid = false;
+			bool confirmed = false;
+			bool completed = false;
+			while (!completed || !confirmed || !receivedPayment)
+			{
+				var request = await callbackServer.GetNextRequest();
+				if (request.ContainsKey("event"))
+				{
+					var evtName = request["event"]["name"].Value<string>();
+					switch (evtName)
+					{
+						case InvoiceEvent.Created:
+							tester.ExplorerNode.SendToAddress(url.Address, url.Amount);
+							break;
+						case InvoiceEvent.ReceivedPayment:
+							receivedPayment = true;
+							break;
+						case InvoiceEvent.PaidInFull:
+							// TODO, we should check that ReceivedPayment is sent after PaidInFull
+							// for now, we can't ensure this because the ReceivedPayment events isn't sent by the
+							// InvoiceWatcher, contrary to all other events
+							tester.ExplorerNode.Generate(6);
+							paid = true;
+							break;
+						case InvoiceEvent.Confirmed:
+							Assert.True(paid);
+							confirmed = true;
+							break;
+						case InvoiceEvent.Completed:
+							Assert.True(
+								paid); //TODO: Fix, out of order event mean we can receive invoice_confirmed after invoice_complete
+							completed = true;
+							break;
+						default:
+							Assert.Fail($"{evtName} was not expected");
+							break;
+					}
+				}
+			}
+			var invoice2 = acc.BitPay.GetInvoice(invoice.Id);
+			Assert.NotNull(invoice2);
+		}
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CantPairTwiceWithSamePubkey()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            acc.Register();
-            acc.CreateStore();
-            var store = acc.GetController<UIStoresController>();
-            var pairingCode = acc.BitPay.RequestClientAuthorization("test", Facade.Merchant);
-            Assert.IsType<RedirectToActionResult>(store.Pair(pairingCode.ToString(), acc.StoreId).GetAwaiter()
-                .GetResult());
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CantPairTwiceWithSamePubkey()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
+			acc.Register();
+			acc.CreateStore();
+			var store = acc.GetController<UIStoresController>();
+			var pairingCode = acc.BitPay.RequestClientAuthorization("test", Facade.Merchant);
+			Assert.IsType<RedirectToActionResult>(store.Pair(pairingCode.ToString(), acc.StoreId).GetAwaiter()
+				.GetResult());
 
-            pairingCode = acc.BitPay.RequestClientAuthorization("test1", Facade.Merchant);
-            acc.CreateStore();
-            var store2 = acc.GetController<UIStoresController>();
-            await store2.Pair(pairingCode.ToString(), store2.CurrentStore.Id);
-            Assert.Contains(nameof(PairingResult.ReusedKey),
-                (string)store2.TempData[WellKnownTempData.ErrorMessage], StringComparison.CurrentCultureIgnoreCase);
-        }
+			pairingCode = acc.BitPay.RequestClientAuthorization("test1", Facade.Merchant);
+			acc.CreateStore();
+			var store2 = acc.GetController<UIStoresController>();
+			await store2.Pair(pairingCode.ToString(), store2.CurrentStore.Id);
+			Assert.Contains(nameof(PairingResult.ReusedKey),
+				(string)store2.TempData[WellKnownTempData.ErrorMessage], StringComparison.CurrentCultureIgnoreCase);
+		}
 
-        [Fact(Timeout = LongRunningTestTimeout * 2)]
-        [Trait("Flaky", "Flaky")]
-        public async Task CanUseTorClient()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var httpFactory = tester.PayTester.GetService<IHttpClientFactory>();
-            var client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
-            Assert.NotNull(client);
+		[Fact(Timeout = LongRunningTestTimeout * 2)]
+		[Trait("Flaky", "Flaky")]
+		public async Task CanUseTorClient()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var httpFactory = tester.PayTester.GetService<IHttpClientFactory>();
+			var client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
+			Assert.NotNull(client);
 
-            TestLogs.LogInformation("Querying an clearnet site over tor");
-            var response = await client.GetAsync("https://check.torproject.org/");
-            response.EnsureSuccessStatusCode();
-            var result = await response.Content.ReadAsStringAsync();
-            Assert.DoesNotContain("You are not using Tor.", result);
-            Assert.Contains("Congratulations. This browser is configured to use Tor.", result);
+			TestLogs.LogInformation("Querying an clearnet site over tor");
+			var response = await client.GetAsync("https://check.torproject.org/");
+			response.EnsureSuccessStatusCode();
+			var result = await response.Content.ReadAsStringAsync();
+			Assert.DoesNotContain("You are not using Tor.", result);
+			Assert.Contains("Congratulations. This browser is configured to use Tor.", result);
 
-            TestLogs.LogInformation("Querying a tor website");
-            response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
-            if (response.IsSuccessStatusCode) // Sometimes the site goes down
-            {
-                result = await response.Content.ReadAsStringAsync();
-                Assert.Contains("Bitcoin", result);
-            }
+			TestLogs.LogInformation("Querying a tor website");
+			response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
+			if (response.IsSuccessStatusCode) // Sometimes the site goes down
+			{
+				result = await response.Content.ReadAsStringAsync();
+				Assert.Contains("Bitcoin", result);
+			}
 
-            TestLogs.LogInformation("...twice");
-            response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
-            client.Dispose();
+			TestLogs.LogInformation("...twice");
+			response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
+			client.Dispose();
 
-            TestLogs.LogInformation("...three times, but with a new httpclient");
-            client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
-            response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
+			TestLogs.LogInformation("...three times, but with a new httpclient");
+			client = httpFactory.CreateClient(PayjoinServerCommunicator.PayjoinOnionNamedClient);
+			response = await client.GetAsync("http://explorerzydxu5ecjrkwceayqybizmpjjznk5izmitf2modhcusuqlid.onion/");
 
-            TestLogs.LogInformation("Querying an onion address which can't be found");
-            await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://dwoduwoi.onion/"));
+			TestLogs.LogInformation("Querying an onion address which can't be found");
+			await Assert.ThrowsAsync<HttpRequestException>(() => client.GetAsync("http://dwoduwoi.onion/"));
 
 
-            TestLogs.LogInformation("Querying valid onion but unreachable");
-            using var cts = new CancellationTokenSource(10_000);
-            try
-            {
-                await client.GetAsync("http://nzwsosflsoquxirwb2zikz6uxr3u5n5u73l33umtdx4hq5mzm5dycuqd.onion/", cts.Token);
-            }
-            catch (HttpRequestException)
-            {
+			TestLogs.LogInformation("Querying valid onion but unreachable");
+			using var cts = new CancellationTokenSource(10_000);
+			try
+			{
+				await client.GetAsync("http://nzwsosflsoquxirwb2zikz6uxr3u5n5u73l33umtdx4hq5mzm5dycuqd.onion/", cts.Token);
+			}
+			catch (HttpRequestException)
+			{
 
-            }
-            catch when (cts.Token.IsCancellationRequested) // Ignore timeouts
-            {
+			}
+			catch when (cts.Token.IsCancellationRequested) // Ignore timeouts
+			{
 
-            }
-        }
+			}
+		}
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanRescanWallet()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            acc.GrantAccess();
-            acc.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
-            var btcDerivationScheme = acc.DerivationScheme;
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanRescanWallet()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
+			acc.GrantAccess();
+			acc.RegisterDerivationScheme("BTC", ScriptPubKeyType.Segwit);
+			var btcDerivationScheme = acc.DerivationScheme;
 
-            var walletController = acc.GetController<UIWalletsController>();
+			var walletController = acc.GetController<UIWalletsController>();
 
-            var walletId = new WalletId(acc.StoreId, "BTC");
-            acc.IsAdmin = true;
-            walletController = acc.GetController<UIWalletsController>();
+			var walletId = new WalletId(acc.StoreId, "BTC");
+			acc.IsAdmin = true;
+			walletController = acc.GetController<UIWalletsController>();
 
-            var rescan =
-                Assert.IsType<RescanWalletModel>(Assert
-                    .IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
-            Assert.True(rescan.Ok);
-            Assert.True(rescan.IsFullySync);
-            Assert.True(rescan.IsSupportedByCurrency);
-            Assert.True(rescan.IsServerAdmin);
+			var rescan =
+				Assert.IsType<RescanWalletModel>(Assert
+					.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
+			Assert.True(rescan.Ok);
+			Assert.True(rescan.IsFullySync);
+			Assert.True(rescan.IsSupportedByCurrency);
+			Assert.True(rescan.IsServerAdmin);
 
-            rescan.GapLimit = 100;
+			rescan.GapLimit = 100;
 
-            // Sending a coin
-            var txId = tester.ExplorerNode.SendToAddress(
-                btcDerivationScheme.GetDerivation(new KeyPath("0/90")).ScriptPubKey, Money.Coins(1.0m));
-            tester.ExplorerNode.Generate(1);
-            var transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
-            Assert.Empty(transactions.Transactions);
+			// Sending a coin
+			var txId = tester.ExplorerNode.SendToAddress(
+				btcDerivationScheme.GetDerivation(new KeyPath("0/90")).ScriptPubKey, Money.Coins(1.0m));
+			tester.ExplorerNode.Generate(1);
+			var transactions = Assert.IsType<ListTransactionsViewModel>(Assert
+				.IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
+			Assert.Empty(transactions.Transactions);
 
-            Assert.IsType<RedirectToActionResult>(walletController.WalletRescan(walletId, rescan).Result);
+			Assert.IsType<RedirectToActionResult>(walletController.WalletRescan(walletId, rescan).Result);
 
-            while (true)
-            {
-                rescan = Assert.IsType<RescanWalletModel>(Assert
-                    .IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
-                if (rescan.Progress == null && rescan.LastSuccess != null)
-                {
-                    if (rescan.LastSuccess.Found == 0)
-                        continue;
-                    // Scan over
-                    break;
-                }
-                else
-                {
-                    Assert.Null(rescan.TimeOfScan);
-                    Assert.NotNull(rescan.RemainingTime);
-                    Assert.NotNull(rescan.Progress);
-                    Thread.Sleep(100);
-                }
-            }
+			while (true)
+			{
+				rescan = Assert.IsType<RescanWalletModel>(Assert
+					.IsType<ViewResult>(walletController.WalletRescan(walletId).Result).Model);
+				if (rescan.Progress == null && rescan.LastSuccess != null)
+				{
+					if (rescan.LastSuccess.Found == 0)
+						continue;
+					// Scan over
+					break;
+				}
+				else
+				{
+					Assert.Null(rescan.TimeOfScan);
+					Assert.NotNull(rescan.RemainingTime);
+					Assert.NotNull(rescan.Progress);
+					Thread.Sleep(100);
+				}
+			}
 
-            Assert.Null(rescan.PreviousError);
-            Assert.NotNull(rescan.TimeOfScan);
-            Assert.Equal(1, rescan.LastSuccess.Found);
-            transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
-            var tx = Assert.Single(transactions.Transactions);
-            Assert.Equal(tx.Id, txId.ToString());
+			Assert.Null(rescan.PreviousError);
+			Assert.NotNull(rescan.TimeOfScan);
+			Assert.Equal(1, rescan.LastSuccess.Found);
+			transactions = Assert.IsType<ListTransactionsViewModel>(Assert
+				.IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
+			var tx = Assert.Single(transactions.Transactions);
+			Assert.Equal(tx.Id, txId.ToString());
 
-            // Hijack the test to see if we can add label and comments
-            Assert.IsType<RedirectToActionResult>(
-                await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello-pouet"));
-            Assert.IsType<RedirectToActionResult>(
-                await walletController.ModifyTransaction(walletId, tx.Id, addlabel: "test"));
-            Assert.IsType<RedirectToActionResult>(
-                await walletController.ModifyTransaction(walletId, tx.Id, addlabelclick: "test2"));
-            Assert.IsType<RedirectToActionResult>(
-                await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello"));
+			// Hijack the test to see if we can add label and comments
+			Assert.IsType<RedirectToActionResult>(
+				await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello-pouet"));
+			Assert.IsType<RedirectToActionResult>(
+				await walletController.ModifyTransaction(walletId, tx.Id, addlabel: "test"));
+			Assert.IsType<RedirectToActionResult>(
+				await walletController.ModifyTransaction(walletId, tx.Id, addlabelclick: "test2"));
+			Assert.IsType<RedirectToActionResult>(
+				await walletController.ModifyTransaction(walletId, tx.Id, addcomment: "hello"));
 
-            transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
-            tx = Assert.Single(transactions.Transactions);
+			transactions = Assert.IsType<ListTransactionsViewModel>(Assert
+				.IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
+			tx = Assert.Single(transactions.Transactions);
 
-            Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Tags.Select(l => l.Text));
-            Assert.Contains("test2", tx.Tags.Select(l => l.Text));
-            Assert.Equal(2, tx.Tags.GroupBy(l => l.Color).Count());
+			Assert.Equal("hello", tx.Comment);
+			Assert.Contains("test", tx.Tags.Select(l => l.Text));
+			Assert.Contains("test2", tx.Tags.Select(l => l.Text));
+			Assert.Equal(2, tx.Tags.GroupBy(l => l.Color).Count());
 
-            Assert.IsType<RedirectToActionResult>(
-                await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
+			Assert.IsType<RedirectToActionResult>(
+				await walletController.ModifyTransaction(walletId, tx.Id, removelabel: "test2"));
 
-            transactions = Assert.IsType<ListTransactionsViewModel>(Assert
-                .IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
-            tx = Assert.Single(transactions.Transactions);
+			transactions = Assert.IsType<ListTransactionsViewModel>(Assert
+				.IsType<ViewResult>(walletController.WalletTransactions(walletId, loadTransactions: true).Result).Model);
+			tx = Assert.Single(transactions.Transactions);
 
-            Assert.Equal("hello", tx.Comment);
-            Assert.Contains("test", tx.Tags.Select(l => l.Text));
-            Assert.DoesNotContain("test2", tx.Tags.Select(l => l.Text));
-            Assert.Single(tx.Tags.GroupBy(l => l.Color));
-        }
+			Assert.Equal("hello", tx.Comment);
+			Assert.Contains("test", tx.Tags.Select(l => l.Text));
+			Assert.DoesNotContain("test2", tx.Tags.Select(l => l.Text));
+			Assert.Single(tx.Tags.GroupBy(l => l.Color));
+		}
 
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanListInvoices()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            await acc.GrantAccessAsync();
-            acc.RegisterDerivationScheme("BTC");
-            // First we try payment with a merchant having only BTC
-            var invoice = await acc.BitPay.CreateInvoiceAsync(
-                new Invoice
-                {
-                    Price = 500,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanListInvoices()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
+			await acc.GrantAccessAsync();
+			acc.RegisterDerivationScheme("BTC");
+			// First we try payment with a merchant having only BTC
+			var invoice = await acc.BitPay.CreateInvoiceAsync(
+				new Invoice
+				{
+					Price = 500,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
 
-            var cashCow = tester.ExplorerNode;
-            var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
-            var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
-            await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
-            TestUtils.Eventually(() =>
-            {
-                invoice = acc.BitPay.GetInvoice(invoice.Id);
-                Assert.Equal(firstPayment, invoice.CryptoInfo[0].Paid);
-            });
+			var cashCow = tester.ExplorerNode;
+			var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
+			var firstPayment = invoice.CryptoInfo[0].TotalDue - Money.Satoshis(10);
+			await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
+			TestUtils.Eventually(() =>
+			{
+				invoice = acc.BitPay.GetInvoice(invoice.Id);
+				Assert.Equal(firstPayment, invoice.CryptoInfo[0].Paid);
+			});
 
-            AssertSearchInvoice(acc, true, invoice.Id, null);
-            AssertSearchInvoice(acc, true, invoice.Id, null, acc.StoreId);
-            AssertSearchInvoice(acc, true, invoice.Id, $"storeid:{acc.StoreId}");
-            AssertSearchInvoice(acc, false, invoice.Id, "storeid:doesnotexist");
-            AssertSearchInvoice(acc, true, invoice.Id, $"{invoice.Id}");
-            AssertSearchInvoice(acc, true, invoice.Id, "exceptionstatus:paidPartial");
-            AssertSearchInvoice(acc, false, invoice.Id, "exceptionstatus:paidOver");
-            AssertSearchInvoice(acc, true, invoice.Id, "unusual:true");
-            AssertSearchInvoice(acc, false, invoice.Id, "unusual:false");
+			AssertSearchInvoice(acc, true, invoice.Id, null);
+			AssertSearchInvoice(acc, true, invoice.Id, null, acc.StoreId);
+			AssertSearchInvoice(acc, true, invoice.Id, $"storeid:{acc.StoreId}");
+			AssertSearchInvoice(acc, false, invoice.Id, "storeid:doesnotexist");
+			AssertSearchInvoice(acc, true, invoice.Id, $"{invoice.Id}");
+			AssertSearchInvoice(acc, true, invoice.Id, "exceptionstatus:paidPartial");
+			AssertSearchInvoice(acc, false, invoice.Id, "exceptionstatus:paidOver");
+			AssertSearchInvoice(acc, true, invoice.Id, "unusual:true");
+			AssertSearchInvoice(acc, false, invoice.Id, "unusual:false");
 
-            var time = invoice.InvoiceTime;
-            AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
-            AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString().ToLowerInvariant()}");
-            AssertSearchInvoice(acc, false, invoice.Id,
-                $"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
-            AssertSearchInvoice(acc, false, invoice.Id,
-                $"enddate:{time.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss")}");
-        }
+			var time = invoice.InvoiceTime;
+			AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");
+			AssertSearchInvoice(acc, true, invoice.Id, $"enddate:{time.ToString().ToLowerInvariant()}");
+			AssertSearchInvoice(acc, false, invoice.Id,
+				$"startdate:{time.AddSeconds(1).ToString("yyyy-MM-dd HH:mm:ss")}");
+			AssertSearchInvoice(acc, false, invoice.Id,
+				$"enddate:{time.AddSeconds(-1).ToString("yyyy-MM-dd HH:mm:ss")}");
+		}
 
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanGetRates()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var acc = tester.NewAccount();
-            acc.GrantAccess();
-            acc.RegisterDerivationScheme("BTC");
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task CanGetRates()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var acc = tester.NewAccount();
+			acc.GrantAccess();
+			acc.RegisterDerivationScheme("BTC");
 
-            var rateController = acc.GetController<BitpayRateController>();
-            var GetBaseCurrencyRatesResult = JObject.Parse(((JsonResult)rateController
-                .GetBaseCurrencyRates("BTC", default)
-                .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
-            Assert.NotNull(GetBaseCurrencyRatesResult);
-            Assert.NotNull(GetBaseCurrencyRatesResult.Data);
-            var rate = Assert.Single(GetBaseCurrencyRatesResult.Data);
-            Assert.Equal("BTC", rate.Code);
+			var rateController = acc.GetController<BitpayRateController>();
+			var GetBaseCurrencyRatesResult = JObject.Parse(((JsonResult)rateController
+				.GetBaseCurrencyRates("BTC", default)
+				.GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
+			Assert.NotNull(GetBaseCurrencyRatesResult);
+			Assert.NotNull(GetBaseCurrencyRatesResult.Data);
+			var rate = Assert.Single(GetBaseCurrencyRatesResult.Data);
+			Assert.Equal("BTC", rate.Code);
 
-            var GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, default)
-                .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
-            // We don't have any default currencies, so this should be failing
-            Assert.Null(GetRatesResult?.Data);
+			var GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, default)
+				.GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
+			// We don't have any default currencies, so this should be failing
+			Assert.Null(GetRatesResult?.Data);
 
-            var store = acc.GetController<UIStoresController>();
-            var ratesVM = (RatesViewModel)(Assert.IsType<ViewResult>(store.Rates()).Model);
-            ratesVM.DefaultCurrencyPairs = "BTC_USD,LTC_USD";
-            await store.Rates(ratesVM);
-            store = acc.GetController<UIStoresController>();
-            rateController = acc.GetController<BitpayRateController>();
-            GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, default)
-                .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
-            // Now we should have a result
-            Assert.NotNull(GetRatesResult);
-            Assert.NotNull(GetRatesResult.Data);
-            Assert.Equal(2, GetRatesResult.Data.Length);
+			var store = acc.GetController<UIStoresController>();
+			var ratesVM = (RatesViewModel)(Assert.IsType<ViewResult>(store.Rates()).Model);
+			ratesVM.DefaultCurrencyPairs = "BTC_USD,LTC_USD";
+			await store.Rates(ratesVM);
+			store = acc.GetController<UIStoresController>();
+			rateController = acc.GetController<BitpayRateController>();
+			GetRatesResult = JObject.Parse(((JsonResult)rateController.GetRates(null, default)
+				.GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate[]>>();
+			// Now we should have a result
+			Assert.NotNull(GetRatesResult);
+			Assert.NotNull(GetRatesResult.Data);
+			Assert.Equal(2, GetRatesResult.Data.Length);
 
-            var GetCurrencyPairRateResult = JObject.Parse(((JsonResult)rateController
-                .GetCurrencyPairRate("BTC", "LTC", default)
-                .GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate>>();
+			var GetCurrencyPairRateResult = JObject.Parse(((JsonResult)rateController
+				.GetCurrencyPairRate("BTC", "LTC", default)
+				.GetAwaiter().GetResult()).Value.ToJson()).ToObject<DataWrapper<Rate>>();
 
-            Assert.NotNull(GetCurrencyPairRateResult);
-            Assert.NotNull(GetCurrencyPairRateResult.Data);
-            Assert.Equal("LTC", GetCurrencyPairRateResult.Data.Code);
+			Assert.NotNull(GetCurrencyPairRateResult);
+			Assert.NotNull(GetCurrencyPairRateResult.Data);
+			Assert.Equal("LTC", GetCurrencyPairRateResult.Data.Code);
 
-            // Should be OK because the request is signed, so we can know the store
-            acc.BitPay.GetRates();
-            HttpClient client = new HttpClient();
-            // Unauthentified requests should also be ok
-            var response =
-                await client.GetAsync($"http://127.0.0.1:{tester.PayTester.Port}/api/rates?storeId={acc.StoreId}");
-            response.EnsureSuccessStatusCode();
-            response = await client.GetAsync(
-                $"http://127.0.0.1:{tester.PayTester.Port}/rates?storeId={acc.StoreId}");
-            response.EnsureSuccessStatusCode();
-        }
+			// Should be OK because the request is signed, so we can know the store
+			acc.BitPay.GetRates();
+			HttpClient client = new HttpClient();
+			// Unauthentified requests should also be ok
+			var response =
+				await client.GetAsync($"http://127.0.0.1:{tester.PayTester.Port}/api/rates?storeId={acc.StoreId}");
+			response.EnsureSuccessStatusCode();
+			response = await client.GetAsync(
+				$"http://127.0.0.1:{tester.PayTester.Port}/rates?storeId={acc.StoreId}");
+			response.EnsureSuccessStatusCode();
+		}
 
-        private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter, string storeId = null)
-        {
-            var result =
-                (InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>(storeId is not null)
-                    .ListInvoices(new InvoicesModel { SearchTerm = filter, StoreId = storeId }).Result).Model;
-            Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
-        }
+		private void AssertSearchInvoice(TestAccount acc, bool expected, string invoiceId, string filter, string storeId = null)
+		{
+			var result =
+				(InvoicesModel)((ViewResult)acc.GetController<UIInvoiceController>(storeId is not null)
+					.ListInvoices(new InvoicesModel { SearchTerm = filter, StoreId = storeId }).Result).Model;
+			Assert.Equal(expected, result.Invoices.Any(i => i.InvoiceId == invoiceId));
+		}
 
-        // [Fact(Timeout = TestTimeout)]
-        [Fact()]
-        [Trait("Integration", "Integration")]
-        public async Task CanRBFPayment()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            user.RegisterDerivationScheme("BTC");
-            await user.SetNetworkFeeMode(NetworkFeeMode.Always);
-            var invoice =
-                user.BitPay.CreateInvoice(new Invoice() { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
-            var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
-            var payment2 = invoice.BtcDue;
+		// [Fact(Timeout = TestTimeout)]
+		[Fact()]
+		[Trait("Integration", "Integration")]
+		public async Task CanRBFPayment()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			await user.GrantAccessAsync();
+			user.RegisterDerivationScheme("BTC");
+			await user.SetNetworkFeeMode(NetworkFeeMode.Always);
+			var invoice =
+				user.BitPay.CreateInvoice(new Invoice() { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
+			var payment1 = invoice.BtcDue + Money.Coins(0.0001m);
+			var payment2 = invoice.BtcDue;
 
-            var tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
-            {
-                    invoice.BitcoinAddress, payment1.ToString(), null, //comment
+			var tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
+			{
+					invoice.BitcoinAddress, payment1.ToString(), null, //comment
                     null, //comment_to
                     false, //subtractfeefromamount
                     true, //replaceable
             }).ResultString);
-            TestLogs.LogInformation(
-                $"Let's send a first payment of {payment1} for the {invoice.BtcDue} invoice ({tx1})");
-            var invoiceAddress =
-                BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
+			TestLogs.LogInformation(
+				$"Let's send a first payment of {payment1} for the {invoice.BtcDue} invoice ({tx1})");
+			var invoiceAddress =
+				BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
 
-            TestLogs.LogInformation($"The invoice should be paidOver");
-            TestUtils.Eventually(() =>
-            {
-                invoice = user.BitPay.GetInvoice(invoice.Id);
-                Assert.Equal(payment1, invoice.BtcPaid);
-                Assert.Equal("paid", invoice.Status);
-                Assert.Equal("paidOver", invoice.ExceptionStatus.ToString());
-                invoiceAddress =
-                    BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
-            });
+			TestLogs.LogInformation($"The invoice should be paidOver");
+			TestUtils.Eventually(() =>
+			{
+				invoice = user.BitPay.GetInvoice(invoice.Id);
+				Assert.Equal(payment1, invoice.BtcPaid);
+				Assert.Equal("paid", invoice.Status);
+				Assert.Equal("paidOver", invoice.ExceptionStatus.ToString());
+				invoiceAddress =
+					BitcoinAddress.Create(invoice.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
+			});
 
-            var tx = tester.ExplorerNode.GetRawTransaction(new uint256(tx1));
-            foreach (var input in tx.Inputs)
-            {
-                input.ScriptSig = Script.Empty; //Strip signatures
-            }
+			var tx = tester.ExplorerNode.GetRawTransaction(new uint256(tx1));
+			foreach (var input in tx.Inputs)
+			{
+				input.ScriptSig = Script.Empty; //Strip signatures
+			}
 
-            var output = tx.Outputs.First(o => o.Value == payment1);
-            output.Value = payment2;
-            output.ScriptPubKey = invoiceAddress.ScriptPubKey;
+			var output = tx.Outputs.First(o => o.Value == payment1);
+			output.Value = payment2;
+			output.ScriptPubKey = invoiceAddress.ScriptPubKey;
 
-            using (var cts = new CancellationTokenSource(10000))
-            using (var listener = tester.ExplorerClient.CreateWebsocketNotificationSession())
-            {
-                listener.ListenAllDerivationSchemes();
-                var replaced = tester.ExplorerNode.SignRawTransaction(tx);
-                Thread.Sleep(1000); // Make sure the replacement has a different timestamp
-                var tx2 = tester.ExplorerNode.SendRawTransaction(replaced);
-                TestLogs.LogInformation(
-                    $"Let's RBF with a payment of {payment2} ({tx2}), waiting for NBXplorer to pick it up");
-                Assert.Equal(tx2,
-                    ((NewTransactionEvent)listener.NextEvent(cts.Token)).TransactionData.TransactionHash);
-            }
+			using (var cts = new CancellationTokenSource(10000))
+			using (var listener = tester.ExplorerClient.CreateWebsocketNotificationSession())
+			{
+				listener.ListenAllDerivationSchemes();
+				var replaced = tester.ExplorerNode.SignRawTransaction(tx);
+				Thread.Sleep(1000); // Make sure the replacement has a different timestamp
+				var tx2 = tester.ExplorerNode.SendRawTransaction(replaced);
+				TestLogs.LogInformation(
+					$"Let's RBF with a payment of {payment2} ({tx2}), waiting for NBXplorer to pick it up");
+				Assert.Equal(tx2,
+					((NewTransactionEvent)listener.NextEvent(cts.Token)).TransactionData.TransactionHash);
+			}
 
-            TestLogs.LogInformation($"The invoice should now not be paidOver anymore");
-            TestUtils.Eventually(() =>
-            {
-                invoice = user.BitPay.GetInvoice(invoice.Id);
-                Assert.Equal(payment2, invoice.BtcPaid);
-                Assert.Equal("False", invoice.ExceptionStatus.ToString());
-            });
+			TestLogs.LogInformation($"The invoice should now not be paidOver anymore");
+			TestUtils.Eventually(() =>
+			{
+				invoice = user.BitPay.GetInvoice(invoice.Id);
+				Assert.Equal(payment2, invoice.BtcPaid);
+				Assert.Equal("False", invoice.ExceptionStatus.ToString());
+			});
 
 
-            TestLogs.LogInformation(
-                $"Let's test out rbf payments where the payment gets sent elsehwere instead");
-            var invoice2 =
-                user.BitPay.CreateInvoice(new Invoice() { Price = 0.01m, Currency = "BTC" }, Facade.Merchant);
+			TestLogs.LogInformation(
+				$"Let's test out rbf payments where the payment gets sent elsehwere instead");
+			var invoice2 =
+				user.BitPay.CreateInvoice(new Invoice() { Price = 0.01m, Currency = "BTC" }, Facade.Merchant);
 
-            var invoice2Address =
-                BitcoinAddress.Create(invoice2.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
-            uint256 invoice2tx1Id =
-                await tester.ExplorerNode.SendToAddressAsync(invoice2Address, invoice2.BtcDue, new NBitcoin.RPC.SendToAddressParameters()
-                {
-                    Replaceable = true
-                });
-            Transaction invoice2Tx1 = null;
-            TestUtils.Eventually(() =>
-            {
-                invoice2 = user.BitPay.GetInvoice(invoice2.Id);
-                Assert.Equal("paid", invoice2.Status);
-                invoice2Tx1 = tester.ExplorerNode.GetRawTransaction(new uint256(invoice2tx1Id));
-            });
-            var invoice2Tx2 = invoice2Tx1.Clone();
-            foreach (var input in invoice2Tx2.Inputs)
-            {
-                input.ScriptSig = Script.Empty; //Strip signatures
-                input.WitScript = WitScript.Empty; //Strip signatures
-            }
+			var invoice2Address =
+				BitcoinAddress.Create(invoice2.BitcoinAddress, user.SupportedNetwork.NBitcoinNetwork);
+			uint256 invoice2tx1Id =
+				await tester.ExplorerNode.SendToAddressAsync(invoice2Address, invoice2.BtcDue, new NBitcoin.RPC.SendToAddressParameters()
+				{
+					Replaceable = true
+				});
+			Transaction invoice2Tx1 = null;
+			TestUtils.Eventually(() =>
+			{
+				invoice2 = user.BitPay.GetInvoice(invoice2.Id);
+				Assert.Equal("paid", invoice2.Status);
+				invoice2Tx1 = tester.ExplorerNode.GetRawTransaction(new uint256(invoice2tx1Id));
+			});
+			var invoice2Tx2 = invoice2Tx1.Clone();
+			foreach (var input in invoice2Tx2.Inputs)
+			{
+				input.ScriptSig = Script.Empty; //Strip signatures
+				input.WitScript = WitScript.Empty; //Strip signatures
+			}
 
-            output = invoice2Tx2.Outputs.First(o =>
-                o.ScriptPubKey == invoice2Address.ScriptPubKey);
-            output.Value -= new Money(10_000, MoneyUnit.Satoshi);
-            output.ScriptPubKey = new Key().GetScriptPubKey(ScriptPubKeyType.Legacy);
-            invoice2Tx2 = await tester.ExplorerNode.SignRawTransactionAsync(invoice2Tx2);
-            await tester.ExplorerNode.SendRawTransactionAsync(invoice2Tx2);
-            tester.ExplorerNode.Generate(1);
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                var i = await tester.PayTester.InvoiceRepository.GetInvoice(invoice2.Id);
-                Assert.Equal(InvoiceStatus.New, i.Status);
-                Assert.Single(i.GetPayments(false));
-                Assert.False(i.GetPayments(false).First().Accounted);
-            });
+			output = invoice2Tx2.Outputs.First(o =>
+				o.ScriptPubKey == invoice2Address.ScriptPubKey);
+			output.Value -= new Money(10_000, MoneyUnit.Satoshi);
+			output.ScriptPubKey = new Key().GetScriptPubKey(ScriptPubKeyType.Legacy);
+			invoice2Tx2 = await tester.ExplorerNode.SignRawTransactionAsync(invoice2Tx2);
+			await tester.ExplorerNode.SendRawTransactionAsync(invoice2Tx2);
+			tester.ExplorerNode.Generate(1);
+			await TestUtils.EventuallyAsync(async () =>
+			{
+				var i = await tester.PayTester.InvoiceRepository.GetInvoice(invoice2.Id);
+				Assert.Equal(InvoiceStatus.New, i.Status);
+				Assert.Single(i.GetPayments(false));
+				Assert.False(i.GetPayments(false).First().Accounted);
+			});
 
-            TestLogs.LogInformation("Let's test if we can RBF a normal payment without adding fees to the invoice");
-            await user.SetNetworkFeeMode(NetworkFeeMode.MultiplePaymentsOnly);
-            invoice = user.BitPay.CreateInvoice(new Invoice { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
-            payment1 = invoice.BtcDue;
-            tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
-            {
-                    invoice.BitcoinAddress, payment1.ToString(), null, //comment
+			TestLogs.LogInformation("Let's test if we can RBF a normal payment without adding fees to the invoice");
+			await user.SetNetworkFeeMode(NetworkFeeMode.MultiplePaymentsOnly);
+			invoice = user.BitPay.CreateInvoice(new Invoice { Price = 5000.0m, Currency = "USD" }, Facade.Merchant);
+			payment1 = invoice.BtcDue;
+			tx1 = new uint256(tester.ExplorerNode.SendCommand("sendtoaddress", new object[]
+			{
+					invoice.BitcoinAddress, payment1.ToString(), null, //comment
                     null, //comment_to
                     false, //subtractfeefromamount
                     true, //replaceable
             }).ResultString);
-            TestLogs.LogInformation($"Paid {tx1}");
-            TestUtils.Eventually(() =>
-                {
-                    invoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.Equal(payment1, invoice.BtcPaid);
-                    Assert.Equal("paid", invoice.Status);
-                    Assert.Equal("False", invoice.ExceptionStatus.ToString());
-                }
-            );
-            var tx1Bump = new uint256(tester.ExplorerNode.SendCommand("bumpfee", new object[]
-            {
-                    tx1.ToString(),
-            }).Result["txid"].Value<string>());
-            TestLogs.LogInformation($"Bumped with {tx1Bump}");
-            var handler = tester.PayTester.GetService<PaymentMethodHandlerDictionary>().GetBitcoinHandler("BTC");
-            await TestUtils.EventuallyAsync(async () =>
-                {
-                    var invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
-                    var btcPayments = invoiceEntity.GetAllBitcoinPaymentData(handler, false).ToArray();
-                    var payments = invoiceEntity.GetPayments(false).ToArray();
-                    Assert.Equal(tx1, btcPayments[0].Outpoint.Hash);
-                    Assert.False(payments[0].Accounted);
-                    Assert.Equal(tx1Bump, btcPayments[1].Outpoint.Hash);
-                    Assert.True(payments[1].Accounted);
-                    Assert.Equal(0.0m, payments[1].PaymentMethodFee);
-                    invoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.Equal(payment1, invoice.BtcPaid);
-                    Assert.Equal("paid", invoice.Status);
-                    Assert.Equal("False", invoice.ExceptionStatus.ToString());
-                }
-            );
-        }
-
-        [Fact(Timeout = TestUtils.TestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanSaveKeyPathForOnChainPayments()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            await user.RegisterDerivationSchemeAsync("BTC");
-
-            var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.01m, "BTC"));
-            await tester.WaitForEvent<InvoiceEvent>(async () =>
-            {
-                await tester.ExplorerNode.SendToAddressAsync(
-                    BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest),
-                    Money.Coins(0.01m));
-            });
-
-
-
-            var payments = Assert.IsType<InvoiceDetailsModel>(
-                    Assert.IsType<ViewResult>(await user.GetController<UIInvoiceController>().Invoice(invoice.Id)).Model)
-                .Payments;
-            Assert.Single(payments);
-            var paymentData = payments.First().Details;
-            Assert.NotNull(paymentData["keyPath"]);
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CheckCORSSetOnBitpayAPI()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            foreach (var req in new[] { "invoices/", "invoices", "rates", "tokens" }.Select(async path =>
-              {
-                  using HttpClient client = new HttpClient();
-                  HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Options,
-                          tester.PayTester.ServerUri.AbsoluteUri + path);
-                  message.Headers.Add("Access-Control-Request-Headers", "test");
-                  var response = await client.SendAsync(message);
-                  response.EnsureSuccessStatusCode();
-                  Assert.True(response.Headers.TryGetValues("Access-Control-Allow-Origin", out var val));
-                  Assert.Equal("*", val.FirstOrDefault());
-                  Assert.True(response.Headers.TryGetValues("Access-Control-Allow-Headers", out val));
-                  Assert.Equal("test", val.FirstOrDefault());
-              }).ToList())
-            {
-                await req;
-            }
-
-            HttpClient client2 = new HttpClient();
-            HttpRequestMessage message2 = new HttpRequestMessage(HttpMethod.Options,
-                tester.PayTester.ServerUri.AbsoluteUri + "rates");
-            var response2 = await client2.SendAsync(message2);
-            Assert.True(response2.Headers.TryGetValues("Access-Control-Allow-Origin", out var val2));
-            Assert.Equal("*", val2.FirstOrDefault());
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task TestAccessBitpayAPI()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            Assert.False(user.BitPay.TestAccess(Facade.Merchant));
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
-
-            Assert.True(user.BitPay.TestAccess(Facade.Merchant));
-
-            // Test request pairing code client side
-            var storeController = user.GetController<UIStoresController>();
-            storeController
-                .CreateToken(user.StoreId, new CreateTokenViewModel() { Label = "test2", StoreId = user.StoreId })
-                .GetAwaiter().GetResult();
-            Assert.NotNull(storeController.GeneratedPairingCode);
-
-
-            var k = new Key();
-            var bitpay = new Bitpay(k, tester.PayTester.ServerUri);
-            bitpay.AuthorizeClient(new PairingCode(storeController.GeneratedPairingCode)).Wait();
-            Assert.True(bitpay.TestAccess(Facade.Merchant));
-            Assert.True(bitpay.TestAccess(Facade.PointOfSale));
-            // Same with new instance
-            bitpay = new Bitpay(k, tester.PayTester.ServerUri);
-            Assert.True(bitpay.TestAccess(Facade.Merchant));
-            Assert.True(bitpay.TestAccess(Facade.PointOfSale));
-            HttpClient client = new HttpClient();
-            var token = (await bitpay.GetAccessTokenAsync(Facade.Merchant)).Value;
-            var getRates = tester.PayTester.ServerUri.AbsoluteUri + $"rates/?cryptoCode=BTC&token={token}";
-            var req = new HttpRequestMessage(HttpMethod.Get, getRates);
-            req.Headers.Add("x-signature", NBitpayClient.Extensions.BitIdExtensions.GetBitIDSignature(k, getRates, null));
-            req.Headers.Add("x-identity", k.PubKey.ToHex());
-            var resp = await client.SendAsync(req);
-            resp.EnsureSuccessStatusCode();
-
-            // Can generate API Key
-            var repo = tester.PayTester.GetService<TokenRepository>();
-            Assert.Empty(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>()
-                .GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
-
-            var apiKey = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
-            ///////
-
-            // Generating a new one remove the previous
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>()
-                .GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
-            var apiKey2 = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
-            Assert.NotEqual(apiKey, apiKey2);
-            ////////
-
-            apiKey = apiKey2;
-
-            // Can create an invoice with this new API Key
-            HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post,
-                tester.PayTester.ServerUri.AbsoluteUri + "invoices");
-            message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic",
-                Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(apiKey)));
-            var invoice = new Invoice() { Price = 5000.0m, Currency = "USD" };
-            message.Content = new StringContent(JsonConvert.SerializeObject(invoice), Encoding.UTF8,
-                "application/json");
-            var result = client.SendAsync(message).GetAwaiter().GetResult();
-            result.EnsureSuccessStatusCode();
-            /////////////////////
-
-            // Have error 403 with bad signature
-            client = new HttpClient();
-            HttpRequestMessage mess =
-                new HttpRequestMessage(HttpMethod.Get, tester.PayTester.ServerUri.AbsoluteUri + "tokens");
-            mess.Content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
-            mess.Headers.Add("x-signature",
-                "3045022100caa123193afc22ef93d9c6b358debce6897c09dd9869fe6fe029c9cb43623fac022000b90c65c50ba8bbbc6ebee8878abe5659e17b9f2e1b27d95eda4423da5608fe");
-            mess.Headers.Add("x-identity",
-                "04b4d82095947262dd70f94c0a0e005ec3916e3f5f2181c176b8b22a52db22a8c436c4703f43a9e8884104854a11e1eb30df8fdf116e283807a1f1b8fe4c182b99");
-            mess.Method = HttpMethod.Get;
-            result = client.SendAsync(mess).GetAwaiter().GetResult();
-            Assert.Equal(System.Net.HttpStatusCode.Unauthorized, result.StatusCode);
-
-            //
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanUseAnyoneCanCreateInvoice()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
-
-            TestLogs.LogInformation("StoreId without anyone can create invoice = 403");
-            var response = await tester.PayTester.HttpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
-                {
-                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
-                        "application/json"),
-                });
-            Assert.Equal(403, (int)response.StatusCode);
-
-            TestLogs.LogInformation(
-                "No store without  anyone can create invoice = 404 because the bitpay API can't know the storeid");
-            response = await tester.PayTester.HttpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, $"invoices")
-                {
-                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
-                        "application/json"),
-                });
-            Assert.Equal(404, (int)response.StatusCode);
-
-            await user.ModifyPayment(p => p.AnyoneCanCreateInvoice = true);
-
-            TestLogs.LogInformation("Bad store with anyone can create invoice = 403");
-            response = await tester.PayTester.HttpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId=badid")
-                {
-                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
-                        "application/json"),
-                });
-            Assert.Equal(403, (int)response.StatusCode);
-
-            TestLogs.LogInformation("Good store with anyone can create invoice = 200");
-            response = await tester.PayTester.HttpClient.SendAsync(
-                new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
-                {
-                    Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
-                        "application/json"),
-                });
-            Assert.Equal(200, (int)response.StatusCode);
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanTweakRate()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
-            // First we try payment with a merchant having only BTC
-            var invoice1 = user.BitPay.CreateInvoice(
-                new Invoice()
-                {
-                    Price = 5000.0m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-            Assert.Equal(Money.Coins(1.0m), invoice1.BtcPrice);
-
-            var storeController = user.GetController<UIStoresController>();
-            var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
-            Assert.Equal(0.0, vm.Spread);
-            vm.Spread = 40;
-            await storeController.Rates(vm);
-
-
-            var invoice2 = user.BitPay.CreateInvoice(
-                new Invoice()
-                {
-                    Price = 5000.0m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-
-            var expectedRate = 5000.0m * 0.6m;
-            var expectedCoins = invoice2.Price / expectedRate;
-            Assert.True(invoice2.BtcPrice.Almost(Money.Coins(expectedCoins), 0.00001m));
-        }
-
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanCreateTopupInvoices()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync();
-            user.RegisterDerivationScheme("BTC");
-            await tester.ExplorerNode.EnsureGenerateAsync(1);
-            var rng = new Random();
-            foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
-            {
-                await user.SetNetworkFeeMode(networkFeeMode);
-                await AssertTopUpBtcPrice(tester, user, Money.Coins(1.0m), 5000.0m, networkFeeMode);
-                await AssertTopUpBtcPrice(tester, user, Money.Coins(1.23456789m), 5000.0m * 1.23456789m, networkFeeMode);
-                // Check if there is no strange roundup issues
-                var v = (decimal)(rng.NextDouble() + 1.0);
-                v = Money.Coins(v).ToDecimal(MoneyUnit.BTC);
-                await AssertTopUpBtcPrice(tester, user, Money.Coins(v), 5000.0m * v, networkFeeMode);
-            }
-        }
-
-        private async Task AssertTopUpBtcPrice(ServerTester tester, TestAccount user, Money btcSent, decimal expectedPriceWithoutNetworkFee, NetworkFeeMode networkFeeMode)
-        {
-            var cashCow = tester.ExplorerNode;
-            // First we try payment with a merchant having only BTC
-            var client = await user.CreateClient();
-            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
-            {
-                Amount = null,
-                Currency = "USD"
-            });
-            Assert.Equal(0m, invoice.Amount);
-            Assert.Equal(InvoiceType.TopUp, invoice.Type);
-            var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
-            var paid = btcSent;
-            var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
-            var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
-            var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
-                            .GetPaymentPrompt(btc)
-                            .PaymentMethodFee;
-            if (networkFeeMode != NetworkFeeMode.Always)
-            {
-                networkFee = 0.0m;
-            }
-            await cashCow.SendToAddressAsync(invoiceAddress, paid);
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                try
-                {
-                    var bitpayinvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
-                    Assert.NotEqual(0.0m, bitpayinvoice.Price);
-                    var due = Money.Parse(bitpayinvoice.CryptoInfo[0].CryptoPaid);
-                    Assert.Equal(paid, due);
-                    Assert.Equal(expectedPriceWithoutNetworkFee - networkFee * bitpayinvoice.Rate, bitpayinvoice.Price);
-                    Assert.Equal(Money.Zero, bitpayinvoice.BtcDue);
-                    Assert.Equal("paid", bitpayinvoice.Status);
-                    Assert.Equal("False", bitpayinvoice.ExceptionStatus.ToString());
-
-                    // Check if we index by price correctly once we know it
-                    var invoices = await client.GetInvoices(user.StoreId, textSearch: bitpayinvoice.Price.ToString(CultureInfo.InvariantCulture).Split('.')[0]);
-                    Assert.Contains(invoices, inv => inv.Id == bitpayinvoice.Id);
-                }
-                catch (JsonSerializationException)
-                {
-                    Assert.Fail("The bitpay's amount is not set");
-                }
-            });
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
-        [Trait("Integration", "Integration")]
-        public async Task CanModifyRates()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess();
-            user.RegisterDerivationScheme("BTC");
-
-            var store = user.GetController<UIStoresController>();
-            var rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.False(rateVm.ShowScripting);
-            Assert.Equal(CoinGeckoRateProvider.CoinGeckoName, rateVm.PreferredExchange);
-            Assert.Equal(0.0, rateVm.Spread);
-            Assert.Null(rateVm.TestRateRules);
-
-            rateVm.PreferredExchange = "bitflyer";
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.Equal("bitflyer", rateVm.PreferredExchange);
-
-            rateVm.ScriptTest = "BTC_JPY,BTC_CAD";
-            rateVm.Spread = 10;
-            store = user.GetController<UIStoresController>();
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
-                .Model);
-            Assert.NotNull(rateVm.TestRateRules);
-            Assert.Equal(2, rateVm.TestRateRules.Count);
-            Assert.False(rateVm.TestRateRules[0].Error);
-            Assert.StartsWith("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", rateVm.TestRateRules[0].Rule,
-                StringComparison.OrdinalIgnoreCase);
-            Assert.True(rateVm.TestRateRules[1].Error);
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
-
-            Assert.IsType<RedirectToActionResult>(store.ShowRateRulesPost(true).Result);
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
-            store = user.GetController<UIStoresController>();
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.Equal(rateVm.StoreId, user.StoreId);
-            Assert.Equal(rateVm.DefaultScript, rateVm.Script);
-            Assert.True(rateVm.ShowScripting);
-            rateVm.ScriptTest = "BTC_JPY";
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
-                .Model);
-            Assert.True(rateVm.ShowScripting);
-            Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = ", rateVm.TestRateRules[0].Rule,
-                StringComparison.OrdinalIgnoreCase);
-
-            rateVm.ScriptTest = "BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD";
-            rateVm.Script = "DOGE_X = bitpay(DOGE_BTC) * BTC_X;\n" +
-                            "X_CAD = ndax(X_CAD);\n" +
-                            "X_X = coingecko(X_X);";
-            rateVm.Spread = 50;
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
-                .Model);
-            Assert.True(rateVm.TestRateRules.All(t => !t.Error));
-            Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
-            store = user.GetController<UIStoresController>();
-            rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
-            Assert.Equal(50, rateVm.Spread);
-            Assert.True(rateVm.ShowScripting);
-            Assert.Contains("DOGE_X", rateVm.Script, StringComparison.OrdinalIgnoreCase);
-        }
-
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanUseDefaultCurrency()
-        {
-            await using var tester = CreateServerTester();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            await user.GrantAccessAsync(true);
-            user.RegisterDerivationScheme("BTC");
-            await user.ModifyPayment(s =>
-            {
-                Assert.Equal("USD", s.DefaultCurrency);
-                s.DefaultCurrency = "EUR";
-            });
-            var client = await user.CreateClient();
-
-            // with greenfield
-            var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest());
-            Assert.Equal("EUR", invoice.Currency);
-            Assert.Equal(InvoiceType.TopUp, invoice.Type);
-
-            // with bitpay api
-            var invoice2 = await user.BitPay.CreateInvoiceAsync(new Invoice());
-            Assert.Equal("EUR", invoice2.Currency);
-
-            // via UI
-            var controller = user.GetController<UIInvoiceController>();
-            await controller.CreateInvoice();
-            (await controller.CreateInvoice(new CreateInvoiceModel(), default)).AssertType<RedirectToActionResult>();
-            invoice = await client.GetInvoice(user.StoreId, controller.CreatedInvoiceId);
-            Assert.Equal("EUR", invoice.Currency);
-            Assert.Equal(InvoiceType.TopUp, invoice.Type);
-
-            // Check that the SendWallet use the default currency
-            var walletController = user.GetController<UIWalletsController>();
-            var walletSend = await walletController.WalletSend(new WalletId(user.StoreId, "BTC")).AssertViewModelAsync<WalletSendModel>();
-            Assert.Equal("EUR", walletSend.Fiat);
-        }
-
-        [Fact]
-        [Trait("Lightning", "Lightning")]
-        [Trait("Integration", "Integration")]
-        public async Task CanSetPaymentMethodLimits()
-        {
-            await using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            var user = tester.NewAccount();
-            user.GrantAccess(true);
-            user.RegisterDerivationScheme("BTC");
-            await user.RegisterLightningNodeAsync("BTC");
-
-
-            var lnMethod = PaymentTypes.LN.GetPaymentMethodId("BTC").ToString();
-            var btcMethod = PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString();
-
-            // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
-            var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
-            Assert.Equal(2, vm.PaymentMethodCriteria.Count);
-            var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
-            Assert.Equal(PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString(), criteria.PaymentMethod);
-            criteria.Value = "5 USD";
-            criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
-                .Result);
-
-            var invoice = user.BitPay.CreateInvoice(
-                new Invoice
-                {
-                    Price = 4.5m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-            // LN and LNURL
-            Assert.Equal(2, invoice.CryptoInfo.Length);
-            Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == "BTC-LNURL");
-            Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == "BTC-LN");
-
-            // Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
-            // We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default
-            // payment method should be LN.
-            vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
-            vm.DefaultPaymentMethod = lnMethod;
-            criteria = vm.PaymentMethodCriteria.First();
-            criteria.Value = "150 USD";
-            criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
-            criteria = vm.PaymentMethodCriteria.Skip(1).First();
-            criteria.Value = "5 USD";
-            criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
-                .Result);
-            invoice = user.BitPay.CreateInvoice(
-               new Invoice()
-               {
-                   Price = 50m,
-                   Currency = "USD",
-                   PosData = "posData",
-                   OrderId = "orderId",
-                   ItemDesc = "Some description",
-                   FullNotifications = true
-               }, Facade.Merchant);
-            var checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
-            Assert.Equal(lnMethod, checkout.PaymentMethodId);
-
-            // If we change store's default, it should change the checkout's default
-            vm.DefaultPaymentMethod = btcMethod;
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
-                .Result);
-            checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
-            Assert.Equal(btcMethod, checkout.PaymentMethodId);
-        }
-
-        [Fact]
-        [Trait("Integration", "Integration")]
-        public async Task CanSetUnifiedQrCode()
-        {
-            await using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            await tester.EnsureChannelsSetup();
-            var user = tester.NewAccount();
-            var cryptoCode = "BTC";
-            await user.GrantAccessAsync(true);
-            user.RegisterDerivationScheme(cryptoCode, ScriptPubKeyType.Segwit);
-            user.RegisterLightningNode(cryptoCode, LightningConnectionType.CLightning);
-
-            var invoice = user.BitPay.CreateInvoice(
-                new Invoice
-                {
-                    Price = 5.5m,
-                    Currency = "USD",
-                    PosData = "posData",
-                    OrderId = "orderId",
-                    ItemDesc = "Some description",
-                    FullNotifications = true
-                }, Facade.Merchant);
-
-            // validate that invoice data model doesn't have lightning string initially
-            var res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
-            var paymentMethodFirst = Assert.IsType<PaymentModel>(
-                Assert.IsType<ViewResult>(res).Model
-            );
-            Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
-
-            // enable unified QR code in settings
-            var vm = Assert.IsType<LightningSettingsViewModel>(Assert
-                .IsType<ViewResult>(user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode)).Model
-            );
-            vm.OnChainWithLnInvoiceFallback = true;
-            Assert.IsType<RedirectToActionResult>(
-                user.GetController<UIStoresController>().LightningSettings(vm).Result
-            );
-
-            // validate that QR code now has both onchain and offchain payment urls
-            res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
-            var paymentMethodUnified = Assert.IsType<PaymentModel>(
-                Assert.IsType<ViewResult>(res).Model
-            );
-            Assert.StartsWith("bitcoin:bcrt", paymentMethodUnified.InvoiceBitcoinUrl);
-            Assert.StartsWith("bitcoin:BCRT", paymentMethodUnified.InvoiceBitcoinUrlQR);
-            Assert.Contains("&lightning=lnbcrt", paymentMethodUnified.InvoiceBitcoinUrl);
-            Assert.Contains("&lightning=LNBCRT", paymentMethodUnified.InvoiceBitcoinUrlQR);
-
-            // Check correct casing: Addresses in payment URI need to be …
-            // - lowercase in link version
-            // - uppercase in QR version
-
-            // Standard for all uppercase characters in QR codes is still not implemented in all wallets
-            // But we're proceeding with BECH32 being uppercase
-            Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
-            Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR.Split('?')[0]);
-
-            // Fallback lightning invoice should be uppercase inside the QR code, lowercase in payment URI
-            var lightningFallback = paymentMethodUnified.InvoiceBitcoinUrl.Split(new[] { "&lightning=" }, StringSplitOptions.None)[1];
-            Assert.NotNull(lightningFallback);
-            Assert.Contains($"&lightning={lightningFallback}", paymentMethodUnified.InvoiceBitcoinUrl);
-            Assert.Contains($"&lightning={lightningFallback.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR);
-        }
-
-        [Fact(Timeout = 60 * 2 * 1000)]
-        [Trait("Integration", "Integration")]
-        [Trait("Lightning", "Lightning")]
-        public async Task CanSetPaymentMethodLimitsLightning()
-        {
-            await using var tester = CreateServerTester();
-            tester.ActivateLightning();
-            await tester.StartAsync();
-            await tester.EnsureChannelsSetup();
-            var user = tester.NewAccount();
-            var cryptoCode = "BTC";
-            user.GrantAccess(true);
-            user.RegisterLightningNode(cryptoCode);
-            user.SetLNUrl(cryptoCode, false);
-            var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
-            var criteria = Assert.Single(vm.PaymentMethodCriteria);
-            Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);
-            criteria.Value = "2 USD";
-            criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
-                .Result);
-
-            var invoice = user.BitPay.CreateInvoice(
-                new Invoice
-                {
-                    Price = 1.5m,
-                    Currency = "USD"
-                }, Facade.Merchant);
-            Assert.Single(invoice.CryptoInfo);
-            Assert.Equal("BTC-LN", invoice.CryptoInfo[0].PaymentType);
-
-            // Activating LNUrl, we should still have only 1 payment criteria that can be set.
-            user.RegisterLightningNode(cryptoCode);
-            user.SetLNUrl(cryptoCode, true);
-            vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
-            criteria = Assert.Single(vm.PaymentMethodCriteria);
-            Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm).Result);
-
-            // However, creating an invoice should show LNURL
-            invoice = user.BitPay.CreateInvoice(
-                new Invoice
-                {
-                    Price = 1.5m,
-                    Currency = "USD"
-                }, Facade.Merchant);
-            Assert.Equal(2, invoice.CryptoInfo.Length);
-
-            // Make sure this throw: Since BOLT11 and LN Url share the same criteria, there should be no payment method available
-            Assert.Throws<BitPayException>(() => user.BitPay.CreateInvoice(
-                new Invoice
-                {
-                    Price = 2.5m,
-                    Currency = "USD"
-                }, Facade.Merchant));
-        }
-
-        [Fact(Timeout = LongRunningTestTimeout)]
+			TestLogs.LogInformation($"Paid {tx1}");
+			TestUtils.Eventually(() =>
+				{
+					invoice = user.BitPay.GetInvoice(invoice.Id);
+					Assert.Equal(payment1, invoice.BtcPaid);
+					Assert.Equal("paid", invoice.Status);
+					Assert.Equal("False", invoice.ExceptionStatus.ToString());
+				}
+			);
+			var tx1Bump = new uint256(tester.ExplorerNode.SendCommand("bumpfee", new object[]
+			{
+					tx1.ToString(),
+			}).Result["txid"].Value<string>());
+			TestLogs.LogInformation($"Bumped with {tx1Bump}");
+			var handler = tester.PayTester.GetService<PaymentMethodHandlerDictionary>().GetBitcoinHandler("BTC");
+			await TestUtils.EventuallyAsync(async () =>
+				{
+					var invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
+					var btcPayments = invoiceEntity.GetAllBitcoinPaymentData(handler, false).ToArray();
+					var payments = invoiceEntity.GetPayments(false).ToArray();
+					Assert.Equal(tx1, btcPayments[0].Outpoint.Hash);
+					Assert.False(payments[0].Accounted);
+					Assert.Equal(tx1Bump, btcPayments[1].Outpoint.Hash);
+					Assert.True(payments[1].Accounted);
+					Assert.Equal(0.0m, payments[1].PaymentMethodFee);
+					invoice = user.BitPay.GetInvoice(invoice.Id);
+					Assert.Equal(payment1, invoice.BtcPaid);
+					Assert.Equal("paid", invoice.Status);
+					Assert.Equal("False", invoice.ExceptionStatus.ToString());
+				}
+			);
+		}
+
+		[Fact(Timeout = TestUtils.TestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanSaveKeyPathForOnChainPayments()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			await user.GrantAccessAsync();
+			await user.RegisterDerivationSchemeAsync("BTC");
+
+			var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.01m, "BTC"));
+			await tester.WaitForEvent<InvoiceEvent>(async () =>
+			{
+				await tester.ExplorerNode.SendToAddressAsync(
+					BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest),
+					Money.Coins(0.01m));
+			});
+
+
+
+			var payments = Assert.IsType<InvoiceDetailsModel>(
+					Assert.IsType<ViewResult>(await user.GetController<UIInvoiceController>().Invoice(invoice.Id)).Model)
+				.Payments;
+			Assert.Single(payments);
+			var paymentData = payments.First().Details;
+			Assert.NotNull(paymentData["keyPath"]);
+		}
+
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CheckCORSSetOnBitpayAPI()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			foreach (var req in new[] { "invoices/", "invoices", "rates", "tokens" }.Select(async path =>
+			  {
+				  using HttpClient client = new HttpClient();
+				  HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Options,
+						  tester.PayTester.ServerUri.AbsoluteUri + path);
+				  message.Headers.Add("Access-Control-Request-Headers", "test");
+				  var response = await client.SendAsync(message);
+				  response.EnsureSuccessStatusCode();
+				  Assert.True(response.Headers.TryGetValues("Access-Control-Allow-Origin", out var val));
+				  Assert.Equal("*", val.FirstOrDefault());
+				  Assert.True(response.Headers.TryGetValues("Access-Control-Allow-Headers", out val));
+				  Assert.Equal("test", val.FirstOrDefault());
+			  }).ToList())
+			{
+				await req;
+			}
+
+			HttpClient client2 = new HttpClient();
+			HttpRequestMessage message2 = new HttpRequestMessage(HttpMethod.Options,
+				tester.PayTester.ServerUri.AbsoluteUri + "rates");
+			var response2 = await client2.SendAsync(message2);
+			Assert.True(response2.Headers.TryGetValues("Access-Control-Allow-Origin", out var val2));
+			Assert.Equal("*", val2.FirstOrDefault());
+		}
+
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task TestAccessBitpayAPI()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			Assert.False(user.BitPay.TestAccess(Facade.Merchant));
+			user.GrantAccess();
+			user.RegisterDerivationScheme("BTC");
+
+			Assert.True(user.BitPay.TestAccess(Facade.Merchant));
+
+			// Test request pairing code client side
+			var storeController = user.GetController<UIStoresController>();
+			storeController
+				.CreateToken(user.StoreId, new CreateTokenViewModel() { Label = "test2", StoreId = user.StoreId })
+				.GetAwaiter().GetResult();
+			Assert.NotNull(storeController.GeneratedPairingCode);
+
+
+			var k = new Key();
+			var bitpay = new Bitpay(k, tester.PayTester.ServerUri);
+			bitpay.AuthorizeClient(new PairingCode(storeController.GeneratedPairingCode)).Wait();
+			Assert.True(bitpay.TestAccess(Facade.Merchant));
+			Assert.True(bitpay.TestAccess(Facade.PointOfSale));
+			// Same with new instance
+			bitpay = new Bitpay(k, tester.PayTester.ServerUri);
+			Assert.True(bitpay.TestAccess(Facade.Merchant));
+			Assert.True(bitpay.TestAccess(Facade.PointOfSale));
+			HttpClient client = new HttpClient();
+			var token = (await bitpay.GetAccessTokenAsync(Facade.Merchant)).Value;
+			var getRates = tester.PayTester.ServerUri.AbsoluteUri + $"rates/?cryptoCode=BTC&token={token}";
+			var req = new HttpRequestMessage(HttpMethod.Get, getRates);
+			req.Headers.Add("x-signature", NBitpayClient.Extensions.BitIdExtensions.GetBitIDSignature(k, getRates, null));
+			req.Headers.Add("x-identity", k.PubKey.ToHex());
+			var resp = await client.SendAsync(req);
+			resp.EnsureSuccessStatusCode();
+
+			// Can generate API Key
+			var repo = tester.PayTester.GetService<TokenRepository>();
+			Assert.Empty(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+			Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>()
+				.GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
+
+			var apiKey = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+			///////
+
+			// Generating a new one remove the previous
+			Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>()
+				.GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
+			var apiKey2 = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+			Assert.NotEqual(apiKey, apiKey2);
+			////////
+
+			apiKey = apiKey2;
+
+			// Can create an invoice with this new API Key
+			HttpRequestMessage message = new HttpRequestMessage(HttpMethod.Post,
+				tester.PayTester.ServerUri.AbsoluteUri + "invoices");
+			message.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Basic",
+				Encoders.Base64.EncodeData(Encoders.ASCII.DecodeData(apiKey)));
+			var invoice = new Invoice() { Price = 5000.0m, Currency = "USD" };
+			message.Content = new StringContent(JsonConvert.SerializeObject(invoice), Encoding.UTF8,
+				"application/json");
+			var result = client.SendAsync(message).GetAwaiter().GetResult();
+			result.EnsureSuccessStatusCode();
+			/////////////////////
+
+			// Have error 403 with bad signature
+			client = new HttpClient();
+			HttpRequestMessage mess =
+				new HttpRequestMessage(HttpMethod.Get, tester.PayTester.ServerUri.AbsoluteUri + "tokens");
+			mess.Content = new StringContent(string.Empty, Encoding.UTF8, "application/json");
+			mess.Headers.Add("x-signature",
+				"3045022100caa123193afc22ef93d9c6b358debce6897c09dd9869fe6fe029c9cb43623fac022000b90c65c50ba8bbbc6ebee8878abe5659e17b9f2e1b27d95eda4423da5608fe");
+			mess.Headers.Add("x-identity",
+				"04b4d82095947262dd70f94c0a0e005ec3916e3f5f2181c176b8b22a52db22a8c436c4703f43a9e8884104854a11e1eb30df8fdf116e283807a1f1b8fe4c182b99");
+			mess.Method = HttpMethod.Get;
+			result = client.SendAsync(mess).GetAwaiter().GetResult();
+			Assert.Equal(System.Net.HttpStatusCode.Unauthorized, result.StatusCode);
+
+			//
+		}
+
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanUseAnyoneCanCreateInvoice()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			user.GrantAccess();
+			user.RegisterDerivationScheme("BTC");
+
+			TestLogs.LogInformation("StoreId without anyone can create invoice = 403");
+			var response = await tester.PayTester.HttpClient.SendAsync(
+				new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+				{
+					Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
+						"application/json"),
+				});
+			Assert.Equal(403, (int)response.StatusCode);
+
+			TestLogs.LogInformation(
+				"No store without  anyone can create invoice = 404 because the bitpay API can't know the storeid");
+			response = await tester.PayTester.HttpClient.SendAsync(
+				new HttpRequestMessage(HttpMethod.Post, $"invoices")
+				{
+					Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
+						"application/json"),
+				});
+			Assert.Equal(404, (int)response.StatusCode);
+
+			await user.ModifyPayment(p => p.AnyoneCanCreateInvoice = true);
+
+			TestLogs.LogInformation("Bad store with anyone can create invoice = 403");
+			response = await tester.PayTester.HttpClient.SendAsync(
+				new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId=badid")
+				{
+					Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
+						"application/json"),
+				});
+			Assert.Equal(403, (int)response.StatusCode);
+
+			TestLogs.LogInformation("Good store with anyone can create invoice = 200");
+			response = await tester.PayTester.HttpClient.SendAsync(
+				new HttpRequestMessage(HttpMethod.Post, $"invoices?storeId={user.StoreId}")
+				{
+					Content = new StringContent("{\"Price\": 5000, \"currency\": \"USD\"}", Encoding.UTF8,
+						"application/json"),
+				});
+			Assert.Equal(200, (int)response.StatusCode);
+		}
+
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanTweakRate()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			user.GrantAccess();
+			user.RegisterDerivationScheme("BTC");
+			// First we try payment with a merchant having only BTC
+			var invoice1 = user.BitPay.CreateInvoice(
+				new Invoice()
+				{
+					Price = 5000.0m,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
+			Assert.Equal(Money.Coins(1.0m), invoice1.BtcPrice);
+
+			var storeController = user.GetController<UIStoresController>();
+			var vm = (RatesViewModel)((ViewResult)storeController.Rates()).Model;
+			Assert.Equal(0.0, vm.Spread);
+			vm.Spread = 40;
+			await storeController.Rates(vm);
+
+
+			var invoice2 = user.BitPay.CreateInvoice(
+				new Invoice()
+				{
+					Price = 5000.0m,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
+
+			var expectedRate = 5000.0m * 0.6m;
+			var expectedCoins = invoice2.Price / expectedRate;
+			Assert.True(invoice2.BtcPrice.Almost(Money.Coins(expectedCoins), 0.00001m));
+		}
+
+
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanCreateTopupInvoices()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			await user.GrantAccessAsync();
+			user.RegisterDerivationScheme("BTC");
+			await tester.ExplorerNode.EnsureGenerateAsync(1);
+			var rng = new Random();
+			foreach (var networkFeeMode in Enum.GetValues(typeof(NetworkFeeMode)).Cast<NetworkFeeMode>())
+			{
+				await user.SetNetworkFeeMode(networkFeeMode);
+				await AssertTopUpBtcPrice(tester, user, Money.Coins(1.0m), 5000.0m, networkFeeMode);
+				await AssertTopUpBtcPrice(tester, user, Money.Coins(1.23456789m), 5000.0m * 1.23456789m, networkFeeMode);
+				// Check if there is no strange roundup issues
+				var v = (decimal)(rng.NextDouble() + 1.0);
+				v = Money.Coins(v).ToDecimal(MoneyUnit.BTC);
+				await AssertTopUpBtcPrice(tester, user, Money.Coins(v), 5000.0m * v, networkFeeMode);
+			}
+		}
+
+		private async Task AssertTopUpBtcPrice(ServerTester tester, TestAccount user, Money btcSent, decimal expectedPriceWithoutNetworkFee, NetworkFeeMode networkFeeMode)
+		{
+			var cashCow = tester.ExplorerNode;
+			// First we try payment with a merchant having only BTC
+			var client = await user.CreateClient();
+			var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest()
+			{
+				Amount = null,
+				Currency = "USD"
+			});
+			Assert.Equal(0m, invoice.Amount);
+			Assert.Equal(InvoiceType.TopUp, invoice.Type);
+			var btcmethod = (await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id))[0];
+			var paid = btcSent;
+			var invoiceAddress = BitcoinAddress.Create(btcmethod.Destination, cashCow.Network);
+			var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+			var networkFee = (await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id))
+							.GetPaymentPrompt(btc)
+							.PaymentMethodFee;
+			if (networkFeeMode != NetworkFeeMode.Always)
+			{
+				networkFee = 0.0m;
+			}
+			await cashCow.SendToAddressAsync(invoiceAddress, paid);
+			await TestUtils.EventuallyAsync(async () =>
+			{
+				try
+				{
+					var bitpayinvoice = await user.BitPay.GetInvoiceAsync(invoice.Id);
+					Assert.NotEqual(0.0m, bitpayinvoice.Price);
+					var due = Money.Parse(bitpayinvoice.CryptoInfo[0].CryptoPaid);
+					Assert.Equal(paid, due);
+					Assert.Equal(expectedPriceWithoutNetworkFee - networkFee * bitpayinvoice.Rate, bitpayinvoice.Price);
+					Assert.Equal(Money.Zero, bitpayinvoice.BtcDue);
+					Assert.Equal("paid", bitpayinvoice.Status);
+					Assert.Equal("False", bitpayinvoice.ExceptionStatus.ToString());
+
+					// Check if we index by price correctly once we know it
+					var invoices = await client.GetInvoices(user.StoreId, textSearch: bitpayinvoice.Price.ToString(CultureInfo.InvariantCulture).Split('.')[0]);
+					Assert.Contains(invoices, inv => inv.Id == bitpayinvoice.Id);
+				}
+				catch (JsonSerializationException)
+				{
+					Assert.Fail("The bitpay's amount is not set");
+				}
+			});
+		}
+
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("Integration", "Integration")]
+		public async Task CanModifyRates()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			user.GrantAccess();
+			user.RegisterDerivationScheme("BTC");
+
+			var store = user.GetController<UIStoresController>();
+			var rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+			Assert.False(rateVm.ShowScripting);
+			Assert.Equal(CoinGeckoRateProvider.CoinGeckoName, rateVm.PreferredExchange);
+			Assert.Equal(0.0, rateVm.Spread);
+			Assert.Null(rateVm.TestRateRules);
+
+			rateVm.PreferredExchange = "bitflyer";
+			Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
+			rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+			Assert.Equal("bitflyer", rateVm.PreferredExchange);
+
+			rateVm.ScriptTest = "BTC_JPY,BTC_CAD";
+			rateVm.Spread = 10;
+			store = user.GetController<UIStoresController>();
+			rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
+				.Model);
+			Assert.NotNull(rateVm.TestRateRules);
+			Assert.Equal(2, rateVm.TestRateRules.Count);
+			Assert.False(rateVm.TestRateRules[0].Error);
+			Assert.StartsWith("(bitflyer(BTC_JPY)) * (0.9, 1.1) =", rateVm.TestRateRules[0].Rule,
+				StringComparison.OrdinalIgnoreCase);
+			Assert.True(rateVm.TestRateRules[1].Error);
+			Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
+
+			Assert.IsType<RedirectToActionResult>(store.ShowRateRulesPost(true).Result);
+			Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
+			store = user.GetController<UIStoresController>();
+			rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+			Assert.Equal(rateVm.StoreId, user.StoreId);
+			Assert.Equal(rateVm.DefaultScript, rateVm.Script);
+			Assert.True(rateVm.ShowScripting);
+			rateVm.ScriptTest = "BTC_JPY";
+			rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
+				.Model);
+			Assert.True(rateVm.ShowScripting);
+			Assert.Contains("(bitflyer(BTC_JPY)) * (0.9, 1.1) = ", rateVm.TestRateRules[0].Rule,
+				StringComparison.OrdinalIgnoreCase);
+
+			rateVm.ScriptTest = "BTC_USD,BTC_CAD,DOGE_USD,DOGE_CAD";
+			rateVm.Script = "DOGE_X = bitpay(DOGE_BTC) * BTC_X;\n" +
+							"X_CAD = ndax(X_CAD);\n" +
+							"X_X = coingecko(X_X);";
+			rateVm.Spread = 50;
+			rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(await store.Rates(rateVm, "Test"))
+				.Model);
+			Assert.True(rateVm.TestRateRules.All(t => !t.Error));
+			Assert.IsType<RedirectToActionResult>(await store.Rates(rateVm, "Save"));
+			store = user.GetController<UIStoresController>();
+			rateVm = Assert.IsType<RatesViewModel>(Assert.IsType<ViewResult>(store.Rates()).Model);
+			Assert.Equal(50, rateVm.Spread);
+			Assert.True(rateVm.ShowScripting);
+			Assert.Contains("DOGE_X", rateVm.Script, StringComparison.OrdinalIgnoreCase);
+		}
+
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task CanUseDefaultCurrency()
+		{
+			await using var tester = CreateServerTester();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			await user.GrantAccessAsync(true);
+			user.RegisterDerivationScheme("BTC");
+			await user.ModifyPayment(s =>
+			{
+				Assert.Equal("USD", s.DefaultCurrency);
+				s.DefaultCurrency = "EUR";
+			});
+			var client = await user.CreateClient();
+
+			// with greenfield
+			var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest());
+			Assert.Equal("EUR", invoice.Currency);
+			Assert.Equal(InvoiceType.TopUp, invoice.Type);
+
+			// with bitpay api
+			var invoice2 = await user.BitPay.CreateInvoiceAsync(new Invoice());
+			Assert.Equal("EUR", invoice2.Currency);
+
+			// via UI
+			var controller = user.GetController<UIInvoiceController>();
+			await controller.CreateInvoice();
+			(await controller.CreateInvoice(new CreateInvoiceModel(), default)).AssertType<RedirectToActionResult>();
+			invoice = await client.GetInvoice(user.StoreId, controller.CreatedInvoiceId);
+			Assert.Equal("EUR", invoice.Currency);
+			Assert.Equal(InvoiceType.TopUp, invoice.Type);
+
+			// Check that the SendWallet use the default currency
+			var walletController = user.GetController<UIWalletsController>();
+			var walletSend = await walletController.WalletSend(new WalletId(user.StoreId, "BTC")).AssertViewModelAsync<WalletSendModel>();
+			Assert.Equal("EUR", walletSend.Fiat);
+		}
+
+		[Fact]
+		[Trait("Lightning", "Lightning")]
+		[Trait("Integration", "Integration")]
+		public async Task CanSetPaymentMethodLimits()
+		{
+			await using var tester = CreateServerTester();
+			tester.ActivateLightning();
+			await tester.StartAsync();
+			var user = tester.NewAccount();
+			user.GrantAccess(true);
+			user.RegisterDerivationScheme("BTC");
+			await user.RegisterLightningNodeAsync("BTC");
+
+
+			var lnMethod = PaymentTypes.LN.GetPaymentMethodId("BTC").ToString();
+			var btcMethod = PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString();
+
+			// We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
+			var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
+			Assert.Equal(2, vm.PaymentMethodCriteria.Count);
+			var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
+			Assert.Equal(PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString(), criteria.PaymentMethod);
+			criteria.Value = "5 USD";
+			criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
+			Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
+				.Result);
+
+			var invoice = user.BitPay.CreateInvoice(
+				new Invoice
+				{
+					Price = 4.5m,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
+			// LN and LNURL
+			Assert.Equal(2, invoice.CryptoInfo.Length);
+			Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == "BTC-LNURL");
+			Assert.Contains(invoice.CryptoInfo, c => c.PaymentType == "BTC-LN");
+
+			// Let's replicate https://github.com/btcpayserver/btcpayserver/issues/2963
+			// We allow BTC for more than 5 USD, and LN for less than 150. The default is LN, so the default
+			// payment method should be LN.
+			vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
+			vm.DefaultPaymentMethod = lnMethod;
+			criteria = vm.PaymentMethodCriteria.First();
+			criteria.Value = "150 USD";
+			criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
+			criteria = vm.PaymentMethodCriteria.Skip(1).First();
+			criteria.Value = "5 USD";
+			criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
+			Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
+				.Result);
+			invoice = user.BitPay.CreateInvoice(
+			   new Invoice()
+			   {
+				   Price = 50m,
+				   Currency = "USD",
+				   PosData = "posData",
+				   OrderId = "orderId",
+				   ItemDesc = "Some description",
+				   FullNotifications = true
+			   }, Facade.Merchant);
+			var checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+			Assert.Equal(lnMethod, checkout.PaymentMethodId);
+
+			// If we change store's default, it should change the checkout's default
+			vm.DefaultPaymentMethod = btcMethod;
+			Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
+				.Result);
+			checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+			Assert.Equal(btcMethod, checkout.PaymentMethodId);
+		}
+
+		[Fact]
+		[Trait("Integration", "Integration")]
+		public async Task CanSetUnifiedQrCode()
+		{
+			await using var tester = CreateServerTester();
+			tester.ActivateLightning();
+			await tester.StartAsync();
+			await tester.EnsureChannelsSetup();
+			var user = tester.NewAccount();
+			var cryptoCode = "BTC";
+			await user.GrantAccessAsync(true);
+			user.RegisterDerivationScheme(cryptoCode, ScriptPubKeyType.Segwit);
+			user.RegisterLightningNode(cryptoCode, LightningConnectionType.CLightning);
+
+			var invoice = user.BitPay.CreateInvoice(
+				new Invoice
+				{
+					Price = 5.5m,
+					Currency = "USD",
+					PosData = "posData",
+					OrderId = "orderId",
+					ItemDesc = "Some description",
+					FullNotifications = true
+				}, Facade.Merchant);
+
+			// validate that invoice data model doesn't have lightning string initially
+			var res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
+			var paymentMethodFirst = Assert.IsType<PaymentModel>(
+				Assert.IsType<ViewResult>(res).Model
+			);
+			Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
+
+			// enable unified QR code in settings
+			var vm = Assert.IsType<LightningSettingsViewModel>(Assert
+				.IsType<ViewResult>(user.GetController<UIStoresController>().LightningSettings(user.StoreId, cryptoCode)).Model
+			);
+			vm.OnChainWithLnInvoiceFallback = true;
+			Assert.IsType<RedirectToActionResult>(
+				user.GetController<UIStoresController>().LightningSettings(vm).Result
+			);
+
+			// validate that QR code now has both onchain and offchain payment urls
+			res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
+			var paymentMethodUnified = Assert.IsType<PaymentModel>(
+				Assert.IsType<ViewResult>(res).Model
+			);
+			Assert.StartsWith("bitcoin:bcrt", paymentMethodUnified.InvoiceBitcoinUrl);
+			Assert.StartsWith("bitcoin:BCRT", paymentMethodUnified.InvoiceBitcoinUrlQR);
+			Assert.Contains("&lightning=lnbcrt", paymentMethodUnified.InvoiceBitcoinUrl);
+			Assert.Contains("&lightning=LNBCRT", paymentMethodUnified.InvoiceBitcoinUrlQR);
+
+			// Check correct casing: Addresses in payment URI need to be …
+			// - lowercase in link version
+			// - uppercase in QR version
+
+			// Standard for all uppercase characters in QR codes is still not implemented in all wallets
+			// But we're proceeding with BECH32 being uppercase
+			Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
+			Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR.Split('?')[0]);
+
+			// Fallback lightning invoice should be uppercase inside the QR code, lowercase in payment URI
+			var lightningFallback = paymentMethodUnified.InvoiceBitcoinUrl.Split(new[] { "&lightning=" }, StringSplitOptions.None)[1];
+			Assert.NotNull(lightningFallback);
+			Assert.Contains($"&lightning={lightningFallback}", paymentMethodUnified.InvoiceBitcoinUrl);
+			Assert.Contains($"&lightning={lightningFallback.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR);
+		}
+
+		[Fact(Timeout = 60 * 2 * 1000)]
+		[Trait("Integration", "Integration")]
+		[Trait("Lightning", "Lightning")]
+		public async Task CanSetPaymentMethodLimitsLightning()
+		{
+			await using var tester = CreateServerTester();
+			tester.ActivateLightning();
+			await tester.StartAsync();
+			await tester.EnsureChannelsSetup();
+			var user = tester.NewAccount();
+			var cryptoCode = "BTC";
+			user.GrantAccess(true);
+			user.RegisterLightningNode(cryptoCode);
+			user.SetLNUrl(cryptoCode, false);
+			var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
+			var criteria = Assert.Single(vm.PaymentMethodCriteria);
+			Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);
+			criteria.Value = "2 USD";
+			criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.LessThan;
+			Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
+				.Result);
+
+			var invoice = user.BitPay.CreateInvoice(
+				new Invoice
+				{
+					Price = 1.5m,
+					Currency = "USD"
+				}, Facade.Merchant);
+			Assert.Single(invoice.CryptoInfo);
+			Assert.Equal("BTC-LN", invoice.CryptoInfo[0].PaymentType);
+
+			// Activating LNUrl, we should still have only 1 payment criteria that can be set.
+			user.RegisterLightningNode(cryptoCode);
+			user.SetLNUrl(cryptoCode, true);
+			vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
+			criteria = Assert.Single(vm.PaymentMethodCriteria);
+			Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode).ToString(), criteria.PaymentMethod);
+			Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm).Result);
+
+			// However, creating an invoice should show LNURL
+			invoice = user.BitPay.CreateInvoice(
+				new Invoice
+				{
+					Price = 1.5m,
+					Currency = "USD"
+				}, Facade.Merchant);
+			Assert.Equal(2, invoice.CryptoInfo.Length);
+
+			// Make sure this throw: Since BOLT11 and LN Url share the same criteria, there should be no payment method available
+			Assert.Throws<BitPayException>(() => user.BitPay.CreateInvoice(
+				new Invoice
+				{
+					Price = 2.5m,
+					Currency = "USD"
+				}, Facade.Merchant));
+		}
+
+		[Fact(Timeout = LongRunningTestTimeout)]
+		[Trait("pouet", "pouet")]
+		public async Task temptest()
+		{
+			await Task.Delay(10000);
+			throw new Exception("boom");
+		}
+
+		[Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task PosDataParser_ParsesCorrectly_Slower()
         {

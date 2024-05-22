@@ -6,6 +6,11 @@ using Xunit.Abstractions;
 using Xunit.Sdk;
 using System.Linq;
 using System.Reflection;
+using System.Diagnostics;
+using BTCPayServer.Client.Models;
+using ExchangeSharp;
+using Microsoft.Diagnostics.Runtime;
+using System.IO;
 
 namespace BTCPayServer.Tests
 {
@@ -89,17 +94,43 @@ namespace BTCPayServer.Tests
                 }
 
                 var test = $"{TestMethod.TestClass.Class.Name}.{TestMethod.Method.Name}({parameters})";
+                DateTimeOffset started = DateTimeOffset.UtcNow;
+                ManualResetEvent stopped = new ManualResetEvent(false);
+                new Thread(o =>
+                {
+ctn:
+                    if (DateTimeOffset.UtcNow - started > TimeSpan.FromMinutes(1.5))
+                    {
+                        _diagnosticMessageSink.OnMessage(new DiagnosticMessage($"WARNING: {test} has been running for more than 1.5 minutes"));
+                        var solution = Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "ConsoleApp1");
+                        ProcessStartInfo process = new ProcessStartInfo("dotnet", ["run", "--", Process.GetCurrentProcess().Id.ToString()])
+                        {
+                            WorkingDirectory = solution,
+                            UseShellExecute = false,
+                            RedirectStandardOutput = true,
+                        };
+                        
+                        var p = new Process();
+                        p.StartInfo = process;
+                        p.OutputDataReceived += (object sender, DataReceivedEventArgs e) =>
+                        {
+                            if (e.Data is not null)
+                                _diagnosticMessageSink.OnMessage(new DiagnosticMessage($"{e.Data}"));
+                        };
+                        p.Start();
+                        p.BeginOutputReadLine();
+                        p.WaitForExit();
+                    }
+                    if (!stopped.WaitOne(1000))
+                        goto ctn;
+                    stopped.Dispose();
+                }).Start();
+                
 
                 _diagnosticMessageSink.OnMessage(new DiagnosticMessage($"STARTED: {test}"));
 
                 try
                 {
-                    var deadlineMinutes = 2;
-                    using var timer = new Timer(
-                        _ => _diagnosticMessageSink.OnMessage(new DiagnosticMessage($"WARNING: {test} has been running for more than {deadlineMinutes} minutes")),
-                        null,
-                        TimeSpan.FromMinutes(deadlineMinutes),
-                        Timeout.InfiniteTimeSpan);
                     var result = await base.RunTestCaseAsync(testCase);
 
                     var status = result.Failed > 0
@@ -114,6 +145,10 @@ namespace BTCPayServer.Tests
                 {
                     _diagnosticMessageSink.OnMessage(new DiagnosticMessage($"ERROR: {test} ({ex.Message})"));
                     throw;
+                }
+                finally
+                {
+                    stopped.Set();
                 }
             }
         }

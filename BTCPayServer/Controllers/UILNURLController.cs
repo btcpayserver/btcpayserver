@@ -303,11 +303,11 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var createInvoice = new CreateInvoiceRequest()
+            var createInvoice = new CreateInvoiceRequest
             {
-                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup? null:  item?.Price,
+                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? null : item?.Price,
                 Currency = currencyCode,
-                Checkout = new InvoiceDataBase.CheckoutOptions()
+                Checkout = new InvoiceDataBase.CheckoutOptions
                 {
                     RedirectURL = app.AppType switch
                     {
@@ -319,6 +319,7 @@ namespace BTCPayServer
                 AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
             };
 
+            var allowOverpay = item?.PriceType is not ViewPointOfSaleViewModel.ItemPriceType.Fixed;
             var invoiceMetadata = new InvoiceMetadata { OrderId = AppService.GetRandomOrderId() };
             if (item != null)
             {
@@ -333,7 +334,7 @@ namespace BTCPayServer
                 store.GetStoreBlob(),
                 createInvoice,
                 additionalTags: new List<string> { AppService.GetAppInternalTag(appId) },
-                allowOverpay: false);
+                allowOverpay: allowOverpay);
         }
 
         public class EditLightningAddressVM
@@ -529,7 +530,9 @@ namespace BTCPayServer
                 return this.CreateAPIError(null, e.Message);
             }
             lnurlRequest = await CreateLNUrlRequestFromInvoice(cryptoCode, i, store, blob, lnurlRequest, lnUrlMetadata, allowOverpay);
-            return lnurlRequest is null ? NotFound() : Ok(lnurlRequest);
+            return lnurlRequest is null
+                ? BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Unable to create LNURL request." })
+                : Ok(lnurlRequest);
         }
 
         private async Task<LNURLPayRequest> CreateLNUrlRequestFromInvoice(

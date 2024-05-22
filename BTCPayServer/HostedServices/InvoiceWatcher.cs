@@ -343,7 +343,7 @@ namespace BTCPayServer.HostedServices
                         var client = _explorerClientProvider.GetExplorerClient(payment.Currency);
                         var transactionResult = client is null ? null : await client.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
                         var confirmationCount = transactionResult?.Confirmations ?? 0;
-                        onChainPaymentData.ConfirmationCount = confirmationCount;
+                        if (network.CryptoCode != "MWEB") onChainPaymentData.ConfirmationCount = confirmationCount;
                         payment.Status = NBXplorerListener.IsSettled(invoice, onChainPaymentData) ? PaymentStatus.Settled : PaymentStatus.Processing;
                         payment.SetDetails(handler, onChainPaymentData);
 

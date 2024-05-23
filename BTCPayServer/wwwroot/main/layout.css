@@ -388,7 +388,7 @@
     padding: var(--content-padding-top) var(--content-padding-horizontal) var(--btcpay-space-l);
 }
 
-.sticky-header > h2 {
+.sticky-header h2 {
     margin-bottom: 0;
 }
 
@@ -396,6 +396,10 @@
     display: flex;
     flex-wrap: wrap;
     gap: var(--btcpay-space-m);
+}
+
+.sticky-header > nav + :last-child {
+    align-self: flex-start;
 }
 
 /* Footer */

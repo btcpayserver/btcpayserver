@@ -23,7 +23,17 @@
 
 <form method="post">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListRoles" asp-route-storeId="@storeId">Roles</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>
         <button id="Save" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>
 

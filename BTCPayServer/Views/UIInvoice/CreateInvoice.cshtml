@@ -1,5 +1,4 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
-@using BTCPayServer.Services.Apps
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
@@ -30,7 +29,17 @@
 
 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>
         <input type="submit" value="Create" class="btn btn-primary" id="Create" />
     </div>
 

@@ -291,7 +291,8 @@ h2 .icon.icon-info {
         page-break-inside: avoid;
     }
     .actions-col,
-    .sticky-header > div {
+    .sticky-header > div:last-child,
+    .sticky-header > .btn:last-child {
         display: none;
     }
 }

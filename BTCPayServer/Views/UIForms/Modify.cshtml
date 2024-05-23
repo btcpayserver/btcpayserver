@@ -193,13 +193,21 @@
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
     <div class="sticky-header">
-        <h2>
-            <span>@ViewData["Title"]</span>
-            <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-                <vc:icon symbol="info" />
-            </a>
-        </h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@storeId">Forms</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+                <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info" />
+                </a>
+            </h2>
+        </nav>
+        <div>
             <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
             @if (!isNew)
             {

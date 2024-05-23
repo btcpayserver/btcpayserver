@@ -100,13 +100,14 @@ namespace BTCPayServer.Services.Wallets
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
 
+            var addressIndex = pathInfo.KeyPath.Indexes.Last() + 1;
             if (Network.CryptoCode == "MWEB")
             {
                 using var channel = GrpcChannel.ForAddress("http://localhost:12345");
                 var client = new Rpc.RpcClient(channel);
-                var response = await client.AddressesAsync(new AddressRequest {
-                    FromIndex = pathInfo.KeyPath.Indexes.Last() + 1,
-                    ToIndex = pathInfo.KeyPath.Indexes.Last() + 2,
+                var response = await client.AddressesAsync(new AddressRequest
+                {
+                    FromIndex = addressIndex, ToIndex = addressIndex + 1,
                     ScanSecret = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebScanKey.PrivateKey.ToBytes()),
                     SpendPubkey = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebSpendPubKey.GetPublicKey().ToBytes()),
                 });
@@ -121,9 +122,10 @@ namespace BTCPayServer.Services.Wallets
 
             if (storeId != null)
             {
+                var obj = new JObject() { ["generatedBy"] = generatedBy };
+                if (Network.CryptoCode == "MWEB") obj["addressIndex"] = addressIndex;
                 await WalletRepository.EnsureWalletObject(
-                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()),
-                    new JObject() { ["generatedBy"] = generatedBy });
+                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()), obj);
             }
             return pathInfo;
         }

@@ -1299,17 +1299,22 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             filter = "status:abed, status:abed2";
             search = new SearchString(filter);
-            Assert.Equal("", search.TextSearch);
+            Assert.Null(search.TextSearch);
+            Assert.Null(search.TextFilters);
             Assert.Equal("status:abed, status:abed2", search.ToString());
             Assert.Throws<KeyNotFoundException>(() => search.Filters["test"]);
             Assert.Equal(2, search.Filters["status"].Count);
             Assert.Equal("abed", search.Filters["status"].First());
             Assert.Equal("abed2", search.Filters["status"].Skip(1).First());
 
-            filter = "StartDate:2019-04-25 01:00 AM, hekki";
+            filter = "StartDate:2019-04-25 01:00 AM, hekki,orderid:MYORDERID,orderid:MYORDERID_2";
             search = new SearchString(filter);
             Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
             Assert.Equal("hekki", search.TextSearch);
+            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2", search.TextFilters);
+            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2,hekki", search.TextCombined);
+            Assert.Equal("StartDate:2019-04-25 01:00 AM", search.WithoutSearchText());
+            Assert.Equal(filter, search.ToString());
 
             // modify search
             filter = $"status:settled,exceptionstatus:paidLate,unusual:true, fulltext searchterm, storeid:{storeId},startdate:2019-04-25 01:00:00";

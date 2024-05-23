@@ -209,7 +209,10 @@
     </div>
     <div class="row mb-4">
         <div class="col-12">
-            <div asp-validation-summary="All"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <div class="form-group" style="max-width: 27rem;">
                 <label asp-for="Name" class="form-label" data-required></label>
                 <input asp-for="Name" class="form-control" required />

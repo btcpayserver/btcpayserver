@@ -19,7 +19,7 @@
 {
     <div asp-validation-summary="All"></div>
 }
-@if (this.Model.Method is WalletSetupMethod.Hardware)
+@if (Model.Method is WalletSetupMethod.Hardware)
 {
 	<partial name="LocalhostBrowserSupport" />
 }

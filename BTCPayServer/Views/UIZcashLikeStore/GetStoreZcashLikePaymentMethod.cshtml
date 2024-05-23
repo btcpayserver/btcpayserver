@@ -7,7 +7,10 @@
 
 <div class="row">
     <div class="col-md-8">
-        <div asp-validation-summary="All" class="text-danger"></div>
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All" class="text-danger"></div>
+        }
         @if (Model.Summary != null)
         {
             <div class="card">

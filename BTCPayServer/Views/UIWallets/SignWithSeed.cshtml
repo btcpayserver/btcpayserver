@@ -37,7 +37,10 @@
     <p class="mb-0">Otherwise you are exposing yourself to malicious site owners, or to malicious plugins installed in your browser.</p>
 </div>
 
-<div asp-validation-summary="All"></div>
+@if (!ViewContext.ModelState.IsValid)
+{
+    <div asp-validation-summary="All"></div>
+}
 
 <form method="post" asp-action="SignWithSeed" asp-route-walletId="@walletId">
     <partial name="SigningContext" for="SigningContext"/>

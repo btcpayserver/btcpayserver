@@ -6,12 +6,12 @@
     ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "Lightning Payout Processor", Context.GetStoreData().Id);
 }
 
-
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
         <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save</button>
     </div>
+    <partial name="_StatusMessage" />
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <p>Set a schedule for automated Lightning Network Payouts.</p>

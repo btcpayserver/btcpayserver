@@ -30,13 +30,13 @@
         <h2>@ViewData["Title"]</h2>
         <button type="submit" class="btn btn-primary" id="Generate">Generate API Key</button>
     </div>
-
+    <p>Generate a new api key to use BTCPay through its API.</p>
     <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
-            <p>Generate a new api key to use BTCPay through its API.</p>
-            
-            <div asp-validation-summary="All"></div>
-        
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <div class="form-group">
                 <label asp-for="Label" class="form-label"></label>
                 <input asp-for="Label" class="form-control"/>

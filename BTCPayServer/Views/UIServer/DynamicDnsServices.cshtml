@@ -3,24 +3,22 @@
 @{
     ViewData.SetActivePage(ServerNavPages.Services, "Dynamic DNS Settings");
 }
-
+<div class="sticky-header">
+    <h2 class="my-1">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
+                <vc:icon symbol="info" />
+            </a>
+        </small>
+    </h2>
+    <form method="post" asp-action="DynamicDnsService">
+        <button id="AddDynamicDNS" class="btn btn-primary mt-2" type="submit">Add service</button>
+    </form>
+</div>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-md-8">
-        <div class="d-sm-flex align-items-center justify-content-between mt-n1 mb-2 mb-lg-3">
-            <h2 class="mb-0">
-                @ViewData["Title"]
-                <small>
-                    <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info" />
-                    </a>
-                </small>
-            </h2>
-            <form method="post" asp-action="DynamicDnsService">
-                <button id="AddDynamicDNS" class="btn btn-primary mt-2" type="submit">Add service</button>
-            </form>
-        </div>
-        <partial name="_StatusMessage" />
-
         <div class="form-group">
             <p>
                 Dynamic DNS allows you to have a stable DNS name pointing to your server, even if your IP address changes regulary.

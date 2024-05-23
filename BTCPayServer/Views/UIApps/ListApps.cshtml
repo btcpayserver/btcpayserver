@@ -44,10 +44,10 @@
     <a asp-action="CreateApp" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary" role="button" id="CreateNewApp">Create a new app</a>
 </div>
 
-<div class="table-responsive">
+<div class="table-responsive-md">
     @if (Model.Apps.Any())
     {
-        <table class="table table-hover table-responsive-md">
+        <table class="table table-hover">
             <thead>
             <tr>
                 <th>

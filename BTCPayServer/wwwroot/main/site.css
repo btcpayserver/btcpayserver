@@ -1190,10 +1190,11 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
  Responsive table adjustments: Reset sticky header height,
  because it doesn't work in containers with overflow auto.
 */
-.table-responsive{
+.table-responsive {
     --sticky-header-height: 0;
 }
-.sticky-header + .table-responsive {
+.sticky-header + .table-responsive,
+main .sticky-header + [class*='table-responsive'] {
     margin-top: 0 !important;
 }
 

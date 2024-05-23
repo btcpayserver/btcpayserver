@@ -41,26 +41,28 @@
 
         @if (Model.Tokens.Any())
         {
-            <table class="table table-hover table-responsive-md">
-                <thead>
-                <tr>
-                    <th>Label</th>
-                    <th class="text-end" permission="@Policies.CanModifyStoreSettings">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var token in Model.Tokens)
-                {
+            <div class="table-responsive-md">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th>Label</th>
+                        <th class="text-end" permission="@Policies.CanModifyStoreSettings">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var token in Model.Tokens)
+                    {
                     <tr>
                         <td>@token.Label</td>
                         <td class="text-end" permission="@Policies.CanModifyStoreSettings">
-                            <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - 
+                            <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> -
                             <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@Html.Encode(token.Label)</strong> will be revoked." data-confirm-input="REVOKE">Revoke</a>
                         </td>
                     </tr>
-                }
-                </tbody>
-            </table>
+                    }
+                    </tbody>
+                </table>
+            </div>
         }
         else
         {

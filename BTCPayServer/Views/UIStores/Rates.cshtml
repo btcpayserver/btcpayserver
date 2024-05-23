@@ -65,9 +65,9 @@
             }
             @if (Model.TestRateRules != null)
             {
-                <div class="form-group">
-                    <h5>Test Results:</h5>
-                    <table class="table table-hover table-responsive-md">
+                <h5>Test Results:</h5>
+                <div class="table-responsive-md">
+                    <table class="table table-hover">
                         <tbody>
                         @foreach (var result in Model.TestRateRules)
                         {

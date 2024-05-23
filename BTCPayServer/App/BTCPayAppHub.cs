@@ -195,7 +195,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
             {
                 BlockHash = tx.BlockId?.ToString(),
                 BlockHeight = (int?) tx.Height,
-                Transaction = tx.Transaction.ToString()
+                Transaction = tx.Transaction.ToHex()
             }),
             Blocks = headersTask.ToDictionary(kv => kv.Key.ToString(), kv => Convert.ToHexString(kv.Value.Result.ToBytes())),
             BlockHeghts = headerToHeight.ToDictionary(kv => kv.Key.ToString(), kv =>(int) kv.Value!)

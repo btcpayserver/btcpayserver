@@ -244,9 +244,11 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
         foreach (string identifier in identifiers)
         {
             var ts = TrackedSource.Parse(identifier,explorerClient.Network);
-            if (ts is not DerivationSchemeTrackedSource derivationSchemeTrackedSource)
+            if (ts is null)
+            {
                 continue;
-            var utxos = await explorerClient.GetUTXOsAsync(derivationSchemeTrackedSource.DerivationStrategy);
+            }
+            var utxos = await explorerClient.GetUTXOsAsync(ts);
             result.AddRange(utxos.GetUnspentUTXOs(0).Select(utxo => new CoinResponse()
             {
                 Identifier = identifier,
@@ -254,10 +256,34 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
                 Script = utxo.ScriptPubKey.ToHex(),
                 Outpoint = utxo.Outpoint.ToString(),
                 Value = utxo.Value.GetValue(_btcPayNetworkProvider.BTC),
-                Path = utxo.KeyPath.ToString()
+                Path = utxo.KeyPath?.ToString()
             }));
         }
         return result.ToArray();
+    }
+
+    public async Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers)
+    {
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
+        var result = new Dictionary<string, TxResp[]>();
+        foreach (string identifier in identifiers)
+        {
+            var ts = TrackedSource.Parse(identifier,explorerClient.Network);
+            if (ts is null)
+            {
+                continue;
+            }
+            var txs = await explorerClient.GetTransactionsAsync(ts);
+            
+            var items = txs.ConfirmedTransactions.Transactions
+                .Concat(txs.UnconfirmedTransactions.Transactions)
+                .Concat(txs.ImmatureTransactions.Transactions)
+                .Concat(txs.ReplacedTransactions.Transactions)
+                .Select(tx => new TxResp(tx.Confirmations, tx.Height, tx.BalanceChange.GetValue(_btcPayNetworkProvider.BTC), tx.Timestamp, tx.TransactionId.ToString())).OrderByDescending(arg => arg.Timestamp);
+            result.Add(identifier,items.ToArray());
+        }
+
+        return result;
     }
 
     public async Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment)
@@ -286,3 +312,5 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
         return await _appState.Handshake(Context.ConnectionId, request);
     }
 }
+
+

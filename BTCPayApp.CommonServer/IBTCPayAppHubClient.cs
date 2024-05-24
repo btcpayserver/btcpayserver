@@ -1,7 +1,9 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
+using NBitcoin;
 
 namespace BTCPayApp.CommonServer;
 
@@ -30,6 +32,15 @@ public interface IBTCPayAppHubClient
     Task<List<LightningPayment>> GetLightningPayments(ListPaymentsParams request);
     Task<List<LightningPayment>> GetLightningInvoices(ListInvoicesParams request);
 }
+
+public record TxResp(long Confirmations, long? Height, decimal BalanceChange, DateTimeOffset Timestamp, string TransactionId)
+{
+    public override string ToString()
+    {
+        return $"{{ Confirmations = {Confirmations}, Height = {Height}, BalanceChange = {BalanceChange}, Timestamp = {Timestamp}, TransactionId = {TransactionId} }}";
+    }
+}
+
 //methods available on the hub in the server
 public interface IBTCPayAppHubServer
 {
@@ -47,6 +58,7 @@ public interface IBTCPayAppHubServer
     Task TrackScripts(string identifier, string[] scripts);
     Task<string> UpdatePsbt(string[] identifiers, string psbt);
     Task<CoinResponse[]> GetUTXOs(string[] identifiers);
+    Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
 
 
     Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment);

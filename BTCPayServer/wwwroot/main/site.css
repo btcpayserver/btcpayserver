@@ -473,7 +473,7 @@ svg.icon-note {
     font-weight: var(--btcpay-font-weight-bold);
 }
 
-.widget .table {
+.widget *:not([class*='table-responsive']) > .table {
     margin-left: -.5rem;
     margin-right: -.5rem;
     width: calc(100% + 1rem);

@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.13.2
+
+### New features
+
+* Add refund reports (#5791) @NicolasDorier
+* Allow `lightning:` in html hyperlinks (#6002 #6001) @dennisreimann
+
+### Bug fixes
+
+* If you specified a 0 amount bolt 11 invoice for a payout, it would be incorrectly validated and not accepted. (#5943 #5819) @Kukks
+* Domain mapping constraint: Fix .onion case (#5948 #5917) @dennisreimann
+* Pull payment QR scan fixes (#5950) @dennisreimann
+* Server email settings: Fix missing password field (#5952 #5949) @dennisreimann
+* Fix: Some valid taproot PSBT couldn't parsed and show better error message (#5715 #5993) @NicolasDorier
+
+### Improvements
+
+* Search: Display text filters in search input (#5986 #5984) @dennisreimann
+* POS: Allow overpay for articles with minimum price (#5997 #5995) @dennisreimann
+* Improve data display on receipt (#5896 #5882) @dennisreimann
+* Greenfield API clarifications (#5955) @ndeet
+* Improvements to receipts display for PoS @rockstardev
+* Fix layout on mobile on the dashboard (#5721 #6006) @dennisreimann
+
 ## 1.13.1
 
 ### Bug fixes

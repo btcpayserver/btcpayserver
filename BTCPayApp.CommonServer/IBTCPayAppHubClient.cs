@@ -31,6 +31,7 @@ public interface IBTCPayAppHubClient
     Task<LightningPayment?> GetLightningPayment(string paymentHash);
     Task<List<LightningPayment>> GetLightningPayments(ListPaymentsParams request);
     Task<List<LightningPayment>> GetLightningInvoices(ListInvoicesParams request);
+    Task<PayResponse> PayInvoice(string bolt11, long? amountMilliSatoshi);
 }
 
 public record TxResp(long Confirmations, long? Height, decimal BalanceChange, DateTimeOffset Timestamp, string TransactionId)

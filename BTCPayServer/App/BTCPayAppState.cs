@@ -6,6 +6,7 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
+using AngleSharp.Dom.Events;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Events;
 using BTCPayServer.Payments.Lightning;
@@ -203,10 +204,16 @@ public class BTCPayAppState : IHostedService
         foreach (var group in GroupToConnectionId.Where(a => a.Value == contextConnectionId).Select(a => a.Key)
                      .ToArray())
         {
-            GroupToConnectionId.TryRemove(group, out _);
+            if (GroupToConnectionId.TryRemove(group, out _))
+            {
+                GroupRemoved?.Invoke(this, group);
+            }
+
         }
     }
 
+    public event EventHandler<string>? GroupRemoved;
+    
     public async Task Connected(string contextConnectionId)
     {
         if(_nodeInfo.Length > 0)

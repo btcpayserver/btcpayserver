@@ -334,6 +334,8 @@ namespace BTCPayServer.Hosting
                 htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
                 htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
                 htmlSanitizer.AllowedSchemes.Add("mailto");
+                htmlSanitizer.AllowedSchemes.Add("bitcoin");
+                htmlSanitizer.AllowedSchemes.Add("lightning");
                 return htmlSanitizer;
             });
 

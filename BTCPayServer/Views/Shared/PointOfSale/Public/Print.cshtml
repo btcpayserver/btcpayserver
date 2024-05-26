@@ -76,6 +76,7 @@ else
             {
                 var item = Model.Items[x];
                 var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+                if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && item.Price == 0) continue;
                 <div class="d-flex flex-wrap">
                     <div class="card px-0" data-id="@x">
                         <div class="card-body p-3 d-flex flex-column gap-2">

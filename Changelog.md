@@ -14,6 +14,7 @@
 * Pull payment QR scan fixes (#5950) @dennisreimann
 * Server email settings: Fix missing password field (#5952 #5949) @dennisreimann
 * Fix: Some valid taproot PSBT couldn't parsed and show better error message (#5715 #5993) @NicolasDorier
+* Fix: Adding a label to a base58 addresses in the `Send Wallet` screen wasn't working (#6011) @NicolasDorier
 
 ### Improvements
 

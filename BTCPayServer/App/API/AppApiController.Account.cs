@@ -20,46 +20,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using NicolasDorier.RateLimits;
 
-namespace BTCPayServer.App;
+namespace BTCPayServer.App.API;
 
-[ApiController]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldBearer)]
-[Route("btcpayapp")]
-public class BtcPayAppController(
-    StoreRepository storeRepository,
-    EventAggregator eventAggregator,
-    SignInManager<ApplicationUser> signInManager,
-    UserManager<ApplicationUser> userManager,
-    TimeProvider timeProvider,
-    ISettingsRepository settingsRepository,
-    UriResolver uriResolver,
-    IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
-    : Controller
+public partial class AppApiController
 {
-    [AllowAnonymous]
-    [HttpGet("instance")]
-    public async Task<Results<Ok<AppInstanceInfo>, NotFound>> Instance()
-    {
-        var serverSettings = await settingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
-        var policiesSettings = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-        var themeSettings = await settingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-
-        return TypedResults.Ok(new AppInstanceInfo
-        {
-            BaseUrl = Request.GetAbsoluteRoot(),
-            ServerName = serverSettings.ServerName,
-            ContactUrl = serverSettings.ContactUrl,
-            RegistrationEnabled = policiesSettings.EnableRegistration,
-            CustomThemeExtension = themeSettings.CustomTheme ? themeSettings.CustomThemeExtension.ToString() : null,
-            CustomThemeCssUrl = themeSettings.CustomTheme && !string.IsNullOrEmpty(themeSettings.CustomThemeCssUrl?.ToString())
-                ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), themeSettings.CustomThemeCssUrl)
-                : null,
-            LogoUrl = !string.IsNullOrEmpty(themeSettings.LogoUrl?.ToString())
-                ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), themeSettings.LogoUrl)
-                : null
-        });
-    }
-    
     [AllowAnonymous]
     [HttpPost("register")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]

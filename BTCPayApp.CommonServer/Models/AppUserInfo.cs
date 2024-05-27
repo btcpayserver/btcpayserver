@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using BTCPayServer.Lightning;
 
-namespace BTCPayApp.CommonServer;
+namespace BTCPayApp.CommonServer.Models;
 
 public partial class LightningPayment
 {

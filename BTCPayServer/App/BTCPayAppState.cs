@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Dom.Events;
 using BTCPayApp.CommonServer;
+using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;

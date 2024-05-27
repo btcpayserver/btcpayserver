@@ -1,4 +1,4 @@
-#nullable enable
+﻿#nullable enable
 using System;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +31,8 @@ public partial class AppApiController(
     TimeProvider timeProvider,
     ISettingsRepository settingsRepository,
     UriResolver uriResolver,
+    DefaultRulesCollection defaultRules,
+    RateFetcher rateFactory,
     IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
     : Controller
 {

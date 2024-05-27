@@ -2,15 +2,13 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
 using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -18,7 +16,6 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.App.API;
@@ -28,11 +25,11 @@ public partial class AppApiController
     [AllowAnonymous]
     [HttpPost("register")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<Results<Ok<SignupResult>, ValidationProblem, ProblemHttpResult>> Register(SignupRequest signup)
+    public async Task<IActionResult> Register(SignupRequest signup)
     {
         var policiesSettings = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
         if (policiesSettings.LockSubscription)
-            return TypedResults.Problem("This instance does not allow public user registration", statusCode: 406);
+            return this.CreateAPIError("unauthorized", "This instance does not allow public user registration");
             
         var errorMessage = "Invalid signup attempt.";
         if (ModelState.IsValid)
@@ -60,11 +57,12 @@ public partial class AppApiController
                     RequiresConfirmedEmail = policiesSettings.RequiresConfirmedEmail && !user.EmailConfirmed,
                     RequiresUserApproval = policiesSettings.RequiresUserApproval && !user.Approved
                 };
-                return TypedResults.Ok(response);
+                return Ok(response);
             }
             errorMessage = result.ToString();
         }
-        return TypedResults.Problem(errorMessage, statusCode: 400);
+        
+        return this.CreateAPIError(null, errorMessage);
     }
     
     [AllowAnonymous]
@@ -98,6 +96,7 @@ public partial class AppApiController
                 ? TypedResults.Empty
                 : TypedResults.Problem(signInResult.ToString(), statusCode: 401);
         }
+
         return TypedResults.Problem(errorMessage, statusCode: 401);
     }
 
@@ -187,12 +186,12 @@ public partial class AppApiController
 
     [AllowAnonymous]
     [HttpPost("reset-password")]
-    public async Task<IResult> SetPassword(ResetPasswordRequest resetRequest)
+    public async Task<IActionResult> SetPassword(ResetPasswordRequest resetRequest)
     {
         var user = await userManager.FindByEmailAsync(resetRequest.Email);
         if (!UserService.TryCanLogin(user, out _))
         {
-            return TypedResults.Problem("Invalid account", statusCode: 401);
+            return Unauthorized(new GreenfieldAPIError(null, "Invalid account"));
         }
 
         IdentityResult result;
@@ -204,7 +203,6 @@ public partial class AppApiController
         {
             result = IdentityResult.Failed(userManager.ErrorDescriber.InvalidToken());
         }
-        return result.Succeeded ? TypedResults.Ok() : TypedResults.Problem(result.ToString().Split(": ").Last(), statusCode: 401);
+        return result.Succeeded ? Ok() : this.CreateAPIError(401, "unauthorized", result.ToString().Split(": ").Last());
     }
-    
 }

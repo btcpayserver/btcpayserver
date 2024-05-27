@@ -1,6 +1,6 @@
 using System;
 
-namespace BTCPayApp.CommonServer;
+namespace BTCPayApp.CommonServer.Models;
 
 public class AccessTokenResult(string accessToken, string refreshToken, DateTimeOffset expiry)
 {

@@ -1,4 +1,4 @@
-namespace BTCPayApp.CommonServer;
+namespace BTCPayApp.CommonServer.Models;
 
 public class AppInstanceInfo
 {

@@ -10,7 +10,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Lightning;
 using Microsoft.AspNetCore.SignalR;
 using NBitcoin;
-using LightningPayment = BTCPayApp.CommonServer.LightningPayment;
+using LightningPayment = BTCPayApp.CommonServer.Models.LightningPayment;
 
 namespace BTCPayServer.App;
 

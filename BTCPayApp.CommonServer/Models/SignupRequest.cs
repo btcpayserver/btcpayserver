@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace BTCPayApp.CommonServer;
+namespace BTCPayApp.CommonServer.Models;
 
 public class SignupRequest
 {

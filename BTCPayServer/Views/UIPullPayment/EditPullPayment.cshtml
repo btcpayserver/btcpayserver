@@ -1,7 +1,7 @@
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Models.WalletViewModels.UpdatePullPaymentModel
-
 @{
+    var storeId = Context.GetStoreData().Id;
     ViewData.SetActivePage(StoreNavPages.Create, "Edit Pull Payment", Model.Id);
 }
 
@@ -14,9 +14,19 @@
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }
 
-<form method="post" asp-action="EditPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-pullPaymentId="@Model.Id">
+<form method="post" asp-action="EditPullPayment" asp-route-storeId="@storeId" asp-route-pullPaymentId="@Model.Id">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@storeId">Pull Payments</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {

@@ -13,10 +13,10 @@
 
     var storeId = Context.GetRouteValue("storeId") as string;
     if (storeId is null)
-        ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update role");
+        ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update Role");
     else
     {
-        ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update role");
+        ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update Role");
     }
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
 }

@@ -4,6 +4,20 @@
 }
 
 <div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Files">Files</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="Storage">Storage Provider</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Provider</li>
+        </ol>
+        <h2>
+            <span>@ViewData["Title"]</span>
+        </h2>
+    </nav>
     <h2 class="my-1">@ViewData["Title"]</h2>
 </div>
 <partial name="_StatusMessage" />

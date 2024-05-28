@@ -1,10 +1,20 @@
 ﻿@model ChargeServiceViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, "Lightning charge service");
+    ViewData.SetActivePage(ServerNavPages.Services, "Lightning Charge Service");
 }
 
 <div class="sticky-header">
-    <h2 class="my-1">@ViewData["Title"]</h2>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>
+            <span>@ViewData["Title"]</span>
+        </h2>
+    </nav>
 </div>
 <partial name="_StatusMessage" />
 

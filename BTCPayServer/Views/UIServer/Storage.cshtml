@@ -1,11 +1,21 @@
 @model BTCPayServer.Storage.ViewModels.ChooseStorageViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, "Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, "Storage Provider");
 }
 
 <form method="post">
     <div class="sticky-header">
-        <h2 class="my-1">@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Files">Files</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>         
         <button type="submit" class="btn btn-primary" name="command" value="Save">Next</button>
     </div>
     <partial name="_StatusMessage" />

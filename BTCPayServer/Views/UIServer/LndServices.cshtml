@@ -4,7 +4,17 @@
 }
 
 <div class="sticky-header">
-    <h2 class="my-1">@ViewData["Title"]</h2>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>
+            <span>@ViewData["Title"]</span>
+        </h2>
+    </nav>
 </div>
 <partial name="_StatusMessage" />
 <p>
@@ -39,7 +49,7 @@
 
 <h4 class="mt-4 mb-3">QR Code connection</h4>
 <p>
-    You can use this QR Code to connect external software to your LND instance.<br/>
+    You can use this QR Code to connect external software to your LND instance.<br />
     This QR Code is only valid for 10 minutes.
 </p>
 
@@ -77,7 +87,7 @@ else
     {
         <div class="form-group">
             <label asp-for="Host" class="form-label"></label>
-            <input asp-for="Host" readonly class="form-control"/>
+            <input asp-for="Host" readonly class="form-control" />
         </div>
         <div class="form-group">
             <label asp-for="SSL" class="form-label"></label>
@@ -88,49 +98,49 @@ else
     {
         <div class="form-group">
             <label asp-for="Uri" class="form-label"></label>
-            <input asp-for="Uri" readonly class="form-control"/>
+            <input asp-for="Uri" readonly class="form-control" />
         </div>
     }
     @if (Model.Macaroon != null)
     {
         <div class="form-group">
             <label asp-for="Macaroon" class="form-label"></label>
-            <input asp-for="Macaroon" readonly class="form-control"/>
+            <input asp-for="Macaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.AdminMacaroon != null)
     {
         <div class="form-group">
             <label asp-for="AdminMacaroon" class="form-label"></label>
-            <input asp-for="AdminMacaroon" readonly class="form-control"/>
+            <input asp-for="AdminMacaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.InvoiceMacaroon != null)
     {
         <div class="form-group">
             <label asp-for="InvoiceMacaroon" class="form-label"></label>
-            <input asp-for="InvoiceMacaroon" readonly class="form-control"/>
+            <input asp-for="InvoiceMacaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.ReadonlyMacaroon != null)
     {
         <div class="form-group">
             <label asp-for="ReadonlyMacaroon" class="form-label"></label>
-            <input asp-for="ReadonlyMacaroon" readonly class="form-control"/>
+            <input asp-for="ReadonlyMacaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.GRPCSSLCipherSuites != null)
     {
         <div class="form-group">
             <label asp-for="GRPCSSLCipherSuites" class="form-label"></label>
-            <input asp-for="GRPCSSLCipherSuites" readonly class="form-control"/>
+            <input asp-for="GRPCSSLCipherSuites" readonly class="form-control" />
         </div>
     }
     @if (Model.CertificateThumbprint != null)
     {
         <div class="form-group">
             <label asp-for="CertificateThumbprint" class="form-label"></label>
-            <input asp-for="CertificateThumbprint" readonly class="form-control"/>
+            <input asp-for="CertificateThumbprint" readonly class="form-control" />
         </div>
     }
 </div>
@@ -138,7 +148,7 @@ else
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 
-    @if(Model.QRCode != null)
+    @if (Model.QRCode != null)
     {
         <script src="~/js/qrcode.js" asp-append-version="true"></script>
         <script>

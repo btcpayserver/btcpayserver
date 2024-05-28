@@ -5,7 +5,17 @@
 
 <form method="post">
     <div class="sticky-header">
-        <h2 class="my-1">@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListUsers">Users</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">User</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>         
         <button name="command" type="submit" class="btn btn-primary" value="Save" id="SaveUser">Save</button>
     </div>
     <partial name="_StatusMessage" />

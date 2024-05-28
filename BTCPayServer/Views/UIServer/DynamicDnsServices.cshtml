@@ -4,17 +4,27 @@
     ViewData.SetActivePage(ServerNavPages.Services, "Dynamic DNS Settings");
 }
 <div class="sticky-header">
-    <h2 class="my-1">
-        @ViewData["Title"]
-        <small>
-            <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
-                <vc:icon symbol="info" />
-            </a>
-        </small>
-    </h2>
-    <form method="post" asp-action="DynamicDnsService">
-        <button id="AddDynamicDNS" class="btn btn-primary mt-2" type="submit">Add service</button>
-    </form>
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>
+            <span>@ViewData["Title"]</span>
+            <small>
+                <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info" />
+                </a>
+            </small>
+        </h2>
+    </nav>
+    <div>
+        <form method="post" asp-action="DynamicDnsService">
+            <button id="AddDynamicDNS" class="btn btn-primary mt-2" type="submit">Add Service</button>
+        </form>
+    </div>
 </div>
 <partial name="_StatusMessage" />
 <div class="row">

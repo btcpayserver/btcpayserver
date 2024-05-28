@@ -292,7 +292,7 @@
                     <span>Server Settings</span>
                 </a>
             </li>
-            @if (ViewData.IsActiveCategory(typeof(ServerNavPages)))
+            @if (ViewData.IsActiveCategory(typeof(ServerNavPages)) && !ViewData.IsActivePage([ServerNavPages.Plugins]))
             {
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Users" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
@@ -363,7 +363,7 @@
                     </li>
                 </ul>
             </li>
-            @if (ViewData.IsActiveCategory(typeof(ManageNavPages)) || ViewData.IsActivePage(new[] { ManageNavPages.ChangePassword }))
+            @if (ViewData.IsActiveCategory(typeof(ManageNavPages)) || ViewData.IsActivePage([ManageNavPages.ChangePassword]))
             {
                 <li class="nav-item nav-item-sub">
                     <a id="SectionNav-@ManageNavPages.ChangePassword.ToString()" class="nav-link @ViewData.ActivePageClass(ManageNavPages.ChangePassword)" asp-controller="UIManage" asp-action="ChangePassword">Password</a>

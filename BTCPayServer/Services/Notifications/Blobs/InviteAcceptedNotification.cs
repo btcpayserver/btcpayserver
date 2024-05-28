@@ -44,6 +44,7 @@ internal class InviteAcceptedNotification : BaseNotification
         {
             vm.Identifier = notification.Identifier;
             vm.Type = notification.NotificationType;
+            vm.StoreId = notification.StoreId;
             vm.Body = $"User {notification.UserEmail} accepted the invite to {notification.StoreName}.";
             vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIStoresController.StoreUsers),
                 "UIStores",

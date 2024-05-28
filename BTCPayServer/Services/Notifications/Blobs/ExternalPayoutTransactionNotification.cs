@@ -36,6 +36,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
+                vm.StoreId = notification.StoreId;
                 vm.Body =
                     "A payment that was made to an approved payout by an external wallet is waiting for your confirmation.";
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),

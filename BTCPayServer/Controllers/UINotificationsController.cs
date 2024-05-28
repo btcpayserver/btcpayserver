@@ -1,17 +1,13 @@
 using System;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.NotificationViewModels;
-using BTCPayServer.Security;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
-using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,34 +19,58 @@ namespace BTCPayServer.Controllers
     [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController : Controller
     {
+        private readonly ApplicationDbContextFactory _factory;
+        private readonly StoreRepository _storeRepo;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
 
         public UINotificationsController(
+            StoreRepository storeRepo,
             UserManager<ApplicationUser> userManager,
-            NotificationManager notificationManager)
+            NotificationManager notificationManager,
+            ApplicationDbContextFactory factory)
         {
+            _storeRepo = storeRepo;
             _userManager = userManager;
             _notificationManager = notificationManager;
+            _factory = factory;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
+        public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
+            model ??= new NotificationIndexViewModel { Skip = 0 };
+            var timezoneOffset = model.TimezoneOffset ?? 0;
+            model.Status ??= "Unread";
+            ViewBag.Status = model.Status;
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "UIHome");
 
-            var res = await _notificationManager.GetNotifications(new NotificationsQuery()
-            {
-                Skip = skip,
-                Take = count,
-                UserId = userId
-            });
+            var stores = await _storeRepo.GetStoresByUserId(userId);
+            model.Stores = stores.Where(store => !store.Archived).OrderBy(s => s.StoreName).ToList();
 
-            var model = new IndexViewModel() { Skip = skip, Count = count, Items = res.Items, Total = res.Count };
+
+            await using var dbContext = _factory.CreateContext();
+
+            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
+            var fs = new SearchString(searchTerm, timezoneOffset);
+            model.Search = fs;
+
+            var res = await _notificationManager.GetNotifications(new NotificationsQuery
+            {
+                Skip = model.Skip,
+                Take = model.Count,
+                UserId = userId,
+                SearchText = model.SearchText,
+                Type = fs.GetFilterArray("type"),
+                Stores = fs.GetFilterArray("store"),
+                Seen = model.Status == "Unread" ? false : null
+            });
+            model.Items = res.Items;
 
             return View(model);
         }
+
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanManageNotificationsForUser)]

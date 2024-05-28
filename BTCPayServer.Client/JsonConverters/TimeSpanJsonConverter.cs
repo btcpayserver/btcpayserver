@@ -58,6 +58,8 @@ namespace BTCPayServer.Client.JsonConverters
                         return null;
                     return TimeSpan.Zero;
                 }
+                if (reader.TokenType == JsonToken.String && TimeSpan.TryParse(reader.Value?.ToString(), out var res))
+                    return res;
                 if (reader.TokenType != JsonToken.Integer)
                     throw new JsonObjectException("Invalid timespan, expected integer", reader);
                 return ToTimespan((long)reader.Value);

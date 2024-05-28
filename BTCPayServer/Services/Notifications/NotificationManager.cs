@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Newtonsoft.Json;
+using static BTCPayServer.Data.WalletObjectData;
 
 namespace BTCPayServer.Services.Notifications
 {
@@ -68,7 +69,7 @@ namespace BTCPayServer.Services.Notifications
 
             var queryables = GetNotificationsQueryable(dbContext, query);
             var items = (await queryables.withPaging.ToListAsync()).Select(ToViewModel).Where(model => model != null).ToList();
-
+            items = FilterNotifications(items, query);
             int? count = null;
             if (query.Seen is false)
             {
@@ -134,6 +135,19 @@ namespace BTCPayServer.Services.Notifications
             return (queryable, queryable2);
         }
 
+        private List<NotificationViewModel> FilterNotifications(List<NotificationViewModel> notifications, NotificationsQuery query)
+        {
+            if (!string.IsNullOrEmpty(query.SearchText))
+            {
+                notifications = notifications.Where(data => data.Body.Contains(query.SearchText)).ToList();
+            }
+            if (query.Type?.Length > 0)
+            {
+                notifications = notifications.Where(n => query.Type.Contains(n.Type, StringComparer.OrdinalIgnoreCase)).ToList();
+            }
+            return notifications;
+        }
+
         public async Task<List<NotificationViewModel>> ToggleSeen(NotificationsQuery notificationsQuery, bool? setSeen)
         {
             await using var dbContext = _factory.CreateContext();
@@ -195,5 +209,7 @@ namespace BTCPayServer.Services.Notifications
         public int? Skip { get; set; }
         public int? Take { get; set; }
         public bool? Seen { get; set; }
+        public string SearchText { get; set; }
+        public string[] Type { get; set; }
     }
 }

@@ -1,8 +1,10 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon.Runtime.Internal.Transform;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
@@ -12,6 +14,7 @@ using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using MailKit.Search;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -35,22 +38,33 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
+        public async Task<IActionResult> Index(IndexViewModel? model = null)
         {
+            model = model ?? new IndexViewModel { Skip = 0 };
+            var timezoneOffset = model.TimezoneOffset ?? 0;
+            model.Status = model.Status ?? "Unread";
+            ViewBag.Status = model.Status;
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "UIHome");
 
+            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
+            var fs = new SearchString(searchTerm, timezoneOffset);
+            model.Search = fs;
+
             var res = await _notificationManager.GetNotifications(new NotificationsQuery()
             {
-                Skip = skip,
-                Take = count,
-                UserId = userId
+                Skip = model.Skip,
+                Take = model.Count,
+                UserId = userId,
+                SearchText = model.SearchText,
+                Type = fs.GetFilterArray("type"),
+                Seen = model.Status == "Unread" ? false : (bool?)null
             });
-
-            var model = new IndexViewModel() { Skip = skip, Count = count, Items = res.Items, Total = res.Count };
+            model.Items = res.Items;
 
             return View(model);
         }
+
 
         [HttpPost]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanManageNotificationsForUser)]

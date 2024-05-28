@@ -8,7 +8,17 @@
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="PayoutProcessors">Payout Processors</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>          
         <button name="command" type="submit" class="btn btn-primary" value="Save" id="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />

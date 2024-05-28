@@ -18,7 +18,20 @@
 }
 <form asp-action="Pair" method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListTokens">Access Tokens</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="CreateToken">Create Token</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>
         <button id="ApprovePairing" type="submit" class="btn btn-primary mt-3" title="Approve this pairing demand">Approve</button>
     </div>
     <partial name="_StatusMessage" />

@@ -7,7 +7,17 @@
 
 <form method="post">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListTokens">Access Tokens</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+            </h2>
+        </nav>
         <input id="RequestPairing" type="submit" value="Request Pairing" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />

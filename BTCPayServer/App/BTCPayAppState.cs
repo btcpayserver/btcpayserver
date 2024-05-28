@@ -8,8 +8,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using AngleSharp.Dom.Events;
 using BTCPayApp.CommonServer;
-using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Events;
+using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.SignalR;
@@ -19,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
+using LightningPayment = BTCPayApp.CommonServer.Models.LightningPayment;
 using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 
 namespace BTCPayServer.Controllers;
@@ -82,10 +83,14 @@ public class BTCPayAppState : IHostedService
                     false, false);
                 if (res.Any())
                 {
-                    var newInf = res.First().ToString();
-                    if (newInf != _nodeInfo)
+                    var newInf = res.First();
+                    if (_networkProvider.NetworkType == ChainName.Regtest)
                     {
-                        _nodeInfo = newInf;
+                        newInf = new NodeInfo(newInf.NodeId, "127.0.0.1", 30893);
+                    }
+                    if (newInf.ToString() != _nodeInfo)
+                    {
+                        _nodeInfo = newInf.ToString();
                         await _hubContext.Clients.All.NotifyServerNode(_nodeInfo);
                     }
 

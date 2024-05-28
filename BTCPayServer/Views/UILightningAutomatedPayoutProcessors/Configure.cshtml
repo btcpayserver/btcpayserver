@@ -3,7 +3,8 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.Lightning.UILightningAutomatedPayoutProcessorsController.LightningTransferViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "Lightning Payout Processor", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "Lightning Payout Processor", storeId);
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
@@ -11,7 +12,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="PayoutProcessors">Payout Processors</a>
+                    <a asp-controller="UIPayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-route-storeId="@storeId">Payout Processors</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>

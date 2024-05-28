@@ -3,8 +3,9 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.PayoutProcessors.OnChain.UIOnChainAutomatedPayoutProcessorsController.OnChainTransferViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "On-Chain Payout Processor", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
     var cryptoCode = Context.GetRouteValue("cryptocode")?.ToString();
+    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "On-Chain Payout Processor", storeId);
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
@@ -12,7 +13,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="PayoutProcessors">Payout Processors</a>
+                    <a asp-controller="UIPayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-route-storeId="@storeId">Payout Processors</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>

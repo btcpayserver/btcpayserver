@@ -2,7 +2,8 @@
 @using BTCPayServer.HostedServices.Webhooks
 @inject WebhookSender WebhookSender 
 @{
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook", storeId);
 }
 
 @section PageHeadContent {
@@ -17,7 +18,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="Webhooks">Webhooks</a>
+                    <a asp-action="Webhooks" asp-route-storeId="@storeId">Webhooks</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>

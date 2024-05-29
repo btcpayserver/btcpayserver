@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authentication.BearerToken;
@@ -25,6 +26,7 @@ namespace BTCPayServer.App.API;
 [Route("btcpayapp")]
 public partial class AppApiController(
     StoreRepository storeRepository,
+    AppService appService,
     EventAggregator eventAggregator,
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,

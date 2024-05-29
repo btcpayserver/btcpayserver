@@ -4,8 +4,9 @@
 @model PairingModel
 @{
     var store = Context.GetStoreData();
+    var storeId = Context.GetStoreData().Id;
     Layout = store is null ? "_LayoutWizard" : "_Layout";
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Pairing Permission", store?.Id);
+    ViewData.SetActivePage(StoreNavPages.Tokens, "Pairing Permission", storeId);
 }
 
 @if (store is null)
@@ -21,10 +22,10 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="ListTokens">Access Tokens</a>
+                    <a asp-action="ListTokens" asp-route-storeId="@storeId">Access Tokens</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a asp-action="CreateToken">Create Token</a>
+                    <a asp-action="CreateToken" asp-route-storeId="@storeId">Create Token</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>

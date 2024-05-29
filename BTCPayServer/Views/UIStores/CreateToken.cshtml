@@ -1,6 +1,7 @@
 ﻿@model CreateTokenViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", Context.GetStoreData()?.Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", storeId);
     ViewBag.HidePublicKey ??= false;
     ViewBag.ShowStores ??= false;
 }
@@ -10,7 +11,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="ListTokens">Access Tokens</a>
+                    <a asp-action="ListTokens" asp-route-storeId="@storeId">Access Tokens</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>

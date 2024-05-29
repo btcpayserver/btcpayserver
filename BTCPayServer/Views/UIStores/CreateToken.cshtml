@@ -1,22 +1,29 @@
 ﻿@model CreateTokenViewModel
 @{
-    var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", storeId);
+    var store = Context.GetStoreData();
+    ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", store?.Id);
     ViewBag.HidePublicKey ??= false;
     ViewBag.ShowStores ??= false;
 }
 
 <form method="post">
     <div class="sticky-header">
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb">
-                <li class="breadcrumb-item">
-                    <a asp-action="ListTokens" asp-route-storeId="@storeId">Access Tokens</a>
-                </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
-            </ol>
+        @if (store != null)
+        {
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-action="ListTokens" asp-route-storeId="@store.Id">Access Tokens</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                </ol>
+                <h2>@ViewData["Title"]</h2>
+            </nav>
+        }
+        else
+        {
             <h2>@ViewData["Title"]</h2>
-        </nav>
+        }
         <input id="RequestPairing" type="submit" value="Request Pairing" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />

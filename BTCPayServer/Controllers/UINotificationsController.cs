@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Amazon.Runtime.Internal.Transform;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
+using BTCPayServer.Components.StoreSelector;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.NotificationViewModels;
@@ -14,10 +15,12 @@ using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.Stores;
 using MailKit.Search;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Controllers
 {
@@ -26,26 +29,43 @@ namespace BTCPayServer.Controllers
     [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController : Controller
     {
+        private readonly ApplicationDbContextFactory _factory;
+        private readonly StoreRepository _storeRepo;
+        private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
 
         public UINotificationsController(
+            StoreRepository storeRepo,
             UserManager<ApplicationUser> userManager,
-            NotificationManager notificationManager)
+            NotificationManager notificationManager,
+            ApplicationDbContextFactory factory,
+            NotificationSender notificationSender)
         {
+            _storeRepo = storeRepo;
             _userManager = userManager;
             _notificationManager = notificationManager;
+            _factory = factory;
+            _notificationSender = notificationSender;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(IndexViewModel? model = null)
+        public async Task<IActionResult> Index(NotificationIndexViewModel? model = null)
         {
-            model = model ?? new IndexViewModel { Skip = 0 };
+            model = model ?? new NotificationIndexViewModel { Skip = 0 };
             var timezoneOffset = model.TimezoneOffset ?? 0;
             model.Status = model.Status ?? "Unread";
             ViewBag.Status = model.Status;
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "UIHome");
+
+            var stores = await _storeRepo.GetStoresByUserId(userId);
+            model.Stores = stores.Where(store => !store.Archived).OrderBy(s => s.StoreName).ToList();
+
+
+            await using var dbContext = _factory.CreateContext();
+            var notification = dbContext.Notifications.First();
+            var baseNotif = _notificationSender.GetBaseNotification(notification);
 
             var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
             var fs = new SearchString(searchTerm, timezoneOffset);

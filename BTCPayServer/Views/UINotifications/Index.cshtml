@@ -1,4 +1,4 @@
-@model BTCPayServer.Models.NotificationViewModels.IndexViewModel
+@model BTCPayServer.Models.NotificationViewModels.NotificationIndexViewModel
 @{
     ViewData["Title"] = "Notifications";
     string status = ViewBag.Status;
@@ -26,18 +26,6 @@
 @section PageHeadContent
 {
     <style>
-        .btn-toggle-selected {
-            background-color: white;
-            color: black;
-            border-color: lightgrey;
-        }
-
-        .btn-toggle-unselected {
-            background-color: lightgrey;
-            color: black;
-            border-color: lightgrey;
-        }
-
         .dropdown > .btn {
             min-width: 7rem;
             padding-left: 1rem;
@@ -57,24 +45,21 @@
     <div class="col-12 col-md-6 col-lg-4">
         <input asp-for="SearchText" class="form-control" placeholder="Search…" />
     </div>
-    
-
-    <div class="btn-group ms-2" role="group" aria-label="View Notification">
-        <a class="btn @((status == "All") ? "btn-toggle-selected" : "btn-toggle-unselected")"
+    <div class="btn-group ms-3" role="group" aria-label="View Notification">
+        <a class="btn @((status == "All") ? "btn-secondary active" : "btn-outline-secondary")"
            asp-controller="UINotifications"
            asp-action="Index"
            asp-route-Status="All">
             All
         </a>
-        <a class="btn @((status == "Unread") ? "btn-toggle-selected" : "btn-toggle-unselected")"
+        <a class="btn @((status == "Unread") ? "btn-secondary active" : "btn-outline-secondary")"
            asp-controller="UINotifications"
            asp-action="Index"
            asp-route-Status="Unread">
             Unread
         </a>
     </div>
-
-    <div class="dropdown ms-2">
+    <div class="dropdown ms-3">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
             {
@@ -95,6 +80,22 @@
             <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "userapproval")" class="dropdown-item @(HasArrayFilter("type", "userapproval") ? "custom-active" : "")">User Approval</a>
           </div>
     </div>
+
+    <div class="dropdown ms-3">
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            <span>All Stores</span>
+        </button>
+        <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
+            @foreach (var store in Model.Stores)
+            {
+                <a asp-action="Index"
+                   class="dropdown-item">
+                    @store.StoreName
+                </a>
+            }
+        </div>
+    </div>
+
 </form>
 
 

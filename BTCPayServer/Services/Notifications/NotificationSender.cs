@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BTCPayServer.Services.Notifications
 {
@@ -56,6 +57,11 @@ namespace BTCPayServer.Services.Notifications
             {
                 _notificationManager.InvalidateNotificationCache(user);
             }
+        }
+
+        public BaseNotification GetBaseNotification(NotificationData notificationData)
+        {
+            return notificationData.HasTypedBlob<BaseNotification>().GetBlob();
         }
 
         private async Task<string[]> GetUsers(INotificationScope scope, string notificationIdentifier)

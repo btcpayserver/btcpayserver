@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer.Models;
@@ -8,7 +9,9 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -17,6 +20,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using NicolasDorier.RateLimits;
+using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
 namespace BTCPayServer.App.API;
 
@@ -143,28 +147,36 @@ public partial class AppApiController
     }
 
     [HttpGet("user")]
-    public async Task<Results<Ok<AppUserInfo>, NotFound>> UserInfo()
+    public async Task<IActionResult> UserInfo()
     {
         var user = await userManager.GetUserAsync(User);
-        if (user == null) return TypedResults.NotFound();
+        if (user == null) return NotFound();
 
         var userStores = await storeRepository.GetStoresByUserId(user.Id);
-        return TypedResults.Ok(new AppUserInfo
+        var stores = new List<AppUserStoreInfo>();
+        foreach (var store in userStores)
+        {
+            var userStore = store.UserStores.Find(us => us.ApplicationUserId == user.Id && us.StoreDataId == store.Id)!;
+            var apps = await appService.GetAllApps(user.Id, false, store.Id);
+            var posApp = apps.FirstOrDefault(app => app.AppType == PointOfSaleAppType.AppType && app.App.GetSettings<PointOfSaleSettings>().DefaultView == PosViewType.Light);
+            stores.Add(new AppUserStoreInfo
+            {
+                Id = store.Id,
+                Name = store.StoreName,
+                Archived = store.Archived,
+                RoleId = userStore.StoreRole.Id,
+                PosAppId = posApp?.Id,
+                Permissions = userStore.StoreRole.Permissions
+            });
+        }
+        var info = new AppUserInfo
         {
             UserId = user.Id,
             Email = await userManager.GetEmailAsync(user),
             Roles = await userManager.GetRolesAsync(user),
-            Stores = (from store in userStores
-                let userStore = store.UserStores.Find(us => us.ApplicationUserId == user.Id && us.StoreDataId == store.Id)!
-                select new AppUserStoreInfo
-                {
-                    Id = store.Id,
-                    Name = store.StoreName,
-                    Archived = store.Archived,
-                    RoleId = userStore.StoreRole.Id,
-                    Permissions = userStore.StoreRole.Permissions
-                }).ToList()
-        });
+            Stores = stores
+        };
+        return Ok(info);
     }
 
     [AllowAnonymous]

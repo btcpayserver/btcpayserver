@@ -16,12 +16,12 @@
 <form asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
-        <div class="d-flex gap-3" permission="@Policies.CanModifyStoreSettings">
+        <div permission="@Policies.CanModifyStoreSettings">
             @if (Model.Rules.Any())
             {
-            <button class="btn btn-primary" name="command" type="submit" value="save" id="SaveEmailRules">
-                Save
-            </button>
+                <button class="btn btn-primary" name="command" type="submit" value="save" id="SaveEmailRules">
+                    Save
+                </button>
             }
             <button class="btn btn-primary" name="command" type="submit" value="add" id="CreateEmailRule">
                 Create

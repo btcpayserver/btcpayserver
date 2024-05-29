@@ -7,13 +7,11 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="TwoFactorAuthentication">Two Factor Authentication</a>
+                <a asp-controller="UIManage" asp-action="TwoFactorAuthentication">Two Factor Authentication</a>
             </li>
             <li class="breadcrumb-item active" aria-current="page">Register Device</li>
         </ol>
-        <h2>
-            <span>@ViewData["Title"]</span>
-        </h2>
+        <h2>@ViewData["Title"]</h2>
     </nav>
 </div>
 <partial name="_StatusMessage" />

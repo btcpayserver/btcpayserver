@@ -228,6 +228,7 @@ public class BTCPayAppState : IHostedService
 
     public async Task PaymentUpdate(string identifier, LightningPayment lightningPayment)
     {
+        _logger.LogInformation("Payment update for {identifier} {}", identifier);
         OnPaymentUpdate?.Invoke(this, (identifier, lightningPayment));
     }
     

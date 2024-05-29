@@ -12,6 +12,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
@@ -92,18 +93,21 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     private readonly BTCPayAppState _appState;
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly IFeeProviderFactory _feeProviderFactory;
+    private readonly ILogger<BTCPayAppHub> _logger;
 
     public BTCPayAppHub(BTCPayNetworkProvider btcPayNetworkProvider,
         NBXplorerDashboard nbXplorerDashboard,
         BTCPayAppState appState,
         ExplorerClientProvider explorerClientProvider,
-        IFeeProviderFactory feeProviderFactory)
+        IFeeProviderFactory feeProviderFactory,
+        ILogger<BTCPayAppHub> logger) 
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         _nbXplorerDashboard = nbXplorerDashboard;
         _appState = appState;
         _explorerClientProvider = explorerClientProvider;
         _feeProviderFactory = feeProviderFactory;
+        _logger = logger;
     }
 
 
@@ -213,11 +217,14 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public async Task TrackScripts(string identifier, string[] scripts)
     {
+        _logger.LogInformation($"Tracking {scripts.Length} scripts for {identifier}");
         var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
         
         var ts = TrackedSource.Parse(identifier,explorerClient.Network ) as GroupTrackedSource;
         var s = scripts.Select(Script.FromHex).Select(script => script.GetDestinationAddress(explorerClient.Network.NBitcoinNetwork)).Select(address => address.ToString()).ToArray();
         await explorerClient.AddGroupAddressAsync(explorerClient.CryptoCode,ts.GroupId, s);
+        
+        _logger.LogInformation($"Tracking {scripts.Length} scripts for {identifier} done ");
     }
 
     public async Task<string> UpdatePsbt(string[] identifiers, string psbt)

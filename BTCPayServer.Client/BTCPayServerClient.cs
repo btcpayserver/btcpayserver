@@ -17,7 +17,7 @@ namespace BTCPayServer.Client
         private readonly Uri _btcpayHost;
         private readonly string _username;
         private readonly string _password;
-        private readonly HttpClient _httpClient;
+        protected readonly HttpClient _httpClient;
         public Uri Host => _btcpayHost;
 
         public string APIKey => _apiKey;
@@ -29,6 +29,7 @@ namespace BTCPayServer.Client
             _btcpayHost = btcpayHost;
             _httpClient = httpClient ?? new HttpClient();
         }
+
         public BTCPayServerClient(Uri btcpayHost, string APIKey, HttpClient httpClient = null)
         {
             _apiKey = APIKey;
@@ -70,27 +71,29 @@ namespace BTCPayServer.Client
             message.EnsureSuccessStatusCode();
         }
 
-        protected async Task<T> HandleResponse<T>(HttpResponseMessage message)
+        protected virtual async Task<T> HandleResponse<T>(HttpResponseMessage message)
         {
             await HandleResponse(message);
             var str = await message.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<T>(str);
         }
 
-        public async Task<T> SendHttpRequest<T>(string path,
+        protected virtual async Task<T> SendHttpRequest<T>(string path,
             Dictionary<string, object> queryPayload = null,
             HttpMethod method = null, CancellationToken cancellationToken = default)
         {
             using var resp = await _httpClient.SendAsync(CreateHttpRequest(path, queryPayload, method), cancellationToken);
             return await HandleResponse<T>(resp);
         }
-        public async Task<T> SendHttpRequest<T>(string path,
-        object bodyPayload = null,
-        HttpMethod method = null, CancellationToken cancellationToken = default)
+
+        protected virtual async Task<T> SendHttpRequest<T>(string path,
+            object bodyPayload = null,
+            HttpMethod method = null, CancellationToken cancellationToken = default)
         {
             using var resp = await _httpClient.SendAsync(CreateHttpRequest(path: path, bodyPayload: bodyPayload, method: method), cancellationToken);
             return await HandleResponse<T>(resp);
         }
+
         protected virtual HttpRequestMessage CreateHttpRequest(string path,
             Dictionary<string, object> queryPayload = null,
             HttpMethod method = null)
@@ -106,9 +109,8 @@ namespace BTCPayServer.Client
                 httpRequest.Headers.Authorization = new AuthenticationHeaderValue("token", _apiKey);
             else if (!string.IsNullOrEmpty(_username))
             {
-                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", System.Convert.ToBase64String(Encoding.ASCII.GetBytes(_username + ":" + _password)));
+                httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Basic", Convert.ToBase64String(Encoding.ASCII.GetBytes(_username + ":" + _password)));
             }
-
 
             return httpRequest;
         }

@@ -23,6 +23,8 @@ public class AppUserInfo
 {
     public string? UserId { get; set; }
     public string? Email { get; set; }
+    public string? Name { get; set; }
+    public string? ImageUrl { get; set; }
     public IEnumerable<string>? Roles { get; set; }
     public IEnumerable<AppUserStoreInfo>? Stores { get; set; }
 
@@ -32,7 +34,9 @@ public class AppUserInfo
         if (ReferenceEquals(x, null)) return false;
         if (ReferenceEquals(y, null)) return false;
         if (x.GetType() != y.GetType()) return false;
-        return x.UserId == y.UserId && x.Email == y.Email && Equals(x.Roles, y.Roles) && Equals(x.Stores, y.Stores);
+        return x.UserId == y.UserId && x.Email == y.Email &&
+               x.Name == y.Name && x.ImageUrl == y.ImageUrl &&
+               Equals(x.Roles, y.Roles) && Equals(x.Stores, y.Stores);
     }
 }
 

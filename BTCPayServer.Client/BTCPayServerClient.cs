@@ -78,12 +78,28 @@ namespace BTCPayServer.Client
             return JsonConvert.DeserializeObject<T>(str);
         }
 
+        protected virtual async Task SendHttpRequest(string path,
+            Dictionary<string, object> queryPayload = null,
+            HttpMethod method = null, CancellationToken cancellationToken = default)
+        {
+            using var resp = await _httpClient.SendAsync(CreateHttpRequest(path, queryPayload, method), cancellationToken);
+            await HandleResponse(resp);
+        }
+
         protected virtual async Task<T> SendHttpRequest<T>(string path,
             Dictionary<string, object> queryPayload = null,
             HttpMethod method = null, CancellationToken cancellationToken = default)
         {
             using var resp = await _httpClient.SendAsync(CreateHttpRequest(path, queryPayload, method), cancellationToken);
             return await HandleResponse<T>(resp);
+        }
+
+        protected virtual async Task SendHttpRequest(string path,
+            object bodyPayload = null,
+            HttpMethod method = null, CancellationToken cancellationToken = default)
+        {
+            using var resp = await _httpClient.SendAsync(CreateHttpRequest(path: path, bodyPayload: bodyPayload, method: method), cancellationToken);
+            await HandleResponse(resp);
         }
 
         protected virtual async Task<T> SendHttpRequest<T>(string path,

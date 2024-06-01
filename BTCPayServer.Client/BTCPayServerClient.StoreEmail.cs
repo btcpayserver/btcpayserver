@@ -7,31 +7,19 @@ namespace BTCPayServer.Client
 {
     public partial class BTCPayServerClient
     {
-        public virtual async Task<EmailSettingsData> GetStoreEmailSettings(string storeId,
-            CancellationToken token = default)
+        public virtual async Task<EmailSettingsData> GetStoreEmailSettings(string storeId, CancellationToken token = default)
         {
-            using var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/email", method: HttpMethod.Get),
-                token);
-            return await HandleResponse<EmailSettingsData>(response);
+            return await SendHttpRequest<EmailSettingsData>($"api/v1/stores/{storeId}/email", null, HttpMethod.Get, token);
         }
 
-        public virtual async Task<EmailSettingsData> UpdateStoreEmailSettings(string storeId, EmailSettingsData request,
-            CancellationToken token = default)
+        public virtual async Task<EmailSettingsData> UpdateStoreEmailSettings(string storeId, EmailSettingsData request, CancellationToken token = default)
         {
-            using var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/email", bodyPayload: request, method: HttpMethod.Put),
-                token);
-            return await HandleResponse<EmailSettingsData>(response);
+            return await SendHttpRequest<EmailSettingsData>($"api/v1/stores/{storeId}/email", request, method: HttpMethod.Put, token);
         }
 
-        public virtual async Task SendEmail(string storeId, SendEmailRequest request,
-            CancellationToken token = default)
+        public virtual async Task SendEmail(string storeId, SendEmailRequest request, CancellationToken token = default)
         {
-            using var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/email/send", bodyPayload: request, method: HttpMethod.Post),
-                token);
-            await HandleResponse(response);
+            await SendHttpRequest($"api/v1/stores/{storeId}/email/send", request, HttpMethod.Post, token);
         }
     }
 }

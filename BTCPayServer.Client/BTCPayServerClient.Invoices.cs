@@ -21,112 +21,72 @@ namespace BTCPayServer.Client
             int? take = null,
             CancellationToken token = default)
         {
-            Dictionary<string, object> queryPayload = new Dictionary<string, object>();
-            queryPayload.Add(nameof(includeArchived), includeArchived);
-
-            if (startDate is DateTimeOffset s)
+            var queryPayload = new Dictionary<string, object> { { nameof(includeArchived), includeArchived } };
+            if (startDate is { } s)
                 queryPayload.Add(nameof(startDate), Utils.DateTimeToUnixTime(s));
-
-            if (endDate is DateTimeOffset e)
+            if (endDate is { } e)
                 queryPayload.Add(nameof(endDate), Utils.DateTimeToUnixTime(e));
-
             if (orderId != null)
                 queryPayload.Add(nameof(orderId), orderId);
             if (textSearch != null)
                 queryPayload.Add(nameof(textSearch), textSearch);
             if (status != null)
                 queryPayload.Add(nameof(status), status.Select(s => s.ToString().ToLower()).ToArray());
-
             if (skip != null)
-            {
                 queryPayload.Add(nameof(skip), skip);
-            }
-
             if (take != null)
-            {
                 queryPayload.Add(nameof(take), take);
-            }
 
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/invoices",
-                        queryPayload), token);
-            return await HandleResponse<IEnumerable<InvoiceData>>(response);
+            return await SendHttpRequest<IEnumerable<InvoiceData>>($"api/v1/stores/{storeId}/invoices", queryPayload, HttpMethod.Get, token);
         }
 
         public virtual async Task<InvoiceData> GetInvoice(string storeId, string invoiceId,
             CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}"), token);
-            return await HandleResponse<InvoiceData>(response);
+            return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/invoices/{invoiceId}", null, HttpMethod.Get, token);
         }
         public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId, string invoiceId,
             CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods"), token);
-            return await HandleResponse<InvoicePaymentMethodDataModel[]>(response);
+            return await SendHttpRequest<InvoicePaymentMethodDataModel[]>($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods", null, HttpMethod.Get, token);
         }
 
         public virtual async Task ArchiveInvoice(string storeId, string invoiceId,
             CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}",
-                    method: HttpMethod.Delete), token);
-            await HandleResponse(response);
+            await SendHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}", null, HttpMethod.Delete, token);
         }
 
         public virtual async Task<InvoiceData> CreateInvoice(string storeId,
             CreateInvoiceRequest request, CancellationToken token = default)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices", bodyPayload: request,
-                    method: HttpMethod.Post), token);
-            return await HandleResponse<InvoiceData>(response);
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/invoices", request, HttpMethod.Post, token);
         }
 
         public virtual async Task<InvoiceData> UpdateInvoice(string storeId, string invoiceId,
             UpdateInvoiceRequest request, CancellationToken token = default)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}", bodyPayload: request,
-                    method: HttpMethod.Put), token);
-            return await HandleResponse<InvoiceData>(response);
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/invoices/{invoiceId}", request, HttpMethod.Put, token);
         }
 
         public virtual async Task<InvoiceData> MarkInvoiceStatus(string storeId, string invoiceId,
             MarkInvoiceStatusRequest request, CancellationToken token = default)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            if (request.Status != InvoiceStatus.Settled && request.Status != InvoiceStatus.Invalid)
-                throw new ArgumentOutOfRangeException(nameof(request.Status), "Status can only be Invalid or Complete");
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/status", bodyPayload: request,
-                    method: HttpMethod.Post), token);
-            return await HandleResponse<InvoiceData>(response);
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (request.Status != InvoiceStatus.Settled && request.Status != InvoiceStatus.Invalid) throw new ArgumentOutOfRangeException(nameof(request.Status), "Status can only be Invalid or Complete");
+            return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/invoices/{invoiceId}/status", request, HttpMethod.Post, token);
         }
 
         public virtual async Task<InvoiceData> UnarchiveInvoice(string storeId, string invoiceId, CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive",
-                    method: HttpMethod.Post), token);
-            return await HandleResponse<InvoiceData>(response);
+            return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/invoices/{invoiceId}/unarchive", null, HttpMethod.Post, token);
         }
 
         public virtual async Task ActivateInvoicePaymentMethod(string storeId, string invoiceId, string paymentMethod, CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate",
-                    method: HttpMethod.Post), token);
-            await HandleResponse(response);
+            await SendHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate", null, HttpMethod.Post, token);
         }
 
         public virtual async Task<PullPaymentData> RefundInvoice(
@@ -136,10 +96,7 @@ namespace BTCPayServer.Client
             CancellationToken token = default
         )
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/invoices/{invoiceId}/refund", bodyPayload: request,
-                    method: HttpMethod.Post), token);
-            return await HandleResponse<PullPaymentData>(response);
+            return await SendHttpRequest<PullPaymentData>($"api/v1/stores/{storeId}/invoices/{invoiceId}/refund", request, HttpMethod.Post, token);
         }
     }
 }

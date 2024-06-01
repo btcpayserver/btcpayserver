@@ -24,8 +24,7 @@ namespace BTCPayServer.Client
 
         public BTCPayServerClient(Uri btcpayHost, HttpClient httpClient = null)
         {
-            if (btcpayHost == null)
-                throw new ArgumentNullException(nameof(btcpayHost));
+            if (btcpayHost == null) throw new ArgumentNullException(nameof(btcpayHost));
             _btcpayHost = btcpayHost;
             _httpClient = httpClient ?? new HttpClient();
         }
@@ -78,7 +77,7 @@ namespace BTCPayServer.Client
             return JsonConvert.DeserializeObject<T>(str);
         }
 
-        protected virtual async Task SendHttpRequest(string path,
+        public virtual async Task SendHttpRequest(string path,
             Dictionary<string, object> queryPayload = null,
             HttpMethod method = null, CancellationToken cancellationToken = default)
         {
@@ -86,7 +85,7 @@ namespace BTCPayServer.Client
             await HandleResponse(resp);
         }
 
-        protected virtual async Task<T> SendHttpRequest<T>(string path,
+        public virtual async Task<T> SendHttpRequest<T>(string path,
             Dictionary<string, object> queryPayload = null,
             HttpMethod method = null, CancellationToken cancellationToken = default)
         {
@@ -94,7 +93,7 @@ namespace BTCPayServer.Client
             return await HandleResponse<T>(resp);
         }
 
-        protected virtual async Task SendHttpRequest(string path,
+        public virtual async Task SendHttpRequest(string path,
             object bodyPayload = null,
             HttpMethod method = null, CancellationToken cancellationToken = default)
         {
@@ -108,6 +107,14 @@ namespace BTCPayServer.Client
         {
             using var resp = await _httpClient.SendAsync(CreateHttpRequest(path: path, bodyPayload: bodyPayload, method: method), cancellationToken);
             return await HandleResponse<T>(resp);
+        }
+        
+        protected virtual async Task<TRes> SendHttpRequest<TReq, TRes>(string path,
+            Dictionary<string, object> queryPayload = null,
+            TReq bodyPayload = default, HttpMethod method = null, CancellationToken cancellationToken = default)
+        {
+            using var resp = await _httpClient.SendAsync(CreateHttpRequest(path: path, bodyPayload: bodyPayload, queryPayload: queryPayload, method: method), cancellationToken);
+            return await HandleResponse<TRes>(resp);
         }
 
         protected virtual HttpRequestMessage CreateHttpRequest(string path,

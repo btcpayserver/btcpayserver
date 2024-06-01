@@ -13,64 +13,42 @@ namespace BTCPayServer.Client
             bool includeArchived = false,
             CancellationToken token = default)
         {
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests",
-                        new Dictionary<string, object>() { { nameof(includeArchived), includeArchived } }), token);
-            return await HandleResponse<IEnumerable<PaymentRequestData>>(response);
+            return await SendHttpRequest<IEnumerable<PaymentRequestData>>($"api/v1/stores/{storeId}/payment-requests",
+                new Dictionary<string, object> { { nameof(includeArchived), includeArchived } }, HttpMethod.Get, token);
         }
 
         public virtual async Task<PaymentRequestData> GetPaymentRequest(string storeId, string paymentRequestId,
             CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}"), token);
-            return await HandleResponse<PaymentRequestData>(response);
+            return await SendHttpRequest<PaymentRequestData>($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}", null, HttpMethod.Get, token);
         }
 
         public virtual async Task ArchivePaymentRequest(string storeId, string paymentRequestId,
             CancellationToken token = default)
         {
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}",
-                    method: HttpMethod.Delete), token);
-            await HandleResponse(response);
+            await SendHttpRequest($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}", null, HttpMethod.Delete, token);
         }
 
         public virtual async Task<Client.Models.InvoiceData> PayPaymentRequest(string storeId, string paymentRequestId, PayPaymentRequestRequest request, CancellationToken token = default)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            if (storeId is null)
-                throw new ArgumentNullException(nameof(storeId));
-            if (paymentRequestId is null)
-                throw new ArgumentNullException(nameof(paymentRequestId));
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay", bodyPayload: request,
-                    method: HttpMethod.Post), token);
-            return await HandleResponse<Client.Models.InvoiceData>(response);
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            if (storeId is null) throw new ArgumentNullException(nameof(storeId));
+            if (paymentRequestId is null) throw new ArgumentNullException(nameof(paymentRequestId));
+            return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}/pay", request, HttpMethod.Post, token);
         }
 
         public virtual async Task<PaymentRequestData> CreatePaymentRequest(string storeId,
             CreatePaymentRequestRequest request, CancellationToken token = default)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests", bodyPayload: request,
-                    method: HttpMethod.Post), token);
-            return await HandleResponse<PaymentRequestData>(response);
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            return await SendHttpRequest<PaymentRequestData>($"api/v1/stores/{storeId}/payment-requests", request, HttpMethod.Post, token);
         }
 
         public virtual async Task<PaymentRequestData> UpdatePaymentRequest(string storeId, string paymentRequestId,
             UpdatePaymentRequestRequest request, CancellationToken token = default)
         {
-            if (request == null)
-                throw new ArgumentNullException(nameof(request));
-            var response = await _httpClient.SendAsync(
-                CreateHttpRequest($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}", bodyPayload: request,
-                    method: HttpMethod.Put), token);
-            return await HandleResponse<PaymentRequestData>(response);
+            if (request == null) throw new ArgumentNullException(nameof(request));
+            return await SendHttpRequest<PaymentRequestData>($"api/v1/stores/{storeId}/payment-requests/{paymentRequestId}", request, HttpMethod.Put, token);
         }
     }
 }

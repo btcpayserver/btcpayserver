@@ -13,8 +13,7 @@ namespace BTCPayServer.Client
 
         private static string BuildMessage(GreenfieldValidationError[] errors)
         {
-            if (errors == null)
-                throw new ArgumentNullException(nameof(errors));
+            if (errors == null) throw new ArgumentNullException(nameof(errors));
             StringBuilder builder = new StringBuilder();
             foreach (var error in errors)
             {

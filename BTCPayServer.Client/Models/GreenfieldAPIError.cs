@@ -11,8 +11,7 @@ namespace BTCPayServer.Client.Models
         public GreenfieldAPIError(string code, string message)
         {
             code = code ?? "generic-error";
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
+            if (message == null) throw new ArgumentNullException(nameof(message));
             Code = code;
             Message = message;
         }

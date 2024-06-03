@@ -15,6 +15,7 @@
 * Server email settings: Fix missing password field (#5952 #5949) @dennisreimann
 * Fix: Some valid taproot PSBT couldn't parsed and show better error message (#5715 #5993) @NicolasDorier
 * Fix: Adding a label to a base58 addresses in the `Send Wallet` screen wasn't working (#6011) @NicolasDorier
+* Fix: When an invoice expires, the corresponding Shopify order remains pending instead of canceling (#6021 #6027) @Kukks
 
 ### Improvements
 

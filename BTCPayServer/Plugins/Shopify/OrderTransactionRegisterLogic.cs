@@ -81,6 +81,11 @@ namespace BTCPayServer.Plugins.Shopify
                 }
             };
             var createResp = await _client.TransactionCreate(orderId, createTransaction);
+
+            if (!success)
+            {
+                await _client.CancelOrder(orderId);
+            }
             return createResp;
         }
     }

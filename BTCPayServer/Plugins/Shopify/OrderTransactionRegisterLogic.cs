@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Logging;
 using BTCPayServer.Plugins.Shopify.ApiModels;
 
 namespace BTCPayServer.Plugins.Shopify
@@ -15,8 +17,9 @@ namespace BTCPayServer.Plugins.Shopify
         }
 
         private static string[] _keywords = new[] { "bitcoin", "btc", "btcpayserver", "btcpay server" };
-        public async Task<TransactionsCreateResp> Process(string orderId, string invoiceId, string currency, string amountCaptured, bool success)
+        public async Task<InvoiceLogs> Process(string orderId, string invoiceId, string currency, string amountCaptured, bool success)
         {
+            var result = new InvoiceLogs();
             currency = currency.ToUpperInvariant().Trim();
             var existingShopifyOrderTransactions = (await _client.TransactionsList(orderId)).transactions;
 
@@ -24,7 +27,8 @@ namespace BTCPayServer.Plugins.Shopify
             var baseParentTransaction = existingShopifyOrderTransactions.FirstOrDefault(holder => _keywords.Any(a => holder.gateway.Contains(a, StringComparison.InvariantCultureIgnoreCase)));
             if (baseParentTransaction is null)
             {
-                return null;
+                result.Write("Couldn't find the order on Shopify.", InvoiceEventData.EventSeverity.Error);
+                return result;
             }
 
             //technically, this exploit should not be possible as we use internal invoice tags to verify that the invoice was created by our controlled, dedicated endpoint.
@@ -34,7 +38,8 @@ namespace BTCPayServer.Plugins.Shopify
                 // malicious attacker could potentially exploit this by creating invoice 
                 // in different currency and paying that one, registering order on Shopify as paid
                 // so if currency is supplied and is different from parent transaction currency we just won't register
-                return null;
+                result.Write("Currency mismatch on Shopify.", InvoiceEventData.EventSeverity.Error);
+                return result;
             }
 
             var kind = "capture";
@@ -60,11 +65,20 @@ namespace BTCPayServer.Plugins.Shopify
                 kind = "void";
                 parentId = successfulCaptures.Last().id;
                 status = "success";
+                result.Write("A transaction was previously recorded against the Shopify order. Creating a void transaction.", InvoiceEventData.EventSeverity.Warning);
+
+            }else if (!success)
+            {
+                
+                kind = "void";
+                status = "success";
+                result.Write("Attempting to void the payment on Shopify order due to failure in payment.", InvoiceEventData.EventSeverity.Warning);
             }
             //if we are working with a success registration, but can see that we have already had a successful transaction saved, get outta here
             else if (success && successfulCaptures.Length > 0 && (successfulCaptures.Length - refunds.Length) > 0)
             {
-                return null;
+                result.Write("A transaction was previously recorded against the Shopify order. Skipping.", InvoiceEventData.EventSeverity.Warning);
+                return result;
             }
             var createTransaction = new TransactionsCreateReq
             {
@@ -82,11 +96,32 @@ namespace BTCPayServer.Plugins.Shopify
             };
             var createResp = await _client.TransactionCreate(orderId, createTransaction);
 
+            if (createResp.transaction is null)
+            {
+                result.Write("Failed to register the transaction on Shopify.", InvoiceEventData.EventSeverity.Error);
+            }
+            else
+            {
+                result.Write($"Successfully registered the transaction on Shopify. tx status:{createResp.transaction.status}, kind: {createResp.transaction.kind}, order id:{createResp.transaction.order_id}", InvoiceEventData.EventSeverity.Info);
+                
+            }
             if (!success)
             {
-                await _client.CancelOrder(orderId);
+                try
+                {
+
+                    await _client.CancelOrder(orderId);
+                    result.Write("Cancelling the Shopify order.", InvoiceEventData.EventSeverity.Warning);
+
+                    
+                }
+                catch (Exception e)
+                {
+                    result.Write($"Failed to cancel the Shopify order. {e.Message}", InvoiceEventData.EventSeverity.Error);
+                }
+               
             }
-            return createResp;
+            return result;
         }
     }
 }

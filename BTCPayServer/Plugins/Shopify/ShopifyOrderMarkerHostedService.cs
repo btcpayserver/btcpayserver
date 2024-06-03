@@ -19,14 +19,17 @@ namespace BTCPayServer.Plugins.Shopify
     public class ShopifyOrderMarkerHostedService : EventHostedServiceBase
     {
         private readonly StoreRepository _storeRepository;
+        private readonly InvoiceRepository _invoiceRepository;
         private readonly IHttpClientFactory _httpClientFactory;
 
         public ShopifyOrderMarkerHostedService(EventAggregator eventAggregator,
             StoreRepository storeRepository,
+            InvoiceRepository invoiceRepository,
             IHttpClientFactory httpClientFactory,
             Logs logs) : base(eventAggregator, logs)
         {
             _storeRepository = storeRepository;
+            _invoiceRepository = invoiceRepository;
             _httpClientFactory = httpClientFactory;
         }
 
@@ -94,8 +97,8 @@ namespace BTCPayServer.Plugins.Shopify
                         invoice.Price.ToString(CultureInfo.InvariantCulture), success);
                     if (resp != null)
                     {
-                        Logs.PayServer.LogInformation($"Registered order transaction {invoice.Price}{invoice.Currency} on Shopify. " +
-                                                      $"Triggered by invoiceId: {invoice.Id}, Shopify orderId: {shopifyOrderId}, Success: {success}");
+                        await _invoiceRepository.AddInvoiceLogs(invoice.Id, resp);
+                       
                     }
                 }
                 catch (Exception ex)

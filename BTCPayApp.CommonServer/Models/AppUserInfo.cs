@@ -46,6 +46,7 @@ public class AppUserStoreInfo
     public string? Name { get; set; }
     public string? RoleId { get; set; }
     public string? PosAppId { get; set; }
+    public string? DefaultCurrency { get; set; }
     public bool Archived { get; set; }
     public IEnumerable<string>? Permissions { get; set; }
 }

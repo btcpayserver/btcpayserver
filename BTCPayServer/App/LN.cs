@@ -71,7 +71,7 @@ public class BTCPayAppLightningClient:ILightningClient
 
     public override string ToString()
     {
-        return $"type=app;group={_key}";
+        return $"type=app;group={_key}".ToLower();
     }
 
     public IBTCPayAppHubClient HubClient => _appState.GroupToConnectionId.TryGetValue(_key, out var connId) ? _hubContext.Clients.Client(connId) : throw new InvalidOperationException("Connection not found");
@@ -85,7 +85,7 @@ public class BTCPayAppLightningClient:ILightningClient
     public async Task<LightningInvoice> GetInvoice(uint256 paymentHash, CancellationToken cancellation = new CancellationToken())
     {
         var lp = await HubClient.GetLightningInvoice(paymentHash.ToString());
-        return ToLightningInvoice(lp, _network);
+        return lp is null ? null : ToLightningInvoice(lp, _network);
     }
 
     public async Task<LightningInvoice[]> ListInvoices(CancellationToken cancellation = new CancellationToken())
@@ -155,6 +155,7 @@ public class BTCPayAppLightningClient:ILightningClient
             Amount = LightMoney.MilliSatoshis(lightningPayment.Value),
             PaymentHash = lightningPayment.PaymentHash,
             Preimage = lightningPayment.Preimage,
+            PaidAt = lightningPayment.Status == LightningPaymentStatus.Complete? DateTimeOffset.UtcNow: null, //TODO: store these in ln payment
             BOLT11 = lightningPayment.PaymentRequests.FirstOrDefault(),
             Status = lightningPayment.Status == LightningPaymentStatus.Complete? LightningInvoiceStatus.Paid: paymenRequest.ExpiryDate < DateTimeOffset.UtcNow? LightningInvoiceStatus.Expired: LightningInvoiceStatus.Unpaid
         };
@@ -162,7 +163,6 @@ public class BTCPayAppLightningClient:ILightningClient
     
     public async Task<ILightningInvoiceListener> Listen(CancellationToken cancellation = new CancellationToken())
     {
-        
         return new Listener(_appState, _network, _key);
     }
 
@@ -192,9 +192,9 @@ public class BTCPayAppLightningClient:ILightningClient
 
         private void BtcPayAppStateOnOnPaymentUpdate(object sender, (string, LightningPayment) e)
         {
-            if(e.Item1 != _key)
-                return;
-            _channel.Writer.TryWrite(e.Item2);
+            if (e.Item1.Equals(_key, StringComparison.InvariantCultureIgnoreCase)) 
+                _channel.Writer.TryWrite(e.Item2);
+          
         }
 
         public void Dispose()

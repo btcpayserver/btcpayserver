@@ -257,14 +257,23 @@ retry:
         {
             lock (_InstanceListeners)
             {
-                foreach ((_, var instance) in _InstanceListeners.ToArray())
+                foreach (var key in _InstanceListeners.Keys)
                 {
-                    instance.RemoveExpiredInvoices();
-                    if (!instance.Empty)
-                        instance.EnsureListening(_Cts.Token);
+                    CheckConnection(key.Item1, key.Item2);
                 }
             }
         }
+
+        public void CheckConnection(string cryptoCode, string connStr)
+        {
+            if (_InstanceListeners.TryGetValue((cryptoCode, connStr), out var instance))
+            {
+                
+                instance.RemoveExpiredInvoices();
+                if (!instance.Empty)
+                    instance.EnsureListening(_Cts.Token);
+            }
+            }
 
         private async Task CreateNewLNInvoiceForBTCPayInvoice(InvoiceEntity invoice)
         {

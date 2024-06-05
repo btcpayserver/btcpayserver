@@ -159,6 +159,7 @@ public partial class AppApiController
             var userStore = store.UserStores.Find(us => us.ApplicationUserId == user.Id && us.StoreDataId == store.Id)!;
             var apps = await appService.GetAllApps(user.Id, false, store.Id);
             var posApp = apps.FirstOrDefault(app => app.AppType == PointOfSaleAppType.AppType && app.App.GetSettings<PointOfSaleSettings>().DefaultView == PosViewType.Light);
+            var storeBlob = userStore.StoreData.GetStoreBlob();
             stores.Add(new AppUserStoreInfo
             {
                 Id = store.Id,
@@ -166,6 +167,7 @@ public partial class AppApiController
                 Archived = store.Archived,
                 RoleId = userStore.StoreRole.Id,
                 PosAppId = posApp?.Id,
+                DefaultCurrency = storeBlob.DefaultCurrency,
                 Permissions = userStore.StoreRole.Permissions
             });
         }

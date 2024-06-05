@@ -46,7 +46,7 @@ public record TxResp(long Confirmations, long? Height, decimal BalanceChange, Da
 //methods available on the hub in the server
 public interface IBTCPayAppHubServer
 {
-    Task IdentifierActive(string group, bool active);
+    Task<bool> IdentifierActive(string group, bool active);
     
     Task<Dictionary<string,string>> Pair(PairRequest request);
     Task<AppHandshakeResponse> Handshake(AppHandshake request);

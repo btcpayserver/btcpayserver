@@ -151,6 +151,11 @@ public class BTCPayAppState : IHostedService
             {
                 if (TrackedSource.TryParse(ts, out var trackedSource, ExplorerClient.Network))
                 {
+                    if (trackedSource is GroupTrackedSource groupTrackedSource)
+                    {
+                        
+                    }
+                    
                     ExplorerClient.Track(trackedSource);
                 }
                 await _hubContext.Groups.AddToGroupAsync(contextConnectionId, ts);
@@ -193,16 +198,17 @@ public class BTCPayAppState : IHostedService
     private CancellationTokenSource _cts;
 
 
-    public async Task IdentifierActive(string group, string contextConnectionId, bool active)
+    public async Task<bool> IdentifierActive(string group, string contextConnectionId, bool active)
     {
         if (active)
         {
-            GroupToConnectionId.AddOrUpdate(group, contextConnectionId, (a, b) => contextConnectionId);
+            return GroupToConnectionId.TryAdd(group, contextConnectionId);
         }
         else if (GroupToConnectionId.TryGetValue(group, out var connId) && connId == contextConnectionId)
         {
-            GroupToConnectionId.TryRemove(group, out _);
+            return GroupToConnectionId.TryRemove(group, out _);
         }
+        return false;
     }
 
     public async Task Disconnected(string contextConnectionId)

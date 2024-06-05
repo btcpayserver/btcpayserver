@@ -300,9 +300,10 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
     }
 
 
-    public async Task IdentifierActive(string group, bool active)
+    public async Task<bool> IdentifierActive(string group, bool active)
     {
-        await _appState.IdentifierActive(group, Context.ConnectionId, active);
+        
+        return await _appState.IdentifierActive(group, Context.ConnectionId, active);
     }
 
 

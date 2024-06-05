@@ -60,6 +60,7 @@ namespace BTCPayServer.Plugins
                     p.Author = github.Owner;
                     p.AuthorLink = $"https://github.com/{github.Owner}";
                 }
+                p.BuildDate = v.BuildInfo.buildDate;
                 p.SystemPlugin = false;
                 return p;
             }).ToArray();
@@ -119,7 +120,7 @@ namespace BTCPayServer.Plugins
             public Version Version { get; set; }
             public string Description { get; set; }
             public bool SystemPlugin { get; set; } = false;
-
+            public DateTime BuildDate { get; set; }
             public IBTCPayServerPlugin.PluginDependency[] Dependencies { get; set; } = Array.Empty<IBTCPayServerPlugin.PluginDependency>();
             public string Documentation { get; set; }
             public string Source { get; set; }

@@ -3,6 +3,7 @@
 @using BTCPayServer.Views.Invoice
 @using BTCPayServer.Views.Manage
 @using BTCPayServer.Views.PaymentRequest
+@using BTCPayServer.Views.UIServer.UIPlugins
 @using BTCPayServer.Views.Wallets
 @using BTCPayServer.Client
 @using BTCPayServer.Components.ThemeSwitch
@@ -160,13 +161,12 @@
                 <div id="Nav-Plugins" class="accordion-collapse collapse show" aria-labelledby="Nav-Plugins-Header">
                     <div class="accordion-body">
                         <ul class="navbar-nav">
-                            <vc:ui-extension-point location="header-nav" model="@Model"/>
-                            @if (Model.Store != null)
-                            {
-                                <vc:ui-extension-point location="store-integrations-nav" model="@Model"/>
-                            }
-                        </ul>
-                        <ul class="navbar-nav">
+                            <li class="nav-item" permission="@Policies.CanModifyServerSettings">
+                                <a asp-area="" asp-controller="UIServer" asp-action="ExplorePlugins" class="nav-link @ViewData.IsActivePage(PluginNavPages.All)" id="Nav-ExplorePlugins">
+                                    <vc:icon symbol="nav-plugins-explore" />
+                                    <span>Explore</span>
+                                </a>
+                            </li>
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
                                 <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
                                     @if (PluginService.GetDisabledPlugins().Any())
@@ -177,7 +177,7 @@
                                     {
                                         <vc:icon symbol="nav-plugins-manage" />
                                     }
-                                    <span>Manage Plugins</span>
+                                    <span>Manage</span>
                                 </a>
                             </li>
                             @if (Model.Store != null && Model.ArchivedAppsCount > 0)
@@ -187,6 +187,13 @@
                                         @Model.ArchivedAppsCount Archived App@(Model.ArchivedAppsCount == 1 ? "" : "s")
                                     </a>
                                 </li>
+                            }
+                        </ul>
+                        <ul class="navbar-nav">
+                            <vc:ui-extension-point location="header-nav" model="@Model"/>
+                            @if (Model.Store != null)
+                            {
+                                <vc:ui-extension-point location="store-integrations-nav" model="@Model"/>
                             }
                         </ul>
                     </div>

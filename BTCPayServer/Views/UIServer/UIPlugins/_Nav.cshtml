@@ -1,0 +1,13 @@
+@using BTCPayServer.Configuration
+@using BTCPayServer.Views.UIServer.UIPlugins
+@inject BTCPayServerOptions _btcPayServerOptions
+
+<div class="sticky-header mb-l">
+    <h2 class="mt-1 mb-2 mb-lg-4">Explore Plugins</h2>
+    <nav id="SectionNav">
+        <div class="nav">
+            <a asp-controller="UIServer" id="SectionNav-@PluginNavPages.All" class="nav-link @ViewData.IsActivePage(PluginNavPages.All)" asp-action="ExplorePlugins">All</a>
+            <vc:ui-extension-point location="server-nav" model="@Model"/>
+        </div>
+    </nav>
+</div>

@@ -44,9 +44,12 @@ namespace BTCPayServer.Plugins.Shopify
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            if (evt is InvoiceEvent invoiceEvent && !new[]
+            if (evt is InvoiceEvent invoiceEvent && new[]
                 {
-                    InvoiceEvent.MarkedCompleted, InvoiceEvent.MarkedInvalid, InvoiceEvent.Expired,
+                    InvoiceEvent.MarkedCompleted, 
+                    InvoiceEvent.MarkedInvalid, 
+                    InvoiceEvent.Expired,
+                    InvoiceEvent.Confirmed,
                     InvoiceEvent.Completed
                 }.Contains(invoiceEvent.Name))
             {

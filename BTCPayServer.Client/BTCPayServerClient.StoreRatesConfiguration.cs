@@ -23,14 +23,15 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<StoreRateConfiguration>($"api/v1/stores/{storeId}/rates/configuration", request, HttpMethod.Put, token);
     }
 
-    public virtual async Task<List<StoreRateResult>> PreviewUpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, string[] currencyPair, CancellationToken token = default)
+    public virtual async Task<List<StoreRateResult>> PreviewUpdateStoreRateConfiguration(string storeId, StoreRateConfiguration request, string[] currencyPair = null, CancellationToken token = default)
     {
-        return await SendHttpRequest<StoreRateConfiguration, List<StoreRateResult>>($"api/v1/stores/{storeId}/rates/configuration/preview", 
-            new Dictionary<string, object> { { "currencyPair", currencyPair } }, request, HttpMethod.Post, token);
+        var queryPayload = currencyPair == null ? null : new Dictionary<string, object> { { "currencyPair", currencyPair } };
+        return await SendHttpRequest<StoreRateConfiguration, List<StoreRateResult>>($"api/v1/stores/{storeId}/rates/configuration/preview", queryPayload, request, HttpMethod.Post, token);
     }
 
-    public virtual async Task<List<StoreRateResult>> GetStoreRates(string storeId, string[] currencyPair, CancellationToken token = default)
+    public virtual async Task<List<StoreRateResult>> GetStoreRates(string storeId, string[] currencyPair = null, CancellationToken token = default)
     {
-        return await SendHttpRequest<List<StoreRateResult>>($"api/v1/stores/{storeId}/rates", new Dictionary<string, object>() { { "currencyPair", currencyPair } }, HttpMethod.Get, token);
+        var queryPayload = currencyPair == null ? null : new Dictionary<string, object> { { "currencyPair", currencyPair } };
+        return await SendHttpRequest<List<StoreRateResult>>($"api/v1/stores/{storeId}/rates", queryPayload, HttpMethod.Get, token);
     }
 }

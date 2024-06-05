@@ -49,6 +49,77 @@ namespace BTCPayServer.Controllers
             return View(res);
         }
 
+        [HttpGet("server/exploreplugins")]
+        public async Task<IActionResult> ExplorePlugins(
+            [FromServices] PluginService pluginService,
+            [FromServices] BTCPayServerOptions btcPayServerOptions, string searchText)
+        {
+            IEnumerable<PluginService.AvailablePlugin> availablePlugins;
+            try
+            {
+                availablePlugins = await pluginService.GetRemotePlugins();
+            }
+            catch (Exception)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "Remote plugins lookup failed. Try again later."
+                });
+                availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
+            }
+            if (!string.IsNullOrEmpty(searchText))
+            {
+                availablePlugins = availablePlugins.Where(c => c.Name.ToLower().Contains(searchText.ToLower()));
+            }
+            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>();
+            foreach (var p in availablePlugins)
+                availablePluginsByIdentifier.TryAdd(p.Identifier, p);
+            var res = new ListPluginsViewModel()
+            {
+                Installed = pluginService.LoadedPlugins,
+                Available = availablePlugins,
+                CanShowRestart = true,
+                DownloadedPluginsByIdentifier = availablePluginsByIdentifier
+            };
+            return View(res);
+        }
+
+        [HttpGet("server/installedplugins")]
+        public async Task<IActionResult> ListInstalledPlugins(
+            [FromServices] PluginService pluginService,
+            [FromServices] BTCPayServerOptions btcPayServerOptions)
+        {
+            IEnumerable<PluginService.AvailablePlugin> availablePlugins;
+            try
+            {
+                availablePlugins = await pluginService.GetRemotePlugins();
+            }
+            catch (Exception)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "Remote plugins lookup failed. Try again later."
+                });
+                availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
+            }
+            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>();
+            foreach (var p in availablePlugins)
+                availablePluginsByIdentifier.TryAdd(p.Identifier, p);
+            var res = new ListPluginsViewModel()
+            {
+                Installed = pluginService.LoadedPlugins,
+                Available = availablePlugins,
+                Commands = pluginService.GetPendingCommands(),
+                Disabled = pluginService.GetDisabledPlugins(),
+                CanShowRestart = true,
+                DownloadedPluginsByIdentifier = availablePluginsByIdentifier
+            };
+            return View(res);
+        }
+        
+
         public class ListPluginsViewModel
         {
             public IEnumerable<IBTCPayServerPlugin> Installed { get; set; }

@@ -6,7 +6,8 @@
 @inject WebhookSender WebhookSender
 
 @{
-    ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", storeId);
 }
 
 @section PageHeadContent {
@@ -15,7 +16,15 @@
 
 <form asp-action="StoreEmails" method="post" asp-route-storeId="@Context.GetStoreData().Id" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="StoreEmailSettings" asp-route-storeId="@storeId">Emails</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
         <div permission="@Policies.CanModifyStoreSettings">
             @if (Model.Rules.Any())
             {
@@ -30,7 +39,7 @@
     </div>
     <partial name="_StatusMessage" />
     <p>
-        <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Context.GetStoreData().Id">Email rules</a>
+        <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@storeId">Email rules</a>
         allow BTCPay Server to send customized emails from your store based on events.
     </p>
     <div class="row">

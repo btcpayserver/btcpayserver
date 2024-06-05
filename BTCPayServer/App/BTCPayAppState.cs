@@ -194,7 +194,7 @@ public class BTCPayAppState : IHostedService
         return result;
     }
 
-    public readonly ConcurrentDictionary<string, string> GroupToConnectionId = new();
+    public readonly ConcurrentDictionary<string, string> GroupToConnectionId = new(StringComparer.InvariantCultureIgnoreCase);
     private CancellationTokenSource _cts;
 
 
@@ -202,7 +202,13 @@ public class BTCPayAppState : IHostedService
     {
         if (active)
         {
-            return GroupToConnectionId.TryAdd(group, contextConnectionId);
+            if (GroupToConnectionId.TryAdd(group, contextConnectionId))
+            {
+                var connString ="type=app;group=" + group;
+                _serviceProvider.GetService<LightningListener>()?.CheckConnection(ExplorerClient.CryptoCode, connString);
+                return true;
+            }
+            return false;
         }
         else if (GroupToConnectionId.TryGetValue(group, out var connId) && connId == contextConnectionId)
         {
@@ -234,7 +240,7 @@ public class BTCPayAppState : IHostedService
 
     public async Task PaymentUpdate(string identifier, LightningPayment lightningPayment)
     {
-        _logger.LogInformation("Payment update for {identifier} {}", identifier);
+        _logger.LogInformation($"Payment update for {identifier} {lightningPayment.Value} {lightningPayment.PaymentHash}");
         OnPaymentUpdate?.Invoke(this, (identifier, lightningPayment));
     }
     

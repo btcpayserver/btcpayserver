@@ -395,7 +395,8 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 
             services.AddSingleton<IUIExtension>(new UIExtension("LNURL/LightningAddressNav",
                 "store-integrations-nav"));
-            services.AddSingleton<IHostedService, LightningListener>();
+            services.AddSingleton<LightningListener>();
+            services.AddSingleton<IHostedService, LightningListener>(o => o.GetRequiredService<LightningListener>());
             services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();

@@ -341,11 +341,11 @@ namespace BTCPayServer.HostedServices
             {
                 payoutHandler.StartBackgroundCheck(Subscribe);
             }
-
+            _eventAggregator.Subscribe<Events.InvoiceEvent>(TopUpInvoiceCore);
             return new[] { Loop() };
         }
 
-        private void TopUpInvoice(InvoiceEvent evt)
+        private void TopUpInvoiceCore(InvoiceEvent evt)
         {
             if (evt.EventCode == InvoiceEventCode.Completed || evt.EventCode == InvoiceEventCode.MarkedCompleted)
             {

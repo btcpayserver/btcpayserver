@@ -119,7 +119,6 @@
 
 @if (Model.Installed.Any())
 {
-    <h3 class="mb-4">Installed Plugins</h3>
     <div class="container-fluid mb-4">
         @foreach (var plugin in Model.Installed.Where(i => !i.SystemPlugin))
         {

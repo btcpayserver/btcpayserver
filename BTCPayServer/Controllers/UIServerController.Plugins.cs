@@ -54,7 +54,6 @@ namespace BTCPayServer.Controllers
             [FromServices] PluginService pluginService,
             [FromServices] BTCPayServerOptions btcPayServerOptions, string searchText)
         {
-            ViewData["Title"] = "Explore Plugins";
             IEnumerable<PluginService.AvailablePlugin> availablePlugins;
             try
             {

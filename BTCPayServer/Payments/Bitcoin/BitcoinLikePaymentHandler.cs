@@ -92,7 +92,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public async Task AfterSavingInvoice(PaymentMethodContext paymentMethodContext)
         {
-            var paymentPrompt = paymentMethodContext.Prompt;
+            var paymentPrompt = paymentMethodContext.Prompts[0];
             var store = paymentMethodContext.Store;
             var entity = paymentMethodContext.InvoiceEntity;
             var links = new List<WalletObjectLinkData>();
@@ -116,11 +116,12 @@ namespace BTCPayServer.Payments.Bitcoin
             await _walletRepository.EnsureCreated(null, links);
         }
 
-        public Task BeforeFetchingRates(PaymentMethodContext paymentMethodContext)
+        public Task CreatePrompts(PaymentMethodContext paymentMethodContext)
         {
-            paymentMethodContext.Prompt.Currency = _Network.CryptoCode;
-            paymentMethodContext.Prompt.Divisibility = _Network.Divisibility;
-            if (paymentMethodContext.Prompt.Activated)
+            paymentMethodContext.PromptTemplate.Currency = _Network.CryptoCode;
+            paymentMethodContext.PromptTemplate.Divisibility = _Network.Divisibility;
+            paymentMethodContext.AddPrompt();
+            if (paymentMethodContext.PromptTemplate.Activated)
             {
                 var settings = ParsePaymentMethodConfig(paymentMethodContext.PaymentMethodConfig);
                 var storeBlob = paymentMethodContext.StoreBlob;
@@ -140,13 +141,12 @@ namespace BTCPayServer.Payments.Bitcoin
             }
             return Task.CompletedTask;
         }
-        public async Task ConfigurePrompt(PaymentMethodContext paymentContext)
+        public async Task ActivatePrompt(PaymentMethodContext paymentContext, PaymentPrompt prompt)
         {
             var prepare = (Prepare)paymentContext.State;
             var accountDerivation = prepare.DerivationSchemeSettings.AccountDerivation;
             if (!_ExplorerProvider.IsAvailable(_Network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
-            var paymentMethod = paymentContext.Prompt;
             var onchainMethod = new BitcoinPaymentPromptDetails();
             var blob = paymentContext.StoreBlob;
 
@@ -157,9 +157,9 @@ namespace BTCPayServer.Payments.Bitcoin
                 case NetworkFeeMode.Always:
                 case NetworkFeeMode.MultiplePaymentsOnly:
                     onchainMethod.PaymentMethodFeeRate = (await prepare.GetNetworkFeeRate);
-                    if (onchainMethod.FeeMode == NetworkFeeMode.Always || paymentMethod.Calculate().TxCount > 0)
+                    if (onchainMethod.FeeMode == NetworkFeeMode.Always || prompt.Calculate().TxCount > 0)
                     {
-                        paymentMethod.PaymentMethodFee =
+                        prompt.PaymentMethodFee =
                             onchainMethod.PaymentMethodFeeRate.GetFee(100).GetValue(_Network); // assume price for 100 bytes
                     }
                     break;
@@ -173,14 +173,14 @@ namespace BTCPayServer.Payments.Bitcoin
                 txOut.ScriptPubKey =
                     new Key().GetScriptPubKey(accountDerivation.ScriptPubKeyType());
                 var dust = txOut.GetDustThreshold();
-                var amount = paymentMethod.Calculate().Due;
+                var amount = prompt.Calculate().Due;
                 if (amount < dust.ToDecimal(MoneyUnit.BTC))
                     throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable an off-chain (Lightning) payment method");
             }
 
             var reserved = await prepare.ReserveAddress;
 
-            paymentMethod.Destination = reserved.Address.ToString();
+            prompt.Destination = reserved.Address.ToString();
             paymentContext.TrackedDestinations.Add(Network.GetTrackedDestination(reserved.Address.ScriptPubKey));
             onchainMethod.KeyPath = reserved.KeyPath;
             onchainMethod.AccountDerivation = accountDerivation;
@@ -202,7 +202,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     logs.Write("Payjoin is enabled for this invoice.", InvoiceEventData.EventSeverity.Info);
             }
 
-            paymentMethod.Details = JObject.FromObject(onchainMethod, Serializer);
+            prompt.Details = JObject.FromObject(onchainMethod, Serializer);
         }
 
         public static DerivationStrategyBase GetAccountDerivation(JToken activationData, BTCPayNetwork network)

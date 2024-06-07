@@ -335,30 +335,30 @@ retry:
                         }
 
                         var paymentContext = new PaymentMethodContext(store, store.GetStoreBlob(), JToken.FromObject(lnConfig, _handlers.GetLightningHandler(network).Serializer), lightningHandler, invoice, logs);
-                        var paymentPrompt = paymentContext.Prompt;
-                        await paymentContext.BeforeFetchingRates();
-                        await paymentContext.CreatePaymentPrompt();
-                        if (paymentContext.Status != PaymentMethodContext.ContextStatus.Created)
-                            continue;
-                        var instanceListenerKey = (paymentPrompt.Currency, connStr.ToString());
-                        LightningInstanceListener? instanceListener;
-                        lock (_InstanceListeners)
+                        
+                        await paymentContext.CreatePrompts();
+                        foreach (var prompt in await paymentContext.ActivatePrompts())
                         {
-                            _InstanceListeners.TryGetValue(instanceListenerKey, out instanceListener);
-                        }
-                        if (instanceListener is not null)
-                        {
-                            await _InvoiceRepository.NewPaymentPrompt(invoice.Id, paymentContext);
-                            await paymentContext.ActivatingPaymentPrompt();
-                            var details = lightningHandler.ParsePaymentPromptDetails(paymentPrompt.Details);
-                            instanceListener.AddListenedInvoice(new ListenedInvoice(
-                                invoice.ExpirationTime,
-                                details,
-                                paymentPrompt,
-                                network,
-                                invoice.Id));
-                            _Aggregator.Publish(new Events.InvoiceNewPaymentDetailsEvent(invoice.Id,
-                                details, paymentPrompt.PaymentMethodId));
+                            var instanceListenerKey = (prompt.Currency, connStr.ToString());
+                            LightningInstanceListener? instanceListener;
+                            lock (_InstanceListeners)
+                            {
+                                _InstanceListeners.TryGetValue(instanceListenerKey, out instanceListener);
+                            }
+                            if (instanceListener is not null)
+                            {
+                                await _InvoiceRepository.NewPaymentPrompt(invoice.Id, paymentContext, prompt);
+                                await paymentContext.AfterSavingInvoice();
+                                var details = lightningHandler.ParsePaymentPromptDetails(prompt.Details);
+                                instanceListener.AddListenedInvoice(new ListenedInvoice(
+                                    invoice.ExpirationTime,
+                                    details,
+                                    prompt,
+                                    network,
+                                    invoice.Id));
+                                _Aggregator.Publish(new Events.InvoiceNewPaymentDetailsEvent(invoice.Id,
+                                    details, prompt.PaymentMethodId));
+                            }
                         }
                     }
                     catch (Exception e)

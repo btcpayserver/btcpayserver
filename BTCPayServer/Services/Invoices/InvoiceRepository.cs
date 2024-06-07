@@ -348,9 +348,8 @@ retry:
                 }
             }
         }
-        public async Task NewPaymentPrompt(string invoiceId, PaymentMethodContext paymentPromptContext)
+        public async Task NewPaymentPrompt(string invoiceId, PaymentMethodContext paymentPromptContext, PaymentPrompt prompt)
         {
-            var prompt = paymentPromptContext.Prompt;
 retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {

@@ -39,7 +39,7 @@
 <partial name="_StatusMessage" />
 
 
-<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ListAllPlugins" method="get">
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ExplorePlugins" method="get">
     <input class="form-control col-12 col-md-6 col-lg-4" name="searchText" placeholder="Search…" />
 </form>
 
@@ -133,10 +133,6 @@
                                                 <span>Last Updated:</span>
                                                 <span>@plugin.BuildDate.ToTimeAgo()</span>
                                             </div>
-                                            <hr /><div class="d-flex justify-content-between mb-2 w-100">
-                                                <strong>Release:</strong>
-                                                <span>@plugin.Version</span>
-                                            </div>
                                             <hr />
                                             @if (downloadInfo?.Source is not null)
                                             {
@@ -156,7 +152,10 @@
                                             }
                                             <div class="d-flex justify-content-between mb-2 w-100">
                                                 <strong>Dependency:</strong>
-                                                <span>@plugin.Version</span>
+                                                @foreach (var dependency in plugin.Dependencies)
+                                                {
+                                                    <span>@dependency</span>
+                                                }
                                             </div>
                                             <hr />
                                         </div>
@@ -248,10 +247,6 @@ else
                                                 <span>Last Updated:</span>
                                                 <span>@plugin.BuildDate.ToTimeAgo()</span>
                                             </div>
-                                            <hr /><div class="d-flex justify-content-between mb-2 w-100">
-                                                <strong>Release:</strong>
-                                                <span>@plugin.Version</span>
-                                            </div>
                                             <hr />
                                             @if (downloadInfo?.Source is not null)
                                             {
@@ -271,7 +266,10 @@ else
                                             }
                                             <div class="d-flex justify-content-between mb-2 w-100">
                                                 <strong>Dependency:</strong>
-                                                <span>@plugin.Version</span>
+                                                @foreach (var dependency in plugin.Dependencies)
+                                                {
+                                                    <span>@dependency</span>
+                                                }
                                             </div>
                                             <hr />
                                         </div>

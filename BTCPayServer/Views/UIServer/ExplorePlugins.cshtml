@@ -20,17 +20,17 @@
         var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
         availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? ordered.FirstOrDefault());
     }
-    var recentPlugins = availableAndNotInstalled.OrderByDescending(c => c.BuildDate).Take(9).ToList();
+    var recentPlugins = availableAndNotInstalled.OrderByDescending(c => c.BuildDate).Take(10).ToList();
 }
 
 <style>
-    .version-switch .nav-link {
-        display: inline;
+    .modal-content > .modal-body > .p-3:last-child > .row > [class*='col-']:last-child {
+        border-bottom: none;
     }
 
-        .version-switch .nav-link.active {
-            display: none;
-        }
+    .modal-content > .modal-body > .p-3:last-child > .row > .col-lg-5 {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
 </style>
 
 
@@ -40,7 +40,7 @@
 
 
 <form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ExplorePlugins" method="get">
-    <input class="form-control col-12 col-md-6 col-lg-4" name="searchText" placeholder="Search…" />
+    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
 </form>
 
 <div class="alert alert-warning alert-dismissible mb-4" role="alert">
@@ -75,7 +75,7 @@
                     <div class="card h-100 bg-transparent border-0" id="@plugin.Identifier">
                         <div class="card-body d-flex">
                             <div class="me-3 d-flex justify-content-center align-items-center">
-                                <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-1" style="width: 64px; height: 64px;">
+                                <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
                             </div>
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
@@ -94,28 +94,31 @@
                         <div class="modal-content">
                             <div class="modal-body">
                                 <div class="p-3 w-100">
-                                    <div class="d-flex justify-content-between">
-                                        <div class="d-flex flex-column col-7">
+                                    <div class="row">
+                                        <div class="col-lg-7">
                                             <h4 class="modal-title fs-2" id="pluginModalLabel">@plugin.Name</h4>
                                             <p>@plugin.Description</p>
                                         </div>
-                                        <div class="d-flex flex-column align-items-end">
-                                            <button type="button" class="btn btn-primary mt-3">Install</button>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        <div class="col-lg-5">
+                                            <div class="d-flex flex-column align-items-end">
+                                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
+                                                    <button type="submit" class="btn btn-primary">Install</button>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div class="d-flex justify-content-between mt-3">
-                                        <div class="d-flex flex-column gap-3 col-7">
+                                    <div class="d-flex justify-content-between mt-3 flex-wrap">
+                                        <div class="d-flex flex-column gap-3 col-12 col-md-7 mb-3 mb-md-0">
                                             <div class="d-flex flex-column gap-2 h-100">
-                                                <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3);"></div>
+                                                <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3); min-height: 100px; flex-basis: 100px;"></div>
                                                 <div class="d-flex gap-2 flex-grow-1">
-                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3);"></div>
-                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3);"></div>
+                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3); min-height: 100px; flex-basis: 100px;"></div>
+                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3); min-height: 100px; flex-basis: 100px;"></div>
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-4 mt-3">
+                                        <div class="col-12 col-md-4 mt-3">
                                             <div class="d-flex justify-content-between mb-2 w-100">
                                                 <strong>Version:</strong>
                                                 <span>@plugin.Version</span>
@@ -152,14 +155,18 @@
                                             }
                                             <div class="d-flex justify-content-between mb-2 w-100">
                                                 <strong>Dependency:</strong>
-                                                @foreach (var dependency in plugin.Dependencies)
-                                                {
-                                                    <span>@dependency</span>
-                                                }
+                                                <div>
+                                                    @foreach (var dependency in plugin.Dependencies)
+                                                    {
+                                                        <span>@dependency</span>
+                                                        <br />
+                                                    }
+                                                </div>
                                             </div>
                                             <hr />
                                         </div>
                                     </div>
+
                                 </div>
                             </div>
                         </div>
@@ -176,140 +183,70 @@ else
 }
 
 
-@if (recentPlugins.Any())
+@if (string.IsNullOrEmpty(Model.SearchText))
 {
-    <h4 class="mb-4">Recent</h4>
-    <div class="row mb-4">
-        @foreach (var plugin in recentPlugins)
-        {
-            Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
-            var recentPluginModalId = $"modal_{plugin.Identifier}";
-            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
-                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#@recentPluginModalId">
-                    <div class="card h-100 bg-transparent border-0" id="@plugin.Identifier">
-                        <div class="card-body d-flex">
-                            <div class="me-3 d-flex justify-content-center align-items-center">
-                                <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-1" style="width: 64px; height: 64px;">
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="d-flex justify-content-between align-items-center mb-2">
-                                    <h4 class="card-title mb-0">@plugin.Name</h4>
+    @if (recentPlugins.Any())
+    {
+        <h4 class="mb-4">Recent</h4>
+        <div class="row mb-4">
+            @foreach (var plugin in recentPlugins)
+            {
+                Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
+                var recentPluginModalId = $"modal_{plugin.Identifier}";
+                <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#@recentPluginModalId">
+                        <div class="card h-100 bg-transparent border-0" id="@plugin.Identifier">
+                            <div class="card-body d-flex">
+                                <div class="me-3 d-flex justify-content-center align-items-center">
+                                    <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
                                 </div>
-                                <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">
-                                    @plugin.Description
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                </a>
-
-                <div class="modal fade" id="@recentPluginModalId" tabindex="-1" aria-labelledby="pluginModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-xl">
-                        <div class="modal-content">
-                            <div class="modal-body">
-                                <div class="p-3 w-100">
-                                    <div class="d-flex justify-content-between">
-                                        <div class="d-flex flex-column col-7">
-                                            <h4 class="modal-title fs-2" id="pluginModalLabel">@plugin.Name</h4>
-                                            <p>@plugin.Description</p>
-                                        </div>
-                                        <div class="d-flex flex-column align-items-end">
-                                            <button type="button" class="btn btn-primary mt-3">Install</button>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h4 class="card-title mb-0">@plugin.Name</h4>
                                     </div>
-
-                                    <div class="d-flex justify-content-between mt-3">
-                                        <div class="d-flex flex-column gap-3 col-7">
-                                            <div class="d-flex flex-column gap-2 h-100">
-                                                <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3);"></div>
-                                                <div class="d-flex gap-2 flex-grow-1">
-                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3);"></div>
-                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3);"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-4 mt-3">
-                                            <div class="d-flex justify-content-between mb-2 w-100">
-                                                <strong>Version:</strong>
-                                                <span>@plugin.Version</span>
-                                            </div>
-                                            <hr />
-                                            @if (!string.IsNullOrEmpty(plugin.Author))
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <span>Developed By:</span>
-                                                    <span><a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">@plugin.Author</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            <div class="d-flex justify-content-between mb-2 w-100">
-                                                <span>Last Updated:</span>
-                                                <span>@plugin.BuildDate.ToTimeAgo()</span>
-                                            </div>
-                                            <hr />
-                                            @if (downloadInfo?.Source is not null)
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <strong>Source Code:</strong>
-                                                    <span><a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <strong>Documentation:</strong>
-                                                    <span><a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            <div class="d-flex justify-content-between mb-2 w-100">
-                                                <strong>Dependency:</strong>
-                                                @foreach (var dependency in plugin.Dependencies)
-                                                {
-                                                    <span>@dependency</span>
-                                                }
-                                            </div>
-                                            <hr />
-                                        </div>
-                                    </div>
+                                    <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">
+                                        @plugin.Description
+                                    </p>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </a>
                 </div>
-            </div>
-        }
-    </div>
+            }
+        </div>
+    }
+    else
+    {
+        <p>No plugin found for the matching criteria</p>
+    }
 }
-else
+
+
+
+@if (string.IsNullOrEmpty(Model.SearchText))
 {
-    <p>No plugin found for the matching criteria</p>
-}
-
-
-
-<div class="mb-4">
-    <h4 class="mb-4">Upload Plugin</h4>
-    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
-        Upload Plugin
-    </button>
-    <div class="row collapse" id="manual-upload">
-        <div class="col col-xl-6 mb-4">
-            <div class="card">
-                <div class="card-body">
-                    <h4 class="card-title">Add plugin manually</h4>
-                    <div class="alert alert-warning my-3">
-                        <h6 class="me-1">This is an extremely dangerous operation!</h6>
-                        Only upload plugins from trusted sources.
+    <div class="mb-4">
+        <h4 class="mb-4">Upload Plugin</h4>
+        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
+            Upload Plugin
+        </button>
+        <div class="row collapse" id="manual-upload">
+            <div class="col col-xl-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Add plugin manually</h4>
+                        <div class="alert alert-warning my-3">
+                            <h6 class="me-1">This is an extremely dangerous operation!</h6>
+                            Only upload plugins from trusted sources.
+                        </div>
+                        <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
+                            <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
+                            <button class="btn btn-primary" type="submit">Upload</button>
+                        </form>
                     </div>
-                    <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
-                        <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
-                        <button class="btn btn-primary" type="submit">Upload</button>
-                    </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
+
+}

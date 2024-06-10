@@ -1,12 +1,13 @@
 ﻿#nullable enable
 using System;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
 using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
+using BTCPayServer.Fido2;
+using BTCPayServer.Logging;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
@@ -17,6 +18,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.App.API;
@@ -35,9 +38,14 @@ public partial class AppApiController(
     UriResolver uriResolver,
     DefaultRulesCollection defaultRules,
     RateFetcher rateFactory,
+    LinkGenerator linkGenerator,
+    UserLoginCodeService userLoginCodeService,
+    Logs logs,
     IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
     : Controller
 {
+    private readonly ILogger _logger = logs.PayServer;
+    
     [AllowAnonymous]
     [HttpGet("instance")]
     public async Task<Results<Ok<AppInstanceInfo>, NotFound>> Instance()

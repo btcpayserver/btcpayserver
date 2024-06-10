@@ -126,7 +126,7 @@
                             <td colspan="2"><hr class="w-100 my-0"/></td>
                         </tr>
                     }
-					@if (hasCart && !IsManualEntryCart(Model.AdditionalData))
+					@if (hasCart && !IsManualEntryCart(Model.CartData))
                     {
 						_ = Model.CartData.TryGetValue("cart", out var cart) || Model.CartData.TryGetValue("Cart", out cart);
                         var hasTotal = Model.CartData.TryGetValue("total", out var total) || Model.CartData.TryGetValue("Total", out total);

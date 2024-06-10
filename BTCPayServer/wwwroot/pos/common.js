@@ -266,6 +266,7 @@ const posCommon = {
             return inSearch && inCategories
         },
         updateDisplay() {
+            if (!this.$refs.posItems) return;
             this.forEachItem(item => {
                 item.classList[this.displayItem(item) ? 'add' : 'remove']('posItem--displayed')
                 item.classList.remove('posItem--first')

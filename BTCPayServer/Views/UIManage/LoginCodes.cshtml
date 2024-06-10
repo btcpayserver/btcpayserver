@@ -22,22 +22,26 @@
 
 @section PageFootContent
 {
-    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true"/>
+    <link href="~/main/qrcode.css" rel="stylesheet" asp-append-version="true" />
     <script src="~/js/copy-to-clipboard.js"></script>
     <script>
-        const SECONDS = 60
-        const progress = document.getElementById('progress')
-        const progressbar = document.getElementById('progressbar')
-        let remaining = SECONDS
-        const update = () => {
-            remaining--
-            const percent = Math.round(remaining/SECONDS * 100)
-            progress.innerText = `Valid for ${remaining} seconds`
-            progressbar.style.width = `${percent}%`
-            if (percent < 15) progressbar.classList.add('bg-warning')
-            if (percent < 1) document.getElementById('regeneratecode').click()
-        }
-        setInterval(update, 1000)
-        update()
+        (function () {
+            const SECONDS = 60
+            const progress = document.getElementById('progress')
+            const progressbar = document.getElementById('progressbar')
+            let remaining = SECONDS
+            let handle = setInterval(update, 1000)
+            function update() {
+                remaining--
+                const percent = Math.round(remaining/SECONDS * 100)
+                progress.innerText = `Valid for ${remaining} seconds`
+                progressbar.style.width = `${percent}%`
+                if (percent < 15) progressbar.classList.add('bg-warning')
+                if (percent < 1) {
+                    clearInterval(handle)
+                    window.location.reload()
+                }
+            }
+        })()
     </script>
 }

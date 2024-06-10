@@ -109,5 +109,14 @@ namespace Microsoft.AspNetCore.Mvc
                 values: new { storeId = wallet?.StoreId ?? walletIdOrStoreId, pullPaymentId, payoutState },
                 scheme, host, pathbase);
         }
+
+        public static string IndexLink(this LinkGenerator urlHelper, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(UIHomeController.Index),
+                controller: "UIHome",
+                values: null,
+                scheme, host, pathbase);
+        }
     }
 }

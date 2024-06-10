@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using NicolasDorier.RateLimits;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
@@ -74,7 +75,7 @@ public partial class AppApiController
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> Login(LoginRequest login)
     {
-        const string errorMessage = "Invalid login attempt.";
+        var errorMessage = "Invalid login attempt.";
         if (ModelState.IsValid)
         {
             // Require the user to pass basic checks (approval, confirmed email, not disabled) before they can log on
@@ -95,10 +96,44 @@ public partial class AppApiController
             }
             
             // TODO: Add FIDO and LNURL Auth
+            
+            if (signInResult.IsLockedOut)
+            {
+                _logger.LogWarning("User {Email} tried to log in, but is locked out", user.Email);
+            }
+            else if (signInResult.Succeeded)
+            {
+                _logger.LogInformation("User {Email} logged in", user.Email);
+                return TypedResults.Empty;
+            }
 
-            return signInResult.Succeeded
-                ? TypedResults.Empty
-                : TypedResults.Problem(signInResult.ToString(), statusCode: 401);
+            errorMessage = signInResult.ToString();
+        }
+
+        return TypedResults.Problem(errorMessage, statusCode: 401);
+    }
+    
+    [AllowAnonymous]
+    [HttpPost("login/code")]
+    [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
+    public async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> LoginWithCode([FromBody] string loginCode)
+    {
+        const string errorMessage = "Invalid login attempt.";
+        if (!string.IsNullOrEmpty(loginCode))
+        {
+            var code = loginCode.Split(';').First();
+            var userId = userLoginCodeService.Verify(code);
+            var user = userId is null ? null : await userManager.FindByIdAsync(userId);
+            if (!UserService.TryCanLogin(user, out var message))
+            {
+                return TypedResults.Problem(message, statusCode: 401);
+            }
+            
+            signInManager.AuthenticationScheme = AuthenticationSchemes.GreenfieldBearer;
+            await signInManager.SignInAsync(user, false, "LoginCode");
+
+            _logger.LogInformation("User {Email} logged in with a login code", user.Email);
+            return TypedResults.Empty;
         }
 
         return TypedResults.Problem(errorMessage, statusCode: 401);
@@ -141,6 +176,7 @@ public partial class AppApiController
         if (user != null)
         {
             await signInManager.SignOutAsync();
+            _logger.LogInformation("User {Email} logged out", user.Email);
             return Results.Ok();
         }
         return Results.Unauthorized();

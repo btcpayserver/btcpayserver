@@ -14,8 +14,10 @@ namespace BTCPayServer.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-
-            return View(nameof(LoginCodes), _userLoginCodeService.GetOrGenerate(user.Id));
+            
+            var indexUrl = _linkGenerator.IndexLink(Request.Scheme, Request.Host, Request.PathBase);
+            var loginCode = _userLoginCodeService.GetOrGenerate(user.Id);
+            return View(nameof(LoginCodes), $"{loginCode};{indexUrl};{user.Email}");
         }
     }
 }

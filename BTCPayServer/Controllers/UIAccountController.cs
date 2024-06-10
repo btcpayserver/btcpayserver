@@ -129,7 +129,8 @@ namespace BTCPayServer.Controllers
         {
             if (!string.IsNullOrEmpty(loginCode))
             {
-                var userId = _userLoginCodeService.Verify(loginCode);
+                var code = loginCode.Split(';').First();
+                var userId = _userLoginCodeService.Verify(code);
                 if (userId is null)
                 {
                     TempData[WellKnownTempData.ErrorMessage] = "Login code was invalid";

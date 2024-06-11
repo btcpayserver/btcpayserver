@@ -806,6 +806,31 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanUseInvoiceReceiptsPrint()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.AddDerivationScheme();
+            s.GoToInvoices();
+            var i = s.CreateInvoice();
+            await s.Server.PayTester.InvoiceRepository.MarkInvoiceStatus(i, InvoiceStatus.Settled);
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.Id($"Receipt")).Click();
+            });
+            TestUtils.Eventually(() =>
+            {
+                s.Driver.Navigate().Refresh();
+                s.Driver.FindElement(By.Id($"PrintReceipt")).Click();
+            });
+
+            Assert.Contains("100.00 USD", s.Driver.PageSource);
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanSetupStoreViaGuide()
         {
             using var s = CreateSeleniumTester();

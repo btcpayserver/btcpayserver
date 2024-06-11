@@ -117,7 +117,7 @@
                     {
                         @foreach (var (key, value) in Model.AdditionalData)
                         {
-                            <tr>
+                            <tr class="additional-data">
                                 <td class="text-secondary">@key</td>
                                 <td class="text-end">@value</td>
                             </tr>
@@ -126,20 +126,20 @@
                             <td colspan="2"><hr class="w-100 my-0"/></td>
                         </tr>
                     }
-					@if (hasCart && !IsManualEntryCart(Model.AdditionalData))
+					@if (hasCart && !IsManualEntryCart(Model.CartData))
                     {
 						_ = Model.CartData.TryGetValue("cart", out var cart) || Model.CartData.TryGetValue("Cart", out cart);
                         var hasTotal = Model.CartData.TryGetValue("total", out var total) || Model.CartData.TryGetValue("Total", out total);
                         var hasSubtotal = Model.CartData.TryGetValue("subtotal", out var subtotal) || Model.CartData.TryGetValue("subTotal", out subtotal) || Model.CartData.TryGetValue("Subtotal", out subtotal);
                         var hasDiscount = Model.CartData.TryGetValue("discount", out var discount) || Model.CartData.TryGetValue("Discount", out discount);
                         var hasTip = Model.CartData.TryGetValue("tip", out var tip) || Model.CartData.TryGetValue("Tip", out tip);
-                        if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict) 
+                        if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
                         {
                             @foreach (var (key, value) in cartDict)
                             {
-                                <tr>
-                                    <td class="text-secondary">@key</td>
-                                    <td class="text-end">@value</td>
+                                <tr class="cart-data">
+                                    <td class="key text-secondary">@key</td>
+                                    <td class="val text-end">@value</td>
                                 </tr>
                             }
                         }
@@ -148,7 +148,7 @@
                             @foreach (var value in cartCollection)
                             {
                                 <tr>
-                                    <td class="text-end">@value</td>
+                                    <td class="val text-end">@value</td>
                                 </tr>
                             }
                         }
@@ -157,23 +157,23 @@
                             <tr>
                                 <td colspan="2"><hr class="w-100 my-0"/></td>
                             </tr>
-                            <tr>
-                                <td class="text-secondary">Subtotal</td>
-                                <td class="text-end">@subtotal</td>
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Subtotal</td>
+                                <td class="val text-end">@subtotal</td>
                             </tr>
                         }
                         if (hasDiscount)
                         {
-                            <tr>
-                                <td class="text-secondary">Discount</td>
-                                <td class="text-end">@discount</td>
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Discount</td>
+                                <td class="val text-end">@discount</td>
                             </tr>
                         }
                         if (hasTip)
                         {
-                            <tr>
-                                <td class="text-secondary">Tip</td>
-                                <td class="text-end">@tip</td>
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Tip</td>
+                                <td class="val text-end">@tip</td>
                             </tr>
                         }
                         if (hasTotal)
@@ -181,17 +181,17 @@
                             <tr>
                                 <td colspan="2"><hr class="w-100 my-0"/></td>
                             </tr>
-                            <tr>
-                                <th class="text-secondary">Total</th>
-                                <td class="text-end fw-semibold">@total</td>
+                            <tr class="sums-data">
+                                <td class="key text-secondary">Total</td>
+                                <td class="val text-end fw-semibold">@total</td>
                             </tr>
                         }
                     }
                     else
                     {
-                        <tr>
-                            <td class="text-nowrap text-secondary">Total</td>
-                            <td class="text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
+                        <tr class="sums-data">
+                            <td class="key text-nowrap text-secondary">Total</td>
+                            <td class="val text-end fw-semibold">@DisplayFormatter.Currency(Model.Amount, Model.Currency, DisplayFormatter.CurrencyFormat.Symbol)</td>
                         </tr>
                     }
                     @if (Model.Payments?.Any() is true)
@@ -207,25 +207,25 @@
                                 <tr>
                                     <td colspan="2" class="text-nowrap text-secondary">Payment @(i + 1)</td>
                                 </tr>
-                                <tr>
+                                <tr class="payment-data">
                                     <td class="text-nowrap">Received</td>
                                     <td>@payment.ReceivedDate.ToBrowserDate()</td>
                                 </tr>
                             }
-                            <tr>
+                            <tr class="payment-data">
                                 <td class="text-nowrap text-secondary">@(Model.Payments.Count == 1 ? "Paid" : "")</td>
                                 <td class="text-end">@payment.AmountFormatted</td>
                             </tr>
-                            <tr>
+                            <tr class="payment-data">
                                 <td colspan="2" class="text-end">@payment.PaidFormatted</td>
                             </tr>
-                            <tr>
+                            <tr class="payment-data">
                                 <td class="text-nowrap text-secondary">Rate</td>
                                 <td class="text-end">@payment.RateFormatted</td>
                             </tr>
                             @if (!string.IsNullOrEmpty(payment.Destination))
                             {
-                                <tr>
+                                <tr class="payment-data">
                                     <td class="text-nowrap text-secondary">Destination</td>
                                     <td class="text-break">
                                         @if (payment.Destination.Length > 69)
@@ -245,7 +245,7 @@
                             }
                             @if (!string.IsNullOrEmpty(payment.PaymentProof))
                             {
-                                <tr>
+                                <tr class="payment-data">
                                     <td class="text-nowrap text-secondary">Pay Proof</td>
                                     <td class="text-break">@payment.PaymentProof</td>
                                 </tr>

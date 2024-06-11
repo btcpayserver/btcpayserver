@@ -272,7 +272,8 @@ namespace BTCPayServer.Tests
                 "https://www.btse.com", // not allowing to be hit from circleci
                 "https://www.bitpay.com", // not allowing to be hit from circleci
                 "https://support.bitpay.com",
-                "https://www.coingecko.com" // unhappy service
+                "https://www.coingecko.com", // unhappy service
+                "https://www.wasabiwallet.io/" // returning Forbidden
             };
 
             foreach (var match in regex.Matches(text).OfType<Match>())

@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.13.3
+
+### Bug fixes
+
+* Fix potential crash on receipt print page (#6045) @dennisreimann
+* Fix invoice paid for topping up a pull payment didn't top up. @NicolasDorier
+
 ## 1.13.2
 
 ### New features

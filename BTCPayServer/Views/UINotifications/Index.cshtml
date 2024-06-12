@@ -142,10 +142,13 @@
                             <th colspan="6">
                                 <div class="d-flex flex-wrap align-items-center justify-content-start gap-3">
                                     <div class="d-inline-flex align-items-center gap-3">
-                                        <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
-                                            <vc:icon symbol="actions-show" />
-                                            Mark as seen
-                                        </button>
+                                        @if (Model.Status == "Unread")
+                                        {
+                                            <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
+                                                <vc:icon symbol="actions-show" />
+                                                Mark as seen
+                                            </button>
+                                        }
                                         <button type="submit" name="command" value="delete" class="btn btn-link gap-1">
                                             <vc:icon symbol="actions-trash" />
                                             Delete

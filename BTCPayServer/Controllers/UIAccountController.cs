@@ -781,9 +781,11 @@ namespace BTCPayServer.Controllers
             
             var user = await _userManager.FindByEmailAsync(model.Email);
             var hasPassword = user != null && await _userManager.HasPasswordAsync(user);
-            if (!UserService.TryCanLogin(user, out _))
+            var needsInitialPassword = user != null && !await _userManager.HasPasswordAsync(user);
+            // Let unapproved users set a password. Otherwise, don't reveal that the user does not exist.
+            if (!UserService.TryCanLogin(user, out var message) && !needsInitialPassword || user == null)
             {
-                // Don't reveal that the user does not exist
+                _logger.LogWarning("User {Email} tried to reset password, but failed: {Message}", user?.Email ?? "(NO EMAIL)", message);
                 return RedirectToAction(nameof(Login));
             }
 

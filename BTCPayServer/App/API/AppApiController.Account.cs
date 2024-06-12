@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -168,6 +169,58 @@ public partial class AppApiController
             ? TypedResults.SignIn(await signInManager.CreateUserPrincipalAsync(user), authenticationScheme: scheme)
             : TypedResults.Challenge(authenticationSchemes: new[] { scheme });
     }
+    
+    [AllowAnonymous]
+    [HttpPost("accept-invite")]
+    [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
+    public async Task<IActionResult> AcceptInvite(AcceptInviteRequest invite)
+    {
+        if (string.IsNullOrEmpty(invite.UserId) || string.IsNullOrEmpty(invite.Code))
+        {
+            return NotFound();
+        }
+
+        var user = await userManager.FindByInvitationTokenAsync(invite.UserId, Uri.UnescapeDataString(invite.Code));
+        if (user == null)
+        {
+            return NotFound();
+        }
+            
+        var requiresEmailConfirmation = user is { RequiresEmailConfirmation: true, EmailConfirmed: false };
+        var requiresUserApproval = user is { RequiresApproval: true, Approved: false };
+        bool? emailHasBeenConfirmed = requiresEmailConfirmation ? false : null;
+        var requiresSetPassword = !await userManager.HasPasswordAsync(user);
+        string? passwordSetCode = requiresSetPassword ? await userManager.GeneratePasswordResetTokenAsync(user) : null;
+            
+        eventAggregator.Publish(new UserInviteAcceptedEvent
+        {
+            User = user,
+            RequestUri = Request.GetAbsoluteRootUri()
+        });
+            
+        if (requiresEmailConfirmation)
+        {
+            var emailConfirmCode = await userManager.GenerateEmailConfirmationTokenAsync(user);
+            var result = await userManager.ConfirmEmailAsync(user, emailConfirmCode);
+            if (result.Succeeded)
+            {
+                emailHasBeenConfirmed = true;
+                eventAggregator.Publish(new UserConfirmedEmailEvent
+                {
+                    User = user,
+                    RequestUri = Request.GetAbsoluteRootUri()
+                });
+            }
+        }
+
+        var response = new AcceptInviteResult(user.Email!)
+        {
+            EmailHasBeenConfirmed = emailHasBeenConfirmed,
+            RequiresUserApproval = requiresUserApproval,
+            PasswordSetCode = passwordSetCode
+        };
+        return Ok(response);
+    }
 
     [HttpPost("logout")]
     public async Task<IResult> Logout()
@@ -239,9 +292,12 @@ public partial class AppApiController
     public async Task<IActionResult> SetPassword(ResetPasswordRequest resetRequest)
     {
         var user = await userManager.FindByEmailAsync(resetRequest.Email);
-        if (!UserService.TryCanLogin(user, out _))
+        var needsInitialPassword = user != null && !await userManager.HasPasswordAsync(user);
+        // Let unapproved users set a password. Otherwise, don't reveal that the user does not exist.
+        if (!UserService.TryCanLogin(user, out var message) && !needsInitialPassword || user == null)
         {
-            return Unauthorized(new GreenfieldAPIError(null, "Invalid account"));
+            _logger.LogWarning("User {Email} tried to reset password, but failed: {Message}", user?.Email ?? "(NO EMAIL)", message);
+            return Unauthorized(new GreenfieldAPIError(null, "Invalid request"));
         }
 
         IdentityResult result;

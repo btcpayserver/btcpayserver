@@ -64,8 +64,6 @@ namespace BTCPayServer.Controllers
 
 
             await using var dbContext = _factory.CreateContext();
-            var notification = dbContext.Notifications.First();
-            var baseNotif = _notificationSender.GetBaseNotification(notification);
 
             var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
             var fs = new SearchString(searchTerm, timezoneOffset);
@@ -78,6 +76,7 @@ namespace BTCPayServer.Controllers
                 UserId = userId,
                 SearchText = model.SearchText,
                 Type = fs.GetFilterArray("type"),
+                Stores = fs.GetFilterArray("store"),
                 Seen = model.Status == "Unread" ? false : (bool?)null
             });
             model.Items = res.Items;

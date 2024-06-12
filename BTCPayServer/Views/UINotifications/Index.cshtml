@@ -3,6 +3,7 @@
     ViewData["Title"] = "Notifications";
     string status = ViewBag.Status;
     var statusFilterCount = CountArrayFilter("type");
+    var storesFilterCount = CountArrayFilter("store");
 }
 
 <partial name="_StatusMessage" />
@@ -71,26 +72,36 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "invoicestate")" class="dropdown-item @(HasArrayFilter("type", "invoicestate") ? "custom-active" : "")">Invoice</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "payout")" class="dropdown-item @(HasArrayFilter("type", "payout") ? "custom-active" : "")">Payout</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "external-payout-transaction")" class="dropdown-item @(HasArrayFilter("type", "external-payout-transaction") ? "custom-active" : "")">External Payout</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "newversion")" class="dropdown-item @(HasArrayFilter("type", "newversion") ? "custom-active" : "")">New Version</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "pluginupdate")" class="dropdown-item @(HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")">Plugin Update</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "inviteaccepted")" class="dropdown-item @(HasArrayFilter("type", "inviteaccepted") ? "custom-active" : "")">Accepted Invite</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("type", "userapproval")" class="dropdown-item @(HasArrayFilter("type", "userapproval") ? "custom-active" : "")">User Approval</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "invoicestate")" class="dropdown-item @(HasArrayFilter("type", "invoicestate") ? "custom-active" : "")">Invoice</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "payout")" class="dropdown-item @(HasArrayFilter("type", "payout") ? "custom-active" : "")">Payout</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "external-payout-transaction")" class="dropdown-item @(HasArrayFilter("type", "external-payout-transaction") ? "custom-active" : "")">External Payout</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "newversion")" class="dropdown-item @(HasArrayFilter("type", "newversion") ? "custom-active" : "")">New Version</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "pluginupdate")" class="dropdown-item @(HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")">Plugin Update</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "inviteaccepted")" class="dropdown-item @(HasArrayFilter("type", "inviteaccepted") ? "custom-active" : "")">Accepted Invite</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "userapproval")" class="dropdown-item @(HasArrayFilter("type", "userapproval") ? "custom-active" : "")">User Approval</a>
           </div>
     </div>
 
     <div class="dropdown ms-3">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-            <span>All Stores</span>
+            @if (storesFilterCount > 0)
+            {
+                <span>@storesFilterCount Store</span>
+            }
+            else
+            {
+                <span>All Stores</span>
+            }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
             @foreach (var store in Model.Stores)
             {
                 <a asp-action="Index"
-                   class="dropdown-item">
-                    @store.StoreName
+                   asp-route-count="@Model.Count" 
+                   asp-route-status="@Model.Status"
+                   asp-route-searchTerm="@Model.Search.Toggle("store", store.Id)"
+                   class="dropdown-item @(HasArrayFilter("store", store.Id) ? "custom-active" : "")">
+                   @store.StoreName
                 </a>
             }
         </div>

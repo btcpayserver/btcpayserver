@@ -90,11 +90,14 @@ namespace BTCPayServer
             _pluginHookService = pluginHookService;
             _invoiceActivator = invoiceActivator;
         }
+
+        [EnableCors(CorsPolicies.All)]
         [HttpGet("withdraw/pp/{pullPaymentId}")]
         public Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, [FromQuery] string pr, CancellationToken cancellationToken)
         {
             return GetLNURLForPullPayment(cryptoCode, pullPaymentId, pr, pullPaymentId, cancellationToken);
         }
+
         [NonAction]
         internal async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, string k1, CancellationToken cancellationToken)
         {

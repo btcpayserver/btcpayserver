@@ -121,7 +121,8 @@ public partial class BTCPayServerClient
         Dictionary<string, object> queryPayload = null,
         HttpMethod method = null)
     {
-        UriBuilder uriBuilder = new UriBuilder(_btcpayHost) { Path = path };
+        var uriBuilder = new UriBuilder(_btcpayHost);
+        uriBuilder.Path += (uriBuilder.Path.EndsWith("/") || path.StartsWith("/") ? "" : "/") + path;
         if (queryPayload != null && queryPayload.Any())
         {
             AppendPayloadToQuery(uriBuilder, queryPayload);

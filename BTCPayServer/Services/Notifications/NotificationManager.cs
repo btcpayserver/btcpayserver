@@ -143,7 +143,18 @@ namespace BTCPayServer.Services.Notifications
             }
             if (query.Type?.Length > 0)
             {
-                notifications = notifications.Where(n => query.Type.Contains(n.Type, StringComparer.OrdinalIgnoreCase)).ToList();
+                if (query.Type?.Length > 0)
+                {
+                    if (query.Type.Contains("userupdate"))
+                    {
+                        notifications = notifications.Where(n => n.Type.Equals("inviteaccepted", StringComparison.OrdinalIgnoreCase) ||
+                                                                 n.Type.Equals("userapproval", StringComparison.OrdinalIgnoreCase)).ToList();
+                    }
+                    else
+                    {
+                        notifications = notifications.Where(n => query.Type.Contains(n.Type, StringComparer.OrdinalIgnoreCase)).ToList();
+                    }
+                }
             }
             if (query.Stores?.Length > 0)
             {

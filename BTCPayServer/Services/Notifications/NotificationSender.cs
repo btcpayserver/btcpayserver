@@ -6,7 +6,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BTCPayServer.Services.Notifications
 {

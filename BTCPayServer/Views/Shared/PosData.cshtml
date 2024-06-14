@@ -38,9 +38,22 @@
                 <tbody>
                 @foreach (var value in cartCollection)
                 {
-                    <tr>
-                        <td>@value</td>
-                    </tr>
+                    if (value is Dictionary<string, object> { Keys.Count: > 0 } valDict)
+                    {
+                        @foreach (var (key, val) in valDict)
+                        {
+                            <tr>
+                                <th>@key</th>
+                                <td class="text-end">@val</td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td>@value</td>
+                        </tr>
+                    }
                 }
                 </tbody>
             }

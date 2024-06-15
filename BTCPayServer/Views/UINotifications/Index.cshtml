@@ -41,7 +41,7 @@
 }
 
 
-<form class="d-flex flex-wrap align-items-center gap-4 mb-4 col-xxl-8" asp-action="Index" method="get">
+<form class="d-flex flex-wrap align-items-center gap-4 gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
 
@@ -50,13 +50,13 @@
     </div>
 
     <div class="btn-group col-12 col-md-auto mb-3 mb-md-0" role="group" aria-label="View Notification">
-        <a class="btn @((status == "All") ? "btn-primary active" : "btn-outline-secondary")"
+        <a class="btn @((status == "All") ? "btn-primary" : "btn-outline-secondary")"
            asp-controller="UINotifications"
            asp-action="Index"
            asp-route-Status="All">
             All
         </a>
-        <a class="btn @((status == "Unread") ? "btn-primary active" : "btn-outline-secondary")"
+        <a class="btn @((status == "Unread") ? "btn-primary" : "btn-outline-secondary")"
            asp-controller="UINotifications"
            asp-action="Index"
            asp-route-Status="Unread">

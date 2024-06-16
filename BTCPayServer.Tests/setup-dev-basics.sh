@@ -4,6 +4,9 @@ BASE="https://localhost:14142"
 API_BASE="$BASE/api/v1"
 PASSWORD="rockstar"
 
+# Ensure we are in the script directory
+cd "$(dirname "${BASH_SOURCE}")"
+
 # Create admin user
 admin_id=$(curl -s -k -X POST -H 'Content-Type: application/json' \
     -d "{'email': 'admin@$USERHOST', 'password': '$PASSWORD', 'isAdministrator': true }" \
@@ -82,7 +85,6 @@ btcaddress_satoshis_steaks=$(curl -s -k -X GET -H 'Content-Type: application/jso
     -H "Authorization: token $admin_api_key" \
     "$API_BASE/stores/$store_id_satoshis_steaks/payment-methods/onchain/BTC/wallet/address" | jq -r '.address')
 
-cd ~/Sources/btcpay/server/BTCPayServer.Tests
 ./docker-bitcoin-cli.sh sendtoaddress "$btcaddress_satoshis_steaks" 6.15 >/dev/null 2>&1
 
 printf "\n"
@@ -167,7 +169,6 @@ btcaddress_nakamoto_nuggets=$(curl -s -k -X GET -H 'Content-Type: application/js
     -H "Authorization: token $admin_api_key" \
     "$API_BASE/stores/$store_id_nakamoto_nuggets/payment-methods/onchain/BTC/wallet/address" | jq -r '.address')
 
-cd ~/Sources/btcpay/server/BTCPayServer.Tests
 ./docker-bitcoin-cli.sh sendtoaddress "$btcaddress_nakamoto_nuggets" 6.15 >/dev/null 2>&1
 
 printf "\n"

@@ -1,15 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
-using static BTCPayServer.Data.WalletObjectData;
 
 namespace BTCPayServer.Services.Notifications
 {
@@ -28,7 +24,6 @@ namespace BTCPayServer.Services.Notifications
             _eventAggregator = eventAggregator;
             _handlersByNotificationType = handlers.ToDictionary(h => h.NotificationType);
         }
-
 
         public async Task<(List<NotificationViewModel> Items, int? Count)> GetSummaryNotifications(string userId, bool cachedOnly)
         {

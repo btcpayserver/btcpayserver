@@ -1,13 +1,12 @@
 using System.Collections.Generic;
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Components.StoreSelector;
 using BTCPayServer.Data;
 
 namespace BTCPayServer.Models.NotificationViewModels
 {
     public class IndexViewModel : BasePagingViewModel
     {
-        public List<NotificationViewModel> Items { get; set; } = new List<NotificationViewModel>();
+        public List<NotificationViewModel> Items { get; set; } = [];
         public string SearchText { get; set; }
         public string Status { get; set; }
         public SearchString Search { get; set; }

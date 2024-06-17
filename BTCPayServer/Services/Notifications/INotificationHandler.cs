@@ -1,5 +1,4 @@
 using System;
-using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 
 namespace BTCPayServer.Services.Notifications

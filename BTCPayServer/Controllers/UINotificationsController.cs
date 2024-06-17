@@ -1,25 +1,16 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
-using BTCPayServer.Components.StoreSelector;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.NotificationViewModels;
-using BTCPayServer.Security;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
-using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
-using MailKit.Search;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Controllers
 {
@@ -30,7 +21,6 @@ namespace BTCPayServer.Controllers
     {
         private readonly ApplicationDbContextFactory _factory;
         private readonly StoreRepository _storeRepo;
-        private readonly NotificationSender _notificationSender;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
 
@@ -38,14 +28,12 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepo,
             UserManager<ApplicationUser> userManager,
             NotificationManager notificationManager,
-            ApplicationDbContextFactory factory,
-            NotificationSender notificationSender)
+            ApplicationDbContextFactory factory)
         {
             _storeRepo = storeRepo;
             _userManager = userManager;
             _notificationManager = notificationManager;
             _factory = factory;
-            _notificationSender = notificationSender;
         }
 
         [HttpGet]

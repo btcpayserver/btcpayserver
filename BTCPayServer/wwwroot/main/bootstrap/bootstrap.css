@@ -12248,6 +12248,14 @@ ul:not([class]) li {
   box-shadow: 0 20px 20px rgba(0, 0, 0, 0.15);
 }
 
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
+}
+
 /* Accordion */
 .accordion-item + .accordion-item {
   border-top: 1px solid var(--btcpay-body-border-light);

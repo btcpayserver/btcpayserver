@@ -1,19 +1,31 @@
 @model BTCPayServer.Storage.ViewModels.ChooseStorageViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, "Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, "Storage Provider");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<form method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Files">Files</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>         
+        <button type="submit" class="btn btn-primary" name="command" value="Save">Next</button>
+    </div>
+    <partial name="_StatusMessage" />
 
-<div class="row">
-    <div class="col-xl-10 col-xxl-constrain">
-        @if (Model.ShowChangeWarning)
-        {
-            <div class="alert alert-danger mb-4">
-                If you change your configured storage provider, your current files will become inaccessible. 
-            </div>
-        }
-        <form method="post">
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            @if (Model.ShowChangeWarning)
+            {
+                <div class="alert alert-danger mb-4">
+                    If you change your configured storage provider, your current files will become inaccessible. 
+                </div>
+            }
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All"></div>
@@ -22,10 +34,9 @@
                 <label asp-for="Provider" class="form-label"></label>
                 <select asp-for="Provider" asp-items="@Model.ProvidersList" class="form-select w-auto"></select>
             </div>
-            <button type="submit" class="btn btn-primary mt-2" name="command" value="Save">Next</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

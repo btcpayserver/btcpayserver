@@ -1,11 +1,21 @@
 @model EnableAuthenticatorViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Enable authenticator app");
+    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Enable Authenticator App");
 }
-
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="TwoFactorAuthentication">Two Factor Authentication</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
+<p class="my-3">To use an authenticator app go through the following steps:</p>
 <div class="col-xl-8 col-xxl-constrain">
-    <h3>Enable Authenticator</h3>
-    <p class="my-3">To use an authenticator app go through the following steps:</p>
     <ol class="ps-3">
         <li class="mb-5">
             <div class="mb-2">Download a two-factor authenticator app like …</div>

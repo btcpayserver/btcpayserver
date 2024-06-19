@@ -22,9 +22,17 @@
 }
 
 <form method="post" action="@Url.Action("EditPaymentRequest", "UIPaymentRequest", new { storeId = Model.StoreId, payReqId = Model.Id }, Context.Request.Scheme)">
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId">Requests</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
                 <button type="submit" class="btn btn-primary" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Create</button>
@@ -36,12 +44,15 @@
             }
         </div>
     </div>
-
+    
     <partial name="_StatusMessage" />
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <div asp-validation-summary="ModelOnly"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
             <div class="form-group">
                 <label asp-for="Title" class="form-label" data-required></label>
                 <input asp-for="Title" class="form-control" required />

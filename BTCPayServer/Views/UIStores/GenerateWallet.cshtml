@@ -3,7 +3,7 @@
     var isHotWallet = Model.Method == WalletSetupMethod.HotWallet;
     var type = isHotWallet ? "Hot" : "Watch-Only";
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Create {Model.CryptoCode} {type} Wallet", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Create {Model.CryptoCode} {type} Wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
     ViewData.Add(nameof(Model.CanUseHotWallet), Model.CanUseHotWallet);
     ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
     ViewData.Add(nameof(Model.SupportSegwit), Model.SupportSegwit);

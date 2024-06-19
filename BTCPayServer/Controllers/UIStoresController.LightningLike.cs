@@ -246,16 +246,27 @@ public partial class UIStoresController
         }
 
         var network = _explorerProvider.GetNetwork(vm.CryptoCode);
+        var lnId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
+        var lnurlId = PaymentTypes.LNURL.GetPaymentMethodId(network.CryptoCode);
+        
+        var lightning = GetConfig<LightningPaymentMethodConfig>(lnId, store);
+        if (lightning == null)
+            return NotFound();
+        
         var needUpdate = false;
         var blob = store.GetStoreBlob();
         blob.LightningDescriptionTemplate = vm.LightningDescriptionTemplate ?? string.Empty;
         blob.LightningAmountInSatoshi = vm.LightningAmountInSatoshi;
         blob.LightningPrivateRouteHints = vm.LightningPrivateRouteHints;
         blob.OnChainWithLnInvoiceFallback = vm.OnChainWithLnInvoiceFallback;
-        var lnurlId = PaymentTypes.LNURL.GetPaymentMethodId(vm.CryptoCode);
-        blob.SetExcluded(lnurlId, !vm.LNURLEnabled);
+        
+        // Lightning
+        blob.SetExcluded(lnId, !vm.Enabled);
+        
+        // LNURL
+        blob.SetExcluded(lnurlId, !vm.LNURLEnabled || !vm.Enabled);
 
-        var lnurl = GetConfig<LNURLPaymentMethodConfig>(PaymentTypes.LNURL.GetPaymentMethodId(vm.CryptoCode), store);
+        var lnurl = GetConfig<LNURLPaymentMethodConfig>(lnurlId, store);
         if (lnurl is null || (
                 lnurl.UseBech32Scheme != vm.LNURLBech32Mode ||
                 lnurl.LUD12Enabled != vm.LUD12Enabled))
@@ -282,36 +293,6 @@ public partial class UIStoresController
         }
 
         return RedirectToAction(nameof(LightningSettings), new { vm.StoreId, vm.CryptoCode });
-    }
-
-    [HttpPost("{storeId}/lightning/{cryptoCode}/status")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> SetLightningNodeEnabled(string storeId, string cryptoCode, bool enabled)
-    {
-        var store = HttpContext.GetStoreData();
-        if (store == null)
-            return NotFound();
-
-        var network = _explorerProvider.GetNetwork(cryptoCode);
-        if (network == null)
-            return NotFound();
-
-        var lightning = GetConfig<LightningPaymentMethodConfig>(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), store);
-        if (lightning == null)
-            return NotFound();
-
-        var paymentMethodId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
-        var storeBlob = store.GetStoreBlob();
-        storeBlob.SetExcluded(paymentMethodId, !enabled);
-        if (!enabled)
-        {
-            storeBlob.SetExcluded(PaymentTypes.LNURL.GetPaymentMethodId(network.CryptoCode), true);
-        }
-        store.SetStoreBlob(storeBlob);
-        await _storeRepo.UpdateStore(store);
-        TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning payments are now {(enabled ? "enabled" : "disabled")} for this store.";
-
-        return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });
     }
 
     private bool CanUseInternalLightning(string cryptoCode)

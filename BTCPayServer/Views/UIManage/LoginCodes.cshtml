@@ -2,7 +2,12 @@
 @{
     ViewData.SetActivePage(ManageNavPages.LoginCodes, "Login Codes");
 }
-<h3 class="mb-3">@ViewData["Title"]</h3>
+
+<div class="sticky-header">
+    <h2>@ViewData["Title"]</h2>
+    <a class="btn btn-primary" id="regeneratecode" asp-action="LoginCodes">Regenerate code</a>
+</div>
+<partial name="_StatusMessage" />
 <p>Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
 <div class="d-inline-flex flex-column" style="width:256px">
     <div class="qr-container mb-2">
@@ -13,7 +18,6 @@
     <div class="progress only-for-js" data-bs-toggle="tooltip" data-bs-placement="top">
         <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width:100%" id="progressbar"></div>
     </div>
-    <a class="btn btn-secondary mt-3" id="regeneratecode" asp-action="LoginCodes">Regenerate code</a>
 </div>
 
 @section PageFootContent

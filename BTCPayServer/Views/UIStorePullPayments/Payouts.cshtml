@@ -1,10 +1,7 @@
 @using BTCPayServer.Client.Models
-@using BTCPayServer.Payments
 @using BTCPayServer.Payouts
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
-@using BTCPayServer.PayoutProcessors
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
 @inject PayoutMethodHandlerDictionary PayoutHandlers;
@@ -59,8 +56,8 @@
     </script>
 }
 
-<div class="sticky-header d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2 class="my-1">
         @ViewData["Title"]
         <a href="#descriptor" data-bs-toggle="collapse">
             <vc:icon symbol="info" />

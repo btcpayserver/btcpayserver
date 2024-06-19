@@ -1,18 +1,17 @@
-@using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @using MoneroLikePaymentMethodViewModel = BTCPayServer.Services.Altcoins.Monero.UI.UIMoneroLikeStoreController.MoneroLikePaymentMethodViewModel
 @using MoneroLikeSettlementThresholdChoice = BTCPayServer.Services.Altcoins.Monero.UI.UIMoneroLikeStoreController.MoneroLikeSettlementThresholdChoice;
 @model MoneroLikePaymentMethodViewModel
 
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(Model.CryptoCode, $"{Model.CryptoCode} Settings", Model.CryptoCode);
 }
 
 <div class="row">
     <div class="col-md-8">
-        <div asp-validation-summary="All"></div>
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All"></div>
+        }
         @if (Model.Summary != null)
         {
             <div class="card">

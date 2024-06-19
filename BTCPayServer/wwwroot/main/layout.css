@@ -375,6 +375,11 @@
     position: sticky;
     top: 0;
     z-index: 1021;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+    align-items: center;
+    justify-content: space-between;
     background: var(--btcpay-body-bg);
     margin-top: calc(var(--content-padding-top) * -1);
     /* pull it out of the content padding and adjust its inner padding to make up for that space */
@@ -383,8 +388,18 @@
     padding: var(--content-padding-top) var(--content-padding-horizontal) var(--btcpay-space-l);
 }
 
-.sticky-header #SectionNav {
-    margin-bottom: calc(var(--btcpay-space-l) * -1);
+.sticky-header h2 {
+    margin-bottom: 0;
+}
+
+.sticky-header > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+}
+
+.sticky-header > nav + :last-child {
+    align-self: flex-start;
 }
 
 /* Footer */
@@ -659,6 +674,10 @@
     #mainContent > section .w-100-fixed {
         /* constrains the content to respect the maximum width and enable responsive tables */
         width: calc(100vw - var(--sidebar-width) - var(--btcpay-scrollbar-width) - var(--content-padding-horizontal) * 2);
+    }
+
+    #mainContent > section > h2 {
+        margin-top: var(--btcpay-space-xs);
     }
 
     #SectionNav .nav {

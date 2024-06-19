@@ -13,11 +13,15 @@
     <partial name="_ValidationScriptsPartial" />
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<form method="post" enctype="multipart/form-data">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
 
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <form method="post" enctype="multipart/form-data">
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
                 <label asp-for="ServerName" class="form-label"></label>
                 <input asp-for="ServerName" class="form-control" />
@@ -107,8 +111,6 @@
                     }
                 </div>
             </div>
-            
-            <button type="submit" class="btn btn-primary mt-2" name="command" value="Save">Save</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>

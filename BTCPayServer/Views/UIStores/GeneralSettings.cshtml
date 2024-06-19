@@ -6,19 +6,23 @@
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
-	Layout = "../Shared/_NavLayout.cshtml";
 	ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
 	var canUpload = await FileService.IsAvailable();
 }
+<form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2>Store Settings</h2>
+        <button type="submit" class="btn btn-primary" id="Save">Save</button>
+    </div>
 
-<div class="row">
-    <div class="col-xxl-constrain col-xl-8">
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All"></div>
-        }
-        <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
-            <h3 class="mb-3">General</h3>
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
                 <input asp-for="Id" readonly class="form-control" />
@@ -158,27 +162,26 @@
                 </div>
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
             </div>
-            
-            <button type="submit" class="btn btn-primary mt-2" id="Save">Save</button>
-        </form>
-        <div permission="@Policies.CanModifyStoreSettings">
-            <h3 class="mt-5 mb-3">Additional Actions</h3>
-            <div id="danger-zone" class="d-flex flex-wrap align-items-center gap-3 mb-5 mt-2">
-                <form asp-action="ToggleArchive" asp-route-storeId="@Model.Id" method="post">
-                    <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
-                        @if (Model.Archived)
-                        {
-                            <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store">Unarchive this store</span>
-                        }
-                        else
-                        {
-                            <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default">Archive this store</span>
-                        }
-                    </button>
-                </form>
-                <a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
-            </div>
         </div>
+    </div>
+</form>
+
+<div permission="@Policies.CanModifyStoreSettings">
+    <h3 class="mt-5 mb-3">Additional Actions</h3>
+    <div id="danger-zone" class="d-flex flex-wrap align-items-center gap-3 mb-5 mt-2">
+        <form asp-action="ToggleArchive" asp-route-storeId="@Model.Id" method="post">
+            <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
+                @if (Model.Archived)
+                {
+                <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store">Unarchive this store</span>
+                }
+                else
+                {
+                <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default">Archive this store</span>
+                }
+            </button>
+        </form>
+        <a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
     </div>
 </div>
 

@@ -10,7 +10,9 @@
 @using BTCPayServer.Plugins
 @using BTCPayServer.Services
 @using BTCPayServer.Views.Apps
+@using BTCPayServer.Configuration
 @inject Microsoft.AspNetCore.Http.IHttpContextAccessor HttpContext;
+@inject BTCPayServerOptions BtcPayServerOptions
 @inject BTCPayServerEnvironment Env
 @inject SignInManager<ApplicationUser> SignInManager
 @inject PoliciesSettings PoliciesSettings
@@ -30,17 +32,48 @@
                     <div class="accordion-body">
                         <ul class="navbar-nav">
                             <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
-                                <a asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Dashboard)" id="StoreNav-Dashboard">
+                                <a id="StoreNav-@(nameof(StoreNavPages.Dashboard))" asp-area="" asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Dashboard)">
                                     <vc:icon symbol="nav-dashboard"/>
                                     <span>Dashboard</span>
                                 </a>
                             </li>
                             <li class="nav-item" permission="@Policies.CanViewStoreSettings">
-                                <a asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(new [] {StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.General, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails})" id="StoreNav-StoreSettings">
+                                <a id="StoreNav-@(nameof(StoreNavPages.General))" asp-area="" asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.General)">
                                     <vc:icon symbol="nav-store-settings"/>
                                     <span>Settings</span>
                                 </a>
                             </li>
+                            @if (ViewData.IsActivePage([StoreNavPages.General, StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Roles, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails, StoreNavPages.Forms]))
+                            {
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Rates))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Rates)" asp-controller="UIStores" asp-action="Rates" asp-route-storeId="@Model.Store.Id">Rates</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.CheckoutAppearance))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.CheckoutAppearance)" asp-controller="UIStores" asp-action="CheckoutAppearance" asp-route-storeId="@Model.Store.Id">Checkout Appearance</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Tokens))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Tokens)" asp-controller="UIStores" asp-action="ListTokens" asp-route-storeId="@Model.Store.Id">Access Tokens</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Users))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Users)" asp-controller="UIStores" asp-action="StoreUsers" asp-route-storeId="@Model.Store.Id">Users</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Roles))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Roles)" asp-controller="UIStores" asp-action="ListRoles" asp-route-storeId="@Model.Store.Id">Roles</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Webhooks))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Webhooks)" asp-controller="UIStores" asp-action="Webhooks" asp-route-storeId="@Model.Store.Id">Webhooks</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.PayoutProcessors))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.PayoutProcessors)" asp-controller="UIPayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-route-storeId="@Model.Store.Id">Payout Processors</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Emails))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Emails)" asp-controller="UIStores" asp-action="StoreEmailSettings" asp-route-storeId="@Model.Store.Id">Emails</a>
+                                </li>
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                    <a id="StoreNav-@(nameof(StoreNavPages.Forms))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Forms)" asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@Model.Store.Id">Forms</a>
+                                </li>
+                            }
+                            <vc:ui-extension-point location="store-nav" model="@Model"/>
                         </ul>
                     </div>
                 </div>
@@ -56,22 +89,36 @@
                                 @foreach (var scheme in Model.DerivationSchemes.OrderBy(scheme => scheme.Collapsed))
                                 {
                                     var isSetUp = !string.IsNullOrWhiteSpace(scheme.Value);
+                                    var categoryId = $"{Model.Store.Id}-{scheme.WalletId.CryptoCode}";
                                     <li class="nav-item">
                                         @if (isSetUp && scheme.WalletSupported)
                                         {
-                                            <a asp-area="" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link @ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
+                                            <a asp-area="" asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@scheme.WalletId" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Transactions], scheme.WalletId.ToString())" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
                                         }
                                         else
                                         {
-                                            <a asp-area="" asp-controller="UIStores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
+                                            <a asp-area="" asp-controller="UIStores" asp-action="SetupWallet" asp-route-cryptoCode="@scheme.Crypto" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.OnchainSettings)" id="@($"StoreNav-Wallet{scheme.Crypto}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
                                                 <span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
                                         }
                                     </li>
+                                    @if (ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) || ViewData.IsActivePage([WalletsNavPages.Settings], scheme.WalletId.ToString()) || ViewData.IsActivePage([StoreNavPages.OnchainSettings], categoryId))
+                                    {
+                                        <li class="nav-item nav-item-sub">
+                                            <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId">Send</a>
+                                        </li>
+                                        <li class="nav-item nav-item-sub">
+                                            <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId">Receive</a>
+                                        </li>
+                                        <li class="nav-item nav-item-sub">
+                                            <a id="WalletNav-Settings" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Settings, scheme.WalletId.ToString()) @ViewData.ActivePageClass(StoreNavPages.OnchainSettings, categoryId)" asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId">Settings</a>
+                                        </li>
+                                        <vc:ui-extension-point location="wallet-nav" model="@Model" />
+                                    }
                                 }
                                 @foreach (var scheme in Model.LightningNodes)
                                 {
@@ -82,20 +129,26 @@
                                             var status = scheme.Enabled
                                                 ? scheme.Available ? "enabled" : "disabled"
                                                 : "pending";
-                                            <a asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Lightning) @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
+                                            <a asp-area="" asp-controller="UIStores" asp-action="Lightning" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Lightning, $"{Model.Store.Id}-{scheme.CryptoCode}")" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@status"></span>
 												<span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
                                         }
                                         else
                                         {
-                                            <a asp-area="" asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.LightningSettings)" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
+                                            <a asp-area="" asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-cryptoCode="@scheme.CryptoCode" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.LightningSettings, $"{Model.Store.Id}-{scheme.CryptoCode}")" id="@($"StoreNav-Lightning{scheme.CryptoCode}")">
                                                 <span class="me-2 btcpay-status btcpay-status--@(scheme.Enabled ? "enabled" : "pending")"></span>
 												<span>@PrettyName.PrettyName(scheme.PaymentMethodId)</span>
                                             </a>
                                         }
-                                        
                                     </li>
+                                    @if (ViewData.IsActivePage([StoreNavPages.Lightning, StoreNavPages.LightningSettings], $"{Model.Store.Id}-{scheme.CryptoCode}"))
+                                    {
+                                        <li class="nav-item nav-item-sub">
+                                            <a id="StoreNav-@(nameof(StoreNavPages.LightningSettings))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.LightningSettings)" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode">Settings</a>
+                                        </li>
+                                        <vc:ui-extension-point location="lightning-nav" model="@Model"/>
+                                    }
                                 }
                                 <vc:ui-extension-point location="store-wallets-nav" model="@Model"/>
                             </ul>
@@ -112,25 +165,25 @@
                             <div class="accordion-body">
                                 <ul class="navbar-nav">
                                     <li class="nav-item" permission="@Policies.CanViewInvoices">
-                                        <a asp-area="" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
+                                        <a asp-area="" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActiveCategoryClass(typeof(InvoiceNavPages))" id="StoreNav-Invoices">
                                             <vc:icon symbol="nav-invoices"/>
                                             <span>Invoices</span>
                                         </a>
                                     </li>
-									<li class="nav-item" permission="@Policies.CanViewReports">
-										<a asp-area="" asp-controller="UIReports" asp-action="StoreReports" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Reporting)" id="SectionNav-Reporting">
-											<vc:icon symbol="nav-reporting" />
-											<span>Reporting</span>
-										</a>
-									</li>
+                                    <li class="nav-item" permission="@Policies.CanViewReports">
+                                        <a asp-area="" asp-controller="UIReports" asp-action="StoreReports" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Reporting)" id="SectionNav-Reporting">
+                                            <vc:icon symbol="nav-reporting" />
+                                            <span>Reporting</span>
+                                        </a>
+                                    </li>
                                     <li class="nav-item" permission="@Policies.CanViewPaymentRequests">
-                                        <a asp-area="" asp-controller="UIPaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActiveCategory(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
+                                        <a asp-area="" asp-controller="UIPaymentRequest" asp-action="GetPaymentRequests" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActiveCategoryClass(typeof(PaymentRequestsNavPages))" id="StoreNav-PaymentRequests">
                                             <vc:icon symbol="nav-payment-requests"/>
                                             <span>Requests</span>
                                         </a>
                                     </li>
                                     <li class="nav-item" permission="@Policies.CanViewPullPayments">
-                                        <a asp-area="" asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.PullPayments)" id="StoreNav-PullPayments">
+                                        <a asp-area="" asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.PullPayments)" id="StoreNav-PullPayments">
                                             <vc:icon symbol="nav-pull-payments"/>
                                             <span>Pull Payments</span>
                                         </a>
@@ -139,7 +192,7 @@
                                         <a asp-area="" 
                                            asp-controller="UIStorePullPayments" asp-action="Payouts" 
                                            asp-route-pullPaymentId=""
-                                           asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.IsActivePage(StoreNavPages.Payouts)" id="StoreNav-Payouts">
+                                           asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Payouts)" id="StoreNav-Payouts">
                                             <vc:icon symbol="nav-payouts"/>
                                             <span>Payouts</span>
                                         </a>
@@ -168,7 +221,7 @@
                         </ul>
                         <ul class="navbar-nav">
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.IsActivePage(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
+                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
                                     @if (PluginService.GetDisabledPlugins().Any())
                                     {
                                         <span class="me-2 btcpay-status btcpay-status--disabled"></span>
@@ -183,7 +236,7 @@
                             @if (Model.Store != null && Model.ArchivedAppsCount > 0)
                             {
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
-                                    <a asp-area="" asp-controller="UIApps" asp-action="ListApps" asp-route-storeId="@Model.Store.Id" asp-route-archived="true" class="nav-link @ViewData.IsActivePage(AppsNavPages.Index)" id="Nav-ArchivedApps">
+                                    <a asp-area="" asp-controller="UIApps" asp-action="ListApps" asp-route-storeId="@Model.Store.Id" asp-route-archived="true" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Index)" id="Nav-ArchivedApps">
                                         @Model.ArchivedAppsCount Archived App@(Model.ArchivedAppsCount == 1 ? "" : "s")
                                     </a>
                                 </li>
@@ -234,13 +287,44 @@
     {
         <ul id="mainNavSettings" class="navbar-nav border-top p-3 px-lg-4">
             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                <a asp-area="" asp-controller="UIServer" asp-action="ListUsers" class="nav-link @ViewData.IsActivePage(ServerNavPages.Users) @ViewData.IsActivePage(ServerNavPages.Emails) @ViewData.IsActivePage(ServerNavPages.Policies) @ViewData.IsActivePage(ServerNavPages.Services) @ViewData.IsActivePage(ServerNavPages.Branding) @ViewData.IsActivePage(ServerNavPages.Maintenance) @ViewData.IsActivePage(ServerNavPages.Logs) @ViewData.IsActivePage(ServerNavPages.Files)" id="Nav-ServerSettings">
+                <a asp-area="" asp-controller="UIServer" asp-action="Policies" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Policies)" id="Nav-ServerSettings">
                     <vc:icon symbol="nav-server-settings"/>
                     <span>Server Settings</span>
                 </a>
             </li>
+            @if (ViewData.IsActiveCategory(typeof(ServerNavPages)) && !ViewData.IsActivePage([ServerNavPages.Plugins]))
+            {
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Users" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Users)" asp-action="ListUsers">Users</a>
+                </li>
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Roles" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Roles)" asp-action="ListRoles">Roles</a>
+                </li>
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Emails" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Emails)" asp-action="Emails">Email</a>
+                </li>
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Services" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Services)" asp-action="Services">Services</a>
+                </li>
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Branding" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Branding)" asp-action="Branding">Branding</a>
+                </li>
+                @if (BtcPayServerOptions.DockerDeployment)
+                {
+                    <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                        <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Maintenance" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Maintenance)" asp-action="Maintenance">Maintenance</a>
+                    </li>
+                }
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Logs" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Logs)" asp-action="LogsView">Logs</a>
+                </li>
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Files" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Files)" asp-action="Files">Files</a>
+                </li>
+            }
+            <vc:ui-extension-point location="server-nav" model="@Model"/>
             <li class="nav-item dropup">
-                <a class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
+                <a class="nav-link @ViewData.ActivePageClass(ManageNavPages.Index)" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="nav-account"/>
                     <span>Account</span>
                 </a>   
@@ -268,7 +352,7 @@
                         </script>
                     </li>
                     <li class="border-top py-1 px-3">
-                        <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link @ViewData.IsActiveCategory(typeof(ManageNavPages))" id="Nav-ManageAccount">
+                        <a asp-area="" asp-controller="UIManage" asp-action="Index" class="nav-link" id="Nav-ManageAccount">
                             <span>Manage Account</span>
                         </a>
                     </li>
@@ -279,6 +363,25 @@
                     </li>
                 </ul>
             </li>
+            @if (ViewData.IsActiveCategory(typeof(ManageNavPages)) || ViewData.IsActivePage([ManageNavPages.ChangePassword]))
+            {
+                <li class="nav-item nav-item-sub">
+                    <a id="SectionNav-@ManageNavPages.ChangePassword.ToString()" class="nav-link @ViewData.ActivePageClass(ManageNavPages.ChangePassword)" asp-controller="UIManage" asp-action="ChangePassword">Password</a>
+                </li>
+                <li class="nav-item nav-item-sub">
+                    <a id="SectionNav-@ManageNavPages.TwoFactorAuthentication.ToString()" class="nav-link @ViewData.ActivePageClass(ManageNavPages.TwoFactorAuthentication)" asp-controller="UIManage" asp-action="TwoFactorAuthentication">Two-Factor Authentication</a>
+                </li>
+                <li class="nav-item nav-item-sub">
+                    <a id="SectionNav-@ManageNavPages.APIKeys.ToString()" class="nav-link @ViewData.ActivePageClass(ManageNavPages.APIKeys)" asp-controller="UIManage" asp-action="APIKeys">API Keys</a>
+                </li>
+                <li class="nav-item nav-item-sub">
+                    <a id="SectionNav-@ManageNavPages.Notifications.ToString()" class="nav-link @ViewData.ActivePageClass(ManageNavPages.Notifications)" asp-controller="UIManage" asp-action="NotificationSettings">Notifications</a>
+                </li>
+                <li class="nav-item nav-item-sub">
+                    <a id="SectionNav-@ManageNavPages.LoginCodes.ToString()" class="nav-link @ViewData.ActivePageClass(ManageNavPages.LoginCodes)" asp-controller="UIManage" asp-action="LoginCodes">Login Codes</a>
+                </li>
+                <vc:ui-extension-point location="user-nav" model="@Model" />
+            }
             @if (!string.IsNullOrWhiteSpace(Model.ContactUrl))
             {
                 <li class="nav-item">
@@ -291,3 +394,9 @@
         </ul>
     }
 </nav>
+<script>
+    (function () {
+        const activeEl = document.querySelector('#mainNav .nav-link.active')
+        if (activeEl) activeEl.scrollIntoView({ block: 'center', inline: 'center' })
+    })()
+</script>

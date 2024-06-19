@@ -63,9 +63,7 @@ namespace BTCPayServer.Tests
             s.GoToServer();
             s.Driver.AssertNoError();
             s.ClickOnAllSectionLinks();
-            s.GoToServer();
-            s.Driver.FindElement(By.LinkText("Services")).Click();
-
+            s.GoToServer(ServerNavPages.Services);
             TestLogs.LogInformation("Let's check if we can access the logs");
             s.Driver.FindElement(By.LinkText("Logs")).Click();
             s.Driver.FindElement(By.PartialLinkText(".log")).Click();
@@ -257,10 +255,8 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.GoToHome();
-            s.GoToServer();
+            s.GoToServer(ServerNavPages.Services);
             s.Driver.AssertNoError();
-            s.Driver.FindElement(By.LinkText("Services")).Click();
-
             TestLogs.LogInformation("Let's if we can access LND's seed");
             Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
             s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));
@@ -609,6 +605,12 @@ namespace BTCPayServer.Tests
             
             // Ensure empty server settings
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
+            if (s.Driver.PageSource.Contains("id=\"ResetPassword\""))
+            {
+                s.Driver.FindElement(By.Id("ResetPassword")).Click();
+                Assert.Contains("Email server password reset", s.FindAlertMessage().Text);
+            }
+            
             s.Driver.FindElement(By.Id("Settings_Login")).Clear();
             s.Driver.FindElement(By.Id("Settings_Password")).Clear();
             s.Driver.FindElement(By.Id("Settings_From")).Clear();
@@ -3429,7 +3431,7 @@ retry:
             Assert.DoesNotContain(guestBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(guestBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
             guestRow.FindElement(By.Id("SetDefault")).Click();
-            s.FindAlertMessage();
+            Assert.Contains("Role set default", s.FindAlertMessage().Text);
             
             existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
             foreach (var roleItem in existingServerRoles)
@@ -3451,6 +3453,8 @@ retry:
             ownerRow.FindElement(By.Id("SetDefault")).Click();
             s.FindAlertMessage();
             
+            Assert.Contains("Role set default", s.FindAlertMessage().Text);
+
             s.CreateNewStore();
             s.GoToStore(StoreNavPages.Roles);
             var existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));

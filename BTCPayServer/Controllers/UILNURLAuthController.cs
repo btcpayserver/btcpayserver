@@ -5,7 +5,6 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Models;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;

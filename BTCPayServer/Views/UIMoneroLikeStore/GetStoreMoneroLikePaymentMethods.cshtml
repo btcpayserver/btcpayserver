@@ -1,18 +1,18 @@
-@using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Services.Altcoins.Monero.UI.UIMoneroLikeStoreController.MoneroLikePaymentMethodListViewModel
 
 @{
     Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage("Monero Settings", "Monero Settings", "Monero Settings");
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
 }
 
 <div class="row">
     <div class="col-md-8">
-        <div asp-validation-summary="All" class="text-danger"></div>
-        <div class="form-group">
-            <table class="table table-hover table-responsive-md">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All"></div>
+        }
+        <div class="table-responsive-md">
+            <table class="table table-hover">
                 <thead>
                 <tr>
                     <th>Crypto</th>

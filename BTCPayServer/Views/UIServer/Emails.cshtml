@@ -3,9 +3,13 @@
     ViewData.SetActivePage(ServerNavPages.Emails, "Emails");
 }
 
-<h3 class="mb-4">Email Server</h3>
 <form method="post" autocomplete="off">
-    <div class="form-group" style="margin:1rem 0 2rem">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <button type="submit" class="btn btn-primary" name="command" value="Save" id="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="form-group mb-4">
         <div class="d-flex align-items-center">
             <input asp-for="EnableStoresToUseServerEmailSettings" type="checkbox" class="btcpay-toggle me-3"/>
             <div>

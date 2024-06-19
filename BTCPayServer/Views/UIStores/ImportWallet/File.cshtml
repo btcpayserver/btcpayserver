@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Import your wallet file", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Import your wallet file", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {

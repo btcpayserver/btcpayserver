@@ -169,9 +169,17 @@
     </div>
 }
 
-<div class="sticky-header d-flex flex-wrap gap-3 align-items-center justify-content-between">
-    <h2 class="mb-0 text-break">@ViewData["Title"]</h2>
-    <div class="d-flex flex-wrap gap-3 d-print-none">
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Invoice</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+    <div>
         @if (Model.ShowCheckout)
         {
             <a asp-action="Checkout" class="invoice-checkout-link btn btn-primary text-nowrap" asp-route-invoiceId="@Model.Id">Checkout</a>

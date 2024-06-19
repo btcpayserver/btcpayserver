@@ -60,6 +60,7 @@ namespace BTCPayServer.Controllers
                 Role = roleData.Role
             });
         } 
+
         [HttpPost("server/roles/{role}")]
         public async Task<IActionResult> CreateOrEditRole([FromRoute] string role, UpdateRoleViewModel viewModel)
         {

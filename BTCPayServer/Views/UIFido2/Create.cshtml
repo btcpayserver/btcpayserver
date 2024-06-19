@@ -3,7 +3,18 @@
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Register your security device");
 }
 
-<h3 class="mb-3">@ViewData["Title"]</h3>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-controller="UIManage" asp-action="TwoFactorAuthentication">Two Factor Authentication</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Register Device</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
 
 <p>Insert your security device and proceed.</p>
 

@@ -6,15 +6,6 @@
     var storesFilterCount = CountArrayFilter("store");
 }
 
-<partial name="_StatusMessage" />
-
-<div class="d-flex flex-row align-items-center justify-content-between mb-2 gap-2">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-    <a id="NotificationSettings" asp-controller="UIManage" asp-action="NotificationSettings" class="btn btn-secondary d-flex align-items-center">
-        <vc:icon symbol="nav-store-settings" />
-    </a>
-</div>
-
 @functions
 {
     private int CountArrayFilter(string type) =>
@@ -41,6 +32,13 @@
 }
 
 
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+    <a id="NotificationSettings" asp-controller="UIManage" asp-action="NotificationSettings" class="btn btn-secondary d-flex align-items-center">
+        <vc:icon symbol="nav-store-settings" />
+    </a>
+</div>
+<partial name="_StatusMessage" />
 <form class="d-flex flex-wrap align-items-center gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />

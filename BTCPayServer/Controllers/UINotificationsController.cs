@@ -37,11 +37,11 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(NotificationIndexViewModel? model = null)
+        public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
-            model = model ?? new NotificationIndexViewModel { Skip = 0 };
+            model ??= new NotificationIndexViewModel { Skip = 0 };
             var timezoneOffset = model.TimezoneOffset ?? 0;
-            model.Status = model.Status ?? "Unread";
+            model.Status ??= "Unread";
             ViewBag.Status = model.Status;
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "UIHome");
@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
             var fs = new SearchString(searchTerm, timezoneOffset);
             model.Search = fs;
 
-            var res = await _notificationManager.GetNotifications(new NotificationsQuery()
+            var res = await _notificationManager.GetNotifications(new NotificationsQuery
             {
                 Skip = model.Skip,
                 Take = model.Count,
@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers
                 SearchText = model.SearchText,
                 Type = fs.GetFilterArray("type"),
                 Stores = fs.GetFilterArray("store"),
-                Seen = model.Status == "Unread" ? false : (bool?)null
+                Seen = model.Status == "Unread" ? false : null
             });
             model.Items = res.Items;
 

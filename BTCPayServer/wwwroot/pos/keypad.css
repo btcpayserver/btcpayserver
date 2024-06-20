@@ -3,6 +3,9 @@
     overflow: hidden;
     position: relative;
 }
+#PosKeypad .alert {
+    margin-top: var(--btcpay-space-xl);
+}
 
 button[data-bs-toggle] {
     position: absolute;

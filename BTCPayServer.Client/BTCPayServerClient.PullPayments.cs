@@ -109,7 +109,7 @@ namespace BTCPayServer.Client
         {
             var response = await _httpClient.SendAsync(
                 CreateHttpRequest(
-                    $"/api/v1/pull-payments/{pullPaymentId}/lnurl",
+                    $"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/lnurl",
                     method: HttpMethod.Get), cancellationToken);
             return await HandleResponse<PullPaymentLNURL>(response);
         }

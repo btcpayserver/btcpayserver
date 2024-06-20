@@ -89,6 +89,6 @@ public partial class BTCPayServerClient
 
     public virtual async Task<PullPaymentLNURL> GetPullPaymentLNURL(string pullPaymentId, CancellationToken cancellationToken = default)
     {
-        return await SendHttpRequest<PullPaymentLNURL>($"/api/v1/pull-payments/{pullPaymentId}/lnurl", null, HttpMethod.Get, cancellationToken);
+        return await SendHttpRequest<PullPaymentLNURL>($"api/v1/pull-payments/{HttpUtility.UrlEncode(pullPaymentId)}/lnurl", null, HttpMethod.Get, cancellationToken);
     }
 }

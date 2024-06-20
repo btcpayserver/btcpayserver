@@ -245,6 +245,8 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
             if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
             {
+                
+                payoutData.State = PayoutState.Cancelled;
                 return (null, new ResultVM
                 {
                     PayoutId = payoutData.Id,

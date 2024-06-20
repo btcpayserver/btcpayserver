@@ -631,6 +631,7 @@ namespace BTCPayServer.Controllers
                     if (logon)
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
+                        _logger.LogInformation("User {Email} logged in", user.Email);
                         return RedirectToLocal(returnUrl);
                     }
                 }

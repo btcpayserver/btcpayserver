@@ -1,15 +1,9 @@
-@using BTCPayServer.Configuration
 @using BTCPayServer.Plugins
 @model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel
-@inject BTCPayServerOptions BTCPayServerOptions
-@inject PluginService PluginService
 @{
-    Layout = "_Layout";
-    ViewData.SetActivePage(ServerNavPages.Explore);
+    ViewData.SetActivePage(ServerNavPages.Explore, "Explore Plugins");
 
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-
-    var installedWithoutSystemPlugins = Model.Installed.Where(i => !i.SystemPlugin).ToList();
     var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier))
@@ -33,11 +27,11 @@
     }
 </style>
 
-
-<h2 class="mt-1 mb-2 mb-lg-4">Explore Plugins</h2>
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+</div>
 
 <partial name="_StatusMessage" />
-
 
 <form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ExplorePlugins" method="get">
     <input asp-for="SearchText" class="form-control" placeholder="Search…" />
@@ -60,7 +54,6 @@
         <p class="mb-0"><strong>Feedback and Reporting:</strong> Should you experience issues with a plugin, please provide feedback or report concerns directly to the respective plugin developers.</p>
     </div>
 </div>
-
 
 @if (availableAndNotInstalled.Any())
 {
@@ -179,9 +172,8 @@
 }
 else
 {
-    <p>No plugin found for the matching criteria</p>
+    <p class="text-secondary">No plugin found for the matching criteria.</p>
 }
-
 
 @if (string.IsNullOrEmpty(Model.SearchText))
 {
@@ -217,11 +209,9 @@ else
     }
     else
     {
-        <p>No plugin found for the matching criteria</p>
+        <p class="text-secondary">No plugin found for the matching criteria.</p>
     }
 }
-
-
 
 @if (string.IsNullOrEmpty(Model.SearchText))
 {
@@ -248,5 +238,4 @@ else
             </div>
         </div>
     </div>
-
 }

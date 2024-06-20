@@ -1,11 +1,8 @@
-@using BTCPayServer.Configuration
 @using BTCPayServer.Plugins
 @model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel
-@inject BTCPayServerOptions BTCPayServerOptions
 @inject PluginService PluginService
 @{
-    Layout = "_Layout";
-    ViewData.SetActivePage(ServerNavPages.Plugins);
+    ViewData.SetActivePage(ServerNavPages.Plugins, "Manage Plugins");
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
     var installedWithoutSystemPlugins = Model.Installed.Where(i => !i.SystemPlugin).ToList();
     var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
@@ -48,10 +45,8 @@
     .version-switch .nav-link.active { display: none; }
 </style>
 
-<div class="sticky-header d-sm-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
-        @ViewData["Title"]
-    </h2>
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
 </div>
 
 <partial name="_StatusMessage" />
@@ -200,8 +195,6 @@ else
 {
     <p>No plugin found for the matching criteria</p>
 }
-
-
 
 @if (Model.Commands.Any())
 {

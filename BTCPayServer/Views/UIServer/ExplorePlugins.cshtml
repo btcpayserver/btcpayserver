@@ -212,30 +212,3 @@ else
         <p class="text-secondary">No plugin found for the matching criteria.</p>
     }
 }
-
-@if (string.IsNullOrEmpty(Model.SearchText))
-{
-    <div class="mb-4">
-        <h4 class="mb-4">Upload Plugin</h4>
-        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
-            Upload Plugin
-        </button>
-        <div class="row collapse" id="manual-upload">
-            <div class="col col-xl-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Add plugin manually</h4>
-                        <div class="alert alert-warning my-3">
-                            <h6 class="me-1">This is an extremely dangerous operation!</h6>
-                            Only upload plugins from trusted sources.
-                        </div>
-                        <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
-                            <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
-                            <button class="btn btn-primary" type="submit">Upload</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-}

@@ -13,6 +13,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -23,19 +24,22 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using NicolasDorier.RateLimits;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
+using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BTCPayServer.App.API;
 
 public partial class AppApiController
 {
+    private const string Scheme = AuthenticationSchemes.GreenfieldBearer;
+    
     [AllowAnonymous]
     [HttpPost("register")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<IActionResult> Register(SignupRequest signup)
+    public async Task<Results<Ok<AccessTokenResponse>, Ok<SignupResult>, EmptyHttpResult, ProblemHttpResult>> Register(SignupRequest signup)
     {
         var policiesSettings = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
         if (policiesSettings.LockSubscription)
-            return this.CreateAPIError("unauthorized", "This instance does not allow public user registration");
+            return TypedResults.Problem("This instance does not allow public user registration", statusCode: 401);
             
         var errorMessage = "Invalid signup attempt.";
         if (ModelState.IsValid)
@@ -57,18 +61,32 @@ public partial class AppApiController
                     User = user
                 });
 
+                SignInResult? signInResult = null;
+                var requiresConfirmedEmail = policiesSettings.RequiresConfirmedEmail && !user.EmailConfirmed;
+                var requiresUserApproval = policiesSettings.RequiresUserApproval && !user.Approved;
+                if (!requiresConfirmedEmail && !requiresUserApproval)
+                {
+                    signInManager.AuthenticationScheme = Scheme;
+                    signInResult = await signInManager.PasswordSignInAsync(signup.Email, signup.Password, true, true);
+                }
+                
+                if (signInResult?.Succeeded is true)
+                {
+                    _logger.LogInformation("User {Email} logged in", user.Email);
+                    return TypedResults.Empty;
+                }
                 var response = new SignupResult
                 {
                     Email = user.Email,
-                    RequiresConfirmedEmail = policiesSettings.RequiresConfirmedEmail && !user.EmailConfirmed,
-                    RequiresUserApproval = policiesSettings.RequiresUserApproval && !user.Approved
+                    RequiresConfirmedEmail = requiresConfirmedEmail,
+                    RequiresUserApproval = requiresUserApproval
                 };
-                return Ok(response);
+                return TypedResults.Ok(response);
             }
             errorMessage = result.ToString();
         }
         
-        return this.CreateAPIError(null, errorMessage);
+        return TypedResults.Problem(errorMessage, statusCode: 401);
     }
     
     [AllowAnonymous]
@@ -86,7 +104,7 @@ public partial class AppApiController
                 return TypedResults.Problem(message, statusCode: 401);
             }
 
-            signInManager.AuthenticationScheme = AuthenticationSchemes.GreenfieldBearer;
+            signInManager.AuthenticationScheme = Scheme;
             var signInResult = await signInManager.PasswordSignInAsync(login.Email, login.Password, true, true);
             if (signInResult.RequiresTwoFactor)
             {
@@ -129,8 +147,8 @@ public partial class AppApiController
             {
                 return TypedResults.Problem(message, statusCode: 401);
             }
-            
-            signInManager.AuthenticationScheme = AuthenticationSchemes.GreenfieldBearer;
+
+            signInManager.AuthenticationScheme = Scheme;
             await signInManager.SignInAsync(user, false, "LoginCode");
 
             _logger.LogInformation("User {Email} logged in with a login code", user.Email);
@@ -145,8 +163,7 @@ public partial class AppApiController
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<Results<Ok<AccessTokenResponse>, UnauthorizedHttpResult, SignInHttpResult, ChallengeHttpResult>> Refresh(RefreshRequest refresh)
     {
-        const string scheme = AuthenticationSchemes.GreenfieldBearer;
-        var authenticationTicket = bearerTokenOptions.Get(scheme).RefreshTokenProtector.Unprotect(refresh.RefreshToken);
+        var authenticationTicket = bearerTokenOptions.Get(Scheme).RefreshTokenProtector.Unprotect(refresh.RefreshToken);
         var expiresUtc = authenticationTicket?.Properties.ExpiresUtc;
 
         ApplicationUser? user = null;
@@ -161,13 +178,13 @@ public partial class AppApiController
         bool flag = num != 0;
         if (!flag)
         {
-            signInManager.AuthenticationScheme = scheme;
+            signInManager.AuthenticationScheme = Scheme;
             user = await signInManager.ValidateSecurityStampAsync(authenticationTicket?.Principal);
         }
         
         return user != null
-            ? TypedResults.SignIn(await signInManager.CreateUserPrincipalAsync(user), authenticationScheme: scheme)
-            : TypedResults.Challenge(authenticationSchemes: new[] { scheme });
+            ? TypedResults.SignIn(await signInManager.CreateUserPrincipalAsync(user), authenticationScheme: Scheme)
+            : TypedResults.Challenge(authenticationSchemes: new[] { Scheme });
     }
     
     [AllowAnonymous]

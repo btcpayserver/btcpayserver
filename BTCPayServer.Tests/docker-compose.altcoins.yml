@@ -194,6 +194,7 @@ services:
   merchant_lightningd:
     image: btcpayserver/lightning:v24.05
     stop_signal: SIGKILL
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
@@ -217,6 +218,7 @@ services:
       - "merchant_lightningd_datadir:/root/.lightning"
     depends_on:
       - bitcoind
+
   postgres:
     image:  postgres:13.13
     environment:

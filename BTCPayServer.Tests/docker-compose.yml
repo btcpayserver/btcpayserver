@@ -180,6 +180,7 @@ services:
   merchant_lightningd:
     image: btcpayserver/lightning:v24.05
     stop_signal: SIGKILL
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"

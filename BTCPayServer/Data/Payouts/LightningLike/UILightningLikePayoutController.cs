@@ -253,7 +253,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     Result = PayResult.Error,
                     Destination = blob.Destination,
                     Message =
-                        $"The LNURL provided would not generate an invoice of {lm.MilliSatoshi}msats"
+                        $"The LNURL provided would not generate an invoice of {lm.ToDecimal(LightMoneyUnit.Satoshi)} sats"
                 });
             }
 

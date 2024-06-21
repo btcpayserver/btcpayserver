@@ -200,7 +200,13 @@ namespace BTCPayServer.Tests
             acc = tester.NewAccount();
             await acc.GrantAccessAsync(isAdmin: true);
             unrestricted = await acc.CreateClient();
-            var newUser = await unrestricted.CreateUser(new CreateApplicationUserRequest() { Email = Utils.GenerateEmail(), Password = "Kitten0@" });
+            var newUser = await unrestricted.CreateUser(new CreateApplicationUserRequest
+            {
+                Email = Utils.GenerateEmail(),
+                Password = "Kitten0@",
+                Name = "New User",
+                ImageUrl = "avatar.jpg"
+            });
             var newUserAPIKey = await unrestricted.CreateAPIKey(newUser.Id, new CreateApiKeyRequest()
             {
                 Label = "Hello world",
@@ -208,6 +214,8 @@ namespace BTCPayServer.Tests
             });
             var newUserClient = acc.CreateClientFromAPIKey(newUserAPIKey.ApiKey);
             Assert.Equal(newUser.Id, (await newUserClient.GetCurrentUser()).Id);
+            Assert.Equal("New User", newUser.Name);
+            Assert.Equal("avatar.jpg", newUser.ImageUrl);
             // Admin delete it
             await unrestricted.RevokeAPIKey(newUser.Id, newUserAPIKey.ApiKey);
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetCurrentUser());
@@ -844,6 +852,60 @@ namespace BTCPayServer.Tests
                         new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" }));
             await adminClient.CreateUser(
                 new CreateApplicationUserRequest() { Email = "test9@gmail.com", Password = "afewfoiewiou" });
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUpdateUsersViaAPI()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            tester.PayTester.DisableRegistration = true;
+            await tester.StartAsync();
+            var unauthClient = new BTCPayServerClient(tester.PayTester.ServerUri);
+
+            // We have no admin, so it should work
+            var user = await unauthClient.CreateUser(
+                new CreateApplicationUserRequest { Email = "test@gmail.com", Password = "abceudhqw" });
+            Assert.Empty(user.Roles);
+
+            // We have no admin, so it should work
+            var admin = await unauthClient.CreateUser(
+                new CreateApplicationUserRequest { Email = "admin@gmail.com", Password = "abceudhqw", IsAdministrator = true });
+            Assert.Contains("ServerAdmin", admin.Roles);
+
+            var adminAcc = tester.NewAccount();
+            adminAcc.UserId = admin.Id;
+            adminAcc.IsAdmin = true;
+            var adminClient = await adminAcc.CreateClient(Policies.CanModifyProfile);
+
+            // Invalid email
+            await AssertValidationError(["Email"],
+                async () => await adminClient.UpdateCurrentUser(
+                    new UpdateApplicationUserRequest { Email = "test@" }));
+
+            // Duplicate email
+            await AssertValidationError(["Email"],
+                async () => await adminClient.UpdateCurrentUser(
+                    new UpdateApplicationUserRequest { Email = "test@gmail.com" }));
+
+            // Invalid current password
+            await AssertValidationError(["CurrentPassword"],
+                async () => await adminClient.UpdateCurrentUser(
+                    new UpdateApplicationUserRequest { Email = "test@gmail.com", CurrentPassword = "123", NewPassword = "abceudhqw123"}));
+            
+            // Change properties with valid state
+            var changed = await adminClient.UpdateCurrentUser(
+                new UpdateApplicationUserRequest
+                {
+                    Email = "administrator@gmail.com",
+                    CurrentPassword = "abceudhqw",
+                    NewPassword = "abceudhqw123",
+                    Name = "Changed Admin",
+                    ImageUrl = "avatar.jpg"
+                });
+            Assert.Equal("administrator@gmail.com", changed.Email);
+            Assert.Equal("Changed Admin", changed.Name);
+            Assert.Equal("avatar.jpg", changed.ImageUrl);
         }
 
         [Fact]

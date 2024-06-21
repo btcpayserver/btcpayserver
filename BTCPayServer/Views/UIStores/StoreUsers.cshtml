@@ -45,6 +45,7 @@
                 <thead>
                 <tr>
                     <th>Email</th>
+                    <th>Name</th>
                     <th>Role</th>
                     <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                 </tr>
@@ -54,6 +55,7 @@
                 {
                     <tr>
                         <td>@user.Email</td>
+                        <td>@user.Name</td>
                         <td>@user.Role</td>
                         <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                             <div class="d-inline-flex align-items-center gap-3">
@@ -113,7 +115,6 @@
         });
     })()
 </script>
-
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />

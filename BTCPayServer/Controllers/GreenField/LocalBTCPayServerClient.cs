@@ -875,6 +875,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldStoreOnChainWalletsController>().GetOnChainFeeRate(storeId, cryptoCode, blockTarget));
         }
 
+        public override async Task<ApplicationUserData> UpdateCurrentUser(UpdateApplicationUserRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<ApplicationUserData>(await GetController<GreenfieldUsersController>().UpdateCurrentUser(request, token));
+        }
+
         public override async Task DeleteCurrentUser(CancellationToken token = default)
         {
             HandleActionResult(await GetController<GreenfieldUsersController>().DeleteCurrentUser());

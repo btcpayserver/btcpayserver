@@ -59,7 +59,8 @@ namespace BTCPayServer.Controllers
                 .Take(model.Count)
                 .Select(u => new UsersViewModel.UserViewModel
                 {
-                    Name = u.UserName,
+                    Name = u.Name,
+                    ImageUrl = u.ImageUrl,
                     Email = u.Email,
                     Id = u.Id,
                     EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
@@ -85,6 +86,8 @@ namespace BTCPayServer.Controllers
             {
                 Id = user.Id,
                 Email = user.Email,
+                Name = user.Name,
+                ImageUrl = string.IsNullOrEmpty(user.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(user.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
                 IsAdmin = Roles.HasServerAdmin(roles)
@@ -93,7 +96,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/users/{userId}")]
-        public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel)
+        public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel, [FromForm] bool RemoveImageFile = false)
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
@@ -110,6 +113,53 @@ namespace BTCPayServer.Controllers
             if (user.RequiresEmailConfirmation && viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
             {
                 user.EmailConfirmed = viewModel.EmailConfirmed.Value;
+                propertiesChanged = true;
+            }
+
+            if (user.Name != viewModel.Name)
+            {
+                user.Name = viewModel.Name;
+                propertiesChanged = true;
+            }
+            
+            if (viewModel.ImageFile != null)
+            {
+                if (viewModel.ImageFile.Length > 1_000_000)
+                {
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded image file should be less than 1MB");
+                }
+                else if (!viewModel.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                }
+                else
+                {
+                    var formFile = await viewModel.ImageFile.Bufferize();
+                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    {
+                        ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                    }
+                    else
+                    {
+                        viewModel.ImageFile = formFile;
+                        // add new image
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(viewModel.ImageFile, userId);
+                            var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                            user.ImageUrl = fileIdUri.ToString();
+                            propertiesChanged = true;
+                        }
+                        catch (Exception e)
+                        {
+                            ModelState.AddModelError(nameof(viewModel.ImageFile), $"Could not save image: {e.Message}");
+                        }
+                    }
+                }
+            }
+            else if (RemoveImageFile && !string.IsNullOrEmpty(user.ImageUrl))
+            {
+                user.ImageUrl = null;
                 propertiesChanged = true;
             }
 

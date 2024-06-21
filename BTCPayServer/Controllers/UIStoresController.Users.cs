@@ -137,9 +137,11 @@ public partial class UIStoresController
     {
         var users = await _storeRepo.GetStoreUsers(CurrentStore.Id);
         vm.StoreId = CurrentStore.Id;
-        vm.Users = users.Select(u => new StoreUsersViewModel.StoreUserViewModel()
+        vm.Users = users.Select(u => new StoreUsersViewModel.StoreUserViewModel
         {
             Email = u.Email,
+            Name = u.Name,
+            ImageUrl = u.ImageUrl,
             Id = u.Id,
             Role = u.StoreRole.Role
         }).ToList();

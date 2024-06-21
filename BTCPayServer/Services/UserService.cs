@@ -58,6 +58,8 @@ namespace BTCPayServer.Services
                 Approved = data.Approved,
                 RequiresApproval = data.RequiresApproval,
                 Created = data.Created,
+                Name = data.Name,
+                ImageUrl = data.ImageUrl,
                 Roles = roles,
                 Disabled = data.LockoutEnabled && data.LockoutEnd is not null && DateTimeOffset.UtcNow < data.LockoutEnd.Value.UtcDateTime
             };

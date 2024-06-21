@@ -60,6 +60,8 @@ namespace BTCPayServer.Services.Stores
         {
             public string Id { get; set; }
             public string Email { get; set; }
+            public string Name { get; set; }
+            public string ImageUrl { get; set; }
             public StoreRole StoreRole { get; set; }
         }
 
@@ -189,6 +191,8 @@ namespace BTCPayServer.Services.Stores
                     {
                         Id = u.ApplicationUserId,
                         u.ApplicationUser.Email,
+                        u.ApplicationUser.Name,
+                        u.ApplicationUser.ImageUrl,
                         u.StoreRole
                     })
                     .Where(u => roles == null || roles.Contains(u.StoreRole.Id))
@@ -196,7 +200,9 @@ namespace BTCPayServer.Services.Stores
                     {
                         StoreRole = ToStoreRole(arg.StoreRole),
                         Id = arg.Id,
-                        Email = arg.Email
+                        Email = arg.Email,
+                        Name = arg.Name,
+                        ImageUrl = arg.ImageUrl
                     }).ToArray();
         }
 

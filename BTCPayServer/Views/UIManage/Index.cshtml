@@ -1,11 +1,14 @@
+@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.Models
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject IFileService FileService
 @model IndexViewModel
 @{
     ViewData.SetActivePage(ManageNavPages.Index, "Update your account");
+    var canUpload = await FileService.IsAvailable();
 }
 
-
-<form method="post">
+<form method="post" enctype="multipart/form-data">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
         <button type="submit" id="save" class="btn btn-primary">Save</button>
@@ -14,34 +17,56 @@
     <div class="col-xxl-constrain col-xl-8">
         @if (!ViewContext.ModelState.IsValid)
         {
-            <div asp-validation-summary="All"></div>
+            <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
         }
         <div class="form-group">
-            <div class="col-md-6">
-                <label asp-for="Username" class="form-label"></label>
-                <input asp-for="Username" class="form-control" disabled />
-            </div>
-        </div>
-        <div class="form-group row">
-            <div class="col-md-6">
+            <div class="d-flex align-items-center justify-content-between gap-3">
                 <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
-            <div class="col-md-6 d-flex align-items-end">
-                @if (Model.IsEmailConfirmed)
+                @if (Model.RequiresEmailConfirmation)
                 {
-                    <span class="badge bg-success p-2 my-1">
+                    <button asp-action="SendVerificationEmail" class="d-inline-flex align-items-center gap-1 btn btn-link p-0">
+                        <vc:icon symbol="actions-email" />
+                        Send verification email
+                    </button>
+                }
+                else if (Model.EmailConfirmed)
+                {
+                    <span class="d-inline-flex align-items-center gap-1 text-success">
                         <vc:icon symbol="checkmark" />
                         confirmed
                     </span>
                 }
-                else
-                {
-                    <button asp-action="SendVerificationEmail" class="btn btn-secondary">Send verification email</button>
-                }
             </div>
+            <input asp-for="Email" class="form-control" />
+            <span asp-validation-for="Email" class="text-danger"></span>
         </div>
+        <div class="form-group">
+            <label asp-for="Name" class="form-label"></label>
+            <input asp-for="Name" class="form-control" />
+            <span asp-validation-for="Name" class="text-danger"></span>
+        </div>
+        @if (canUpload)
+        {
+            <div class="form-group">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <label asp-for="ImageFile" class="form-label"></label>
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveImageFile" value="true">
+                            <vc:icon symbol="cross" /> Remove
+                        </button>
+                    }
+                </div>
+                <div class="d-flex align-items-center gap-3">
+                    <input asp-for="ImageFile" type="file" class="form-control flex-grow">
+                    @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl" alt="Profile picture" class="profile-picture"/>
+                    }
+                </div>
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+        }
         <h3 class="mt-5 mb-4">Delete Account</h3>
         <div id="danger-zone">
             <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user.">Delete Account</a>

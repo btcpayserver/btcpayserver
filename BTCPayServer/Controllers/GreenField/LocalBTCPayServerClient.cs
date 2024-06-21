@@ -22,7 +22,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -642,6 +641,18 @@ namespace BTCPayServer.Controllers.Greenfield
         public override async Task RevokeAPIKey(string apikey, CancellationToken token = default)
         {
             HandleActionResult(await GetController<GreenfieldApiKeysController>().RevokeAPIKey(apikey));
+        }
+
+        public override async Task<NotificationSettingsData> GetNotificationSettings(CancellationToken token = default)
+        {
+            return GetFromActionResult<NotificationSettingsData>(
+                await GetController<GreenfieldNotificationsController>().GetNotificationSettings());
+        }
+
+        public override async Task<NotificationSettingsData> UpdateNotificationSettings(UpdateNotificationSettingsRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<NotificationSettingsData>(
+                await GetController<GreenfieldNotificationsController>().UpdateNotificationSettings(request));
         }
 
         public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null,

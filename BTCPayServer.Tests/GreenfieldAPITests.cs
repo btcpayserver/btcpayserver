@@ -2851,6 +2851,30 @@ namespace BTCPayServer.Tests
             await client.RemoveNotification(notification.Id);
             Assert.Empty(await viewOnlyClient.GetNotifications(true));
             Assert.Empty(await viewOnlyClient.GetNotifications(false));
+            
+            // Settings
+            var settings = await client.GetNotificationSettings();
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
+
+            var request = new UpdateNotificationSettingsRequest { Disabled = ["newversion", "pluginupdate"] };
+            settings = await client.UpdateNotificationSettings(request);
+            Assert.False(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
+            Assert.False(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
+
+            request = new UpdateNotificationSettingsRequest { Disabled = ["all"] };
+            settings = await client.UpdateNotificationSettings(request);
+            Assert.False(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
+            Assert.False(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
+            Assert.False(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
+            
+            request = new UpdateNotificationSettingsRequest { Disabled = [] };
+            settings = await client.UpdateNotificationSettings(request);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "newversion").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "pluginupdate").Enabled);
+            Assert.True(settings.Notifications.Find(n => n.Identifier == "inviteaccepted").Enabled);
         }
 
         [Fact(Timeout = TestTimeout)]

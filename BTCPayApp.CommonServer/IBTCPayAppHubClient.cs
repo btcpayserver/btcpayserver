@@ -22,6 +22,8 @@ public class TransactionDetectedRequest
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
 {
+    Task NotifyServerEvent(string eventName);
+    
     Task NotifyNetwork(string network);
     Task NotifyServerNode(string nodeInfo);
     Task TransactionDetected(TransactionDetectedRequest request);

@@ -7,10 +7,12 @@ using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -94,13 +96,15 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly IFeeProviderFactory _feeProviderFactory;
     private readonly ILogger<BTCPayAppHub> _logger;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public BTCPayAppHub(BTCPayNetworkProvider btcPayNetworkProvider,
         NBXplorerDashboard nbXplorerDashboard,
         BTCPayAppState appState,
         ExplorerClientProvider explorerClientProvider,
         IFeeProviderFactory feeProviderFactory,
-        ILogger<BTCPayAppHub> logger) 
+        ILogger<BTCPayAppHub> logger,
+        UserManager<ApplicationUser> userManager) 
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
         _nbXplorerDashboard = nbXplorerDashboard;
@@ -108,6 +112,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         _explorerClientProvider = explorerClientProvider;
         _feeProviderFactory = feeProviderFactory;
         _logger = logger;
+        _userManager = userManager;
     }
 
 
@@ -122,6 +127,9 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
             Context.Abort();
             return;
         }
+
+        
+        await Groups.AddToGroupAsync(Context.ConnectionId,_userManager.GetUserId(Context.User));
         await Clients.Client(Context.ConnectionId).NotifyNetwork(_btcPayNetworkProvider.BTC.NBitcoinNetwork.ToString());
         
 

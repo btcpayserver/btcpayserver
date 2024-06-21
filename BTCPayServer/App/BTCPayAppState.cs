@@ -12,6 +12,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Notifications;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -64,10 +65,17 @@ public class BTCPayAppState : IHostedService
             _eventAggregator.Subscribe<NewBlockEvent>(OnNewBlock));
         _compositeDisposable.Add(
             _eventAggregator.SubscribeAsync<NewOnChainTransactionEvent>(OnNewTransaction));
+        _compositeDisposable.Add(
+            _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
         _ = UpdateNodeInfo();
         return Task.CompletedTask;
     }
-    
+
+    private async Task UserNotificationsUpdatedEvent(UserNotificationsUpdatedEvent arg)
+    {
+        await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent("notifications-updated");
+    }
+
     private string _nodeInfo = string.Empty;
     private async Task UpdateNodeInfo()
     {

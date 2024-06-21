@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.Serialization;
+using System.Text.Json;
 using BTCPayServer.Lightning;
+using Newtonsoft.Json;
 
 namespace BTCPayApp.CommonServer.Models;
 
@@ -17,6 +20,9 @@ public partial class LightningPayment
 
     //you can have multiple requests generated for the same payment hash, but once you reveal the preimage, you should reject any attempt to pay the same payment hash
     public List<string> PaymentRequests { get; set; }
+    [JsonIgnore]
+    public Dictionary<string, JsonDocument> AdditionalData { get; set; } 
+    
 }
 
 public class AppUserInfo

@@ -145,18 +145,29 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public async Task<decimal> GetFeeRate(int blockTarget)
     {
+        _logger.LogInformation($"Getting fee rate for {blockTarget}");
        
       var feeProvider =  _feeProviderFactory.CreateFeeProvider( _btcPayNetworkProvider.BTC);
-      return (await feeProvider.GetFeeRateAsync(blockTarget)).SatoshiPerByte;
+      try
+      {
+
+          return (await feeProvider.GetFeeRateAsync(blockTarget)).SatoshiPerByte;
+      }
+      finally
+      {
+          _logger.LogInformation($"Getting fee rate for {blockTarget} done");
+          
+      }
+      
     }
 
     public async Task<BestBlockResponse> GetBestBlock()
     {
-        
+        _logger.LogInformation($"Getting best block");
         var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
         var bcInfo = await explorerClient.RPCClient.GetBlockchainInfoAsyncEx();
         var bh = await GetBlockHeader(bcInfo.BestBlockHash.ToString());
-        
+        _logger.LogInformation($"Getting best block done");
         return new BestBlockResponse()
         {
             BlockHash = bcInfo.BestBlockHash.ToString(),

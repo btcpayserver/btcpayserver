@@ -21,7 +21,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreatePointOfSaleAppRequest"
+                                "$ref": "#/components/schemas/PointOfSaleAppRequest"
                             }
                         }
                     },
@@ -84,7 +84,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreatePointOfSaleAppRequest"
+                                "$ref": "#/components/schemas/PointOfSaleAppRequest"
                             }
                         }
                     },
@@ -223,7 +223,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/CreateCrowdfundAppRequest"
+                                "$ref": "#/components/schemas/CrowdfundAppRequest"
                             }
                         }
                     },
@@ -291,7 +291,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/BasicAppData"
+                                    "$ref": "#/components/schemas/AppBaseData"
                                 }
                             }
                         }
@@ -372,7 +372,7 @@
                           "schema": {
                               "type": "array",
                               "items": {
-                                  "$ref": "#/components/schemas/BasicAppData"
+                                  "$ref": "#/components/schemas/AppBaseData"
                               }
                           }
                         }
@@ -405,7 +405,7 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/components/schemas/BasicAppData"
+                                "$ref": "#/components/schemas/AppBaseData"
                             }
                         }
                       }
@@ -425,10 +425,46 @@
     },
     "components": {
         "schemas": {
-            "PointOfSaleAppData": {
+            "AppBaseData": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "Id of the app",
+                        "example": "3ki4jsAkN4u9rv1PUzj1odX4Nx7s"
+                    },
+                    "appName": {
+                        "type": "string",
+                        "description": "Name given to the app when it was created",
+                        "example": "my test app"
+                    },
+                    "storeId": {
+                        "type": "string",
+                        "description": "Id of the store to which the app belongs",
+                        "example": "9CiNzKoANXxmk5ayZngSXrHTiVvvgCrwrpFQd4m2K776"
+                    },
+                    "created": {
+                        "type": "integer",
+                        "example": 1651554744,
+                        "description": "UNIX timestamp for when the app was created"
+                    },
+                    "appType": {
+                        "type": "string",
+                        "example": "PointOfSale",
+                        "description": "Type of the app which was created"
+                    },
+                    "archived": {
+                        "type": "boolean",
+                        "description": "If true, the app does not appear in the apps list by default.",
+                        "default": false,
+                        "nullable": true
+                    }
+                }
+            },
+            "PointOfSaleBaseData": {
                 "allOf": [
                     {
-                        "$ref": "#/components/schemas/BasicAppData"
+                        "$ref": "#/components/schemas/AppBaseData"
                     },
                     {
                         "type": "object",
@@ -436,12 +472,14 @@
                             "title": {
                                 "type": "string",
                                 "description": "Display title of the app",
-                                "example": "My PoS app"
+                                "example": "My PoS app",
+                                "nullable": true
                             },
                             "description": {
                                 "type": "string",
                                 "description": "App description",
-                                "example": "This is my amazing PoS app"
+                                "example": "This is my amazing PoS app",
+                                "nullable": true
                             },
                             "defaultView": {
                                 "type": "string",
@@ -458,48 +496,132 @@
                                     "Cart",
                                     "Light",
                                     "Print"
-                                ]
+                                ],
+                                "nullable": true
                             },
                             "showItems": {
                                 "type": "boolean",
                                 "default": false,
                                 "description": "Display item selection for keypad",
-                                "example": true
+                                "example": true,
+                                "nullable": true
                             },
                             "showCustomAmount": {
                                 "type": "boolean",
                                 "description": "Whether the option to enter a custom amount is shown",
-                                "example": true
+                                "example": true,
+                                "nullable": true
                             },
                             "showDiscount": {
                                 "default": false,
                                 "type": "boolean",
                                 "description": "Whether the option to enter a discount is shown",
-                                "example": false
+                                "example": false,
+                                "nullable": true
                             },
                             "showSearch": {
                                 "type": "boolean",
                                 "description": "Display the search bar",
                                 "example": false,
-                                "default": true
+                                "default": true,
+                                "nullable": true
                             },
                             "showCategories": {
                                 "type": "boolean",
                                 "description": "Display the list of categories",
                                 "example": false,
-                                "default": true
+                                "default": true,
+                                "nullable": true
                             },
                             "enableTips": {
                                 "default": false,
                                 "type": "boolean",
                                 "description": "Whether the option to enter a tip is shown",
-                                "example": true
+                                "example": true,
+                                "nullable": true
                             },
                             "currency": {
                                 "type": "string",
                                 "description": "Currency used for the app",
-                                "example": "BTC"
+                                "example": "BTC",
+                                "nullable": true
                             },
+                            "fixedAmountPayButtonText": {
+                                "type": "string",
+                                "description": "Payment button text template for items with a set price",
+                                "example": "Buy for {0}",
+                                "nullable": true
+                            },
+                            "customAmountPayButtonText": {
+                                "type": "string",
+                                "description": "Payment button text which appears for items which allow user to input a custom amount",
+                                "example": "Pay",
+                                "nullable": true
+                            },
+                            "tipText": {
+                                "type": "string",
+                                "description": "Prompt which appears next to the tip amount field if tipping is enabled",
+                                "example": "Do you want to leave a tip?",
+                                "nullable": true
+                            },
+                            "customTipPercentages": {
+                                "type": "array",
+                                "description": "Array of predefined tip percentage amounts",
+                                "items": {
+                                    "type": "number"
+                                },
+                                "default": [15,18,20],
+                                "nullable": true
+                            },
+                            "notificationUrl": {
+                                "type": "string",
+                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "nullable": true
+                            },
+                            "redirectUrl": {
+                                "type": "string",
+                                "description": "URL user is redirected to once invoice is paid",
+                                "nullable": true
+                            },
+                            "redirectAutomatically": {
+                                "type": "boolean",
+                                "description": "Whether user is redirected to specified redirect URL automatically after the invoice is paid",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "formId": {
+                                "type": "string",
+                                "description": "Form ID to request customer data",
+                                "nullable": true
+                            }
+                        }
+                    }
+                ]
+            },
+            "PointOfSaleAppRequest": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/PointOfSaleBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "template": {
+                                "type": "string",
+                                "description": "JSON of item available in the app"
+                            }
+                        }
+                    }
+                ]
+            },
+            "PointOfSaleAppData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/PointOfSaleBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
                             "items": {
                                 "type": "object",
                                 "description": "JSON object of app items",
@@ -535,34 +657,169 @@
                                         "disabled": false
                                     }
                                 ]
-                            },
-                            "fixedAmountPayButtonText": {
+                            }
+                        }
+                    }
+                ]
+            },
+            "CrowdfundBaseData": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/AppBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "title": {
                                 "type": "string",
-                                "description": "Payment button text template for items with a set price",
-                                "example": "Buy for {0}"
+                                "description": "Display title of the app",
+                                "example": "My crowdfund app",
+                                "nullable": true
                             },
-                            "customAmountPayButtonText": {
+                            "description": {
                                 "type": "string",
-                                "description": "Payment button text which appears for items which allow user to input a custom amount",
-                                "example": "Pay"
+                                "description": "App description",
+                                "example": "My crowdfund description",
+                                "nullable": true
                             },
-                            "tipText": {
+                            "enabled": {
+                                "type": "boolean",
+                                "description": "Whether the app is enabled to be viewed by everyone",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "enforceTargetAmount": {
+                                "type": "boolean",
+                                "description": "Whether contributions over the set target amount are allowed",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "startDate": {
+                                "type": "number",
+                                "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
+                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "example": 768658369,
+                                "nullable": true
+                            },
+                            "endDate": {
+                                "type": "number",
+                                "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
+                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "example": 771336769,
+                                "nullable": true
+                            },
+                            "targetCurrency": {
                                 "type": "string",
-                                "description": "Prompt which appears next to the tip amount field if tipping is enabled",
-                                "example": "Do you want to leave a tip?"
+                                "description": "Target currency for the crowdfund",
+                                "example": "BTC",
+                                "nullable": true
+                            },
+                            "targetAmount": {
+                                "type": "number",
+                                "description": "Target amount for the crowdfund",
+                                "example": 420.69,
+                                "nullable": true
+                            },
+                            "mainImageUrl": {
+                                "type": "string",
+                                "description": "URL for image used as a cover image for the app",
+                                "nullable": true
                             },
                             "notificationUrl": {
                                 "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations"
+                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
+                                "nullable": true
                             },
-                            "redirectUrl": {
+                            "tagline": {
                                 "type": "string",
-                                "description": "URL user is redirected to once invoice is paid"
+                                "description": "Tagline for the app displayed to user",
+                                "example": "I can't believe it's not butter",
+                                "nullable": true
                             },
-                            "redirectAutomatically": {
+                            "disqusEnabled": {
                                 "type": "boolean",
-                                "description": "Whether user is redirected to specified redirect URL automatically after the invoice is paid",
-                                "example": true
+                                "description": "Whether Disqus is enabled for the app",
+                                "nullable": true
+                            },
+                            "disqusShortname": {
+                                "type": "string",
+                                "description": "Disqus shortname to used for the app",
+                                "nullable": true
+                            },
+                            "soundsEnabled": {
+                                "type": "boolean",
+                                "description": "Whether sounds on new contributions are enabled",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "animationsEnabled": {
+                                "type": "boolean",
+                                "description": "Whether background animations on new contributions are enabled",
+                                "example": true,
+                                "nullable": true
+                            },
+                            "resetEveryAmount": {
+                                "type": "number",
+                                "description": "Contribution goal reset frequency amount",
+                                "example": 1,
+                                "nullable": true
+                            },
+                            "resetEvery": {
+                                "type": "string",
+                                "description": "Contribution goal reset frequency",
+                                "example": "Day",
+                                "nullable": true
+                            },
+                            "displayPerksValue": {
+                                "type": "boolean",
+                                "description": "Whether perk values are displayed",
+                                "example": false,
+                                "nullable": true
+                            },
+                            "sortPerksByPopularity": {
+                                "type": "boolean",
+                                "description": "Whether perks are sorted by popularity",
+                                "default": true,
+                                "nullable": true
+                            },
+                            "sounds": {
+                                "type": "array",
+                                "description": "Array of custom sounds which can be used on new contributions",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": ["https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"],
+                                "nullable": true
+                            },
+                            "animationColors": {
+                                "type": "array",
+                                "description": "Array of custom HEX colors which can be used for background animations on new contributions",
+                                "items": {
+                                    "type": "string"
+                                },
+                                "example": ["#FF0000", "#00FF00", "#0000FF"],
+                                "nullable": true
+                            },
+                            "formId": {
+                                "type": "string",
+                                "description": "Form ID to request customer data",
+                                "nullable": true
+                            }
+                        }
+                    }
+                ]
+            },
+            "CrowdfundAppRequest": {
+                "allOf": [
+                    {
+                        "$ref": "#/components/schemas/CrowdfundBaseData"
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "perksTemplate": {
+                                "type": "string",
+                                "description": "JSON of perks available in the app"
                             }
                         }
                     }
@@ -571,57 +828,11 @@
             "CrowdfundAppData": {
                 "allOf": [
                     {
-                        "$ref": "#/components/schemas/BasicAppData"
+                        "$ref": "#/components/schemas/CrowdfundBaseData"
                     },
                     {
                         "type": "object",
                         "properties": {
-                            "title": {
-                                "type": "string",
-                                "description": "Display title of the app",
-                                "example": "My crowdfund app"
-                            },
-                            "description": {
-                                "type": "string",
-                                "description": "App description",
-                                "example": "My crowdfund description"
-                            },
-                            "enabled": {
-                                "type": "boolean",
-                                "description": "Whether the app is enabled to be viewed by everyone",
-                                "example": true
-                            },
-                            "enforceTargetAmount": {
-                                "type": "boolean",
-                                "description": "Whether contributions over the set target amount are allowed",
-                                "example": false
-                            },
-                            "startDate": {
-                                "type": "number",
-                                "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
-                                "example": 768658369
-                            },
-                            "endDate": {
-                                "type": "number",
-                                "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
-                                "example": 771336769
-                            },
-                            "targetCurrency": {
-                                "type": "string",
-                                "description": "Target currency for the crowdfund",
-                                "example": "BTC"
-                            },
-                            "targetAmount": {
-                                "type": "number",
-                                "description": "Target amount for the crowdfund",
-                                "example": 420.69
-                            },
-                            "mainImageUrl": {
-                                "type": "string",
-                                "description": "URL for image used as a cover image for the app"
-                            },
                             "perks": {
                                 "type": "object",
                                 "description": "JSON of perks available in the app",
@@ -672,369 +883,10 @@
                                         "disabled": true
                                     }
                                 ]
-                            },
-                            "notificationUrl": {
-                                "type": "string",
-                                "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations"
-                            },
-                            "tagline": {
-                                "type": "string",
-                                "description": "Tagline for the app displayed to user",
-                                "example": "I can't believe it's not butter"
-                            },
-                            "disqusEnabled": {
-                                "type": "boolean",
-                                "description": "Whether Disqus is enabled for the app"
-                            },
-                            "disqusShortname": {
-                                "type": "string",
-                                "description": "Disqus shortname to used for the app"
-                            },
-                            "soundsEnabled": {
-                                "type": "boolean",
-                                "description": "Whether sounds on new contributions are enabled",
-                                "example": false
-                            },
-                            "animationsEnabled": {
-                                "type": "boolean",
-                                "description": "Whether background animations on new contributions are enabled",
-                                "example": true
-                            },
-                            "resetEveryAmount": {
-                                "type": "number",
-                                "description": "Contribution goal reset frequency amount",
-                                "example": 1
-                            },
-                            "resetEvery": {
-                                "type": "string",
-                                "description": "Contribution goal reset frequency",
-                                "example": "Day"
-                            },
-                            "displayPerksValue": {
-                                "type": "boolean",
-                                "description": "Whether perk values are displayed",
-                                "example": false
-                            },
-                            "sortPerksByPopularity": {
-                                "type": "boolean",
-                                "description": "Whether perks are sorted by popularity",
-                                "default": true
-                            },
-                            "sounds": {
-                                "type": "array",
-                                "description": "Array of custom sounds which can be used on new contributions",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "example": ["https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"]
-                            },
-                            "animationColors": {
-                                "type": "array",
-                                "description": "Array of custom HEX colors which can be used for background animations on new contributions",
-                                "items": {
-                                    "type": "string"
-                                },
-                                "example": ["#FF0000", "#00FF00", "#0000FF"]
                             }
                         }
                     }
                 ]
-            },
-            "BasicAppData": {
-                "type": "object",
-                "properties": {
-                    "id": {
-                        "type": "string",
-                        "description": "Id of the app",
-                        "example": "3ki4jsAkN4u9rv1PUzj1odX4Nx7s"
-                    },
-                    "name": {
-                        "type": "string",
-                        "description": "Name given to the app when it was created",
-                        "example": "my test app"
-                    },
-                    "storeId": {
-                        "type": "string",
-                        "description": "Id of the store to which the app belongs",
-                        "example": "9CiNzKoANXxmk5ayZngSXrHTiVvvgCrwrpFQd4m2K776"
-                    },
-                    "created": {
-                        "type": "integer",
-                        "example": 1651554744,
-                        "description": "UNIX timestamp for when the app was created"
-                    },
-                    "appType": {
-                        "type": "string",
-                        "example": "PointOfSale",
-                        "description": "Type of the app which was created"
-                    },
-                    "archived": {
-                        "type": "boolean",
-                        "description": "If true, the app does not appear in the apps list by default.",
-                        "default": false,
-                        "nullable": true
-                    }
-                }
-            },
-            "CreatePointOfSaleAppRequest": {
-                "type": "object",
-                "properties": {
-                    "appName": {
-                        "type": "string",
-                        "description": "The name of the app (shown in admin UI)",
-                        "nullable": false
-                    },
-                    "title": {
-                        "type": "string",
-                        "description": "The title of the app (shown to the user)",
-                        "nullable": true
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "The description of the app",
-                        "nullable": true
-                    },
-                    "template": {
-                        "type": "string",
-                        "description": "Template for items available in the app",
-                        "nullable": true
-                    },
-                    "defaultView": {
-                        "type": "string",
-                        "description": "Template for items available in the app",
-                        "nullable": true,
-                        "x-enumNames": [
-                            "Static",
-                            "Cart",
-                            "Light",
-                            "Print"
-                        ],
-                        "enum": [
-                            "Static",
-                            "Cart",
-                            "Light",
-                            "Print"
-                        ]
-                    },
-                    "currency": {
-                        "type": "string",
-                        "description": "Currency to use for the app. Defaults to the currency used by the store if not specified",
-                        "example": "BTC",
-                        "nullable": true
-                    },
-                    "showCustomAmount": {
-                        "type": "boolean",
-                        "description": "Whether to include a special item in the store which allows user to input a custom payment amount",
-                        "default": false,
-                        "nullable": true
-                    },
-                    "showDiscount": {
-                        "type": "boolean",
-                        "description": "Whether to allow user to input a discount amount. Applies to Cart view only. Not recommended for customer self-checkout",
-                        "default": true,
-                        "nullable": true
-                    },
-                    "enableTips": {
-                        "type": "boolean",
-                        "description": "Whether to allow user to input a tip amount. Applies to Cart and Light views only",
-                        "default": true,
-                        "nullable": true
-                    },
-                    "customAmountPayButtonText": {
-                        "type": "string",
-                        "description": "Payment button text which appears for items which allow user to input a custom amount",
-                        "default": "Pay",
-                        "nullable": true
-                    },
-                    "fixedAmountPayButtonText": {
-                        "type": "string",
-                        "description": "Payment button text which appears for items which have a fixed price",
-                        "default": "Buy for {PRICE_HERE}",
-                        "nullable": true
-                    },
-                    "tipText": {
-                        "type": "string",
-                        "description": "Prompt which appears next to the tip amount field if tipping is enabled",
-                        "default": "Do you want to leave a tip?",
-                        "nullable": true
-                    },
-                    "notificationUrl": {
-                        "type": "string",
-                        "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
-                        "nullable": true
-                    },
-                    "redirectUrl": {
-                        "type": "string",
-                        "description": "URL to redirect user to once invoice is paid",
-                        "nullable": true
-                    },
-                    "redirectAutomatically": {
-                        "type": "boolean",
-                        "description": "Whether to redirect user to redirect URL automatically once invoice is paid. Defaults to what is set in the store settings",
-                        "nullable": true
-                    },
-                    "formId": {
-                        "type": "string",
-                        "description": "Form ID to request customer data",
-                        "nullable": true
-                    }
-                }
-            },
-            "CreateCrowdfundAppRequest": {
-                "type": "object",
-                "properties": {
-                    "appName": {
-                        "type": "string",
-                        "description": "The name of the app (shown in admin UI)",
-                        "example": "Kukkstarter",
-                        "nullable": false
-                    },
-                    "title": {
-                        "type": "string",
-                        "description": "The title of the app (shown to the user)",
-                        "example": "My crowdfund app",
-                        "nullable": true
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "The description of the app (shown to the user)",
-                        "example": "My app description",
-                        "nullable": true
-                    },
-                    "enabled": {
-                        "type": "boolean",
-                        "description": "Determines if the app is enabled to be viewed by everyone",
-                        "default": true,
-                        "nullable": true
-                    },
-                    "enforceTargetAmount": {
-                        "type": "boolean",
-                        "description": "Will not allow contributions over the set target amount",
-                        "default": false,
-                        "nullable": true
-                    },
-                    "startDate": {
-                        "type": "number",
-                        "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
-                        "example": 768658369,
-                        "nullable": true
-                    },
-                    "endDate": {
-                        "type": "number",
-                        "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
-                        "example": 771336769,
-                        "nullable": true
-                    },
-                    "targetCurrency": {
-                        "type": "string",
-                        "description": "Target currency for the crowdfund. Defaults to the currency used by the store if not specified",
-                        "example": "BTC",
-                        "nullable": true
-                    },
-                    "targetAmount": {
-                        "type": "number",
-                        "description": "Target amount for the crowdfund",
-                        "example": 420,
-                        "nullable": true
-                    },
-                    "mainImageUrl": {
-                        "type": "string",
-                        "description": "URL for image to be used as a cover image for the app",
-                        "nullable": true
-                    },
-                    "perksTemplate": {
-                        "type": "string",
-                        "description": "YAML template of perks available in the app",
-                        "example": "test_perk:\r\n  price: 100\r\n  title: test perk\r\n  price_type: \"fixed\" \r\n  disabled: false",
-                        "nullable": true
-                    },
-                    "notificationUrl": {
-                        "type": "string",
-                        "description": "Callback notification url to POST to once when invoice is paid for and once when there are enough blockchain confirmations",
-                        "nullable": true
-                    },
-                    "tagline": {
-                        "type": "string",
-                        "description": "Tagline for the app (shown to the user)",
-                        "example": "I can't believe it's not butter",
-                        "nullable": true
-                    },
-                    "disqusShortname": {
-                        "type": "string",
-                        "description": "Disqus shortname to used for the app. Enables Disqus functionality if set.",
-                        "nullable": true
-                    },
-                    "soundsEnabled": {
-                        "type": "boolean",
-                        "description": "Enables sounds on new contributions if set to true",
-                        "default": false,
-                        "nullable": true
-                    },
-                    "animationsEnabled": {
-                        "type": "boolean",
-                        "description": "Enables background animations on new contributions if set to true",
-                        "default": false,
-                        "nullable": true
-                    },
-                    "resetEveryAmount": {
-                        "type": "number",
-                        "description": "Contribution goal reset frequency amount. Must be used in conjunction with resetEvery and startDate.",
-                        "default": 1,
-                        "nullable": true
-                    },
-                    "resetEvery": {
-                        "type": "string",
-                        "description": "Contribution goal reset frequency. Must be used in conjunction with resetEveryAmount and startDate.",
-                        "nullable": true,
-                        "default": "Never",
-                        "x-enumNames": [
-                            "Never",
-                            "Hour",
-                            "Day",
-                            "Month",
-                            "Year"
-                        ],
-                        "enum": [
-                            "Never",
-                            "Hour",
-                            "Day",
-                            "Month",
-                            "Year"
-                        ]
-                    },
-                    "displayPerksValue": {
-                        "type": "boolean",
-                        "description": "Displays values of perks if set to true",
-                        "default": false,
-                        "nullable": true
-                    },
-                    "sortPerksByPopularity": {
-                        "type": "boolean",
-                        "description": "Sorts perks by popularity if set to true",
-                        "default": false,
-                        "nullable": true
-                    },
-                    "sounds": {
-                        "type": "array",
-                        "description": "Array of custom sounds to use on new contributions",
-                        "items": {
-                            "type": "string"
-                        },
-                        "nullable": true,
-                        "example": [ "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav" ]
-                    },
-                    "animationColors": {
-                        "type": "array",
-                        "description": "Array of custom HEX colors to use for background animations on new contributions",
-                        "items": {
-                            "type": "string"
-                        },
-                        "nullable": true,
-                        "example": ["#FF0000", "#00FF00", "#0000FF"]
-                    }
-                }
             }
         }
     },

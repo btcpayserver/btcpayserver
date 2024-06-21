@@ -1083,7 +1083,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<PointOfSaleAppData> CreatePointOfSaleApp(
             string storeId,
-            CreatePointOfSaleAppRequest request, CancellationToken token = default)
+            PointOfSaleAppRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<PointOfSaleAppData>(
                 await GetController<GreenfieldAppsController>().CreatePointOfSaleApp(storeId, request));
@@ -1091,7 +1091,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<PointOfSaleAppData> UpdatePointOfSaleApp(
             string appId,
-            CreatePointOfSaleAppRequest request, CancellationToken token = default)
+            PointOfSaleAppRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<PointOfSaleAppData>(
                await GetController<GreenfieldAppsController>().UpdatePointOfSaleApp(appId, request));
@@ -1099,27 +1099,27 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<CrowdfundAppData> CreateCrowdfundApp(
             string storeId,
-            CreateCrowdfundAppRequest request, CancellationToken token = default)
+            CrowdfundAppRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<CrowdfundAppData>(
                 await GetController<GreenfieldAppsController>().CreateCrowdfundApp(storeId, request));
         }
 
-        public override async Task<AppDataBase> GetApp(string appId, CancellationToken token = default)
+        public override async Task<AppBaseData> GetApp(string appId, CancellationToken token = default)
         {
-            return GetFromActionResult<AppDataBase>(
+            return GetFromActionResult<AppBaseData>(
                 await GetController<GreenfieldAppsController>().GetApp(appId));
         }
 
-        public override async Task<AppDataBase[]> GetAllApps(string storeId, CancellationToken token = default)
+        public override async Task<AppBaseData[]> GetAllApps(string storeId, CancellationToken token = default)
         {
-            return GetFromActionResult<AppDataBase[]>(
+            return GetFromActionResult<AppBaseData[]>(
                 await GetController<GreenfieldAppsController>().GetAllApps(storeId));
         }
 
-        public override async Task<AppDataBase[]> GetAllApps(CancellationToken token = default)
+        public override async Task<AppBaseData[]> GetAllApps(CancellationToken token = default)
         {
-            return GetFromActionResult<AppDataBase[]>(
+            return GetFromActionResult<AppBaseData[]>(
                 await GetController<GreenfieldAppsController>().GetAllApps());
         }
 

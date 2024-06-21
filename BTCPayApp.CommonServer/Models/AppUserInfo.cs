@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Runtime.Serialization;
 using System.Text.Json;
 using BTCPayServer.Lightning;
+using NBitcoin;
+using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayApp.CommonServer.Models;

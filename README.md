@@ -1,4 +1,4 @@
-# BTCPay Server
+bc1q4k4zlga72f0t0jrsyh93dzv2k7upry6an304jp# BTCPay Server
 
 ![BTCPay Server](BTCPayServer/wwwroot/img/btc_pay_BG_twitter.png)
 

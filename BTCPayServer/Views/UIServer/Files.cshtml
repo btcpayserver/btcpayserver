@@ -4,10 +4,9 @@
 }
 
 <div class="sticky-header">
-    <h2>@ViewData["Title"]</h2>
+    <h2 class="my-1">@ViewData["Title"]</h2>
     <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]" class="btn btn-secondary d-flex align-items-center">
         <vc:icon symbol="settings" />
-        <span class="ms-1">Settings</span>
     </a>
 </div>
 <partial name="_StatusMessage" />

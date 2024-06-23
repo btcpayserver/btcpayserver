@@ -5,7 +5,15 @@
 
 <form method="post" asp-action="NotificationSettings">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UINotifications" asp-action="Index">Notifications</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
         <button type="submit" class="btn btn-primary" name="command" value="update">Save</button>
     </div>
     <partial name="_StatusMessage" />

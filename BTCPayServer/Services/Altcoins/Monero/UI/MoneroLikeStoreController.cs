@@ -249,10 +249,28 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                         }
                     }
 
+                    try
+                    {
+                        var response = await _MoneroRpcProvider.WalletRpcClients[cryptoCode].SendCommandAsync<OpenWalletRequest, OpenWalletResponse>("open_wallet", new OpenWalletRequest
+                        {
+                            Filename = "wallet",
+                            Password = viewModel.WalletPassword
+                        });
+                        if (response?.Error != null)
+                        {
+                            throw new Exception(response.Error.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError(nameof(viewModel.AccountIndex), $"Could not open the wallet: {ex.Message}");
+                        return View(viewModel);
+                    }
+
                     return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new
                     {
                         cryptoCode,
-                        StatusMessage = "View-only wallet files uploaded. If they are valid the wallet will soon become available."
+                        StatusMessage = "View-only wallet files uploaded. The wallet will soon become available."
 
                     });
                 }

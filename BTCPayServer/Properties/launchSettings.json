@@ -70,6 +70,47 @@
       },
       "applicationUrl": "https://localhost:14142/"
     },
+    "Altcoins": {
+      "commandName": "Project",
+      "launchBrowser": true,
+      "environmentVariables": {
+        "BTCPAY_EXPERIMENTALV2_CONFIRM": "true",
+        "BTCPAY_NETWORK": "regtest",
+        "BTCPAY_LAUNCHSETTINGS": "true",
+        "BTCPAY_PORT": "14142",
+        "BTCPAY_HttpsUseDefaultCertificate": "true",
+        "BTCPAY_VERBOSE": "true",
+        "BTCPAY_LTCEXPLORERURL": "http://127.0.0.1:32838/",
+        "BTCPAY_LBTCEXPLORERURL": "http://127.0.0.1:32838/",
+        "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993/",
+        "BTCPAY_BTCEXTERNALLNDREST": "type=lnd-rest;server=http://lnd:lnd@127.0.0.1:35531/;allowinsecure=true",
+        "BTCPAY_BTCEXTERNALLNDSEEDBACKUP": "../BTCPayServer.Tests/TestData/LndSeedBackup/walletunlock.json",
+        "BTCPAY_BTCEXTERNALSPARK": "server=/spark/btc/;cookiefile=fake",
+        "BTCPAY_BTCEXTERNALCHARGE": "server=https://127.0.0.1:53280/mycharge/btc/;cookiefilepath=fake",
+        "BTCPAY_BTCEXTERNALRTL": "server=/rtl/api/authenticate/cookie;cookiefile=fake",
+        "BTCPAY_BTCEXTERNALTHUNDERHUB": "server=/thub/sso;cookiefile=fake",
+        "BTCPAY_BTCEXTERNALTORQ": "server=/torq/cookie-login;cookiefile=fake",
+        "BTCPAY_EXTERNALSERVICES": "totoservice:totolink;Lightning Terminal:/lit/;",
+        "BTCPAY_EXTERNALCONFIGURATOR": "passwordfile=testpwd;server=/configurator",
+        "BTCPAY_BTCEXPLORERURL": "http://127.0.0.1:32838/",
+        "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
+        "BTCPAY_DISABLE-REGISTRATION": "false",
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "BTCPAY_CHAINS": "btc,ltc,lbtc,xmr",
+        "BTCPAY_POSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver",
+        "BTCPAY_DEBUGLOG": "debug.log",
+        "BTCPAY_TORRCFILE": "../BTCPayServer.Tests/TestData/Tor/torrc",
+        "BTCPAY_SOCKSENDPOINT": "localhost:9050",
+        "BTCPAY_DOCKERDEPLOYMENT": "true",
+        "BTCPAY_RECOMMENDED-PLUGINS": "",
+        "BTCPAY_CHEATMODE": "true",
+        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer",
+        "BTCPAY_XMR_DAEMON_URI": "http://127.0.0.1:18081",
+        "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082",
+        "BTCPAY_XMR_WALLET_DAEMON_WALLETDIR": "/path/to/monero_wallet"
+      },
+      "applicationUrl": "https://localhost:14142/"
+    },
     "Altcoins-HTTPS": {
       "commandName": "Project",
       "launchBrowser": true,
@@ -95,7 +136,7 @@
         "BTCPAY_ALLOW-ADMIN-REGISTRATION": "true",
         "BTCPAY_DISABLE-REGISTRATION": "false",
         "ASPNETCORE_ENVIRONMENT": "Development",
-        "BTCPAY_CHAINS": "btc,ltc,lbtc",
+        "BTCPAY_CHAINS": "btc,ltc,lbtc,xmr",
         "BTCPAY_POSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver",
         "BTCPAY_SSHCONNECTION": "root@127.0.0.1:21622",
         "BTCPAY_SSHPASSWORD": "opD3i2282D",
@@ -105,7 +146,10 @@
         "BTCPAY_DOCKERDEPLOYMENT": "true",
         "BTCPAY_RECOMMENDED-PLUGINS": "",
         "BTCPAY_CHEATMODE": "true",
-        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
+        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer",
+        "BTCPAY_XMR_DAEMON_URI": "http://127.0.0.1:18081",
+        "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082",
+        "BTCPAY_XMR_WALLET_DAEMON_WALLETDIR": "/path/to/monero_wallet"
       },
       "applicationUrl": "https://localhost:14142/"
     }

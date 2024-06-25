@@ -136,13 +136,14 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             var user = await _userManager.GetUserAsync(User);
             if (User.Identity is null || user is null)
-                throw new JsonHttpException(StatusCode(401));
+                return this.CreateAPIError(401, "unauthenticated", "User is not authenticated");
 
             if (!string.IsNullOrEmpty(request.Email) && !MailboxAddressValidator.IsMailboxAddress(request.Email))
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }
 
+            bool needUpdate = false;
             var setNewPassword = !string.IsNullOrEmpty(request.NewPassword);
             if (setNewPassword)
             {
@@ -153,7 +154,15 @@ namespace BTCPayServer.Controllers.Greenfield
                 else
                 {
                     var passwordValidation = await _passwordValidator.ValidateAsync(_userManager, user, request.NewPassword);
-                    if (!passwordValidation.Succeeded)
+                    if (passwordValidation.Succeeded)
+                    {
+                        var setUserResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+                        if (!setUserResult.Succeeded)
+                        {
+                            ModelState.AddModelError(nameof(request.Email), "Unexpected error occurred setting password for user.");
+                        }
+                    }
+                    else
                     {
                         foreach (var error in passwordValidation.Errors)
                         {
@@ -163,7 +172,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
-            bool? propertiesChanged = null;
             var email = user.Email;
             if (!string.IsNullOrEmpty(request.Email) && request.Email != email)
             {
@@ -177,32 +185,22 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     ModelState.AddModelError(nameof(request.Email), "Unexpected error occurred setting email for user.");
                 }
-                propertiesChanged = true;
             }
 
             if (request.Name is not null && request.Name != user.Name)
             {
                 user.Name = request.Name;
-                propertiesChanged = true;
+                needUpdate = true;
             }
 
             if (request.ImageUrl is not null && request.ImageUrl != user.ImageUrl)
             {
                 user.ImageUrl = request.ImageUrl;
-                propertiesChanged = true;
+                needUpdate = true;
             }
 
-            if (ModelState.IsValid && propertiesChanged is true || setNewPassword)
-            {
-                if (setNewPassword)
-                {
-                    var setUserResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
-                    if (!setUserResult.Succeeded)
-                    {
-                        ModelState.AddModelError(nameof(request.Email), "Unexpected error occurred setting password for user.");
-                    }
-                }
-                
+            if (ModelState.IsValid && needUpdate)
+            {   
                 var identityResult = await _userManager.UpdateAsync(user);
                 if (!identityResult.Succeeded)
                 {
@@ -217,9 +215,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             if (!ModelState.IsValid)
-            {
                 return this.CreateValidationError(ModelState);
-            }
 
             var model = await FromModel(user);
             return Ok(model);

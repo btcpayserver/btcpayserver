@@ -16,6 +16,7 @@ namespace BTCPayServer.Plugins
             public string gitCommit { get; set; }
             public string pluginDir { get; set; }
             public string gitRepository { get; set; }
+            public DateTime buildDate { get; set; }
 #nullable enable
             static Regex GithubRepositoryRegex = new Regex("^https://(www\\.)?github\\.com/([^/]+)/([^/]+)/?");
             public record GithubRepository(string Owner, string RepositoryName)

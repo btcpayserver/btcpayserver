@@ -36,6 +36,13 @@ public class AppUserInfo
     public IEnumerable<string>? Roles { get; set; }
     public IEnumerable<AppUserStoreInfo>? Stores { get; set; }
 
+    public void SetInfo(string email, string? name, string? imageUrl)
+    {
+        Email = email;
+        Name = name;
+        ImageUrl = imageUrl;
+    }
+
     public static bool Equals(AppUserInfo? x, AppUserInfo? y)
     {
         if (ReferenceEquals(x, y)) return true;

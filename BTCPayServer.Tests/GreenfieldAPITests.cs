@@ -4103,6 +4103,7 @@ namespace BTCPayServer.Tests
                 {
                     case "before-automated-payout-processing":
                         beforeHookTcs.TrySetResult();
+                        TestLogs.LogInformation("before-automated-payout-processing");
                         var bd = (BeforePayoutActionData)tuple.args;
                         foreach (var p in bd.Payouts)
                         {
@@ -4110,6 +4111,7 @@ namespace BTCPayServer.Tests
                         }
                         break;
                     case "after-automated-payout-processing":
+                        TestLogs.LogInformation("after-automated-payout-processing");
                         afterHookTcs.TrySetResult();
                         var ad = (AfterPayoutActionData)tuple.args;
                         foreach (var p in ad.Payouts)
@@ -4131,6 +4133,8 @@ namespace BTCPayServer.Tests
             await beforeHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
             TestLogs.LogInformation("Waiting before after...");
             await afterHookTcs.Task.WaitAsync(TimeSpan.FromSeconds(5));
+            TestLogs.LogInformation($"beforeHookTcs.IsCompleted: {beforeHookTcs.Task.IsCompleted}");
+            TestLogs.LogInformation($"afterHookTcs.IsCompleted: {afterHookTcs.Task.IsCompleted}");
             payouts = await adminClient.GetStorePayouts(admin.StoreId);
             try
             {

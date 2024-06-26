@@ -21,7 +21,9 @@ using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 
@@ -277,11 +279,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
         public static async Task<ResultVM> TrypayBolt(
             ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest,
-            string payoutCurrency, CancellationToken cancellationToken)
+            string payoutCurrency, CancellationToken cancellationToken, ILogger logger = null)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
+            logger?.LogInformation("TB: 1");
             if (boltAmount > payoutBlob.CryptoAmount)
             {
+                logger?.LogInformation("TB: 2");
                 payoutData.State = PayoutState.Cancelled;
                 return new ResultVM
                 {
@@ -291,6 +295,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     Destination = payoutBlob.Destination
                 };
             }
+            logger?.LogInformation("TB: 3");
 
             if (bolt11PaymentRequest.ExpiryDate < DateTimeOffset.Now)
             {
@@ -307,12 +312,14 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var proofBlob = new PayoutLightningBlob { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
             try
             {
+                logger?.LogInformation("TB: 4");
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                     new PayInvoiceParams()
                     {
                         // CLN does not support explicit amount param if it is the same as the invoice amount
                         Amount = payoutBlob.CryptoAmount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
                     }, cancellationToken);
+                logger?.LogInformation("TB: 5");
                 if (result == null) throw new NoPaymentResultException();
                 
                 string message = null;
@@ -324,11 +331,14 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     payoutData.State = PayoutState.Completed;
                     try
                     {
+                        logger?.LogInformation("TB: 6");
                         var payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(), cancellationToken);
+                        logger?.LogInformation("TB: 7");
                         proofBlob.Preimage = payment.Preimage;
                     }
-                    catch (Exception)
+                    catch (Exception ex)
                     {
+                        logger?.LogInformation("TB: 6.1 " + ex.ToString());
                         // ignored
                     }
                 }
@@ -337,7 +347,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     payoutData.State = PayoutState.InProgress;
                     message = "The payment has been initiated but is still in-flight.";
                 }
-
+                logger?.LogInformation("TB: 8");
                 payoutData.SetProofBlob(proofBlob, null);
                 return new ResultVM
                 {
@@ -349,6 +359,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
             catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException or NoPaymentResultException)
             {
+                logger?.LogInformation("TB: 9");
                 // Timeout, potentially caused by hold invoices
                 // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
                 payoutData.State = PayoutState.InProgress;

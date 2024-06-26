@@ -72,33 +72,42 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
     {
         if (payoutData.State != PayoutState.AwaitingPayment)
             return;
+        Logs.PayServer.LogInformation("LN: 1");
         var res = await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
         {
             State = PayoutState.InProgress, PayoutId = payoutData.Id, Proof = null
         });
         if (res != MarkPayoutRequest.PayoutPaidResult.Ok)
         {
+            Logs.PayServer.LogInformation("LN: 1.1");
             return;
         }
-
+        Logs.PayServer.LogInformation("LN: 2");
         var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
         var claim = await _payoutHandler.ParseClaimDestination(blob.Destination, CancellationToken);
+        Logs.PayServer.LogInformation("LN: 3");
         try
         {
             switch (claim.destination)
             {
                 case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
+                    Logs.PayServer.LogInformation("LN: 4");
                     var lnurlResult = await UILightningLikePayoutController.GetInvoiceFromLNURL(payoutData,
                         _payoutHandler, blob,
                         lnurlPayClaimDestinaton, Network.NBitcoinNetwork, CancellationToken);
+                    Logs.PayServer.LogInformation("LN: 5");
                     if (lnurlResult.Item2 is null)
                     {
+                        Logs.PayServer.LogInformation("LN: 6");
                         await TrypayBolt(lightningClient, blob, payoutData,
                             lnurlResult.Item1);
+                        Logs.PayServer.LogInformation("LN: 7");
                     }
                     break;
                 case BoltInvoiceClaimDestination item1:
+                    Logs.PayServer.LogInformation("LN: 3.1");
                     await TrypayBolt(lightningClient, blob, payoutData, item1.PaymentRequest);
+                    Logs.PayServer.LogInformation("LN: 3.2");
                     break;
             }
         }
@@ -107,13 +116,17 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
             Logs.PayServer.LogError(e, $"Could not process payout {payoutData.Id}");
         }
 
+        Logs.PayServer.LogInformation("LN: 55");
         if (payoutData.State != PayoutState.InProgress || payoutData.Proof is not null)
         {
+            Logs.PayServer.LogInformation("LN: 6");
             await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
             {
                 State = payoutData.State, PayoutId = payoutData.Id, Proof = payoutData.GetProofBlobJson()
             });
+            Logs.PayServer.LogInformation("LN: 7");
         }
+        Logs.PayServer.LogInformation("LN: 66");
     }
 
     protected override async Task<bool> ProcessShouldSave(object paymentMethodConfig, List<PayoutData> payouts)
@@ -146,6 +159,6 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
     {
         return (await UILightningLikePayoutController.TrypayBolt(lightningClient, payoutBlob, payoutData,
             bolt11PaymentRequest,
-			_payoutHandler.Currency, CancellationToken)).Result is  PayResult.Ok ;
+			_payoutHandler.Currency, CancellationToken, Logs.PayServer)).Result is  PayResult.Ok ;
     }
 }

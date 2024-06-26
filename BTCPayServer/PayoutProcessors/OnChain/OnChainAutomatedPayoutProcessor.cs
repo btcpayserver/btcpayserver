@@ -16,10 +16,12 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using ExchangeSharp;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
+using NLog.Layouts;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
@@ -170,6 +172,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var txHash = workingTx.GetHash();
                     foreach (var payoutData in transfersProcessing)
                     {
+                        Logs.PayServer.LogInformation("Processing Payout " + payoutData.Key.Id);
                         payoutData.Key.State = PayoutState.InProgress;
                         _bitcoinLikePayoutHandler.SetProofBlob(payoutData.Key,
                             new PayoutTransactionOnChainBlob()
@@ -182,8 +185,11 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     TaskCompletionSource<bool> tcs = new();
                     var cts = new CancellationTokenSource();
                     cts.CancelAfter(TimeSpan.FromSeconds(20));
-                    var task = _eventAggregator.WaitNext<NewOnChainTransactionEvent>(
-                        e => e.NewTransactionEvent.TransactionData.TransactionHash == txHash,
+                    var task = _eventAggregator.WaitNext<NewOnChainTransactionEvent>((e) =>
+                        {
+                            Logs.PayServer.LogInformation($"PAYOUT WAITING {e.NewTransactionEvent.TransactionData.TransactionHash} == {txHash}");
+                        return e.NewTransactionEvent.TransactionData.TransactionHash == txHash;
+                        },
                         cts.Token);
                     var broadcastResult = await explorerClient.BroadcastAsync(workingTx, cts.Token);
                     if (!broadcastResult.Success)

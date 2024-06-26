@@ -279,8 +279,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 UserName = request.Email,
                 Email = request.Email,
-                Name = request.Name,
-                ImageUrl = request.ImageUrl,
                 RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
                 RequiresApproval = policies.RequiresUserApproval,
                 Created = DateTimeOffset.UtcNow,

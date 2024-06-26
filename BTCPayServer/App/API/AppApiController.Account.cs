@@ -277,12 +277,14 @@ public partial class AppApiController
                 Permissions = userStore.StoreRole.Permissions
             });
         }
+
+        var userBlob = user.GetBlob();
         var info = new AppUserInfo
         {
             UserId = user.Id,
-            Name = user.Name,
-            ImageUrl = !string.IsNullOrEmpty(user.ImageUrl)
-                ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(user.ImageUrl))
+            Name = userBlob?.Name,
+            ImageUrl = !string.IsNullOrEmpty(userBlob?.ImageUrl)
+                ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(userBlob.ImageUrl))
                 : null,
             Email = await userManager.GetEmailAsync(user),
             Roles = await userManager.GetRolesAsync(user),

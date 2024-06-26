@@ -61,6 +61,8 @@ namespace BTCPayServer.Services.Stores
         {
             public string Id { get; set; }
             public string Email { get; set; }
+            public string Name { get; set; }
+            public string ImageUrl { get; set; }
             public StoreRole StoreRole { get; set; }
             public UserBlob UserBlob { get; set; }
         }

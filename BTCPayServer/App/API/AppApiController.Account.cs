@@ -280,6 +280,10 @@ public partial class AppApiController
         var info = new AppUserInfo
         {
             UserId = user.Id,
+            Name = user.Name,
+            ImageUrl = !string.IsNullOrEmpty(user.ImageUrl)
+                ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(user.ImageUrl))
+                : null,
             Email = await userManager.GetEmailAsync(user),
             Roles = await userManager.GetRolesAsync(user),
             Stores = stores

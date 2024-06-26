@@ -55,7 +55,7 @@ public class PaymentsReportProvider : ReportProvider
                 new ("LightningAddress", "string"),
                 new ("InvoiceCurrency", "string"),
                 new ("InvoiceCurrencyAmount", "amount"),
-                new ("Rate", "amount")
+                new ("Rate", "amount"),
                 new ("Subtotal", "amount"),
                 new ("Discount", "amount"),
                 new ("Tip", "amount")

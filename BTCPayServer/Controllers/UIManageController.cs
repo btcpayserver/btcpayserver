@@ -2,6 +2,8 @@ using System;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
@@ -41,6 +43,8 @@ namespace BTCPayServer.Controllers
         private readonly UserLoginCodeService _userLoginCodeService;
         private readonly IHtmlHelper Html;
         private readonly UserService _userService;
+        private readonly UriResolver _uriResolver;
+        private readonly IFileService _fileService;
         readonly StoreRepository _StoreRepository;
 
         public UIManageController(
@@ -56,6 +60,8 @@ namespace BTCPayServer.Controllers
           Fido2Service fido2Service,
           LinkGenerator linkGenerator,
           UserService userService,
+          UriResolver uriResolver,
+          IFileService fileService,
           UserLoginCodeService userLoginCodeService,
           IHtmlHelper htmlHelper
           )
@@ -73,6 +79,8 @@ namespace BTCPayServer.Controllers
             _userLoginCodeService = userLoginCodeService;
             Html = htmlHelper;
             _userService = userService;
+            _uriResolver = uriResolver;
+            _fileService = fileService;
             _StoreRepository = storeRepository;
         }
 
@@ -84,12 +92,14 @@ namespace BTCPayServer.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-
+            var blob = user.GetBlob() ?? new();
             var model = new IndexViewModel
             {
-                Username = user.UserName,
                 Email = user.Email,
-                IsEmailConfirmed = user.EmailConfirmed
+                Name = blob.Name,
+                ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
+                EmailConfirmed = user.EmailConfirmed,
+                RequiresEmailConfirmation = user.RequiresEmailConfirmation
             };
             return View(model);
         }
@@ -105,7 +115,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var blob = user.GetBlob();
+            var blob = user.GetBlob() ?? new();
             blob.ShowInvoiceStatusChangeHint = false;
             user.SetBlob(blob);
             await _userManager.UpdateAsync(user);
@@ -114,19 +124,15 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(IndexViewModel model)
+        public async Task<IActionResult> Index(IndexViewModel model, [FromForm] bool RemoveImageFile = false)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            bool needUpdate = false;
             var email = user.Email;
             if (model.Email != email)
             {
@@ -145,8 +151,72 @@ namespace BTCPayServer.Controllers
                 {
                     throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
                 }
+                needUpdate = true;
             }
-            TempData[WellKnownTempData.SuccessMessage] = "Your profile has been updated";
+
+            var blob = user.GetBlob() ?? new();
+            if (blob.Name != model.Name)
+            {
+                blob.Name = model.Name;
+                needUpdate = true;
+            }
+            
+            if (model.ImageFile != null)
+            {
+                if (model.ImageFile.Length > 1_000_000)
+                {
+                    ModelState.AddModelError(nameof(model.ImageFile), "The uploaded image file should be less than 1MB");
+                }
+                else if (!model.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    ModelState.AddModelError(nameof(model.ImageFile), "The uploaded file needs to be an image");
+                }
+                else
+                {
+                    var formFile = await model.ImageFile.Bufferize();
+                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    {
+                        ModelState.AddModelError(nameof(model.ImageFile), "The uploaded file needs to be an image");
+                    }
+                    else
+                    {
+                        model.ImageFile = formFile;
+                        // add new image
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(model.ImageFile, user.Id);
+                            var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                            blob.ImageUrl = fileIdUri.ToString();
+                            needUpdate = true;
+                        }
+                        catch (Exception e)
+                        {
+                            ModelState.AddModelError(nameof(model.ImageFile), $"Could not save image: {e.Message}");
+                        }
+                    }
+                }
+            }
+            else if (RemoveImageFile && !string.IsNullOrEmpty(blob.ImageUrl))
+            {
+                blob.ImageUrl = null;
+                needUpdate = true;
+            }
+            user.SetBlob(blob);
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            if (needUpdate is true)
+            {
+                needUpdate = await _userManager.UpdateAsync(user) is { Succeeded: true };
+                TempData[WellKnownTempData.SuccessMessage] = "Your profile has been updated";
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Error updating profile";
+            }
+            
             return RedirectToAction(nameof(Index));
         }
 

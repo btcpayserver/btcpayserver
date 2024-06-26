@@ -32,6 +32,77 @@
                     }
                 ]
             },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user information",
+                "description": "Update the current user",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "The email of the user",
+                                        "nullable": true
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The name of the user",
+                                        "nullable": true
+                                    },
+                                    "imageUrl": {
+                                        "type": "string",
+                                        "description": "The profile picture URL of the user",
+                                        "nullable": true
+                                    },
+                                    "currentPassword": {
+                                        "type": "string",
+                                        "description": "The current password of the user",
+                                        "nullable": true
+                                    },
+                                    "newPassword": {
+                                        "type": "string",
+                                        "description": "The new password of the user",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "operationId": "Users_UpdateCurrentUser",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "Users"
@@ -105,6 +176,16 @@
                                         "type": "string",
                                         "description": "The email of the new user",
                                         "nullable": false
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The name of the new user",
+                                        "nullable": true
+                                    },
+                                    "imageUrl": {
+                                        "type": "string",
+                                        "description": "The profile picture URL of the new user",
+                                        "nullable": true
                                     },
                                     "password": {
                                         "type": "string",
@@ -186,7 +267,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User found"
+                        "description": "User found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Missing authorization for loading the user"
@@ -371,6 +459,16 @@
                         "type": "string",
                         "description": "The email of the user",
                         "nullable": false
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the user",
+                        "nullable": true
+                    },
+                    "imageUrl": {
+                        "type": "string",
+                        "description": "The profile picture URL of the user",
+                        "nullable": true
                     },
                     "emailConfirmed": {
                         "type": "boolean",

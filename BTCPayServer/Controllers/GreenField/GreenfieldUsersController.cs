@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
@@ -39,6 +40,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly BTCPayServerOptions _options;
         private readonly IAuthorizationService _authorizationService;
         private readonly UserService _userService;
+        private readonly UriResolver _uriResolver;
 
         public GreenfieldUsersController(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
@@ -50,6 +52,7 @@ namespace BTCPayServer.Controllers.Greenfield
             BTCPayServerOptions options,
             IAuthorizationService authorizationService,
             UserService userService,
+            UriResolver uriResolver,
             Logs logs)
         {
             this.Logs = logs;
@@ -63,6 +66,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _options = options;
             _authorizationService = authorizationService;
             _userService = userService;
+            _uriResolver = uriResolver;
         }
 
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -127,6 +131,99 @@ namespace BTCPayServer.Controllers.Greenfield
             return await FromModel(user!);
         }
 
+        [Authorize(Policy = Policies.CanModifyProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPut("~/api/v1/users/me")]
+        public async Task<IActionResult> UpdateCurrentUser(UpdateApplicationUserRequest request, CancellationToken cancellationToken = default)
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (User.Identity is null || user is null)
+                return this.CreateAPIError(401, "unauthenticated", "User is not authenticated");
+
+            if (!string.IsNullOrEmpty(request.Email) && !request.Email.IsValidEmail())
+            {
+                ModelState.AddModelError(nameof(request.Email), "Invalid email");
+            }
+
+            bool needUpdate = false;
+            var setNewPassword = !string.IsNullOrEmpty(request.NewPassword);
+            if (setNewPassword)
+            {
+                if (!await _userManager.CheckPasswordAsync(user, request.CurrentPassword))
+                {
+                    ModelState.AddModelError(nameof(request.CurrentPassword), "The current password is not correct.");
+                }
+                else
+                {
+                    var passwordValidation = await _passwordValidator.ValidateAsync(_userManager, user, request.NewPassword);
+                    if (passwordValidation.Succeeded)
+                    {
+                        var setUserResult = await _userManager.ChangePasswordAsync(user, request.CurrentPassword, request.NewPassword);
+                        if (!setUserResult.Succeeded)
+                        {
+                            ModelState.AddModelError(nameof(request.Email), "Unexpected error occurred setting password for user.");
+                        }
+                    }
+                    else
+                    {
+                        foreach (var error in passwordValidation.Errors)
+                        {
+                            ModelState.AddModelError(nameof(request.NewPassword), error.Description);
+                        }
+                    }
+                }
+            }
+
+            var email = user.Email;
+            if (!string.IsNullOrEmpty(request.Email) && request.Email != email)
+            {
+                var setUserResult = await _userManager.SetUserNameAsync(user, request.Email);
+                if (!setUserResult.Succeeded)
+                {
+                    ModelState.AddModelError(nameof(request.Email), "Unexpected error occurred setting email for user.");
+                }
+                var setEmailResult = await _userManager.SetEmailAsync(user, request.Email);
+                if (!setEmailResult.Succeeded)
+                {
+                    ModelState.AddModelError(nameof(request.Email), "Unexpected error occurred setting email for user.");
+                }
+            }
+
+            var blob = user.GetBlob() ?? new();
+            if (request.Name is not null && request.Name != blob.Name)
+            {
+                blob.Name = request.Name;
+                needUpdate = true;
+            }
+
+            if (request.ImageUrl is not null && request.ImageUrl != blob.ImageUrl)
+            {
+                blob.ImageUrl = request.ImageUrl;
+                needUpdate = true;
+            }
+            user.SetBlob(blob);
+
+            if (ModelState.IsValid && needUpdate)
+            {   
+                var identityResult = await _userManager.UpdateAsync(user);
+                if (!identityResult.Succeeded)
+                {
+                    foreach (var error in identityResult.Errors)
+                    {
+                        if (error.Code == "DuplicateUserName")
+                            ModelState.AddModelError(nameof(request.Email), error.Description);
+                        else
+                            ModelState.AddModelError(string.Empty, error.Description);
+                    }
+                }
+            }
+
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            var model = await FromModel(user);
+            return Ok(model);
+        }
+
         [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/users/me")]
         public async Task<IActionResult> DeleteCurrentUser()
@@ -187,6 +284,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 Created = DateTimeOffset.UtcNow,
                 Approved = isAdmin // auto-approve first admin and users created by an admin
             };
+            var blob = user.GetBlob() ?? new();
+            blob.Name = request.Name;
+            blob.ImageUrl = request.ImageUrl;
+            user.SetBlob(blob);
             var passwordValidation = await this._passwordValidator.ValidateAsync(_userManager, user, request.Password);
             if (!passwordValidation.Succeeded)
             {
@@ -286,7 +387,11 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            return UserService.FromModel(data, roles);
+            var model = UserService.FromModel(data, roles);
+            model.ImageUrl = string.IsNullOrEmpty(model.ImageUrl)
+                ? null
+                : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(model.ImageUrl));
+            return model;
         }
     }
 }

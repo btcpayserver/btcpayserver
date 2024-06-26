@@ -882,6 +882,9 @@ namespace BTCPayServer.Tests
             await AssertValidationError(["Email"],
                 async () => await adminClient.UpdateCurrentUser(
                     new UpdateApplicationUserRequest { Email = "test@" }));
+            await AssertValidationError(["Email"],
+                async () => await adminClient.UpdateCurrentUser(
+                    new UpdateApplicationUserRequest { Email = "Firstname Lastname <blah@example.com>" }));
 
             // Duplicate email
             await AssertValidationError(["Email"],

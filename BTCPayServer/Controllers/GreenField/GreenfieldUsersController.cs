@@ -139,7 +139,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (User.Identity is null || user is null)
                 return this.CreateAPIError(401, "unauthenticated", "User is not authenticated");
 
-            if (!string.IsNullOrEmpty(request.Email) && !MailboxAddressValidator.IsMailboxAddress(request.Email))
+            if (!string.IsNullOrEmpty(request.Email) && !request.Email.IsValidEmail())
             {
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
             }

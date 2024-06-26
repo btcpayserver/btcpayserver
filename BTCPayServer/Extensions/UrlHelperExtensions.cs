@@ -23,6 +23,25 @@ namespace Microsoft.AspNetCore.Mvc
             return null;
         }
 #nullable restore
+
+        public static string UserDetailsLink(this LinkGenerator urlHelper, string userId, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(nameof(UIServerController.User), "UIServer",
+                new { userId }, scheme, host, pathbase);
+        }
+        
+        public static string StoreUsersLink(this LinkGenerator urlHelper, string storeId, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(nameof(UIStoresController.StoreUsers), "UIStores",
+                new { storeId }, scheme, host, pathbase);
+        }
+
+        public static string InvitationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(nameof(UIAccountController.AcceptInvite), "UIAccount",
+                new { userId, code }, scheme, host, pathbase);
+        }
+
         public static string EmailConfirmationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(nameof(UIAccountController.ConfirmEmail), "UIAccount",
@@ -33,8 +52,7 @@ namespace Microsoft.AspNetCore.Mvc
         {
             return urlHelper.GetUriByAction(nameof(UIAccountController.Login), "UIAccount", null , scheme, host, pathbase);
         }
-
-        public static string ResetPasswordCallbackLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
+        public static string ResetPasswordLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(
                 action: nameof(UIAccountController.SetPassword),

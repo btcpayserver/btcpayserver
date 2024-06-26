@@ -25,10 +25,7 @@ public class WasabiWalletFileParser : IWalletFileParser
         derivationSchemeSettings = null;
         var jobj = JsonConvert.DeserializeObject<WasabiFormat>(data);
         var derivationSchemeParser = network.GetDerivationSchemeParser();
-        var result = new DerivationSchemeSettings()
-        {
-            Network = network
-        };
+        var result = new DerivationSchemeSettings();
 
         if (jobj is null || !derivationSchemeParser.TryParseXpub(jobj.ExtPubKey, ref result))
             return false;

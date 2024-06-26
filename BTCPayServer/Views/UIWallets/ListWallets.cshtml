@@ -30,38 +30,40 @@
     <div class="col-lg-12">
         @if (Model.Wallets.Any())
         {
-            <table class="table table-hover table-responsive-md">
-                <thead>
+            <div class="table-responsive-md">
+                <table class="table table-hover">
+                    <thead>
                     <tr>
                         <th>Store Name</th>
                         <th>Crypto Code</th>
                         <th>Balance</th>
                         <th class="text-end">Actions</th>
                     </tr>
-                </thead>
-                <tbody>
+                    </thead>
+                    <tbody>
                     @foreach (var wallet in Model.Wallets)
                     {
-                        <tr>
+                    <tr>
 
-                            <td>
-                                <a
-                                    permission="@Policies.CanModifyStoreSettings"
-                                    asp-action="GeneralSettings" asp-controller="UIStores" asp-route-storeId="@wallet.StoreId">
-                                    @wallet.StoreName
-                                </a>
-                                <span not-permission="@Policies.CanModifyStoreSettings">@wallet.StoreName</span>
-                            </td>
+                        <td>
+                            <a
+                                permission="@Policies.CanModifyStoreSettings"
+                                asp-action="GeneralSettings" asp-controller="UIStores" asp-route-storeId="@wallet.StoreId">
+                                @wallet.StoreName
+                            </a>
+                            <span not-permission="@Policies.CanModifyStoreSettings">@wallet.StoreName</span>
+                        </td>
 
-                            <td>@wallet.CryptoCode</td>
-                            <td><span permission="@Policies.CanModifyStoreSettings">@wallet.Balance</span></td>
-                            <td class="text-end">
-                                <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
-                            </td>
-                        </tr>
+                        <td>@wallet.CryptoCode</td>
+                        <td><span permission="@Policies.CanModifyStoreSettings">@wallet.Balance</span></td>
+                        <td class="text-end">
+                            <a asp-action="WalletTransactions" asp-route-walletId="@wallet.Id">Manage</a>
+                        </td>
+                    </tr>
                     }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         }
         else
         {

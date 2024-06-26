@@ -7,13 +7,11 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Custodians;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -62,6 +60,11 @@ namespace BTCPayServer.Tests
         public Uri LBTCNBXplorerUri { get; set; }
 
         public Uri ServerUri
+        {
+            get;
+            set;
+        }
+        public Uri ServerUriWithIP
         {
             get;
             set;
@@ -166,6 +169,7 @@ namespace BTCPayServer.Tests
             await File.WriteAllTextAsync(confPath, config.ToString());
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
+            ServerUriWithIP = new Uri("http://127.0.0.1:" + Port + "/");
             HttpClient = new HttpClient();
             HttpClient.BaseAddress = ServerUri;
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
@@ -193,7 +197,6 @@ namespace BTCPayServer.Tests
                     .ConfigureServices(services =>
                     {
                         services.TryAddSingleton<IFeeProviderFactory>(new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
-                        services.AddSingleton<ICustodian, MockCustodian>();
                     })
                     .UseKestrel()
                     .UseStartup<Startup>()

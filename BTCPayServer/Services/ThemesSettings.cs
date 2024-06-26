@@ -1,5 +1,6 @@
+using System;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Http;
+using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Services;
@@ -22,33 +23,17 @@ public class ThemeSettings
     [Display(Name = "Custom Theme Extension Type")]
     public ThemeExtension CustomThemeExtension { get; set; }
 
-    [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-    [MaxLength(500)]
-    [Display(Name = "Custom Theme CSS URL")]
-    public string CustomThemeCssUri { get; set; }
+    [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+    public UnresolvedUri CustomThemeCssUrl { get; set; }
 
-    [Display(Name = "Custom Theme File")]
-    [JsonIgnore]
-    public IFormFile CustomThemeFile { get; set; }
+    [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+    public UnresolvedUri LogoUrl { get; set; }
 
-    public string CustomThemeFileId { get; set; }
-
-    [Display(Name = "Logo")]
-    [JsonIgnore]
-    public IFormFile LogoFile { get; set; }
-
-    public string LogoFileId { get; set; }
-
-    public bool FirstRun { get; set; }
+    public bool FirstRun { get; set; } = true;
 
     public override string ToString()
     {
         // no logs
         return string.Empty;
-    }
-
-    public string CssUri
-    {
-        get => CustomTheme ? CustomThemeCssUri : "/main/themes/default.css";
     }
 }

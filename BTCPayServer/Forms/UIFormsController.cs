@@ -14,6 +14,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -22,19 +23,22 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
 
-[Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+[Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
 public class UIFormsController : Controller
 {
     private readonly FormDataService _formDataService;
+    private readonly UriResolver _uriResolver;
     private readonly IAuthorizationService _authorizationService;
     private readonly StoreRepository _storeRepository;
     private FormComponentProviders FormProviders { get; }
 
     public UIFormsController(FormComponentProviders formProviders, FormDataService formDataService,
+        UriResolver uriResolver,
         StoreRepository storeRepository, IAuthorizationService authorizationService)
     {
         FormProviders = formProviders;
         _formDataService = formDataService;
+        _uriResolver = uriResolver;
         _authorizationService = authorizationService;
         _storeRepository = storeRepository;
     }
@@ -48,6 +52,7 @@ public class UIFormsController : Controller
     }
 
     [HttpGet("~/stores/{storeId}/forms/new")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult Create(string storeId)
     {
         var vm = new ModifyForm { FormConfig = new Form().ToString() };
@@ -55,6 +60,7 @@ public class UIFormsController : Controller
     }
 
     [HttpGet("~/stores/{storeId}/forms/modify/{id}")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Modify(string storeId, string id)
     {
         var form = await _formDataService.GetForm(storeId, id);
@@ -66,6 +72,7 @@ public class UIFormsController : Controller
     }
 
     [HttpPost("~/stores/{storeId}/forms/modify/{id?}")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Modify(string storeId, string? id, ModifyForm modifyForm)
     {
         if (id is not null)
@@ -122,6 +129,7 @@ public class UIFormsController : Controller
     }
 
     [HttpPost("~/stores/{storeId}/forms/{id}/remove")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> Remove(string storeId, string id)
     {
         await _formDataService.RemoveForm(id, storeId);
@@ -165,7 +173,7 @@ public class UIFormsController : Controller
             FormName = formData.Name,
             Form = form,
             StoreName = store?.StoreName,
-            StoreBranding = new StoreBrandingViewModel(storeBlob)
+            StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob)
         });
     }
 

@@ -17,7 +17,6 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            var permissionsType = migrationBuilder.IsNpgsql() ? "TEXT[]" : "TEXT";
             migrationBuilder.CreateTable(
                 name: "StoreRoles",
                 columns: table => new
@@ -25,7 +24,7 @@ namespace BTCPayServer.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     StoreDataId = table.Column<string>(type: "TEXT", nullable: true),
                     Role = table.Column<string>(type: "TEXT", nullable: false),
-                    Permissions = table.Column<string>(type: permissionsType, nullable: false)
+                    Permissions = table.Column<string>(type: "TEXT[]", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -44,60 +43,45 @@ namespace BTCPayServer.Migrations
                 columns: new[] { "StoreDataId", "Role" },
                 unique: true);
 
-            object GetPermissionsData(string[] permissions)
-            {
-                if (migrationBuilder.IsNpgsql())
-                    return permissions;
-                return JsonConvert.SerializeObject(permissions);
-            }
-
             migrationBuilder.InsertData(
                 "StoreRoles",
                 columns: new[] { "Id", "Role", "Permissions" },
-                columnTypes: new[] { "TEXT", "TEXT", permissionsType },
+                columnTypes: new[] { "TEXT", "TEXT", "TEXT[]" },
                 values: new object[,]
                 {
                     {
-                        "Owner", "Owner", GetPermissionsData(new[]
+                        "Owner", "Owner", new[]
                         {
                             "btcpay.store.canmodifystoresettings",
                             "btcpay.store.cantradecustodianaccount",
                             "btcpay.store.canwithdrawfromcustodianaccount",
                             "btcpay.store.candeposittocustodianaccount"
-                        })
+                        }
                     },
                     {
-                        "Guest", "Guest", GetPermissionsData(new[]
+                        "Guest", "Guest", new[]
                         {
                             "btcpay.store.canviewstoresettings",
                             "btcpay.store.canmodifyinvoices",
                             "btcpay.store.canviewcustodianaccounts",
                             "btcpay.store.candeposittocustodianaccount"
-                        })
+                        }
                 }
                 });
 
-            if (this.SupportAddForeignKey(migrationBuilder.ActiveProvider))
-            {
-                
-                migrationBuilder.AddForeignKey(
-                    name: "FK_UserStore_StoreRoles_Role",
-                    table: "UserStore",
-                    column: "Role",
-                    principalTable: "StoreRoles",
-                    principalColumn: "Id");
-            }
+            migrationBuilder.AddForeignKey(
+                name: "FK_UserStore_StoreRoles_Role",
+                table: "UserStore",
+                column: "Role",
+                principalTable: "StoreRoles",
+                principalColumn: "Id");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-
-            if (this.SupportDropForeignKey(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropForeignKey(
-                    name: "FK_UserStore_StoreRoles_Role",
-                    table: "UserStore");
-            }
+            migrationBuilder.DropForeignKey(
+                name: "FK_UserStore_StoreRoles_Role",
+                table: "UserStore");
 
             migrationBuilder.DropTable(
                 name: "StoreRoles");

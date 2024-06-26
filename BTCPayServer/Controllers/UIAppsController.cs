@@ -100,11 +100,11 @@ namespace BTCPayServer.Controllers
                 switch (sortOrder)
                 {
                     case "desc":
-                        ViewData[$"{sortOrderColumn}SortOrder"] = "asc";
+                        ViewData[$"{sortOrderColumn}NextSortOrder"] = "asc";
                         break;
                     case "asc":
                         apps = apps.Reverse();
-                        ViewData[$"{sortOrderColumn}SortOrder"] = "desc";
+                        ViewData[$"{sortOrderColumn}NextSortOrder"] = "desc";
                         break;
                 }
             }

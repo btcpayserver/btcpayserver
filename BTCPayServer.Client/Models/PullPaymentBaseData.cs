@@ -24,8 +24,6 @@ namespace BTCPayServer.Client.Models
         public string Currency { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
-        [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
-        public TimeSpan? Period { get; set; }
         [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
         [JsonProperty("BOLT11Expiration")]
         public TimeSpan BOLT11Expiration { get; set; }

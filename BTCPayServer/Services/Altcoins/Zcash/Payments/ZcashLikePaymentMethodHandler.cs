@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
+using BTCPayServer.Common;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
@@ -17,120 +19,107 @@ using BTCPayServer.Services.Altcoins.Zcash.Utils;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Altcoins.Zcash.Payments
 {
-    public class ZcashLikePaymentMethodHandler : PaymentMethodHandlerBase<ZcashSupportedPaymentMethod, ZcashLikeSpecificBtcPayNetwork>
+    public class ZcashLikePaymentMethodHandler : IPaymentMethodHandler
     {
-        private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly ZcashLikeSpecificBtcPayNetwork _network;
+        public ZcashLikeSpecificBtcPayNetwork Network => _network;
+        public JsonSerializer Serializer { get; }
         private readonly ZcashRPCProvider _ZcashRpcProvider;
-
-        public ZcashLikePaymentMethodHandler(BTCPayNetworkProvider networkProvider, ZcashRPCProvider ZcashRpcProvider)
+        public PaymentMethodId PaymentMethodId { get; }
+        public ZcashLikePaymentMethodHandler(BTCPayNetworkBase network, ZcashRPCProvider ZcashRpcProvider)
         {
-            _networkProvider = networkProvider;
+            _network = (ZcashLikeSpecificBtcPayNetwork)network;
+            PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(_network.CryptoCode);
+            Serializer = BlobSerializer.CreateSerializer().Serializer;
             _ZcashRpcProvider = ZcashRpcProvider;
         }
-        public override PaymentType PaymentType => ZcashPaymentType.Instance;
-
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(InvoiceLogs logs, ZcashSupportedPaymentMethod supportedPaymentMethod, PaymentMethod paymentMethod,
-            StoreData store, ZcashLikeSpecificBtcPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
+        public Task BeforeFetchingRates(PaymentMethodContext context)
         {
-            
-            if (preparePaymentObject is null)
+            context.Prompt.Currency = _network.CryptoCode;
+            context.Prompt.Divisibility = _network.Divisibility;
+            if (context.Prompt.Activated)
             {
-                return new ZcashLikeOnChainPaymentMethodDetails()
+                var walletClient = _ZcashRpcProvider.WalletRpcClients[_network.CryptoCode];
+                var daemonClient = _ZcashRpcProvider.DaemonRpcClients[_network.CryptoCode];
+                var config = ParsePaymentMethodConfig(context.PaymentMethodConfig);
+                context.State = new Prepare()
                 {
-                    Activated = false
+                    GetFeeRate = daemonClient.SendCommandAsync<GetFeeEstimateRequest, GetFeeEstimateResponse>("get_fee_estimate", new GetFeeEstimateRequest()),
+                    ReserveAddress = s => walletClient.SendCommandAsync<CreateAddressRequest, CreateAddressResponse>("create_address", new CreateAddressRequest() { Label = $"btcpay invoice #{s}", AccountIndex = config.AccountIndex }),
+                    AccountIndex = config.AccountIndex
                 };
             }
-
-            if (!_ZcashRpcProvider.IsAvailable(network.CryptoCode))
+            return Task.CompletedTask;
+        }
+        public async Task ConfigurePrompt(PaymentMethodContext context)
+        {
+            if (!_ZcashRpcProvider.IsAvailable(_network.CryptoCode))
                 throw new PaymentMethodUnavailableException($"Node or wallet not available");
-            var invoice = paymentMethod.ParentEntity;
-            if (!(preparePaymentObject is Prepare ZcashPrepare))
-                throw new ArgumentException();
+            var invoice = context.InvoiceEntity;
+            var ZcashPrepare = (Prepare)context.State;
             var feeRatePerKb = await ZcashPrepare.GetFeeRate;
             var address = await ZcashPrepare.ReserveAddress(invoice.Id);
 
             var feeRatePerByte = feeRatePerKb.Fee / 1024;
-            return new ZcashLikeOnChainPaymentMethodDetails()
+
+            context.Prompt.PaymentMethodFee = ZcashMoney.Convert(feeRatePerByte * 100);
+            context.Prompt.Details = JObject.FromObject(new ZcashPaymentPromptDetails()
             {
-                NextNetworkFee = ZcashMoney.Convert(feeRatePerByte * 100),
-                AccountIndex = supportedPaymentMethod.AccountIndex,
+                AccountIndex = ZcashPrepare.AccountIndex,
                 AddressIndex = address.AddressIndex,
-                DepositAddress = address.Address,
-                Activated = true
-            };
-
+                DepositAddress = address.Address
+            }, Serializer);
         }
 
-        public override object PreparePayment(ZcashSupportedPaymentMethod supportedPaymentMethod, StoreData store,
-            BTCPayNetworkBase network)
+        object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
         {
-
-            var walletClient = _ZcashRpcProvider.WalletRpcClients[supportedPaymentMethod.CryptoCode];
-            var daemonClient = _ZcashRpcProvider.DaemonRpcClients[supportedPaymentMethod.CryptoCode];
-            return new Prepare()
-            {
-                GetFeeRate = daemonClient.SendCommandAsync<GetFeeEstimateRequest, GetFeeEstimateResponse>("get_fee_estimate", new GetFeeEstimateRequest()),
-                ReserveAddress = s => walletClient.SendCommandAsync<CreateAddressRequest, CreateAddressResponse>("create_address", new CreateAddressRequest() { Label = $"btcpay invoice #{s}", AccountIndex = supportedPaymentMethod.AccountIndex })
-            };
+            return ParsePaymentPromptDetails(details);
         }
+        public ZcashPaymentPromptDetails ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
+        {
+            return details.ToObject<ZcashPaymentPromptDetails>(Serializer);
+        }
+        object IPaymentMethodHandler.ParsePaymentMethodConfig(JToken config)
+        {
+            return ParsePaymentMethodConfig(config);
+        }
+        public ZcashPaymentMethodConfig ParsePaymentMethodConfig(JToken config)
+        {
+            return config.ToObject<ZcashPaymentMethodConfig>(Serializer) ?? throw new FormatException($"Invalid {nameof(ZcashPaymentMethodConfig)}");
+        }
+
+
 
         class Prepare
         {
             public Task<GetFeeEstimateResponse> GetFeeRate;
             public Func<string, Task<CreateAddressResponse>> ReserveAddress;
+            public long AccountIndex { get; internal set; }
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
-            StoreBlob storeBlob, IPaymentMethod paymentMethod)
+        public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
         {
-            var paymentMethodId = paymentMethod.GetId();
-            var network = _networkProvider.GetNetwork<ZcashLikeSpecificBtcPayNetwork>(model.CryptoCode);
-            model.PaymentMethodName = GetPaymentMethodName(network);
-            model.CryptoImage = GetCryptoImage(network);
-            if (model.Activated)
+            return new CheckoutUIPaymentMethodSettings
             {
-                var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-                model.InvoiceBitcoinUrl = ZcashPaymentType.Instance.GetPaymentLink(network, null,
-                    new ZcashLikeOnChainPaymentMethodDetails() {DepositAddress = cryptoInfo.Address}, cryptoInfo.GetDue().Value,
-                    null);
-                model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrl;
-            }
-            else
-            {
-                model.InvoiceBitcoinUrl = "";
-                model.InvoiceBitcoinUrlQR = "";
-            }
-        }
-        public override string GetCryptoImage(PaymentMethodId paymentMethodId)
-        {
-            var network = _networkProvider.GetNetwork<ZcashLikeSpecificBtcPayNetwork>(paymentMethodId.CryptoCode);
-            return GetCryptoImage(network);
+                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
+                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
+                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
+                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
+            };
         }
 
-        public override string GetPaymentMethodName(PaymentMethodId paymentMethodId)
+        public ZcashLikePaymentData ParsePaymentDetails(JToken details)
         {
-            var network = _networkProvider.GetNetwork<ZcashLikeSpecificBtcPayNetwork>(paymentMethodId.CryptoCode);
-            return GetPaymentMethodName(network);
+            return details.ToObject<ZcashLikePaymentData>(Serializer) ?? throw new FormatException($"Invalid {nameof(ZcashLikePaymentData)}");
         }
-        public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
+        object IPaymentMethodHandler.ParsePaymentDetails(JToken details)
         {
-            return _networkProvider.GetAll()
-                .Where(network => network is ZcashLikeSpecificBtcPayNetwork)
-                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentType));
-        }
-
-        private string GetCryptoImage(ZcashLikeSpecificBtcPayNetwork network)
-        {
-            return network.CryptoImagePath;
-        }
-
-
-        private string GetPaymentMethodName(ZcashLikeSpecificBtcPayNetwork network)
-        {
-            return $"{network.DisplayName}";
+            return ParsePaymentDetails(details);
         }
     }
 }

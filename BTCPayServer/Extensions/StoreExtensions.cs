@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer
 {
@@ -10,7 +12,7 @@ namespace BTCPayServer
     {
         public static StoreRole? GetStoreRoleOfUser(this StoreData store, string userId)
         {
-            return store.UserStores.FirstOrDefault(r => r.ApplicationUserId == userId)?.StoreRole;
+            return store.UserStores?.FirstOrDefault(r => r.ApplicationUserId == userId)?.StoreRole;
         }
         
         public static PermissionSet GetPermissionSet(this StoreRole storeRole, string storeId)
@@ -36,21 +38,10 @@ namespace BTCPayServer
             return permissionSet.Contains(permission, storeId);
         }
         
-        public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, BTCPayNetworkProvider networkProvider, string cryptoCode)
+        public static DerivationSchemeSettings? GetDerivationSchemeSettings(this StoreData store, PaymentMethodHandlerDictionary handlers, string cryptoCode, bool onlyEnabled = false)
         {
-            var paymentMethod = store
-                .GetSupportedPaymentMethods(networkProvider)
-                .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == cryptoCode);
-            return paymentMethod;
-        }
-        public static IEnumerable<DerivationSchemeSettings> GetDerivationSchemeSettings(this StoreData store, BTCPayNetworkProvider networkProvider)
-        {
-            var paymentMethod = store
-                .GetSupportedPaymentMethods(networkProvider)
-                .OfType<DerivationSchemeSettings>()
-                .Where(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike);
-            return paymentMethod;
+            var pmi = Payments.PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+            return store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers, onlyEnabled);
         }
     }
 }

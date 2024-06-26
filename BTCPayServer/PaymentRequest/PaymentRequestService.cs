@@ -20,6 +20,7 @@ namespace BTCPayServer.PaymentRequest
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly InvoiceRepository _invoiceRepository;
         private readonly CurrencyNameTable _currencies;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly DisplayFormatter _displayFormatter;
 
@@ -29,12 +30,14 @@ namespace BTCPayServer.PaymentRequest
             InvoiceRepository invoiceRepository,
             DisplayFormatter displayFormatter,
             CurrencyNameTable currencies,
+            PaymentMethodHandlerDictionary handlers,
             TransactionLinkProviders transactionLinkProviders)
         {
             _paymentRequestRepository = paymentRequestRepository;
             _btcPayNetworkProvider = btcPayNetworkProvider;
             _invoiceRepository = invoiceRepository;
             _currencies = currencies;
+            _handlers = handlers;
             _transactionLinkProviders = transactionLinkProviders;
             _displayFormatter = displayFormatter;
         }
@@ -63,7 +66,7 @@ namespace BTCPayServer.PaymentRequest
             {
                 var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
-                var allSettled = contributions.All(i => i.Value.States.All(s => s.IsSettled()));
+                var allSettled = contributions.All(i => i.Value.Settled);
                 var isPaid = contributions.TotalCurrency >= blob.Amount;
 
                 if (isPaid)
@@ -98,7 +101,7 @@ namespace BTCPayServer.PaymentRequest
             var paymentStats = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
             var amountDue = blob.Amount - paymentStats.TotalCurrency;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
-                .FirstOrDefault(entity => entity.Status == InvoiceStatusLegacy.New);
+                .FirstOrDefault(entity => entity.Status == InvoiceStatus.New);
             
             return new ViewPaymentRequestViewModel(pr)
             {
@@ -118,10 +121,10 @@ namespace BTCPayServer.PaymentRequest
                 Invoices = new ViewPaymentRequestViewModel.InvoiceList(invoices.Select(entity =>
                 {
                     var state = entity.GetInvoiceState();
-                    var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(entity, _displayFormatter, _transactionLinkProviders);
+                    var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(entity, _displayFormatter, _transactionLinkProviders, _handlers);
 
-                    if (state.Status == InvoiceStatusLegacy.Invalid ||
-                        state.Status == InvoiceStatusLegacy.Expired && !payments.Any())
+                    if (state.Status == InvoiceStatus.Invalid ||
+                        state.Status == InvoiceStatus.Expired && !payments.Any())
                         return null;
 
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoice

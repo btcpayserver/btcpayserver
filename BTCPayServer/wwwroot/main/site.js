@@ -2,20 +2,6 @@ const baseUrl = Object.values(document.scripts).find(s => s.src.includes('/main/
 
 const flatpickrInstances = [];
 
-// https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
-const dtFormatOpts = { dateStyle: 'short', timeStyle: 'short' };
-
-const formatDateTimes = format => {
-    // select only elements which haven't been initialized before, those without data-localized
-    document.querySelectorAll("time[datetime]:not([data-localized])").forEach($el => {
-        const date = new Date($el.getAttribute("datetime"));
-        // initialize and set localized attribute
-        $el.dataset.localized = new Intl.DateTimeFormat('default', dtFormatOpts).format(date);
-        // set text to chosen mode
-        const mode = format || $el.dataset.initial;
-        if ($el.dataset[mode]) $el.innerText = $el.dataset[mode];
-    });
-};
 
 const switchTimeFormat = event => {
     const curr = event.target.dataset.mode || 'localized';
@@ -167,8 +153,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     // initialize timezone offset value if field is present in page
-    var timezoneOffset = new Date().getTimezoneOffset();
-    $("#TimezoneOffset").val(timezoneOffset);
+    const $timezoneOffset = document.getElementById("TimezoneOffset");
+    const timezoneOffset = new Date().getTimezoneOffset();
+    if ($timezoneOffset) $timezoneOffset.value = timezoneOffset;
 
     // localize all elements that have localizeDate class
     formatDateTimes();
@@ -259,22 +246,19 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    $('[data-toggle="password"]').each(function () {
-        var input = $(this);
-        var eye_btn = $(this).parent().find('.input-group-text');
-        eye_btn.css('cursor', 'pointer').addClass('input-password-hide');
-        eye_btn.on('click', function () {
-            if (eye_btn.hasClass('input-password-hide')) {
-                eye_btn.removeClass('input-password-hide').addClass('input-password-show');
-                eye_btn.find('.fa').removeClass('fa-eye').addClass('fa-eye-slash')
-                input.attr('type', 'text');
-            } else {
-                eye_btn.removeClass('input-password-show').addClass('input-password-hide');
-                eye_btn.find('.fa').removeClass('fa-eye-slash').addClass('fa-eye')
-                input.attr('type', 'password');
-            }
-        });
-    });
+    delegate('click', '[data-toggle-password]', async e => {
+        const $button = e.target.closest('[data-toggle-password]')
+        const $el = document.querySelector($button.dataset.togglePassword);
+        if (!$el) return;
+        const isPassword = $el.getAttribute('type') === 'password';
+        if (isPassword) {
+            $el.setAttribute('type', 'text')
+            if (!!$button.innerHTML.match('#actions-show')) $button.innerHTML = $button.innerHTML.replace('#actions-show', '#actions-hide');
+        } else {
+            $el.setAttribute('type', 'password')
+            if (!!$button.innerHTML.match('#actions-hide')) $button.innerHTML = $button.innerHTML.replace('#actions-hide', '#actions-show');
+        }
+    })
     
     // Invoice Status
     delegate('click', '[data-invoice-state-badge] [data-invoice-id][data-new-state]', async e => {

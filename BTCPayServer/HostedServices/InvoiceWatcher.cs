@@ -4,10 +4,13 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
@@ -50,6 +53,8 @@ namespace BTCPayServer.HostedServices
         readonly ExplorerClientProvider _explorerClientProvider;
         private readonly NotificationSender _notificationSender;
         private readonly PaymentService _paymentService;
+        private readonly PaymentMethodHandlerDictionary _handlers;
+
         public Logs Logs { get; }
 
         public InvoiceWatcher(
@@ -58,6 +63,7 @@ namespace BTCPayServer.HostedServices
             ExplorerClientProvider explorerClientProvider,
             NotificationSender notificationSender,
             PaymentService paymentService,
+            PaymentMethodHandlerDictionary handlers,
             Logs logs)
         {
             _invoiceRepository = invoiceRepository ?? throw new ArgumentNullException(nameof(invoiceRepository));
@@ -65,6 +71,7 @@ namespace BTCPayServer.HostedServices
             _explorerClientProvider = explorerClientProvider;
             _notificationSender = notificationSender;
             _paymentService = paymentService;
+            _handlers = handlers;
             Logs = logs;
         }
 
@@ -74,10 +81,10 @@ namespace BTCPayServer.HostedServices
         private void UpdateInvoice(UpdateInvoiceContext context)
         {
             var invoice = context.Invoice;
-            if (invoice.Status == InvoiceStatusLegacy.New && invoice.ExpirationTime <= DateTimeOffset.UtcNow)
+            if (invoice.Status == InvoiceStatus.New && invoice.ExpirationTime <= DateTimeOffset.UtcNow)
             {
                 context.MarkDirty();
-                invoice.Status = InvoiceStatusLegacy.Expired;
+                invoice.Status = InvoiceStatus.Expired;
                 var paidPartial = invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial;
                 context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Expired) { PaidPartial = paidPartial });
                 if (invoice.ExceptionStatus == InvoiceExceptionStatus.PaidPartial)
@@ -85,17 +92,17 @@ namespace BTCPayServer.HostedServices
             }
 
             var hasPayment = invoice.GetPayments(true).Any();
-            if (invoice.Status == InvoiceStatusLegacy.New || invoice.Status == InvoiceStatusLegacy.Expired)
+            if (invoice.Status == InvoiceStatus.New || invoice.Status == InvoiceStatus.Expired)
             {
                 var isPaid = invoice.IsUnsetTopUp() ?
                     hasPayment :
                     !invoice.IsUnderPaid;
                 if (isPaid)
                 {
-                    if (invoice.Status == InvoiceStatusLegacy.New)
+                    if (invoice.Status == InvoiceStatus.New)
                     {
                         context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.PaidInFull));
-                        invoice.Status = InvoiceStatusLegacy.Paid;
+                        invoice.Status = InvoiceStatus.Processing;
                         if (invoice.IsUnsetTopUp())
                         {
                             invoice.ExceptionStatus = InvoiceExceptionStatus.None;
@@ -111,7 +118,7 @@ namespace BTCPayServer.HostedServices
                         }
                         context.MarkDirty();
                     }
-                    else if (invoice.Status == InvoiceStatusLegacy.Expired && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidLate)
+                    else if (invoice.Status == InvoiceStatus.Expired && invoice.ExceptionStatus != InvoiceExceptionStatus.PaidLate)
                     {
                         invoice.ExceptionStatus = InvoiceExceptionStatus.PaidLate;
                         context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.PaidAfterExpiration));
@@ -127,7 +134,7 @@ namespace BTCPayServer.HostedServices
             }
 
             // Just make sure RBF did not cancelled a payment
-            if (invoice.Status == InvoiceStatusLegacy.Paid)
+            if (invoice.Status == InvoiceStatus.Processing)
             {
                 if (!invoice.IsUnderPaid && !invoice.IsOverPaid && invoice.ExceptionStatus == InvoiceExceptionStatus.PaidOver)
                 {
@@ -143,18 +150,17 @@ namespace BTCPayServer.HostedServices
 
                 if (invoice.IsUnderPaid)
                 {
-                    invoice.Status = InvoiceStatusLegacy.New;
+                    invoice.Status = InvoiceStatus.New;
                     invoice.ExceptionStatus = hasPayment ? InvoiceExceptionStatus.PaidPartial : InvoiceExceptionStatus.None;
                     context.MarkDirty();
                 }
             }
 
-            if (invoice.Status == InvoiceStatusLegacy.Paid)
+            if (invoice.Status == InvoiceStatus.Processing)
             {
-                var unconfPayments = invoice.GetPayments(true).Where(p => !p.GetCryptoPaymentData().PaymentConfirmed(p, invoice.SpeedPolicy)).ToList();
+                var unconfPayments = invoice.GetPayments(false).Where(p => p.Status is PaymentStatus.Processing).ToList();
                 var unconfirmedPaid = unconfPayments.Select(p => p.InvoicePaidAmount.Net).Sum();
                 var minimumDue = invoice.MinimumNetDue + unconfirmedPaid;
-
                 if (// Is after the monitoring deadline
                    (invoice.MonitoringExpiration < DateTimeOffset.UtcNow)
                    &&
@@ -162,31 +168,17 @@ namespace BTCPayServer.HostedServices
                    (minimumDue > 0.0m))
                 {
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.FailedToConfirm));
-                    invoice.Status = InvoiceStatusLegacy.Invalid;
+                    invoice.Status = InvoiceStatus.Invalid;
                     context.MarkDirty();
                 }
                 else if (minimumDue <= 0.0m)
                 {
-                    invoice.Status = InvoiceStatusLegacy.Confirmed;
+                    invoice.Status = InvoiceStatus.Settled;
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Confirmed));
-                    context.MarkDirty();
-                }
-            }
-
-            if (invoice.Status == InvoiceStatusLegacy.Confirmed)
-            {
-                var unconfPayments = invoice.GetPayments(true).Where(p => !p.GetCryptoPaymentData().PaymentCompleted(p)).ToList();
-                var unconfirmedPaid = unconfPayments.Select(p => p.InvoicePaidAmount.Net).Sum();
-                var minimumDue = invoice.MinimumNetDue + unconfirmedPaid;
-
-                if (minimumDue <= 0.0m)
-                {
                     context.Events.Add(new InvoiceEvent(invoice, InvoiceEvent.Completed));
-                    invoice.Status = InvoiceStatusLegacy.Complete;
                     context.MarkDirty();
                 }
             }
-
         }
 
         private void Watch(string invoiceId)
@@ -300,8 +292,8 @@ namespace BTCPayServer.HostedServices
                             _eventAggregator.Publish(evt, evt.GetType());
                         }
 
-                        if (invoice.Status == InvoiceStatusLegacy.Complete ||
-                           ((invoice.Status == InvoiceStatusLegacy.Invalid || invoice.Status == InvoiceStatusLegacy.Expired) && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
+                        if (invoice.Status == InvoiceStatus.Settled ||
+                           ((invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired) && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
                         {
                             var extendInvoiceMonitoring = await UpdateConfirmationCount(invoice);
 
@@ -332,33 +324,34 @@ namespace BTCPayServer.HostedServices
             }
         }
 
+        // TODO: Move that in the NBXplorerListener
         private async Task<bool> UpdateConfirmationCount(InvoiceEntity invoice)
         {
             bool extendInvoiceMonitoring = false;
             var updateConfirmationCountIfNeeded = invoice
-                .GetPayments(false)
+                .GetPayments(true)
                 .Select<PaymentEntity, Task<PaymentEntity>>(async payment =>
                 {
-                    var paymentData = payment.GetCryptoPaymentData();
-                    if (paymentData is Payments.Bitcoin.BitcoinLikePaymentData onChainPaymentData)
+                    if (!_handlers.TryGetValue(payment.PaymentMethodId, out var h) || h is not Payments.Bitcoin.BitcoinLikePaymentHandler handler)
+                        return null;
+
+                    var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
+                    var network = handler.Network;
+                    // Do update if confirmation count in the paymentData is not up to date
+                    if (onChainPaymentData.ConfirmationCount < network.MaxTrackedConfirmation)
                     {
-                        var network = payment.Network as BTCPayNetwork;
-                        // Do update if confirmation count in the paymentData is not up to date
-                        if ((onChainPaymentData.ConfirmationCount < network.MaxTrackedConfirmation && payment.Accounted)
-                            && (onChainPaymentData.Legacy || invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
-                        {
-                            var client = _explorerClientProvider.GetExplorerClient(payment.Currency);
-                            var transactionResult = client is null ? null : await client.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
-                            var confirmationCount = transactionResult?.Confirmations ?? 0;
-                            onChainPaymentData.ConfirmationCount = confirmationCount;
-                            payment.SetCryptoPaymentData(onChainPaymentData);
+                        var client = _explorerClientProvider.GetExplorerClient(payment.Currency);
+                        var transactionResult = client is null ? null : await client.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
+                        var confirmationCount = transactionResult?.Confirmations ?? 0;
+                        onChainPaymentData.ConfirmationCount = confirmationCount;
+                        payment.Status = NBXplorerListener.IsSettled(invoice, onChainPaymentData) ? PaymentStatus.Settled : PaymentStatus.Processing;
+                        payment.SetDetails(handler, onChainPaymentData);
 
-                            // we want to extend invoice monitoring until we reach max confirmations on all onchain payment methods
-                            if (confirmationCount < network.MaxTrackedConfirmation)
-                                extendInvoiceMonitoring = true;
+                        // we want to extend invoice monitoring until we reach max confirmations on all onchain payment methods
+                        if (confirmationCount < network.MaxTrackedConfirmation)
+                            extendInvoiceMonitoring = true;
 
-                            return payment;
-                        }
+                        return payment;
                     }
                     return null;
                 })

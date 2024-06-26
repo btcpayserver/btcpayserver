@@ -9,6 +9,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -50,23 +51,27 @@ namespace BTCPayServer.Controllers
             }
 
             model.Roles = roleManager.Roles.ToDictionary(role => role.Id, role => role.Name);
-            model.Users = await usersQuery
+            model.Users = (await usersQuery
                 .Include(user => user.UserRoles)
+                .Include(user => user.UserStores)
+                .ThenInclude(data => data.StoreData)
                 .Skip(model.Skip)
                 .Take(model.Count)
+                .ToListAsync())
                 .Select(u => new UsersViewModel.UserViewModel
                 {
-                    Name = u.UserName,
+                    Name = u.GetBlob()?.Name,
+                    ImageUrl = u.GetBlob()?.ImageUrl,
                     Email = u.Email,
                     Id = u.Id,
                     EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
                     Approved = u.RequiresApproval ? u.Approved : null,
                     Created = u.Created,
                     Roles = u.UserRoles.Select(role => role.RoleId),
-                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime
+                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
+                    Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                 })
-                .ToListAsync();
-
+                .ToList();
             return View(model);
         }
 
@@ -77,10 +82,13 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
             var roles = await _UserManager.GetRolesAsync(user);
+            var blob = user.GetBlob();
             var model = new UsersViewModel.UserViewModel
             {
                 Id = user.Id,
                 Email = user.Email,
+                Name = blob?.Name,
+                ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
                 IsAdmin = Roles.HasServerAdmin(roles)
@@ -89,7 +97,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/users/{userId}")]
-        public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel)
+        public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel, [FromForm] bool RemoveImageFile = false)
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
@@ -99,7 +107,7 @@ namespace BTCPayServer.Controllers
             bool? adminStatusChanged = null;
             bool? approvalStatusChanged = null;
 
-            if (user.RequiresApproval && viewModel.Approved.HasValue)
+            if (user.RequiresApproval && viewModel.Approved.HasValue && user.Approved != viewModel.Approved.Value)
             {
                 approvalStatusChanged = await _userService.SetUserApproval(user.Id, viewModel.Approved.Value, Request.GetAbsoluteRootUri());
             }
@@ -109,6 +117,54 @@ namespace BTCPayServer.Controllers
                 propertiesChanged = true;
             }
 
+            var blob = user.GetBlob() ?? new();
+            if (blob.Name != viewModel.Name)
+            {
+                blob.Name = viewModel.Name;
+                propertiesChanged = true;
+            }
+            
+            if (viewModel.ImageFile != null)
+            {
+                if (viewModel.ImageFile.Length > 1_000_000)
+                {
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded image file should be less than 1MB");
+                }
+                else if (!viewModel.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                }
+                else
+                {
+                    var formFile = await viewModel.ImageFile.Bufferize();
+                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    {
+                        ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                    }
+                    else
+                    {
+                        viewModel.ImageFile = formFile;
+                        // add new image
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(viewModel.ImageFile, userId);
+                            var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                            blob.ImageUrl = fileIdUri.ToString();
+                            propertiesChanged = true;
+                        }
+                        catch (Exception e)
+                        {
+                            ModelState.AddModelError(nameof(viewModel.ImageFile), $"Could not save image: {e.Message}");
+                        }
+                    }
+                }
+            }
+            else if (RemoveImageFile && !string.IsNullOrEmpty(blob.ImageUrl))
+            {
+                blob.ImageUrl = null;
+                propertiesChanged = true;
+            }
+            user.SetBlob(blob);
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
             var wasAdmin = Roles.HasServerAdmin(roles);
@@ -146,7 +202,6 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/users/new")]
         public IActionResult CreateUser()
         {
-            ViewData["AllowRequestApproval"] = _policiesSettings.RequiresUserApproval;
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             return View();
         }
@@ -154,13 +209,11 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/users/new")]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
-            ViewData["AllowRequestApproval"] = _policiesSettings.RequiresUserApproval;
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
             {
-                IdentityResult result;
                 var user = new ApplicationUser
                 {
                     UserName = model.Email,
@@ -168,18 +221,13 @@ namespace BTCPayServer.Controllers
                     EmailConfirmed = model.EmailConfirmed,
                     RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
                     RequiresApproval = _policiesSettings.RequiresUserApproval,
-                    Approved = model.Approved,
+                    Approved = true, // auto-approve users created by an admin
                     Created = DateTimeOffset.UtcNow
                 };
 
-                if (!string.IsNullOrEmpty(model.Password))
-                {
-                    result = await _UserManager.CreateAsync(user, model.Password);
-                }
-                else
-                {
-                    result = await _UserManager.CreateAsync(user);
-                }
+                var result = string.IsNullOrEmpty(model.Password)
+                    ? await _UserManager.CreateAsync(user)
+                    : await _UserManager.CreateAsync(user, model.Password);
 
                 if (result.Succeeded)
                 {
@@ -187,37 +235,30 @@ namespace BTCPayServer.Controllers
                         model.IsAdmin = false;
 
                     var tcs = new TaskCompletionSource<Uri>();
+                    var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
 
-                    _eventAggregator.Publish(new UserRegisteredEvent()
+                    _eventAggregator.Publish(new UserRegisteredEvent
                     {
                         RequestUri = Request.GetAbsoluteRootUri(),
+                        Kind = UserRegisteredEventKind.Invite,
                         User = user,
-                        Admin = model.IsAdmin is true,
+                        InvitedByUser = currentUser,
+                        Admin = model.IsAdmin,
                         CallbackUrlGenerated = tcs
                     });
+                    
                     var callbackUrl = await tcs.Task;
-
-                    if (user.RequiresEmailConfirmation && !user.EmailConfirmed)
+                    var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+                    var info = settings.IsComplete()
+                        ? "An invitation email has been sent.<br/>You may alternatively"
+                        : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
+                    
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
-
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                            AllowDismiss = false,
-                            Html =
-                                $"Account created without a set password. An email will be sent (if configured) to set the password.<br/> You may alternatively share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
-                        });
-                    }
-                    else if (!await _UserManager.HasPasswordAsync(user))
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
-                        {
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                            AllowDismiss = false,
-                            Html =
-                                $"Account created without a set password. An email will be sent (if configured) to set the password.<br/> You may alternatively share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
-                        });
-                    }
+                        Severity = StatusMessageModel.StatusSeverity.Success,
+                        AllowDismiss = false,
+                        Html = $"Account successfully created. {info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
+                    });
                     return RedirectToAction(nameof(ListUsers));
                 }
 
@@ -374,8 +415,5 @@ namespace BTCPayServer.Controllers
 
         [Display(Name = "Email confirmed?")]
         public bool EmailConfirmed { get; set; }
-
-        [Display(Name = "User approved?")]
-        public bool Approved { get; set; }
     }
 }

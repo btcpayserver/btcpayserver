@@ -6,44 +6,61 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
+using MimeKit;
 using NBitcoin;
 
 namespace BTCPayServer.Data.Payouts.LightningLike
 {
-    public class LightningLikePayoutHandler : IPayoutHandler
+    public class LightningLikePayoutHandler : IPayoutHandler, IHasNetwork
     {
+        public string Currency { get; }
+        public PayoutMethodId PayoutMethodId { get; }
+        public PaymentMethodId PaymentMethodId { get; }
+
+        private readonly IOptions<LightningNetworkOptions> _options;
+        private PaymentMethodHandlerDictionary _paymentHandlers;
+
+        public BTCPayNetwork Network { get; }
+        public string[] DefaultRateRules => Network.DefaultRateRules;
+
         public const string LightningLikePayoutHandlerOnionNamedClient =
             nameof(LightningLikePayoutHandlerOnionNamedClient);
 
         public const string LightningLikePayoutHandlerClearnetNamedClient =
             nameof(LightningLikePayoutHandlerClearnetNamedClient);
-
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly UserService _userService;
         private readonly IAuthorizationService _authorizationService;
 
-        public LightningLikePayoutHandler(BTCPayNetworkProvider btcPayNetworkProvider,
+        public LightningLikePayoutHandler(
+            PayoutMethodId payoutMethodId,
+            IOptions<LightningNetworkOptions> options,
+            BTCPayNetwork network,
+            PaymentMethodHandlerDictionary paymentHandlers,
             IHttpClientFactory httpClientFactory, UserService userService, IAuthorizationService authorizationService)
         {
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _paymentHandlers = paymentHandlers;
+            Network = network;
+            PayoutMethodId = payoutMethodId;
+            _options = options;
+            PaymentMethodId = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
             _httpClientFactory = httpClientFactory;
             _userService = userService;
             _authorizationService = authorizationService;
-        }
-
-        public bool CanHandle(PaymentMethodId paymentMethod)
-        {
-            return (paymentMethod.PaymentType == LightningPaymentType.Instance || paymentMethod.PaymentType == LNURLPayPaymentType.Instance) &&
-                   _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethod.CryptoCode)?.SupportLightning is true;
+            Currency = network.CryptoCode;
         }
 
         public Task TrackClaim(ClaimRequest claimRequest, PayoutData payoutData)
@@ -58,10 +75,9 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 : LightningLikePayoutHandlerClearnetNamedClient);
         }
 
-        public async Task<(IClaimDestination destination, string error)> ParseClaimDestination(PaymentMethodId paymentMethodId, string destination, CancellationToken cancellationToken)
+        public async Task<(IClaimDestination destination, string error)> ParseClaimDestination(string destination, CancellationToken cancellationToken)
         {
             destination = destination.Trim();
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
             try
             {
                 string lnurlTag = null;
@@ -91,7 +107,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
 
             var result =
-                BOLT11PaymentRequest.TryParse(destination, out var invoice, network.NBitcoinNetwork)
+                BOLT11PaymentRequest.TryParse(destination, out var invoice, Network.NBitcoinNetwork)
                     ? new BoltInvoiceClaimDestination(destination, invoice)
                     : null;
 
@@ -143,7 +159,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return Task.CompletedTask;
         }
 
-        public Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
+        public Task<decimal> GetMinimumPayoutAmount(IClaimDestination claimDestination)
         {
             return Task.FromResult(Money.Satoshis(1).ToDecimal(MoneyUnit.BTC));
         }
@@ -158,35 +174,16 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return Task.FromResult<StatusMessageModel>(null);
         }
 
-        public async Task<IEnumerable<PaymentMethodId>> GetSupportedPaymentMethods(StoreData storeData)
+        public bool IsSupported(StoreData storeData)
         {
-            var result = new List<PaymentMethodId>();
-            var methods = storeData.GetEnabledPaymentMethods(_btcPayNetworkProvider).Where(id => id.PaymentId.PaymentType == LightningPaymentType.Instance).OfType<LightningSupportedPaymentMethod>();
-            foreach (LightningSupportedPaymentMethod supportedPaymentMethod in methods)
-            {
-                if (!supportedPaymentMethod.IsInternalNode)
-                {
-                    result.Add(supportedPaymentMethod.PaymentId);
-                    continue;
-                }
-
-                foreach (UserStore storeDataUserStore in storeData.UserStores)
-                {
-                    if (!await _userService.IsAdminUser(storeDataUserStore.ApplicationUserId))
-                        continue;
-                    result.Add(supportedPaymentMethod.PaymentId);
-                    break;
-                }
-
-            }
-
-            return result;
+            return storeData.GetPaymentMethodConfig<LightningPaymentMethodConfig>(PaymentMethodId, _paymentHandlers, true)?.IsConfigured(Network, _options.Value) is true;
         }
 
-        public Task<IActionResult> InitiatePayment(PaymentMethodId paymentMethodId, string[] payoutIds)
+        public Task<IActionResult> InitiatePayment(string[] payoutIds)
         {
+            var cryptoCode = Network.CryptoCode;
             return Task.FromResult<IActionResult>(new RedirectToActionResult("ConfirmLightningPayout",
-                "UILightningLikePayout", new { cryptoCode = paymentMethodId.CryptoCode, payoutIds }));
+                "UILightningLikePayout", new { cryptoCode, payoutIds }));
         }
 
     }

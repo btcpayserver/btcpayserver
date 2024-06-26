@@ -1,5 +1,4 @@
 using System;
-using System.Buffers;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -7,6 +6,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -14,10 +14,8 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
-using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
@@ -27,10 +25,10 @@ using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using BTCPayServer.Views.Wallets;
-using Dapper;
 using ExchangeSharp;
 using LNURL;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc.Routing;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -42,7 +40,6 @@ using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
 
 namespace BTCPayServer.Tests
 {
@@ -66,9 +63,7 @@ namespace BTCPayServer.Tests
             s.GoToServer();
             s.Driver.AssertNoError();
             s.ClickOnAllSectionLinks();
-            s.GoToServer();
-            s.Driver.FindElement(By.LinkText("Services")).Click();
-
+            s.GoToServer(ServerNavPages.Services);
             TestLogs.LogInformation("Let's check if we can access the logs");
             s.Driver.FindElement(By.LinkText("Logs")).Click();
             s.Driver.FindElement(By.PartialLinkText(".log")).Click();
@@ -86,8 +81,9 @@ namespace BTCPayServer.Tests
             s.GenerateWallet(isHotWallet: true);
 
             // Point Of Sale
+            var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
             s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
+            s.Driver.FindElement(By.Id("AppName")).SendKeys(appName);
             s.Driver.FindElement(By.Id("Create")).Click();
             Assert.Contains("App successfully created", s.FindAlertMessage().Text);
 
@@ -97,7 +93,7 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            
+
             s.Driver.FindElement(By.CssSelector("button[type='submit']")).Click();
 
             Assert.Contains("Enter your email", s.Driver.PageSource);
@@ -108,7 +104,7 @@ namespace BTCPayServer.Tests
             var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-            
+
             s.GoToInvoice(invoiceId);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
 
@@ -123,10 +119,10 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
             var editUrl = s.Driver.Url;
-            
+
             s.Driver.FindElement(By.Id("ViewPaymentRequest")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
-            
+
             s.Driver.FindElement(By.CssSelector("[data-test='form-button']")).Click();
             Assert.Contains("Enter your email", s.Driver.PageSource);
 
@@ -135,7 +131,7 @@ namespace BTCPayServer.Tests
             invoiceId = s.Driver.Url.Split('/').Last();
             s.Driver.Close();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
-            
+
             s.Driver.Navigate().GoToUrl(editUrl);
             Assert.Contains("aa@aa.com", s.Driver.PageSource);
             var invoice = await s.Server.PayTester.GetService<InvoiceRepository>().GetInvoice(invoiceId);
@@ -147,13 +143,13 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 1");
             s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
-            
+
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
             s.Driver.WaitForElement(By.Id("CodeTabPane"));
-            
+
             var config = s.Driver.FindElement(By.Name("FormConfig")).GetAttribute("value");
             Assert.Contains("buyerEmail", config);
-            
+
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
             s.Driver.FindElement(By.Name("FormConfig"))
                 .SendKeys(config.Replace("Enter your email", "CustomFormInputTest"));
@@ -179,10 +175,10 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CreateForm")).Click();
             s.Driver.FindElement(By.Name("Name")).SendKeys("Custom Form 2");
             s.Driver.FindElement(By.Id("ApplyEmailTemplate")).Click();
-            
+
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
             s.Driver.WaitForElement(By.Id("CodeTabPane"));
-            
+
             s.Driver.SetCheckbox(By.Name("Public"), true);
 
             s.Driver.FindElement(By.Name("FormConfig")).Clear();
@@ -259,17 +255,15 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             s.RegisterNewUser(true);
             s.GoToHome();
-            s.GoToServer();
+            s.GoToServer(ServerNavPages.Services);
             s.Driver.AssertNoError();
-            s.Driver.FindElement(By.LinkText("Services")).Click();
-
             TestLogs.LogInformation("Let's if we can access LND's seed");
             Assert.Contains("server/services/lndseedbackup/BTC", s.Driver.PageSource);
             s.Driver.Navigate().GoToUrl(s.Link("/server/services/lndseedbackup/BTC"));
             s.Driver.FindElement(By.Id("details")).Click();
             var seedEl = s.Driver.FindElement(By.Id("Seed"));
             Assert.True(seedEl.Displayed);
-            Assert.Contains("about over million", seedEl.Text, StringComparison.OrdinalIgnoreCase);
+            Assert.Contains("about over million", seedEl.GetAttribute("value"), StringComparison.OrdinalIgnoreCase);
             var passEl = s.Driver.FindElement(By.Id("WalletPassword"));
             Assert.True(passEl.Displayed);
             Assert.Contains(passEl.Text, "hellorockstar", StringComparison.OrdinalIgnoreCase);
@@ -349,17 +343,18 @@ namespace BTCPayServer.Tests
             s.GoToHome();
 
             //Change Password & Log Out
+            var newPassword = "abc???";
             s.GoToProfile(ManageNavPages.ChangePassword);
             s.Driver.FindElement(By.Id("OldPassword")).SendKeys("123456");
-            s.Driver.FindElement(By.Id("NewPassword")).SendKeys("abc???");
-            s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("abc???");
+            s.Driver.FindElement(By.Id("NewPassword")).SendKeys(newPassword);
+            s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys(newPassword);
             s.Driver.FindElement(By.Id("UpdatePassword")).Click();
             s.Logout();
             s.Driver.AssertNoError();
 
             //Log In With New Password
             s.Driver.FindElement(By.Id("Email")).SendKeys(email);
-            s.Driver.FindElement(By.Id("Password")).SendKeys("abc???");
+            s.Driver.FindElement(By.Id("Password")).SendKeys(newPassword);
             s.Driver.FindElement(By.Id("LoginButton")).Click();
 
             s.GoToHome();
@@ -383,11 +378,14 @@ namespace BTCPayServer.Tests
             s.Driver.Navigate().GoToUrl(url);
             Assert.Equal("hidden", s.Driver.FindElement(By.Id("Email")).GetAttribute("type"));
             Assert.Equal(usr, s.Driver.FindElement(By.Id("Email")).GetAttribute("value"));
+            Assert.Equal("Create Account", s.Driver.FindElement(By.CssSelector("h4")).Text);
+            Assert.Contains("Invitation accepted. Please set your password.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Info).Text);
 
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
             s.Driver.FindElement(By.Id("SetPassword")).Click();
-            s.FindAlertMessage();
+            Assert.Contains("Account successfully created.", s.FindAlertMessage().Text);
+            
             s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
             s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
             s.Driver.FindElement(By.Id("LoginButton")).Click();
@@ -427,11 +425,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveButton")).Click();
             Assert.Contains("Policies updated successfully", s.FindAlertMessage().Text);
             Assert.True(s.Driver.FindElement(By.Id("RequiresUserApproval")).Selected);
-            
-            // Check user create view has approval checkbox
-            s.GoToServer(ServerNavPages.Users);
-            s.Driver.FindElement(By.Id("CreateUser")).Click();
-            Assert.False(s.Driver.FindElement(By.Id("Approved")).Selected);
             
             // Ensure there is no unread notification yet
             s.Driver.ElementDoesNotExist(By.Id("NotificationsBadge"));
@@ -501,19 +494,19 @@ namespace BTCPayServer.Tests
             
             // Check users list
             s.GoToServer(ServerNavPages.Users);
-            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.True(rows.Count >= 3);
             
             // Check user which didn't require approval
             s.Driver.FindElement(By.Id("SearchTerm")).Clear();
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(autoApproved.RegisterDetails.Email);
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
-            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.Single(rows);
             Assert.Contains(autoApproved.RegisterDetails.Email, rows.First().Text);
-            s.Driver.ElementDoesNotExist(By.CssSelector("#UsersList tr:first-child .user-approved"));
+            s.Driver.ElementDoesNotExist(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-approved"));
             // Edit view does not contain approve toggle
-            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-edit")).Click();
             s.Driver.ElementDoesNotExist(By.Id("Approved"));
             
             // Check user which still requires approval
@@ -521,22 +514,22 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SearchTerm")).Clear();
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(unapproved.RegisterDetails.Email);
             s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
-            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.Single(rows);
             Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
-            Assert.Contains("Pending Approval", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
+            Assert.Contains("Pending Approval", s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-status")).Text);
             // Approve user
-            s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-edit")).Click();
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-edit")).Click();
             s.Driver.FindElement(By.Id("Approved")).Click();
             s.Driver.FindElement(By.Id("SaveUser")).Click();
             Assert.Contains("User successfully updated", s.FindAlertMessage().Text);
             // Check list again
             s.GoToServer(ServerNavPages.Users);
             Assert.Contains(unapproved.RegisterDetails.Email, s.Driver.FindElement(By.Id("SearchTerm")).GetAttribute("value"));
-            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr"));
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
             Assert.Single(rows);
             Assert.Contains(unapproved.RegisterDetails.Email, rows.First().Text);
-            Assert.Contains("Active", s.Driver.FindElement(By.CssSelector("#UsersList tr:first-child .user-status")).Text);
+            Assert.Contains("Active", s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-status")).Text);
             
             // Finally, login user that needed approval
             s.Logout();
@@ -612,6 +605,12 @@ namespace BTCPayServer.Tests
             
             // Ensure empty server settings
             s.Driver.Navigate().GoToUrl(s.Link("/server/emails"));
+            if (s.Driver.PageSource.Contains("id=\"ResetPassword\""))
+            {
+                s.Driver.FindElement(By.Id("ResetPassword")).Click();
+                Assert.Contains("Email server password reset", s.FindAlertMessage().Text);
+            }
+            
             s.Driver.FindElement(By.Id("Settings_Login")).Clear();
             s.Driver.FindElement(By.Id("Settings_Password")).Clear();
             s.Driver.FindElement(By.Id("Settings_From")).Clear();
@@ -933,11 +932,9 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.Logout();
 
-            // Let's add Bob as a guest to alice's store
+            // Let's add Bob as an employee to alice's store
             s.LogIn(alice);
-            s.GoToUrl(storeUrl + "/users");
-            s.Driver.FindElement(By.Id("Email")).SendKeys(bob + Keys.Enter);
-            Assert.Contains("User added successfully", s.Driver.PageSource);
+            s.AddUserToStore(storeId, bob, "Employee");
             s.Logout();
 
             // Bob should not have access to store, but should have access to invoice
@@ -998,7 +995,7 @@ namespace BTCPayServer.Tests
             
             var storeLink = s.Driver.FindElement(By.Id($"Store-{storeId}"));
             Assert.Contains(storeName, storeLink.Text);
-            storeLink.Click();
+            s.GoToStore(storeId);
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The store has been unarchived and will appear in the stores list by default again.", s.FindAlertMessage().Text);
         }
@@ -1068,7 +1065,8 @@ namespace BTCPayServer.Tests
                     Policies.CanViewInvoices,
                     Policies.CanModifyInvoices,
                     Policies.CanViewPaymentRequests,
-                    Policies.CanViewStoreSettings,
+                    Policies.CanViewPullPayments,
+                    Policies.CanViewPayouts,
                     Policies.CanModifyStoreSettingsUnscoped,
                     Policies.CanDeleteUser
                 });
@@ -1154,24 +1152,21 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
-            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("PoS" + Guid.NewGuid());
-            s.Driver.FindElement(By.Id("Create")).Click();
-            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-
+            (_, string appId) = s.CreateApp("PointOfSale");
+            s.Driver.FindElement(By.Id("Title")).Clear();
+            s.Driver.FindElement(By.Id("Title")).SendKeys("Tea shop");
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.CssSelector(".template-item:nth-of-type(1)")).Click();
             s.Driver.FindElement(By.Id("BuyButtonText")).SendKeys("Take my money");
             s.Driver.FindElement(By.Id("EditorCategories-ts-control")).SendKeys("Drinks");
-            s.Driver.FindElement(By.Id("ApplyItemChanges")).Click();
-
+            s.Driver.ScrollTo(By.Id("CodeTabButton"));
+            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
             var template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
             Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
             Assert.Matches("\"categories\": \\[\n\\s+\"Drinks\"\n\\s+\\]", template);
 
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
-            var appId = s.Driver.Url.Split('/')[4];
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
@@ -1270,11 +1265,8 @@ namespace BTCPayServer.Tests
             s.CreateNewStore();
             s.AddDerivationScheme();
 
-            s.Driver.FindElement(By.Id("StoreNav-CreateCrowdfund")).Click();
-            s.Driver.FindElement(By.Name("AppName")).SendKeys("CF" + Guid.NewGuid());
-            s.Driver.FindElement(By.Id("Create")).Click();
-            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
-
+            (_, string appId) = s.CreateApp("Crowdfund");
+            s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Kukkstarter");
             s.Driver.FindElement(By.CssSelector("div.note-editable.card-block")).SendKeys("1BTC = 1BTC");
             s.Driver.FindElement(By.Id("TargetCurrency")).Clear();
@@ -1292,34 +1284,32 @@ namespace BTCPayServer.Tests
             s.Driver.ExecuteJavaScript("document.getElementById('EndDate').value = ''");
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
-            var appId = s.Driver.Url.Split('/')[4];
+            var editUrl = s.Driver.Url;
             
-            // CHeck public page
+            // Check public page
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
             s.Driver.SwitchTo().Window(windows[1]);
             var cfUrl = s.Driver.Url;
 
-            Assert.Equal("Currently active!",
-                s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
+            Assert.Equal("Currently active!", s.Driver.FindElement(By.CssSelector("[data-test='time-state']")).Text);
 
             // Contribute
             s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
-            s.Driver.WaitUntilAvailable(By.Name("btcpay"));
-
-            var frameElement = s.Driver.FindElement(By.Name("btcpay"));
-            Assert.True(frameElement.Displayed);
-            var iframe = s.Driver.SwitchTo().Frame(frameElement);
-            iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
-
-            IWebElement closebutton = null;
             TestUtils.Eventually(() =>
             {
-                closebutton = iframe.FindElement(By.Id("close"));
-                Assert.True(closebutton.Displayed);
+                s.Driver.WaitUntilAvailable(By.Name("btcpay"));
+
+                var frameElement = s.Driver.FindElement(By.Name("btcpay"));
+                Assert.True(frameElement.Displayed);
+                var iframe = s.Driver.SwitchTo().Frame(frameElement);
+                iframe.WaitUntilAvailable(By.Id("Checkout"));
+                
+                var closeButton = iframe.FindElement(By.Id("close"));
+                Assert.True(closeButton.Displayed);
+                closeButton.Click();
             });
-            closebutton.Click();
             s.Driver.AssertElementNotFound(By.Name("btcpay"));
             
             // Back to admin view
@@ -1343,6 +1333,63 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id($"App-{appId}")).Click();
             s.Driver.FindElement(By.Id("btn-archive-toggle")).Click();
             Assert.Contains("The app has been unarchived and will appear in the apps list by default again.", s.FindAlertMessage().Text);
+            
+            // Crowdfund with form
+            s.GoToUrl(editUrl);
+            new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.FindElement(By.Id("crowdfund-body-header-cta")).Click();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("test-without-perk@crowdfund.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true, 10);
+            var invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("test-without-perk@crowdfund.com", s.Driver.PageSource);
+
+            // Crowdfund with perk
+            s.GoToUrl(editUrl);
+            s.Driver.ScrollTo(By.Id("btAddItem"));
+            s.Driver.FindElement(By.Id("btAddItem")).Click();
+            s.Driver.FindElement(By.Id("EditorTitle")).SendKeys("Perk 1");
+            s.Driver.FindElement(By.Id("EditorAmount")).SendKeys("20");
+            // Test autogenerated ID
+            Assert.Equal("perk-1", s.Driver.FindElement(By.Id("EditorId")).GetAttribute("value"));
+            s.Driver.FindElement(By.Id("EditorId")).Clear();
+            s.Driver.FindElement(By.Id("EditorId")).SendKeys("Perk-1");
+            s.Driver.ScrollTo(By.Id("CodeTabButton"));
+            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
+            var template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
+            Assert.Contains("\"title\": \"Perk 1\"", template);
+            Assert.Contains("\"id\": \"Perk-1\"", template);
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+
+            s.Driver.FindElement(By.Id("ViewApp")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            s.Driver.WaitForElement(By.Id("Perk-1")).Click();
+            s.Driver.WaitForElement(By.CssSelector("#Perk-1 button[type=\"submit\"]")).Submit();
+
+            Assert.Contains("Enter your email", s.Driver.PageSource);
+            s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("test-with-perk@crowdfund.com");
+            s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
+
+            s.PayInvoice(true, 20);
+            invoiceId = s.Driver.Url[(s.Driver.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+
+            s.GoToInvoice(invoiceId);
+            Assert.Contains("test-with-perk@crowdfund.com", s.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1412,7 +1459,7 @@ namespace BTCPayServer.Tests
                 var frameElement = s.Driver.FindElement(By.Name("btcpay"));
                 Assert.True(frameElement.Displayed);
                 var iframe = s.Driver.SwitchTo().Frame(frameElement);
-                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+                iframe.WaitUntilAvailable(By.Id("Checkout"));
 
                 IWebElement closebutton = null;
                 TestUtils.Eventually(() =>
@@ -1454,7 +1501,7 @@ namespace BTCPayServer.Tests
                 var frameElement = s.Driver.FindElement(By.Name("btcpay"));
                 Assert.True(frameElement.Displayed);
                 var iframe = s.Driver.SwitchTo().Frame(frameElement);
-                iframe.WaitUntilAvailable(By.Id("Checkout-v2"));
+                iframe.WaitUntilAvailable(By.Id("Checkout"));
 
                 // Pay full amount
                 s.PayInvoice();
@@ -1507,17 +1554,16 @@ namespace BTCPayServer.Tests
             {
                 await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.0m));
             }
-
+            var handlers = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
             var targetTx = await s.Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(1.2m));
             var tx = await s.Server.ExplorerNode.GetRawTransactionAsync(targetTx);
             var spentOutpoint = new OutPoint(targetTx,
                 tx.Outputs.FindIndex(txout => txout.Value == Money.Coins(1.2m)));
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
             await TestUtils.EventuallyAsync(async () =>
             {
                 var store = await s.Server.PayTester.StoreRepository.FindStore(storeId);
-                var x = store.GetSupportedPaymentMethods(s.Server.NetworkProvider)
-                    .OfType<DerivationSchemeSettings>()
-                    .Single(settings => settings.PaymentId.CryptoCode == walletId.CryptoCode);
+                var x = store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
                 var wallet = s.Server.PayTester.GetService<BTCPayWalletProvider>().GetWallet(walletId.CryptoCode);
                 wallet.InvalidateCache(x.AccountDerivation);
                 Assert.Contains(
@@ -1628,8 +1674,8 @@ namespace BTCPayServer.Tests
             var elements = s.Driver.FindElements(By.ClassName("redeliver"));
 
             // One worked, one failed
-            s.Driver.FindElement(By.ClassName("fa-times"));
-            s.Driver.FindElement(By.ClassName("fa-check"));
+            s.Driver.FindElement(By.ClassName("icon-cross"));
+            s.Driver.FindElement(By.ClassName("icon-checkmark"));
             elements[0].Click();
 
             s.FindAlertMessage();
@@ -1778,7 +1824,8 @@ namespace BTCPayServer.Tests
 
             var invoiceId = s.CreateInvoice(storeId);
             var invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
-            var address = invoice.EntityToDTO().Addresses["BTC"];
+            var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+            var address = invoice.GetPaymentPrompt(btc).Destination;
 
             //wallet should have been imported to bitcoin core wallet in watch only mode.
             var result =
@@ -1790,7 +1837,7 @@ namespace BTCPayServer.Tests
             //lets import and save private keys
             invoiceId = s.CreateInvoice(storeId);
             invoice = await s.Server.PayTester.InvoiceRepository.GetInvoice(invoiceId);
-            address = invoice.EntityToDTO().Addresses["BTC"];
+            address = invoice.GetPaymentPrompt(btc).Destination;
             result = await s.Server.ExplorerNode.GetAddressInfoAsync(
                 BitcoinAddress.Create(address, Network.RegTest));
             //spendable from bitcoin core wallet!
@@ -1852,8 +1899,7 @@ namespace BTCPayServer.Tests
             Assert.EndsWith("psbt/ready", s.Driver.Url);
             s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
             Assert.Equal(walletTransactionUri.ToString(), s.Driver.Url);
-
-            var bip21 = invoice.EntityToDTO().CryptoInfo.First().PaymentUrls.BIP21;
+            var bip21 = invoice.EntityToDTO(s.Server.PayTester.GetService<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>()).CryptoInfo.First().PaymentUrls.BIP21;
             //let's make bip21 more interesting
             bip21 += "&label=Solid Snake&message=Snake? Snake? SNAAAAKE!";
             var parsedBip21 = new BitcoinUrlBuilder(bip21, Network.RegTest);
@@ -1920,6 +1966,60 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ExportDropdownToggle")).Click();
             s.Driver.FindElement(By.Id("ExportBIP329")).Click();
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+        }
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanManageLightningNode()
+        {
+            using var s = CreateSeleniumTester();
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            s.RegisterNewUser(true);
+            (string storeName, _) = s.CreateNewStore();
+
+            // Check status in navigation
+            s.Driver.FindElement(By.CssSelector("#StoreNav-LightningBTC .btcpay-status--pending"));
+            
+            // Set up LN node
+            s.AddLightningNode();
+            s.Driver.FindElement(By.CssSelector("#StoreNav-LightningBTC .btcpay-status--enabled"));
+            
+            // Check public node info for availability
+            s.Driver.FindElement(By.Id("PublicNodeInfo")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            Assert.Equal(storeName, s.Driver.FindElement(By.CssSelector(".store-name")).Text);
+            Assert.Equal("BTC Lightning Node", s.Driver.FindElement(By.Id("LightningNodeTitle")).Text);
+            Assert.Equal("Online", s.Driver.FindElement(By.Id("LightningNodeStatus")).Text);
+            s.Driver.FindElement(By.CssSelector(".btcpay-status--enabled"));
+            s.Driver.FindElement(By.Id("LightningNodeUrlClearnet"));
+            s.Driver.Close();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
+            
+            // Set wrong node connection string to simulate offline node
+            s.GoToLightningSettings();
+            s.Driver.FindElement(By.Id("SetupLightningNodeLink")).Click();
+            s.Driver.FindElement(By.CssSelector("label[for=\"LightningNodeType-Custom\"]")).Click();
+            s.Driver.WaitForElement(By.Id("ConnectionString")).Clear();
+            s.Driver.FindElement(By.Id("ConnectionString")).SendKeys("type=lnd-rest;server=https://doesnotwork:8080/");
+            s.Driver.FindElement(By.Id("test")).Click();
+            Assert.Contains("Error", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
+            s.Driver.FindElement(By.Id("save")).Click();
+            Assert.Contains("BTC Lightning node updated.", s.FindAlertMessage().Text);
+            
+            // Check offline state is communicated in nav item
+            s.Driver.FindElement(By.CssSelector("#StoreNav-LightningBTC .btcpay-status--disabled"));
+            
+            // Check public node info for availability
+            s.Driver.FindElement(By.Id("PublicNodeInfo")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+            Assert.Equal(storeName, s.Driver.FindElement(By.CssSelector(".store-name")).Text);
+            Assert.Equal("BTC Lightning Node", s.Driver.FindElement(By.Id("LightningNodeTitle")).Text);
+            Assert.Equal("Unavailable", s.Driver.FindElement(By.Id("LightningNodeStatus")).Text);
+            s.Driver.FindElement(By.CssSelector(".btcpay-status--disabled"));
+            s.Driver.AssertElementNotFound(By.Id("LightningNodeUrlClearnet"));
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -1996,6 +2096,7 @@ namespace BTCPayServer.Tests
         public async Task CanUsePullPaymentsViaUI()
         {
             using var s = CreateSeleniumTester();
+			s.Server.DeleteStore = false;
             s.Server.ActivateLightning(LightningConnectionType.LndREST);
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -2176,7 +2277,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(newStore.storeId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
 
-            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"));
+            var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PayoutMethods']"));
             Assert.Equal(2, paymentMethodOptions.Count);
 
             s.Driver.FindElement(By.Id("Name")).SendKeys("Lightning Test");
@@ -2189,7 +2290,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
             
             // Bitcoin-only, SelectedPaymentMethod should not be displayed
-            s.Driver.ElementDoesNotExist(By.Id("SelectedPaymentMethod"));
+            s.Driver.ElementDoesNotExist(By.Id("SelectedPayoutMethod"));
 
             var bolt = (await s.Server.CustomerLightningD.CreateInvoice(
                 payoutAmount,
@@ -2214,7 +2315,7 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.First());
 
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
-            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+            s.Driver.FindElement(By.Id($"{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-view")).Click();
             s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
@@ -2224,7 +2325,7 @@ namespace BTCPayServer.Tests
 
             s.FindAlertMessage();
             s.GoToStore(newStore.storeId, StoreNavPages.Payouts);
-            s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+            s.Driver.FindElement(By.Id($"{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view")).Click();
 
             s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
             if (!s.Driver.PageSource.Contains(bolt))
@@ -2234,7 +2335,7 @@ namespace BTCPayServer.Tests
 
                 s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
                 s.Driver.FindElement(By.Id($"{PayoutState.AwaitingPayment}-mark-paid")).Click();
-                s.Driver.FindElement(By.Id($"{new PaymentMethodId("BTC", PaymentTypes.LightningLike)}-view")).Click();
+                s.Driver.FindElement(By.Id($"{PaymentTypes.LN.GetPaymentMethodId("BTC")}-view")).Click();
 
                 s.Driver.FindElement(By.Id($"{PayoutState.Completed}-view")).Click();
                 Assert.Contains(bolt, s.Driver.PageSource);
@@ -2450,7 +2551,6 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester();
             s.Server.ActivateLightning();
             await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
 
             s.RegisterNewUser(true);
             s.CreateNewStore();
@@ -2458,10 +2558,7 @@ namespace BTCPayServer.Tests
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
-            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
-            s.Driver.FindElement(By.Id("Create")).Click();
-            TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
+            s.CreateApp("PointOfSale");
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Print']")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
@@ -2480,13 +2577,10 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Selenium", "Selenium")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanUsePOSKeypad()
         {
             using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
             await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
             
             // Create users
             var user = s.RegisterNewUser();
@@ -2497,24 +2591,16 @@ namespace BTCPayServer.Tests
             s.RegisterNewUser(true);
             
             // Setup store and associate user
-            s.CreateNewStore();
+            (_, string storeId) = s.CreateNewStore();
             s.GoToStore();
-            s.AddLightningNode(LightningConnectionType.CLightning, false);
-            s.GoToStore(StoreNavPages.Users);
-            s.Driver.FindElement(By.Id("Email")).Clear();
-            s.Driver.FindElement(By.Id("Email")).SendKeys(user);
-            new SelectElement(s.Driver.FindElement(By.Id("Role"))).SelectByValue("Guest");
-            s.Driver.FindElement(By.Id("AddUser")).Click();
-            Assert.Contains("User added successfully", s.FindAlertMessage().Text);
+            s.AddDerivationScheme();
+            s.AddUserToStore(storeId, user, "Guest");
             
             // Setup POS
-            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
-            s.Driver.FindElement(By.Id("Create")).Click();
-            TestUtils.Eventually(() => Assert.Contains("App successfully created", s.FindAlertMessage().Text));
+            s.CreateApp("PointOfSale");
+            var editUrl = s.Driver.Url;
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Light']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
-
             Assert.False(s.Driver.FindElement(By.Id("EnableTips")).Selected);
             s.Driver.FindElement(By.Id("EnableTips")).Click();
             Assert.True(s.Driver.FindElement(By.Id("EnableTips")).Selected);
@@ -2522,9 +2608,12 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CustomTipPercentages")).Clear();
             s.Driver.FindElement(By.Id("CustomTipPercentages")).SendKeys("10,21");
             Assert.False(s.Driver.FindElement(By.Id("ShowDiscount")).Selected);
+            Assert.False(s.Driver.FindElement(By.Id("ShowItems")).Selected);
             s.Driver.FindElement(By.Id("ShowDiscount")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
+            
+            // View
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
@@ -2534,6 +2623,7 @@ namespace BTCPayServer.Tests
             // basic checks
             var keypadUrl = s.Driver.Url;
             s.Driver.FindElement(By.Id("RecentTransactionsToggle"));
+            s.Driver.ElementDoesNotExist(By.Id("ItemsListToggle"));
             Assert.Contains("EUR", s.Driver.FindElement(By.Id("Currency")).Text);
             Assert.Contains("0,00", s.Driver.FindElement(By.Id("Amount")).Text);
             Assert.Equal("", s.Driver.FindElement(By.Id("Calculation")).Text);
@@ -2575,10 +2665,88 @@ namespace BTCPayServer.Tests
 
             // Pay
             s.Driver.FindElement(By.Id("pay-button")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            s.Driver.WaitUntilAvailable(By.Id("Checkout"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
             Assert.Contains("1 222,21 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            s.PayInvoice(true);
+            TestUtils.Eventually(() =>
+            {
+                s.MineBlockOnInvoiceCheckout();
+                Assert.True(s.Driver.WaitForElement(By.Id("settled")).Displayed);
+            });
+
+            // Receipt
+            s.Driver.WaitForElement(By.Id("ReceiptLink")).Click();
+            var cartData = s.Driver.FindElement(By.CssSelector("#CartData table"));
+            var items = cartData.FindElements(By.CssSelector("tbody tr"));
+            var sums = cartData.FindElements(By.CssSelector("tfoot tr"));
+            Assert.Equal(2, items.Count);
+            Assert.Equal(4, sums.Count);
+            Assert.Contains("Manual entry 1", items[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 234,00 €", items[0].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Manual entry 2", items[1].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("0,56 €", items[1].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Subtotal", sums[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 234,56 €", sums[0].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Discount", sums[1].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("10% = 123,46 €", sums[1].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Tip", sums[2].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("10% = 111,11 €", sums[2].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Total", sums[3].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 222,21 €", sums[3].FindElement(By.CssSelector("td")).Text);
+            
+            // Once more with items
+            s.GoToUrl(editUrl);
+            s.Driver.FindElement(By.Id("ShowItems")).Click();
+            s.Driver.FindElement(By.Id("SaveSettings")).Click();
+            Assert.Contains("App updated", s.FindAlertMessage().Text);
+            
+            s.GoToUrl(keypadUrl);
+            s.Driver.WaitForElement(By.ClassName("keypad"));
+            s.Driver.FindElement(By.Id("ItemsListToggle")).Click();
+            Thread.Sleep(250);
+            Assert.True(s.Driver.WaitForElement(By.Id("PosItems")).Displayed);
+            s.Driver.FindElement(By.CssSelector("#PosItems .posItem--displayed:nth-child(1) .btn-plus")).Click();
+            s.Driver.FindElement(By.CssSelector("#PosItems .posItem--displayed:nth-child(1) .btn-plus")).Click();
+            s.Driver.FindElement(By.CssSelector("#PosItems .posItem--displayed:nth-child(2) .btn-plus")).Click();
+            s.Driver.FindElement(By.CssSelector("#ItemsListOffcanvas button[data-bs-dismiss=\"offcanvas\"]")).Click();
+            
+            s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
+            s.Driver.FindElement(By.CssSelector(".keypad [data-key='2']")).Click();
+            s.Driver.FindElement(By.CssSelector(".keypad [data-key='3']")).Click();
+            Assert.Contains("4,23", s.Driver.FindElement(By.Id("Amount")).Text);
+            Assert.Contains("2 x Green Tea (1,00 €) = 2,00 € + 1 x Black Tea (1,00 €) = 1,00 € + 1,23 €", s.Driver.FindElement(By.Id("Calculation")).Text);
+
+            // Pay
+            s.Driver.FindElement(By.Id("pay-button")).Click();
+            s.Driver.WaitUntilAvailable(By.Id("Checkout"));
+            s.Driver.FindElement(By.Id("DetailsToggle")).Click();
+            s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
+            Assert.Contains("4,23 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
+            s.PayInvoice(true);
+            TestUtils.Eventually(() =>
+            {
+                s.MineBlockOnInvoiceCheckout();
+                Assert.True(s.Driver.WaitForElement(By.Id("settled")).Displayed);
+            });
+
+            // Receipt
+            s.Driver.WaitForElement(By.Id("ReceiptLink")).Click();
+
+            cartData = s.Driver.FindElement(By.CssSelector("#CartData table"));
+            items = cartData.FindElements(By.CssSelector("tbody tr"));
+            sums = cartData.FindElements(By.CssSelector("tfoot tr"));
+            Assert.Equal(3, items.Count);
+            Assert.Single(sums);
+            Assert.Contains("Black Tea", items[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 x 1,00 € = 1,00 €", items[0].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Green Tea", items[1].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("2 x 1,00 € = 2,00 €", items[1].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Manual entry 1", items[2].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1,23 €", items[2].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Total", sums[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("4,23 €", sums[0].FindElement(By.CssSelector("td")).Text);
             
             // Guest user can access recent transactions
             s.GoToHome();
@@ -2596,22 +2764,27 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Selenium", "Selenium")]
-        [Trait("Lightning", "Lightning")]
         public async Task CanUsePOSCart()
         {
             using var s = CreateSeleniumTester();
-            s.Server.ActivateLightning();
             await s.StartAsync();
-            await s.Server.EnsureChannelsSetup();
-
+            
+            // Create users
+            var user = s.RegisterNewUser();
+            var userAccount = s.AsTestAccount();
+            s.GoToHome();
+            s.Logout();
+            s.GoToRegister();
             s.RegisterNewUser(true);
-            s.CreateNewStore();
+            
+            // Setup store and associate user
+            (_, string storeId) = s.CreateNewStore();
             s.GoToStore();
-            s.AddLightningNode(LightningConnectionType.CLightning, false);
-            s.Driver.FindElement(By.Id("StoreNav-CreatePointOfSale")).Click();
-            s.Driver.FindElement(By.Id("AppName")).SendKeys(Guid.NewGuid().ToString());
-            s.Driver.FindElement(By.Id("Create")).Click();
-            Assert.Contains("App successfully created", s.FindAlertMessage().Text);
+            s.AddDerivationScheme();
+            s.AddUserToStore(storeId, user, "Guest");
+            
+            // Setup POS
+            s.CreateApp("PointOfSale");
             s.Driver.FindElement(By.CssSelector("label[for='DefaultView_Cart']")).Click();
             s.Driver.FindElement(By.Id("Currency")).SendKeys("EUR");
             Assert.False(s.Driver.FindElement(By.Id("EnableTips")).Selected);
@@ -2624,6 +2797,8 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ShowDiscount")).Click();
             s.Driver.FindElement(By.Id("SaveSettings")).Click();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
+            
+            // View
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
             Assert.Equal(2, windows.Count);
@@ -2703,17 +2878,65 @@ namespace BTCPayServer.Tests
 
             // Check values on checkout page
             s.Driver.FindElement(By.Id("CartSubmit")).Click();
-            s.Driver.WaitUntilAvailable(By.Id("Checkout-v2"));
+            s.Driver.WaitUntilAvailable(By.Id("Checkout"));
             s.Driver.FindElement(By.Id("DetailsToggle")).Click();
             s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
             Assert.Contains("9,90 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
 
             // Pay
-            s.PayInvoice();
+            s.PayInvoice(true);
+            TestUtils.Eventually(() =>
+            {
+                s.MineBlockOnInvoiceCheckout();
+                Assert.True(s.Driver.WaitForElement(By.Id("settled")).Displayed);
+            });
+
+            // Receipt
+            s.Driver.WaitForElement(By.Id("ReceiptLink")).Click();
+            var cartData = s.Driver.FindElement(By.CssSelector("#CartData table"));
+            var items = cartData.FindElements(By.CssSelector("tbody tr"));
+            var sums = cartData.FindElements(By.CssSelector("tfoot tr"));
+            Assert.Equal(7, items.Count);
+            Assert.Equal(4, sums.Count);
+            Assert.Contains("Black Tea", items[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("2 x 1,00 € = 2,00 €", items[0].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Green Tea", items[1].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 x 1,00 € = 1,00 €", items[1].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Rooibos (limited)", items[2].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("2 x 1,20 € = 2,40 €", items[2].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Herbal Tea (minimum) (1,80 €)", items[3].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 x 1,80 € = 1,80 €", items[3].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Herbal Tea (minimum) (2,30 €)", items[4].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 x 2,30 € = 2,30 €", items[4].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Fruit Tea (any amount) (0,20 €)", items[5].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 x 0,20 € = 0,20 €", items[5].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Fruit Tea (any amount) (0,30 €)", items[6].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("1 x 0,30 € = 0,30 €", items[6].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Subtotal", sums[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("10,00 €", sums[0].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Discount", sums[1].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("10% = 1,00 €", sums[1].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Tip", sums[2].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("10% = 0,90 €", sums[2].FindElement(By.CssSelector("td")).Text);
+            Assert.Contains("Total", sums[3].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("9,90 €", sums[3].FindElement(By.CssSelector("td")).Text);
             
             // Check inventory got updated and is now 3 instead of 5
             s.Driver.Navigate().GoToUrl(posUrl);
-            Assert.Equal("3 left", s.Driver.FindElement(By.CssSelector(".posItem:nth-child(3) .badge.inventory")).Text);
+            Assert.Equal("3 left", s.Driver.FindElement(By.CssSelector(".posItem:nth-child(3) .badge.inventory")).Text);            
+            
+            // Guest user can access recent transactions
+            s.GoToHome();
+            s.Logout();
+            s.LogIn(user, userAccount.RegisterDetails.Password);
+            s.GoToUrl(posUrl);
+            s.Driver.FindElement(By.Id("RecentTransactionsToggle"));
+            s.GoToHome();
+            s.Logout();
+            
+            // Unauthenticated user can't access recent transactions
+            s.GoToUrl(posUrl);
+            s.Driver.ElementDoesNotExist(By.Id("RecentTransactionsToggle"));
         }
 
         [Fact]
@@ -2722,6 +2945,7 @@ namespace BTCPayServer.Tests
         public async Task CanUseLNURL()
         {
             using var s = CreateSeleniumTester();
+            s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -2731,7 +2955,6 @@ namespace BTCPayServer.Tests
                 new[] { s.Server.MerchantLnd.Client });
             s.RegisterNewUser(true);
             (_, string storeId) = s.CreateNewStore();
-            s.EnableCheckout(CheckoutType.V1);
             var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode).NBitcoinNetwork;
             s.AddLightningNode(LightningConnectionType.CLightning, false);
             s.GoToLightningSettings();
@@ -2743,8 +2966,7 @@ namespace BTCPayServer.Tests
             // Topup Invoice test
             var i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            s.Driver.FindElement(By.Id("copy-tab")).Click();
-            var lnurl = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
+            var lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
             var parsed = LNURL.LNURL.Parse(lnurl, out var tag);
             var fetchedReuqest =
                 Assert.IsType<LNURL.LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
@@ -2768,7 +2990,7 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 var inv = await s.Server.PayTester.InvoiceRepository.GetInvoice(i);
-                Assert.Equal(InvoiceStatusLegacy.Complete, inv.Status);
+                Assert.Equal(InvoiceStatus.Settled, inv.Status);
             });
             var greenfield = await s.AsTestAccount().CreateClient();
             var paymentMethods = await greenfield.GetInvoicePaymentMethods(s.StoreId, i);
@@ -2780,11 +3002,9 @@ namespace BTCPayServer.Tests
             s.GoToStore(storeId);
             i = s.CreateInvoice(storeId, 0.0000001m, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            s.Driver.FindElement(By.ClassName("payment__currencies_noborder")).Click();
             // BOLT11 is also displayed for standard invoice (not LNURL, even if it is available)
-            s.Driver.FindElement(By.Id("copy-tab")).Click();
-            var bolt11 = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
-            Lightning.BOLT11PaymentRequest.Parse(bolt11, s.Server.ExplorerNode.Network);
+            var bolt11 = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LN .truncate-center-start")).Text;
+            BOLT11PaymentRequest.Parse(bolt11, s.Server.ExplorerNode.Network);
             var invoiceId = s.Driver.Url.Split('/').Last();
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
             {
@@ -2810,7 +3030,7 @@ namespace BTCPayServer.Tests
                 network, new HttpClient());
             lnurlResponse2 = await fetchedReuqest.SendRequest(new LightMoney(0.0000001m, LightMoneyUnit.BTC),
                 network, new HttpClient());
-            //invoice amounts do no change so the paymnet request is not regenerated
+            //invoice amounts do no change so the payment request is not regenerated
             Assert.Equal(lnurlResponse.Pr, lnurlResponse2.Pr);
             await s.Server.CustomerLightningD.Pay(lnurlResponse.Pr);
             Assert.Equal(new LightMoney(0.0000001m, LightMoneyUnit.BTC),
@@ -2819,12 +3039,10 @@ namespace BTCPayServer.Tests
 
             i = s.CreateInvoice(storeId, 0.000001m, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
 
             s.GoToStore(storeId);
             i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
 
             s.GoToHome();
             s.GoToLightningSettings();
@@ -2838,15 +3056,12 @@ namespace BTCPayServer.Tests
 
             i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            s.Driver.FindElement(By.ClassName("payment__currencies_noborder"));
-            s.Driver.FindElement(By.Id("copy-tab")).Click();
-            lnurl = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
+            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
             Assert.StartsWith("lnurlp", lnurl);
             LNURL.LNURL.Parse(lnurl, out tag);
 
             s.GoToHome();
             s.CreateNewStore(false);
-            s.EnableCheckout(CheckoutType.V1);
             s.AddLightningNode(LightningConnectionType.LndREST, false);
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), true);
@@ -2854,14 +3069,13 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
             var invForPP = s.CreateInvoice(null, cryptoCode);
             s.GoToInvoiceCheckout(invForPP);
-            s.Driver.FindElement(By.Id("copy-tab")).Click();
-            lnurl = s.Driver.FindElement(By.CssSelector("input.checkoutTextbox")).GetAttribute("value");
+            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
             LNURL.LNURL.Parse(lnurl, out tag);
 
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             s.Driver.FindElement(By.Id("NewPullPayment")).Click();
-            Assert.Equal(new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PaymentMethods']"))).GetAttribute("value")));
+            Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PayoutMethods']"))).GetAttribute("value")));
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.0000001");
@@ -2886,7 +3100,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
             var payouts = s.Driver.FindElements(By.ClassName("pp-payout"));
             payouts[0].Click();
-            s.Driver.FindElement(By.Id("BTC_LightningLike-view")).Click();
+            s.Driver.FindElement(By.Id("BTC-LN-view")).Click();
             Assert.NotEmpty(s.Driver.FindElements(By.ClassName("payout")));
             s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
             s.Driver.FindElement(By.Id($"{PayoutState.AwaitingApproval}-approve-pay")).Click();
@@ -2898,7 +3112,7 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 var inv = await s.Server.PayTester.InvoiceRepository.GetInvoice(invForPP);
-                Assert.Equal(InvoiceStatusLegacy.Complete, inv.Status);
+                Assert.Equal(InvoiceStatus.Settled, inv.Status);
 
                 await using var ctx = s.Server.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
                 var payoutsData = await ctx.Payouts.Where(p => p.PullPaymentDataId == pullPaymentId).ToListAsync();
@@ -2997,14 +3211,14 @@ namespace BTCPayServer.Tests
             Assert.Equal(2, invoices.Length);
             foreach (var i in invoices)
             {
-                var lightningPaymentMethod = i.GetPaymentMethod(new PaymentMethodId("BTC", PaymentTypes.LNURLPay));
-                var paymentMethodDetails =
-                    lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                var prompt = i.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
+                var handlers = s.Server.PayTester.GetService<PaymentMethodHandlerDictionary>();
+                var details = (LNURLPayPaymentMethodDetails)handlers.ParsePaymentPromptDetails(prompt);
                 Assert.Contains(
-                    paymentMethodDetails.ConsumedLightningAddress,
+                    details.ConsumedLightningAddress,
                     new[] { lnaddress1, lnaddress2 });
 
-                if (paymentMethodDetails.ConsumedLightningAddress == lnaddress2)
+                if (details.ConsumedLightningAddress == lnaddress2)
                 {
                     Assert.Equal("lol", i.Metadata.AdditionalData["test"].Value<string>());
                 }
@@ -3160,6 +3374,7 @@ retry:
                 Assert.StartsWith(s.ServerUri.ToString(), s.Driver.Url);
             });
         }
+
         [Fact]
         [Trait("Selenium", "Selenium")]
         public async Task CanUseRoleManager()
@@ -3170,14 +3385,24 @@ retry:
             s.GoToHome();
             s.GoToServer(ServerNavPages.Roles);
             var existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
-            Assert.Equal(3, existingServerRoles.Count);
+            Assert.Equal(5, existingServerRoles.Count);
             IWebElement ownerRow = null;
+            IWebElement managerRow = null;
+            IWebElement employeeRow = null;
             IWebElement guestRow = null;
             foreach (var roleItem in existingServerRoles)
             {
                 if (roleItem.Text.Contains("owner", StringComparison.InvariantCultureIgnoreCase))
                 {
                     ownerRow = roleItem;
+                }
+                else if (roleItem.Text.Contains("manager", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    managerRow = roleItem;
+                }
+                else if (roleItem.Text.Contains("employee", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    employeeRow = roleItem;
                 }
                 else if (roleItem.Text.Contains("guest", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -3186,17 +3411,27 @@ retry:
             }
             
             Assert.NotNull(ownerRow);
+            Assert.NotNull(managerRow);
+            Assert.NotNull(employeeRow);
             Assert.NotNull(guestRow);
 
             var ownerBadges = ownerRow.FindElements(By.CssSelector(".badge"));
             Assert.Contains(ownerBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(ownerBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var managerBadges = managerRow.FindElements(By.CssSelector(".badge"));
+            Assert.DoesNotContain(managerBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(managerBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
+
+            var employeeBadges = employeeRow.FindElements(By.CssSelector(".badge"));
+            Assert.DoesNotContain(employeeBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
+            Assert.Contains(employeeBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
             
             var guestBadges = guestRow.FindElements(By.CssSelector(".badge"));
             Assert.DoesNotContain(guestBadges, element => element.Text.Equals("Default", StringComparison.InvariantCultureIgnoreCase));
             Assert.Contains(guestBadges, element => element.Text.Equals("Server-wide", StringComparison.InvariantCultureIgnoreCase));
             guestRow.FindElement(By.Id("SetDefault")).Click();
-            s.FindAlertMessage();
+            Assert.Contains("Role set default", s.FindAlertMessage().Text);
             
             existingServerRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
             foreach (var roleItem in existingServerRoles)
@@ -3218,13 +3453,13 @@ retry:
             ownerRow.FindElement(By.Id("SetDefault")).Click();
             s.FindAlertMessage();
             
-            
+            Assert.Contains("Role set default", s.FindAlertMessage().Text);
 
             s.CreateNewStore();
             s.GoToStore(StoreNavPages.Roles);
             var existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
-            Assert.Equal(3, existingStoreRoles.Count);
-            Assert.Equal(2, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+            Assert.Equal(5, existingStoreRoles.Count);
+            Assert.Equal(4, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
 
             foreach (var roleItem in existingStoreRoles)
             {
@@ -3275,19 +3510,18 @@ retry:
             Assert.DoesNotContain(guestBadges, element => element.Text.Equals("server-wide", StringComparison.InvariantCultureIgnoreCase));
             s.GoToStore(StoreNavPages.Users);
             var options = s.Driver.FindElements(By.CssSelector("#Role option"));
-            Assert.Equal(2, options.Count);
+            Assert.Equal(4, options.Count);
             Assert.Contains(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
             s.CreateNewStore();
             s.GoToStore(StoreNavPages.Roles);
             existingStoreRoles = s.Driver.FindElement(By.CssSelector("table")).FindElements(By.CssSelector("tr"));
-            Assert.Equal(2, existingStoreRoles.Count);
-            Assert.Equal(1, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
+            Assert.Equal(4, existingStoreRoles.Count);
+            Assert.Equal(3, existingStoreRoles.Count(element => element.Text.Contains("Server-wide", StringComparison.InvariantCultureIgnoreCase)));
             Assert.Equal(0, existingStoreRoles.Count(element => element.Text.Contains("store role", StringComparison.InvariantCultureIgnoreCase)));
             s.GoToStore(StoreNavPages.Users);
             options = s.Driver.FindElements(By.CssSelector("#Role option"));
-            Assert.Single(options);
+            Assert.Equal(3, options.Count);
             Assert.DoesNotContain(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
-            
             
             s.GoToStore(StoreNavPages.Roles);
             s.Driver.FindElement(By.Id("CreateRole")).Click();
@@ -3299,6 +3533,260 @@ retry:
             s.FindAlertMessage();
             Assert.Contains("Malice",s.Driver.PageSource);
             Assert.DoesNotContain(Policies.CanModifyServerSettings,s.Driver.PageSource);
+        }
+        
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanAccessUserStoreAsAdmin()
+        {
+            using var s = CreateSeleniumTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
+
+            // Setup user, store and wallets
+            s.RegisterNewUser();
+            (_, string storeId) = s.CreateNewStore();
+            s.GoToStore();
+            s.GenerateWallet(isHotWallet: true);
+            s.AddLightningNode(LightningConnectionType.CLightning, false);
+
+            // Add apps
+            (_, string posId) = s.CreateApp("PointOfSale");
+            (_, string crowdfundId) = s.CreateApp("Crowdfund");
+            s.Logout();
+
+            // Setup admin and check access
+            s.GoToRegister();
+            s.RegisterNewUser(true);
+            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
+
+            // Admin access
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(true, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(false, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                TestLogs.LogInformation($"Checking access to store page {path} as admin");
+                s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
+                }
+            }
+        }
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        [Trait("Lightning", "Lightning")]
+        public async Task CanUsePredefinedRoles()
+        {
+            using var s = CreateSeleniumTester(newDb: true);
+            s.Server.ActivateLightning();
+            await s.StartAsync();
+            await s.Server.EnsureChannelsSetup();
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
+
+            // Setup users
+            var manager = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            var employee = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            var guest = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            
+            // Setup store, wallets and add users
+            s.RegisterNewUser(true);
+            (_, string storeId) = s.CreateNewStore();
+            s.GoToStore();
+            s.GenerateWallet(isHotWallet: true);
+            s.AddLightningNode(LightningConnectionType.CLightning, false);
+            s.AddUserToStore(storeId, manager, "Manager");
+            s.AddUserToStore(storeId, employee, "Employee");
+            s.AddUserToStore(storeId, guest, "Guest");
+            
+            // Add apps
+            (_, string posId) = s.CreateApp("PointOfSale");
+            (_, string crowdfundId) = s.CreateApp("Crowdfund");
+            
+            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
+
+            // Owner access
+            s.AssertPageAccess(true, GetStorePath(""));
+            s.AssertPageAccess(true, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(true, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(true, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(true, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(true, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(true, GetStorePath("apps/create"));
+            s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have manage access to settings, hence should see submit buttons or create links
+                TestLogs.LogInformation($"Checking access to store page {path} as owner");
+                s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                if (path != "payout-processors")
+                {
+                    s.Driver.FindElement(By.CssSelector("#mainContent .btn-primary"));
+                }
+            }
+            s.Logout();
+
+            // Manager access
+            s.LogIn(manager);
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(true, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            s.AssertPageAccess(true, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(true, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should have view access to settings, but no submit buttons or create links
+                TestLogs.LogInformation($"Checking access to store page {path} as manager");
+                s.AssertPageAccess(true, $"stores/{storeId}/{path}");
+                s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .btn-primary"));
+            }
+            s.Logout();
+            
+            // Employee access
+            s.LogIn(employee);
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(false, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                TestLogs.LogInformation($"Checking access to store page {path} as employee");
+                s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            s.Logout();
+            
+            // Guest access
+            s.LogIn(guest);
+            s.AssertPageAccess(false, GetStorePath(""));
+            s.AssertPageAccess(false, GetStorePath("reports"));
+            s.AssertPageAccess(true, GetStorePath("invoices"));
+            s.AssertPageAccess(true, GetStorePath("invoices/create"));
+            s.AssertPageAccess(true, GetStorePath("payment-requests"));
+            s.AssertPageAccess(false, GetStorePath("payment-requests/edit"));
+            s.AssertPageAccess(true, GetStorePath("pull-payments"));
+            s.AssertPageAccess(true, GetStorePath("payouts"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC"));
+            s.AssertPageAccess(false, GetStorePath("onchain/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
+            s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
+            s.AssertPageAccess(false, GetStorePath("apps/create"));
+            s.AssertPageAccess(false, $"/apps/{posId}/settings/pos");
+            s.AssertPageAccess(false, $"/apps/{crowdfundId}/settings/crowdfund");
+            foreach (var path in storeSettingsPaths)
+            {   // should not have access to settings
+                TestLogs.LogInformation($"Checking access to store page {path} as guest");
+                s.AssertPageAccess(false, $"stores/{storeId}/{path}");
+            }
+            s.Logout();
+        }
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanChangeUserRoles()
+        {
+            using var s = CreateSeleniumTester(newDb: true);
+            await s.StartAsync();
+
+            // Setup users and store
+            var employee = s.RegisterNewUser();
+            s.Logout();
+            s.GoToRegister();
+            var owner = s.RegisterNewUser(true);
+            (_, string storeId) = s.CreateNewStore();
+            s.GoToStore();
+            s.AddUserToStore(storeId, employee, "Employee");
+            
+            // Should successfully change the role
+            var userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
+            Assert.Equal(2, userRows.Count);
+            IWebElement employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if (row.Text.Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            employeeRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
+            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, employee);
+            new SelectElement(s.Driver.FindElement(By.Id("EditUserRole"))).SelectByValue("Manager");
+            s.Driver.FindElement(By.Id("EditContinue")).Click();
+            Assert.Contains($"The role of {employee} has been changed to Manager.", s.FindAlertMessage().Text);
+            
+            // Should not see a message when not changing role
+            userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
+            Assert.Equal(2, userRows.Count);
+            employeeRow = null;
+            foreach (var row in userRows)
+            {
+                if (row.Text.Contains(employee, StringComparison.InvariantCultureIgnoreCase)) employeeRow = row;
+            }
+            Assert.NotNull(employeeRow);
+            employeeRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
+            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, employee);
+            // no change, no alert message
+            s.Driver.FindElement(By.Id("EditContinue")).Click();
+            s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .alert"));
+            
+            // Should not change last owner
+            userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
+            Assert.Equal(2, userRows.Count);
+            IWebElement ownerRow = null;
+            foreach (var row in userRows)
+            {
+                if (row.Text.Contains(owner, StringComparison.InvariantCultureIgnoreCase)) ownerRow = row;
+            }
+            Assert.NotNull(ownerRow);
+            ownerRow.FindElement(By.CssSelector("a[data-bs-target=\"#EditModal\"]")).Click();
+            Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, owner);
+            new SelectElement(s.Driver.FindElement(By.Id("EditUserRole"))).SelectByValue("Employee");
+            s.Driver.FindElement(By.Id("EditContinue")).Click();
+            Assert.Contains($"User {owner} is the last owner. Their role cannot be changed.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
         }
 
         private static void CanBrowseContent(SeleniumTester s)

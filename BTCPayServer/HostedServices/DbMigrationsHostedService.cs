@@ -307,14 +307,11 @@ retrySave:
                     var textSearch = new List<string>();
 
                     // recreating different textSearch.Adds that were previously in DBriize
-                    foreach (var paymentMethod in invoice.GetPaymentMethods())
+                    foreach (var paymentMethod in invoice.GetPaymentPrompts())
                     {
-                        if (paymentMethod.Network != null)
-                        {
-                            var paymentDestination = paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
-                            textSearch.Add(paymentDestination);
-                            textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
-                        }
+                        var paymentDestination = paymentMethod.Destination;
+                        textSearch.Add(paymentDestination);
+                        textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                     }
                     // 
                     textSearch.Add(invoice.Id);
@@ -323,8 +320,6 @@ retrySave:
                     textSearch.Add(invoice.Metadata.OrderId);
                     textSearch.Add(invoice.StoreId);
                     textSearch.Add(invoice.Metadata.BuyerEmail);
-                    //
-                    textSearch.Add(invoice.RefundMail);
                     // TODO: Are there more things to cache? PaymentData?
                     InvoiceRepository.AddToTextSearch(ctx,
                         new Data.InvoiceData { Id = invoice.Id, InvoiceSearchData = new List<InvoiceSearchData>() },

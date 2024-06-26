@@ -43,7 +43,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                     new
                     {
                         storeId = notification.StoreId,
-                        paymentMethodId = notification.PaymentMethod,
+                        payoutMethodId = notification.PaymentMethod,
                         payoutState = PayoutState.AwaitingPayment
                     }, _options.RootPath);
             }

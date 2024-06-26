@@ -47,7 +47,7 @@ public partial class AltcoinsPlugin
                 ? "https://live.blockcypher.com/ltc/tx/{0}/"
                 : "http://explorer.litecointools.com/tx/{0}";
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(new PaymentMethodId(nbxplorerNetwork.CryptoCode, PaymentTypes.BTCLike), new DefaultTransactionLinkProvider(blockExplorerLinks));
+                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(blockExplorerLinks));
     }
 }
 

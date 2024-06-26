@@ -15,9 +15,11 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
@@ -44,7 +46,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private readonly IAuthorizationService _authorizationService;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly WalletRepository _walletRepository;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly NBXplorerDashboard _nbXplorerDashboard;
@@ -60,7 +62,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
             BTCPayWalletProvider btcPayWalletProvider,
-            BTCPayNetworkProvider btcPayNetworkProvider,
+            PaymentMethodHandlerDictionary handlers,
             WalletRepository walletRepository,
             ExplorerClientProvider explorerClientProvider,
             NBXplorerDashboard nbXplorerDashboard,
@@ -77,7 +79,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             _authorizationService = authorizationService;
             _btcPayWalletProvider = btcPayWalletProvider;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _handlers = handlers;
             _walletRepository = walletRepository;
             _explorerClientProvider = explorerClientProvider;
             PoliciesSettings = policiesSettings;
@@ -316,7 +318,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var utxos = await wallet.GetUnspentCoins(derivationScheme.AccountDerivation);
             var walletTransactionsInfoAsync = await _walletRepository.GetWalletTransactionsInfo(walletId,
                 utxos.SelectMany(GetWalletObjectsQuery.Get).Distinct().ToArray());
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             return Ok(utxos.Select(coin =>
                 {
                     walletTransactionsInfoAsync.TryGetValue(coin.OutPoint.Hash.ToString(), out var info1);
@@ -332,7 +334,7 @@ namespace BTCPayServer.Controllers.Greenfield
 #pragma warning disable CS0612 // Type or member is obsolete
                         Labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>(),
 #pragma warning restore CS0612 // Type or member is obsolete
-                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, coin.OutPoint.ToString()),
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,
@@ -771,14 +773,14 @@ namespace BTCPayServer.Controllers.Greenfield
             [MaybeNullWhen(true)] out DerivationSchemeSettings derivationScheme,
             [MaybeNullWhen(false)] out IActionResult actionResult)
         {
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             derivationScheme = null;
-            network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network is null)
+            if (!_handlers.TryGetValue(pmi, out var handler))
             {
                 throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode",
                     "This crypto code isn't set up in this BTCPay Server instance"));
             }
-
+            network = ((IHasNetwork)handler).Network;
 
             if (!network.WalletSupported || !_btcPayWalletProvider.IsAvailable(network))
             {
@@ -801,13 +803,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private DerivationSchemeSettings? GetDerivationSchemeSettings(string cryptoCode)
         {
-            var paymentMethod = Store
-                .GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault(p =>
-                    p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike &&
-                    p.PaymentId.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCultureIgnoreCase));
-            return paymentMethod;
+            return Store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), _handlers);
         }
 
         private OnChainWalletTransactionData ToModel(WalletTransactionInfo? walletTransactionsInfoAsync,

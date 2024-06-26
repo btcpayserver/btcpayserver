@@ -6,8 +6,6 @@
     Csp.UnsafeEval();
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
     var storeId = Context.GetCurrentStoreId();
 }
@@ -71,7 +69,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addOption($event)">
-                    <vc:icon symbol="new" />
+                    <vc:icon symbol="actions-add" />
                     Add Option
                 </button>
             </div>
@@ -108,7 +106,7 @@
                     </div>
                 </div>
                 <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addValueMap($event)">
-                    <vc:icon symbol="new" />
+                    <vc:icon symbol="actions-add" />
                     Add mapped value
                 </button>
             </div>
@@ -134,18 +132,18 @@
             <div class="fields list-group" :class="{ 'list-group-flush': path.length }" :data-path="path.join(',')" v-sortable="{ handle: '.drag', onUpdate (event) { const { path } = this.el.dataset; $emit('sort-fields', event, (path.indexOf(',') !== -1 ? path.split(',') : [])) } }">
                 <div v-for="(field, index) in fields" :key="field.name" class="d-flex align-items-start gap-2 list-group-item" :class="{ active: field === selectedField }" v-on:click.stop="$emit('select-field', $event, path, index)">
                     <button type="button" class="btn b-0 control drag" :disabled="fields.length === 1">
-                        <vc:icon symbol="drag" />
+                        <vc:icon symbol="actions-drag" />
                     </button>
                     <div class="field flex-grow-1">
                         <component :is="getFieldComponent(field.type)" v-bind="field" :path="path.concat(field.name)" :selected-field="selectedField" v-on="$listeners" />
                     </div>
                     <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-field', $event, path, index)">
-                        <vc:icon symbol="remove" />
+                        <vc:icon symbol="actions-remove" />
                     </button>
                 </div>
             </div>
             <button type="button" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
-                <vc:icon symbol="new" />
+                <vc:icon symbol="actions-add" />
                 Add Form Field
             </button>
         </div>
@@ -194,24 +192,35 @@
 }
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@storeId">Forms</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                @ViewData["Title"]
+                <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info" />
+                </a>
+            </h2>
+        </nav>
+        <div>
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+            @if (!isNew)
+            {
+                <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
+            }
+        </div>
+    </div>
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h3 class="mb-0">
-                    <span>@ViewData["Title"]</span>
-                    <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info" />
-                    </a>
-                </h3>
-                <div class="d-flex gap-3 mt-3 mt-sm-0">
-                    <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
-                    @if (!isNew)
-                    {
-                        <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
-                    }
-                </div>
-            </div>
-            <div asp-validation-summary="All"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <div class="form-group" style="max-width: 27rem;">
                 <label asp-for="Name" class="form-label" data-required></label>
                 <input asp-for="Name" class="form-control" required />

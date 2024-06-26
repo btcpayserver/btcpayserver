@@ -15,24 +15,26 @@
         <div id="item-form" class="item" v-show="!!editingItem">
             <div class="form-group">
                 <label for="EditorTitle" class="form-label" data-required>Title</label>
-                <input id="EditorTitle" required class="form-control mb-2" v-model="editingItem && editingItem.title" ref="inputTitle" />
+                <input id="EditorTitle" required class="form-control mb-2" v-model="editingItem && editingItem.title" v-on:change="onTitleChange" />
+                <div class="text-danger mb-3" v-if="errors.title">{{errors.title}}</div>
             </div>
             <div class="form-group">
                 <label for="EditorId" class="form-label" data-required>ID</label>
-                <input id="EditorId" required class="form-control mb-2" v-model="editingItem && editingItem.id" ref="inputtId" />
-                <div class="form-text">Leave blank to generate ID from title.</div>
+                <input id="EditorId" required class="form-control mb-2" v-model="editingItem && editingItem.id" v-on:change="onIdChange" />
+                <div class="text-danger mb-3" v-if="errors.id">{{errors.id}}</div>
+                <div class="form-text" v-else>Leave blank to generate ID from title.</div>
             </div>
             <div class="form-group row">
                 <div class="col-sm-6">
                     <label for="EditorPrice" class="form-label">Price</label>
-                    <select id="EditorPrice" class="form-select" v-model="editingItem && editingItem.priceType">
+                    <select id="EditorPrice" class="form-select" v-model="editingItem && editingItem.priceType" v-on:change="onPriceTypeChange">
                         <option v-for="option in customPriceOptions" :value="option.value">{{option.text}}</option>
                     </select>
                 </div>
                 <div class="col-sm-6" v-show="editingItem && editingItem.priceType !== 'Topup'">
                     <label for="EditorAmount" class="form-label">&nbsp;</label>
                     <div class="input-group mb-2">
-                        <input class="form-control"
+                        <input class="form-control hide-number-spin"
                                id="EditorAmount"
                                inputmode="decimal"
                                pattern="\d*"
@@ -41,11 +43,12 @@
                                type="number"
                                required
                                v-model="editingItem && editingItem.price"
-                               ref="inputPrice"
+                               v-on:change="onPriceChange"
                                aria-describedby="currency-addon" />
                         <span class="input-group-text" id="currency-addon" v-pre>@Model.currency</span>
                     </div>
                 </div>
+                <div class="text-danger" v-if="errors.price">{{errors.price}}</div>
             </div>
             <div class="form-group">
                 <label for="EditorImageUrl" class="form-label">Image Url</label>
@@ -63,7 +66,7 @@
             </div>
             <div class="form-group">
                 <label for="EditorInventory" class="form-label">Inventory</label>
-                <input id="EditorInventory" type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem && editingItem.inventory" ref="inputInventory" />
+                <input id="EditorInventory" type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem && editingItem.inventory" v-on:change="onInventoryChange" />
                 <div class="form-text">Leave blank to not use this feature.</div>
             </div>
             <div class="form-group">
@@ -71,12 +74,10 @@
                 <input id="BuyButtonText" type="text" class="form-control mb-2" v-model="editingItem && editingItem.buyButtonText" />
             </div>
             <div class="form-group d-flex align-items-center">
-                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" v-model="editingItem && editingItem.disabled" />
-                <label for="Disabled" class="form-label mb-0">Disabled</label>
+                <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" :checked="editingItem && !editingItem.disabled" v-on:change="$event => editingItem.disabled = !$event.target.checked" />
+                <label for="Disabled" class="form-check-label">Enable</label>
             </div>
             <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
-            <div class="text-danger mb-3" v-for="error of errors">{{error}}</div>
-            <button class="btn btn-primary d-none d-xl-inline-block" type="button" id="ApplyItemChanges" v-on:click="apply">Apply</button>
         </div>
         <div v-if="!editingItem">Select an item to edit</div>
     </div>
@@ -87,7 +88,7 @@
         <div class="items list-group list-group-flush" v-sortable="{ handle: '.drag', onUpdate (event) { $emit('sort-items', event) } }">
             <div v-for="(item, index) of items" class="d-inline-flex align-items-center gap-3 list-group-item" :key="item.id" :class="{ active: item === selectedItem }" v-on:click.stop="$emit('select-item', $event, index)">
                 <button type="button" class="btn b-0 control drag" :disabled="items.length === 1">
-                    <vc:icon symbol="drag" />
+                    <vc:icon symbol="actions-drag" />
                 </button>
                 <div class="template-item d-flex align-items-start w-100 gap-3">
                     <div class="img">
@@ -105,12 +106,12 @@
                     </div>
                 </div>
                 <button type="button" class="btn b-0 control remove" v-on:click="$emit('remove-item', $event, index)">
-                    <vc:icon symbol="remove" />
+                    <vc:icon symbol="actions-remove" />
                 </button>
             </div>
         </div>
-        <button type="button" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-item', $event)">
-            <vc:icon symbol="new" />
+        <button type="button" id="btAddItem" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-item', $event)">
+            <vc:icon symbol="actions-add" />
             Add Item
         </button>
     </div>
@@ -152,16 +153,10 @@
                 <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
                     <div class="offcanvas-header p-3">
                         <h5 class="offcanvas-title">Edit Item</h5>
-                        <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
-                            <vc:icon symbol="close" />
-                        </button>
+                        <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': itemChanged, 'btn-outline-secondary': !itemChanged }" v-on:click="hideOffcanvas" v-text="itemChanged ? 'Apply' : 'Close'"></button>
                     </div>
                     <div class="offcanvas-body p-3 p-xl-0">
                         <item-editor ref="itemEditor" :item="selectedItem" class="bg-tile w-100 p-xl-4 rounded" />
-                    </div>
-                    <div class="offcanvas-header p-3">
-                        <button class="btn btn-primary" type="button" v-on:click="() => { $refs.itemEditor.apply(); hideOffcanvas() }">Apply and close</button>
-                        <button class="btn btn-secondary" type="button" v-on:click="hideOffcanvas">Cancel</button>
                     </div>
                 </div>
             </div>

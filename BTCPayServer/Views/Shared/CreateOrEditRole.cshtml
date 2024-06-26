@@ -1,13 +1,11 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Server
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Controllers
 @using BTCPayServer.Views.Stores
 @model UpdateRoleViewModel
 @{
-    Layout = "_NavLayout.cshtml";
     var role = Context.GetRouteValue("role") as string;
 
     if (role == "create")
@@ -15,35 +13,46 @@
 
     var storeId = Context.GetRouteValue("storeId") as string;
     if (storeId is null)
-        ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update role");
-
+        ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update Role");
     else
     {
-        ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update role");
+        ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update Role");
     }
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
-
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<form method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListRoles" asp-route-storeId="@storeId">Roles</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <button id="Save" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+    </div>
 
-<div class="row">
-    <div class="col-xxl-constrain">
-        <form method="post">
-            <div asp-validation-summary="ModelOnly"></div>
-
+    <div class="row">
+        <div class="col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
             <div class="form-group" style="max-width:320px">
                 <label asp-for="Role" class="form-label"></label>
-				@if (role == null)
-				{
-					<input asp-for="Role" required="required" class="form-control" />
-				}
-				else
-				{
-				    <input type="hidden" asp-for="Role"/>
-					<input  required="required" class="form-control" disabled value="@Model.Role" />					
-				}
-				<span asp-validation-for="Role" class="text-danger"></span>
+                @if (role == null)
+                {
+                    <input asp-for="Role" required="required" class="form-control" />
+                }
+                else
+                {
+                    <input type="hidden" asp-for="Role" />
+                    <input required="required" class="form-control" disabled value="@Model.Role" />
+                }
+                <span asp-validation-for="Role" class="text-danger"></span>
             </div>
 
             <h4 class="mt-4 mb-3">Permissions</h4>
@@ -64,10 +73,9 @@
                 }
             </div>
             <span asp-validation-for="Policies" class="text-danger"></span>
-            <button id="Save" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
 @{
     void RenderTree(KeyValuePair<string, HashSet<string>> policy, KeyValuePair<string, HashSet<string>>[] storePolicyMap, bool isChecked)

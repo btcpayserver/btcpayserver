@@ -1,0 +1,36 @@
+@using BTCPayServer.Client
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+
+<div class="modal" tabindex="-1" id="RecentTransactions" ref="RecentTransactions" data-bs-backdrop="static" data-url="@Url.Action("RecentTransactions", "UIPointOfSale", new { appId = Model.AppId })" permission="@Policies.CanViewInvoices">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Recent Transactions</h5>
+                <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" v-on:click="loadRecentTransactions" :disabled="recentTransactionsLoading" id="RecentTransactionsRefresh">
+                    <vc:icon symbol="actions-refresh"/>
+                    <span v-if="recentTransactionsLoading" class="visually-hidden">Loading...</span>
+                </button>
+                <button type="button" class="btn-close py-3" aria-label="Close" v-on:click="hideRecentTransactions">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div v-if="recentTransactions.length" class="list-group list-group-flush">
+                    <a v-for="t in recentTransactions" :key="t.id" :href="t.url" class="list-group-item list-group-item-action d-flex align-items-center gap-3 pe-1 py-3">
+                        <div class="d-flex align-items-baseline justify-content-between flex-wrap flex-grow-1 gap-2">
+                            <span class="flex-grow-1">{{displayDate(t.date)}}</span>
+                            <span class="flex-grow-1 text-end">{{t.price}}</span>
+                            <div class="badge-container">
+                                <span class="badge" :class="`badge-${t.status.toLowerCase()}`">{{t.status}}</span>
+                            </div>
+                        </div>
+                        <vc:icon symbol="caret-right" />
+                    </a>
+                </div>
+                <p v-else-if="recentTransactionsLoading" class="text-muted my-0">Loading...</p>
+                <p v-else class="text-muted my-0">No transactions, yet.</p>
+            </div>
+        </div>
+    </div>
+</div>
+

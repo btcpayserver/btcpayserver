@@ -60,7 +60,7 @@
 }
 
 .editor .control.remove .icon {
-    --btn-icon-size: 1.75rem;
+    --icon-size: 1.75rem;
 }
 
 .editor .field .form-group:last-child {
@@ -73,4 +73,17 @@
 
 .editor .nested-fields .list-group-item {
     padding-right: 1rem;
+}
+
+:disabled .editor {
+    pointer-events: none;
+}
+
+:disabled .editor .bg-tile {
+    background-color: var(--btcpay-form-bg-disabled);
+}
+
+:disabled .editor .control,
+:disabled .editor button {
+    display: none !important;
 }

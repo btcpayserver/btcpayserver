@@ -18,28 +18,6 @@
     transition-duration: var(--btcpay-transition-duration-fast);
 }
 
-#Categories nav {
-    justify-content: center;
-}
-#Categories.scrollable {
-    --scroll-bar-spacing: var(--btcpay-space-m);
-    --scroll-indicator-spacing: var(--btcpay-space-m);
-    position: relative;
-    margin-bottom: calc(var(--scroll-bar-spacing) * -1);
-}
-#Categories.scrollable nav {
-    justify-content: start;
-    overflow: auto visible;
-    -webkit-overflow-scrolling: touch;
-    margin-left: calc(var(--scroll-indicator-spacing) * -1);
-    margin-right: calc(var(--scroll-indicator-spacing) * -1);
-    padding: 0 var(--scroll-indicator-spacing) var(--scroll-bar-spacing);
-}
-
-#Categories.scrollable nav::-webkit-scrollbar {
-    display: none;
-}
-
 /* Horizontal scroll indicators */
 #Categories.scrollable:before,
 #Categories.scrollable:after {
@@ -60,41 +38,48 @@
     right: calc(var(--scroll-indicator-spacing) * -1);
 }
 
+#RecentTransactionsToggle,
 .cart-toggle-btn {
     --button-width: 40px;
     --button-height: 40px;
     --button-padding: 7px;
-    --icon-size: 1rem;
     position: absolute;
     top: calc(50% - var(--button-height) / 2);
-    right: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: var(--button-width);
     height: var(--button-height);
     padding: var(--button-padding);
+    color: var(--btcpay-header-link);
     background: transparent;
     border: none;
     cursor: pointer;
     outline: none;
 }
 
-header .cart-toggle-btn {
-    --icon-size: 32px;
+#RecentTransactionsToggle {
+    --icon-size: 1.5rem;
+    left: 0;
 }
 
+header .cart-toggle-btn {
+    --icon-size: 2rem;
+    right: 0;
+}
+
+#RecentTransactionsToggle .icon,
 .cart-toggle-btn .icon-pos-cart {
     width: var(--icon-size);
     height: var(--icon-size);
-    color: var(--btcpay-header-link);
 }
 
-.cart-toggle-btn:disabled svg {
+.cart-toggle-btn:disabled {
     color: var(--btcpay-body-text-muted);
 }
 
-.cart-toggle-btn:not(:disabled):hover svg {
+#RecentTransactionsToggle:hover,
+.cart-toggle-btn:not(:disabled):hover {
     color: var(--btcpay-header-link-accent);
 }
 
@@ -115,14 +100,6 @@ header .cart-toggle-btn {
     background-color: var(--btcpay-bg-tile);
 }
 
-#cart .quantity .btn {
-    width: 2rem;
-    height: 2rem;
-}
-#cart .quantity .btn .icon{
-    --btn-icon-size: .75rem;
-}
-
 #CartBadge {
     position: absolute;
     top: 0;
@@ -138,9 +115,6 @@ header .cart-toggle-btn {
     }
     #cart.show {
         transform: none;
-    }
-    #CartClose {
-        color: var(--btcpay-body-text);
     }
 }
 @media (min-width: 992px) {

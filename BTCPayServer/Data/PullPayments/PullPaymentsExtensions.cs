@@ -1,5 +1,6 @@
 using System.Linq;
 using System.Text;
+using BTCPayServer.Payouts;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 
@@ -10,16 +11,16 @@ namespace BTCPayServer.Data
 
         public static PullPaymentBlob GetBlob(this PullPaymentData data)
         {
-            var result = JsonConvert.DeserializeObject<PullPaymentBlob>(Encoding.UTF8.GetString(data.Blob));
+            var result = JsonConvert.DeserializeObject<PullPaymentBlob>(data.Blob);
             result!.SupportedPaymentMethods = result.SupportedPaymentMethods.Where(id => id is not null).ToArray();
             return result;
         }
         public static void SetBlob(this PullPaymentData data, PullPaymentBlob blob)
         {
-            data.Blob = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(blob));
+            data.Blob = JsonConvert.SerializeObject(blob).ToString();
         }
 
-        public static bool IsSupported(this PullPaymentData data, Payments.PaymentMethodId paymentId)
+        public static bool IsSupported(this PullPaymentData data, PayoutMethodId paymentId)
         {
             return data.GetBlob().SupportedPaymentMethods.Contains(paymentId);
         }

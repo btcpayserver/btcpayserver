@@ -11,7 +11,7 @@
 	Layout = null;
     string StatusClass(InvoiceState state)
     {
-        var status = state.Status.ToModernStatus();
+        var status = state.Status;
         switch (status)
         {
             case InvoiceStatus.Expired:
@@ -32,7 +32,7 @@
 }
 
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PaymentRequest-@Model.Id">
 <head>
     <partial name="LayoutHead"/>
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
@@ -118,7 +118,10 @@
                     </p>
                     <dl class="mt-n1 mb-4" v-if="srvModel.amountCollected > 0 && srvModel.amountDue > 0">
                         <div class="progress bg-light d-flex mb-3 d-print-none" style="height:5px">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width:@(Model.AmountCollected/Model.Amount*100)%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
+                            @{
+                                var prcnt = Model.Amount == 0? 100:  Model.AmountCollected / Model.Amount * 100;
+                            }
+                            <div class="progress-bar bg-primary" role="progressbar" style="width:@prcnt%" v-bind:style="{ width: (srvModel.amountCollected/srvModel.amount*100) + '%' }"></div>
                         </div>
                         <div class="d-flex flex-wrap gap-3 align-items-center justify-content-between">
                             <div class="d-flex d-print-inline-block flex-column gap-1">

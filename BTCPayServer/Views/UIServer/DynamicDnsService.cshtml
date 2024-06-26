@@ -10,16 +10,37 @@
         });
     </script>
 }
+<form method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Services">Services</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="DynamicDnsService">Dynamic DNS Settings</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                <span>@ViewData["Title"]</span>
+                <small>
+                    <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
+                        <vc:icon symbol="info" />
+                    </a>
+                </small>
+            </h2>
+        </nav>
+        <button name="command" class="btn btn-primary" type="submit" value="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
-
-<div class="row">
-    <div class="col-md-8">
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All"></div>
-        }
-        <form method="post">
+    <div class="row">
+        <div class="col-md-8">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <div class="form-group">
                 <input type="hidden" asp-for="Modify"/>
                 <div class="form-group">
@@ -68,8 +89,7 @@
                         <input asp-for="Settings.Enabled" disabled type="checkbox" class="btcpay-toggle ms-2" />
                     </div>
                 }
-                <button name="command" class="btn btn-primary mt-2" type="submit" value="Save">Save</button>
             </div>
-        </form>
+        </div>
     </div>
-</div>
+</form>

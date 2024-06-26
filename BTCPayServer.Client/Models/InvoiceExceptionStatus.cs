@@ -5,7 +5,6 @@ public enum InvoiceExceptionStatus
     PaidLate,
     PaidPartial,
     Marked,
-    Invalid,
     PaidOver
 }
 

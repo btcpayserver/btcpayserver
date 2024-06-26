@@ -39,7 +39,7 @@
     {
         <div class="ct-chart"></div>
     }
-    else if (!Model.Store.GetSupportedPaymentMethods(NetworkProvider).Any(method => method.PaymentId.PaymentType == BitcoinPaymentType.Instance && method.PaymentId.CryptoCode == Model.CryptoCode))
+	else if (Model.Store.GetPaymentMethodConfig(PaymentTypes.CHAIN.GetPaymentMethodId(Model.CryptoCode)) is null)
     {
         <p>
             We would like to show you a chart of your balance but you have not yet <a href="@Url.Action("SetupWallet", "UIStores", new {storeId = Model.Store.Id, cryptoCode = Model.CryptoCode})">configured a wallet</a>.

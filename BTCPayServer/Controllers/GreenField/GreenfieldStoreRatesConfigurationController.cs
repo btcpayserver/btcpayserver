@@ -10,6 +10,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -26,16 +27,16 @@ namespace BTCPayServer.Controllers.GreenField
     public class GreenfieldStoreRateConfigurationController : ControllerBase
     {
         private readonly RateFetcher _rateProviderFactory;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly DefaultRulesCollection _defaultRules;
         private readonly StoreRepository _storeRepository;
 
         public GreenfieldStoreRateConfigurationController(
             RateFetcher rateProviderFactory,
-            BTCPayNetworkProvider btcPayNetworkProvider,
+			DefaultRulesCollection defaultRules,
             StoreRepository storeRepository)
         {
             _rateProviderFactory = rateProviderFactory;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+			_defaultRules = defaultRules;
             _storeRepository = storeRepository;
         }
 
@@ -48,10 +49,10 @@ namespace BTCPayServer.Controllers.GreenField
 
             return Ok(new StoreRateConfiguration()
             {
-                EffectiveScript = blob.GetRateRules(_btcPayNetworkProvider, out var preferredExchange).ToString(),
+                EffectiveScript = blob.GetRateRules(_defaultRules, out var preferredExchange).ToString(),
                 Spread = blob.Spread * 100.0m,
                 IsCustomScript = blob.RateScripting,
-                PreferredSource = preferredExchange ? blob.PreferredExchange : null
+                PreferredSource = preferredExchange ? blob.GetPreferredExchange(_defaultRules) : null
             });
         }
 
@@ -117,10 +118,10 @@ namespace BTCPayServer.Controllers.GreenField
                 return this.CreateValidationError(ModelState);
             PopulateBlob(configuration, blob);
 
-            var rules = blob.GetRateRules(_btcPayNetworkProvider);
+            var rules = blob.GetRateRules(_defaultRules);
 
 
-            var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, CancellationToken.None);
+            var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, new StoreIdRateContext(data.Id), CancellationToken.None);
             await Task.WhenAll(rateTasks.Values);
             var result = new List<StoreRateResult>();
             foreach (var rateTask in rateTasks)
@@ -155,7 +156,7 @@ namespace BTCPayServer.Controllers.GreenField
             {
                 if (string.IsNullOrEmpty(configuration.EffectiveScript))
                 {
-                    configuration.EffectiveScript = storeBlob.GetDefaultRateRules(_btcPayNetworkProvider).ToString();
+                    configuration.EffectiveScript = storeBlob.GetDefaultRateRules(_defaultRules).ToString();
                 }
 
                 if (!RateRules.TryParse(configuration.EffectiveScript, out var r))
@@ -181,23 +182,20 @@ $"You can't set the preferredSource if you are using custom scripts");
                     ModelState.AddModelError(nameof(configuration.EffectiveScript),
                     $"You can't set the effectiveScript if you aren't using custom scripts");
                 }
-                if (string.IsNullOrEmpty(configuration.PreferredSource))
+                if (!string.IsNullOrEmpty(configuration.PreferredSource))
                 {
-                    ModelState.AddModelError(nameof(configuration.PreferredSource),
-$"The preferredSource is required if you aren't using custom scripts");
-                }
+                    configuration.PreferredSource = _rateProviderFactory
+                        .RateProviderFactory
+                        .AvailableRateProviders
+                        .FirstOrDefault(s =>
+                            s.Id.Equals(configuration.PreferredSource,
+                                StringComparison.InvariantCultureIgnoreCase))?.Id;
 
-                configuration.PreferredSource = _rateProviderFactory
-                    .RateProviderFactory
-                    .AvailableRateProviders
-                    .FirstOrDefault(s =>
-                        s.Id.Equals(configuration.PreferredSource,
-                            StringComparison.InvariantCultureIgnoreCase))?.Id;
-
-                if (string.IsNullOrEmpty(configuration.PreferredSource))
-                {
-                    ModelState.AddModelError(nameof(configuration.PreferredSource),
-                    $"Unsupported source, please check /misc/rate-sources to see valid values ({configuration.PreferredSource})");
+                    if (string.IsNullOrEmpty(configuration.PreferredSource))
+                    {
+                        ModelState.AddModelError(nameof(configuration.PreferredSource),
+                        $"Unsupported source, please check /misc/rate-sources to see valid values ({configuration.PreferredSource})");
+                    }
                 }
             }
         }

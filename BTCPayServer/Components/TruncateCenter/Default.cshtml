@@ -36,7 +36,7 @@
     @if (Model.Copy)
     {
         <button type="button" class="btn btn-link p-0" @(Model.IsVue ? ":" : string.Empty)data-clipboard=@Safe.Json(Model.Text)>
-            <vc:icon symbol="copy" />
+            <vc:icon symbol="actions-copy" />
         </button>
     }
     @if (!string.IsNullOrEmpty(Model.Link))

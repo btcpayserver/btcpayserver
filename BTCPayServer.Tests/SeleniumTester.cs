@@ -90,7 +90,6 @@ namespace BTCPayServer.Tests
 
         public void PayInvoice(bool mine = false, decimal? amount = null)
         {
-
             if (amount is not null)
             {
                 Driver.FindElement(By.Id("test-payment-amount")).Clear();
@@ -98,19 +97,19 @@ namespace BTCPayServer.Tests
             }
             Driver.WaitUntilAvailable(By.Id("FakePayment"));
             Driver.FindElement(By.Id("FakePayment")).Click();
+            TestUtils.Eventually(() =>
+            {
+                Driver.WaitForElement(By.Id("CheatSuccessMessage"));
+            });
             if (mine)
             {
-                TestUtils.Eventually(() =>
-                {
-                    Driver.WaitForElement(By.Id("CheatSuccessMessage"));
-                });
                 MineBlockOnInvoiceCheckout();
             }
         }
 
         public void MineBlockOnInvoiceCheckout()
         {
-            retry:
+retry:
             try
             {
                 Driver.FindElement(By.CssSelector("#mine-block button")).Click();
@@ -197,32 +196,14 @@ namespace BTCPayServer.Tests
             TestLogs.LogInformation($"Created store {name}");
             Driver.WaitForElement(By.Id("Name")).SendKeys(name);
             var rateSource = new SelectElement(Driver.FindElement(By.Id("PreferredExchange")));
-            Assert.Equal("Kraken (Recommended)", rateSource.SelectedOption.Text);
+            Assert.Equal("Recommendation (Kraken)", rateSource.SelectedOption.Text);
             rateSource.SelectByText("CoinGecko");
             Driver.WaitForElement(By.Id("Create")).Click();
-            Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
-            Driver.FindElement(By.Id($"SectionNav-{StoreNavPages.General.ToString()}")).Click();
+            Driver.FindElement(By.Id("StoreNav-General")).Click();
             var storeId = Driver.WaitForElement(By.Id("Id")).GetAttribute("value");
             if (keepId)
                 StoreId = storeId;
             return (name, storeId);
-        }
-        public void EnableCheckout(CheckoutType checkoutType, bool bip21 = false)
-        {
-            GoToStore(StoreNavPages.CheckoutAppearance);
-            if (checkoutType == CheckoutType.V2)
-            {
-                Driver.SetCheckbox(By.Id("UseClassicCheckout"), false);
-                Driver.WaitForElement(By.Id("OnChainWithLnInvoiceFallback"));
-                Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), bip21);
-            }
-            else
-            {
-                Driver.SetCheckbox(By.Id("UseClassicCheckout"), true);
-            }
-            Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
-            Assert.Contains("Store successfully updated", FindAlertMessage().Text);
-            Assert.True(Driver.FindElement(By.Id("UseClassicCheckout")).Selected);
         }
 
         public Mnemonic GenerateWallet(string cryptoCode = "BTC", string seed = "", bool? importkeys = null, bool isHotWallet = false, ScriptPubKeyType format = ScriptPubKeyType.Segwit)
@@ -348,10 +329,11 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
 
             var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
-            if (enabled.Text == "Enable")
+            if (enabled.Selected == false)
             {
                 enabled.Click();
-                Assert.Contains($"{cryptoCode} Lightning payments are now enabled for this store.", FindAlertMessage().Text);
+                Driver.FindElement(By.Id("save")).Click();
+                Assert.Contains($"{cryptoCode} Lightning settings successfully updated", FindAlertMessage().Text);
             }
         }
 
@@ -409,14 +391,12 @@ namespace BTCPayServer.Tests
         public void Logout()
         {
             if (!Driver.PageSource.Contains("id=\"Nav-Logout\""))
-            {
-                Driver.Navigate().GoToUrl(ServerUri);
-            }
+                GoToUrl("/account");
             Driver.FindElement(By.Id("Nav-Account")).Click();
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
 
-        public void LogIn(string user, string password)
+        public void LogIn(string user, string password = "123456")
         {
             Driver.FindElement(By.Id("Email")).SendKeys(user);
             Driver.FindElement(By.Id("Password")).SendKeys(password);
@@ -438,23 +418,11 @@ namespace BTCPayServer.Tests
                     WalletId = new WalletId(storeId, WalletId.CryptoCode);
             }
 
-            Driver.FindElement(By.Id("StoreNav-StoreSettings")).Click();
-
             if (storeNavPage != StoreNavPages.General)
             {
-                switch (storeNavPage)
-                {
-                    case StoreNavPages.Dashboard:
-                    case StoreNavPages.Payouts:
-                    case StoreNavPages.PayButton:
-                    case StoreNavPages.PullPayments:
-                        Driver.FindElement(By.Id($"StoreNav-{storeNavPage.ToString()}")).Click();
-                        break;
-                    default:
-                        Driver.FindElement(By.Id($"SectionNav-{storeNavPage.ToString()}")).Click();
-                        break;
-                }
+                Driver.FindElement(By.Id($"StoreNav-{StoreNavPages.General}")).Click();
             }
+            Driver.FindElement(By.Id($"StoreNav-{storeNavPage}")).Click();
         }
 
         public void GoToWalletSettings(string cryptoCode = "BTC")
@@ -470,9 +438,9 @@ namespace BTCPayServer.Tests
         {
             Driver.FindElement(By.Id($"StoreNav-Lightning{cryptoCode}")).Click();
             // if Lightning is already set up we need to navigate to the settings
-            if (Driver.PageSource.Contains("id=\"SectionNav-LightningSettings\""))
+            if (Driver.PageSource.Contains("id=\"StoreNav-LightningSettings\""))
             {
-                Driver.FindElement(By.Id("SectionNav-LightningSettings")).Click();
+                Driver.FindElement(By.Id("StoreNav-LightningSettings")).Click();
             }
         }
 
@@ -488,6 +456,7 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("StoreNav-Invoices")).Click();
             Driver.FindElement(By.Id($"invoice-checkout-{invoiceId}")).Click();
             CheckForJSErrors();
+            Driver.WaitUntilAvailable(By.Id("Checkout"));
         }
 
         public void GoToInvoice(string id)
@@ -527,11 +496,10 @@ namespace BTCPayServer.Tests
             string currency = "USD",
             string refundEmail = "",
             string defaultPaymentMethod = null,
-            bool? requiresRefundEmail = null,
             StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
         )
         {
-            return CreateInvoice(null, amount, currency, refundEmail, defaultPaymentMethod, requiresRefundEmail, expectedSeverity);
+            return CreateInvoice(null, amount, currency, refundEmail, defaultPaymentMethod, expectedSeverity);
         }
 
         public string CreateInvoice(
@@ -540,7 +508,6 @@ namespace BTCPayServer.Tests
             string currency = "USD",
             string refundEmail = "",
             string defaultPaymentMethod = null,
-            bool? requiresRefundEmail = null,
             StatusMessageModel.StatusSeverity expectedSeverity = StatusMessageModel.StatusSeverity.Success
         )
         {
@@ -555,8 +522,6 @@ namespace BTCPayServer.Tests
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
             if (defaultPaymentMethod is not null)
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
-            if (requiresRefundEmail is bool)
-                new SelectElement(Driver.FindElement(By.Name("RequiresRefundEmail"))).SelectByValue(requiresRefundEmail == true ? "1" : "2");
             Driver.FindElement(By.Id("Create")).Click();
 
             var statusElement = FindAlertMessage(expectedSeverity);
@@ -637,13 +602,47 @@ retry:
             Driver.Navigate().GoToUrl(new Uri(ServerUri, relativeUrl));
         }
 
-        public void GoToServer(ServerNavPages navPages = ServerNavPages.Index)
+        public void GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
         {
             Driver.FindElement(By.Id("Nav-ServerSettings")).Click();
-            if (navPages != ServerNavPages.Index)
+            if (navPages != ServerNavPages.Policies)
             {
                 Driver.FindElement(By.Id($"SectionNav-{navPages}")).Click();
             }
+        }
+
+        public void AddUserToStore(string storeId, string email, string role)
+        {
+            if (Driver.FindElements(By.Id("AddUser")).Count == 0)
+            {
+                GoToStore(storeId, StoreNavPages.Users);
+            }
+            Driver.FindElement(By.Id("Email")).SendKeys(email);
+            new SelectElement(Driver.FindElement(By.Id("Role"))).SelectByValue(role);
+            Driver.FindElement(By.Id("AddUser")).Click();
+            Assert.Contains("User added successfully", FindAlertMessage().Text);
+        }
+
+        public void AssertPageAccess(bool shouldHaveAccess, string url)
+        {
+            GoToUrl(url);
+            Assert.DoesNotMatch("404 - Page not found</h", Driver.PageSource);
+            if (shouldHaveAccess)
+                Assert.DoesNotMatch("- Denied</h", Driver.PageSource);
+            else
+                Assert.Contains("- Denied</h", Driver.PageSource);
+        }
+
+        public (string appName, string appId) CreateApp(string type, string name = null)
+        {
+            if (string.IsNullOrEmpty(name))
+                name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
+            Driver.FindElement(By.Id($"StoreNav-Create{type}")).Click();
+            Driver.FindElement(By.Name("AppName")).SendKeys(name);
+            Driver.FindElement(By.Id("Create")).Click();
+            Assert.Contains("App successfully created", FindAlertMessage().Text);
+            var appId = Driver.Url.Split('/')[4];
+            return (name, appId);
         }
     }
 }

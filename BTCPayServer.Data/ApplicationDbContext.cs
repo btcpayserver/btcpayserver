@@ -12,36 +12,22 @@ namespace BTCPayServer.Data
     {
         public ApplicationDbContext CreateDbContext(string[] args)
         {
-
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
-
-            builder.UseSqlite("Data Source=temp.db");
-
-            return new ApplicationDbContext(builder.Options, true);
+			// Same as launchsettings.json, it's connecting to the docker's postgres.
+            builder.UseNpgsql("User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver");
+            return new ApplicationDbContext(builder.Options);
         }
     }
-
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
     {
-        private readonly bool _designTime;
-
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, bool designTime = false)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options)
         {
-            _designTime = designTime;
         }
-#nullable enable
-        public async Task<string?> GetMigrationState()
-        {
-            return (await Settings.FromSqlRaw("SELECT \"Id\", \"Value\" FROM \"Settings\" WHERE \"Id\"='MigrationData'").AsNoTracking().FirstOrDefaultAsync())?.Value;
-        }
-#nullable restore
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
         public DbSet<APIKeyData> ApiKeys { get; set; }
         public DbSet<AppData> Apps { get; set; }
-        public DbSet<CustodianAccountData> CustodianAccount { get; set; }
         public DbSet<StoredFile> Files { get; set; }
-        public DbSet<InvoiceEventData> InvoiceEvents { get; set; }
         public DbSet<InvoiceSearchData> InvoiceSearches { get; set; }
         public DbSet<InvoiceWebhookDeliveryData> InvoiceWebhookDeliveries { get; set; }
         public DbSet<InvoiceData> Invoices { get; set; }
@@ -77,13 +63,6 @@ namespace BTCPayServer.Data
         public DbSet<PayoutProcessorData> PayoutProcessors { get; set; }
         public DbSet<FormData> Forms { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            var isConfigured = optionsBuilder.Options.Extensions.OfType<RelationalOptionsExtension>().Any();
-            if (!isConfigured)
-                optionsBuilder.UseSqlite("Data Source=temp.db");
-        }
-
         protected override void OnModelCreating(ModelBuilder builder)
         {
             base.OnModelCreating(builder);
@@ -94,9 +73,7 @@ namespace BTCPayServer.Data
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder, Database);
             AppData.OnModelCreating(builder, Database);
-            CustodianAccountData.OnModelCreating(builder, Database);
             //StoredFile.OnModelCreating(builder);
-            InvoiceEventData.OnModelCreating(builder);
             InvoiceSearchData.OnModelCreating(builder);
             InvoiceWebhookDeliveryData.OnModelCreating(builder);
             InvoiceData.OnModelCreating(builder, Database);
@@ -107,10 +84,10 @@ namespace BTCPayServer.Data
             //PayjoinLock.OnModelCreating(builder);
             PaymentRequestData.OnModelCreating(builder, Database);
             PaymentData.OnModelCreating(builder, Database);
-            PayoutData.OnModelCreating(builder);
+            PayoutData.OnModelCreating(builder, Database);
             PendingInvoiceData.OnModelCreating(builder);
             //PlannedTransaction.OnModelCreating(builder);
-            PullPaymentData.OnModelCreating(builder);
+            PullPaymentData.OnModelCreating(builder, Database);
             RefundData.OnModelCreating(builder);
             SettingData.OnModelCreating(builder, Database);
             StoreSettingData.OnModelCreating(builder, Database);
@@ -131,28 +108,6 @@ namespace BTCPayServer.Data
             WebhookData.OnModelCreating(builder, Database);
             FormData.OnModelCreating(builder, Database);
             StoreRole.OnModelCreating(builder, Database);
-
-
-            if (Database.IsSqlite() && !_designTime)
-            {
-                // SQLite does not have proper support for DateTimeOffset via Entity Framework Core, see the limitations
-                // here: https://docs.microsoft.com/en-us/ef/core/providers/sqlite/limitations#query-limitations
-                // To work around this, when the Sqlite database provider is used, all model properties of type DateTimeOffset
-                // use the DateTimeOffsetToBinaryConverter
-                // Based on: https://github.com/aspnet/EntityFrameworkCore/issues/10784#issuecomment-415769754
-                // This only supports millisecond precision, but should be sufficient for most use cases.
-                foreach (var entityType in builder.Model.GetEntityTypes())
-                {
-                    var properties = entityType.ClrType.GetProperties().Where(p => p.PropertyType == typeof(DateTimeOffset));
-                    foreach (var property in properties)
-                    {
-                        builder
-                            .Entity(entityType.Name)
-                            .Property(property.Name)
-                            .HasConversion(new Microsoft.EntityFrameworkCore.Storage.ValueConversion.DateTimeOffsetToBinaryConverter());
-                    }
-                }
-            }
         }
     }
 

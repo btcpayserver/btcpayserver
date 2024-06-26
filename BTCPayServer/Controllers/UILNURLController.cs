@@ -19,6 +19,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payouts;
 using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
@@ -34,6 +35,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using NBitcoin;
+using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
@@ -47,29 +49,27 @@ namespace BTCPayServer
     {
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly LightningLikePaymentHandler _lightningLikePaymentHandler;
+        private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly StoreRepository _storeRepository;
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly LinkGenerator _linkGenerator;
         private readonly LightningAddressService _lightningAddressService;
-        private readonly LightningLikePayoutHandler _lightningLikePayoutHandler;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly BTCPayNetworkJsonSerializerSettings _btcPayNetworkJsonSerializerSettings;
         private readonly IPluginHookService _pluginHookService;
         private readonly InvoiceActivator _invoiceActivator;
+        private readonly PaymentMethodHandlerDictionary _handlers;
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
-            BTCPayNetworkProvider btcPayNetworkProvider,
-            LightningLikePaymentHandler lightningLikePaymentHandler,
+            PayoutMethodHandlerDictionary payoutHandlers,
+            PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository,
             AppService appService,
             UIInvoiceController invoiceController,
             LinkGenerator linkGenerator,
             LightningAddressService lightningAddressService,
-            LightningLikePayoutHandler lightningLikePayoutHandler,
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             IPluginHookService pluginHookService,
@@ -77,36 +77,39 @@ namespace BTCPayServer
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
-            _lightningLikePaymentHandler = lightningLikePaymentHandler;
+            _payoutHandlers = payoutHandlers;
+            _handlers = handlers;
             _storeRepository = storeRepository;
             _appService = appService;
             _invoiceController = invoiceController;
             _linkGenerator = linkGenerator;
             _lightningAddressService = lightningAddressService;
-            _lightningLikePayoutHandler = lightningLikePayoutHandler;
             _pullPaymentHostedService = pullPaymentHostedService;
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _pluginHookService = pluginHookService;
             _invoiceActivator = invoiceActivator;
         }
+
+        [EnableCors(CorsPolicies.All)]
         [HttpGet("withdraw/pp/{pullPaymentId}")]
         public Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, [FromQuery] string pr, CancellationToken cancellationToken)
         {
             return GetLNURLForPullPayment(cryptoCode, pullPaymentId, pr, pullPaymentId, cancellationToken);
         }
+
         [NonAction]
         internal async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, string k1, CancellationToken cancellationToken)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = GetNetwork(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
                 return NotFound();
             }
-
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
+            
+            var pmi = PayoutTypes.LN.GetPayoutMethodId(cryptoCode);
+            var paymentMethodId = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
             var pp = await _pullPaymentHostedService.GetPullPayment(pullPaymentId, true);
-            if (!pp.IsRunning() || !pp.IsSupported(pmi))
+            if (!pp.IsRunning() || !pp.IsSupported(pmi) || !_payoutHandlers.TryGetValue(pmi, out var payoutHandler))
             {
                 return NotFound();
             }
@@ -128,7 +131,7 @@ namespace BTCPayServer
                 CurrentBalance = LightMoney.FromUnit(remaining, unit),
                 MinWithdrawable =
                     LightMoney.FromUnit(
-                        Math.Min(await _lightningLikePayoutHandler.GetMinimumPayoutAmount(pmi, null), remaining),
+                        Math.Min(await payoutHandler.GetMinimumPayoutAmount(null), remaining),
                         unit),
                 Tag = "withdrawRequest",
                 Callback = new Uri(Request.GetCurrentUrl()),
@@ -149,9 +152,7 @@ namespace BTCPayServer
             if (result.MinimumAmount < request.MinWithdrawable || result.MinimumAmount > request.MaxWithdrawable)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = $"Payment request was not within bounds ({request.MinWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} - {request.MaxWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} sats)" });
             var store = await _storeRepository.FindStore(pp.StoreId);
-            var pm = store!.GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                .OfType<LightningSupportedPaymentMethod>()
-                .FirstOrDefault(method => method.PaymentId == pmi);
+            var pm = store!.GetPaymentMethodConfig<LightningPaymentMethodConfig>(paymentMethodId, _handlers);
             if (pm is null)
             {
                 return NotFound();
@@ -160,7 +161,7 @@ namespace BTCPayServer
             var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),
-                PaymentMethodId = pmi,
+                PayoutMethodId = pmi,
                 PullPaymentId = pullPaymentId,
                 StoreId = pp.StoreId,
                 Value = result.MinimumAmount.ToDecimal(unit)
@@ -169,15 +170,16 @@ namespace BTCPayServer
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid" });
 
+            var lightningHandler = _handlers.GetLightningHandler(network);
             switch (claimResponse.PayoutData.State)
             {
                 case PayoutState.AwaitingPayment:
                     {
                         var client =
-                            _lightningLikePaymentHandler.CreateLightningClient(pm, network);
+                            lightningHandler.CreateLightningClient(pm);
                         var payResult = await UILightningLikePayoutController.TrypayBolt(client,
                             claimResponse.PayoutData.GetBlob(_btcPayNetworkJsonSerializerSettings),
-                            claimResponse.PayoutData, result, pmi, cancellationToken);
+                            claimResponse.PayoutData, result, payoutHandler.Currency, cancellationToken);
 
                         switch (payResult.Result)
                         {
@@ -226,10 +228,18 @@ namespace BTCPayServer
             return Ok(request);
         }
 
+        private BTCPayNetwork GetNetwork(string cryptoCode)
+        {
+            if (!_handlers.TryGetValue(PaymentTypes.LNURL.GetPaymentMethodId(cryptoCode), out var o) ||
+                o is not LNURLPayPaymentHandler { Network: var network })
+                return null;
+            return network;
+        }
+
         [HttpGet("pay/app/{appId}/{itemCode}")]
         public async Task<IActionResult> GetLNURLForApp(string cryptoCode, string appId, string itemCode = null)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = GetNetwork(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
                 return NotFound();
@@ -296,11 +306,11 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var createInvoice = new CreateInvoiceRequest()
+            var createInvoice = new CreateInvoiceRequest
             {
-                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup? null:  item?.Price,
+                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? null : item?.Price,
                 Currency = currencyCode,
-                Checkout = new InvoiceDataBase.CheckoutOptions()
+                Checkout = new InvoiceDataBase.CheckoutOptions
                 {
                     RedirectURL = app.AppType switch
                     {
@@ -312,6 +322,7 @@ namespace BTCPayServer
                 AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
             };
 
+            var allowOverpay = item?.PriceType is not ViewPointOfSaleViewModel.ItemPriceType.Fixed;
             var invoiceMetadata = new InvoiceMetadata { OrderId = AppService.GetRandomOrderId() };
             if (item != null)
             {
@@ -326,7 +337,7 @@ namespace BTCPayServer
                 store.GetStoreBlob(),
                 createInvoice,
                 additionalTags: new List<string> { AppService.GetAppInternalTag(appId) },
-                allowOverpay: false);
+                allowOverpay: allowOverpay);
         }
 
         public class EditLightningAddressVM
@@ -495,7 +506,7 @@ namespace BTCPayServer
                 });
         }
 
-        private async Task<IActionResult> GetLNURLRequest(
+        public async Task<IActionResult> GetLNURLRequest(
             string cryptoCode,
             Data.StoreData store,
             Data.StoreBlob blob,
@@ -514,7 +525,7 @@ namespace BTCPayServer
             {
                 createInvoice.Checkout ??= new InvoiceDataBase.CheckoutOptions();
                 createInvoice.Checkout.LazyPaymentMethods = false;
-                createInvoice.Checkout.PaymentMethods = new[] { pmi.ToStringNormalized() };
+                createInvoice.Checkout.PaymentMethods = new[] { pmi.ToString() };
                 i = await _invoiceController.CreateInvoiceCoreRaw(createInvoice, store, Request.GetAbsoluteRoot(), additionalTags);
             }
             catch (Exception e)
@@ -522,7 +533,9 @@ namespace BTCPayServer
                 return this.CreateAPIError(null, e.Message);
             }
             lnurlRequest = await CreateLNUrlRequestFromInvoice(cryptoCode, i, store, blob, lnurlRequest, lnUrlMetadata, allowOverpay);
-            return lnurlRequest is null ? NotFound() : Ok(lnurlRequest);
+            return lnurlRequest is null
+                ? BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Unable to create LNURL request." })
+                : Ok(lnurlRequest);
         }
 
         private async Task<LNURLPayRequest> CreateLNUrlRequestFromInvoice(
@@ -540,14 +553,17 @@ namespace BTCPayServer
             lnurlRequest ??= new LNURLPayRequest();
             lnUrlMetadata ??= new Dictionary<string, string>();
 
-            var pm = i.GetPaymentMethod(pmi);
+            var pm = i.GetPaymentPrompt(pmi);
             if (pm is null)
                 return null;
-            var paymentMethodDetails = (LNURLPayPaymentMethodDetails)pm.GetPaymentMethodDetails();
+            var handler = ((LNURLPayPaymentHandler)_handlers[pmi]);
+            var paymentMethodDetails = handler.ParsePaymentPromptDetails(pm.Details);
             bool updatePaymentMethodDetails = false;
+            List<string> searchTerms = new List<string>();
             if (lnUrlMetadata?.TryGetValue("text/identifier", out var lnAddress) is true && lnAddress is not null)
             {
                 paymentMethodDetails.ConsumedLightningAddress = lnAddress;
+                searchTerms.Add(lnAddress);
                 updatePaymentMethodDetails = true;
             }
 
@@ -561,7 +577,7 @@ namespace BTCPayServer
             lnurlRequest.Callback = new Uri(_linkGenerator.GetUriByAction(
                         action: nameof(GetLNURLForInvoice),
                         controller: "UILNURL",
-                        values: new { pmi.CryptoCode, invoiceId = i.Id }, Request.Scheme, Request.Host, Request.PathBase));
+                        values: new { cryptoCode, invoiceId = i.Id }, Request.Scheme, Request.Host, Request.PathBase));
             lnurlRequest.Metadata = JsonConvert.SerializeObject(lnUrlMetadata.Select(kv => new[] { kv.Key, kv.Value }));
             if (i.Type != InvoiceType.TopUp)
             {
@@ -580,8 +596,10 @@ namespace BTCPayServer
             }
             if (updatePaymentMethodDetails)
             {
-                pm.SetPaymentMethodDetails(paymentMethodDetails);
-                await _invoiceRepository.UpdateInvoicePaymentMethod(i.Id, pm);
+                pm.Details = JToken.FromObject(paymentMethodDetails, handler.Serializer);
+                await _invoiceRepository.UpdatePaymentDetails(i.Id, handler, paymentMethodDetails);
+                await _invoiceRepository.AddSearchTerms(i.Id, searchTerms);
+                _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(i.Id, paymentMethodDetails, pmi));
             }
             return lnurlRequest;
         }
@@ -605,18 +623,16 @@ namespace BTCPayServer
                 lnurlRequest.MaxSendable = LightMoney.FromUnit(6.12m, LightMoneyUnit.BTC);
         }
 
-        PaymentMethodId GetLNUrlPaymentMethodId(string cryptoCode, Data.StoreData store, out LNURLPaySupportedPaymentMethod lnUrlSettings)
+        PaymentMethodId GetLNUrlPaymentMethodId(string cryptoCode, Data.StoreData store, out LNURLPaymentMethodConfig lnUrlSettings)
         {
             lnUrlSettings = null;
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = GetNetwork(cryptoCode);
             if (network is null || !network.SupportLightning)
                 return null;
-            var pmi = new PaymentMethodId(cryptoCode, PaymentTypes.LNURLPay);
-            var lnpmi = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-            var methods = store.GetSupportedPaymentMethods(_btcPayNetworkProvider);
-            var lnUrlMethod =
-                methods.FirstOrDefault(method => method.PaymentId == pmi) as LNURLPaySupportedPaymentMethod;
-            var lnMethod = methods.FirstOrDefault(method => method.PaymentId == lnpmi);
+            var pmi = PaymentTypes.LNURL.GetPaymentMethodId(cryptoCode);
+            var lnpmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+            var lnUrlMethod = store.GetPaymentMethodConfig<LNURLPaymentMethodConfig>(pmi, _handlers);
+            var lnMethod = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(lnpmi, _handlers);
             if (lnUrlMethod is null || lnMethod is null)
                 return null;
             var blob = store.GetStoreBlob();
@@ -632,7 +648,7 @@ namespace BTCPayServer
         public async Task<IActionResult> GetLNURLForInvoice(string invoiceId, string cryptoCode,
             [FromQuery] long? amount = null, string comment = null)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = GetNetwork(cryptoCode);
             if (network is null || !network.SupportLightning)
             {
                 return NotFound();
@@ -646,30 +662,30 @@ namespace BTCPayServer
             if (store is null)
                 return NotFound();
 
-            if (i.Status == InvoiceStatusLegacy.New)
+            if (i.Status == InvoiceStatus.New)
             {
                 var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out var lnurlSupportedPaymentMethod);
                 if (pmi is null)
                     return NotFound();
-
-                var lightningPaymentMethod = i.GetPaymentMethod(pmi);
-                var paymentMethodDetails =
-                    lightningPaymentMethod?.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
-                if (paymentMethodDetails is not null && !paymentMethodDetails.Activated)
+                var handler = ((LNURLPayPaymentHandler)_handlers[pmi]);
+                var lightningPaymentMethod = i.GetPaymentPrompt(pmi);
+                var promptDetails = handler.ParsePaymentPromptDetails(lightningPaymentMethod.Details);
+                if (promptDetails is null)
                 {
-                    if (!await _invoiceActivator.ActivateInvoicePaymentMethod(pmi, i, store))
+                    if (!await _invoiceActivator.ActivateInvoicePaymentMethod(i.Id, pmi))
                         return NotFound();
                     i = await _invoiceRepository.GetInvoice(invoiceId, true);
-                    lightningPaymentMethod = i.GetPaymentMethod(pmi);
-                    paymentMethodDetails = lightningPaymentMethod.GetPaymentMethodDetails() as LNURLPayPaymentMethodDetails;
+                    lightningPaymentMethod = i.GetPaymentPrompt(pmi);
+                    promptDetails = handler.ParsePaymentPromptDetails(lightningPaymentMethod.Details);
                 }
 
-                if (paymentMethodDetails?.LightningSupportedPaymentMethod is null)
+                var lnConfig = _handlers.GetLightningConfig(store, network);
+                if (lnConfig is null)
                     return NotFound();
 
-                LNURLPayRequest lnurlPayRequest = paymentMethodDetails.PayRequest;
+                LNURLPayRequest lnurlPayRequest = promptDetails.PayRequest;
                 var blob = store.GetStoreBlob();
-                if (paymentMethodDetails.PayRequest is null)
+                if (promptDetails.PayRequest is null)
                 {
                     lnurlPayRequest = await CreateLNUrlRequestFromInvoice(cryptoCode, i, store, blob, allowOverpay: false);
                     if (lnurlPayRequest is null)
@@ -705,23 +721,20 @@ namespace BTCPayServer
                 if (lnurlSupportedPaymentMethod.LUD12Enabled)
                 {
                     comment = comment?.Truncate(2000);
-                    if (paymentMethodDetails.ProvidedComment != comment)
+                    if (promptDetails.ProvidedComment != comment)
                     {
-                        paymentMethodDetails.ProvidedComment = comment;
+                        promptDetails.ProvidedComment = comment;
                         updatePaymentMethod = true;
                     }
                 }
-
-                if (string.IsNullOrEmpty(paymentMethodDetails.BOLT11) || paymentMethodDetails.GeneratedBoltAmount != amt)
+                if (string.IsNullOrEmpty(lightningPaymentMethod.Destination) || promptDetails.GeneratedBoltAmount != amt)
                 {
-                    var client =
-                        _lightningLikePaymentHandler.CreateLightningClient(
-                            paymentMethodDetails.LightningSupportedPaymentMethod, network);
-                    if (!string.IsNullOrEmpty(paymentMethodDetails.BOLT11))
+                    var client = _handlers.GetLightningHandler(network).CreateLightningClient(lnConfig);
+                    if (!string.IsNullOrEmpty(lightningPaymentMethod.Destination))
                     {
                         try
                         {
-                            await client.CancelInvoice(paymentMethodDetails.InvoiceId);
+                            await client.CancelInvoice(promptDetails.InvoiceId);
                         }
                         catch (Exception)
                         {
@@ -764,26 +777,26 @@ namespace BTCPayServer
                         });
                     }
 
-                    paymentMethodDetails.BOLT11 = invoice.BOLT11;
-                    paymentMethodDetails.PaymentHash = string.IsNullOrEmpty(invoice.PaymentHash) ? null : uint256.Parse(invoice.PaymentHash);
-                    paymentMethodDetails.Preimage = string.IsNullOrEmpty(invoice.Preimage) ? null : uint256.Parse(invoice.Preimage);
-                    paymentMethodDetails.InvoiceId = invoice.Id;
-                    paymentMethodDetails.GeneratedBoltAmount = amt;
+                    lightningPaymentMethod.Destination = invoice.BOLT11;
+                    promptDetails.PaymentHash = string.IsNullOrEmpty(invoice.PaymentHash) ? null : uint256.Parse(invoice.PaymentHash);
+                    promptDetails.Preimage = string.IsNullOrEmpty(invoice.Preimage) ? null : uint256.Parse(invoice.Preimage);
+                    promptDetails.InvoiceId = invoice.Id;
+                    promptDetails.GeneratedBoltAmount = amt;
+                    lightningPaymentMethod.Details = JToken.FromObject(promptDetails, handler.Serializer);
                     updatePaymentMethod = true;
                 }
 
                 if (updatePaymentMethod)
                 {
-                    lightningPaymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
-                    await _invoiceRepository.UpdateInvoicePaymentMethod(invoiceId, lightningPaymentMethod);
-                    _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId, paymentMethodDetails, pmi));
+                    await _invoiceRepository.UpdatePrompt(invoiceId, lightningPaymentMethod);
+                    _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoiceId, promptDetails, pmi));
                 }
 
                 return Ok(new LNURLPayRequest.LNURLPayRequestCallbackResponse
                 {
                     Disposable = true,
                     Routes = Array.Empty<string>(),
-                    Pr = paymentMethodDetails.BOLT11,
+                    Pr = lightningPaymentMethod.Destination,
                     SuccessAction = successAction
                 });
             }
@@ -800,8 +813,8 @@ namespace BTCPayServer
         [HttpGet("~/stores/{storeId}/plugins/lightning-address")]
         public async Task<IActionResult> EditLightningAddress(string storeId)
         {
-            if (ControllerContext.HttpContext.GetStoreData().GetEnabledPaymentIds(_btcPayNetworkProvider)
-                .All(id => id.PaymentType != LNURLPayPaymentType.Instance))
+            if (ControllerContext.HttpContext.GetStoreData().GetEnabledPaymentIds()
+                .All(id => _handlers.TryGet(id) is not LNURLPayPaymentHandler))
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {

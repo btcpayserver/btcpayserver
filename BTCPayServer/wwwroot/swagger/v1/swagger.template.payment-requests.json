@@ -454,19 +454,6 @@
                         "nullable": true,
                         "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                     },
-                    "embeddedCSS": {
-                        "type": "string",
-                        "description": "Custom CSS styling for the payment request",
-                        "nullable": true,
-                        "format": "css",
-                        "maximum": 500
-                    },
-                    "customCSSLink": {
-                        "type": "string",
-                        "description": "Custom CSS link for styling the payment request",
-                        "nullable": true,
-                        "format": "uri"
-                    },
                     "allowCustomPaymentAmounts": {
                         "type": "boolean",
                         "description": "Whether to allow users to create invoices that partially pay the payment request ",

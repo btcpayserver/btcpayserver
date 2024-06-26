@@ -63,12 +63,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 return StoreNotFound();
             }
-
-            if (!_storeRepository.CanDeleteStores())
-            {
-                return this.CreateAPIError("unsupported",
-                    "BTCPay Server is using a database server that does not allow you to remove stores.");
-            }
             await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User));
             return Ok();
         }
@@ -122,9 +116,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = data.StoreName,
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
+                BrandColor = storeBlob.BrandColor,
+                CssUrl = storeBlob.CssUrl?.ToString(),
+                LogoUrl = storeBlob.LogoUrl?.ToString(),
+                PaymentSoundUrl = storeBlob.PaymentSoundUrl?.ToString(),
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
-                DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToStringNormalized(),
+                DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToString(),
                 //blob
                 //we do not include DefaultCurrencyPairs,Spread, PreferredExchange, RateScripting, RateScript  in this model and instead opt to set it in stores/storeid/rates endpoints
                 //we do not include ExcludedPaymentMethods in this model and instead opt to set it in stores/storeid/payment-methods endpoints
@@ -132,8 +130,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 //we do not include PaymentMethodCriteria because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
                 NetworkFeeMode = storeBlob.NetworkFeeMode,
                 DefaultCurrency = storeBlob.DefaultCurrency,
-                RequiresRefundEmail = storeBlob.RequiresRefundEmail,
-                CheckoutType = storeBlob.CheckoutType,
                 Receipt = InvoiceDataBase.ReceiptOptions.Merge(storeBlob.ReceiptOptions, null),
                 LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi,
                 LightningPrivateRouteHints = storeBlob.LightningPrivateRouteHints,
@@ -146,8 +142,6 @@ namespace BTCPayServer.Controllers.Greenfield
                 MonitoringExpiration = storeBlob.MonitoringExpiration,
                 InvoiceExpiration = storeBlob.InvoiceExpiration,
                 DisplayExpirationTimer = storeBlob.DisplayExpirationTimer,
-                CustomLogo = storeBlob.CustomLogo,
-                CustomCSS = storeBlob.CustomCSS,
                 HtmlTitle = storeBlob.HtmlTitle,
                 AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
                 LightningDescriptionTemplate = storeBlob.LightningDescriptionTemplate,
@@ -163,7 +157,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
-                    PaymentMethod = criteria.PaymentMethod.ToStringNormalized()
+                    PaymentMethod = criteria.PaymentMethod.ToString()
                 }).ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }
@@ -184,7 +178,6 @@ namespace BTCPayServer.Controllers.Greenfield
             //we do not include OnChainMinValue and LightningMaxValue because moving the CurrencyValueJsonConverter to the Client csproj is hard and requires a refactor (#1571 & #1572)
             blob.NetworkFeeMode = restModel.NetworkFeeMode;
             blob.DefaultCurrency = restModel.DefaultCurrency;
-            blob.RequiresRefundEmail = restModel.RequiresRefundEmail;
             blob.ReceiptOptions = InvoiceDataBase.ReceiptOptions.Merge(restModel.Receipt, null);
             blob.LightningAmountInSatoshi = restModel.LightningAmountInSatoshi;
             blob.LightningPrivateRouteHints = restModel.LightningPrivateRouteHints;
@@ -198,15 +191,15 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.MonitoringExpiration = restModel.MonitoringExpiration;
             blob.InvoiceExpiration = restModel.InvoiceExpiration;
             blob.DisplayExpirationTimer = restModel.DisplayExpirationTimer;
-            blob.CustomLogo = restModel.CustomLogo;
-            blob.CustomCSS = restModel.CustomCSS;
             blob.HtmlTitle = restModel.HtmlTitle;
             blob.AnyoneCanInvoice = restModel.AnyoneCanCreateInvoice;
             blob.LightningDescriptionTemplate = restModel.LightningDescriptionTemplate;
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
-            if (restModel.CheckoutType.HasValue)
-                blob.CheckoutType = restModel.CheckoutType.Value;
+            blob.BrandColor = restModel.BrandColor;
+            blob.LogoUrl = restModel.LogoUrl is null ? null : UnresolvedUri.Create(restModel.LogoUrl);
+            blob.CssUrl = restModel.CssUrl is null ? null : UnresolvedUri.Create(restModel.CssUrl);
+            blob.PaymentSoundUrl = restModel.PaymentSoundUrl is null ? null : UnresolvedUri.Create(restModel.PaymentSoundUrl);
             if (restModel.AutoDetectLanguage.HasValue)
                 blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
             if (restModel.ShowPayInWalletButton.HasValue)
@@ -228,7 +221,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     },
                     PaymentMethod = PaymentMethodId.Parse(criteria.PaymentMethod)
                 }).ToList() ?? new List<PaymentMethodCriteria>();
-            blob.NormalizeToRelativeLinks(Request);
             model.SetStoreBlob(blob);
         }
 
@@ -252,6 +244,18 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!string.IsNullOrEmpty(request.Website) && !Uri.TryCreate(request.Website, UriKind.Absolute, out _))
             {
                 ModelState.AddModelError(nameof(request.Website), "Website is not a valid url");
+            }
+            if (!string.IsNullOrEmpty(request.LogoUrl) && !Uri.TryCreate(request.LogoUrl, UriKind.Absolute, out _))
+            {
+                ModelState.AddModelError(nameof(request.LogoUrl), "Logo is not a valid url");
+            }
+            if (!string.IsNullOrEmpty(request.CssUrl) && !Uri.TryCreate(request.CssUrl, UriKind.Absolute, out _))
+            {
+                ModelState.AddModelError(nameof(request.CssUrl), "CSS is not a valid url");
+            }
+            if (!string.IsNullOrEmpty(request.BrandColor) && !ColorPalette.IsValid(request.BrandColor))
+            {
+                ModelState.AddModelError(nameof(request.BrandColor), "Brand color is not a valid HEX Color (e.g. #F7931A)");
             }
             if (request.InvoiceExpiration < TimeSpan.FromMinutes(1) && request.InvoiceExpiration > TimeSpan.FromMinutes(60 * 24 * 24))
                 ModelState.AddModelError(nameof(request.InvoiceExpiration), "InvoiceExpiration can only be between 1 and 34560 mins");

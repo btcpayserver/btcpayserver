@@ -13,20 +13,17 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.DropForeignKey(
-                    name: "FK_Invoices_Refunds_Id_CurrentRefundId",
-                    table: "Invoices");
+            migrationBuilder.DropForeignKey(
+                name: "FK_Invoices_Refunds_Id_CurrentRefundId",
+                table: "Invoices");
 
-                migrationBuilder.DropIndex(
-                    name: "IX_Invoices_Id_CurrentRefundId",
-                    table: "Invoices");
+            migrationBuilder.DropIndex(
+                name: "IX_Invoices_Id_CurrentRefundId",
+                table: "Invoices");
 
-                migrationBuilder.DropColumn(
-                    name: "CurrentRefundId",
-                    table: "Invoices");
-            }
+            migrationBuilder.DropColumn(
+                name: "CurrentRefundId",
+                table: "Invoices");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

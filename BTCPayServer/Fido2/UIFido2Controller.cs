@@ -1,6 +1,8 @@
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2.Models;
 using BTCPayServer.Models;
@@ -13,7 +15,7 @@ using Newtonsoft.Json.Linq;
 namespace BTCPayServer.Fido2
 {
     [Route("fido2")]
-    [Authorize]
+    [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
     public class UIFido2Controller : Controller
     {
         private readonly UserManager<ApplicationUser> _userManager;

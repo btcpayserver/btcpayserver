@@ -1241,22 +1241,6 @@
                         "nullable": true,
                         "description": "When the customer has paid the invoice, and a `redirectURL` is set, the checkout is redirected to `redirectURL` automatically if `redirectAutomatically` is true. Defaults to the store's settings. (The default store settings is false)"
                     },
-                    "requiresRefundEmail": {
-                        "type": "boolean",
-                        "nullable": true,
-                        "description": "Invoice will require user to provide a refund email if this option is set to `true`. Has no effect if `buyerEmail` metadata is set as there is no email to collect in this case."
-                    },
-                    "checkoutType": {
-                        "type": "string",
-                        "description": "`\"V1\"`: The original checkout form   \n`\"V2\"`: The new experimental checkout form.   \nIf `null` or unspecified, the store's settings will be used.",
-                        "nullable": true,
-                        "default": null,
-                        "enum": [
-                            null,
-                            "V1",
-                            "V2"
-                        ]
-                    },
                     "defaultLanguage": {
                         "type": "string",
                         "nullable": true,
@@ -1291,12 +1275,12 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethod": {
+                    "paymentMethodId": {
                         "$ref": "#/components/schemas/PaymentMethodId"
                     },
-                    "cryptoCode": {
+                    "currency": {
                         "type": "string",
-                        "description": "Crypto code of the payment method (e.g., \"BTC\" or \"LTC\")",
+                        "description": "The currency of the payment method (e.g., \"BTC\" or \"LTC\")",
                         "example": "BTC"
                     },
                     "destination": {
@@ -1334,10 +1318,10 @@
                         "format": "decimal",
                         "description": "The invoice amount, converted to this payment method's currency"
                     },
-                    "networkFee": {
+                    "paymentMethodFee": {
                         "type": "string",
                         "format": "decimal",
-                        "description": "The added merchant fee to pay for network costs of this payment method."
+                        "description": "The added merchant fee to pay for additional costs incurred by this payment method."
                     },
                     "payments": {
                         "type": "array",

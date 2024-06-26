@@ -1,13 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Lightning;
-using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -19,14 +21,21 @@ namespace BTCPayServer.Controllers
     public class UIPublicLightningNodeInfoController : Controller
     {
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
-        private readonly LightningLikePaymentHandler _LightningLikePaymentHandler;
+        private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
+        private readonly UriResolver _uriResolver;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly StoreRepository _StoreRepository;
 
         public UIPublicLightningNodeInfoController(BTCPayNetworkProvider btcPayNetworkProvider,
-            LightningLikePaymentHandler lightningLikePaymentHandler, StoreRepository storeRepository)
+            Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
+            UriResolver uriResolver,
+            PaymentMethodHandlerDictionary handlers,
+            StoreRepository storeRepository)
         {
             _BtcPayNetworkProvider = btcPayNetworkProvider;
-            _LightningLikePaymentHandler = lightningLikePaymentHandler;
+            _paymentModelExtensions = paymentModelExtensions;
+            _uriResolver = uriResolver;
+            _handlers = handlers;
             _StoreRepository = storeRepository;
         }
 
@@ -35,7 +44,8 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> ShowLightningNodeInfo(string storeId, string cryptoCode)
         {
             var store = await _StoreRepository.FindStore(storeId);
-            if (store == null)
+            var pmi = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+            if (store == null || _handlers.TryGet(pmi) is not LightningLikePaymentHandler handler)
                 return NotFound();
 
             var storeBlob = store.GetStoreBlob();
@@ -43,17 +53,15 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = cryptoCode,
                 StoreName = store.StoreName,
-                StoreBranding = new StoreBrandingViewModel(storeBlob)
+                StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob)
             };
             try
             {
-                var paymentMethodDetails = GetExistingLightningSupportedPaymentMethod(cryptoCode, store);
-                var network = _BtcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-                var nodeInfo = await _LightningLikePaymentHandler.GetNodeInfo(paymentMethodDetails, network,
-                    new InvoiceLogs(), throws: true);
+                var paymentMethodDetails = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(pmi, _handlers);
+                var nodeInfo = await handler.GetNodeInfo(paymentMethodDetails, null, throws: true);
 
                 vm.Available = true;
-                vm.CryptoImage = GetImage(paymentMethodDetails.PaymentId, network);
+                vm.CryptoImage = GetImage(pmi);
                 vm.NodeInfo = nodeInfo.Select(n => new ShowLightningNodeInfoViewModel.NodeData(n)).ToArray();
             }
             catch (Exception)
@@ -64,21 +72,13 @@ namespace BTCPayServer.Controllers
             return View(vm);
         }
 
-        private LightningSupportedPaymentMethod GetExistingLightningSupportedPaymentMethod(string cryptoCode, StoreData store)
+        private string GetImage(PaymentMethodId paymentMethodId)
         {
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-            var existing = store.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
-                .OfType<LightningSupportedPaymentMethod>()
-                .FirstOrDefault(d => d.PaymentId == id);
-            return existing;
-        }
-
-        private string GetImage(PaymentMethodId paymentMethodId, BTCPayNetwork network)
-        {
-            var res = paymentMethodId.PaymentType == PaymentTypes.BTCLike
-                ? Url.Content(network.CryptoImagePath)
-                : Url.Content(network.LightningImagePath);
-            return "/" + res;
+            if (_paymentModelExtensions.TryGetValue(paymentMethodId, out var paymentModelExtension))
+            {
+                return "/" + Url.Content(paymentModelExtension.Image);
+            }
+            return null;
         }
     }
 

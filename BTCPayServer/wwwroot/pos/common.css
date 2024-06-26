@@ -3,6 +3,41 @@
     --wrap-max-width: 1320px;
 }
 
+#Categories nav {
+    justify-content: center;
+}
+#Categories.scrollable {
+    --scroll-bar-spacing: var(--btcpay-space-m);
+    --scroll-indicator-spacing: var(--btcpay-space-m);
+    position: relative;
+    margin-bottom: calc(var(--scroll-bar-spacing) * -1);
+}
+#Categories.scrollable nav {
+    justify-content: start;
+    overflow: auto visible;
+    -webkit-overflow-scrolling: touch;
+    margin-left: calc(var(--scroll-indicator-spacing) * -1);
+    margin-right: calc(var(--scroll-indicator-spacing) * -1);
+    padding: 0 var(--scroll-indicator-spacing) var(--scroll-bar-spacing);
+}
+
+#Categories.scrollable nav::-webkit-scrollbar {
+    display: none;
+}
+#RecentTransactionsRefresh[disabled] .icon {
+    animation: 1.25s linear infinite spinner-border;
+}
+#RecentTransactions .list-group {
+    margin: calc(var(--btcpay-modal-padding) * -1);
+    width: calc(100% + var(--btcpay-modal-padding) * 2);
+}
+#RecentTransactions .list-group-item {
+    background-color: transparent;
+}
+#RecentTransactions .list-group .badge-container {
+    flex: 0 0 5.125rem;
+    text-align: right;
+}
 .lead {
     max-width: 36em;
     margin: 0 auto 2.5rem;
@@ -60,4 +95,31 @@
 .posItem .card .card-img-top {
     max-height: 210px;
     object-fit: scale-down;
+}
+.quantities .btn {
+    --btcpay-btn-disabled-opacity: .3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: none;
+    border: transparent;
+    padding: 0;
+}
+.quantities .btn span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--btcpay-light);
+}
+.quantities .btn:hover span {
+    background: var(--btcpay-light-bg-hover);
+}
+.quantities .icon {
+    width: 1rem;
+    height: 1rem;
 }

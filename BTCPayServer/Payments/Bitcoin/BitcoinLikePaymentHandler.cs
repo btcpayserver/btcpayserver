@@ -1,10 +1,15 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using AngleSharp.Dom;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
@@ -12,263 +17,241 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
 using NBitcoin.DataEncoders;
+using NBitpayClient;
+using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinLikePaymentHandler : PaymentMethodHandlerBase<DerivationSchemeSettings, BTCPayNetwork>
+    public interface IHasNetwork
+    {
+        BTCPayNetwork Network { get; }
+    }
+    public class BitcoinLikePaymentHandler : IPaymentMethodHandler, IHasNetwork
     {
         readonly ExplorerClientProvider _ExplorerProvider;
-        private readonly BTCPayNetworkProvider _networkProvider;
+        private readonly BTCPayNetwork _Network;
         private readonly IFeeProviderFactory _FeeRateProviderFactory;
         private readonly NBXplorerDashboard _dashboard;
-        private readonly DisplayFormatter _displayFormatter;
+        private readonly WalletRepository _walletRepository;
         private readonly Services.Wallets.BTCPayWalletProvider _WalletProvider;
-        private readonly Dictionary<string, string> _bech32Prefix;
+        
+        public JsonSerializer Serializer { get; }
+        public PaymentMethodId PaymentMethodId { get; private set; }
+        public BTCPayNetwork Network => _Network;
 
-        public BitcoinLikePaymentHandler(ExplorerClientProvider provider,
-            BTCPayNetworkProvider networkProvider,
+        public BitcoinLikePaymentHandler(
+            PaymentMethodId paymentMethodId,
+            ExplorerClientProvider provider,
+            BTCPayNetwork network,
             IFeeProviderFactory feeRateProviderFactory,
             DisplayFormatter displayFormatter,
             NBXplorerDashboard dashboard,
+            WalletRepository walletRepository,
             Services.Wallets.BTCPayWalletProvider walletProvider)
         {
+            Serializer = BlobSerializer.CreateSerializer(network.NBXplorerNetwork).Serializer;
             _ExplorerProvider = provider;
-            _networkProvider = networkProvider;
+            _Network = network;
+            PaymentMethodId = paymentMethodId;
             _FeeRateProviderFactory = feeRateProviderFactory;
             _dashboard = dashboard;
+            _walletRepository = walletRepository;
             _WalletProvider = walletProvider;
-            _displayFormatter = displayFormatter;
-
-            _bech32Prefix = networkProvider.GetAll().OfType<BTCPayNetwork>()
-                .Where(network => network.NBitcoinNetwork?.Consensus?.SupportSegwit is true).ToDictionary(network => network.CryptoCode,
-                    network => Encoders.ASCII.EncodeData(
-                        network.NBitcoinNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, false)
-                            .HumanReadablePart));
         }
 
         class Prepare
         {
-            public Task<FeeRate> GetFeeRate;
+            public Task<FeeRate> GetRecommendedFeeRate;
             public Task<FeeRate> GetNetworkFeeRate;
             public Task<KeyPathInformation> ReserveAddress;
+            public DerivationSchemeSettings DerivationSchemeSettings;
         }
 
-        public override void PreparePaymentModel(PaymentModel model, InvoiceResponse invoiceResponse,
-            StoreBlob storeBlob, IPaymentMethod paymentMethod)
+        object IPaymentMethodHandler.ParsePaymentPromptDetails(JToken details)
         {
-            var paymentMethodId = paymentMethod.GetId();
-            var paymentMethodDetails = (BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails();
-            var cryptoInfo = invoiceResponse.CryptoInfo.First(o => o.GetpaymentMethodId() == paymentMethodId);
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(model.CryptoCode);
-            model.ShowRecommendedFee = storeBlob.ShowRecommendedFee;
-            model.FeeRate = paymentMethodDetails.GetFeeRate();
-            model.PaymentMethodName = GetPaymentMethodName(network);
+            return ParsePaymentPromptDetails(details);
+        }
 
-            var bip21Case = network.SupportLightning && storeBlob.OnChainWithLnInvoiceFallback;
-            var amountInSats = bip21Case && storeBlob.LightningAmountInSatoshi && model.CryptoCode == "BTC";
-            string lightningFallback = null;
-            if (model.Activated && bip21Case)
+        public BitcoinPaymentPromptDetails ParsePaymentPromptDetails(JToken details)
+        {
+            return details.ToObject<BitcoinPaymentPromptDetails>(Serializer);
+        }
+        public DerivationSchemeSettings ParsePaymentMethodConfig(JToken config)
+        {
+            return config.ToObject<DerivationSchemeSettings>(Serializer) ?? throw new FormatException($"Invalid {nameof(DerivationSchemeSettings)}");
+        }
+        object IPaymentMethodHandler.ParsePaymentMethodConfig(JToken config)
+        {
+            return ParsePaymentMethodConfig(config);
+        }
+
+        public async Task AfterSavingInvoice(PaymentMethodContext paymentMethodContext)
+        {
+            var paymentPrompt = paymentMethodContext.Prompt;
+            var store = paymentMethodContext.Store;
+            var entity = paymentMethodContext.InvoiceEntity;
+            var links = new List<WalletObjectLinkData>();
+            var walletId = new WalletId(store.Id, _Network.CryptoCode);
+            await _walletRepository.EnsureWalletObject(new WalletObjectId(
+                walletId,
+                WalletObjectData.Types.Invoice,
+                entity.Id
+                ));
+            if (paymentPrompt.Destination is string)
             {
-                var lightningInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
-                    a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LightningLike));
-                if (lightningInfo is not null && !string.IsNullOrEmpty(lightningInfo.PaymentUrls?.BOLT11))
-                {
-                    lightningFallback = lightningInfo.PaymentUrls.BOLT11;
-                }
-                else
-                {
-                    var lnurlInfo = invoiceResponse.CryptoInfo.FirstOrDefault(a =>
-                        a.GetpaymentMethodId() == new PaymentMethodId(model.CryptoCode, PaymentTypes.LNURLPay));
-                    if (lnurlInfo is not null)
-                    {
-                        lightningFallback = lnurlInfo.PaymentUrls?.AdditionalData["LNURLP"].ToObject<string>();
-
-                        // This seems to be an edge case in the Selenium tests, in which the LNURLP isn't populated.
-                        // I have come across it only in the tests and this is supposed to make them happy.
-                        if (string.IsNullOrEmpty(lightningFallback))
-                        {
-                            var serverUrl = new Uri(lnurlInfo.Url[..lnurlInfo.Url.IndexOf("/i/", StringComparison.InvariantCultureIgnoreCase)]);
-                            var uri = new Uri($"{serverUrl}{network.CryptoCode}/lnurl/pay/i/{invoiceResponse.Id}");
-                            lightningFallback = LNURL.LNURL.EncodeUri(uri, "payRequest", true).ToString();
-                        }
-                    }
-                }
-                if (!string.IsNullOrEmpty(lightningFallback))
-                {
-                    lightningFallback = lightningFallback
-                        .Replace("lightning:", "lightning=", StringComparison.OrdinalIgnoreCase);
-                }
+                links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(
+                        walletId,
+                        WalletObjectData.Types.Address,
+                        paymentPrompt.Destination),
+                    new WalletObjectId(
+                        walletId,
+                        WalletObjectData.Types.Invoice,
+                        entity.Id)));
             }
+            await _walletRepository.EnsureCreated(null, links);
+        }
 
-            if (model.Activated)
+        public Task BeforeFetchingRates(PaymentMethodContext paymentMethodContext)
+        {
+            paymentMethodContext.Prompt.Currency = _Network.CryptoCode;
+            paymentMethodContext.Prompt.Divisibility = _Network.Divisibility;
+            if (paymentMethodContext.Prompt.Activated)
             {
-                // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
-                //
-                // Correct casing: Addresses in payment URI need to be …
-                // - lowercase in link version
-                // - uppercase in QR version
-                //
-                // The keys (e.g. "bitcoin:" or "lightning=" should be lowercase!
-
-                // cryptoInfo.PaymentUrls?.BIP21: bitcoin:bcrt1qxp2qa5?amount=0.00044007
-                model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = cryptoInfo.PaymentUrls?.BIP21 ?? "";
-                // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5?amount=0.00044007
-                // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5?amount=0.00044007
-
-                if (!string.IsNullOrEmpty(lightningFallback))
+                var settings = ParsePaymentMethodConfig(paymentMethodContext.PaymentMethodConfig);
+                var storeBlob = paymentMethodContext.StoreBlob;
+                var store = paymentMethodContext.Store;
+                paymentMethodContext.State = new Prepare()
                 {
-                    var delimiterUrl = model.InvoiceBitcoinUrl.Contains("?") ? "&" : "?";
-                    model.InvoiceBitcoinUrl += $"{delimiterUrl}{lightningFallback}";
-                    // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
-
-                    var delimiterUrlQR = model.InvoiceBitcoinUrlQR.Contains("?") ? "&" : "?";
-                    model.InvoiceBitcoinUrlQR += $"{delimiterUrlQR}{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
-                    // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
-                }
-
-                if (network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix.TryGetValue(model.CryptoCode, out var prefix) && model.BtcAddress.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    model.InvoiceBitcoinUrlQR = model.InvoiceBitcoinUrlQR.Replace(
-                        $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress}", $"{network.NBitcoinNetwork.UriScheme}:{model.BtcAddress.ToUpperInvariant()}",
-                        StringComparison.OrdinalIgnoreCase);
-                    // model.InvoiceBitcoinUrlQR: bitcoin:BCRT1QXP2QA5DHN...?amount=0.00044007&lightning=LNBCRT4400...
-                }
+                    GetRecommendedFeeRate =
+                        _FeeRateProviderFactory.CreateFeeProvider(_Network)
+                            .GetFeeRateAsync(storeBlob.RecommendedFeeBlockTarget),
+                    GetNetworkFeeRate = storeBlob.NetworkFeeMode == NetworkFeeMode.Never
+                        ? null
+                        : _FeeRateProviderFactory.CreateFeeProvider(_Network).GetFeeRateAsync(),
+                    ReserveAddress = _WalletProvider.GetWallet(_Network)
+                        .ReserveAddressAsync(store.Id, settings.AccountDerivation, "invoice"),
+                    DerivationSchemeSettings = settings
+                };
             }
-            else
-            {
-                model.InvoiceBitcoinUrl = model.InvoiceBitcoinUrlQR = string.Empty;
-            }
-
-            if (model.Activated && amountInSats)
-            {
-                base.PreparePaymentModelForAmountInSats(model, paymentMethod, _displayFormatter);
-            }
+            return Task.CompletedTask;
         }
-
-        public override string GetCryptoImage(PaymentMethodId paymentMethodId)
+        public async Task ConfigurePrompt(PaymentMethodContext paymentContext)
         {
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            return GetCryptoImage(network);
-        }
-
-        private string GetCryptoImage(BTCPayNetworkBase network)
-        {
-            return network.CryptoImagePath;
-        }
-
-        public override string GetPaymentMethodName(PaymentMethodId paymentMethodId)
-        {
-            var network = _networkProvider.GetNetwork<BTCPayNetwork>(paymentMethodId.CryptoCode);
-            return GetPaymentMethodName(network);
-        }
-
-        public override IEnumerable<PaymentMethodId> GetSupportedPaymentMethods()
-        {
-            return _networkProvider
-                .GetAll()
-                .OfType<BTCPayNetwork>()
-                .Select(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.BTCLike));
-        }
-
-        private string GetPaymentMethodName(BTCPayNetworkBase network)
-        {
-            return network.DisplayName;
-        }
-
-        public override object PreparePayment(DerivationSchemeSettings supportedPaymentMethod, StoreData store,
-            BTCPayNetworkBase network)
-        {
-            var storeBlob = store.GetStoreBlob();
-            return new Prepare()
-            {
-                GetFeeRate =
-                    _FeeRateProviderFactory.CreateFeeProvider(network)
-                        .GetFeeRateAsync(storeBlob.RecommendedFeeBlockTarget),
-                GetNetworkFeeRate = storeBlob.NetworkFeeMode == NetworkFeeMode.Never
-                    ? null
-                    : _FeeRateProviderFactory.CreateFeeProvider(network).GetFeeRateAsync(),
-                ReserveAddress = _WalletProvider.GetWallet(network)
-                    .ReserveAddressAsync(store.Id, supportedPaymentMethod.AccountDerivation, "invoice")
-            };
-        }
-
-        public override PaymentType PaymentType => PaymentTypes.BTCLike;
-
-        public override async Task<IPaymentMethodDetails> CreatePaymentMethodDetails(
-            InvoiceLogs logs,
-            DerivationSchemeSettings supportedPaymentMethod, PaymentMethod paymentMethod, StoreData store,
-            BTCPayNetwork network, object preparePaymentObject, IEnumerable<PaymentMethodId> invoicePaymentMethods)
-        {
-
-            if (!_ExplorerProvider.IsAvailable(network))
+            var prepare = (Prepare)paymentContext.State;
+            var accountDerivation = prepare.DerivationSchemeSettings.AccountDerivation;
+            if (!_ExplorerProvider.IsAvailable(_Network))
                 throw new PaymentMethodUnavailableException($"Full node not available");
-            if (paymentMethod.ParentEntity.Type != InvoiceType.TopUp)
+            var paymentMethod = paymentContext.Prompt;
+            var onchainMethod = new BitcoinPaymentPromptDetails();
+            var blob = paymentContext.StoreBlob;
+
+            onchainMethod.FeeMode = blob.NetworkFeeMode;
+            onchainMethod.RecommendedFeeRate = await prepare.GetRecommendedFeeRate;
+            switch (onchainMethod.FeeMode)
             {
-                var txOut = network.NBitcoinNetwork.Consensus.ConsensusFactory.CreateTxOut();
+                case NetworkFeeMode.Always:
+                case NetworkFeeMode.MultiplePaymentsOnly:
+                    onchainMethod.PaymentMethodFeeRate = (await prepare.GetNetworkFeeRate);
+                    if (onchainMethod.FeeMode == NetworkFeeMode.Always || paymentMethod.Calculate().TxCount > 0)
+                    {
+                        paymentMethod.PaymentMethodFee =
+                            onchainMethod.PaymentMethodFeeRate.GetFee(100).GetValue(_Network); // assume price for 100 bytes
+                    }
+                    break;
+                case NetworkFeeMode.Never:
+                    onchainMethod.PaymentMethodFeeRate = FeeRate.Zero;
+                    break;
+            }
+            if (paymentContext.InvoiceEntity.Type != InvoiceType.TopUp)
+            {
+                var txOut = _Network.NBitcoinNetwork.Consensus.ConsensusFactory.CreateTxOut();
                 txOut.ScriptPubKey =
-                    new Key().GetScriptPubKey(supportedPaymentMethod.AccountDerivation.ScriptPubKeyType());
+                    new Key().GetScriptPubKey(accountDerivation.ScriptPubKeyType());
                 var dust = txOut.GetDustThreshold();
                 var amount = paymentMethod.Calculate().Due;
                 if (amount < dust.ToDecimal(MoneyUnit.BTC))
                     throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable an off-chain (Lightning) payment method");
             }
-            if (preparePaymentObject is null)
-            {
-                return new BitcoinLikeOnChainPaymentMethod()
-                {
-                    Activated = false
-                };
-            }
-            var prepare = (Prepare)preparePaymentObject;
-            var onchainMethod = new BitcoinLikeOnChainPaymentMethod();
-            var blob = store.GetStoreBlob();
-            onchainMethod.Activated = true;
-            // TODO: this needs to be refactored to move this logic into BitcoinLikeOnChainPaymentMethod
-            // This is likely a constructor code
-            onchainMethod.NetworkFeeMode = blob.NetworkFeeMode;
-            onchainMethod.FeeRate = await prepare.GetFeeRate;
-            switch (onchainMethod.NetworkFeeMode)
-            {
-                case NetworkFeeMode.Always:
-                    onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
-                    onchainMethod.NextNetworkFee =
-                        onchainMethod.NetworkFeeRate.GetFee(100); // assume price for 100 bytes
-                    break;
-                case NetworkFeeMode.Never:
-                    onchainMethod.NetworkFeeRate = FeeRate.Zero;
-                    onchainMethod.NextNetworkFee = Money.Zero;
-                    break;
-                case NetworkFeeMode.MultiplePaymentsOnly:
-                    onchainMethod.NetworkFeeRate = (await prepare.GetNetworkFeeRate);
-                    onchainMethod.NextNetworkFee = Money.Zero;
-                    break;
-            }
 
             var reserved = await prepare.ReserveAddress;
 
-            onchainMethod.DepositAddress = reserved.Address.ToString();
+            paymentMethod.Destination = reserved.Address.ToString();
+            paymentContext.TrackedDestinations.Add(Network.GetTrackedDestination(reserved.Address.ScriptPubKey));
             onchainMethod.KeyPath = reserved.KeyPath;
+            onchainMethod.AccountDerivation = accountDerivation;
             onchainMethod.PayjoinEnabled = blob.PayJoinEnabled &&
-                                           supportedPaymentMethod
-                                               .AccountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&
-                                           network.SupportPayJoin;
+                                           accountDerivation.ScriptPubKeyType() != ScriptPubKeyType.Legacy &&
+                                           _Network.SupportPayJoin;
+            var logs = paymentContext.Logs;
             if (onchainMethod.PayjoinEnabled)
             {
-                var prefix = $"{supportedPaymentMethod.PaymentId.ToPrettyString()}:";
-                var nodeSupport = _dashboard?.Get(network.CryptoCode)?.Status?.BitcoinStatus?.Capabilities
+                var isHotwallet = prepare.DerivationSchemeSettings.IsHotWallet;
+                var nodeSupport = _dashboard?.Get(_Network.CryptoCode)?.Status?.BitcoinStatus?.Capabilities
                     ?.CanSupportTransactionCheck is true;
-                onchainMethod.PayjoinEnabled &= supportedPaymentMethod.IsHotWallet && nodeSupport;
-                if (!supportedPaymentMethod.IsHotWallet)
-                    logs.Write($"{prefix} Payjoin should have been enabled, but your store is not a hotwallet", InvoiceEventData.EventSeverity.Warning);
+                onchainMethod.PayjoinEnabled &= isHotwallet && nodeSupport;
+                if (!isHotwallet)
+                    logs.Write("Payjoin should have been enabled, but your store is not a hotwallet", InvoiceEventData.EventSeverity.Warning);
                 if (!nodeSupport)
-                    logs.Write($"{prefix} Payjoin should have been enabled, but your version of NBXplorer or full node does not support it.", InvoiceEventData.EventSeverity.Warning);
+                    logs.Write("Payjoin should have been enabled, but your version of NBXplorer or full node does not support it.", InvoiceEventData.EventSeverity.Warning);
                 if (onchainMethod.PayjoinEnabled)
-                    logs.Write($"{prefix} Payjoin is enabled for this invoice.", InvoiceEventData.EventSeverity.Info);
+                    logs.Write("Payjoin is enabled for this invoice.", InvoiceEventData.EventSeverity.Info);
             }
 
-            return onchainMethod;
+            paymentMethod.Details = JObject.FromObject(onchainMethod, Serializer);
+        }
+
+        public static DerivationStrategyBase GetAccountDerivation(JToken activationData, BTCPayNetwork network)
+        {
+            if (activationData is JValue { Type: JTokenType.String, Value: string v })
+            {
+                var parser = network.GetDerivationSchemeParser();
+                return parser.Parse(v);
+            }
+            throw new FormatException($"{network.CryptoCode}: Invalid activation data, impossible to parse the derivation scheme");
+        }
+        public static DerivationStrategyBase GetAccountDerivation(IDictionary<PaymentMethodId, JToken> activationDataByPmi, BTCPayNetwork network)
+        {
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+            activationDataByPmi.TryGetValue(pmi, out var value);
+            if (value is null)
+                return null;
+            return GetAccountDerivation(value, network);
+        }
+        public Task ValidatePaymentMethodConfig(PaymentMethodConfigValidationContext validationContext)
+        {
+            var parser = Network.GetDerivationSchemeParser();
+            DerivationSchemeSettings settings = new DerivationSchemeSettings();
+            if (parser.TryParseXpub(validationContext.Config.ToString(), ref settings))
+            {
+                validationContext.Config = JToken.FromObject(settings, Serializer);
+                return Task.CompletedTask;
+            }
+            var res = validationContext.Config.ToObject<DerivationSchemeSettings>(Serializer);
+            if (res is null)
+            {
+                validationContext.ModelState.AddModelError(nameof(validationContext.Config), "Invalid derivation scheme settings");
+                return Task.CompletedTask;
+            }
+            if (res.AccountDerivation is null)
+            {
+                validationContext.ModelState.AddModelError(nameof(res.AccountDerivation), "Invalid account derivation");
+            }
+            return Task.CompletedTask;
+        }
+
+        public BitcoinLikePaymentData ParsePaymentDetails(JToken details)
+        {
+            return details.ToObject<BitcoinLikePaymentData>(Serializer) ?? throw new FormatException($"Invalid {nameof(BitcoinLikePaymentData)}");
+        }
+
+        object IPaymentMethodHandler.ParsePaymentDetails(JToken details)
+        {
+            return ParsePaymentDetails(details);
         }
     }
 }

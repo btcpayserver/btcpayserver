@@ -268,8 +268,6 @@ namespace BTCPayServer.Models
         public Dictionary<string, InvoiceCryptoInfo.InvoicePaymentUrls> PaymentCodes { get; set; }
         [JsonProperty("buyer")]
         public JObject Buyer { get; set; }
-        [JsonConverter(typeof(StringEnumConverter))]
-        public CheckoutType? CheckoutType { get; set; }
     }
     public class Flags
     {

@@ -53,7 +53,7 @@
     padding-top: var(--btcpay-space-m);
 }
 
-#mainNav .nav-item svg.icon {
+#mainNav .nav-item .icon {
     width: var(--icon-size);
     height: var(--icon-size);
     margin-right: var(--btcpay-space-xs);
@@ -94,14 +94,14 @@
     white-space: nowrap;
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link:hover {
     color: var(--btcpay-header-link-accent);
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link.active,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link.active,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:hover {
     color: var(--btcpay-header-link-active);
 }
 
@@ -184,19 +184,16 @@
 
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    --icon-size: 1.5rem;
+    max-width: var(--icon-size);
+    max-height: var(--icon-size);
     /* Fixes seemingly delayed icon animation */
     -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }
 
 #StoreSelectorToggle .logo,
-#StoreSelectorToggle .icon.icon-store {
+#StoreSelectorToggle .icon.icon-nav-store {
     margin-right: var(--btcpay-space-s);
-}
-
-#StoreSelectorToggle .logo {
-    border-radius: 50%;
 }
 
 #StoreSelectorToggle .icon.icon-caret-down {
@@ -219,8 +216,10 @@
 
 #StoreSelectorMenu {
     min-width: 100%;
-    max-height: calc(100vh - var(--header-height));
-    overflow-y: scroll;
+    overflow-y: auto;
+    /* gradually try to set better but less supported values and units */
+    max-height: calc(100vh - var(--header-height) - var(--btcpay-space-xxl));
+    max-height: calc(100dvh - var(--header-height));
 }
 
 /* Logo */
@@ -314,13 +313,12 @@
     min-width: 1.75em;
 }
 
-#NotificationsHandle svg {
-    width: 1.25rem;
-    height: 1.25rem;
+#NotificationsHandle .icon {
+    --icon-size: 1.625rem;
     color: var(--btcpay-header-link);
 }
 
-#NotificationsHandle:hover svg {
+#NotificationsHandle:hover .icon {
     color: var(--btcpay-header-link-accent);
 }
 
@@ -335,9 +333,8 @@
     border: 1px solid var(--btcpay-body-border-medium);
 }
 
-#NotificationsList svg {
-    width: 1.5rem;
-    height: 1.5rem;
+#NotificationsList .icon {
+    --icon-size: 1.5rem;
 }
 
 /* Section Navigation / Subnav */
@@ -378,6 +375,11 @@
     position: sticky;
     top: 0;
     z-index: 1021;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+    align-items: center;
+    justify-content: space-between;
     background: var(--btcpay-body-bg);
     margin-top: calc(var(--content-padding-top) * -1);
     /* pull it out of the content padding and adjust its inner padding to make up for that space */
@@ -386,8 +388,18 @@
     padding: var(--content-padding-top) var(--content-padding-horizontal) var(--btcpay-space-l);
 }
 
-.sticky-header #SectionNav {
-    margin-bottom: calc(var(--btcpay-space-l) * -1);
+.sticky-header h2 {
+    margin-bottom: 0;
+}
+
+.sticky-header > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+}
+
+.sticky-header > nav + :last-child {
+    align-self: flex-start;
 }
 
 /* Footer */
@@ -662,6 +674,10 @@
     #mainContent > section .w-100-fixed {
         /* constrains the content to respect the maximum width and enable responsive tables */
         width: calc(100vw - var(--sidebar-width) - var(--btcpay-scrollbar-width) - var(--content-padding-horizontal) * 2);
+    }
+
+    #mainContent > section > h2 {
+        margin-top: var(--btcpay-space-xs);
     }
 
     #SectionNav .nav {

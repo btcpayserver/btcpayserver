@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Services.Apps
 {
@@ -23,15 +24,5 @@ namespace BTCPayServer.Services.Apps
     public interface IHasItemStatsAppType
     {
         Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
-    }
-
-    public enum RequiresRefundEmail
-    {
-        [Display(Name = "Inherit from store settings")]
-        InheritFromStore,
-        [Display(Name = "On")]
-        On,
-        [Display(Name = "Off")]
-        Off
     }
 }

@@ -3,7 +3,18 @@
     ViewData.SetActivePage(ServerNavPages.Services, $"C-Lightning {Model.ConnectionType}");
 }
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
 
 @if (!ViewContext.ModelState.IsValid)
 {

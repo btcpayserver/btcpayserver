@@ -9,7 +9,10 @@
 
 <form asp-route-returnurl="@ViewData["ReturnUrl"]" method="post" id="login-form" asp-action="Login">
     <fieldset disabled="@(ViewData.ContainsKey("disabled") ? "disabled" : null)">
-        <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="ModelOnly" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+        }
         <div class="form-group">
             <label asp-for="Email" class="form-label"></label>
             <input asp-for="Email" class="form-control" required autofocus />
@@ -33,7 +36,9 @@
         <div class="form-group mt-4">
             <div class="btn-group w-100">
                 <button type="submit" class="btn btn-primary btn-lg w-100" id="LoginButton"><span class="ps-3">Sign in</span></button>
-                <button type="button" class="btn btn-outline-primary btn-lg w-auto only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan Login code with camera"><i class="fa fa-camera"></i></button>
+                <button type="button" class="btn btn-outline-primary btn-lg w-auto only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan Login code with camera">
+                    <vc:icon symbol="scan-qr" />
+                </button>
             </div>
         </div>
     </fieldset>

@@ -50,12 +50,9 @@ namespace BTCPayServer.Data
                 .HasForeignKey(o => new { o.WalletId, o.BType, o.BId })
                 .OnDelete(DeleteBehavior.Cascade);
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<WalletObjectLinkData>()
-                                .Property(o => o.Data)
-                                .HasColumnType("JSONB");
-            }
+            builder.Entity<WalletObjectLinkData>()
+                            .Property(o => o.Data)
+                            .HasColumnType("JSONB");
         }
     }
 }

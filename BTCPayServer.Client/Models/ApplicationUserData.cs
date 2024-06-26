@@ -14,6 +14,16 @@ namespace BTCPayServer.Client.Models
         /// the email AND username of the user
         /// </summary>
         public string Email { get; set; }
+        
+        /// <summary>
+        /// the name of the user
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// the image url of the user
+        /// </summary>
+        public string ImageUrl { get; set; }
 
         /// <summary>
         /// Whether the user has verified their email

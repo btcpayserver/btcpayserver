@@ -22,22 +22,16 @@ namespace BTCPayServer.Models.StoreViewModels
         [MaxLength(500)]
         public string StoreWebsite { get; set; }
 
-        [Display(Name = "Support URL")]
-        [MaxLength(500)]
-        public string StoreSupportUrl { get; set; }
-
         [Display(Name = "Brand Color")]
         public string BrandColor { get; set; }
 
         [Display(Name = "Logo")]
         public IFormFile LogoFile { get; set; }
-        public string LogoFileId { get; set; }
+        public string LogoUrl { get; set; }
 
         [Display(Name = "Custom CSS")]
         public IFormFile CssFile { get; set; }
-        public string CssFileId { get; set; }
-
-        public bool CanDelete { get; set; }
+        public string CssUrl { get; set; }
 
         public bool Archived { get; set; }
 

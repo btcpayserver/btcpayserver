@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly InvoiceRepository _InvoiceRepository;
         private readonly StoreRepository _storeRepository;
+        private readonly UriResolver _uriResolver;
         private readonly BTCPayNetworkProvider _networkProvider;
 
         private FormComponentProviders FormProviders { get; }
@@ -55,6 +56,7 @@ namespace BTCPayServer.Controllers
             CurrencyNameTable currencies,
             DisplayFormatter displayFormatter,
             StoreRepository storeRepository,
+            UriResolver uriResolver,
             InvoiceRepository invoiceRepository,
             FormComponentProviders formProviders,
             FormDataService formDataService,
@@ -68,6 +70,7 @@ namespace BTCPayServer.Controllers
             _Currencies = currencies;
             _displayFormatter = displayFormatter;
             _storeRepository = storeRepository;
+            _uriResolver = uriResolver;
             _InvoiceRepository = invoiceRepository;
             FormProviders = formProviders;
             FormDataService = formDataService;
@@ -108,7 +111,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("/stores/{storeId}/payment-requests/edit/{payReqId?}")]
-        [Authorize(Policy = Policies.CanViewPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPaymentRequest(string storeId, string payReqId)
         {
             var store = GetCurrentStore();
@@ -121,7 +124,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!store.AnyPaymentMethodAvailable(_networkProvider))
+            if (!store.AnyPaymentMethodAvailable())
             {
                 return NoPaymentMethodResult(storeId);
             }
@@ -156,7 +159,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!store.AnyPaymentMethodAvailable(_networkProvider))
+            if (!store.AnyPaymentMethodAvailable())
             {
                 return NoPaymentMethodResult(store.Id);
             }
@@ -191,8 +194,6 @@ namespace BTCPayServer.Controllers
             blob.Amount = viewModel.Amount;
             blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
             blob.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
-            blob.EmbeddedCSS = viewModel.EmbeddedCSS;
-            blob.CustomCSSLink = viewModel.CustomCSSLink;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
             blob.FormId = viewModel.FormId;
 
@@ -229,11 +230,7 @@ namespace BTCPayServer.Controllers
             vm.HubPath = PaymentRequestHub.GetHubPath(Request);
             vm.StoreName = store.StoreName;
             vm.StoreWebsite = store.StoreWebsite;
-            vm.StoreBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                EmbeddedCSS = vm.EmbeddedCSS,
-                CustomCSSLink = vm.CustomCSSLink
-            };
+            vm.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
 
             return View(vm);
         }
@@ -277,6 +274,10 @@ namespace BTCPayServer.Controllers
                 if (FormDataService.Validate(form, ModelState))
                 {
                     prBlob.FormResponse = FormDataService.GetValues(form);
+                    if(string.IsNullOrEmpty(prBlob.Email) && form.GetFieldByFullName("buyerEmail") is { } emailField)
+                    {
+                        prBlob.Email = emailField.Value;
+                    }
                     result.SetBlob(prBlob);
                     await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(result);
                     return RedirectToAction("PayPaymentRequest", new { payReqId });
@@ -286,11 +287,8 @@ namespace BTCPayServer.Controllers
             viewModel.Form = form;
             
             var storeBlob = result.StoreData.GetStoreBlob();
-            viewModel.StoreBranding = new StoreBrandingViewModel(storeBlob)
-            {
-                EmbeddedCSS = prBlob.EmbeddedCSS,
-                CustomCSSLink = prBlob.CustomCSSLink
-            };
+            viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
+            
             return View("Views/UIForms/View", viewModel);
         }
 
@@ -394,7 +392,7 @@ namespace BTCPayServer.Controllers
             }
 
             var invoices = result.Invoices.Where(requestInvoice =>
-                requestInvoice.State.Status == InvoiceStatusLegacy.New && !requestInvoice.Payments.Any());
+                requestInvoice.State.Status == InvoiceStatus.New && !requestInvoice.Payments.Any());
 
             if (!invoices.Any())
             {

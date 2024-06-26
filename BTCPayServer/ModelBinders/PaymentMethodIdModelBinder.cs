@@ -9,7 +9,7 @@ namespace BTCPayServer.ModelBinders
     {
         public Task BindModelAsync(ModelBindingContext bindingContext)
         {
-            if (!typeof(PaymentMethodIdModelBinder).GetTypeInfo().IsAssignableFrom(bindingContext.ModelType))
+            if (!typeof(PaymentMethodId).GetTypeInfo().IsAssignableFrom(bindingContext.ModelType))
             {
                 return Task.CompletedTask;
             }

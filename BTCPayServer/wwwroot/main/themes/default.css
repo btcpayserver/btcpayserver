@@ -179,7 +179,7 @@
   --btcpay-bg-tile: var(--btcpay-white);
   --btcpay-bg-dark: var(--btcpay-brand-dark);
 
-  --btcpay-body-bg: var(--btcpay-neutral-100);
+  --btcpay-body-bg: rgb(var(--btcpay-body-bg-rgb));
   --btcpay-body-bg-light: var(--btcpay-white);
   --btcpay-body-bg-medium: var(--btcpay-neutral-200);
   --btcpay-body-bg-striped: var(--btcpay-neutral-200);

@@ -32,6 +32,77 @@
                     }
                 ]
             },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user information",
+                "description": "Update the current user",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "The email of the user",
+                                        "nullable": true
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The name of the user",
+                                        "nullable": true
+                                    },
+                                    "imageUrl": {
+                                        "type": "string",
+                                        "description": "The profile picture URL of the user",
+                                        "nullable": true
+                                    },
+                                    "currentPassword": {
+                                        "type": "string",
+                                        "description": "The current password of the user",
+                                        "nullable": true
+                                    },
+                                    "newPassword": {
+                                        "type": "string",
+                                        "description": "The new password of the user",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "operationId": "Users_UpdateCurrentUser",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "Users"
@@ -92,7 +163,7 @@
                     "Users"
                 ],
                 "summary": "Create user",
-                "description": "Create a new user.\n\nThis operation can be called without authentication in any of this cases:\n* There is not any administrator yet on the server,\n* The subscriptions are not disabled in the server's policies.\n\nIf the first administrator is created by this call, subscriptions are automatically disabled.",
+                "description": "Create a new user.\n\nThis operation can be called without authentication in any of this cases:\n* There is not any administrator yet on the server,\n* User registrations are not disabled in the server's policies.\n\nIf the first administrator is created by this call, user registrations are automatically disabled.",
                 "requestBody": {
                     "x-name": "request",
                     "content": {
@@ -105,6 +176,16 @@
                                         "type": "string",
                                         "description": "The email of the new user",
                                         "nullable": false
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The name of the new user",
+                                        "nullable": true
+                                    },
+                                    "imageUrl": {
+                                        "type": "string",
+                                        "description": "The profile picture URL of the new user",
+                                        "nullable": true
                                     },
                                     "password": {
                                         "type": "string",
@@ -149,7 +230,7 @@
                         "description": "If you need to authenticate for this endpoint (ie. the server settings policies lock subscriptions and that an admin already exists)"
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the `unrestricted` permission on a server administrator or if you are not administrator and registrations are disabled in the server's policies)"
+                        "description": "If you are authenticated but forbidden to create a new user (ie. you don't have the `unrestricted` permission on a server administrator or if you are not administrator and user registrations are disabled in the server's policies)"
                     },
                     "429": {
                         "description": "DDoS protection if you are creating more than 2 accounts every minutes (non-admin only)"
@@ -186,7 +267,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User found"
+                        "description": "User found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Missing authorization for loading the user"
@@ -371,6 +459,16 @@
                         "type": "string",
                         "description": "The email of the user",
                         "nullable": false
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the user",
+                        "nullable": true
+                    },
+                    "imageUrl": {
+                        "type": "string",
+                        "description": "The profile picture URL of the user",
+                        "nullable": true
                     },
                     "emailConfirmed": {
                         "type": "boolean",

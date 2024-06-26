@@ -24,7 +24,7 @@ async function login(makeAssertionOptions) {
 }
 
 /**
- * Sends the credential to the the FIDO2 server for assertion
+ * Sends the credential to the FIDO2 server for assertion
  * @param {any} assertedCredential
  */
 async function verifyAssertionWithServer(assertedCredential) {

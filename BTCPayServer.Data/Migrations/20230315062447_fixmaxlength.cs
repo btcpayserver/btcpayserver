@@ -16,11 +16,8 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql("ALTER TABLE \"InvoiceSearches\" ALTER COLUMN \"Value\" TYPE TEXT USING \"Value\"::TEXT;");
-                migrationBuilder.Sql("ALTER TABLE \"Invoices\"  ALTER COLUMN \"OrderId\" TYPE TEXT USING \"OrderId\"::TEXT;");
-            }
+            migrationBuilder.Sql("ALTER TABLE \"InvoiceSearches\" ALTER COLUMN \"Value\" TYPE TEXT USING \"Value\"::TEXT;");
+            migrationBuilder.Sql("ALTER TABLE \"Invoices\"  ALTER COLUMN \"OrderId\" TYPE TEXT USING \"OrderId\"::TEXT;");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

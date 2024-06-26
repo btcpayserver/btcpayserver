@@ -12,6 +12,7 @@ services:
       args:
         CONFIGURATION_NAME: Release
     environment:
+      TESTS_EXPERIMENTALV2_CONFIRM: "true"
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_DB: "Postgres"
@@ -96,7 +97,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.0
+    image: nicolasdorier/nbxplorer:2.5.4
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -149,7 +150,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.05
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -157,6 +158,7 @@ services:
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=customer_lightningd:9735
@@ -176,13 +178,15 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.05
     stop_signal: SIGKILL
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=merchant_lightningd:9735
@@ -202,7 +206,7 @@ services:
       - bitcoind
 
   postgres:
-    image:  postgres:13.4
+    image:  postgres:13.13
     environment:
         POSTGRES_HOST_AUTH_METHOD: trust
     ports:
@@ -211,7 +215,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.17.3-beta
+    image: btcpayserver/lnd:v0.18.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -248,7 +252,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.17.3-beta
+    image: btcpayserver/lnd:v0.18.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

@@ -17,13 +17,12 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.CreateTable(
+                        migrationBuilder.CreateTable(
                 name: "LightningAddresses",
                 columns: table => new
                 {
-                    Username = table.Column<string>(nullable: false, maxLength: maxLength),
-                    StoreDataId = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Username = table.Column<string>(nullable: false, maxLength: null),
+                    StoreDataId = table.Column<string>(nullable: false, maxLength: null),
                     Blob = table.Column<byte[]>( nullable: true)
                 },
                 constraints: table =>

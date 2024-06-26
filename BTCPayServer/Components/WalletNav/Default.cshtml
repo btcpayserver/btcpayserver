@@ -1,32 +1,14 @@
-@using BTCPayServer.Services;
-@using BTCPayServer.Views.Stores
-@using BTCPayServer.Client
-@using BTCPayServer.Views.Wallets
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Services
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Components.WalletNav.WalletNavViewModel
 
-<div class="d-sm-flex align-items-center justify-content-between">
-    <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">
-        <h2 class="mb-1">@Model.Label</h2>
-        <div class="text-muted fw-semibold" data-sensitive>
-            @DisplayFormatter.Currency(Model.Balance, Model.Network.CryptoCode)
-            @if (!string.IsNullOrEmpty(Model.BalanceDefaultCurrency))
-            {
-                <span>(@DisplayFormatter.Currency(Model.BalanceDefaultCurrency, Model.DefaultCurrency))</span>
-            }
-        </div>
-    </a>
-    <div class="d-flex gap-3 mt-3 mt-sm-0" permission="@Policies.CanModifyStoreSettings">
-        @if (!Model.Network.ReadonlyWallet)
+<a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" class="unobtrusive-link">
+    <h2 class="my-1">@Model.Label</h2>
+    <div class="text-muted fw-semibold" data-sensitive>
+        @DisplayFormatter.Currency(Model.Balance, Model.Network.CryptoCode)
+        @if (!string.IsNullOrEmpty(Model.BalanceDefaultCurrency))
         {
-            <a class="btn btn-primary" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@Model.WalletId" id="WalletNav-Send">Send</a>
+            <span>(@DisplayFormatter.Currency(Model.BalanceDefaultCurrency, Model.DefaultCurrency))</span>
         }
-        <a class="btn btn-primary" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@Model.WalletId" id="WalletNav-Receive">Receive</a>
-        <a class="btn btn-secondary @ViewData.IsActivePage(WalletsNavPages.Settings) @ViewData.IsActivePage(StoreNavPages.OnchainSettings)" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@Model.WalletId.CryptoCode" asp-route-storeId="@Model.WalletId.StoreId" title="Settings" id="WalletNav-Settings">
-            <vc:icon symbol="settings"/>
-        </a>
     </div>
-</div>
-
-<vc:ui-extension-point location="wallet-nav" model="@Model"/>
+</a>

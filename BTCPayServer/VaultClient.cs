@@ -5,7 +5,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.S3.Model.Internal.MarshallTransformations;
-using ExchangeSharp;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer

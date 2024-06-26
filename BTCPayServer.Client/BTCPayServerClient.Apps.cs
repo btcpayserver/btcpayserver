@@ -9,41 +9,41 @@ namespace BTCPayServer.Client;
 public partial class BTCPayServerClient
 {
     public virtual async Task<PointOfSaleAppData> CreatePointOfSaleApp(string storeId,
-        CreatePointOfSaleAppRequest request, CancellationToken token = default)
+        PointOfSaleAppRequest request, CancellationToken token = default)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
         return await SendHttpRequest<PointOfSaleAppData>($"api/v1/stores/{storeId}/apps/pos", request, HttpMethod.Post, token);
     }
 
     public virtual async Task<CrowdfundAppData> CreateCrowdfundApp(string storeId,
-        CreateCrowdfundAppRequest request, CancellationToken token = default)
+        CrowdfundAppRequest request, CancellationToken token = default)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
         return await SendHttpRequest<CrowdfundAppData>($"api/v1/stores/{storeId}/apps/crowdfund", request, HttpMethod.Post, token);
     }
 
     public virtual async Task<PointOfSaleAppData> UpdatePointOfSaleApp(string appId,
-        CreatePointOfSaleAppRequest request, CancellationToken token = default)
+        PointOfSaleAppRequest request, CancellationToken token = default)
     {
         if (request == null) throw new ArgumentNullException(nameof(request));
         return await SendHttpRequest<PointOfSaleAppData>($"api/v1/apps/pos/{appId}", request, HttpMethod.Put, token);
     }
 
-    public virtual async Task<AppDataBase> GetApp(string appId, CancellationToken token = default)
+    public virtual async Task<AppBaseData> GetApp(string appId, CancellationToken token = default)
     {
         if (appId == null) throw new ArgumentNullException(nameof(appId));
-        return await SendHttpRequest<AppDataBase>($"api/v1/apps/{appId}", null, HttpMethod.Get, token);
+        return await SendHttpRequest<AppBaseData>($"api/v1/apps/{appId}", null, HttpMethod.Get, token);
     }
 
-    public virtual async Task<AppDataBase[]> GetAllApps(string storeId, CancellationToken token = default)
+    public virtual async Task<AppBaseData[]> GetAllApps(string storeId, CancellationToken token = default)
     {
         if (storeId == null) throw new ArgumentNullException(nameof(storeId));
-        return await SendHttpRequest<AppDataBase[]>($"api/v1/stores/{storeId}/apps", null, HttpMethod.Get, token);
+        return await SendHttpRequest<AppBaseData[]>($"api/v1/stores/{storeId}/apps", null, HttpMethod.Get, token);
     }
 
-    public virtual async Task<AppDataBase[]> GetAllApps(CancellationToken token = default)
+    public virtual async Task<AppBaseData[]> GetAllApps(CancellationToken token = default)
     {
-        return await SendHttpRequest<AppDataBase[]>("api/v1/apps", null, HttpMethod.Get, token);
+        return await SendHttpRequest<AppBaseData[]>("api/v1/apps", null, HttpMethod.Get, token);
     }
 
     public virtual async Task<PointOfSaleAppData> GetPosApp(string appId, CancellationToken token = default)

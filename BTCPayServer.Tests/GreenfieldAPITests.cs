@@ -253,11 +253,11 @@ namespace BTCPayServer.Tests
 
             // Test validation for creating the app
             await AssertValidationError(new[] { "AppName" },
-                async () => await client.CreatePointOfSaleApp(user.StoreId, new CreatePointOfSaleAppRequest() { }));
+                async () => await client.CreatePointOfSaleApp(user.StoreId, new PointOfSaleAppRequest()));
             await AssertValidationError(new[] { "AppName" },
                 async () => await client.CreatePointOfSaleApp(
                     user.StoreId,
-                    new CreatePointOfSaleAppRequest()
+                    new PointOfSaleAppRequest
                     {
                         AppName = "this is a really long app name this is a really long app name this is a really long app name",
                     }
@@ -266,7 +266,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "Currency" },
                 async () => await client.CreatePointOfSaleApp(
                     user.StoreId,
-                    new CreatePointOfSaleAppRequest()
+                    new PointOfSaleAppRequest
                     {
                         AppName = "good name",
                         Currency = "fake currency"
@@ -276,7 +276,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "Template" },
                 async () => await client.CreatePointOfSaleApp(
                     user.StoreId,
-                    new CreatePointOfSaleAppRequest()
+                    new PointOfSaleAppRequest
                     {
                         AppName = "good name",
                         Template = "lol invalid template"
@@ -286,7 +286,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "AppName", "Currency", "Template" },
                 async () => await client.CreatePointOfSaleApp(
                     user.StoreId,
-                    new CreatePointOfSaleAppRequest()
+                    new PointOfSaleAppRequest
                     {
                         Currency = "fake currency",
                         Template = "lol invalid template"
@@ -297,14 +297,14 @@ namespace BTCPayServer.Tests
             // Test creating a POS app successfully
             var app = await client.CreatePointOfSaleApp(
                 user.StoreId,
-                new CreatePointOfSaleAppRequest()
+                new PointOfSaleAppRequest
                 {
                     AppName = "test app from API",
                     Currency = "JPY",
                     Title = "test app title"
                 }
             );
-            Assert.Equal("test app from API", app.Name);
+            Assert.Equal("test app from API", app.AppName);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("PointOfSale", app.AppType);
             Assert.Equal("test app title", app.Title);
@@ -313,12 +313,19 @@ namespace BTCPayServer.Tests
             // Test title falls back to name
             app = await client.CreatePointOfSaleApp(
                 user.StoreId,
-                new CreatePointOfSaleAppRequest
+                new PointOfSaleAppRequest
                 {
-                    AppName = "test app name"
+                    AppName = "test app name",
+                    Description = "test description",
+                    ShowItems = true,
+                    ShowCategories = false
                 }
             );
             Assert.Equal("test app name", app.Title);
+            Assert.Equal("test description", app.Description);
+            Assert.True(app.ShowItems);
+            Assert.False(app.ShowCategories);
+            Assert.False(app.ShowDiscount);
 
             // Make sure we return a 404 if we try to get an app that doesn't exist
             await AssertHttpError(404, async () =>
@@ -332,30 +339,33 @@ namespace BTCPayServer.Tests
 
             // Test that we can retrieve the app data
             var retrievedApp = await client.GetApp(app.Id);
-            Assert.Equal(app.Name, retrievedApp.Name);
+            Assert.Equal(app.AppName, retrievedApp.AppName);
             Assert.Equal(app.StoreId, retrievedApp.StoreId);
             Assert.Equal(app.AppType, retrievedApp.AppType);
 
             // Test that we can update the app data
-            await client.UpdatePointOfSaleApp(
+            var retrievedPosApp = await client.UpdatePointOfSaleApp(
                 app.Id,
-                new CreatePointOfSaleAppRequest()
+                new PointOfSaleAppRequest
                 {
                     AppName = "new app name",
                     Title = "new app title",
                     Archived = true
                 }
             );
+            Assert.Equal("new app name", retrievedPosApp.AppName);
+            Assert.Equal("new app title", retrievedPosApp.Title);
+            Assert.True(retrievedPosApp.Archived);
+
             // Test generic GET app endpoint first
             retrievedApp = await client.GetApp(app.Id);
-            Assert.Equal("new app name", retrievedApp.Name);
+            Assert.Equal("new app name", retrievedApp.AppName);
             Assert.True(retrievedApp.Archived);
 
             // Test the POS-specific endpoint also
-            var retrievedPosApp = await client.GetPosApp(app.Id);
-            Assert.Equal("new app name", retrievedPosApp.Name);
+            retrievedPosApp = await client.GetPosApp(app.Id);
+            Assert.Equal("new app name", retrievedPosApp.AppName);
             Assert.Equal("new app title", retrievedPosApp.Title);
-            Assert.True(retrievedPosApp.Archived);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>
@@ -383,11 +393,11 @@ namespace BTCPayServer.Tests
 
             // Test validation for creating the app
             await AssertValidationError(new[] { "AppName" },
-                async () => await client.CreateCrowdfundApp(user.StoreId, new CreateCrowdfundAppRequest() { }));
+                async () => await client.CreateCrowdfundApp(user.StoreId, new CrowdfundAppRequest()));
             await AssertValidationError(new[] { "AppName" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "this is a really long app name this is a really long app name this is a really long app name",
                     }
@@ -396,7 +406,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "TargetCurrency" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "good name",
                         TargetCurrency = "fake currency"
@@ -406,7 +416,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "PerksTemplate" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "good name",
                         PerksTemplate = "lol invalid template"
@@ -416,7 +426,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "AppName", "TargetCurrency", "PerksTemplate" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         TargetCurrency = "fake currency",
                         PerksTemplate = "lol invalid template"
@@ -426,7 +436,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "AnimationColors" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "good name",
                         AnimationColors = new string[] { }
@@ -436,7 +446,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "AnimationColors" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "good name",
                         AnimationColors = new string[] { "  ", " " }
@@ -446,7 +456,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "Sounds" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "good name",
                         Sounds = new string[] { "  " }
@@ -456,7 +466,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "Sounds" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "good name",
                         Sounds = new string[] { " ", " ", " " }
@@ -466,7 +476,7 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { "EndDate" },
                 async () => await client.CreateCrowdfundApp(
                     user.StoreId,
-                    new CreateCrowdfundAppRequest()
+                    new CrowdfundAppRequest
                     {
                         AppName = "good name",
                         StartDate = DateTime.Parse("1998-01-01"),
@@ -478,13 +488,13 @@ namespace BTCPayServer.Tests
             // Test creating a crowdfund app
             var app = await client.CreateCrowdfundApp(
                 user.StoreId,
-                new CreateCrowdfundAppRequest()
+                new CrowdfundAppRequest
                 {
                     AppName = "test app from API",
                     Title = "test app title"
                 }
             );
-            Assert.Equal("test app from API", app.Name);
+            Assert.Equal("test app from API", app.AppName);
             Assert.Equal(user.StoreId, app.StoreId);
             Assert.Equal("Crowdfund", app.AppType);
             Assert.False(app.Archived);
@@ -492,9 +502,10 @@ namespace BTCPayServer.Tests
             // Test title falls back to name
             app = await client.CreateCrowdfundApp(
                 user.StoreId,
-                new CreateCrowdfundAppRequest
+                new CrowdfundAppRequest
                 {
-                    AppName = "test app name"
+                    AppName = "test app name",
+                    Description = "test description"
                 }
             );
             Assert.Equal("test app name", app.Title);
@@ -511,15 +522,16 @@ namespace BTCPayServer.Tests
 
             // Test that we can retrieve the app data
             var retrievedApp = await client.GetApp(app.Id);
-            Assert.Equal(app.Name, retrievedApp.Name);
+            Assert.Equal(app.AppName, retrievedApp.AppName);
             Assert.Equal(app.StoreId, retrievedApp.StoreId);
             Assert.Equal(app.AppType, retrievedApp.AppType);
             Assert.False(retrievedApp.Archived);
 
             // Test the crowdfund-specific endpoint also
             var retrievedCfApp = await client.GetCrowdfundApp(app.Id);
-            Assert.Equal(app.Name, retrievedCfApp.Name);
+            Assert.Equal(app.AppName, retrievedCfApp.AppName);
             Assert.Equal(app.Title, retrievedCfApp.Title);
+            Assert.Equal("test description", retrievedCfApp.Description);
             Assert.False(retrievedCfApp.Archived);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
@@ -548,17 +560,17 @@ namespace BTCPayServer.Tests
 
             var posApp = await client.CreatePointOfSaleApp(
                 user.StoreId,
-                new CreatePointOfSaleAppRequest()
+                new PointOfSaleAppRequest
                 {
                     AppName = "test app from API",
                     Currency = "JPY"
                 }
             );
-            var crowdfundApp = await client.CreateCrowdfundApp(user.StoreId, new CreateCrowdfundAppRequest() { AppName = "test app from API" });
+            var crowdfundApp = await client.CreateCrowdfundApp(user.StoreId, new CrowdfundAppRequest { AppName = "test app from API" });
 
             // Create another store and one app on it so we can get all apps from all stores for the user below
-            var newStore = await client.CreateStore(new CreateStoreRequest() { Name = "A" });
-            var newApp = await client.CreateCrowdfundApp(newStore.Id, new CreateCrowdfundAppRequest() { AppName = "new app" });
+            var newStore = await client.CreateStore(new CreateStoreRequest { Name = "A" });
+            var newApp = await client.CreateCrowdfundApp(newStore.Id, new CrowdfundAppRequest { AppName = "new app" });
 
             Assert.NotEqual(newApp.Id, user.StoreId);
 
@@ -567,12 +579,12 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(2, apps.Length);
 
-            Assert.Equal(posApp.Name, apps[0].Name);
+            Assert.Equal(posApp.AppName, apps[0].AppName);
             Assert.Equal(posApp.StoreId, apps[0].StoreId);
             Assert.Equal(posApp.AppType, apps[0].AppType);
             Assert.False(apps[0].Archived);
 
-            Assert.Equal(crowdfundApp.Name, apps[1].Name);
+            Assert.Equal(crowdfundApp.AppName, apps[1].AppName);
             Assert.Equal(crowdfundApp.StoreId, apps[1].StoreId);
             Assert.Equal(crowdfundApp.AppType, apps[1].AppType);
             Assert.False(apps[1].Archived);
@@ -582,17 +594,17 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(3, apps.Length);
 
-            Assert.Equal(posApp.Name, apps[0].Name);
+            Assert.Equal(posApp.AppName, apps[0].AppName);
             Assert.Equal(posApp.StoreId, apps[0].StoreId);
             Assert.Equal(posApp.AppType, apps[0].AppType);
             Assert.False(apps[0].Archived);
 
-            Assert.Equal(crowdfundApp.Name, apps[1].Name);
+            Assert.Equal(crowdfundApp.AppName, apps[1].AppName);
             Assert.Equal(crowdfundApp.StoreId, apps[1].StoreId);
             Assert.Equal(crowdfundApp.AppType, apps[1].AppType);
             Assert.False(apps[1].Archived);
 
-            Assert.Equal(newApp.Name, apps[2].Name);
+            Assert.Equal(newApp.AppName, apps[2].AppName);
             Assert.Equal(newApp.StoreId, apps[2].StoreId);
             Assert.Equal(newApp.AppType, apps[2].AppType);
             Assert.False(apps[2].Archived);

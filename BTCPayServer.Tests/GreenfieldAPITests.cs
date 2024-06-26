@@ -348,11 +348,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("new app name", retrievedPosApp.AppName);
             Assert.Equal("new app title", retrievedPosApp.Title);
             Assert.True(retrievedPosApp.Archived);
-            // Assert these are left unchanged
-            Assert.Equal("test description", retrievedPosApp.Description);
-            Assert.True(retrievedPosApp.ShowItems);
-            Assert.False(retrievedPosApp.ShowCategories);
-            Assert.False(retrievedPosApp.ShowDiscount);
 
             // Test generic GET app endpoint first
             retrievedApp = await client.GetApp(app.Id);
@@ -363,11 +358,6 @@ namespace BTCPayServer.Tests
             retrievedPosApp = await client.GetPosApp(app.Id);
             Assert.Equal("new app name", retrievedPosApp.AppName);
             Assert.Equal("new app title", retrievedPosApp.Title);
-            Assert.Equal("test description", retrievedPosApp.Description);
-            Assert.True(retrievedPosApp.Archived);
-            Assert.True(retrievedPosApp.ShowItems);
-            Assert.False(retrievedPosApp.ShowCategories);
-            Assert.False(retrievedPosApp.ShowDiscount);
 
             // Make sure we return a 404 if we try to delete an app that doesn't exist
             await AssertHttpError(404, async () =>

@@ -232,64 +232,67 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private CrowdfundSettings ToCrowdfundSettings(CrowdfundAppRequest request, CrowdfundSettings settings)
         {
+            var parsedSounds = ValidateStringArray(request.Sounds);
+            var parsedColors = ValidateStringArray(request.AnimationColors);
             Enum.TryParse<BTCPayServer.Services.Apps.CrowdfundResetEvery>(request.ResetEvery.ToString(), true, out var resetEvery);
             
-            if (request.Title is not null) settings.Title = request.Title.Trim();
-            if (request.TargetCurrency is not null) settings.TargetCurrency = request.TargetCurrency.Trim();
-            if (request.Description is not null) settings.Description = request.Description.Trim();
-            if (request.MainImageUrl is not null) settings.MainImageUrl = request.MainImageUrl.Trim();
-            if (request.NotificationUrl is not null) settings.NotificationUrl = request.NotificationUrl.Trim();
-            if (request.Tagline is not null) settings.Tagline = request.Tagline.Trim();
-            if (request.ResetEvery.HasValue) settings.ResetEvery = resetEvery;
-            if (request.ResetEveryAmount.HasValue) settings.ResetEveryAmount = request.ResetEveryAmount ?? 1;
-            if (request.Enabled.HasValue) settings.Enabled = request.Enabled.Value;
-            if (request.EnforceTargetAmount.HasValue) settings.EnforceTargetAmount = request.EnforceTargetAmount.Value;
-            if (request.StartDate.HasValue) settings.StartDate = request.StartDate?.UtcDateTime;
-            if (request.EndDate.HasValue) settings.EndDate = request.EndDate?.UtcDateTime;
-            if (request.TargetAmount.HasValue) settings.TargetAmount = request.TargetAmount.Value;
-            if (request.AnimationsEnabled.HasValue) settings.AnimationsEnabled = request.AnimationsEnabled.Value;
-            if (request.DisplayPerksValue.HasValue) settings.DisplayPerksValue = request.DisplayPerksValue.Value;
-            if (request.DisplayPerksRanking.HasValue) settings.DisplayPerksRanking = request.DisplayPerksRanking.Value;
-            if (request.SortPerksByPopularity.HasValue) settings.SortPerksByPopularity = request.SortPerksByPopularity.Value;
-            // If Disqus shortname is not null or empty we assume that Disqus should be enabled
-            if (request.DisqusShortname is not null) settings.DisqusShortname = request.DisqusShortname.Trim();
-            settings.DisqusEnabled = request.DisqusEnabled is true && !string.IsNullOrEmpty(settings.DisqusShortname);
-            // If explicit parameter is not passed for enabling sounds/animations, turn them on if custom sounds/colors are passed
-            if (request.Sounds is not null) settings.Sounds = ValidateStringArray(request.Sounds);
-            if (request.AnimationColors is not null) settings.AnimationColors = ValidateStringArray(request.AnimationColors);
-            if (request.SoundsEnabled is not null) settings.SoundsEnabled = request.SoundsEnabled is true && settings.Sounds?.Any() is true;
-            if (request.AnimationsEnabled is not null) settings.AnimationsEnabled = request.AnimationsEnabled is true && settings.AnimationColors?.Any() is true;
-            if (request.PerksTemplate is not null) settings.PerksTemplate = AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim()));
-            if (request.FormId is not null) settings.FormId = request.FormId;
-            
-            return settings;
+            return new CrowdfundSettings
+            {
+                Title = request.Title?.Trim() ?? request.AppName,
+                Enabled = request.Enabled ?? true,
+                EnforceTargetAmount = request.EnforceTargetAmount ?? false,
+                StartDate = request.StartDate?.UtcDateTime,
+                TargetCurrency = request.TargetCurrency?.Trim(),
+                Description = request.Description?.Trim(),
+                EndDate = request.EndDate?.UtcDateTime,
+                TargetAmount = request.TargetAmount,
+                MainImageUrl = request.MainImageUrl?.Trim(),
+                NotificationUrl = request.NotificationUrl?.Trim(),
+                Tagline = request.Tagline?.Trim(),
+                PerksTemplate = request.PerksTemplate is not null ? AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim())) : null,
+                // If Disqus shortname is not null or empty we assume that Disqus should be enabled
+                DisqusEnabled = !string.IsNullOrEmpty(request.DisqusShortname?.Trim()),
+                DisqusShortname = request.DisqusShortname?.Trim(),
+                // If explicit parameter is not passed for enabling sounds/animations, turn them on if custom sounds/colors are passed
+                SoundsEnabled = request.SoundsEnabled ?? parsedSounds != null,
+                AnimationsEnabled = request.AnimationsEnabled ?? parsedColors != null,
+                ResetEveryAmount = request.ResetEveryAmount ?? 1,
+                ResetEvery = resetEvery,
+                DisplayPerksValue = request.DisplayPerksValue ?? false,
+                DisplayPerksRanking = request.DisplayPerksRanking ?? false,
+                SortPerksByPopularity = request.SortPerksByPopularity ?? false,
+                Sounds = parsedSounds ?? new CrowdfundSettings().Sounds,
+                AnimationColors = parsedColors ?? new CrowdfundSettings().AnimationColors,
+                FormId = request.FormId
+            };
         }
 
         private PointOfSaleSettings ToPointOfSaleSettings(PointOfSaleAppRequest request, PointOfSaleSettings settings)
         {
             Enum.TryParse<BTCPayServer.Plugins.PointOfSale.PosViewType>(request.DefaultView.ToString(), true, out var defaultView);
 
-            if (request.Title is not null) settings.Title = request.Title;
-            if (request.Currency is not null) settings.Currency = request.Currency;
-            if (request.DefaultView.HasValue) settings.DefaultView = defaultView;
-            if (request.ShowItems.HasValue) settings.ShowItems = request.ShowItems.Value;
-            if (request.ShowCustomAmount.HasValue) settings.ShowCustomAmount = request.ShowCustomAmount.Value;
-            if (request.ShowDiscount.HasValue) settings.ShowDiscount = request.ShowDiscount.Value;
-            if (request.ShowSearch.HasValue) settings.ShowSearch = request.ShowSearch.Value;
-            if (request.ShowCategories.HasValue) settings.ShowCategories = request.ShowCategories.Value;
-            if (request.EnableTips.HasValue) settings.EnableTips = request.EnableTips.Value;
-            if (request.RedirectAutomatically.HasValue) settings.RedirectAutomatically = request.RedirectAutomatically.Value;
-            if (request.Template is not null) settings.Template = AppService.SerializeTemplate(AppService.Parse(request.Template));
-            if (request.RedirectUrl is not null) settings.RedirectUrl = request.RedirectUrl;
-            if (request.NotificationUrl is not null) settings.NotificationUrl = request.NotificationUrl;
-            if (request.Description is not null) settings.Description = request.Description;
-            if (request.FixedAmountPayButtonText is not null) settings.ButtonText = request.FixedAmountPayButtonText;
-            if (request.CustomAmountPayButtonText is not null) settings.CustomButtonText = request.CustomAmountPayButtonText;
-            if (request.TipText is not null) settings.CustomTipText = request.TipText;
-            if (request.CustomTipPercentages is not null) settings.CustomTipPercentages = request.CustomTipPercentages;
-            if (request.FormId is not null) settings.FormId = request.FormId;
-            
-            return settings;
+            return new PointOfSaleSettings
+            {
+                Title = request.Title ?? request.AppName,
+                DefaultView = defaultView,
+                ShowItems = request.ShowItems ?? false,
+                ShowCustomAmount = request.ShowCustomAmount ?? false,
+                ShowDiscount = request.ShowDiscount ?? false,
+                ShowSearch = request.ShowSearch ?? false,
+                ShowCategories = request.ShowCategories ?? false,
+                EnableTips = request.EnableTips ?? false,
+                Currency = request.Currency,
+                Template = request.Template != null ? AppService.SerializeTemplate(AppService.Parse(request.Template)) : null,
+                ButtonText = request.FixedAmountPayButtonText ?? PointOfSaleSettings.BUTTON_TEXT_DEF,
+                CustomButtonText = request.CustomAmountPayButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
+                CustomTipText = request.TipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
+                CustomTipPercentages = request.CustomTipPercentages,
+                NotificationUrl = request.NotificationUrl,
+                RedirectUrl = request.RedirectUrl,
+                Description = request.Description,
+                RedirectAutomatically = request.RedirectAutomatically,
+                FormId = request.FormId
+            };
         }
 
         private AppBaseData ToModel(AppData appData)

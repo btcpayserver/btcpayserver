@@ -140,8 +140,8 @@ public partial class UIStoresController
         vm.Users = users.Select(u => new StoreUsersViewModel.StoreUserViewModel
         {
             Email = u.Email,
-            Name = u.Name,
-            ImageUrl = u.ImageUrl,
+            Name = u.UserBlob.Name,
+            ImageUrl = u.UserBlob.ImageUrl,
             Id = u.Id,
             Role = u.StoreRole.Role
         }).ToList();

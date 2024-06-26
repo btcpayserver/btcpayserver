@@ -92,12 +92,12 @@ namespace BTCPayServer.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-
+            var blob = user.GetBlob() ?? new();
             var model = new IndexViewModel
             {
                 Email = user.Email,
-                Name = user.Name,
-                ImageUrl = string.IsNullOrEmpty(user.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(user.ImageUrl)),
+                Name = blob.Name,
+                ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.EmailConfirmed,
                 RequiresEmailConfirmation = user.RequiresEmailConfirmation
             };
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var blob = user.GetBlob();
+            var blob = user.GetBlob() ?? new();
             blob.ShowInvoiceStatusChangeHint = false;
             user.SetBlob(blob);
             await _userManager.UpdateAsync(user);
@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            bool? propertiesChanged = null;
+            bool needUpdate = false;
             var email = user.Email;
             if (model.Email != email)
             {
@@ -151,13 +151,14 @@ namespace BTCPayServer.Controllers
                 {
                     throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
                 }
-                propertiesChanged = true;
+                needUpdate = true;
             }
-            
-            if (user.Name != model.Name)
+
+            var blob = user.GetBlob() ?? new();
+            if (blob.Name != model.Name)
             {
-                user.Name = model.Name;
-                propertiesChanged = true;
+                blob.Name = model.Name;
+                needUpdate = true;
             }
             
             if (model.ImageFile != null)
@@ -185,8 +186,8 @@ namespace BTCPayServer.Controllers
                         {
                             var storedFile = await _fileService.AddFile(model.ImageFile, user.Id);
                             var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
-                            user.ImageUrl = fileIdUri.ToString();
-                            propertiesChanged = true;
+                            blob.ImageUrl = fileIdUri.ToString();
+                            needUpdate = true;
                         }
                         catch (Exception e)
                         {
@@ -195,32 +196,25 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
-            else if (RemoveImageFile && !string.IsNullOrEmpty(user.ImageUrl))
+            else if (RemoveImageFile && !string.IsNullOrEmpty(blob.ImageUrl))
             {
-                user.ImageUrl = null;
-                propertiesChanged = true;
+                blob.ImageUrl = null;
+                needUpdate = true;
             }
-            
+            user.SetBlob(blob);
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            if (propertiesChanged is true)
+            if (needUpdate is true)
             {
-                propertiesChanged = await _userManager.UpdateAsync(user) is { Succeeded: true };
+                needUpdate = await _userManager.UpdateAsync(user) is { Succeeded: true };
+                TempData[WellKnownTempData.SuccessMessage] = "Your profile has been updated";
             }
-
-            if (propertiesChanged.HasValue)
+            else
             {
-                if (propertiesChanged is not false)
-                {
-                    TempData[WellKnownTempData.SuccessMessage] = "Your profile has been updated";
-                }
-                else
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = "Error updating profile";
-                }
+                TempData[WellKnownTempData.ErrorMessage] = "Error updating profile";
             }
             
             return RedirectToAction(nameof(Index));

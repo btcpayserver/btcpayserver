@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
@@ -60,9 +61,8 @@ namespace BTCPayServer.Services.Stores
         {
             public string Id { get; set; }
             public string Email { get; set; }
-            public string Name { get; set; }
-            public string ImageUrl { get; set; }
             public StoreRole StoreRole { get; set; }
+            public UserBlob UserBlob { get; set; }
         }
 
         public class StoreRole
@@ -190,9 +190,7 @@ namespace BTCPayServer.Services.Stores
                     .Select(u => new
                     {
                         Id = u.ApplicationUserId,
-                        u.ApplicationUser.Email,
-                        u.ApplicationUser.Name,
-                        u.ApplicationUser.ImageUrl,
+                        u.ApplicationUser,
                         u.StoreRole
                     })
                     .Where(u => roles == null || roles.Contains(u.StoreRole.Id))
@@ -200,9 +198,8 @@ namespace BTCPayServer.Services.Stores
                     {
                         StoreRole = ToStoreRole(arg.StoreRole),
                         Id = arg.Id,
-                        Email = arg.Email,
-                        Name = arg.Name,
-                        ImageUrl = arg.ImageUrl
+                        Email = arg.ApplicationUser.Email,
+                        UserBlob = arg.ApplicationUser.GetBlob() ?? new()
                     }).ToArray();
         }
 

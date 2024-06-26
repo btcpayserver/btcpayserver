@@ -3,6 +3,7 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml.Linq;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
@@ -187,17 +188,19 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
-            if (request.Name is not null && request.Name != user.Name)
+            var blob = user.GetBlob() ?? new();
+            if (request.Name is not null && request.Name != blob.Name)
             {
-                user.Name = request.Name;
+                blob.Name = request.Name;
                 needUpdate = true;
             }
 
-            if (request.ImageUrl is not null && request.ImageUrl != user.ImageUrl)
+            if (request.ImageUrl is not null && request.ImageUrl != blob.ImageUrl)
             {
-                user.ImageUrl = request.ImageUrl;
+                blob.ImageUrl = request.ImageUrl;
                 needUpdate = true;
             }
+            user.SetBlob(blob);
 
             if (ModelState.IsValid && needUpdate)
             {   
@@ -276,13 +279,15 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 UserName = request.Email,
                 Email = request.Email,
-                Name = request.Name,
-                ImageUrl = request.ImageUrl,
                 RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
                 RequiresApproval = policies.RequiresUserApproval,
                 Created = DateTimeOffset.UtcNow,
                 Approved = isAdmin // auto-approve first admin and users created by an admin
             };
+            var blob = user.GetBlob() ?? new();
+            blob.Name = request.Name;
+            blob.ImageUrl = request.ImageUrl;
+            user.SetBlob(blob);
             var passwordValidation = await this._passwordValidator.ValidateAsync(_userManager, user, request.Password);
             if (!passwordValidation.Succeeded)
             {
@@ -385,7 +390,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var model = UserService.FromModel(data, roles);
             model.ImageUrl = string.IsNullOrEmpty(model.ImageUrl)
                 ? null
-                : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(data.ImageUrl));
+                : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(model.ImageUrl));
             return model;
         }
     }

@@ -51,16 +51,17 @@ namespace BTCPayServer.Controllers
             }
 
             model.Roles = roleManager.Roles.ToDictionary(role => role.Id, role => role.Name);
-            model.Users = await usersQuery
+            model.Users = (await usersQuery
                 .Include(user => user.UserRoles)
                 .Include(user => user.UserStores)
                 .ThenInclude(data => data.StoreData)
                 .Skip(model.Skip)
                 .Take(model.Count)
+                .ToListAsync())
                 .Select(u => new UsersViewModel.UserViewModel
                 {
-                    Name = u.Name,
-                    ImageUrl = u.ImageUrl,
+                    Name = u.GetBlob()?.Name,
+                    ImageUrl = u.GetBlob()?.ImageUrl,
                     Email = u.Email,
                     Id = u.Id,
                     EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
@@ -70,8 +71,7 @@ namespace BTCPayServer.Controllers
                     Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
                     Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                 })
-                .ToListAsync();
-
+                .ToList();
             return View(model);
         }
 
@@ -82,12 +82,13 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
             var roles = await _UserManager.GetRolesAsync(user);
+            var blob = user.GetBlob();
             var model = new UsersViewModel.UserViewModel
             {
                 Id = user.Id,
                 Email = user.Email,
-                Name = user.Name,
-                ImageUrl = string.IsNullOrEmpty(user.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(user.ImageUrl)),
+                Name = blob?.Name,
+                ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
                 IsAdmin = Roles.HasServerAdmin(roles)
@@ -116,9 +117,10 @@ namespace BTCPayServer.Controllers
                 propertiesChanged = true;
             }
 
-            if (user.Name != viewModel.Name)
+            var blob = user.GetBlob() ?? new();
+            if (blob.Name != viewModel.Name)
             {
-                user.Name = viewModel.Name;
+                blob.Name = viewModel.Name;
                 propertiesChanged = true;
             }
             
@@ -147,7 +149,7 @@ namespace BTCPayServer.Controllers
                         {
                             var storedFile = await _fileService.AddFile(viewModel.ImageFile, userId);
                             var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
-                            user.ImageUrl = fileIdUri.ToString();
+                            blob.ImageUrl = fileIdUri.ToString();
                             propertiesChanged = true;
                         }
                         catch (Exception e)
@@ -157,12 +159,12 @@ namespace BTCPayServer.Controllers
                     }
                 }
             }
-            else if (RemoveImageFile && !string.IsNullOrEmpty(user.ImageUrl))
+            else if (RemoveImageFile && !string.IsNullOrEmpty(blob.ImageUrl))
             {
-                user.ImageUrl = null;
+                blob.ImageUrl = null;
                 propertiesChanged = true;
             }
-
+            user.SetBlob(blob);
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
             var wasAdmin = Roles.HasServerAdmin(roles);

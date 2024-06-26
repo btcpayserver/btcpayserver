@@ -128,10 +128,11 @@ namespace BTCPayServer.Components.MainNav
             var user = await _userManager.GetUserAsync(HttpContext.User);
             if (user != null)
             {
-                vm.UserName = user.Name;
-                vm.UserImageUrl = string.IsNullOrEmpty(user.ImageUrl)
+                var blob = user.GetBlob();
+                vm.UserName = blob?.Name;
+                vm.UserImageUrl = string.IsNullOrEmpty(blob?.ImageUrl)
                     ? null
-                    : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(user.ImageUrl));
+                    : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob?.ImageUrl));
             }
 
             return View(vm);

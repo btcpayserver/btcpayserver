@@ -17,8 +17,6 @@ namespace BTCPayServer.Data
         public List<U2FDevice> U2FDevices { get; set; }
         public List<APIKeyData> APIKeys { get; set; }
         public DateTimeOffset? Created { get; set; }
-        public string Name { get; set; }
-        public string ImageUrl { get; set; }
         public string DisabledNotifications { get; set; }
         
         public List<NotificationData> Notifications { get; set; }
@@ -46,5 +44,7 @@ namespace BTCPayServer.Data
     public class UserBlob
     {
         public bool ShowInvoiceStatusChangeHint { get; set; }
+        public string ImageUrl { get; set; }
+        public string Name { get; set; }
     }
 }

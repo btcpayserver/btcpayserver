@@ -22,8 +22,7 @@ public class TransactionDetectedRequest
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
 {
-    Task NotifyServerEvent(string eventName);
-    
+    Task NotifyServerEvent(IServerEvent ev);
     Task NotifyNetwork(string network);
     Task NotifyServerNode(string nodeInfo);
     Task TransactionDetected(TransactionDetectedRequest request);
@@ -35,6 +34,25 @@ public interface IBTCPayAppHubClient
     Task<List<LightningPayment>> GetLightningPayments(ListPaymentsParams request);
     Task<List<LightningPayment>> GetLightningInvoices(ListInvoicesParams request);
     Task<PayResponse> PayInvoice(string bolt11, long? amountMilliSatoshi);
+}
+
+public interface IServerEvent
+{
+    public string Type { get; }
+}
+
+public interface IServerEvent<T> : IServerEvent
+{
+    public T? Event { get; }
+}
+
+public class ServerEvent(string type) : IServerEvent
+{
+    public string Type { get; } = type;
+}
+public class ServerEvent<T>(string type, T? evt = default) : ServerEvent(type), IServerEvent<T>
+{
+    public T? Event { get; } = evt;
 }
 
 public record TxResp(long Confirmations, long? Height, decimal BalanceChange, DateTimeOffset Timestamp, string TransactionId)

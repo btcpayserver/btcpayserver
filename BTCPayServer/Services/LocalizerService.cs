@@ -164,7 +164,7 @@ namespace BTCPayServer.Services
         {
             await using var ctx = _ContextFactory.CreateContext();
             var db = ctx.Database.GetDbConnection();
-            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source!='Default'", new { dict_id = dictionary });
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id=@dict_id AND source='Custom'", new { dict_id = dictionary });
         }
 
         public async Task UpdateDictionary(Dictionary dictionary, Translations translations)

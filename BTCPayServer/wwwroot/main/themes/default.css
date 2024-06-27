@@ -277,7 +277,7 @@
   --btcpay-primary-rgb: 81, 177, 62;
 
   --btcpay-secondary: var(--btcpay-white);
-  --btcpay-secondary-accent: var(--btcpay-neutral-700);
+  --btcpay-secondary-accent: var(--btcpay-secondary);
   --btcpay-secondary-text: var(--btcpay-primary);
   --btcpay-secondary-text-hover: var(--btcpay-primary);
   --btcpay-secondary-text-active: var(--btcpay-brand-dark);

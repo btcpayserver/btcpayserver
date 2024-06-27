@@ -8,14 +8,17 @@ using BTCPayApp.CommonServer;
 using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -97,6 +100,9 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     private readonly IFeeProviderFactory _feeProviderFactory;
     private readonly ILogger<BTCPayAppHub> _logger;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly StoreRepository _storeRepository;
+    private readonly EventAggregator _eventAggregator;
+    private CompositeDisposable? _compositeDisposable;
 
     public BTCPayAppHub(BTCPayNetworkProvider btcPayNetworkProvider,
         NBXplorerDashboard nbXplorerDashboard,
@@ -104,6 +110,8 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         ExplorerClientProvider explorerClientProvider,
         IFeeProviderFactory feeProviderFactory,
         ILogger<BTCPayAppHub> logger,
+        StoreRepository storeRepository,
+        EventAggregator eventAggregator,
         UserManager<ApplicationUser> userManager) 
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
@@ -113,35 +121,53 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         _feeProviderFactory = feeProviderFactory;
         _logger = logger;
         _userManager = userManager;
+        _storeRepository = storeRepository;
+        _eventAggregator = eventAggregator;
     }
-
 
     public override async Task OnConnectedAsync()
     {
-        
         await _appState.Connected(Context.ConnectionId);
         
-        //TODO: this needs to happen BEFORE connection is established
+        // TODO: this needs to happen BEFORE connection is established
         if (!_nbXplorerDashboard.IsFullySynched(_btcPayNetworkProvider.BTC.CryptoCode, out _))
         {
             Context.Abort();
             return;
         }
 
-        
-        await Groups.AddToGroupAsync(Context.ConnectionId,_userManager.GetUserId(Context.User));
+        var userId = _userManager.GetUserId(Context.User!)!;
+        var userStores = await _storeRepository.GetStoresByUserId(userId);
         await Clients.Client(Context.ConnectionId).NotifyNetwork(_btcPayNetworkProvider.BTC.NBitcoinNetwork.ToString());
+        await Groups.AddToGroupAsync(Context.ConnectionId, userId);
+        foreach (var userStore in userStores)
+        {
+            await Groups.AddToGroupAsync(Context.ConnectionId, userStore.Id);
+        }
         
-
+        _compositeDisposable = new CompositeDisposable();
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreAddedEvent>(StoreUserAddedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreRemovedEvent>(StoreUserRemovedEvent));
     }
-
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
+        _compositeDisposable?.Dispose();
         await _appState.Disconnected(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
     }
+    
+    private async Task StoreUserAddedEvent(UserStoreAddedEvent arg)
+    {
+        // TODO: Groups and COntext are not accessible here
+        // await Groups.AddToGroupAsync(Context.ConnectionId, arg.StoreId);
+    }
 
+    private async Task StoreUserRemovedEvent(UserStoreRemovedEvent arg)
+    {
+        // TODO: Groups and COntext are not accessible here
+        // await Groups.RemoveFromGroupAsync(Context.ConnectionId, arg.UserId);
+    }
 
     public async Task<bool> BroadcastTransaction(string tx)
     {
@@ -158,15 +184,12 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
       var feeProvider =  _feeProviderFactory.CreateFeeProvider( _btcPayNetworkProvider.BTC);
       try
       {
-
           return (await feeProvider.GetFeeRateAsync(blockTarget)).SatoshiPerByte;
       }
       finally
       {
           _logger.LogInformation($"Getting fee rate for {blockTarget} done");
-          
       }
-      
     }
 
     public async Task<BestBlockResponse> GetBestBlock()
@@ -318,22 +341,16 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
         await _appState.PaymentUpdate(identifier, lightningPayment);
     }
 
-
     public async Task<bool> IdentifierActive(string group, bool active)
     {
-        
         return await _appState.IdentifierActive(group, Context.ConnectionId, active);
     }
-
 
     public async Task<Dictionary<string, string>> Pair(PairRequest request)
     {
         return await _appState.Pair(Context.ConnectionId, request);
-        
-        
     }
     
-
     public async Task<AppHandshakeResponse> Handshake(AppHandshake request)
     {
         

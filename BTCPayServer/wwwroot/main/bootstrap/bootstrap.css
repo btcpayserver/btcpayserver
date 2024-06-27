@@ -12266,11 +12266,9 @@ ul:not([class]) li {
 }
 
 .accordion-button .icon {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+  --icon-size: 1.5rem;
   margin-left: auto;
-  transition: transform 0.2s ease-in-out;
+  transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
 }
 
 .accordion-button:not(.collapsed) .icon {
@@ -12304,6 +12302,37 @@ ul:not([class]) li {
 .alert-dismissible .btn-close {
   color: inherit;
   padding: 1rem;
+}
+
+/* Badges */
+.badge-translucent {
+  --btcpay-bg-opacity: .25;
+}
+.badge-translucent.text-bg-primary {
+  --btcpay-primary-text: var(--btcpay-primary);
+}
+.badge-translucent.text-bg-secondary {
+  --btcpay-secondary-text: var(--btcpay-neutral-light-900);
+  --btcpay-secondary-rgb: 248, 249, 250;
+}
+.badge-translucent.text-bg-success {
+  --btcpay-success-text: var(--btcpay-success);
+}
+.badge-translucent.text-bg-info {
+  --btcpay-info-text: var(--btcpay-info);
+}
+.badge-translucent.text-bg-warning {
+  --btcpay-warning-text: var(--btcpay-yellow-600);
+}
+.badge-translucent.text-bg-danger {
+  --btcpay-danger-text: var(--btcpay-danger);
+}
+.badge-translucent.text-bg-light {
+  --btcpay-light-text: var(--btcpay-neutral-800);
+  --btcpay-bg-opacity: .75;
+}
+.badge-translucent.text-bg-dark {
+  --btcpay-dark-text: var(--btcpay-white);
 }
 
 /* Icons */

@@ -3,10 +3,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom.Events;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
@@ -37,6 +35,8 @@ public class BTCPayAppState : IHostedService
     public ExplorerClient ExplorerClient { get; private set; }
     
     private DerivationSchemeParser _derivationSchemeParser;
+    public readonly ConcurrentDictionary<string, string> GroupToConnectionId = new(StringComparer.InvariantCultureIgnoreCase);
+    private CancellationTokenSource? _cts;
     // private readonly ConcurrentDictionary<string, TrackedSource> _connectionScheme = new();
 
     public event EventHandler<(string,LightningPayment)>? OnPaymentUpdate;
@@ -60,20 +60,66 @@ public class BTCPayAppState : IHostedService
         _cts ??= new CancellationTokenSource();
         ExplorerClient = _explorerClientProvider.GetExplorerClient("BTC");
         _derivationSchemeParser = new DerivationSchemeParser(_networkProvider.BTC);
-        _compositeDisposable = new();
-        _compositeDisposable.Add(
-            _eventAggregator.Subscribe<NewBlockEvent>(OnNewBlock));
-        _compositeDisposable.Add(
-            _eventAggregator.SubscribeAsync<NewOnChainTransactionEvent>(OnNewTransaction));
-        _compositeDisposable.Add(
-            _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
+        _compositeDisposable = new CompositeDisposable();
+        _compositeDisposable.Add(_eventAggregator.Subscribe<NewBlockEvent>(OnNewBlock));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<NewOnChainTransactionEvent>(OnNewTransaction));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<InvoiceEvent>(InvoiceChangedEvent));
+        // Store events
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreCreatedEvent>(StoreCreatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreUpdatedEvent>(StoreUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreRemovedEvent>(StoreRemovedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreAddedEvent>(StoreUserAddedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreUpdatedEvent>(StoreUserUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreRemovedEvent>(StoreUserRemovedEvent));
         _ = UpdateNodeInfo();
         return Task.CompletedTask;
     }
 
+    private async Task InvoiceChangedEvent(InvoiceEvent arg)
+    {
+        await _hubContext.Clients.Group(arg.Invoice.StoreId).NotifyServerEvent(new ServerEvent<InvoiceEvent>("invoice-updated", arg));
+    }
+
     private async Task UserNotificationsUpdatedEvent(UserNotificationsUpdatedEvent arg)
     {
-        await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent("notifications-updated");
+        await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(new ServerEvent<UserNotificationsUpdatedEvent>("notifications-updated", arg));
+    }
+
+    private async Task StoreCreatedEvent(StoreCreatedEvent arg)
+    {
+        await _hubContext.Clients.Group(arg.Store.Id).NotifyServerEvent(new ServerEvent<StoreCreatedEvent>("store-created", arg));
+    }
+
+    private async Task StoreUpdatedEvent(StoreUpdatedEvent arg)
+    {
+        await _hubContext.Clients.Group(arg.Store.Id).NotifyServerEvent(new ServerEvent<StoreUpdatedEvent>("store-updated", arg));
+    }
+
+    private async Task StoreRemovedEvent(StoreRemovedEvent arg)
+    {
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(new ServerEvent<StoreRemovedEvent>("store-removed", arg));
+    }
+
+    private async Task StoreUserAddedEvent(UserStoreAddedEvent arg)
+    {
+        var ev = new ServerEvent<UserStoreAddedEvent>("user-store-added", arg);
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
+        await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(ev);
+    }
+
+    private async Task StoreUserUpdatedEvent(UserStoreUpdatedEvent arg)
+    {
+        var ev = new ServerEvent<UserStoreUpdatedEvent>("user-store-updated", arg);
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
+        await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(ev);
+    }
+
+    private async Task StoreUserRemovedEvent(UserStoreRemovedEvent arg)
+    {
+        var ev = new ServerEvent<UserStoreRemovedEvent>("user-store-removed", arg);
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
+        await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(ev);
     }
 
     private string _nodeInfo = string.Empty;
@@ -81,8 +127,6 @@ public class BTCPayAppState : IHostedService
     {
         while (!_cts.Token.IsCancellationRequested)
         {
-
-
             try
             {
                 var res = await _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>().GetLightningHandler(ExplorerClient.CryptoCode).GetNodeInfo(
@@ -112,7 +156,6 @@ public class BTCPayAppState : IHostedService
             }
             await Task.Delay(TimeSpan.FromMinutes(string.IsNullOrEmpty(_nodeInfo)? 1:5), _cts.Token);
         }
-
     }
 
     private async  Task OnNewTransaction(NewOnChainTransactionEvent obj)
@@ -202,9 +245,6 @@ public class BTCPayAppState : IHostedService
         return result;
     }
 
-    public readonly ConcurrentDictionary<string, string> GroupToConnectionId = new(StringComparer.InvariantCultureIgnoreCase);
-    private CancellationTokenSource _cts;
-
 
     public async Task<bool> IdentifierActive(string group, string contextConnectionId, bool active)
     {
@@ -234,7 +274,6 @@ public class BTCPayAppState : IHostedService
             {
                 GroupRemoved?.Invoke(this, group);
             }
-
         }
     }
 

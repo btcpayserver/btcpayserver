@@ -274,7 +274,10 @@ public partial class AppApiController
                 RoleId = userStore.StoreRole.Id,
                 PosAppId = posApp?.Id,
                 DefaultCurrency = storeBlob.DefaultCurrency,
-                Permissions = userStore.StoreRole.Permissions
+                Permissions = userStore.StoreRole.Permissions,
+                LogoUrl = storeBlob.LogoUrl != null
+                    ? await uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl)
+                    : null,
             });
         }
 

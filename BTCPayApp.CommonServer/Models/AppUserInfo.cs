@@ -59,6 +59,7 @@ public class AppUserStoreInfo
 {
     public string? Id { get; set; }
     public string? Name { get; set; }
+    public string? LogoUrl { get; set; }
     public string? RoleId { get; set; }
     public string? PosAppId { get; set; }
     public string? DefaultCurrency { get; set; }

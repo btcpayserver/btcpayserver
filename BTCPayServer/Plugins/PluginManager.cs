@@ -258,10 +258,25 @@ namespace BTCPayServer.Plugins
 
         private static IEnumerable<IBTCPayServerPlugin> GetPluginInstancesFromAssembly(Assembly assembly)
         {
-            return assembly.GetTypes().Where(type =>
+            return GetTypesNotCrash(assembly).Where(type =>
                 typeof(IBTCPayServerPlugin).IsAssignableFrom(type) && type != typeof(PluginService.AvailablePlugin) &&
                 !type.IsAbstract).
                 Select(type => (IBTCPayServerPlugin)Activator.CreateInstance(type, Array.Empty<object>()));
+        }
+
+        private static IEnumerable<Type> GetTypesNotCrash(Assembly assembly)
+        {
+            try
+            {
+                // Strange crash with selenium
+                if (assembly.FullName.Contains("Selenium", StringComparison.OrdinalIgnoreCase))
+                    return Array.Empty<Type>();
+                return assembly.GetTypes();
+            }
+            catch(ReflectionTypeLoadException ex)
+            {
+                return ex.Types.Where(t => t is not null).ToArray();
+            }
         }
 
         private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(string pluginIdentifier, Assembly assembly)

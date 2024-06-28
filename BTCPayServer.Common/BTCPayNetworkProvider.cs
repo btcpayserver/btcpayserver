@@ -3,13 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Configuration;
 using BTCPayServer.Logging;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
-using StandardConfiguration;
 
 namespace BTCPayServer
 {

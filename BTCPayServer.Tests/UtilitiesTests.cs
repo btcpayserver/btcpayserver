@@ -18,7 +18,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.DevTools.V100.Network;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;

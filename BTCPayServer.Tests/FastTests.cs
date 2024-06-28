@@ -47,7 +47,6 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using OpenQA.Selenium.DevTools.V100.DOMSnapshot;
 using Xunit;
 using Xunit.Abstractions;
 using StoreData = BTCPayServer.Data.StoreData;

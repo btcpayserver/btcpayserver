@@ -37,6 +37,10 @@ namespace BTCPayServer.Data
                 {
                     paymentData.Migrate();
                 }
+                else if (entity is PayoutData payoutData && payoutData.Currency is null)
+                {
+                    payoutData.Migrate();
+                }
                 return entity;
             }
         }

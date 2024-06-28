@@ -4,7 +4,6 @@ using System.Linq;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json.Bson;
 
 namespace BTCPayServer
 {

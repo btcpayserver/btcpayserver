@@ -54,7 +54,7 @@ public class PayoutsReportProvider : ReportProvider
             data.Add(payout.Date);
             data.Add(payout.GetPayoutSource(_btcPayNetworkJsonSerializerSettings));
             data.Add(payout.State.ToString());
-            if (PayoutMethodId.TryParse(payout.PaymentMethodId, out var pmi))
+            if (PayoutMethodId.TryParse(payout.PayoutMethodId, out var pmi))
             {
                 var handler = _handlers.TryGet(pmi);
                 if (handler is LightningLikePayoutHandler)

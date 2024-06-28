@@ -18,14 +18,12 @@ namespace BTCPayServer.Migrations
                 table: "Payouts",
                 type: "text",
                 nullable: true);
+            migrationBuilder.RenameColumn("PaymentMethodId", "Payouts", "PayoutMethodId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "Currency",
-                table: "Payouts");
         }
     }
 }

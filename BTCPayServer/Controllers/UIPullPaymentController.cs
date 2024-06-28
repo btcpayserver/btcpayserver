@@ -118,7 +118,7 @@ namespace BTCPayServer.Controllers
                     Currency = blob.Currency,
                     Status = entity.Entity.State,
                     Destination = entity.Blob.Destination,
-                    PaymentMethod = PaymentMethodId.Parse(entity.Entity.PaymentMethodId),
+                    PaymentMethod = PaymentMethodId.Parse(entity.Entity.PayoutMethodId),
                     Link = entity.ProofBlob?.Link,
                     TransactionId = entity.ProofBlob?.Id
                 }).ToList()

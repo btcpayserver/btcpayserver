@@ -10,9 +10,9 @@ namespace BTCPayServer.Data
     {
         public void Migrate()
         {
-            PaymentMethodId = MigrationExtensions.MigratePaymentMethodId(PaymentMethodId);
+            PayoutMethodId = MigrationExtensions.MigratePaymentMethodId(PayoutMethodId);
             // Could only be BTC-LN or BTC-CHAIN, so we extract the crypto currency
-            Currency = PaymentMethodId.Split('-')[0];
+            Currency = PayoutMethodId.Split('-')[0];
         }
     }
 }

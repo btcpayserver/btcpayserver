@@ -24,7 +24,7 @@ namespace BTCPayServer.Data
         public PayoutState State { get; set; }
         [MaxLength(20)]
         [Required]
-        public string PaymentMethodId { get; set; }
+        public string PayoutMethodId { get; set; }
         public string Blob { get; set; }
         public string Proof { get; set; }
 #nullable enable

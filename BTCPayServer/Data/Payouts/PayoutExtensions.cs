@@ -31,7 +31,7 @@ namespace BTCPayServer.Data
 
         public static PayoutMethodId GetPayoutMethodId(this PayoutData data)
         {
-            return PayoutMethodId.TryParse(data.PaymentMethodId, out var pmi) ? pmi : null;
+            return PayoutMethodId.TryParse(data.PayoutMethodId, out var pmi) ? pmi : null;
         }
 
         public static string GetPayoutSource(this PayoutData data, BTCPayNetworkJsonSerializerSettings jsonSerializerSettings)

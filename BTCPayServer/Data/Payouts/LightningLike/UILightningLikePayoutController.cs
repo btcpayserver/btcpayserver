@@ -86,7 +86,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     .Where(data =>
                         payoutIds.Contains(data.Id) &&
                         data.State == PayoutState.AwaitingPayment &&
-                        data.PaymentMethodId == pmiStr)
+                        data.PayoutMethodId == pmiStr)
                     .ToListAsync())
                 .Where(payout =>
                 {

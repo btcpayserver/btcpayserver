@@ -85,7 +85,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
             }
 
             foreach (IGrouping<string, PayoutData> payoutByStoreByPaymentMethod in payoutByStore.GroupBy(data =>
-                         data.PaymentMethodId))
+                         data.PayoutMethodId))
             {
                 var pmi = PaymentMethodId.Parse(payoutByStoreByPaymentMethod.Key);
                 var pm = store.GetPaymentMethodConfigs(_handlers)

@@ -11,6 +11,7 @@ using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Xunit;
 using Xunit.Abstractions;
+using static BTCPayServer.Services.LocalizerService;
 
 namespace BTCPayServer.Tests
 {
@@ -38,15 +39,18 @@ namespace BTCPayServer.Tests
         {
             using var tester = CreateServerTester(newDb: true);
             await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
             var factory = tester.PayTester.GetService<ApplicationDbContextFactory>();
             var db = factory.CreateContext().Database.GetDbConnection();
 
             TestLogs.LogInformation("French fallback to english");
-            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('English', NULL, NULL), ('French', 'English', NULL)");
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', NULL)");
 
-            Task translations_update(string dictId, (string Sentence, string Translation)[] translations)
+            async Task SetDictionary(string dictId, (string Sentence, string Translation)[] translations)
             {
-                return LocalizerService.translations_update(db, dictId, translations.Select(c => KeyValuePair.Create(c.Sentence, c.Translation)));
+                var dict = await localizer.GetDictionary(dictId);
+                var t = new Translations(translations.Select(t => KeyValuePair.Create(t.Sentence, t.Translation)));
+                await localizer.Save(dict, t);
             }
             async Task AssertTranslations(string dictionary, (string Sentence, string Expected)[] expectations)
             {
@@ -60,13 +64,13 @@ namespace BTCPayServer.Tests
                 }
             }
 
-            await translations_update("English",
+            await SetDictionary("English",
                 [
                     ("Hello", "Hello"),
                     ("Goodbye", "Goodbye"),
                     ("Good afternoon", "Good afternoon")
                 ]);
-            await translations_update("French",
+            await SetDictionary("French",
                 [
                     ("Hello", "Salut"),
                     ("Good afternoon", "Bonne aprem")
@@ -85,8 +89,10 @@ namespace BTCPayServer.Tests
                 ("lol", null)]);
 
             TestLogs.LogInformation("Can use fallback by setting null to a sentence");
-            await translations_update("French",
+            await SetDictionary("French",
                 [
+                    ("Good afternoon", "Bonne aprem"),
+                    ("Goodbye", "Goodbye"),
                     ("Hello", null)
                 ]);
             await AssertTranslations("French",
@@ -96,7 +102,7 @@ namespace BTCPayServer.Tests
                 ("lol", null)]);
 
             TestLogs.LogInformation("Can use fallback by setting same as fallback to a sentence");
-            await translations_update("French",
+            await SetDictionary("French",
                 [
                     ("Good afternoon", "Good afternoon")
                 ]);
@@ -106,7 +112,12 @@ namespace BTCPayServer.Tests
                 ("Goodbye", "Goodbye"),
                 ("lol", null)]);
 
-            await translations_update("English", [("Hello", null as string)]);
+            await SetDictionary("English",
+                [
+                    ("Hello", null as string),
+                    ("Good afternoon", "Good afternoon"),
+                    ("Goodbye", "Goodbye")
+                ]);
             await AssertTranslations("French",
                 [("Hello", null),
                 ("Good afternoon", "Good afternoon"),

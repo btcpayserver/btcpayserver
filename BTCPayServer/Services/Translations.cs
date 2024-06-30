@@ -37,7 +37,7 @@ namespace BTCPayServer.Services
         public static Translations CreateFromText(string text)
         {
             text = (text ?? "").Replace("\r\n", "\n");
-            List<(string key, string value)> translations = new List<(string key, string value)>();
+            var translations = new List<(string key, string? value)>();
             foreach (var line in text.Split("\n", StringSplitOptions.RemoveEmptyEntries))
             {
                 var splitted = line.Split("=>", StringSplitOptions.RemoveEmptyEntries);
@@ -54,15 +54,18 @@ namespace BTCPayServer.Services
                                     .Select(t => KeyValuePair.Create(t.key, t.value)));
         }
 
-        public Translations(IEnumerable<KeyValuePair<string, string>> records) : this (records, null)
+        public Translations(IEnumerable<KeyValuePair<string, string?>> records) : this (records, null)
         {
         }
-        public Translations(IEnumerable<KeyValuePair<string, string>> records, Translations? fallback)
+        public Translations(IEnumerable<KeyValuePair<string, string?>> records, Translations? fallback)
         {
             Dictionary<string, string> thisRecords = new Dictionary<string, string>();
             foreach (var r in records)
             {
-                thisRecords.TryAdd(r.Key.Trim(), r.Value.Trim());
+                var v = r.Value?.Trim();
+                if (string.IsNullOrEmpty(v))
+                    continue;
+                thisRecords.TryAdd(r.Key.Trim(), v);
             }
             if (fallback is not null)
             {
@@ -100,6 +103,10 @@ namespace BTCPayServer.Services
             return diff.ToArray();
         }
 
+        public Translations WithFallback(Translations? fallback)
+        {
+            return new Translations(this!, fallback);
+        }
         public IEnumerator<KeyValuePair<string, string>> GetEnumerator()
         {
             return Records.GetEnumerator();

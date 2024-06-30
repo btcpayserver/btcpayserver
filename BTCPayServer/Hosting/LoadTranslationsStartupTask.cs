@@ -73,7 +73,7 @@ namespace BTCPayServer.Hosting
                             newMetadata["hash"] = currentHash.ToString();
                             dictionary = dictionary with { Metadata = newMetadata };
                             Logger.LogInformation($"Updating dictionary '{langName}'");
-                            await LocalizerService.UpdateDictionary(dictionary, translations);
+                            await LocalizerService.Save(dictionary, translations);
                         }
                     }
                 }

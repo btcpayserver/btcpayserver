@@ -155,10 +155,6 @@ namespace BTCPayServer.Services.Notifications
             {
                 notifications = notifications.Where(n => !string.IsNullOrEmpty(n.StoreId) && query.Stores.Contains(n.StoreId, StringComparer.OrdinalIgnoreCase)).ToList();
             }
-            if (query.Stores?.Length > 0)
-            {
-                notifications = notifications.Where(n => !string.IsNullOrEmpty(n.StoreId) && query.Stores.Contains(n.StoreId, StringComparer.OrdinalIgnoreCase)).ToList();
-            }
             return notifications;
         }
 

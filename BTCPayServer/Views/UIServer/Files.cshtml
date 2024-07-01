@@ -29,6 +29,17 @@ else
             <vc:icon symbol="info" />
         </a>
     </p>
+
+    @if (Model.StorageConfigured)
+    {
+        <form asp-action="CreateFiles" method="post" enctype="multipart/form-data">
+            <div class="d-flex">
+                <input multiple type="file" class="form-control mb-3" name="files" id="files" required>
+                <button class="btn btn-primary mb-3 ms-3" role="button">Upload</button>
+            </div>
+        </form>
+    }
+
     @if (Model.DirectUrlByFiles is { Count: > 0 })
     {
         foreach (var fileUrlPair in Model.DirectUrlByFiles)

@@ -356,11 +356,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         var receiptData = new JObject();
                         if (choice is not null)
                         {
-                            receiptData = JObject.FromObject(new Dictionary<string, string>
-                                {
-                                    {"Title", choice.Title},
-                                    {"Description", choice.Description},
-                                });
+                            var dict = new Dictionary<string, string> { { "Title", choice.Title } };
+                            if (!string.IsNullOrEmpty(choice.Description)) dict["Description"] = choice.Description;
+                            receiptData = JObject.FromObject(dict);
                         }
                         else if (jposData is not null)
                         {

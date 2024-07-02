@@ -25,5 +25,6 @@ namespace BTCPayServer.Abstractions.Contracts
         public string Body { get; set; }
         public string ActionLink { get; set; }
         public bool Seen { get; set; }
+        public string StoreId { get; set; }
     }
 }

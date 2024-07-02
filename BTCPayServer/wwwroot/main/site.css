@@ -128,6 +128,11 @@ a.unobtrusive-link {
     transform: rotate(-180deg);
 }
 
+/* Time format button */
+.switch-time-format {
+    line-height: 1;
+}
+
 /* Icon and text, used for warnings of additional info text. Adjust spacing and color via utility classes. */
 .info-note {
     display: inline-flex;

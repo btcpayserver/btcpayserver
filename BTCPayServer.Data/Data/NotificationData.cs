@@ -2,7 +2,6 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BTCPayServer.Data
 {
@@ -22,7 +21,6 @@ namespace BTCPayServer.Data
         [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }
         public string Blob2 { get; set; }
-
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

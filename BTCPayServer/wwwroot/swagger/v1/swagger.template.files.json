@@ -1,0 +1,223 @@
+{
+    "paths": {
+        "/api/v1/files": {
+            "get": {
+                "operationId": "Files_GetFiles",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Get all files",
+                "description": "Load all files that exist.",
+                "parameters": [],
+                "responses": {
+                    "200": {
+                        "description": "Files found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/FileData"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization for loading the files"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Uploads a file",
+                "description": "Uploads a file",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "The profile picture",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "Files_UploadFile",
+                "responses": {
+                    "200": {
+                        "description": "Uploads a file",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FileData"
+                                }
+                            }
+                        }
+                    },
+                    "415": {
+                        "description": "The upload did not work"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/files/{fileId}": {
+            "get": {
+                "operationId": "Files_GetFile",
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Get file",
+                "description": "View information about the specified file",
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The file information to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FileData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization for loading the file"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Files"
+                ],
+                "summary": "Delete file",
+                "description": "Deletes the file",
+                "operationId": "Files_DeleteFile",
+                "parameters": [
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The file to delete",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File deleted successfully"
+                    },
+                    "404": {
+                        "description": "The file could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canmodifyserversettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "FileData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "description": "The id of the file",
+                        "nullable": false
+                    },
+                    "userId": {
+                        "type": "string",
+                        "description": "The id of the user that uploaded the file",
+                        "nullable": false
+                    },
+                    "uri": {
+                        "type": "string",
+                        "description": "The internal URI of the file",
+                        "nullable": false
+                    },
+                    "url": {
+                        "type": "string",
+                        "description": "The full URL of the file",
+                        "nullable": true
+                    },
+                    "originalName": {
+                        "type": "string",
+                        "description": "The original name of the file",
+                        "nullable": true
+                    },
+                    "storageName": {
+                        "type": "string",
+                        "description": "The storage name of the file",
+                        "nullable": true
+                    },
+                    "created": {
+                        "nullable": true,
+                        "description": "The creation date of the file as a unix timestamp",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "Files",
+            "description": "File operations"
+        }
+    ]
+}

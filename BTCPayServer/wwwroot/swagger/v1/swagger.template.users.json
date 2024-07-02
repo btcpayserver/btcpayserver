@@ -128,6 +128,80 @@
                 ]
             }
         },
+        "/api/v1/users/me/picture": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Uploads a profile picture for the current user",
+                "description": "Uploads a profile picture for the current user",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "The profile picture",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "Users_UploadCurrentUserProfilePicture",
+                "responses": {
+                    "200": {
+                        "description": "Uploads a profile picture for the current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Deletes user profile picture",
+                "description": "Deletes the user profile picture",
+                "operationId": "Users_DeleteCurrentUserProfilePicture",
+                "responses": {
+                    "200": {
+                        "description": "Profile picture deleted successfully"
+                    },
+                    "404": {
+                        "description": "The user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/users": {
             "get": {
                 "operationId": "Users_GetUsers",

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -150,6 +151,19 @@ public partial class BTCPayServerClient
         }
 
         return request;
+    }
+
+    protected virtual async Task<T> UploadFileRequest<T>(string apiPath, string filePath, string mimeType, string formFieldName, HttpMethod method = null, CancellationToken token = default)
+    {
+        using MultipartFormDataContent multipartContent = new();
+        var fileContent = new StreamContent(File.OpenRead(filePath));
+        var fileName = Path.GetFileName(filePath);
+        fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(mimeType);
+        multipartContent.Add(fileContent, formFieldName, fileName);
+        var req = CreateHttpRequest(apiPath, null, method ?? HttpMethod.Post);
+        req.Content = multipartContent;
+        using var resp = await _httpClient.SendAsync(req, token);
+        return await HandleResponse<T>(resp);
     }
 
     public static void AppendPayloadToQuery(UriBuilder uri, KeyValuePair<string, object> keyValuePair)

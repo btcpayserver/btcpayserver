@@ -21,10 +21,12 @@
 
   <ItemGroup>
     <None Remove="TestData\OldInvoices.csv" />
+	<None Remove="TestData\Langs\Cypherpunk" />
   </ItemGroup>
 
   <ItemGroup>
     <Content Include="TestData\OldInvoices.csv" />
+	<Content Include="TestData\Langs\Cypherpunk" />
   </ItemGroup>
 
   <ItemGroup>

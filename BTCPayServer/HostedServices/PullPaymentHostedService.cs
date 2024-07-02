@@ -46,7 +46,7 @@ namespace BTCPayServer.HostedServices
     public class PullPaymentHostedService : BaseAsyncService
     {
         private readonly string[] _lnurlSupportedCurrencies = { "BTC", "SATS" };
-        
+
         public class CancelRequest
         {
             public CancelRequest(string pullPaymentId)
@@ -106,7 +106,22 @@ namespace BTCPayServer.HostedServices
                 }
             }
         }
-
+        public Task<string> CreatePullPayment(string storeId, CreatePullPaymentRequest request)
+        {
+            return CreatePullPayment(new CreatePullPayment()
+            {
+                StartsAt = request.StartsAt,
+                ExpiresAt = request.ExpiresAt,
+                BOLT11Expiration = request.BOLT11Expiration,
+                Name = request.Name,
+                Description = request.Description,
+                Amount = request.Amount,
+                Currency = request.Currency,
+                StoreId = storeId,
+                PayoutMethodIds = request.PaymentMethods.Select(p => PayoutMethodId.Parse(p)).ToArray(),
+                AutoApproveClaims = request.AutoApproveClaims
+            });
+        }
         public async Task<string> CreatePullPayment(CreatePullPayment create)
         {
             ArgumentNullException.ThrowIfNull(create);
@@ -279,7 +294,7 @@ namespace BTCPayServer.HostedServices
             EventAggregator eventAggregator,
             BTCPayNetworkProvider networkProvider,
             PayoutMethodHandlerDictionary handlers,
-            IEnumerable<DefaultRates> defaultRates,
+            DefaultRulesCollection defaultRules,
             NotificationSender notificationSender,
             RateFetcher rateFetcher,
             ILogger<PullPaymentHostedService> logger,
@@ -292,7 +307,7 @@ namespace BTCPayServer.HostedServices
             _eventAggregator = eventAggregator;
             _networkProvider = networkProvider;
             _handlers = handlers;
-            _defaultRates = defaultRates;
+            _defaultRules = defaultRules;
             _notificationSender = notificationSender;
             _rateFetcher = rateFetcher;
             _logger = logger;
@@ -306,7 +321,7 @@ namespace BTCPayServer.HostedServices
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly PayoutMethodHandlerDictionary _handlers;
-        private readonly IEnumerable<DefaultRates> _defaultRates;
+        private readonly DefaultRulesCollection _defaultRules;
         private readonly NotificationSender _notificationSender;
         private readonly RateFetcher _rateFetcher;
         private readonly ILogger<PullPaymentHostedService> _logger;
@@ -373,7 +388,7 @@ namespace BTCPayServer.HostedServices
 
         public bool SupportsLNURL(PullPaymentBlob blob)
         {
-            var pms = blob.SupportedPaymentMethods.FirstOrDefault(id => 
+            var pms = blob.SupportedPaymentMethods.FirstOrDefault(id =>
                 PayoutTypes.LN.GetPayoutMethodId(_networkProvider.DefaultNetwork.CryptoCode)
                 == id);
             return pms is not null && _lnurlSupportedCurrencies.Contains(blob.Currency);
@@ -392,7 +407,7 @@ namespace BTCPayServer.HostedServices
                 if (explicitRateRule is null)
                 {
                     var storeBlob = payout.StoreData.GetStoreBlob();
-                    var rules = storeBlob.GetRateRules(_defaultRates);
+                    var rules = storeBlob.GetRateRules(_defaultRules);
                     rules.Spread = 0.0m;
                     rule = rules.GetRuleFor(currencyPair);
                 }
@@ -637,7 +652,7 @@ namespace BTCPayServer.HostedServices
                 {
                     Amount = claimed,
                     Destination = req.ClaimRequest.Destination.ToString(),
-                    Metadata = req.ClaimRequest.Metadata?? new JObject(),
+                    Metadata = req.ClaimRequest.Metadata ?? new JObject(),
                 };
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.Payouts.AddAsync(payout);
@@ -883,25 +898,25 @@ namespace BTCPayServer.HostedServices
             {
                 null when destination.Amount is null && ppCurrency is null => ("Amount is not specified in destination or payout request", null),
                 null when destination.Amount is null => (null, null),
-                null when destination.Amount != null => (null,destination.Amount),
-                not null when destination.Amount is null => (null,amount),
+                null when destination.Amount != null => (null, destination.Amount),
+                not null when destination.Amount is null => (null, amount),
                 not null when destination.Amount != null && amount != destination.Amount &&
                               destination.IsExplicitAmountMinimum &&
                               payoutCurrency == "BTC" && ppCurrency == "SATS" &&
                               new Money(amount.Value, MoneyUnit.Satoshi).ToUnit(MoneyUnit.BTC) < destination.Amount =>
-                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount",null),
+                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount", null),
                 not null when destination.Amount != null && amount != destination.Amount &&
                               destination.IsExplicitAmountMinimum &&
                               !(payoutCurrency == "BTC" && ppCurrency == "SATS") &&
                               amount < destination.Amount =>
-                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount",null),
+                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount", null),
                 not null when destination.Amount != null && amount != destination.Amount &&
                               !destination.IsExplicitAmountMinimum =>
                     ($"Amount is implied in destination ({destination.Amount}) that does not match the payout amount provided {amount})", null),
                 _ => (null, amount)
             };
         }
-        
+
         public static string GetErrorMessage(ClaimResult result)
         {
             switch (result)

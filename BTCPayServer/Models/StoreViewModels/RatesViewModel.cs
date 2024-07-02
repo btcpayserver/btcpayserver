@@ -17,15 +17,6 @@ namespace BTCPayServer.Models.StoreViewModels
             public bool Error { get; set; }
         }
 
-        public void SetExchangeRates(IEnumerable<RateSourceInfo> supportedList, string preferredExchange)
-        {
-            supportedList = supportedList.ToArray();
-            var chosen = supportedList.FirstOrDefault(f => f.Id == preferredExchange) ?? supportedList.FirstOrDefault();
-            Exchanges = new SelectList(supportedList, nameof(chosen.Id), nameof(chosen.DisplayName), chosen);
-            PreferredExchange = chosen?.Id;
-            RateSource = chosen?.Url;
-        }
-
         public List<TestResultViewModel> TestRateRules { get; set; }
 
         public SelectList Exchanges { get; set; }
@@ -47,6 +38,7 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Preferred Price Source")]
         public string PreferredExchange { get; set; }
+        public string PreferredResolvedExchange { get; set; }
 
         public string RateSource { get; set; }
     }

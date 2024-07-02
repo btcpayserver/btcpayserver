@@ -149,8 +149,8 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         {
             static HashSet<InvoiceState> stateAllowedToDisplay = new HashSet<InvoiceState>
                 {
-                    new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.None),
-                    new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.PaidPartial),
+                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.None),
+                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial),
                 };
             public InvoiceList()
             {
@@ -187,7 +187,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public decimal Amount { get; set; }
             public string AmountFormatted { get; set; }
             public InvoiceState State { get; set; }
-            public InvoiceStatusLegacy Status { get; set; }
             public string StateFormatted { get; set; }
 
             public List<PaymentRequestInvoicePayment> Payments { get; set; }

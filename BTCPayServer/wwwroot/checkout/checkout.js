@@ -1,8 +1,8 @@
 // These are the legacy states, see InvoiceEntity
-const STATUS_PAYABLE = ['new'];
-const STATUS_PAID = ['paid'];
-const STATUS_SETTLED = ['complete', 'confirmed'];
-const STATUS_INVALID =  ['expired', 'invalid'];
+const STATUS_PAYABLE = ['New'];
+const STATUS_PAID = ['Processing'];
+const STATUS_SETTLED = ['Settled'];
+const STATUS_INVALID =  ['Expired', 'Invalid'];
 const urlParams = new URLSearchParams(window.location.search);
 
 class NDEFReaderWrapper {

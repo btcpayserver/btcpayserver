@@ -150,8 +150,8 @@ namespace BTCPayServer.Controllers
                 HasRefund = invoice.Refunds.Any(),
                 CanRefund = invoiceState.CanRefund(),
                 Refunds = invoice.Refunds,
-                ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
-                ShowReceipt = invoice.Status.ToModernStatus() == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? receipt.Enabled is true),
+                ShowCheckout = invoice.Status == InvoiceStatus.New,
+                ShowReceipt = invoice.Status == InvoiceStatus.Settled && (invoice.ReceiptOptions?.Enabled ?? receipt.Enabled is true),
                 Deliveries = (await _InvoiceRepository.GetWebhookDeliveries(invoiceId))
                                     .Select(c => new Models.StoreViewModels.DeliveryViewModel(c))
                                     .ToList()
@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
                 OrderUrl = i.Metadata?.OrderUrl,
-                Status = i.Status.ToModernStatus(),
+                Status = i.Status,
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,
                 StoreName = store.StoreName,
@@ -223,7 +223,7 @@ namespace BTCPayServer.Controllers
                 ReceiptOptions = receipt
             };
 
-            if (i.Status.ToModernStatus() != InvoiceStatus.Settled)
+            if (i.Status != InvoiceStatus.Settled)
             {
                 return View(vm);
             }
@@ -382,7 +382,7 @@ namespace BTCPayServer.Controllers
                     var paidCurrency = Math.Round(cryptoPaid * paymentMethod.Rate, cdCurrency.Divisibility);
                     model.CryptoAmountThen = cryptoPaid.RoundToSignificant(paymentMethod.Divisibility);
                     model.RateThenText = _displayFormatter.Currency(model.CryptoAmountThen, paymentMethodCurrency);
-                    rules = store.GetStoreBlob().GetRateRules(_defaultRates);
+                    rules = store.GetStoreBlob().GetRateRules(_defaultRules);
                     rateResult = await _RateProvider.FetchRate(
                         new CurrencyPair(paymentMethodCurrency, invoice.Currency), rules, new StoreIdRateContext(store.Id),
                         cancellationToken);
@@ -491,7 +491,7 @@ namespace BTCPayServer.Controllers
                                 return View("_RefundModal", model);
                             }
 
-                            rules = store.GetStoreBlob().GetRateRules(_defaultRates);
+                            rules = store.GetStoreBlob().GetRateRules(_defaultRules);
                             rateResult = await _RateProvider.FetchRate(
                                 new CurrencyPair(paymentMethodCurrency, model.CustomCurrency), rules, new StoreIdRateContext(store.Id),
                                 cancellationToken);
@@ -929,9 +929,7 @@ namespace BTCPayServer.Controllers
                     _ => null
                 },
                 ReceivedConfirmations = handler is BitcoinLikePaymentHandler  bh ? invoice.GetAllBitcoinPaymentData(bh, false).FirstOrDefault()?.ConfirmationCount : null,
-#pragma warning disable CS0618 // Type or member is obsolete
-                Status = invoice.StatusString,
-#pragma warning restore CS0618 // Type or member is obsolete
+                Status = invoice.Status.ToString(),
                 NetworkFee = prompt.PaymentMethodFee,
                 IsMultiCurrency = invoice.GetPayments(false).Select(p => p.PaymentMethodId).Concat(new[] { prompt.PaymentMethodId }).Distinct().Count() > 1,
                 StoreId = store.Id,
@@ -1028,17 +1026,17 @@ namespace BTCPayServer.Controllers
             return Json(model);
         }
 
-        [HttpGet("i/{invoiceId}/status/ws")]
-        [HttpGet("i/{invoiceId}/{paymentMethodId}/status/ws")]
-        [HttpGet("invoice/{invoiceId}/status/ws")]
-        [HttpGet("invoice/{invoiceId}/{paymentMethodId}/status")]
-        [HttpGet("invoice/status/ws")]
+        [Route("i/{invoiceId}/status/ws")]
+        [Route("i/{invoiceId}/{paymentMethodId}/status/ws")]
+        [Route("invoice/{invoiceId}/status/ws")]
+        [Route("invoice/{invoiceId}/{paymentMethodId}/status")]
+        [Route("invoice/status/ws")]
         public async Task<IActionResult> GetStatusWebSocket(string invoiceId, CancellationToken cancellationToken)
         {
             if (!HttpContext.WebSockets.IsWebSocketRequest)
                 return NotFound();
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-            if (invoice == null || invoice.Status == InvoiceStatusLegacy.Complete || invoice.Status == InvoiceStatusLegacy.Invalid || invoice.Status == InvoiceStatusLegacy.Expired)
+            if (invoice == null || invoice.Status == InvoiceStatus.Settled || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
                 return NotFound();
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             CompositeDisposable leases = new CompositeDisposable();
@@ -1138,7 +1136,7 @@ namespace BTCPayServer.Controllers
                 model.Invoices.Add(new InvoiceModel
                 {
                     Status = state,
-                    ShowCheckout = invoice.Status == InvoiceStatusLegacy.New,
+                    ShowCheckout = invoice.Status == InvoiceStatus.New,
                     Date = invoice.InvoiceTime,
                     InvoiceId = invoice.Id,
                     OrderId = invoice.Metadata.OrderId ?? string.Empty,
@@ -1322,12 +1320,12 @@ namespace BTCPayServer.Controllers
             if (newState == "invalid")
             {
                 await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Invalid);
-                model.StatusString = new InvoiceState(InvoiceStatusLegacy.Invalid, InvoiceExceptionStatus.Marked).ToString();
+                model.StatusString = new InvoiceState(InvoiceStatus.Invalid, InvoiceExceptionStatus.Marked).ToString();
             }
             else if (newState == "settled")
             {
                 await _InvoiceRepository.MarkInvoiceStatus(invoiceId, InvoiceStatus.Settled);
-                model.StatusString = new InvoiceState(InvoiceStatusLegacy.Complete, InvoiceExceptionStatus.Marked).ToString();
+                model.StatusString = new InvoiceState(InvoiceStatus.Settled, InvoiceExceptionStatus.Marked).ToString();
             }
 
             return Json(model);

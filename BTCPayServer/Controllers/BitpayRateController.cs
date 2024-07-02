@@ -31,7 +31,7 @@ namespace BTCPayServer.Controllers
 
         readonly RateFetcher _rateProviderFactory;
         readonly CurrencyNameTable _currencyNameTable;
-        private readonly IEnumerable<DefaultRates> _defaultRates;
+        private readonly DefaultRulesCollection _defaultRules;
         private readonly PaymentMethodHandlerDictionary _handlers;
         readonly StoreRepository _storeRepo;
         private readonly InvoiceRepository _invoiceRepository;
@@ -43,14 +43,14 @@ namespace BTCPayServer.Controllers
             StoreRepository storeRepo,
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencyNameTable,
-            IEnumerable<DefaultRates> defaultRates,
+            DefaultRulesCollection defaultRules,
             PaymentMethodHandlerDictionary handlers)
         {
             _rateProviderFactory = rateProviderFactory ?? throw new ArgumentNullException(nameof(rateProviderFactory));
             _storeRepo = storeRepo;
             _invoiceRepository = invoiceRepository;
             _currencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
-            _defaultRates = defaultRates;
+            _defaultRules = defaultRules;
             _handlers = handlers;
         }
 
@@ -124,7 +124,7 @@ namespace BTCPayServer.Controllers
                 }
             }
 
-            var rules = store.GetStoreBlob().GetRateRules(_defaultRates);
+            var rules = store.GetStoreBlob().GetRateRules(_defaultRules);
             var pairs = new HashSet<CurrencyPair>();
             foreach (var currency in currencyPairs.Split(','))
             {

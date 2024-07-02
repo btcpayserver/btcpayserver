@@ -3,14 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Rating;
-using BTCPayServer.Rating.Providers;
-using ExchangeSharp;
-using NBitcoin;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Rates
 {

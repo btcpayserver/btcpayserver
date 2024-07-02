@@ -50,15 +50,14 @@ namespace BTCPayServer.Plugins.Shopify
                 var shopifyOrderId = invoice.GetInternalTags(SHOPIFY_ORDER_ID_PREFIX).FirstOrDefault();
                 if (shopifyOrderId != null)
                 {
-                    if (new[] { InvoiceStatusLegacy.Invalid, InvoiceStatusLegacy.Expired }.Contains(invoice.GetInvoiceState()
+                    if (new[] { InvoiceStatus.Invalid, InvoiceStatus.Expired }.Contains(invoice.GetInvoiceState()
                         .Status) && invoice.ExceptionStatus != InvoiceExceptionStatus.None)
                     {
                         //you have failed us, customer
 
                         await RegisterTransaction(invoice, shopifyOrderId, false);
                     }
-                    else if (new[] { InvoiceStatusLegacy.Complete, InvoiceStatusLegacy.Confirmed }.Contains(
-                        invoice.Status))
+                    else if (invoice.Status == InvoiceStatus.Settled)
                     {
                         await RegisterTransaction(invoice, shopifyOrderId, true);
                     }

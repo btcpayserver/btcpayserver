@@ -47,6 +47,7 @@
         </form>
     </div>
 </template>
+
 <div id="btcpayservervault" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true"></div>
 
 <form method="post" asp-controller="UIStores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
@@ -111,7 +112,6 @@
             document.querySelectorAll("[data-address]").forEach(link => {
                 link.addEventListener("click", async event => {
                     event.preventDefault();
-
                     const $link = event.currentTarget;
                     const address = JSON.parse($link.dataset.address);
                     const rootedKeyPath = JSON.parse($link.dataset.rootedKeyPath);
@@ -132,8 +132,9 @@
                         vaultUI.closeBridge();
                     });
 
-                    while (!await vaultUI.askForDevice()) {}
+                    $$modal.modal("show");
 
+                    while (!await vaultUI.askForDevice()) {}
                     await vaultUI.askForDisplayAddress(rootedKeyPath);
 
                     $$modal.modal("hide");

@@ -6,7 +6,7 @@
 
 @{
     var state = Model.State.ToString();
-    var badgeClass = Model.State.Status.ToModernStatus().ToString().ToLower();
+    var badgeClass = Model.State.Status.ToString().ToLower();
     var canMark = !string.IsNullOrEmpty(Model.InvoiceId) && (Model.State.CanMarkComplete() || Model.State.CanMarkInvalid());
 }
 <div class="d-inline-flex align-items-center gap-2">

@@ -42,7 +42,7 @@ public class ProductsReportProvider : ReportProvider
             var values = queryContext.CreateData();
             values.Add(i.InvoiceTime);
             values.Add(i.Id);
-            var status = i.Status.ToModernStatus();
+            var status = i.Status;
             if (status == Client.Models.InvoiceStatus.Expired && i.ExceptionStatus == Client.Models.InvoiceExceptionStatus.None)
                 continue;
             values.Add(status.ToString());

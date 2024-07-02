@@ -7,8 +7,6 @@ using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using AngleSharp.Dom;
-using ExchangeSharp;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
 using Org.BouncyCastle.Asn1.X509;

@@ -203,7 +203,7 @@ namespace BTCPayServer.Rating
             return (ExpressionSyntax)CSharpSyntaxTree.ParseText(str, new CSharpParseOptions(LanguageVersion.Default).WithKind(SourceCodeKind.Script)).GetRoot().ChildNodes().First().ChildNodes().First().ChildNodes().First();
         }
 
-        public static RateRules Combine(RateRules[] rateRules)
+        public static RateRules Combine(IEnumerable<RateRules> rateRules)
         {
             var str = string.Join(Environment.NewLine, rateRules.Select(r => r.ToString()));
             return Parse(str);

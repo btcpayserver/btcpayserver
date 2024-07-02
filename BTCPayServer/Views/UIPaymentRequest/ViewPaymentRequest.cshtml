@@ -11,7 +11,7 @@
 	Layout = null;
     string StatusClass(InvoiceState state)
     {
-        var status = state.Status.ToModernStatus();
+        var status = state.Status;
         switch (status)
         {
             case InvoiceStatus.Expired:

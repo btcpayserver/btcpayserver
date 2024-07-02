@@ -208,12 +208,12 @@ namespace BTCPayServer.Tests
                 pair => pair.Key == "Id" && pair.Value.ToString() == invoiceId);
 
             var invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
-            Assert.Equal(InvoiceState.ToString(InvoiceStatusLegacy.New), invoice.Status);
+            Assert.Equal("new", invoice.Status);
             Assert.IsType<OkObjectResult>(await
                 paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId, false));
 
             invoice = user.BitPay.GetInvoice(invoiceId, Facade.Merchant);
-            Assert.Equal(InvoiceState.ToString(InvoiceStatusLegacy.Invalid), invoice.Status);
+            Assert.Equal("invalid", invoice.Status);
 
             Assert.IsType<BadRequestObjectResult>(await
                 paymentRequestController.CancelUnpaidPendingInvoice(paymentRequestId, false));

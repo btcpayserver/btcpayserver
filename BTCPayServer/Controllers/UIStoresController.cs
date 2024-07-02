@@ -55,7 +55,7 @@ public partial class UIStoresController : Controller
         IOptions<LightningNetworkOptions> lightningNetworkOptions,
         IOptions<ExternalServicesOptions> externalServiceOptions,
         IHtmlHelper html,
-        IEnumerable<DefaultRates> defaultRates,
+        DefaultRulesCollection defaultRules,
         EmailSenderFactory emailSenderFactory,
         WalletFileParsers onChainWalletParsers,
         UriResolver uriResolver,
@@ -85,7 +85,7 @@ public partial class UIStoresController : Controller
         _settingsRepository = settingsRepository;
         _eventAggregator = eventAggregator;
         _html = html;
-        _defaultRates = defaultRates;
+        _defaultRules = defaultRules;
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
         _webhookNotificationManager = webhookNotificationManager;
         _lightningNetworkOptions = lightningNetworkOptions.Value;
@@ -104,7 +104,7 @@ public partial class UIStoresController : Controller
     private readonly ExplorerClientProvider _explorerProvider;
     private readonly LanguageService _langService;
     private readonly PaymentMethodHandlerDictionary _handlers;
-    private readonly IEnumerable<DefaultRates> _defaultRates;
+    private readonly DefaultRulesCollection _defaultRules;
     private readonly PoliciesSettings _policiesSettings;
     private readonly IAuthorizationService _authorizationService;
     private readonly AppService _appService;

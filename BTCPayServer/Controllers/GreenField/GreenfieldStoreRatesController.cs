@@ -24,14 +24,14 @@ namespace BTCPayServer.Controllers.GreenField
     public class GreenfieldStoreRatesController : ControllerBase
     {
         private readonly RateFetcher _rateProviderFactory;
-        private readonly IEnumerable<DefaultRates> _defaultRates;
+        private readonly DefaultRulesCollection _defaultRules;
 
         public GreenfieldStoreRatesController(
             RateFetcher rateProviderFactory,
-            IEnumerable<DefaultRates> defaultRates)
+            DefaultRulesCollection defaultRules)
         {
             _rateProviderFactory = rateProviderFactory;
-            _defaultRates = defaultRates;
+            _defaultRules = defaultRules;
         }
 
         [HttpGet("")]
@@ -62,7 +62,7 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
 
-            var rules = blob.GetRateRules(_defaultRates);
+            var rules = blob.GetRateRules(_defaultRules);
 
 
             var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, new StoreIdRateContext(data.Id), CancellationToken.None);

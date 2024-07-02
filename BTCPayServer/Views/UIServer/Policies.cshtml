@@ -231,7 +231,7 @@
             {
                 var pmi = linkProviders[lpi].Key;
                 var defaultLink = linkProviders[lpi].Value.BlockExplorerLinkDefault;
-                var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => PaymentMethodId.Parse(tuple.CryptoCode) == pmi);
+                var existingOverride = Model.BlockExplorerLinks?.FirstOrDefault(tuple => PaymentMethodId.Parse(tuple.CryptoCode) == pmi);
                 if (existingOverride is null)
                 {
                     existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = pmi.ToStringNormalized(), Link = null };

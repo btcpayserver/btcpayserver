@@ -217,11 +217,11 @@ namespace BTCPayServer.HostedServices
                 if (payoutQuery.PayoutMethods.Length == 1)
                 {
                     var pm = payoutQuery.PayoutMethods[0];
-                    query = query.Where(data => pm == data.PaymentMethodId);
+                    query = query.Where(data => pm == data.PayoutMethodId);
                 }
                 else
                 {
-                    query = query.Where(data => payoutQuery.PayoutMethods.Contains(data.PaymentMethodId));
+                    query = query.Where(data => payoutQuery.PayoutMethods.Contains(data.PayoutMethodId));
                 }
             }
 
@@ -459,7 +459,7 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                if (!PayoutMethodId.TryParse(payout.PaymentMethodId, out var paymentMethod))
+                if (!PayoutMethodId.TryParse(payout.PayoutMethodId, out var paymentMethod))
                 {
                     req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.NotFound, null));
                     return;
@@ -644,9 +644,10 @@ namespace BTCPayServer.HostedServices
                     Date = now,
                     State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
-                    PaymentMethodId = req.ClaimRequest.PayoutMethodId.ToString(),
+                    PayoutMethodId = req.ClaimRequest.PayoutMethodId.ToString(),
                     Destination = req.ClaimRequest.Destination.Id,
-                    StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId
+                    StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId,
+                    Currency = payoutHandler.Currency
                 };
                 var payoutBlob = new PayoutBlob()
                 {
@@ -693,7 +694,7 @@ namespace BTCPayServer.HostedServices
                             StoreId = payout.StoreDataId,
                             Currency = ppBlob?.Currency ?? _handlers.TryGetNetwork(req.ClaimRequest.PayoutMethodId)?.NBXplorerNetwork.CryptoCode,
                             Status = payout.State,
-                            PaymentMethod = payout.PaymentMethodId,
+                            PaymentMethod = payout.PayoutMethodId,
                             PayoutId = payout.Id
                         });
                 }

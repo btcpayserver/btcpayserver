@@ -80,6 +80,7 @@ using MarkPayoutRequest = BTCPayServer.Client.Models.MarkPayoutRequest;
 using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
+using PosViewType = BTCPayServer.Client.Models.PosViewType;
 
 namespace BTCPayServer.Tests
 {
@@ -3109,20 +3110,20 @@ namespace BTCPayServer.Tests
             var client = await acc.CreateClient();
             var posController = acc.GetController<UIPointOfSaleController>();
 
-            var app = await client.CreatePointOfSaleApp(acc.StoreId, new CreatePointOfSaleAppRequest()
+            var app = await client.CreatePointOfSaleApp(acc.StoreId, new PointOfSaleAppRequest
             {
                 AppName = "Static",
-                DefaultView = Client.Models.PosViewType.Static,
+                DefaultView = PosViewType.Static,
                 Template = new PointOfSaleSettings().Template
             });
             var resp = await posController.ViewPointOfSale(app.Id, choiceKey: "green-tea");
             var invoiceId = GetInvoiceId(resp);
             await acc.PayOnChain(invoiceId);
 
-            app = await client.CreatePointOfSaleApp(acc.StoreId, new CreatePointOfSaleAppRequest()
+            app = await client.CreatePointOfSaleApp(acc.StoreId, new PointOfSaleAppRequest
             {
                 AppName = "Cart",
-                DefaultView = Client.Models.PosViewType.Cart,
+                DefaultView = PosViewType.Cart,
                 Template = new PointOfSaleSettings().Template
             });
             resp = await posController.ViewPointOfSale(app.Id, posData: new JObject()

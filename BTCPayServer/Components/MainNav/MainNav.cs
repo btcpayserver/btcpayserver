@@ -1,12 +1,11 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
-using BTCPayServer.Lightning;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
@@ -15,10 +14,8 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.Extensions.Caching.Memory;
 using NBitcoin;
-using NBitcoin.Secp256k1;
 
 namespace BTCPayServer.Components.MainNav
 {
@@ -31,6 +28,7 @@ namespace BTCPayServer.Components.MainNav
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
         private readonly SettingsRepository _settingsRepository;
+        private readonly UriResolver _uriResolver;
         private readonly IMemoryCache _cache;
 
         public PoliciesSettings PoliciesSettings { get; }
@@ -44,6 +42,7 @@ namespace BTCPayServer.Components.MainNav
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
             SettingsRepository settingsRepository,
             IMemoryCache cache,
+            UriResolver uriResolver,
             PoliciesSettings policiesSettings)
         {
             _storeRepo = storeRepo;
@@ -53,6 +52,7 @@ namespace BTCPayServer.Components.MainNav
             _storesController = storesController;
             _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
             _settingsRepository = settingsRepository;
+            _uriResolver = uriResolver;
             _cache = cache;
             PoliciesSettings = policiesSettings;
         }
@@ -123,6 +123,16 @@ namespace BTCPayServer.Components.MainNav
                     }).ToList();
 
                 vm.ArchivedAppsCount = apps.Count(a => a.Archived);
+            }
+            
+            var user = await _userManager.GetUserAsync(HttpContext.User);
+            if (user != null)
+            {
+                var blob = user.GetBlob();
+                vm.UserName = blob?.Name;
+                vm.UserImageUrl = string.IsNullOrEmpty(blob?.ImageUrl)
+                    ? null
+                    : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob?.ImageUrl));
             }
 
             return View(vm);

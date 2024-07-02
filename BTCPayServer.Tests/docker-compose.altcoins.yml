@@ -90,7 +90,7 @@ services:
       - merchant_lnd
 
   selenium:
-    image: selenium/standalone-chrome:101.0
+    image: selenium/standalone-chrome:125.0
     extra_hosts:
       - "tests:172.23.0.18"
     expose:
@@ -311,6 +311,7 @@ services:
         - "tor_datadir:/home/tor/.tor"
         - "torrcdir:/usr/local/etc/tor"
         - "tor_servicesdir:/var/lib/tor/hidden_services"
+
   monerod:
       image: btcpayserver/monero:0.18.3.3
       restart: unless-stopped
@@ -320,6 +321,7 @@ services:
           - "monero_data:/home/monero/.bitmonero"
       ports:
           - "18081:18081"
+
   monero_wallet:
       image: btcpayserver/monero:0.18.3.3
       restart: unless-stopped
@@ -331,6 +333,7 @@ services:
           - "./monero_wallet:/wallet"
       depends_on:
           - monerod
+
   litecoind:
     restart: unless-stopped
     image: btcpayserver/litecoin:0.18.1

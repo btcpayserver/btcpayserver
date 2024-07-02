@@ -51,15 +51,17 @@ namespace BTCPayServer.Controllers
             }
 
             model.Roles = roleManager.Roles.ToDictionary(role => role.Id, role => role.Name);
-            model.Users = await usersQuery
+            model.Users = (await usersQuery
                 .Include(user => user.UserRoles)
                 .Include(user => user.UserStores)
                 .ThenInclude(data => data.StoreData)
                 .Skip(model.Skip)
                 .Take(model.Count)
+                .ToListAsync())
                 .Select(u => new UsersViewModel.UserViewModel
                 {
-                    Name = u.UserName,
+                    Name = u.GetBlob()?.Name,
+                    ImageUrl = u.GetBlob()?.ImageUrl,
                     Email = u.Email,
                     Id = u.Id,
                     EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
@@ -69,8 +71,7 @@ namespace BTCPayServer.Controllers
                     Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
                     Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                 })
-                .ToListAsync();
-
+                .ToList();
             return View(model);
         }
 
@@ -81,10 +82,13 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
             var roles = await _UserManager.GetRolesAsync(user);
+            var blob = user.GetBlob();
             var model = new UsersViewModel.UserViewModel
             {
                 Id = user.Id,
                 Email = user.Email,
+                Name = blob?.Name,
+                ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
                 IsAdmin = Roles.HasServerAdmin(roles)
@@ -93,7 +97,7 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/users/{userId}")]
-        public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel)
+        public new async Task<IActionResult> User(string userId, UsersViewModel.UserViewModel viewModel, [FromForm] bool RemoveImageFile = false)
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
@@ -113,6 +117,54 @@ namespace BTCPayServer.Controllers
                 propertiesChanged = true;
             }
 
+            var blob = user.GetBlob() ?? new();
+            if (blob.Name != viewModel.Name)
+            {
+                blob.Name = viewModel.Name;
+                propertiesChanged = true;
+            }
+            
+            if (viewModel.ImageFile != null)
+            {
+                if (viewModel.ImageFile.Length > 1_000_000)
+                {
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded image file should be less than 1MB");
+                }
+                else if (!viewModel.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                {
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                }
+                else
+                {
+                    var formFile = await viewModel.ImageFile.Bufferize();
+                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    {
+                        ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                    }
+                    else
+                    {
+                        viewModel.ImageFile = formFile;
+                        // add new image
+                        try
+                        {
+                            var storedFile = await _fileService.AddFile(viewModel.ImageFile, userId);
+                            var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                            blob.ImageUrl = fileIdUri.ToString();
+                            propertiesChanged = true;
+                        }
+                        catch (Exception e)
+                        {
+                            ModelState.AddModelError(nameof(viewModel.ImageFile), $"Could not save image: {e.Message}");
+                        }
+                    }
+                }
+            }
+            else if (RemoveImageFile && !string.IsNullOrEmpty(blob.ImageUrl))
+            {
+                blob.ImageUrl = null;
+                propertiesChanged = true;
+            }
+            user.SetBlob(blob);
             var admins = await _UserManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var roles = await _UserManager.GetRolesAsync(user);
             var wasAdmin = Roles.HasServerAdmin(roles);

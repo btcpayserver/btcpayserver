@@ -509,14 +509,14 @@ namespace BTCPayServer.Controllers
                 vm.PullPaymentName = (await ctx.PullPayments.FindAsync(pullPaymentId)).GetBlob().Name;
             }
 
-            vm.PayoutMethodCount = (await payoutRequest.GroupBy(data => data.PaymentMethodId)
+            vm.PayoutMethodCount = (await payoutRequest.GroupBy(data => data.PayoutMethodId)
                     .Select(datas => new { datas.Key, Count = datas.Count() }).ToListAsync())
                 .ToDictionary(datas => datas.Key, arg => arg.Count);
 
             if (vm.PayoutMethodId != null)
             {
                 var pmiStr = vm.PayoutMethodId;
-                payoutRequest = payoutRequest.Where(p => p.PaymentMethodId == pmiStr);
+                payoutRequest = payoutRequest.Where(p => p.PayoutMethodId == pmiStr);
             }
             vm.PayoutStateCount = payoutRequest.GroupBy(data => data.State)
                 .Select(e => new { e.Key, Count = e.Count() })
@@ -563,7 +563,6 @@ namespace BTCPayServer.Controllers
                 {
                     payoutSourceLink = Url.Action("ViewPullPayment", "UIPullPayment", new { pullPaymentId = item.PullPayment?.Id });
                 }
-                var pCurrency = _payoutHandlers.TryGet(PayoutMethodId.Parse(item.Payout.PaymentMethodId))?.Currency;
 
                 var m = new PayoutsModel.PayoutModel
                 {
@@ -572,7 +571,7 @@ namespace BTCPayServer.Controllers
                     SourceLink = payoutSourceLink,
                     Date = item.Payout.Date,
                     PayoutId = item.Payout.Id,
-                    Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? pCurrency),
+                    Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? item.Payout.Currency),
                     Destination = payoutBlob.Destination
                 };
                 var handler = _payoutHandlers

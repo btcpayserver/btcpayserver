@@ -329,12 +329,27 @@
                     <span>Account</span>
                 </a>   
                 <ul class="dropdown-menu py-0 w-100" aria-labelledby="Nav-Account">
-                    <li class="p-3 border-bottom">
-                        <strong class="d-block text-truncate" style="max-width:195px">@User.Identity.Name</strong>
-                        @if (User.IsInRole(Roles.ServerAdmin))
+                    <li class="p-3 border-bottom d-flex align-items-center gap-2">
+                        @if (!string.IsNullOrEmpty(Model.UserImageUrl))
                         {
-                            <div class="text-secondary">Administrator</div>
+                            <img src="@Model.UserImageUrl" alt="Profile picture" class="profile-picture"/>
                         }
+                        <div>
+                            <strong class="d-block text-truncate" style="max-width:@(string.IsNullOrEmpty(Model.UserImageUrl) ? "195px" : "160px")">
+                                @if (string.IsNullOrEmpty(Model.UserName))
+                                {
+                                    @(User.Identity.Name)
+                                }
+                                else
+                                {
+                                    @($"{Model.UserName} ({User.Identity.Name})")
+                                }
+                            </strong>
+                            @if (User.IsInRole(Roles.ServerAdmin))
+                            {
+                                <div class="text-secondary">Administrator</div>
+                            }
+                        </div>
                     </li>
                     @if (!Theme.CustomTheme)
                     {

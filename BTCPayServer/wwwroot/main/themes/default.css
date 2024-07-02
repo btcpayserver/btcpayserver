@@ -158,9 +158,9 @@
   --btcpay-font-size-xs: 10px;
   --btcpay-font-size-s: 12px;
   --btcpay-font-size-m: 14px;
-  --btcpay-font-size-l: 18px;
-  --btcpay-font-size-xl: 36px;
-  --btcpay-font-size-xxl: 45px;
+  --btcpay-font-size-l: 20px;
+  --btcpay-font-size-xl: 28px;
+  --btcpay-font-size-xxl: 36px;
   --btcpay-font-weight-normal: 400;
   --btcpay-font-weight-semibold: 600;
   --btcpay-font-weight-bold: 700;
@@ -254,7 +254,7 @@
   --btcpay-pre-bg: var(--btcpay-neutral-900);
 
   --btcpay-primary: var(--btcpay-brand-primary);
-  --btcpay-primary-accent: var(--btcpay-brand-tertiary);
+  --btcpay-primary-accent: var(--btcpay-primary-700);
   --btcpay-primary-text: var(--btcpay-white);
   --btcpay-primary-text-hover: var(--btcpay-white);
   --btcpay-primary-text-active: var(--btcpay-white);

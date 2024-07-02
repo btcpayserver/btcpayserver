@@ -22,7 +22,6 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
 using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
@@ -644,6 +643,18 @@ namespace BTCPayServer.Controllers.Greenfield
             HandleActionResult(await GetController<GreenfieldApiKeysController>().RevokeAPIKey(apikey));
         }
 
+        public override async Task<NotificationSettingsData> GetNotificationSettings(CancellationToken token = default)
+        {
+            return GetFromActionResult<NotificationSettingsData>(
+                await GetController<GreenfieldNotificationsController>().GetNotificationSettings());
+        }
+
+        public override async Task<NotificationSettingsData> UpdateNotificationSettings(UpdateNotificationSettingsRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<NotificationSettingsData>(
+                await GetController<GreenfieldNotificationsController>().UpdateNotificationSettings(request));
+        }
+
         public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null,
             int? skip = null, int? take = null, CancellationToken token = default)
         {
@@ -864,6 +875,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldStoreOnChainWalletsController>().GetOnChainFeeRate(storeId, cryptoCode, blockTarget));
         }
 
+        public override async Task<ApplicationUserData> UpdateCurrentUser(UpdateApplicationUserRequest request, CancellationToken token = default)
+        {
+            return GetFromActionResult<ApplicationUserData>(await GetController<GreenfieldUsersController>().UpdateCurrentUser(request, token));
+        }
+
         public override async Task DeleteCurrentUser(CancellationToken token = default)
         {
             HandleActionResult(await GetController<GreenfieldUsersController>().DeleteCurrentUser());
@@ -1072,7 +1088,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<PointOfSaleAppData> CreatePointOfSaleApp(
             string storeId,
-            CreatePointOfSaleAppRequest request, CancellationToken token = default)
+            PointOfSaleAppRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<PointOfSaleAppData>(
                 await GetController<GreenfieldAppsController>().CreatePointOfSaleApp(storeId, request));
@@ -1080,7 +1096,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<PointOfSaleAppData> UpdatePointOfSaleApp(
             string appId,
-            CreatePointOfSaleAppRequest request, CancellationToken token = default)
+            PointOfSaleAppRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<PointOfSaleAppData>(
                await GetController<GreenfieldAppsController>().UpdatePointOfSaleApp(appId, request));
@@ -1088,27 +1104,27 @@ namespace BTCPayServer.Controllers.Greenfield
 
         public override async Task<CrowdfundAppData> CreateCrowdfundApp(
             string storeId,
-            CreateCrowdfundAppRequest request, CancellationToken token = default)
+            CrowdfundAppRequest request, CancellationToken token = default)
         {
             return GetFromActionResult<CrowdfundAppData>(
                 await GetController<GreenfieldAppsController>().CreateCrowdfundApp(storeId, request));
         }
 
-        public override async Task<AppDataBase> GetApp(string appId, CancellationToken token = default)
+        public override async Task<AppBaseData> GetApp(string appId, CancellationToken token = default)
         {
-            return GetFromActionResult<AppDataBase>(
+            return GetFromActionResult<AppBaseData>(
                 await GetController<GreenfieldAppsController>().GetApp(appId));
         }
 
-        public override async Task<AppDataBase[]> GetAllApps(string storeId, CancellationToken token = default)
+        public override async Task<AppBaseData[]> GetAllApps(string storeId, CancellationToken token = default)
         {
-            return GetFromActionResult<AppDataBase[]>(
+            return GetFromActionResult<AppBaseData[]>(
                 await GetController<GreenfieldAppsController>().GetAllApps(storeId));
         }
 
-        public override async Task<AppDataBase[]> GetAllApps(CancellationToken token = default)
+        public override async Task<AppBaseData[]> GetAllApps(CancellationToken token = default)
         {
-            return GetFromActionResult<AppDataBase[]>(
+            return GetFromActionResult<AppBaseData[]>(
                 await GetController<GreenfieldAppsController>().GetAllApps());
         }
 

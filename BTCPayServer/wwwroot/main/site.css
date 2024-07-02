@@ -47,6 +47,13 @@
     padding-left: 0;
 }
 
+.profile-picture {
+    height: var(--profile-picture-size, 2.1rem);
+    width: var(--profile-picture-size, 2.1rem);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;

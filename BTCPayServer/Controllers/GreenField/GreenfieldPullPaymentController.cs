@@ -372,9 +372,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 Metadata = blob.Metadata?? new JObject(),
             };
             model.Destination = blob.Destination;
-            model.PaymentMethod = p.PaymentMethodId;
-            var currency = this._payoutHandlers.TryGet(p.GetPayoutMethodId())?.Currency;
-            model.CryptoCode = currency;
+            model.PaymentMethod = p.PayoutMethodId;
+            model.CryptoCode = p.Currency;
             model.PaymentProof = p.GetProofBlobJson();
             return model;
         }

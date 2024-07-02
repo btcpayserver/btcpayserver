@@ -5,72 +5,24 @@ using System.Net.Http;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Controllers;
 using BTCPayServer.Plugins;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
-    internal class PluginUpdateNotification : BaseNotification
-    {
-        private const string TYPE = "pluginupdate";
-
-        internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options) : NotificationHandler<PluginUpdateNotification>
-        {
-            public override string NotificationType => TYPE;
-
-            public override (string identifier, string name)[] Meta
-            {
-                get
-                {
-                    return new (string identifier, string name)[] {(TYPE, "Plugin update")};
-                }
-            }
-
-            protected override void FillViewModel(PluginUpdateNotification notification, NotificationViewModel vm)
-            {
-                vm.Identifier = notification.Identifier;
-                vm.Type = notification.NotificationType;
-                vm.Body = $"New {notification.Name} plugin version {notification.Version} released!";
-                vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
-                    "UIServer",
-                    new {plugin = notification.PluginIdentifier}, options.RootPath);
-            }
-        }
-
-        public PluginUpdateNotification()
-        {
-        }
-
-        public PluginUpdateNotification(PluginService.AvailablePlugin plugin)
-        {
-            Name = plugin.Name;
-            PluginIdentifier = plugin.Identifier;
-            Version = plugin.Version.ToString();
-        }
-
-        public string PluginIdentifier { get; set; }
-
-        public string Name { get; set; }
-
-        public string Version { get; set; }
-        public override string Identifier => TYPE;
-        public override string NotificationType => TYPE;
-    }
-
     public class PluginVersionCheckerDataHolder
     {
         public Dictionary<string, Version> LastVersions { get; set; }
+        public List<string> AutoUpdatePlugins { get; set; }
+        public List<string> KillswitchPlugins { get; set; }
     }
 
-    public class PluginUpdateFetcher(SettingsRepository settingsRepository, NotificationSender notificationSender, PluginService pluginService)
+    public class PluginUpdateFetcher(SettingsRepository settingsRepository, NotificationSender notificationSender, PluginService pluginService, DataDirectories dataDirectories)
         : IPeriodicTask
     {
         public async Task Do(CancellationToken cancellationToken)
@@ -78,6 +30,7 @@ namespace BTCPayServer.HostedServices
             var dh = await settingsRepository.GetSettingAsync<PluginVersionCheckerDataHolder>() ??
                      new PluginVersionCheckerDataHolder();
             dh.LastVersions ??= new Dictionary<string, Version>();
+            dh.AutoUpdatePlugins ??= new List<string>();
             var disabledPlugins = pluginService.GetDisabledPlugins();
 
             var installedPlugins =
@@ -89,27 +42,53 @@ namespace BTCPayServer.HostedServices
                 .Select(group => group.OrderByDescending(plugin => plugin.Version).First())
                 .Where(pair => installedPlugins.ContainsKey(pair.Identifier) || disabledPlugins.ContainsKey(pair.Name))
                 .ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-            var notify = new HashSet<string>();
+            var notify = new Dictionary<string, string>();
+            
             foreach (var pair in remotePluginsList)
             {
                 if (dh.LastVersions.TryGetValue(pair.Key, out var lastVersion) && lastVersion >= pair.Value)
                     continue;
                 if (installedPlugins.TryGetValue(pair.Key, out var installedVersion) && installedVersion < pair.Value)
                 {
-                    notify.Add(pair.Key);
+                    notify.TryAdd(pair.Key, "update");
                 }
-                else if (disabledPlugins.TryGetValue(pair.Key, out var disabledVersion) && disabledVersion < pair.Value)
+                else if (disabledPlugins.TryGetValue(pair.Key, out var disabledVersion) && disabledVersion.Item1 < pair.Value)
                 {
-                    notify.Add(pair.Key);
+                    notify.TryAdd(pair.Key, "update");
                 }
             }
 
             dh.LastVersions = remotePluginsList;
-
-            foreach (string pluginUpdate in notify)
+            //check if any loaded plugin is in the remote list with exact version and is marked with Kill. If so, check if there is the plugin listed under AutoKillSwitch and if so, kill the plugin
+            foreach (var plugin in pluginService.LoadedPlugins)
             {
-                var plugin = remotePlugins.First(p => p.Identifier == pluginUpdate);
-                await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin));
+                var matched = remotePlugins.FirstOrDefault(p => p.Identifier == plugin.Identifier && p.Version == plugin.Version);
+                if(matched is {Kill: true} && dh.KillswitchPlugins.Contains(plugin.Identifier))
+                {
+                    PluginManager.DisablePlugin(dataDirectories.PluginDir, plugin.Identifier, "Killswitch activated");
+                    
+                    notify.TryAdd(plugin.Identifier, "kill");
+                }
+            }
+            foreach (var pluginUpdate in notify)
+            {
+                var plugin = remotePlugins.First(p => p.Identifier == pluginUpdate.Key);
+
+                if (pluginUpdate.Value == "kill")
+                {
+                    await notificationSender.SendNotification(new AdminScope(), new PluginKillNotification(plugin));
+                }
+                else
+                {
+                    var update = false;
+                    if (dh.AutoUpdatePlugins.Contains(plugin.Identifier))
+                    {
+                        update = true;
+                        await pluginService.DownloadRemotePlugin(plugin.Identifier, plugin.Version.ToString());
+                        pluginService.UpdatePlugin(plugin.Identifier);
+                    }
+                    await notificationSender.SendNotification(new AdminScope(), new PluginUpdateNotification(plugin, update));
+                }
             }
 
             await settingsRepository.UpdateSetting(dh);

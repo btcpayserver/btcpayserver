@@ -180,7 +180,7 @@
                                     <div class="d-inline-flex align-items-center gap-3">
                                         @if (!string.IsNullOrEmpty(item.ActionLink))
                                         {
-                                            <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
+                                            <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">@item.ActionText</a>
                                         }
                                         @if (!item.Seen)
                                         {

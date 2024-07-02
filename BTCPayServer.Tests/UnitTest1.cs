@@ -2814,7 +2814,7 @@ namespace BTCPayServer.Tests
                 Password = "store@store.com",
                 Port = 1234,
                 Server = "store.com"
-            }), "", true));
+            }), ""));
 
             Assert.Equal("store@store.com", (await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
         }

@@ -38,11 +38,12 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             Serializer = BlobSerializer.CreateSerializer().Serializer;
             _ZcashRpcProvider = ZcashRpcProvider;
         }
-        public Task BeforeFetchingRates(PaymentMethodContext context)
+        public Task CreatePrompts(PaymentMethodContext context)
         {
-            context.Prompt.Currency = _network.CryptoCode;
-            context.Prompt.Divisibility = _network.Divisibility;
-            if (context.Prompt.Activated)
+            context.PromptTemplate.Currency = _network.CryptoCode;
+            context.PromptTemplate.Divisibility = _network.Divisibility;
+            context.AddPrompt();
+            if (context.PromptTemplate.Activated)
             {
                 var walletClient = _ZcashRpcProvider.WalletRpcClients[_network.CryptoCode];
                 var daemonClient = _ZcashRpcProvider.DaemonRpcClients[_network.CryptoCode];
@@ -56,7 +57,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             }
             return Task.CompletedTask;
         }
-        public async Task ConfigurePrompt(PaymentMethodContext context)
+        public async Task ActivatePrompt(PaymentMethodContext context, PaymentPrompt prompt)
         {
             if (!_ZcashRpcProvider.IsAvailable(_network.CryptoCode))
                 throw new PaymentMethodUnavailableException($"Node or wallet not available");
@@ -67,8 +68,8 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
 
             var feeRatePerByte = feeRatePerKb.Fee / 1024;
 
-            context.Prompt.PaymentMethodFee = ZcashMoney.Convert(feeRatePerByte * 100);
-            context.Prompt.Details = JObject.FromObject(new ZcashPaymentPromptDetails()
+            prompt.PaymentMethodFee = ZcashMoney.Convert(feeRatePerByte * 100);
+            prompt.Details = JObject.FromObject(new ZcashPaymentPromptDetails()
             {
                 AccountIndex = ZcashPrepare.AccountIndex,
                 AddressIndex = address.AddressIndex,

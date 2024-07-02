@@ -43,11 +43,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             _moneroRpcProvider = moneroRpcProvider;
         }
 
-        public Task BeforeFetchingRates(PaymentMethodContext context)
+        public Task CreatePrompts(PaymentMethodContext context)
         {
-            context.Prompt.Currency = _network.CryptoCode;
-            context.Prompt.Divisibility = _network.Divisibility;
-            if (context.Prompt.Activated)
+            context.PromptTemplate.Currency = _network.CryptoCode;
+            context.PromptTemplate.Divisibility = _network.Divisibility;
+            context.AddPrompt();
+            if (context.PromptTemplate.Activated)
             {
                 var supportedPaymentMethod = ParsePaymentMethodConfig(context.PaymentMethodConfig);
                 var walletClient = _moneroRpcProvider.WalletRpcClients[_network.CryptoCode];
@@ -62,7 +63,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             return Task.CompletedTask;
         }
 
-        public async Task ConfigurePrompt(PaymentMethodContext context)
+        public async Task ActivatePrompt(PaymentMethodContext context, PaymentPrompt prompt)
         {
             if (!_moneroRpcProvider.IsAvailable(_network.CryptoCode))
                 throw new PaymentMethodUnavailableException($"Node or wallet not available");
@@ -78,9 +79,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
                 AddressIndex = address.AddressIndex,
                 InvoiceSettledConfirmationThreshold = ParsePaymentMethodConfig(context.PaymentMethodConfig).InvoiceSettledConfirmationThreshold
             };
-            context.Prompt.Destination = address.Address;
-            context.Prompt.PaymentMethodFee = MoneroMoney.Convert(feeRatePerByte * 100);
-            context.Prompt.Details = JObject.FromObject(details, Serializer);
+            prompt.Destination = address.Address;
+            prompt.PaymentMethodFee = MoneroMoney.Convert(feeRatePerByte * 100);
+            prompt.Details = JObject.FromObject(details, Serializer);
         }
         private MoneroPaymentPromptDetails ParsePaymentMethodConfig(JToken config)
         {

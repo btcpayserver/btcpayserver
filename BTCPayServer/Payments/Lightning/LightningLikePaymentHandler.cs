@@ -13,6 +13,7 @@ using BTCPayServer.Lightning.LndHub;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.Options;
 using NBitcoin;
@@ -57,11 +58,12 @@ namespace BTCPayServer.Payments.Lightning
             PaymentMethodId = paymentMethodId;
         }
 
-        public Task BeforeFetchingRates(PaymentMethodContext context)
+        public Task CreatePrompts(PaymentMethodContext context)
         {
-            context.Prompt.Currency = _Network.CryptoCode;
-            context.Prompt.PaymentMethodFee = 0m;
-            context.Prompt.Divisibility = 11;
+            context.PromptTemplate.Currency = _Network.CryptoCode;
+            context.PromptTemplate.PaymentMethodFee = 0m;
+            context.PromptTemplate.Divisibility = 11;
+            context.AddPrompt();
             return Task.CompletedTask;
         }
 
@@ -71,14 +73,13 @@ namespace BTCPayServer.Payments.Lightning
 
         public BTCPayNetwork Network => _Network;
 
-        public async Task ConfigurePrompt(PaymentMethodContext context)
+        public async Task ActivatePrompt(PaymentMethodContext context, PaymentPrompt prompt)
         {
             if (context.InvoiceEntity.Type == InvoiceType.TopUp)
             {
                 throw new PaymentMethodUnavailableException("Lightning Network payment method is not available for top-up invoices");
             }
 
-            var paymentPrompt = context.Prompt;
 
             var preferOnion = Uri.TryCreate(context.InvoiceEntity.ServerUrl, UriKind.Absolute, out var u) && u.IsOnion();
 
@@ -89,10 +90,10 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
 
             var invoice = context.InvoiceEntity;
-            decimal due = Extensions.RoundUp(invoice.Price / paymentPrompt.Rate, _Network.Divisibility);
+            decimal due = Extensions.RoundUp(invoice.Price / prompt.Rate, _Network.Divisibility);
             try
             {
-                due = paymentPrompt.Calculate().Due;
+                due = prompt.Calculate().Due;
             }
             catch (Exception)
             {
@@ -127,7 +128,7 @@ namespace BTCPayServer.Payments.Lightning
                 }
             }
 
-            paymentPrompt.Destination = lightningInvoice.BOLT11;
+            prompt.Destination = lightningInvoice.BOLT11;
             var details = new LigthningPaymentPromptDetails
             {
                 PaymentHash = BOLT11PaymentRequest.Parse(lightningInvoice.BOLT11, _Network.NBitcoinNetwork).PaymentHash,
@@ -135,7 +136,7 @@ namespace BTCPayServer.Payments.Lightning
                 InvoiceId = lightningInvoice.Id,
                 NodeInfo = (await nodeInfo).FirstOrDefault()?.ToString()
             };
-            paymentPrompt.Details = JObject.FromObject(details, Serializer);
+            prompt.Details = JObject.FromObject(details, Serializer);
         }
 
 

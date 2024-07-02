@@ -40,7 +40,7 @@ namespace BTCPayServer.Payments
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        Task ConfigurePrompt(PaymentMethodContext context);
+        Task ActivatePrompt(PaymentMethodContext context, PaymentPrompt prompt);
         /// <summary>
         /// Called before the fetching of the rates of an invoice.
         /// If the prompt is activated, it is recommended to start time consuming tasks here by setting the <see cref="PaymentMethodContext.State"/>.
@@ -49,7 +49,7 @@ namespace BTCPayServer.Payments
         /// </summary>
         /// <param name="context"></param>
         /// <returns></returns>
-        Task BeforeFetchingRates(PaymentMethodContext context);
+        Task CreatePrompts(PaymentMethodContext context);
         /// <summary>
         /// Called after the invoice has been saved into database.
         /// Note that this can also be called ater rates has been fetched (for example in lazy activation or forced prompt renew)
@@ -137,12 +137,12 @@ namespace BTCPayServer.Payments
 
         public Task BeforeFetchingRates()
         {
-            return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.BeforeFetchingRates()));
+            return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.CreatePrompts()));
         }
 
-        public Task CreatePaymentPrompts()
+        public Task ActivatePrompts()
         {
-            return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.CreatePaymentPrompt()));
+            return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.ActivatePrompts()));
         }
 
         public HashSet<CurrencyPair> GetCurrenciesToFetch()
@@ -153,12 +153,12 @@ namespace BTCPayServer.Payments
         public void SetLazyActivation(bool lazy)
         {
             foreach (var p in PaymentMethodContexts)
-                p.Value.Prompt.Inactive = lazy;
+                p.Value.PromptTemplate.Inactive = lazy;
         }
 
         public Task ActivatingPaymentPrompt()
         {
-            return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.ActivatingPaymentPrompt()));
+            return Task.WhenAll(PaymentMethodContexts.Select(c => c.Value.AfterSavingInvoice()));
         }
 
         public async Task FetchingRates(RateFetcher rateFetcher, RateRules rateRules, CancellationToken cancellationToken)
@@ -251,7 +251,7 @@ namespace BTCPayServer.Payments
         public IPaymentMethodHandler Handler { get; }
         public Data.StoreBlob StoreBlob { get; }
         public Data.StoreData Store { get; }
-        public PaymentPrompt Prompt { get; set; }
+        public PaymentPrompt PromptTemplate { get; set; }
         public PaymentMethodContext(
             Data.StoreData store,
             Data.StoreBlob storeBlob,
@@ -271,8 +271,23 @@ namespace BTCPayServer.Payments
                 throw new InvalidOperationException("InvoiceEntity.Currency isn't initialized");
             RequiredRates = new CurrencyPairSet(invoiceEntity.Currency);
             OptionalRates = new CurrencyPairSet(invoiceEntity.Currency);
-            Prompt = new PaymentPrompt() { ParentEntity = invoiceEntity, PaymentMethodId = PaymentMethodId };
+            PromptTemplate = new PaymentPrompt() { ParentEntity = invoiceEntity, PaymentMethodId = PaymentMethodId };
         }
+
+        /// <summary>
+        /// Create a new prompt cloned from the <see cref="PromptTemplate"/>
+        /// </summary>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException"></exception>
+        public PaymentPrompt AddPrompt()
+        {
+            var cloned = JToken.FromObject(PromptTemplate, Handler.Serializer).ToObject<PaymentPrompt>(Handler.Serializer) ?? throw new InvalidOperationException("Impossible to clone the payment prompt");
+            cloned.ParentEntity = PromptTemplate.ParentEntity;
+            cloned.PaymentMethodId = PromptTemplate.PaymentMethodId;
+            Prompts.Add(cloned);
+            return cloned;
+        }
+        public List<PaymentPrompt> Prompts { get; } = new List<PaymentPrompt>();
         public CurrencyPairSet RequiredRates { get; }
         public CurrencyPairSet OptionalRates { get; }
         public object? State { get; set; }
@@ -282,14 +297,14 @@ namespace BTCPayServer.Payments
         /// </summary>
         public List<string> TrackedDestinations { get; } = new List<string>();
 
-        internal async Task BeforeFetchingRates()
+        internal async Task CreatePrompts()
         {
-            await Handler.BeforeFetchingRates(this);
+            await Handler.CreatePrompts(this);
             // We need to fetch the rates necessary for the evaluation of the payment method criteria
-            var currency = Prompt.Currency;
+            var currency = PromptTemplate.Currency;
             if (currency is not null)
                 RequiredRates.Add(currency);
-            if (currency is not null 
+            if (currency is not null
                  && Status is PaymentMethodContext.ContextStatus.WaitingForCreation or PaymentMethodContext.ContextStatus.WaitingForActivation)
             {
                 foreach (var paymentMethodCriteria in StoreBlob.PaymentMethodCriteria
@@ -300,73 +315,71 @@ namespace BTCPayServer.Payments
             }
         }
 
-        public Task ActivatingPaymentPrompt()
+        public Task AfterSavingInvoice()
         {
             if (Status is not (ContextStatus.Created or ContextStatus.WaitingForActivation))
                 return Task.CompletedTask;
             return Handler.AfterSavingInvoice(this);
         }
-
-        private Task CreatingPaymentPrompt()
+        public async Task<PaymentPrompt[]> ActivatePrompts()
         {
-            return Handler.ConfigurePrompt(this);
+            var activatedPrompts = new List<PaymentPrompt>();
+            using (Logs.Measure("Payment method prompt activation"))
+            {
+                foreach (var prompt in Prompts)
+                {
+                    if (await ActivatePrompt(prompt))
+                        activatedPrompts.Add(prompt);
+                }
+            }
+            return activatedPrompts.ToArray();
         }
 
-        public async Task CreatePaymentPrompt()
+        private async Task<bool> ActivatePrompt(PaymentPrompt prompt)
         {
-            if (Status != ContextStatus.WaitingForCreation)
-                return;
             bool criteriaChecked = false;
-            if (Prompt.Currency is not null)
+            if (prompt.Currency is not null)
             {
-                if (!CheckCriteria())
+                if (!CheckCriteria(prompt))
                 {
-                    Status = ContextStatus.Failed;
-                    return;
+                    return false;
                 }
                 criteriaChecked = true;
             }
-            if (!Prompt.Activated)
+            if (!prompt.Activated)
+                return false;
+            try
             {
-                Status = ContextStatus.WaitingForActivation;
-                return;
+                await Handler.ActivatePrompt(this, prompt);
+                Status = ContextStatus.Created;
             }
-            using (Logs.Measure("Payment method details creation"))
+            catch (PaymentMethodUnavailableException ex)
             {
-                try
-                {
-                    await Handler.ConfigurePrompt(this);
-                    Status = ContextStatus.Created;
-                }
-                catch (PaymentMethodUnavailableException ex)
-                {
-                    Logs.Write($"Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
-                    Status = ContextStatus.Failed;
-                    return;
-                }
-                catch (Exception ex)
-                {
-                    Logs.Write($"Unexpected exception ({ex})", InvoiceEventData.EventSeverity.Error);
-                    Status = ContextStatus.Failed;
-                    return;
-                }
+                Logs.Write($"Payment method unavailable ({ex.Message})", InvoiceEventData.EventSeverity.Error);
+                return false;
             }
-            if (!criteriaChecked && !CheckCriteria())
+            catch (Exception ex)
             {
-                Status = ContextStatus.Failed;
-                return;
+                Logs.Write($"Unexpected exception ({ex})", InvoiceEventData.EventSeverity.Error);
+                return false;
             }
+            if (!criteriaChecked && !CheckCriteria(prompt))
+            {
+                return false;
+            }
+            return true;
         }
+
         public ContextStatus Status { get; internal set; }
-        private bool CheckCriteria()
+        private bool CheckCriteria(PaymentPrompt prompt)
         {
             var criteria = StoreBlob.PaymentMethodCriteria?.Find(methodCriteria => methodCriteria.PaymentMethod == Handler.PaymentMethodId);
             if (criteria?.Value != null && InvoiceEntity.Type != InvoiceType.TopUp)
             {
                 try
                 {
-                    var currentRateToCrypto = InvoiceEntity.GetRate(new CurrencyPair(Prompt.Currency, criteria.Value.Currency));
-                    var amount = Prompt.Calculate().Due;
+                    var currentRateToCrypto = InvoiceEntity.GetRate(new CurrencyPair(prompt.Currency, criteria.Value.Currency));
+                    var amount = prompt.Calculate().Due;
                     var limitValueCrypto = criteria.Value.Value / currentRateToCrypto;
 
                     if (amount < limitValueCrypto && criteria.Above)

@@ -211,33 +211,13 @@
                         ]
                     }
                 }
-            },
-            "LockUserRequest": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "locked": {
-                        "type": "boolean",
-                        "description": "Whether to lock or unlock the user"
-                    }
-                }
-            },
-            "ApproveUserRequest": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "approved": {
-                        "type": "boolean",
-                        "description": "Whether to approve or unapprove the user"
-                    }
-                }
             }
         }
     },
     "tags": [
         {
-            "name": "Users",
-            "description": "User operations"
+            "name": "Files",
+            "description": "File operations"
         }
     ]
 }

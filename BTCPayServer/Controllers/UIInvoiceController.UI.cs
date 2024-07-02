@@ -213,7 +213,7 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
-                OrderUrl = i.Metadata?.OrderUrl,
+                RedirectUrl = i.RedirectURL?.AbsoluteUri ?? i.Metadata?.OrderUrl,
                 Status = i.Status.ToModernStatus(),
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,

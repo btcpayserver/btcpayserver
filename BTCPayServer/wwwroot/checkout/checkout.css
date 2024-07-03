@@ -1,8 +1,24 @@
+:root {
+    --gradient-opacity: .25;
+}
+:root[data-theme='dark'],
+:root[data-btcpay-theme='dark'] {
+    --gradient-opacity: .175;
+}
+@media (prefers-color-scheme: dark) {
+    :root:not([data-btcpay-theme], [data-theme]) {
+        --gradient-opacity: .175;
+    }
+}
 #Checkout {
     --wrap-max-width: 400px;
 }
 body {
     overflow-x: hidden;
+    background-color: rgb(var(--btcpay-body-bg-rgb));
+    background-image: linear-gradient(125deg, rgba(var(--btcpay-primary-rgb), var(--gradient-opacity))  0%, rgba(var(--btcpay-body-bg-rgb), 1)  25%, rgba(var(--btcpay-body-bg-rgb), 1)  75%, rgba(var(--btcpay-primary-rgb), var(--gradient-opacity))  100%);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
 main {
     position: relative;

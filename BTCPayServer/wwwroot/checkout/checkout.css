@@ -114,9 +114,6 @@ section dl > div dd {
     margin: 0 auto;
     padding: var(--btcpay-space-s);
 }
-.payment-details-button .icon {
-    margin-left: -1rem; /* Adjust for visual center */
-}
 #payment .btcpay-pills .btcpay-pill {
     padding: var(--btcpay-space-xs) var(--btcpay-space-m);
 }

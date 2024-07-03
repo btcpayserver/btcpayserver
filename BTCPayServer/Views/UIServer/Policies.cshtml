@@ -277,7 +277,8 @@
         function toggleExchangeProviderVisibility() {
             const currencyInput = document.getElementById("DefaultCurrency");
             const exchangeDiv = document.getElementById("DefaultExchangeProviderForm");
-            exchangeDiv.classList[currencyInput.value.trim() !== "" || '@Model.DefaultCurrency' !== "" ? "remove" : "add"]("d-none");
+            const defaultCurrency = @Safe.Json(Model.DefaultCurrency);
+            exchangeDiv.classList[currencyInput.value.trim() !== "" || defaultCurrency !== "" ? "remove" : "add"]("d-none");
         }
         delegate('click', '.revert-default', e => {
             const $row = e.target.closest('[data-default]');

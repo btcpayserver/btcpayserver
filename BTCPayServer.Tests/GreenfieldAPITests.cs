@@ -3594,6 +3594,7 @@ namespace BTCPayServer.Tests
             var store2 = (await adminClient.CreateStore(new CreateStoreRequest() { Name = "test2" })).Id;
             var address1 = Guid.NewGuid().ToString("n").Substring(0, 8);
             var address2 = Guid.NewGuid().ToString("n").Substring(0, 8);
+            var address3 = Guid.NewGuid().ToString("n").Substring(0, 8);
 
             Assert.Empty(await adminClient.GetStoreLightningAddresses(store.Id));
             Assert.Empty(await adminClient.GetStoreLightningAddresses(store2));
@@ -3621,6 +3622,17 @@ namespace BTCPayServer.Tests
             await adminClient.RemoveStoreLightningAddress(store2, address2);
 
             Assert.Empty(await adminClient.GetStoreLightningAddresses(store2));
+            
+            var store3 = (await adminClient.CreateStore(new CreateStoreRequest { Name = "test3" })).Id;
+            Assert.Empty(await adminClient.GetStoreLightningAddresses(store3));
+            var metadata = JObject.FromObject(new { test = 123 });
+            await adminClient.AddOrUpdateStoreLightningAddress(store3, address3, new LightningAddressData
+            {
+                InvoiceMetadata = metadata
+            });
+            var lnAddresses = await adminClient.GetStoreLightningAddresses(store3);
+            Assert.Single(lnAddresses);
+            Assert.Equal(metadata, lnAddresses[0].InvoiceMetadata);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

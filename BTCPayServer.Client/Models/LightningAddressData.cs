@@ -1,3 +1,5 @@
+using Newtonsoft.Json.Linq;
+
 namespace BTCPayServer.Client.Models;
 
 public class LightningAddressData
@@ -6,5 +8,5 @@ public class LightningAddressData
     public string CurrencyCode { get; set; }
     public decimal? Min { get; set; }
     public decimal? Max { get; set; }
-
+    public JObject InvoiceMetadata { get; set; }
 }

@@ -141,10 +141,13 @@ namespace BTCPayServer.Controllers
 				.ToList();
 			var exchange = exchanges.First(e => e.Id == defaultExchange);
 			exchanges.Insert(0, new(null, $"Recommendation ({exchange.DisplayName})", ""));
-            var chosen = exchanges.FirstOrDefault(f => f.Id == defaultExchangeProvider)
-                 ?? exchanges.FirstOrDefault(f => f.Id == storeBlob.PreferredExchange)
-                 ?? exchanges.First();
-			return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
+
+            var chosen = !string.IsNullOrEmpty(defaultExchangeProvider)
+                ? exchanges.FirstOrDefault(f => f.Id == defaultExchangeProvider)
+                : exchanges.FirstOrDefault(f => f.Id == storeBlob.PreferredExchange);
+            chosen = chosen ?? exchanges.First();
+
+            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
 		}
 	}
 }

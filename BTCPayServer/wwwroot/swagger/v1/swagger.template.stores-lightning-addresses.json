@@ -246,7 +246,7 @@
                         "description": "The maximum amount in sats this ln address allows"
                     },
                     "invoiceMetadata": {
-                        "type": "string",
+                        "type": "object",
                         "nullable": true,
                         "description": "The invoice metadata as JSON."
                     }

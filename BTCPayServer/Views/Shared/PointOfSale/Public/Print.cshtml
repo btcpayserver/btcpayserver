@@ -78,8 +78,8 @@ else
                 var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
                 if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && item.Price == 0) continue;
                 <div class="d-flex flex-wrap">
-                    <div class="card px-0" data-id="@x">
-                        <div class="card-body p-3 d-flex flex-column gap-2">
+                    <div class="tile card w-100" data-id="@x">
+                        <div class="card-body pt-0 d-flex flex-column gap-2">
                             <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                             <div class="d-flex gap-2 align-items-center">
                                 <span class="fw-semibold">

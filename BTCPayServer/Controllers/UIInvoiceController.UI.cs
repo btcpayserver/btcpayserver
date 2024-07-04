@@ -353,7 +353,8 @@ namespace BTCPayServer.Controllers
                 return View("_RefundModal", model);
             }
 
-            var paymentMethodId = PaymentMethodId.GetSimilarities([pmi], invoice.GetPayments(false).Select(p => p.PaymentMethodId))
+            var availablePaymentMethodIds = invoice.GetPaymentPrompts().Select(p => p.PaymentMethodId).Where(p => _handlers.Support(p)).ToArray();
+            var paymentMethodId = PaymentMethodId.GetSimilarities([pmi], availablePaymentMethodIds)
                 .OrderByDescending(o => o.similarity)
                 .Select(o => o.b)
                 .FirstOrDefault();

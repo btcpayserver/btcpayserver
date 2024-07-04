@@ -408,10 +408,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 var supported = _payoutHandlers.GetSupportedPayoutMethods(store);
                 if (supported.Contains(payoutMethodId))
                 {
-                    var paymentMethodId = PaymentMethodId.GetSimilarities([payoutMethodId], invoice.GetPayments(false).Select(p => p.PaymentMethodId))
-                        .OrderByDescending(o => o.similarity)
-                        .Select(o => o.b)
-                        .FirstOrDefault();
+                    var paymentMethodId = invoice.GetClosestPaymentMethodId([payoutMethodId]);
                     paymentPrompt = paymentMethodId is null ? null : invoice.GetPaymentPrompt(paymentMethodId);
                 }
             }
@@ -426,6 +423,14 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var accounting = paymentPrompt.Calculate();
             var cryptoPaid = accounting.Paid;
+            var dueAmount = accounting.TotalDue;
+
+            // If no payment, but settled and marked, assume it has been fully paid
+            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
+            {
+                cryptoPaid = accounting.TotalDue;
+                dueAmount = 0;
+            }
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paidCurrency = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
@@ -491,8 +496,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         return this.CreateValidationError(ModelState);
                     }
-                    
-                    var dueAmount = accounting.TotalDue;
                     createPullPayment.Currency = paymentPrompt.Currency;
                     createPullPayment.Amount = Math.Round(paidAmount - dueAmount, appliedDivisibility);
                     createPullPayment.AutoApproveClaims = true;

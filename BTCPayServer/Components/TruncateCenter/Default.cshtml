@@ -15,10 +15,9 @@
             }
             else
             {
-                <span class="truncate-center-start" v-text=@Safe.Json($"{Model.Text}.slice(0, {Model.Padding})")></span>
-                <span>…</span>
+                <span class="truncate-center-start" v-text="@Safe.Raw($"{Model.Text}.length > 2 * {Model.Padding} ? ({Model.Text}.slice(0, {Model.Padding}) + '…') : {Model.Text}")"></span>
             }
-            <span class="truncate-center-end" v-text=@Safe.Json($"{Model.Text}.slice(-{Model.Padding})")></span>
+            <span class="truncate-center-end" v-text=@Safe.Json($"{Model.Text}.slice(-{Model.Padding})") v-if="@Safe.Raw($"{Model.Text}.length > 2 * {Model.Padding}")"></span>
         </span>
         <span class="truncate-center-text" v-text=@Safe.Json(Model.Text)></span>
     }

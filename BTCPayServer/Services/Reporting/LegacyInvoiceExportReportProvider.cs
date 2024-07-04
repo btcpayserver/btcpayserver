@@ -33,7 +33,7 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 new("ReceivedDate", "datetime"),
                 new("StoreId", "text"),
                 new("OrderId", "text"),
-                new("InvoiceId", "text"),
+                new("InvoiceId", "invoice_id"),
                 new("InvoiceCreatedDate", "datetime"),
                 new("InvoiceExpirationDate", "datetime"),
                 new("InvoiceMonitoringDate", "datetime"),

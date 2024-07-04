@@ -401,6 +401,14 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var accounting = invoicePaymentMethod.Calculate();
             var cryptoPaid = accounting.Paid;
+            var dueAmount = accounting.TotalDue;
+
+            // If no payment, but settled and marked, assume it has been fully paid
+            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatusLegacy.Confirmed or InvoiceStatusLegacy.Complete, ExceptionStatus: InvoiceExceptionStatus.Marked })
+            {
+                cryptoPaid = accounting.TotalDue;
+                dueAmount = 0;
+            }
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paidCurrency = Math.Round(cryptoPaid * invoicePaymentMethod.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
@@ -468,7 +476,6 @@ namespace BTCPayServer.Controllers.Greenfield
                         return this.CreateValidationError(ModelState);
                     }
                     
-                    var dueAmount = accounting.TotalDue;
                     createPullPayment.Currency = cryptoCode;
                     createPullPayment.Amount = Math.Round(paidAmount - dueAmount, appliedDivisibility);
                     createPullPayment.AutoApproveClaims = true;

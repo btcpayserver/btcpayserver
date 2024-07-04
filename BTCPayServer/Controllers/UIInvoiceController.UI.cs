@@ -366,6 +366,11 @@ namespace BTCPayServer.Controllers
                 accounting = paymentMethod.Calculate();
                 cryptoPaid = accounting.Paid;
                 dueAmount = accounting.TotalDue;
+                if (cryptoPaid is 0 && invoice is { Status: InvoiceStatusLegacy.Confirmed or InvoiceStatusLegacy.Complete, ExceptionStatus: InvoiceExceptionStatus.Marked })
+                {
+                    cryptoPaid = accounting.TotalDue;
+                    dueAmount = 0;
+                }
                 paidAmount = cryptoPaid.RoundToSignificant(appliedDivisibility);
             }
 

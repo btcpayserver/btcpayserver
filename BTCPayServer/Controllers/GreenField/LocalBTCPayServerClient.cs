@@ -656,10 +656,10 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<IEnumerable<NotificationData>> GetNotifications(bool? seen = null,
-            int? skip = null, int? take = null, CancellationToken token = default)
+            int? skip = null, int? take = null, string[] storeId = null, CancellationToken token = default)
         {
             return GetFromActionResult<IEnumerable<NotificationData>>(
-                await GetController<GreenfieldNotificationsController>().GetNotifications(seen, skip, take));
+                await GetController<GreenfieldNotificationsController>().GetNotifications(seen, skip, take, storeId));
         }
 
         public override async Task<NotificationData> GetNotification(string notificationId,

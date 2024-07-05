@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,14 +39,15 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanViewNotificationsForUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/me/notifications")]
-        public async Task<IActionResult> GetNotifications(bool? seen = null, [FromQuery] int? skip = null, [FromQuery] int? take = null)
+        public async Task<IActionResult> GetNotifications(bool? seen = null, [FromQuery] int? skip = null, [FromQuery] int? take = null, [FromQuery] string[]? storeId = null)
         {
             var items = await _notificationManager.GetNotifications(new NotificationsQuery
             {
                 Seen = seen,
                 UserId = _userManager.GetUserId(User),
                 Skip = skip,
-                Take = take
+                Take = take,
+                StoreIds = storeId,
             });
 
             return Ok(items.Items.Select(ToModel));

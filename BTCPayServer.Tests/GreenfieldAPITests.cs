@@ -2944,20 +2944,38 @@ namespace BTCPayServer.Tests
             
             // Store association
             var unrestricted = await user.CreateClient(Policies.Unrestricted);
-            var store = await unrestricted.CreateStore(new CreateStoreRequest { Name = "test store" });
+            var store1 = await unrestricted.CreateStore(new CreateStoreRequest { Name = "Store A" });
             await tester.PayTester.GetService<NotificationSender>()
                 .SendNotification(new UserScope(user.UserId), new InviteAcceptedNotification{
                     UserId = user.UserId,
                     UserEmail = user.Email,
-                    StoreId = store.Id,
-                    StoreName = store.Name
+                    StoreId = store1.Id,
+                    StoreName = store1.Name
                 });
             notifications = (await client.GetNotifications()).ToList();
             Assert.Single(notifications);
 
             notification = notifications.First();
-            Assert.Equal(store.Id, notification.StoreId);
-            Assert.Equal($"User {user.Email} accepted the invite to {store.Name}.", notification.Body);
+            Assert.Equal(store1.Id, notification.StoreId);
+            Assert.Equal($"User {user.Email} accepted the invite to {store1.Name}.", notification.Body);
+            
+            var store2 = await unrestricted.CreateStore(new CreateStoreRequest { Name = "Store B" });
+            await tester.PayTester.GetService<NotificationSender>()
+                .SendNotification(new UserScope(user.UserId), new InviteAcceptedNotification{
+                    UserId = user.UserId,
+                    UserEmail = user.Email,
+                    StoreId = store2.Id,
+                    StoreName = store2.Name
+                });
+            notifications = (await client.GetNotifications(storeId: [store2.Id])).ToList();
+            Assert.Single(notifications);
+
+            notification = notifications.First();
+            Assert.Equal(store2.Id, notification.StoreId);
+            Assert.Equal($"User {user.Email} accepted the invite to {store2.Name}.", notification.Body);
+
+            Assert.Equal(2, (await client.GetNotifications(storeId: [store1.Id, store2.Id])).Count());
+            Assert.Equal(2, (await client.GetNotifications()).Count());
             
             // Settings
             var settings = await client.GetNotificationSettings();

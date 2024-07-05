@@ -63,7 +63,7 @@ namespace BTCPayServer.Controllers
                 UserId = userId,
                 SearchText = model.SearchText,
                 Type = fs.GetFilterArray("type"),
-                Stores = fs.GetFilterArray("store"),
+                StoreIds = fs.GetFilterArray("storeid"),
                 Seen = model.Status == "Unread" ? false : null
             });
             model.Items = res.Items;

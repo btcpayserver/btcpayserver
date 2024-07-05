@@ -151,9 +151,9 @@ namespace BTCPayServer.Services.Notifications
                     }
                 }
             }
-            if (query.Stores?.Length > 0)
+            if (query.StoreIds?.Length > 0)
             {
-                notifications = notifications.Where(n => !string.IsNullOrEmpty(n.StoreId) && query.Stores.Contains(n.StoreId, StringComparer.OrdinalIgnoreCase)).ToList();
+                notifications = notifications.Where(n => !string.IsNullOrEmpty(n.StoreId) && query.StoreIds.Contains(n.StoreId, StringComparer.OrdinalIgnoreCase)).ToList();
             }
             return notifications;
         }
@@ -221,6 +221,6 @@ namespace BTCPayServer.Services.Notifications
         public bool? Seen { get; set; }
         public string SearchText { get; set; }
         public string[] Type { get; set; }
-        public string[] Stores { get; set; }
+        public string[] StoreIds { get; set; }
     }
 }

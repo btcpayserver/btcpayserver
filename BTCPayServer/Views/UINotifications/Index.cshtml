@@ -3,7 +3,7 @@
     ViewData["Title"] = "Notifications";
     string status = ViewBag.Status;
     var statusFilterCount = CountArrayFilter("type");
-    var storesFilterCount = CountArrayFilter("store");
+    var storesFilterCount = CountArrayFilter("storeid");
 }
 
 @functions
@@ -86,7 +86,7 @@
         <button id="StoresOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (storesFilterCount > 0)
             {
-                <span>@storesFilterCount Store</span>
+                <span>@storesFilterCount Store@(storesFilterCount > 1 ? "s" : "")</span>
             }
             else
             {
@@ -99,8 +99,8 @@
                 <a asp-action="Index"
                    asp-route-count="@Model.Count"
                    asp-route-status="@Model.Status"
-                   asp-route-searchTerm="@Model.Search.Toggle("store", store.Id)"
-                   class="dropdown-item @(HasArrayFilter("store", store.Id) ? "custom-active" : "")">
+                   asp-route-searchTerm="@Model.Search.Toggle("storeid", store.Id)"
+                   class="dropdown-item @(HasArrayFilter("storeid", store.Id) ? "custom-active" : "")">
                     @store.StoreName
                 </a>
             }

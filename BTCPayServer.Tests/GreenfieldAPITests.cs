@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -13,7 +13,6 @@ using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.NTag424;
-using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Services;
@@ -30,7 +29,6 @@ using Newtonsoft.Json.Linq;
 using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 using CreateApplicationUserRequest = BTCPayServer.Client.Models.CreateApplicationUserRequest;
 
 namespace BTCPayServer.Tests
@@ -2915,14 +2913,18 @@ namespace BTCPayServer.Tests
             await tester.PayTester.GetService<NotificationSender>()
                 .SendNotification(new UserScope(user.UserId), new NewVersionNotification());
 
-            Assert.Single(await viewOnlyClient.GetNotifications());
+            var notifications = (await viewOnlyClient.GetNotifications()).ToList();
+            Assert.Single(notifications);
             Assert.Single(await viewOnlyClient.GetNotifications(false));
             Assert.Empty(await viewOnlyClient.GetNotifications(true));
+
+            var notification = notifications.First();
+            Assert.Null(notification.StoreId);
 
             Assert.Single(await client.GetNotifications());
             Assert.Single(await client.GetNotifications(false));
             Assert.Empty(await client.GetNotifications(true));
-            var notification = (await client.GetNotifications()).First();
+            notification = (await client.GetNotifications()).First();
             notification = await client.GetNotification(notification.Id);
             Assert.False(notification.Seen);
             await AssertHttpError(403, async () =>
@@ -2939,6 +2941,23 @@ namespace BTCPayServer.Tests
             await client.RemoveNotification(notification.Id);
             Assert.Empty(await viewOnlyClient.GetNotifications(true));
             Assert.Empty(await viewOnlyClient.GetNotifications(false));
+            
+            // Store association
+            var unrestricted = await user.CreateClient(Policies.Unrestricted);
+            var store = await unrestricted.CreateStore(new CreateStoreRequest { Name = "test store" });
+            await tester.PayTester.GetService<NotificationSender>()
+                .SendNotification(new UserScope(user.UserId), new InviteAcceptedNotification{
+                    UserId = user.UserId,
+                    UserEmail = user.Email,
+                    StoreId = store.Id,
+                    StoreName = store.Name
+                });
+            notifications = (await client.GetNotifications()).ToList();
+            Assert.Single(notifications);
+
+            notification = notifications.First();
+            Assert.Equal(store.Id, notification.StoreId);
+            Assert.Equal($"User {user.Email} accepted the invite to {store.Name}.", notification.Body);
             
             // Settings
             var settings = await client.GetNotificationSettings();

@@ -54,7 +54,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 }
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
-                vm.StoreId = notification?.StoreId;
+                vm.StoreId = notification.StoreId;
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIInvoiceController.Invoice),
                     "UIInvoice",
                     new { invoiceId = notification.InvoiceId }, _options.RootPath);

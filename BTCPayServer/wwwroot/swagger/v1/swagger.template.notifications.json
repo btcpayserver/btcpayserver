@@ -313,6 +313,11 @@
                         "format": "html",
                         "description": "The html body of the notifications"
                     },
+                    "storeId": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "If related to a store, the store id of the notification"
+                    },
                     "link": {
                         "type": "string",
                         "format": "uri",

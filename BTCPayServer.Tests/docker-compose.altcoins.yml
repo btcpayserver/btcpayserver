@@ -229,7 +229,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.18.0-beta
+    image: btcpayserver/lnd:v0.18.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -264,7 +264,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.18.0-beta
+    image: btcpayserver/lnd:v0.18.1-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

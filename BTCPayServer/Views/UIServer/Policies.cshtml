@@ -235,7 +235,7 @@
                 {
                     var cryptoCode = linkProviders[lpi].Key;
                     var defaultLink = linkProviders[lpi].Value.BlockExplorerLinkDefault;
-				    var existingOverride = Model.BlockExplorerLinks?.SingleOrDefault(tuple => tuple.CryptoCode == cryptoCode);
+				    var existingOverride = Model.BlockExplorerLinks?.FirstOrDefault(tuple => tuple.CryptoCode == cryptoCode);
                     if (existingOverride is null)
                     {
 					    existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = cryptoCode, Link = null };

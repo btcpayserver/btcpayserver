@@ -2,12 +2,10 @@ using BTCPayServer.Data;
 
 namespace BTCPayServer.Events;
 
-public class StoreCreatedEvent(StoreData store)
+public class StoreCreatedEvent(StoreData store) : StoreEvent(store)
 {
-    public StoreData Store { get; } = store;
-
-    public override string ToString()
+    protected override string ToString()
     {
-        return $"Store \"{Store.StoreName}\" has been created";
+        return $"{base.ToString()} has been created";
     }
 }

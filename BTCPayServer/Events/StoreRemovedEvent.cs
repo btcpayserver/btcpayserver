@@ -1,11 +1,11 @@
+using BTCPayServer.Data;
+
 namespace BTCPayServer.Events;
 
-public class StoreRemovedEvent(string storeId)
+public class StoreRemovedEvent(StoreData store) : StoreEvent(store)
 {
-    public string StoreId { get; } = storeId;
-
-    public override string ToString()
+    protected override string ToString()
     {
-        return $"Store {StoreId} has been removed";
+        return $"{base.ToString()} has been removed";
     }
 }

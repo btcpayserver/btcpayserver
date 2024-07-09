@@ -3,26 +3,14 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
-using NBitcoin;
 using LightningPayment = BTCPayApp.CommonServer.Models.LightningPayment;
 
 namespace BTCPayApp.CommonServer;
 
-
-public class TransactionDetectedRequest
-{
-    public string Identifier { get; set; }
-    public string TxId { get; set; }
-    public string[] SpentScripts { get; set; }
-    public string[] ReceivedScripts { get; set; }
-    public bool Confirmed { get; set; }
-}
-
-
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
 {
-    Task NotifyServerEvent(IServerEvent ev);
+    Task NotifyServerEvent(ServerEvent ev);
     Task NotifyNetwork(string network);
     Task NotifyServerNode(string nodeInfo);
     Task TransactionDetected(TransactionDetectedRequest request);
@@ -34,6 +22,28 @@ public interface IBTCPayAppHubClient
     Task<List<LightningPayment>> GetLightningPayments(ListPaymentsParams request);
     Task<List<LightningPayment>> GetLightningInvoices(ListInvoicesParams request);
     Task<PayResponse> PayInvoice(string bolt11, long? amountMilliSatoshi);
+}
+
+//methods available on the hub in the server
+public interface IBTCPayAppHubServer
+{
+    Task<bool> IdentifierActive(string group, bool active);
+    
+    Task<Dictionary<string,string>> Pair(PairRequest request);
+    Task<AppHandshakeResponse> Handshake(AppHandshake request);
+    Task<bool> BroadcastTransaction(string tx);
+    Task<decimal> GetFeeRate(int blockTarget);
+    Task<BestBlockResponse> GetBestBlock();
+    Task<string> GetBlockHeader(string hash);
+    
+    Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds);
+    Task<string> DeriveScript(string identifier);
+    Task TrackScripts(string identifier, string[] scripts);
+    Task<string> UpdatePsbt(string[] identifiers, string psbt);
+    Task<CoinResponse[]> GetUTXOs(string[] identifiers);
+    Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
+
+    Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment);
 }
 
 public interface IServerEvent
@@ -63,27 +73,13 @@ public record TxResp(long Confirmations, long? Height, decimal BalanceChange, Da
     }
 }
 
-//methods available on the hub in the server
-public interface IBTCPayAppHubServer
+public class TransactionDetectedRequest
 {
-    Task<bool> IdentifierActive(string group, bool active);
-    
-    Task<Dictionary<string,string>> Pair(PairRequest request);
-    Task<AppHandshakeResponse> Handshake(AppHandshake request);
-    Task<bool> BroadcastTransaction(string tx);
-    Task<decimal> GetFeeRate(int blockTarget);
-    Task<BestBlockResponse> GetBestBlock();
-    Task<string> GetBlockHeader(string hash);
-    
-    Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds);
-    Task<string> DeriveScript(string identifier);
-    Task TrackScripts(string identifier, string[] scripts);
-    Task<string> UpdatePsbt(string[] identifiers, string psbt);
-    Task<CoinResponse[]> GetUTXOs(string[] identifiers);
-    Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
-
-
-    Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment);
+    public string Identifier { get; set; }
+    public string TxId { get; set; }
+    public string[] SpentScripts { get; set; }
+    public string[] ReceivedScripts { get; set; }
+    public bool Confirmed { get; set; }
 }
 
 public class CoinResponse
@@ -108,15 +104,12 @@ public class TransactionResponse
     public string? BlockHash { get; set; }
     public int? BlockHeight { get; set; }
     public string Transaction { get; set; }
-    
 }
-
 
 public class BestBlockResponse
 {
     public required string BlockHash { get; set; }
     public required int BlockHeight { get; set; }
-
     public string BlockHeader { get; set; }
 }
 

@@ -88,12 +88,12 @@ public class BTCPayAppState : IHostedService
 
     private async Task StoreCreatedEvent(StoreCreatedEvent arg)
     {
-        await _hubContext.Clients.Group(arg.Store.Id).NotifyServerEvent(new ServerEvent<StoreCreatedEvent>("store-created", arg));
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(new ServerEvent<StoreCreatedEvent>("store-created", arg));
     }
 
-    private async Task StoreUpdatedEvent(StoreUpdatedEvent arg)
+    private async Task  StoreUpdatedEvent(StoreUpdatedEvent arg)
     {
-        await _hubContext.Clients.Group(arg.Store.Id).NotifyServerEvent(new ServerEvent<StoreUpdatedEvent>("store-updated", arg));
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(new ServerEvent<StoreUpdatedEvent>("store-updated", arg));
     }
 
     private async Task StoreRemovedEvent(StoreRemovedEvent arg)
@@ -106,6 +106,7 @@ public class BTCPayAppState : IHostedService
         var ev = new ServerEvent<UserStoreAddedEvent>("user-store-added", arg);
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
         await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(ev);
+        //await _hubContext.Clients.User(arg.UserId) .AddToGroupAsync(Context.ConnectionId, arg.StoreId);
     }
 
     private async Task StoreUserUpdatedEvent(UserStoreUpdatedEvent arg)
@@ -120,6 +121,7 @@ public class BTCPayAppState : IHostedService
         var ev = new ServerEvent<UserStoreRemovedEvent>("user-store-removed", arg);
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
         await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(ev);
+        // await Groups.RemoveFromGroupAsync(Context.ConnectionId, arg.UserId);
     }
 
     private string _nodeInfo = string.Empty;
@@ -145,14 +147,11 @@ public class BTCPayAppState : IHostedService
                         _nodeInfo = newInf.ToString();
                         await _hubContext.Clients.All.NotifyServerNode(_nodeInfo);
                     }
-
                 }
-                
             }
             catch (Exception e)
             {
                 _logger.LogError(e, "Error during node info update");
-               
             }
             await Task.Delay(TimeSpan.FromMinutes(string.IsNullOrEmpty(_nodeInfo)? 1:5), _cts.Token);
         }
@@ -167,10 +166,9 @@ public class BTCPayAppState : IHostedService
         var explorer = _explorerClientProvider.GetExplorerClient(obj.CryptoCode);
         var expandedTx = await explorer.GetTransactionAsync(obj.NewTransactionEvent.TrackedSource,
             obj.NewTransactionEvent.TransactionData.TransactionHash);
-
         await _hubContext.Clients
             .Group(identifier)
-            .TransactionDetected(new TransactionDetectedRequest()
+            .TransactionDetected(new TransactionDetectedRequest
             {
                 SpentScripts = expandedTx.Inputs.Select(input => input.ScriptPubKey.ToHex()).ToArray(),
                 ReceivedScripts = expandedTx.Outputs.Select(output => output.ScriptPubKey.ToHex()).ToArray(),
@@ -258,7 +256,7 @@ public class BTCPayAppState : IHostedService
             }
             return false;
         }
-        else if (GroupToConnectionId.TryGetValue(group, out var connId) && connId == contextConnectionId)
+        if (GroupToConnectionId.TryGetValue(group, out var connId) && connId == contextConnectionId)
         {
             return GroupToConnectionId.TryRemove(group, out _);
         }
@@ -281,7 +279,7 @@ public class BTCPayAppState : IHostedService
     
     public async Task Connected(string contextConnectionId)
     {
-        if(_nodeInfo.Length > 0)
+        if (_nodeInfo.Length > 0)
             await _hubContext.Clients.Client(contextConnectionId).NotifyServerNode(_nodeInfo);
     }
 
@@ -290,6 +288,4 @@ public class BTCPayAppState : IHostedService
         _logger.LogInformation($"Payment update for {identifier} {lightningPayment.Value} {lightningPayment.PaymentHash}");
         OnPaymentUpdate?.Invoke(this, (identifier, lightningPayment));
     }
-    
-    
 }

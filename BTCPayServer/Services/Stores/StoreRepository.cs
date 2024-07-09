@@ -347,14 +347,14 @@ namespace BTCPayServer.Services.Stores
         public async Task CleanUnreachableStores()
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var events = new List<Events.StoreRemovedEvent>();
+            var events = new List<StoreRemovedEvent>();
             foreach (var store in await ctx.Stores.Include(data => data.UserStores)
                          .ThenInclude(store => store.StoreRole).Where(s =>
                              s.UserStores.All(u => !u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)))
                          .ToArrayAsync())
             {
                 ctx.Stores.Remove(store);
-                events.Add(new Events.StoreRemovedEvent(store.Id));
+                events.Add(new StoreRemovedEvent(store));
             }
             await ctx.SaveChangesAsync();
             events.ForEach(e => _eventAggregator.Publish(e));
@@ -385,7 +385,7 @@ namespace BTCPayServer.Services.Stores
                 {
                     ctx.Stores.Remove(store);
                     await ctx.SaveChangesAsync();
-                    _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
+                    _eventAggregator.Publish(new StoreRemovedEvent(store));
                 }
             }
         }
@@ -583,7 +583,7 @@ retry:
             try
             {
                 await ctx.SaveChangesAsync();
-                _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
+                _eventAggregator.Publish(new StoreRemovedEvent(store));
             }
             catch (DbUpdateException ex) when (IsDeadlock(ex) && retry < 5)
             {

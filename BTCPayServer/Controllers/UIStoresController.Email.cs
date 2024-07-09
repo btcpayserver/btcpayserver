@@ -195,10 +195,11 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            ViewBag.UseCustomSMTP = useCustomSMTP;
             model.FallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
                 ? await storeSender.FallbackSender.GetEmailSettings()
                 : null;
+            if (model.FallbackSettings is null) useCustomSMTP = true;
+            ViewBag.UseCustomSMTP = useCustomSMTP;
             if (useCustomSMTP)
             {
                 model.Settings.Validate("Settings.", ModelState);

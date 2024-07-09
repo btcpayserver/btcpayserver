@@ -214,7 +214,7 @@ namespace BTCPayServer.Controllers
             {
                 InvoiceId = i.Id,
                 OrderId = i.Metadata?.OrderId,
-                OrderUrl = i.Metadata?.OrderUrl,
+                RedirectUrl = i.RedirectURL?.AbsoluteUri ?? i.Metadata?.OrderUrl,
                 Status = i.Status,
                 Currency = i.Currency,
                 Timestamp = i.InvoiceTime,
@@ -250,10 +250,12 @@ namespace BTCPayServer.Controllers
                         receiptData.Remove(key);
                     }
                 }
-                // assign the rest to additional data
+                // assign the rest to additional data and remove empty values 
                 if (receiptData.Any())
                 {
-                    vm.AdditionalData = receiptData;
+                    vm.AdditionalData = receiptData
+                        .Where(x => !string.IsNullOrEmpty(x.Value.ToString()))
+                        .ToDictionary(x => x.Key, x => x.Value);
                 }
             }
 

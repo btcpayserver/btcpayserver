@@ -237,5 +237,6 @@ Your dynamic DNS hostname
         /// We only save into database the key/values that differ from Default
         /// </summary>
         public static Translations Default;
+        public readonly static string DefaultLanguage = "English";
     }
 }

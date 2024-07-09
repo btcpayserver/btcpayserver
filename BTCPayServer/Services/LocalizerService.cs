@@ -29,7 +29,7 @@ namespace BTCPayServer.Services
             _logger = logger;
             _ContextFactory = contextFactory;
             _settingsAccessor = settingsAccessor;
-            _LoadedTranslations = new LoadedTranslations(Translations.Default, Translations.Default, "English");
+            _LoadedTranslations = new LoadedTranslations(Translations.Default, Translations.Default, Translations.DefaultLanguage);
         }
 
         public record LoadedTranslations(Translations Translations, Translations Fallback, string LangName);

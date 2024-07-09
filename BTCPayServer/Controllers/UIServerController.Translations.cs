@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Controllers
 {
@@ -33,27 +34,31 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("server/dictionaries/create")]
-        public IActionResult CreateDictionary(string fallback)
+        public async Task<IActionResult> CreateDictionary(string fallback = null)
         {
+            var dictionaries = await this._localizer.GetDictionaries();
             return View(new CreateDictionaryViewModel()
             {
-                Name = $"{fallback} (Copy)",
-                Fallback = fallback
-            });
+                Name = fallback is not null ? $"{fallback} (Copy)" : "",
+                Fallback = fallback ?? Translations.DefaultLanguage,
+            }.SetDictionaries(dictionaries));
         }
         [HttpPost("server/dictionaries/create")]
         public async Task<IActionResult> CreateDictionary(CreateDictionaryViewModel viewModel)
         {
-            try
+            if (ModelState.IsValid)
             {
-                await this._localizer.CreateDictionary(viewModel.Name, viewModel.Fallback, "Custom");
-            }
-            catch (DbException)
-            {
-                ModelState.AddModelError(nameof(viewModel.Name), $"'{viewModel.Name}' already exists");
+                try
+                {
+                    await this._localizer.CreateDictionary(viewModel.Name, viewModel.Fallback, "Custom");
+                }
+                catch (DbException)
+                {
+                    ModelState.AddModelError(nameof(viewModel.Name), $"'{viewModel.Name}' already exists");
+                }
             }
             if (!ModelState.IsValid)
-                return View(viewModel);
+                return View(viewModel.SetDictionaries(await this._localizer.GetDictionaries()));
             TempData[WellKnownTempData.SuccessMessage] = "Dictionary created";
             return RedirectToAction(nameof(EditDictionary), new { dictionary = viewModel.Name });
         }

@@ -101,8 +101,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     private readonly ILogger<BTCPayAppHub> _logger;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly StoreRepository _storeRepository;
-    private readonly EventAggregator _eventAggregator;
-    private CompositeDisposable? _compositeDisposable;
 
     public BTCPayAppHub(BTCPayNetworkProvider btcPayNetworkProvider,
         NBXplorerDashboard nbXplorerDashboard,
@@ -111,7 +109,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         IFeeProviderFactory feeProviderFactory,
         ILogger<BTCPayAppHub> logger,
         StoreRepository storeRepository,
-        EventAggregator eventAggregator,
         UserManager<ApplicationUser> userManager) 
     {
         _btcPayNetworkProvider = btcPayNetworkProvider;
@@ -122,7 +119,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         _logger = logger;
         _userManager = userManager;
         _storeRepository = storeRepository;
-        _eventAggregator = eventAggregator;
     }
 
     public override async Task OnConnectedAsync()
@@ -144,29 +140,12 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         {
             await Groups.AddToGroupAsync(Context.ConnectionId, userStore.Id);
         }
-        
-        _compositeDisposable = new CompositeDisposable();
-        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreAddedEvent>(StoreUserAddedEvent));
-        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreRemovedEvent>(StoreUserRemovedEvent));
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
-        _compositeDisposable?.Dispose();
         await _appState.Disconnected(Context.ConnectionId);
         await base.OnDisconnectedAsync(exception);
-    }
-    
-    private async Task StoreUserAddedEvent(UserStoreAddedEvent arg)
-    {
-        // TODO: Groups and COntext are not accessible here
-        // await Groups.AddToGroupAsync(Context.ConnectionId, arg.StoreId);
-    }
-
-    private async Task StoreUserRemovedEvent(UserStoreRemovedEvent arg)
-    {
-        // TODO: Groups and COntext are not accessible here
-        // await Groups.RemoveFromGroupAsync(Context.ConnectionId, arg.UserId);
     }
 
     public async Task<bool> BroadcastTransaction(string tx)
@@ -198,8 +177,8 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
         var bcInfo = await explorerClient.RPCClient.GetBlockchainInfoAsyncEx();
         var bh = await GetBlockHeader(bcInfo.BestBlockHash.ToString());
-        _logger.LogInformation($"Getting best block done");
-        return new BestBlockResponse()
+        _logger.LogInformation("Getting best block done");
+        return new BestBlockResponse
         {
             BlockHash = bcInfo.BestBlockHash.ToString(),
             BlockHeight = bcInfo.Blocks,
@@ -209,7 +188,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public async Task<string> GetBlockHeader(string hash)
     {
-        
         var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
         var bh = await explorerClient.RPCClient.GetBlockHeaderAsync(uint256.Parse(hash));
         return Convert.ToHexString(bh.ToBytes()).ToLower();
@@ -217,28 +195,24 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public async Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds)
     { 
-        
         var cancellationToken = Context.ConnectionAborted;
         var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
         var uints = txIds.Select(uint256.Parse).ToArray();
-        var txsFetch = await Task.WhenAll(uints.Select(
-            uint256 =>
-                explorerClient.GetTransactionAsync(uint256, cancellationToken)));
+        var txsFetch = await Task.WhenAll(uints.Select(uint256 =>
+            explorerClient.GetTransactionAsync(uint256, cancellationToken)));
 
         var batch = explorerClient.RPCClient.PrepareBatch();
         var headersTask = txsFetch.Where(result => result.BlockId is not null && result.BlockId != uint256.Zero)
             .Distinct().ToDictionary(result => result.BlockId, result =>
                 batch.GetBlockHeaderAsync(result.BlockId, cancellationToken));
         await batch.SendBatchAsync(cancellationToken);
-
-        
         
         var headerToHeight = (await Task.WhenAll(headersTask.Values)).ToDictionary(header => header.GetHash(),
             header => txsFetch.First(result => result.BlockId == header.GetHash()).Height!);
         
-        return new TxInfoResponse()
+        return new TxInfoResponse
         {
-            Txs = txsFetch.ToDictionary(tx => tx.TransactionHash.ToString(), tx => new TransactionResponse()
+            Txs = txsFetch.ToDictionary(tx => tx.TransactionHash.ToString(), tx => new TransactionResponse
             {
                 BlockHash = tx.BlockId?.ToString(),
                 BlockHeight = (int?) tx.Height,
@@ -248,6 +222,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
             BlockHeghts = headerToHeight.ToDictionary(kv => kv.Key.ToString(), kv =>(int) kv.Value!)
         };
     }
+
     public async Task<string> DeriveScript(string identifier)
     {
         var cancellationToken = Context.ConnectionAborted;
@@ -271,8 +246,8 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public async Task<string> UpdatePsbt(string[] identifiers, string psbt)
     {
-        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC);
-var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
+        var explorerClient =  _explorerClientProvider.GetExplorerClient( _btcPayNetworkProvider.BTC); 
+        var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
         foreach (string identifier in identifiers)
         {
             var ts = TrackedSource.Parse(identifier,explorerClient.Network);
@@ -353,7 +328,6 @@ var resultPsbt = PSBT.Parse(psbt, explorerClient.Network.NBitcoinNetwork);
     
     public async Task<AppHandshakeResponse> Handshake(AppHandshake request)
     {
-        
         return await _appState.Handshake(Context.ConnectionId, request);
     }
 }

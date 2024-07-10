@@ -78,12 +78,12 @@
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
                         var categories = new JArray(item.Categories ?? new object[] { });
                         <div class="col posItem posItem--displayed" :class="{ 'posItem--inStock': inStock(@index) }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)'>
-                            <div class="card h-100 px-0" v-on:click="addToCart(@index, 1)">
+                            <div class="tile card" v-on:click="addToCart(@index, 1)">
                                 @if (!string.IsNullOrWhiteSpace(item.Image))
                                 {
                                     <img class="card-img-top" src="@item.Image" alt="@item.Title" asp-append-version="true">
                                 }
-                                <div class="card-body p-3 d-flex flex-column gap-2 mb-auto">
+                                <div class="card-body d-flex flex-column gap-2 mb-auto">
                                     <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                                     <div class="d-flex gap-2 align-items-center">
                                         @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
@@ -108,7 +108,7 @@
                                 </div>
                                 @if (inStock)
                                 {
-                                    <form class="card-footer bg-transparent border-0 pt-0 pb-3">
+                                    <form class="card-footer">
                                         @if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed)
                                         {
                                             <div class="input-group mb-2">

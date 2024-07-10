@@ -732,6 +732,8 @@ input:checked + label.btcpay-list-select-item {
     .tile {
         --tile-padding: 1rem;
         --tile-border-radius: none;
+        margin-left: calc(var(--wrap-padding-horizontal) * -1);
+        margin-right: calc(var(--wrap-padding-horizontal) * -1);
     }
 }
 

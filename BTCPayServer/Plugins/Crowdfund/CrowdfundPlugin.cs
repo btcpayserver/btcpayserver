@@ -76,14 +76,14 @@ namespace BTCPayServer.Plugins.Crowdfund
                 "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
         }
 
-        public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<AppSalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var cfS = app.GetSettings<CrowdfundSettings>();
             var items = AppService.Parse(cfS.PerksTemplate);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
-        public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
+        public Task<IEnumerable<AppItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             var perks = AppService.Parse(settings.PerksTemplate);
@@ -97,7 +97,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                     var total = entities.Sum(entity => entity.PaidAmount.Net);
                     var itemCode = entities.Key;
                     var perk = perks.FirstOrDefault(p => p.Id == itemCode);
-                    return new ItemStats
+                    return new AppItemStats
                     {
                         ItemCode = itemCode,
                         Title = perk?.Title ?? itemCode,
@@ -108,7 +108,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 })
                 .OrderByDescending(stats => stats.SalesCount);
 
-            return Task.FromResult<IEnumerable<ItemStats>>(perkCount);
+            return Task.FromResult<IEnumerable<AppItemStats>>(perkCount);
         }
 
         public override async Task<object?> GetInfo(AppData appData)

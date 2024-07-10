@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
@@ -75,14 +76,14 @@ namespace BTCPayServer.Plugins.PointOfSale
             return Task.FromResult<object?>(null);
         }
 
-        public Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
+        public Task<AppSalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var posS = app.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(posS.Template);
             return AppService.GetSalesStatswithPOSItems(items, paidInvoices, numberOfDays);
         }
 
-        public Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
+        public Task<IEnumerable<AppItemStats>> GetItemStats(AppData appData, InvoiceEntity[] paidInvoices)
         {
             var settings = appData.GetSettings<PointOfSaleSettings>();
             var items = AppService.Parse(settings.Template);
@@ -100,7 +101,7 @@ namespace BTCPayServer.Plugins.PointOfSale
                     var total = entities.Sum(entity => entity.FiatPrice);
                     var itemCode = entities.Key;
                     var item = items.FirstOrDefault(p => p.Id == itemCode);
-                    return new ItemStats
+                    return new AppItemStats
                     {
                         ItemCode = itemCode,
                         Title = item?.Title ?? itemCode,
@@ -111,7 +112,7 @@ namespace BTCPayServer.Plugins.PointOfSale
                 })
                 .OrderByDescending(stats => stats.SalesCount);
 
-            return Task.FromResult<IEnumerable<ItemStats>>(itemCount);
+            return Task.FromResult<IEnumerable<AppItemStats>>(itemCount);
         }
 
         public override Task SetDefaultSettings(AppData appData, string defaultCurrency)

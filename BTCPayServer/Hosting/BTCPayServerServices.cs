@@ -291,6 +291,7 @@ namespace BTCPayServer.Hosting
                 });
             services.TryAddSingleton<BTCPayNetworkProvider>();
 
+            services.AddExceptionHandler<PluginExceptionHandler>();
             services.TryAddSingleton<AppService>();
             services.AddTransient<PluginService>();
             services.AddSingleton<PluginHookService>();

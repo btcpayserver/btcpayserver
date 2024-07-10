@@ -293,6 +293,7 @@ namespace BTCPayServer.Hosting
 
             app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
+            app.UseExceptionHandler("/errors/{0}");
             app.UsePayServer();
             app.UseRouting();
             app.UseCors();

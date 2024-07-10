@@ -243,6 +243,55 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanCreateReadAndDeleteFiles()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.MakeAdmin();
+            var client = await user.CreateClient();
+
+            // List
+            Assert.Empty(await client.GetFiles());
+
+            // Upload
+            var filePath = TestUtils.GetTestDataFullPath("OldInvoices.csv");
+            var upload = await client.UploadFile(filePath, "text/csv");
+            Assert.Equal("OldInvoices.csv", upload.OriginalName);
+            Assert.NotNull(upload.Uri);
+            Assert.NotNull(upload.Url);
+
+            // Re-check list
+            Assert.Single(await client.GetFiles());
+
+            // Single file endpoint
+            var singleFile = await client.GetFile(upload.Id);
+            Assert.Equal("OldInvoices.csv", singleFile.OriginalName);
+            Assert.NotNull(singleFile.Uri);
+            Assert.NotNull(singleFile.Url);
+
+            // Delete
+            await client.DeleteFile(upload.Id);
+            Assert.Empty(await client.GetFiles());
+            
+            // Profile image
+            await AssertValidationError(["file"],
+                async () => await client.UploadCurrentUserProfilePicture(filePath, "text/csv")
+            );
+            
+            var profilePath = TestUtils.GetTestDataFullPath("logo.png");
+            await client.UploadCurrentUserProfilePicture(profilePath, "image/png");
+            var files = await client.GetFiles();
+            Assert.Single(files);
+            Assert.Equal("logo.png", files[0].OriginalName);
+            
+            await client.DeleteCurrentUserProfilePicture();
+            Assert.Empty(await client.GetFiles());
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanCreateReadUpdateAndDeletePointOfSaleApp()
         {
             using var tester = CreateServerTester();

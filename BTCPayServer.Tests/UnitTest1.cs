@@ -161,10 +161,14 @@ namespace BTCPayServer.Tests
             {
                 errors.Remove(validationError);
             }
-            valid = !errors.Any();
-
+            if (errors.Any())
+            {
+                foreach (ValidationError error in errors)
+                {
+                    TestLogs.LogInformation($"Error Type: {error.ErrorType} - {error.Path}: {error.Message} - Value: {error.Value}");
+                } 
+            }
             Assert.Empty(errors);
-            Assert.True(valid);
         }
 
         [Fact]

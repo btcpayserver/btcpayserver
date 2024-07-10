@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
@@ -19,6 +20,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 using NBitcoin;
@@ -880,6 +882,17 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<ApplicationUserData>(await GetController<GreenfieldUsersController>().UpdateCurrentUser(request, token));
         }
 
+        public override async Task<ApplicationUserData> UploadCurrentUserProfilePicture(string filePath, string mimeType, CancellationToken token = default)
+        {
+            var file = GetFormFile(filePath, mimeType);
+            return GetFromActionResult<ApplicationUserData>(await GetController<GreenfieldUsersController>().UploadCurrentUserProfilePicture(file, token));
+        }
+
+        public override async Task DeleteCurrentUserProfilePicture(CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldUsersController>().DeleteCurrentUserProfilePicture());
+        }
+
         public override async Task DeleteCurrentUser(CancellationToken token = default)
         {
             HandleActionResult(await GetController<GreenfieldUsersController>().DeleteCurrentUser());
@@ -1250,6 +1263,38 @@ namespace BTCPayServer.Controllers.Greenfield
         public override async Task<List<RoleData>> GetStoreRoles(string storeId, CancellationToken token = default)
         {
             return GetFromActionResult<List<RoleData>>(await GetController<GreenfieldStoreRolesController>().GetStoreRoles(storeId));
+        }
+
+        public override async Task<FileData[]> GetFiles(CancellationToken token = default)
+        {
+            return GetFromActionResult<FileData[]>(await GetController<GreenfieldFilesController>().GetFiles());
+        }
+
+        public override async Task<FileData> GetFile(string fileId, CancellationToken token = default)
+        {
+            return GetFromActionResult<FileData>(await GetController<GreenfieldFilesController>().GetFile(fileId));
+        }
+
+        public override async Task<FileData> UploadFile(string filePath, string mimeType, CancellationToken token = default)
+        {
+            var file = GetFormFile(filePath, mimeType);
+            return GetFromActionResult<FileData>(await GetController<GreenfieldFilesController>().UploadFile(file));
+        }
+
+        public override async Task DeleteFile(string fileId, CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldFilesController>().DeleteFile(fileId));
+        }
+
+        private IFormFile GetFormFile(string filePath, string mimeType)
+        {
+            var fileName = Path.GetFileName(filePath);
+            var fs = File.OpenRead(filePath);
+            return new FormFile(fs, 0, fs.Length, fileName, fileName)
+            {
+                Headers = new HeaderDictionary(),
+                ContentType = mimeType
+            };
         }
     }
 }

@@ -345,6 +345,130 @@
                 ]
             }
         },
+        "/api/v1/apps/{appId}/sales": {
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAppSales",
+                "summary": "Get app sales statistics",
+                "description": "Returns sales statistics for the app",
+                "parameters": [
+                    {
+                        "name": "appId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The app ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "numberOfDays",
+                        "in": "query",
+                        "required": false,
+                        "description": "How many of the last days",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number",
+                            "default": 7
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "App sales statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/AppSalesStats"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/{appId}/top-items": {
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAppTopItems",
+                "summary": "Get app top items statistics",
+                "description": "Returns top items statistics for the app",
+                "parameters": [
+                    {
+                        "name": "appId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The app ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "required": false,
+                        "description": "How many of the items",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number",
+                            "default": 5
+                        }
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "description": "Offset for paging",
+                        "schema": {
+                            "nullable": true,
+                            "type": "number",
+                            "default": 0
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "App top items statistics",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppItemStats"
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "App with specified ID was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/apps": {
             "parameters": [
                 {
@@ -887,6 +1011,69 @@
                         }
                     }
                 ]
+            },
+            "AppSalesStats": {
+                "type": "object",
+                "properties": {
+                    "salesCount": {
+                        "type": "integer",
+                        "example": 615,
+                        "description": "Total sales in that period"
+                    },
+                    "series": {
+                        "type": "array",
+                        "items": {
+                            "$ref": "#/components/schemas/AppSalesStatsItem"
+                        }
+                    }
+                }
+            },
+            "AppSalesStatsItem": {
+                "type": "object",
+                "properties": {
+                    "date": {
+                        "type": "integer",
+                        "description": "UNIX timestamp of the beginning of that day"
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "Short date as label",
+                        "example": "Jul 21"
+                    },
+                    "salesCount": {
+                        "type": "integer",
+                        "example": 21,
+                        "description": "Total sales on that day"
+                    }
+                }
+            },
+            "AppItemStats": {
+                "type": "object",
+                "properties": {
+                    "itemCode": {
+                        "type": "string",
+                        "description": "Item ID"
+                    },
+                    "title": {
+                        "type": "string",
+                        "description": "Item Name"
+                    },
+                    "salesCount": {
+                        "type": "integer",
+                        "example": 21,
+                        "description": "Total sales of that item"
+                    },
+                    "total": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The total amount of sales of that item"
+                    },
+                    "totalFormatted": {
+                        "type": "string",
+                        "description": "The formatted total amount of sales of that item",
+                        "example": "615.21 USD"
+                    }
+                }
             }
         }
     },

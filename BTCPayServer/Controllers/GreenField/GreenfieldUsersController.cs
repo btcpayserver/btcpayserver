@@ -231,7 +231,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanModifyProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/users/me/picture")]
-        public async Task<IActionResult> UploadCurrentUserProfilePicture(IFormFile? file, CancellationToken cancellationToken = default)
+        public async Task<IActionResult> UploadCurrentUserProfilePicture(IFormFile? file)
         {
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");

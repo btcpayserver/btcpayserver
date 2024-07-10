@@ -37,4 +37,13 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<StoreData>($"api/v1/stores/{storeId}", request, HttpMethod.Put, token);
     }
 
+    public virtual async Task<StoreData> UploadStoreLogo(string storeId, string filePath, string mimeType, CancellationToken token = default)
+    {
+        return await UploadFileRequest<StoreData>($"api/v1/stores/{storeId}/logo", filePath, mimeType, "file", HttpMethod.Post, token);
+    }
+
+    public virtual async Task DeleteStoreLogo(string storeId, CancellationToken token = default)
+    {
+        await SendHttpRequest($"api/v1/stores/{storeId}/logo", null, HttpMethod.Delete, token);
+    }
 }

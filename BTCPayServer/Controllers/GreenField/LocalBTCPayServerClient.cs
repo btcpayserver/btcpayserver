@@ -774,9 +774,9 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult(await GetController<GreenfieldStoresController>().GetStores());
         }
 
-        public override Task<StoreData> GetStore(string storeId, CancellationToken token = default)
+        public override async Task<StoreData> GetStore(string storeId, CancellationToken token = default)
         {
-            return Task.FromResult(GetFromActionResult<StoreData>(GetController<GreenfieldStoresController>().GetStore(storeId)));
+            return GetFromActionResult<StoreData>(await GetController<GreenfieldStoresController>().GetStore(storeId));
         }
 
         public override async Task RemoveStore(string storeId, CancellationToken token = default)
@@ -793,6 +793,17 @@ namespace BTCPayServer.Controllers.Greenfield
             CancellationToken token = default)
         {
             return GetFromActionResult<StoreData>(await GetController<GreenfieldStoresController>().UpdateStore(storeId, request));
+        }
+
+        public override async Task<StoreData> UploadStoreLogo(string storeId, string filePath, string mimeType, CancellationToken token = default)
+        {
+            var file = GetFormFile(filePath, mimeType);
+            return GetFromActionResult<StoreData>(await GetController<GreenfieldStoresController>().UploadStoreLogo(storeId, file));
+        }
+
+        public override async Task DeleteStoreLogo(string storeId, CancellationToken token = default)
+        {
+            HandleActionResult(await GetController<GreenfieldStoresController>().DeleteStoreLogo(storeId));
         }
 
         public override async Task<IEnumerable<InvoiceData>> GetInvoices(string storeId, string[] orderId = null,
@@ -885,7 +896,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public override async Task<ApplicationUserData> UploadCurrentUserProfilePicture(string filePath, string mimeType, CancellationToken token = default)
         {
             var file = GetFormFile(filePath, mimeType);
-            return GetFromActionResult<ApplicationUserData>(await GetController<GreenfieldUsersController>().UploadCurrentUserProfilePicture(file, token));
+            return GetFromActionResult<ApplicationUserData>(await GetController<GreenfieldUsersController>().UploadCurrentUserProfilePicture(file));
         }
 
         public override async Task DeleteCurrentUserProfilePicture(CancellationToken token = default)

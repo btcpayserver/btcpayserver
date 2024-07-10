@@ -806,7 +806,7 @@ retry:
             {
                 "new" => "New",
                 "paid" or "processing" => "Processing",
-                "complete" or "confirmed" => "Settled",
+                "complete" or "confirmed" or "settled" => "Settled",
                 "expired" => "Expired",
                 "invalid" => "Invalid",
                 _ => null

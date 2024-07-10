@@ -282,8 +282,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var blob = user.GetBlob() ?? new UserBlob();
             if (!string.IsNullOrEmpty(blob.ImageUrl))
             {
-                var uri = UnresolvedUri.Create(blob.ImageUrl);
-                var fileId = uri.GetFileId();
+                var fileId = (UnresolvedUri.Create(blob.ImageUrl) as UnresolvedUri.FileIdUri)?.FileId;
                 if (!string.IsNullOrEmpty(fileId)) await _fileService.RemoveFile(fileId, user.Id);
                 blob.ImageUrl = null;
                 user.SetBlob(blob);

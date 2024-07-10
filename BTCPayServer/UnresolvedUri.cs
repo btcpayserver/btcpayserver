@@ -3,10 +3,8 @@ using System;
 
 namespace BTCPayServer
 {
-    public record UnresolvedUri(string? FileId)
+    public record UnresolvedUri
     {
-        public string? GetFileId() => string.IsNullOrEmpty(FileId) ? null : FileId;
-
         public static UnresolvedUri Create(string str)
         {
             ArgumentNullException.ThrowIfNull(str);
@@ -16,11 +14,11 @@ namespace BTCPayServer
             }
             return new Raw(str);
         }
-        public record FileIdUri(string FileId) : UnresolvedUri(FileId)
+        public record FileIdUri(string FileId) : UnresolvedUri
         {
             public override string ToString() => $"fileid:{FileId}";
         }
-        public record Raw(string Uri) : UnresolvedUri(string.Empty)
+        public record Raw(string Uri) : UnresolvedUri
         {
             public override string ToString() => Uri;
         }

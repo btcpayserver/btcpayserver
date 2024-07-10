@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,71 +37,58 @@ namespace BTCPayServer.Controllers.Greenfield
             _notificationHandlers = notificationHandlers;
         }
 
-        [Authorize(Policy = Policies.CanViewNotificationsForUser,
-            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewNotificationsForUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/me/notifications")]
-        public async Task<IActionResult> GetNotifications(bool? seen = null, [FromQuery] int? skip = null, [FromQuery] int? take = null)
+        public async Task<IActionResult> GetNotifications(bool? seen = null, [FromQuery] int? skip = null, [FromQuery] int? take = null, [FromQuery] string[]? storeId = null)
         {
-            var items = await _notificationManager.GetNotifications(new NotificationsQuery()
+            var items = await _notificationManager.GetNotifications(new NotificationsQuery
             {
                 Seen = seen,
                 UserId = _userManager.GetUserId(User),
                 Skip = skip,
-                Take = take
+                Take = take,
+                StoreIds = storeId,
             });
 
             return Ok(items.Items.Select(ToModel));
         }
 
-        [Authorize(Policy = Policies.CanViewNotificationsForUser,
-            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewNotificationsForUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/me/notifications/{id}")]
         public async Task<IActionResult> GetNotification(string id)
         {
-            var items = await _notificationManager.GetNotifications(new NotificationsQuery()
+            var items = await _notificationManager.GetNotifications(new NotificationsQuery
             {
-                Ids = new[] { id },
+                Ids = [id],
                 UserId = _userManager.GetUserId(User)
             });
 
-            if (items.Count == 0)
-            {
-                return NotificationNotFound();
-            }
-
-            return Ok(ToModel(items.Items.First()));
+            return items.Count == 0 ? NotificationNotFound() : Ok(ToModel(items.Items.First()));
         }
 
-        [Authorize(Policy = Policies.CanManageNotificationsForUser,
-            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManageNotificationsForUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/users/me/notifications/{id}")]
         public async Task<IActionResult> UpdateNotification(string id, UpdateNotification request)
         {
             var items = await _notificationManager.ToggleSeen(
-                new NotificationsQuery() { Ids = new[] { id }, UserId = _userManager.GetUserId(User) }, request.Seen);
+                new NotificationsQuery { Ids = [id], UserId = _userManager.GetUserId(User) }, request.Seen);
 
-            if (items.Count == 0)
-            {
-                return NotificationNotFound();
-            }
-
-            return Ok(ToModel(items.First()));
+            return items.Count == 0 ? NotificationNotFound() : Ok(ToModel(items.First()));
         }
 
-        [Authorize(Policy = Policies.CanManageNotificationsForUser,
-            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanManageNotificationsForUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpDelete("~/api/v1/users/me/notifications/{id}")]
         public async Task<IActionResult> DeleteNotification(string id)
         {
-            await _notificationManager.Remove(new NotificationsQuery()
+            await _notificationManager.Remove(new NotificationsQuery
             {
-                Ids = new[] { id },
+                Ids = [id],
                 UserId = _userManager.GetUserId(User)
             });
 
             return Ok();
         }
-        
+
         [Authorize(Policy = Policies.CanManageNotificationsForUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/users/me/notification-settings")]
         public async Task<IActionResult> GetNotificationSettings()
@@ -132,7 +120,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(model);
         }
 
-        private NotificationData ToModel(NotificationViewModel entity)
+        private static NotificationData ToModel(NotificationViewModel entity)
         {
             return new NotificationData
             {
@@ -141,10 +129,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 Type = entity.Type,
                 CreatedTime = entity.Created,
                 Body = entity.Body,
+                StoreId = entity.StoreId,
                 Seen = entity.Seen,
                 Link = string.IsNullOrEmpty(entity.ActionLink) ? null : new Uri(entity.ActionLink)
             };
         }
+
         private IActionResult NotificationNotFound()
         {
             return this.CreateAPIError(404, "notification-not-found", "The notification was not found");

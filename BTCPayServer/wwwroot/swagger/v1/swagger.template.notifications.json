@@ -36,6 +36,19 @@
                             "nullable": true,
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "storeId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of store ids to fetch the notifications for",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": "&storeId=ABCDE&storeId=FGHIJ"
                     }
                 ],
                 "description": "View current user's notifications",
@@ -312,6 +325,11 @@
                         "type": "string",
                         "format": "html",
                         "description": "The html body of the notifications"
+                    },
+                    "storeId": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "If related to a store, the store id of the notification"
                     },
                     "link": {
                         "type": "string",

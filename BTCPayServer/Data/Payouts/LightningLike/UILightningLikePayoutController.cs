@@ -244,13 +244,15 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
             if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
             {
+                
+                payoutData.State = PayoutState.Cancelled;
                 return (null, new ResultVM
                 {
                     PayoutId = payoutData.Id,
                     Result = PayResult.Error,
                     Destination = blob.Destination,
                     Message =
-                        $"The LNURL provided would not generate an invoice of {lm.MilliSatoshi}msats"
+                        $"The LNURL provided would not generate an invoice of {lm.ToDecimal(LightMoneyUnit.Satoshi)} sats"
                 });
             }
 

@@ -73,7 +73,11 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                     using var t = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken);
-                    var info = (LNURLPayRequest)(await LNURL.LNURL.FetchInformation(lnurl, CreateClient(lnurl), t.Token));
+                    var rawInfo = await LNURL.LNURL.FetchInformation(lnurl, CreateClient(lnurl), t.Token);
+                    if(rawInfo is null)
+                        return (null, "The LNURL / Lightning Address provided was not online.");
+                    if(rawInfo is not LNURLPayRequest info)
+                        return (null, "The LNURL was not a valid LNURL Pay request.");
                     lnurlTag = info.Tag;
                 }
 
@@ -143,9 +147,27 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return Task.CompletedTask;
         }
 
-        public Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethodId, IClaimDestination claimDestination)
+        public async Task<decimal> GetMinimumPayoutAmount(PaymentMethodId paymentMethod, IClaimDestination claimDestination)
         {
-            return Task.FromResult(Money.Satoshis(1).ToDecimal(MoneyUnit.BTC));
+            if(claimDestination is LNURLPayClaimDestinaton lnurlPayClaimDestinaton)
+            {
+                try
+                {
+                    var lnurl = lnurlPayClaimDestinaton.LNURL.IsValidEmail()
+                        ? LNURL.LNURL.ExtractUriFromInternetIdentifier(lnurlPayClaimDestinaton.LNURL)
+                        : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out var lnurlTag);
+
+                    using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
+                    var rawInfo = await LNURL.LNURL.FetchInformation(lnurl, CreateClient(lnurl), timeout.Token);
+                    if (rawInfo is LNURLPayRequest info)
+                        return info.MinSendable.ToDecimal(LightMoneyUnit.BTC);
+                }
+                catch
+                {
+                    // ignored
+                }
+            }
+            return Money.Satoshis(1).ToDecimal(MoneyUnit.BTC);
         }
 
         public Dictionary<PayoutState, List<(string Action, string Text)>> GetPayoutSpecificActions()

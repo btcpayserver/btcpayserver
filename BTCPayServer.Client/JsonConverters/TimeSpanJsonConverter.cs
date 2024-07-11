@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using NBitcoin.JsonConverters;
 using Newtonsoft.Json;
 
@@ -58,7 +59,7 @@ namespace BTCPayServer.Client.JsonConverters
                         return null;
                     return TimeSpan.Zero;
                 }
-                if (reader.TokenType == JsonToken.String && TimeSpan.TryParse(reader.Value?.ToString(), out var res))
+                if (reader.TokenType == JsonToken.String && TimeSpan.TryParse(reader.Value?.ToString(), CultureInfo.InvariantCulture, out var res))
                     return res;
                 if (reader.TokenType != JsonToken.Integer)
                     throw new JsonObjectException("Invalid timespan, expected integer", reader);

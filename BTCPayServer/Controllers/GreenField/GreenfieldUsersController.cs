@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -17,6 +18,7 @@ using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using NicolasDorier.RateLimits;
@@ -41,6 +43,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IAuthorizationService _authorizationService;
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
+        private readonly IFileService _fileService;
 
         public GreenfieldUsersController(UserManager<ApplicationUser> userManager,
             RoleManager<IdentityRole> roleManager,
@@ -53,6 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
             IAuthorizationService authorizationService,
             UserService userService,
             UriResolver uriResolver,
+            IFileService fileService,
             Logs logs)
         {
             this.Logs = logs;
@@ -67,6 +71,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _authorizationService = authorizationService;
             _userService = userService;
             _uriResolver = uriResolver;
+            _fileService = fileService;
         }
 
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -203,7 +208,7 @@ namespace BTCPayServer.Controllers.Greenfield
             user.SetBlob(blob);
 
             if (ModelState.IsValid && needUpdate)
-            {   
+            {
                 var identityResult = await _userManager.UpdateAsync(user);
                 if (!identityResult.Succeeded)
                 {
@@ -222,6 +227,68 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var model = await FromModel(user);
             return Ok(model);
+        }
+
+        [Authorize(Policy = Policies.CanModifyProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/users/me/picture")]
+        public async Task<IActionResult> UploadCurrentUserProfilePicture(IFormFile? file)
+        {
+            if (file is null)
+                ModelState.AddModelError(nameof(file), "Invalid file");
+            else if (file.Length > 1_000_000)
+                ModelState.AddModelError(nameof(file), "The uploaded image file should be less than 1MB");
+            else if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+            else if (!file.FileName.IsValidFileName())
+                ModelState.AddModelError(nameof(file.FileName), "Invalid filename");
+            else
+            {
+                var formFile = await file.Bufferize();
+                if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            try
+            {
+                var user = await _userManager.GetUserAsync(User);
+                var storedFile = await _fileService.AddFile(file!, user!.Id);
+                var blob = user.GetBlob() ?? new UserBlob();
+                var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                blob.ImageUrl = fileIdUri.ToString();
+                user.SetBlob(blob);
+                await _userManager.UpdateAsync(user);
+
+                var model = await FromModel(user);
+                return Ok(model);
+            }
+            catch (Exception e)
+            {
+                return this.CreateAPIError(404, "file-upload-failed", e.Message);
+            }
+        }
+
+        [Authorize(Policy = Policies.CanModifyProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/users/me/picture")]
+        public async Task<IActionResult> DeleteCurrentUserProfilePicture()
+        {
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+            {
+                return this.UserNotFound();
+            }
+            
+            var blob = user.GetBlob() ?? new UserBlob();
+            if (!string.IsNullOrEmpty(blob.ImageUrl))
+            {
+                var fileId = (UnresolvedUri.Create(blob.ImageUrl) as UnresolvedUri.FileIdUri)?.FileId;
+                if (!string.IsNullOrEmpty(fileId)) await _fileService.RemoveFile(fileId, user.Id);
+                blob.ImageUrl = null;
+                user.SetBlob(blob);
+                await _userManager.UpdateAsync(user);
+            }
+            return Ok();
         }
 
         [Authorize(Policy = Policies.CanDeleteUser, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

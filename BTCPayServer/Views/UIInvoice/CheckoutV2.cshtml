@@ -52,6 +52,7 @@
                 </button>
             </nav>
             <section id="payment" v-if="isActive">
+                <div v-if="srvModel.itemDesc && srvModel.itemDesc !== srvModel.storeName" v-text="srvModel.itemDesc" class="fw-semibold text-center text-muted mb-3"></div>
                 <div class="d-flex justify-content-center mt-1 text-center">
                     @if (Model.IsUnsetTopUp)
                     {

@@ -27,8 +27,6 @@ public abstract class PointOfSaleBaseData : AppBaseData
     public bool? RedirectAutomatically { get; set; }
     public int[]? CustomTipPercentages { get; set; }
     public string? FormId { get; set; }
-    [JsonExtensionData]
-    public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
 }
 
 public class PointOfSaleAppData : PointOfSaleBaseData

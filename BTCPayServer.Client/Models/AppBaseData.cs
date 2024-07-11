@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models;
 
@@ -13,6 +15,8 @@ public class AppBaseData
     public bool? Archived { get; set; }
     [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
     public DateTimeOffset Created { get; set; }
+    [JsonExtensionData]
+    public IDictionary<string, JToken> AdditionalData { get; set; } = new Dictionary<string, JToken>();
 }
 
 public interface IAppRequest

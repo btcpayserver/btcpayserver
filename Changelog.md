@@ -17,7 +17,7 @@
 * Checkout: Display item description if present (#6082) @dennisreimann
 * Disable plugins if they crash the Dashboard page (#6099) @NicolasDorier
 * Hide empty values in the receipts (#6079) @dennisreimann
-* Greenfield: Add ability to update the invoice metadata of a Lightning Address (#6067 #6084) @dennisreimann
+* Greenfield: Add the invoice metadata of a Lightning Address (#6067 #6084) @dennisreimann
 
 ## 1.13.3
 

@@ -1,9 +1,9 @@
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
 @{
-    ViewData.SetActivePage(StoreNavPages.PullPayments, "New pull payment", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.PullPayments, "Create Pull Payment", storeId);
 }
 
 @section PageHeadContent {
@@ -16,8 +16,16 @@
 }
 
 <form method="post" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-action="NewPullPayment">
-    <div class="sticky-header d-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="PullPayments" asp-route-storeId="@storeId">Pull Payments</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
         <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
     </div>
 

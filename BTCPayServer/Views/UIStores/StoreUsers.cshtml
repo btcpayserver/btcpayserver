@@ -1,18 +1,16 @@
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Services.Stores
-@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model StoreUsersViewModel
 @inject StoreRepository StoreRepository
 @{
     var storeId = Context.GetStoreData().Id;
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", storeId);
     var roles = new SelectList(
         await StoreRepository.GetStoreRoles(storeId),
         nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
         Model.Role);
+    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", storeId);
 }
 @section PageHeadContent {
     <style>
@@ -21,10 +19,10 @@
         }
     </style>
 }
-
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 <div class="row">
-    <div class="col-xxl-constrain">
-        <h3 class="mb-3">@ViewData["Title"]</h3>
+    <div class="col-xxl-constrain col-xl-8">
         <p>
             Give other registered BTCPay Server users access to your store. See the
             <a asp-controller="UIStores" asp-action="ListRoles" asp-route-storeId="@storeId">roles</a>
@@ -42,30 +40,32 @@
             <button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddUser">Add User</button>
         </form>
 
-        <table class="table table-hover table-responsive-md">
-            <thead>
-            <tr>
-                <th>Email</th>
-                <th>Role</th>
-                <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
-            </tr>
-            </thead>
-            <tbody id="StoreUsersList">
-            @foreach (var user in Model.Users)
-            {
+        <div class="table-responsive-md">
+            <table class="table table-hover">
+                <thead>
                 <tr>
-                    <td>@user.Email</td>
-                    <td>@user.Role</td>
-                    <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
-                        <div class="d-inline-flex align-items-center gap-3">
-                            <a asp-action="UpdateStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#EditModal" data-user-email="@user.Email" data-user-role="@user.Role">Change Role</a>
-                            <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@Html.Encode(user.Email)</strong> from accessing this store and its settings." data-confirm-input="REMOVE">Remove</a>
-                        </div>
-                    </td>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                 </tr>
-            }
-            </tbody>
-        </table>
+                </thead>
+                <tbody id="StoreUsersList">
+                @foreach (var user in Model.Users)
+                {
+                    <tr>
+                        <td>@user.Email</td>
+                        <td>@user.Role</td>
+                        <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
+                            <div class="d-inline-flex align-items-center gap-3">
+                                <a asp-action="UpdateStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#EditModal" data-user-email="@user.Email" data-user-role="@user.Role">Change Role</a>
+                                <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@Html.Encode(user.Email)</strong> from accessing this store and its settings." data-confirm-input="REMOVE">Remove</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 

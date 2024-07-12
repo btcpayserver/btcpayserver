@@ -1,7 +1,7 @@
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Models.WalletViewModels.UpdatePullPaymentModel
-
 @{
+    var storeId = Context.GetStoreData().Id;
     ViewData.SetActivePage(StoreNavPages.Create, "Edit Pull Payment", Model.Id);
 }
 
@@ -14,10 +14,18 @@
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
 }
 
-<form method="post" asp-action="EditPullPayment" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-pullPaymentId="@Model.Id">
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
+<form method="post" asp-action="EditPullPayment" asp-route-storeId="@storeId" asp-route-pullPaymentId="@Model.Id">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@storeId">Pull Payments</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
                 <button type="submit" class="btn btn-primary" id="SaveButton">Create</button>
@@ -34,7 +42,10 @@
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <div asp-validation-summary="ModelOnly"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
             <div class="form-group">
                 <label asp-for="Name" class="form-label" data-required></label>
                 <input asp-for="Name" class="form-control" required />

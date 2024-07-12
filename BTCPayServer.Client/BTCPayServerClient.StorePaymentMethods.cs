@@ -4,64 +4,42 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 
-namespace BTCPayServer.Client
+namespace BTCPayServer.Client;
+
+public partial class BTCPayServerClient
 {
-    public partial class BTCPayServerClient
+    public virtual async Task<GenericPaymentMethodData> UpdateStorePaymentMethod(string storeId, string paymentMethodId, UpdatePaymentMethodRequest request, CancellationToken token = default)
     {
-        public virtual async Task<GenericPaymentMethodData> UpdateStorePaymentMethod(
-            string storeId,
-            string paymentMethodId,
-            UpdatePaymentMethodRequest request,
-            CancellationToken token = default)
+        return await SendHttpRequest<GenericPaymentMethodData>($"api/v1/stores/{storeId}/payment-methods/{paymentMethodId}", request, HttpMethod.Put, token);
+    }
+
+    public virtual async Task RemoveStorePaymentMethod(string storeId, string paymentMethodId)
+    {
+        await SendHttpRequest($"api/v1/stores/{storeId}/payment-methods/{paymentMethodId}", null, HttpMethod.Delete, CancellationToken.None);
+    }
+
+    public virtual async Task<GenericPaymentMethodData> GetStorePaymentMethod(string storeId, string paymentMethodId, bool? includeConfig = null, CancellationToken token = default)
+    {
+        var query = new Dictionary<string, object>();
+        if (includeConfig != null)
         {
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/{paymentMethodId}", bodyPayload: request, method: HttpMethod.Put),
-                    token);
-            return await HandleResponse<GenericPaymentMethodData>(response);
+            query.Add(nameof(includeConfig), includeConfig);
         }
-        public virtual async Task RemoveStorePaymentMethod(string storeId, string paymentMethodId)
+        return await SendHttpRequest<GenericPaymentMethodData>($"api/v1/stores/{storeId}/payment-methods/{paymentMethodId}", query, HttpMethod.Get, token);
+    }
+
+    public virtual async Task<GenericPaymentMethodData[]> GetStorePaymentMethods(string storeId, bool? onlyEnabled = null, bool? includeConfig = null, CancellationToken token = default)
+    {
+        var query = new Dictionary<string, object>();
+        if (onlyEnabled != null)
         {
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/{paymentMethodId}", method: HttpMethod.Delete),
-                    CancellationToken.None);
-            await HandleResponse(response);
+            query.Add(nameof(onlyEnabled), onlyEnabled);
+        }
+        if (includeConfig != null)
+        {
+            query.Add(nameof(includeConfig), includeConfig);
         }
 
-        public virtual async Task<GenericPaymentMethodData> GetStorePaymentMethod(string storeId,
-            string paymentMethodId, bool? includeConfig = null, CancellationToken token = default)
-        {
-            var query = new Dictionary<string, object>();
-            if (includeConfig != null)
-            {
-                query.Add(nameof(includeConfig), includeConfig);
-            }
-
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods/{paymentMethodId}",
-                        query), token);
-            return await HandleResponse<GenericPaymentMethodData>(response);
-        }
-        public virtual async Task<GenericPaymentMethodData[]> GetStorePaymentMethods(string storeId,
-            bool? onlyEnabled = null, bool? includeConfig = null, CancellationToken token = default)
-        {
-            var query = new Dictionary<string, object>();
-            if (onlyEnabled != null)
-            {
-                query.Add(nameof(onlyEnabled), onlyEnabled);
-            }
-            if (includeConfig != null)
-            {
-                query.Add(nameof(includeConfig), includeConfig);
-            }
-
-            var response =
-                await _httpClient.SendAsync(
-                    CreateHttpRequest($"api/v1/stores/{storeId}/payment-methods",
-                        query), token);
-            return await HandleResponse<GenericPaymentMethodData[]>(response);
-        }
+        return await SendHttpRequest<GenericPaymentMethodData[]>($"api/v1/stores/{storeId}/payment-methods", query, HttpMethod.Get, token);
     }
 }

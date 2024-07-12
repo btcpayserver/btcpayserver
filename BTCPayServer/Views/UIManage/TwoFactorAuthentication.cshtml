@@ -1,11 +1,12 @@
-@using Fido2NetLib
 @using BTCPayServer.Abstractions.Models
 @model TwoFactorAuthenticationViewModel
 @{
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Two-Factor Authentication");
 }
-<h3 class="mb-3">@ViewData["Title"]</h3>
-
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <p>

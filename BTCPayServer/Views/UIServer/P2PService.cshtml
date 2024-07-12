@@ -3,7 +3,18 @@
     ViewData.SetActivePage(ServerNavPages.Services, Model.WalletName);
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
 
 @if (Model.ShowQR)
 {

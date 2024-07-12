@@ -1,5 +1,4 @@
 @model BTCPayServer.Models.InvoicingModels.CreateInvoiceModel
-@using BTCPayServer.Services.Apps
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.TagHelpers
@@ -29,8 +28,16 @@
 }
 
 <form asp-action="CreateInvoice" method="post" id="create-invoice-form">
-    <div class="sticky-header d-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
         <input type="submit" value="Create" class="btn btn-primary" id="Create" />
     </div>
 
@@ -38,7 +45,10 @@
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <div asp-validation-summary="ModelOnly"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
             @if (Model.StoreId != null)
             {
                 <input type="hidden" asp-for="StoreId" />

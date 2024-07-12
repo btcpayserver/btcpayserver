@@ -1,15 +1,9 @@
-@using BTCPayServer.Configuration
 @using BTCPayServer.Plugins
 @model BTCPayServer.Controllers.UIServerController.ListPluginsViewModel
-@inject BTCPayServerOptions BTCPayServerOptions
-@inject PluginService PluginService
 @{
-    Layout = "_Layout";
-    ViewData.SetActivePage(ServerNavPages.Explore);
+    ViewData.SetActivePage(ServerNavPages.Explore, "Explore Plugins");
 
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-
-    var installedWithoutSystemPlugins = Model.Installed.Where(i => !i.SystemPlugin).ToList();
     var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier))
@@ -33,13 +27,14 @@
     }
 </style>
 
-
-<h2 class="mt-1 mb-2 mb-lg-4">Explore Plugins</h2>
+<div class="sticky-header">
+    <h2 class="my-1">@ViewData["Title"]</h2>
+</div>
 
 <partial name="_StatusMessage" />
 
-<form id="searchForm" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ExplorePlugins" method="get">
-    <input id="searchInput" asp-for="SearchText" class="form-control" placeholder="Search…" />
+<form class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ExplorePlugins" method="get">
+    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
 </form>
 
 <div class="alert alert-warning alert-dismissible mb-4" role="alert">
@@ -59,7 +54,6 @@
         <p class="mb-0"><strong>Feedback and Reporting:</strong> Should you experience issues with a plugin, please provide feedback or report concerns directly to the respective plugin developers.</p>
     </div>
 </div>
-
 
 @if (availableAndNotInstalled.Any())
 {
@@ -91,9 +85,6 @@
                 <div class="modal fade" id="@availablePluginModalId" tabindex="-1" aria-labelledby="pluginModalLabel" aria-hidden="true">
                     <div class="modal-dialog modal-dialog-centered modal-xl">
                         <div class="modal-content">
-                            <div class="modal-header border-0">
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"><vc:icon symbol="close" /></button>
-                            </div>
                             <div class="modal-body">
                                 <div class="p-3 w-100">
                                     <div class="row">
@@ -181,9 +172,8 @@
 }
 else
 {
-    <p>No plugin found for the matching criteria</p>
+    <p class="text-secondary">No plugin found for the matching criteria.</p>
 }
-
 
 @if (string.IsNullOrEmpty(Model.SearchText))
 {
@@ -219,46 +209,6 @@ else
     }
     else
     {
-        <p>No plugin found for the matching criteria</p>
+        <p class="text-secondary">No plugin found for the matching criteria.</p>
     }
-}
-
-
-
-@if (string.IsNullOrEmpty(Model.SearchText))
-{
-    <div class="mb-4">
-        <h4 class="mb-4">Upload Plugin</h4>
-        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
-            Upload Plugin
-        </button>
-        <div class="row collapse" id="manual-upload">
-            <div class="col col-xl-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Add plugin manually</h4>
-                        <div class="alert alert-warning my-3">
-                            <h6 class="me-1">This is an extremely dangerous operation!</h6>
-                            Only upload plugins from trusted sources.
-                        </div>
-                        <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
-                            <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
-                            <button class="btn btn-primary" type="submit">Upload</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-}
-
-@section PageFootContent {
-    <script>
-        document.getElementById('searchInput').addEventListener('input', function () {
-            if (!this.value) {
-                document.getElementById('searchForm').submit();
-            }
-        });
-    </script>
 }

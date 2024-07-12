@@ -6,8 +6,6 @@
     Csp.UnsafeEval();
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
     var storeId = Context.GetCurrentStoreId();
 }
@@ -194,24 +192,35 @@
 }
 
 <form method="post" asp-action="Modify" asp-route-id="@formId" asp-route-storeId="@storeId">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@storeId">Forms</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>
+                @ViewData["Title"]
+                <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info" />
+                </a>
+            </h2>
+        </nav>
+        <div>
+            <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+            @if (!isNew)
+            {
+                <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
+            }
+        </div>
+    </div>
     <div class="row mb-4">
         <div class="col-12">
-            <div class="d-flex align-items-center justify-content-between mb-3">
-                <h3 class="mb-0">
-                    <span>@ViewData["Title"]</span>
-                    <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info" />
-                    </a>
-                </h3>
-                <div class="d-flex gap-3 mt-3 mt-sm-0">
-                    <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
-                    @if (!isNew)
-                    {
-                        <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
-                    }
-                </div>
-            </div>
-            <div asp-validation-summary="All"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <div class="form-group" style="max-width: 27rem;">
                 <label asp-for="Name" class="form-label" data-required></label>
                 <input asp-for="Name" class="form-control" required />

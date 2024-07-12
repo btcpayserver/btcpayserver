@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter the wallet seed", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter the wallet seed", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {

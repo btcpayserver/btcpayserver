@@ -1,5 +1,4 @@
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
@@ -28,8 +27,8 @@
     </style>
 }
 
-<div class="sticky-header d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2>
         @ViewData["Title"]
         <a href="#descriptor" data-bs-toggle="collapse">
             <vc:icon symbol="info" />

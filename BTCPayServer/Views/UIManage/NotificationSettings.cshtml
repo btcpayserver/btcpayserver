@@ -2,11 +2,15 @@
 @{
     ViewData.SetActivePage(ManageNavPages.Notifications, "Notification Settings");
 }
-<h3 class="mb-3">@ViewData["Title"]</h3>
 
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <form method="post" asp-action="NotificationSettings">
+<form method="post" asp-action="NotificationSettings">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <button type="submit" class="btn btn-primary" name="command" value="update">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
             @if (Model.All)
             {
                 <p>All notifications are disabled.</p>
@@ -27,13 +31,12 @@
                     </div>
                 }
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-primary" name="command" value="update">Save</button>
-                    <button type="submit" class="btn btn-secondary ms-3" name="command" value="disable-all">Disable all notifications</button>
+                    <button type="submit" class="btn btn-secondary" name="command" value="disable-all">Disable all notifications</button>
                 </div>
             }
-        </form>
+        </div>
     </div>
-</div>
+</form>
 
 <script>
     function toggleAllCheckboxes(checkbox) {

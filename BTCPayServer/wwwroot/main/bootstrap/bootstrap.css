@@ -4725,12 +4725,12 @@ fieldset:disabled .btn {
 .breadcrumb {
   --btcpay-breadcrumb-padding-x: 0;
   --btcpay-breadcrumb-padding-y: 0;
-  --btcpay-breadcrumb-margin-bottom: 1rem;
+  --btcpay-breadcrumb-margin-bottom: var(--btcpay-space-m);
   --btcpay-breadcrumb-bg: ;
   --btcpay-breadcrumb-border-radius: ;
-  --btcpay-breadcrumb-divider-color: var(--btcpay-secondary);
+  --btcpay-breadcrumb-divider-color: var(--btcpay-body-text);
   --btcpay-breadcrumb-item-padding-x: 0.5rem;
-  --btcpay-breadcrumb-item-active-color: var(--btcpay-secondary);
+  --btcpay-breadcrumb-item-active-color: var(--btcpay-body-text);
   display: flex;
   flex-wrap: wrap;
   padding: var(--btcpay-breadcrumb-padding-y) var(--btcpay-breadcrumb-padding-x);
@@ -4749,7 +4749,7 @@ fieldset:disabled .btn {
   float: left;
   padding-right: var(--btcpay-breadcrumb-item-padding-x);
   color: var(--btcpay-breadcrumb-divider-color);
-  content: var(--btcpay-breadcrumb-divider, "/") /* rtl: var(--btcpay-breadcrumb-divider, "/") */;
+  content: var(--btcpay-breadcrumb-divider, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3e%3cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%238F979E'/%3e%3c/svg%3e")) /* rtl: var(--btcpay-breadcrumb-divider, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3e%3cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%238F979E'/%3e%3c/svg%3e")) */;
 }
 
 .breadcrumb-item.active {
@@ -12246,6 +12246,14 @@ ul:not([class]) li {
 /* Modals */
 .modal-content {
   box-shadow: 0 20px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
 }
 
 /* Accordion */

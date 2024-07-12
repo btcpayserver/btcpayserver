@@ -150,7 +150,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v24.02.2
+    image: btcpayserver/lightning:v24.05
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -178,8 +178,9 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v24.02.2
+    image: btcpayserver/lightning:v24.05
     stop_signal: SIGKILL
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
@@ -214,7 +215,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.17.4-beta
+    image: btcpayserver/lnd:v0.18.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -251,7 +252,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.17.4-beta
+    image: btcpayserver/lnd:v0.18.0-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

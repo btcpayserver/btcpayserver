@@ -1,5 +1,4 @@
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Plugins.Shopify.Models.ShopifySettings
 @{
     ViewData.SetActivePage("shopify", nameof(StoreNavPages), "Shopify", Context.GetStoreData().Id);
@@ -8,19 +7,21 @@
     var shopifyUrl = Model?.ShopifyUrl;
 }
 
-<partial name="_StatusMessage"/>
+<div class="sticky-header">
+    <h2 class="my-1">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/Shopify" target="_blank" rel="noreferrer noopener" title="More information...">
+                <vc:icon symbol="info" />
+            </a>
+        </small>
+    </h2>
+</div>
 
+<partial name="_StatusMessage" />
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <h3 class="mb-3">
-            @ViewData["Title"]
-            <small>
-                <a href="https://docs.btcpayserver.org/Shopify" target="_blank" rel="noreferrer noopener" title="More information...">
-                    <vc:icon symbol="info" />
-                </a>
-            </small>
-        </h3>
         <p>Connect BTCPay Server to your Shopify checkout experience to accept Bitcoin.</p>
 
         @if (!ViewContext.ModelState.IsValid)

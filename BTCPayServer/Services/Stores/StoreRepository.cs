@@ -411,8 +411,8 @@ namespace BTCPayServer.Services.Stores
             ctx.Add(storeData);
             ctx.Add(userStore);
             await ctx.SaveChangesAsync();
-            _eventAggregator.Publish(new StoreCreatedEvent(storeData));
             _eventAggregator.Publish(new UserStoreAddedEvent(storeData.Id, userStore.ApplicationUserId));
+            _eventAggregator.Publish(new StoreCreatedEvent(storeData));
         }
 
         public async Task<WebhookData[]> GetWebhooks(string storeId)

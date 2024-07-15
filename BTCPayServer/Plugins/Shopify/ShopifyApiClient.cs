@@ -118,7 +118,7 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task<ShopifyOrder> CancelOrder(string orderId)
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Post,
-                $"orders/{orderId}/close.json", null, "2024-04");
+                $"orders/{orderId}/cancel.json?restock=true", null, "2024-04");
 
             var strResp = await SendRequest(req);
 

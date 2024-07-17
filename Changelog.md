@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.13.5
+
+### Bug fixes
+
+* Fix: Plugin Exception Handler didn't disabled plugin if crash was detected @NicolasDorier
+* Fix: Kraken rate provider failing due to bid > ask @NicolasDorier
+
 ## 1.13.4
 
 ### Bug fixes

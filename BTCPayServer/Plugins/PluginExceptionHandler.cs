@@ -33,18 +33,19 @@ namespace BTCPayServer.Plugins
                 !PluginManager.IsExceptionByPlugin(exception, out var pluginName))
                 return ValueTask.FromResult(false);
             _logs.Configuration.LogError(exception, $"Unhandled exception caused by plugin '{pluginName}', disabling it and restarting...");
+            PluginManager.DisablePlugin(_pluginDir, pluginName);
             _ = Task.Delay(3000).ContinueWith((t) => _applicationLifetime.StopApplication());
             // Returning true here means we will see Error 500 error message.
             // Returning false means that the user will see a stacktrace.
             return ValueTask.FromResult(false);
         }
 
-        internal static bool GetDisablePluginIfCrash(HttpContext httpContext)
+        public static bool GetDisablePluginIfCrash(HttpContext httpContext)
         {
             return httpContext.Items.TryGetValue("DisablePluginIfCrash", out object renderingDashboard) ||
                             renderingDashboard is not true;
         }
-        internal static void SetDisablePluginIfCrash(HttpContext httpContext)
+        public static void SetDisablePluginIfCrash(HttpContext httpContext)
         {
             httpContext.Items.TryAdd("DisablePluginIfCrash", true);
         }

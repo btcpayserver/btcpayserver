@@ -270,13 +270,13 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                         ModelState.AddModelError(nameof(viewModel.AccountIndex), $"Could not open the wallet: {ex.Message}");
                         return View(viewModel);
                     }
-
-                    return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new
+                    
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
                     {
-                        cryptoCode,
-                        StatusMessage = "View-only wallet files uploaded. The wallet will soon become available."
-
+                        Severity = StatusMessageModel.StatusSeverity.Info,
+                        Message = $"View-only wallet files uploaded. The wallet will soon become available."
                     });
+                    return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new { cryptoCode });
                 }
             }
 

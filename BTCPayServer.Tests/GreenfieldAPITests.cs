@@ -241,6 +241,76 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanCreateReadAndDeleteFiles()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            await user.MakeAdmin();
+            var client = await user.CreateClient();
+
+            // List
+            Assert.Empty(await client.GetFiles());
+
+            // Upload
+            var filePath = TestUtils.GetTestDataFullPath("OldInvoices.csv");
+            var upload = await client.UploadFile(filePath, "text/csv");
+            Assert.Equal("OldInvoices.csv", upload.OriginalName);
+            Assert.NotNull(upload.Uri);
+            Assert.NotNull(upload.Url);
+
+            // Re-check list
+            Assert.Single(await client.GetFiles());
+
+            // Single file endpoint
+            var singleFile = await client.GetFile(upload.Id);
+            Assert.Equal("OldInvoices.csv", singleFile.OriginalName);
+            Assert.NotNull(singleFile.Uri);
+            Assert.NotNull(singleFile.Url);
+
+            // Delete
+            await client.DeleteFile(upload.Id);
+            Assert.Empty(await client.GetFiles());
+            
+            // Profile image
+            await AssertValidationError(["file"],
+                async () => await client.UploadCurrentUserProfilePicture(filePath, "text/csv")
+            );
+            
+            var profilePath = TestUtils.GetTestDataFullPath("logo.png");
+            var currentUser = await client.UploadCurrentUserProfilePicture(profilePath, "image/png");
+            var files = await client.GetFiles();
+            Assert.Single(files);
+            Assert.Equal("logo.png", files[0].OriginalName);
+            Assert.Equal(files[0].Url, currentUser.ImageUrl);
+            
+            await client.DeleteCurrentUserProfilePicture();
+            Assert.Empty(await client.GetFiles());
+            currentUser = await client.GetCurrentUser();
+            Assert.Null(currentUser.ImageUrl);
+            
+            // Store logo
+            var store = await client.CreateStore(new CreateStoreRequest { Name = "mystore" });
+            await AssertValidationError(["file"],
+                async () => await client.UploadStoreLogo(store.Id, filePath, "text/csv")
+            );
+            
+            var logoPath = TestUtils.GetTestDataFullPath("logo.png");
+            var storeData = await client.UploadStoreLogo(store.Id, logoPath, "image/png");
+            files = await client.GetFiles();
+            Assert.Single(files);
+            Assert.Equal("logo.png", files[0].OriginalName);
+            Assert.Equal(files[0].Url, storeData.LogoUrl);
+            
+            await client.DeleteStoreLogo(store.Id);
+            Assert.Empty(await client.GetFiles());
+            storeData = await client.GetStore(store.Id);
+            Assert.Null(storeData.LogoUrl);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanCreateReadUpdateAndDeletePointOfSaleApp()
         {
             using var tester = CreateServerTester();

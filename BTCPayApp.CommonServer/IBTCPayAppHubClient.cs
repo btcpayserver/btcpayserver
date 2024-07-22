@@ -10,7 +10,7 @@ namespace BTCPayApp.CommonServer;
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
 {
-    Task NotifyServerEvent(IServerEvent ev);
+    Task NotifyServerEvent(ServerEvent ev);
     Task NotifyNetwork(string network);
     Task NotifyServerNode(string nodeInfo);
     Task TransactionDetected(TransactionDetectedRequest request);
@@ -43,26 +43,15 @@ public interface IBTCPayAppHubServer
     Task<CoinResponse[]> GetUTXOs(string[] identifiers);
     Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
 
-    Task SendInvoiceUpdate(string identifier, LightningInvoice lightningPayment);
+    Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment);
 }
 
-public interface IServerEvent
-{
-    public string Type { get; }
-}
-
-public interface IServerEvent<T> : IServerEvent
-{
-    public T? Event { get; }
-}
-
-public class ServerEvent(string type) : IServerEvent
+public class ServerEvent(string type)
 {
     public string Type { get; } = type;
-}
-public class ServerEvent<T>(string type, T? evt = default) : ServerEvent(type), IServerEvent<T>
-{
-    public T? Event { get; } = evt;
+    public string? StoreId { get; init; }
+    public string? UserId { get; init; }
+    public string? InvoiceId { get; init; }
 }
 
 public record TxResp(long Confirmations, long? Height, decimal BalanceChange, DateTimeOffset Timestamp, string TransactionId)

@@ -10,7 +10,6 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
@@ -311,12 +310,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
         return result;
     }
-
-    public async Task SendInvoiceUpdate(string identifier, LightningPayment lightningPayment)
-    {
-        throw new NotImplementedException();
-    }
-
     public async Task SendInvoiceUpdate(string identifier, LightningInvoice lightningInvoice)
     {
         await _appState.InvoiceUpdate(identifier, lightningInvoice);

@@ -1,10 +1,8 @@
-using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Security;
-using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -22,14 +20,14 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldTestApiKeyController : ControllerBase
     {
         private readonly UserManager<ApplicationUser> _userManager;
-        private readonly StoreRepository _storeRepository;
-        private readonly BTCPayServerClient _localBTCPayServerClient;
+        private readonly GreenfieldStoresController _greenfieldStoresController;
 
-        public GreenfieldTestApiKeyController(UserManager<ApplicationUser> userManager, StoreRepository storeRepository, BTCPayServerClient localBTCPayServerClient)
+        public GreenfieldTestApiKeyController(
+            UserManager<ApplicationUser> userManager,
+            GreenfieldStoresController greenfieldStoresController)
         {
             _userManager = userManager;
-            _storeRepository = storeRepository;
-            _localBTCPayServerClient = localBTCPayServerClient;
+            _greenfieldStoresController = greenfieldStoresController;
         }
 
         [HttpGet("me/id")]
@@ -55,9 +53,15 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [HttpGet("me/stores")]
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        public BTCPayServer.Client.Models.StoreData[] GetCurrentUserStores()
+        public async Task<BTCPayServer.Client.Models.StoreData[]> GetCurrentUserStores()
         {
-            return this.HttpContext.GetStoresData().Select(Greenfield.GreenfieldStoresController.FromModel).ToArray();
+            var storesData = HttpContext.GetStoresData();
+            var stores = new List<Client.Models.StoreData>();
+            foreach (var storeData in storesData)
+            {
+                stores.Add(await _greenfieldStoresController.FromModel(storeData));
+            }
+            return stores.ToArray();
         }
 
         [HttpGet("me/stores/{storeId}/can-view")]

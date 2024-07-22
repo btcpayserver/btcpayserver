@@ -18,7 +18,6 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
-using LightningPayment = BTCPayApp.CommonServer.Models.LightningPayment;
 using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 
 namespace BTCPayServer.Controllers;
@@ -39,7 +38,7 @@ public class BTCPayAppState : IHostedService
     private CancellationTokenSource? _cts;
     // private readonly ConcurrentDictionary<string, TrackedSource> _connectionScheme = new();
 
-    public event EventHandler<(string,LightningPayment)>? OnPaymentUpdate;
+    public event EventHandler<(string,LightningInvoice)>? OnInvoiceUpdate;
     public BTCPayAppState(
         IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext,
         ILogger<BTCPayAppState> logger,
@@ -283,9 +282,9 @@ public class BTCPayAppState : IHostedService
             await _hubContext.Clients.Client(contextConnectionId).NotifyServerNode(_nodeInfo);
     }
 
-    public async Task PaymentUpdate(string identifier, LightningPayment lightningPayment)
+    public async Task InvoiceUpdate(string identifier, LightningInvoice lightningInvoice)
     {
-        _logger.LogInformation($"Payment update for {identifier} {lightningPayment.Value} {lightningPayment.PaymentHash}");
-        OnPaymentUpdate?.Invoke(this, (identifier, lightningPayment));
+        _logger.LogInformation($"Invoice update for {identifier} {lightningInvoice.Amount} {lightningInvoice.PaymentHash}");
+        OnInvoiceUpdate?.Invoke(this, (identifier, lightningInvoice));
     }
 }

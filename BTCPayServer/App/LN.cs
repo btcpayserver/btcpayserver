@@ -10,7 +10,6 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Lightning;
 using Microsoft.AspNetCore.SignalR;
 using NBitcoin;
-using LightningPayment = BTCPayApp.CommonServer.Models.LightningPayment;
 
 namespace BTCPayServer.App;
 
@@ -84,8 +83,7 @@ public class BTCPayAppLightningClient:ILightningClient
 
     public async Task<LightningInvoice> GetInvoice(uint256 paymentHash, CancellationToken cancellation = new CancellationToken())
     {
-        var lp = await HubClient.GetLightningInvoice(paymentHash.ToString());
-        return lp is null ? null : ToLightningInvoice(lp, _network);
+        return  await HubClient.GetLightningInvoice(paymentHash);
     }
 
     public async Task<LightningInvoice[]> ListInvoices(CancellationToken cancellation = new CancellationToken())
@@ -95,93 +93,61 @@ public class BTCPayAppLightningClient:ILightningClient
 
     public async Task<LightningInvoice[]> ListInvoices(ListInvoicesParams request, CancellationToken cancellation = new CancellationToken())
     {
-        var invs = await HubClient.GetLightningInvoices(request);
-        return invs.Select(i => ToLightningInvoice(i, _network)).ToArray();
+        return (await HubClient.GetLightningInvoices(request)).ToArray();
+       
     }
 
     public async Task<Lightning.LightningPayment> GetPayment(string paymentHash, CancellationToken cancellation = new CancellationToken())
     {
 
-        return ToLightningPayment(await HubClient.GetLightningPayment(paymentHash));
+        return await HubClient.GetLightningPayment(uint256.Parse(paymentHash));
     }
-
-    private static Lightning.LightningPayment ToLightningPayment(LightningPayment lightningPayment)
-    {
-        return new Lightning.LightningPayment()
-        {
-            Id = lightningPayment.PaymentHash,
-            Amount = LightMoney.MilliSatoshis(lightningPayment.Value),
-            PaymentHash = lightningPayment.PaymentHash,
-            Preimage = lightningPayment.Preimage,
-            BOLT11 = lightningPayment.PaymentRequests.FirstOrDefault(),
-            Status = lightningPayment.Status
-        };
-    }
+    
 
     public async Task<Lightning.LightningPayment[]> ListPayments(CancellationToken cancellation = new CancellationToken())
     {
         return await ListPayments(new ListPaymentsParams(), cancellation);
     }
 
-    public async Task<Lightning.LightningPayment[]> ListPayments(ListPaymentsParams request, CancellationToken cancellation = new CancellationToken())
+    public async Task<LightningPayment[]> ListPayments(ListPaymentsParams request, CancellationToken cancellation = new CancellationToken())
     {
-        var invs = await HubClient.GetLightningPayments(request);
-        return invs.Select(ToLightningPayment).ToArray();
+       return (await HubClient.GetLightningPayments(request)).ToArray();
     }
 
     public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry,
-        CancellationToken cancellation = new CancellationToken())
+        CancellationToken cancellation = new())
     {
         return await CreateInvoice(new CreateInvoiceParams(amount, description, expiry), cancellation);
     }
 
     public async Task<LightningInvoice> CreateInvoice(CreateInvoiceParams createInvoiceRequest, CancellationToken cancellation = new CancellationToken())
     {
-        var lp = await HubClient.CreateInvoice(new CreateLightningInvoiceRequest(createInvoiceRequest.Amount, createInvoiceRequest.Description, createInvoiceRequest.Expiry)
+        return await HubClient.CreateInvoice(new CreateLightningInvoiceRequest(createInvoiceRequest.Amount, createInvoiceRequest.Description, createInvoiceRequest.Expiry)
         {
             DescriptionHashOnly = createInvoiceRequest.DescriptionHashOnly,
             PrivateRouteHints = createInvoiceRequest.PrivateRouteHints,
             
         });
-        return ToLightningInvoice(lp, _network);
     }
-
-    private static LightningInvoice ToLightningInvoice(LightningPayment lightningPayment, Network _network)
-    {
-        var paymenRequest = BOLT11PaymentRequest.Parse(lightningPayment.PaymentRequests.First(), _network);
-        return new LightningInvoice()
-        {
-            Id = lightningPayment.PaymentHash,
-            Amount = LightMoney.MilliSatoshis(lightningPayment.Value),
-            PaymentHash = lightningPayment.PaymentHash,
-            Preimage = lightningPayment.Preimage,
-            PaidAt = lightningPayment.Status == LightningPaymentStatus.Complete? DateTimeOffset.UtcNow: null, //TODO: store these in ln payment
-            BOLT11 = lightningPayment.PaymentRequests.FirstOrDefault(),
-            Status = lightningPayment.Status == LightningPaymentStatus.Complete? LightningInvoiceStatus.Paid: paymenRequest.ExpiryDate < DateTimeOffset.UtcNow? LightningInvoiceStatus.Expired: LightningInvoiceStatus.Unpaid
-        };
-    }
-    
     public async Task<ILightningInvoiceListener> Listen(CancellationToken cancellation = new CancellationToken())
     {
-        return new Listener(_appState, _network, _key);
+        return new Listener(_appState, _key);
     }
 
     public class Listener:ILightningInvoiceListener
     {
         private readonly BTCPayAppState _btcPayAppState;
-        private readonly Network _network;
         private readonly string _key;
-        private readonly Channel<LightningPayment> _channel = Channel.CreateUnbounded<LightningPayment>();
+        private readonly Channel<LightningInvoice> _channel = Channel.CreateUnbounded<LightningInvoice>();
         private readonly CancellationTokenSource _cts;
 
-        public Listener(BTCPayAppState btcPayAppState, Network network, string key)
+        public Listener(BTCPayAppState btcPayAppState, string key)
         {
             _btcPayAppState = btcPayAppState;
             btcPayAppState.GroupRemoved += BtcPayAppStateOnGroupRemoved;
-            _network = network;
             _key = key;
             _cts = new CancellationTokenSource();
-            _btcPayAppState.OnPaymentUpdate += BtcPayAppStateOnOnPaymentUpdate;
+            _btcPayAppState.OnInvoiceUpdate += BtcPayAppStateOnOnInvoiceUpdate;
         }
 
         private void BtcPayAppStateOnGroupRemoved(object sender, string e)
@@ -190,7 +156,7 @@ public class BTCPayAppLightningClient:ILightningClient
                 _channel.Writer.Complete();
         }
 
-        private void BtcPayAppStateOnOnPaymentUpdate(object sender, (string, LightningPayment) e)
+        private void BtcPayAppStateOnOnInvoiceUpdate(object sender, (string, LightningInvoice) e)
         {
             if (e.Item1.Equals(_key, StringComparison.InvariantCultureIgnoreCase)) 
                 _channel.Writer.TryWrite(e.Item2);
@@ -200,14 +166,15 @@ public class BTCPayAppLightningClient:ILightningClient
         public void Dispose()
         {
             _cts?.Cancel();
-            _btcPayAppState.OnPaymentUpdate -= BtcPayAppStateOnOnPaymentUpdate;
+            _btcPayAppState.OnInvoiceUpdate -= BtcPayAppStateOnOnInvoiceUpdate;
             _btcPayAppState.GroupRemoved -= BtcPayAppStateOnGroupRemoved;
             _channel.Writer.TryComplete();
         }
 
         public async Task<LightningInvoice> WaitInvoice(CancellationToken cancellation)
         {
-            return ToLightningInvoice(await _channel.Reader.ReadAsync( CancellationTokenSource.CreateLinkedTokenSource(cancellation, _cts.Token).Token), _network);
+            return await _channel.Reader.ReadAsync(CancellationTokenSource
+                .CreateLinkedTokenSource(cancellation, _cts.Token).Token);
         }
     }
 

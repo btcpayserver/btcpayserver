@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
-using LightningPayment = BTCPayApp.CommonServer.Models.LightningPayment;
+using NBitcoin;
 
 namespace BTCPayApp.CommonServer;
 
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
 {
-    Task NotifyServerEvent(ServerEvent ev);
+    Task NotifyServerEvent(IServerEvent ev);
     Task NotifyNetwork(string network);
     Task NotifyServerNode(string nodeInfo);
     Task TransactionDetected(TransactionDetectedRequest request);
     Task NewBlock(string block);
 
-    Task<LightningPayment> CreateInvoice(CreateLightningInvoiceRequest createLightningInvoiceRequest);
-    Task<LightningPayment?> GetLightningInvoice(string paymentHash);
-    Task<LightningPayment?> GetLightningPayment(string paymentHash);
+    Task<LightningInvoice> CreateInvoice(CreateLightningInvoiceRequest createLightningInvoiceRequest);
+    Task<LightningInvoice?> GetLightningInvoice(uint256 paymentHash);
+    Task<LightningPayment?> GetLightningPayment(uint256 paymentHash);
     Task<List<LightningPayment>> GetLightningPayments(ListPaymentsParams request);
-    Task<List<LightningPayment>> GetLightningInvoices(ListInvoicesParams request);
+    Task<List<LightningInvoice>> GetLightningInvoices(ListInvoicesParams request);
     Task<PayResponse> PayInvoice(string bolt11, long? amountMilliSatoshi);
 }
 
@@ -43,7 +43,7 @@ public interface IBTCPayAppHubServer
     Task<CoinResponse[]> GetUTXOs(string[] identifiers);
     Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
 
-    Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment);
+    Task SendInvoiceUpdate(string identifier, LightningInvoice lightningPayment);
 }
 
 public interface IServerEvent

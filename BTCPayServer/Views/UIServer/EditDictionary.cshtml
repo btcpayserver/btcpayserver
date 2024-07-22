@@ -20,7 +20,7 @@
 	</div>
 	<partial name="_StatusMessage" />
 
-	<div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
+	<div class="d-flex mb-4">
 		<div class="flex-fill">
 			<p>
 
@@ -41,7 +41,7 @@
 		<div class="col-xl-8 col-xxl-constrain d-flex flex-column">
 			<div class="form-group">
 				<label asp-for="Translations" class="form-label"></label>
-				<textarea asp-for="Translations" class="form-control" rows="@Model.Lines" cols="40"></textarea>
+				<textarea asp-for="Translations" class="form-control translation-editor" rows="@Model.Lines" cols="40"></textarea>
 				<span asp-validation-for="Translations" class="text-danger"></span>
 			</div>
 		</div>

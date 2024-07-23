@@ -1,4 +1,4 @@
-# Changelog
+# Changelog:bc1q4k4zlga72f0t0jrsyh93dzv2k7upry6an304jp
 
 ## 1.12.5
 

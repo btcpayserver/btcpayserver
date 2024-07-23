@@ -36,9 +36,9 @@ public class BTCPayAppState : IHostedService
     private DerivationSchemeParser _derivationSchemeParser;
     public readonly ConcurrentDictionary<string, string> GroupToConnectionId = new(StringComparer.InvariantCultureIgnoreCase);
     private CancellationTokenSource? _cts;
-    // private readonly ConcurrentDictionary<string, TrackedSource> _connectionScheme = new();
 
-    public event EventHandler<(string,LightningInvoice)>? OnInvoiceUpdate;
+    public event EventHandler<(string, LightningInvoice)>? OnInvoiceUpdate;
+
     public BTCPayAppState(
         IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext,
         ILogger<BTCPayAppState> logger,
@@ -90,7 +90,7 @@ public class BTCPayAppState : IHostedService
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(new ServerEvent("store-created") { StoreId = arg.StoreId });
     }
 
-    private async Task  StoreUpdatedEvent(StoreUpdatedEvent arg)
+    private async Task StoreUpdatedEvent(StoreUpdatedEvent arg)
     {
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(new ServerEvent("store-updated") { StoreId = arg.StoreId });
     }
@@ -128,16 +128,21 @@ public class BTCPayAppState : IHostedService
     }
 
     private string _nodeInfo = string.Empty;
+
     private async Task UpdateNodeInfo()
     {
         while (!_cts.Token.IsCancellationRequested)
         {
             try
             {
-                var res = await _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>().GetLightningHandler(ExplorerClient.CryptoCode).GetNodeInfo(
-                    new LightningPaymentMethodConfig() {InternalNodeRef = LightningPaymentMethodConfig.InternalNode},
-                    null,
-                    false, false);
+                var res = await _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>()
+                    .GetLightningHandler(ExplorerClient.CryptoCode).GetNodeInfo(
+                        new LightningPaymentMethodConfig()
+                        {
+                            InternalNodeRef = LightningPaymentMethodConfig.InternalNode
+                        },
+                        null,
+                        false, false);
                 if (res.Any())
                 {
                     var newInf = res.First();
@@ -145,6 +150,7 @@ public class BTCPayAppState : IHostedService
                     {
                         newInf = new NodeInfo(newInf.NodeId, "127.0.0.1", 30893);
                     }
+
                     if (newInf.ToString() != _nodeInfo)
                     {
                         _nodeInfo = newInf.ToString();
@@ -156,11 +162,12 @@ public class BTCPayAppState : IHostedService
             {
                 _logger.LogError(e, "Error during node info update");
             }
-            await Task.Delay(TimeSpan.FromMinutes(string.IsNullOrEmpty(_nodeInfo)? 1:5), _cts.Token);
+
+            await Task.Delay(TimeSpan.FromMinutes(string.IsNullOrEmpty(_nodeInfo) ? 1 : 5), _cts.Token);
         }
     }
 
-    private async  Task OnNewTransaction(NewOnChainTransactionEvent obj)
+    private async Task OnNewTransaction(NewOnChainTransactionEvent obj)
     {
         if (obj.CryptoCode != "BTC")
             return;
@@ -205,11 +212,11 @@ public class BTCPayAppState : IHostedService
                 {
                     if (trackedSource is GroupTrackedSource groupTrackedSource)
                     {
-                        
                     }
-                    
+
                     ExplorerClient.Track(trackedSource);
                 }
+
                 await _hubContext.Groups.AddToGroupAsync(contextConnectionId, ts);
             }
             catch (Exception e)
@@ -257,12 +264,15 @@ public class BTCPayAppState : IHostedService
                 _serviceProvider.GetService<LightningListener>()?.CheckConnection(ExplorerClient.CryptoCode, connString);
                 return true;
             }
+
             return false;
         }
+
         if (GroupToConnectionId.TryGetValue(group, out var connId) && connId == contextConnectionId)
         {
             return GroupToConnectionId.TryRemove(group, out _);
         }
+
         return false;
     }
 
@@ -279,7 +289,7 @@ public class BTCPayAppState : IHostedService
     }
 
     public event EventHandler<string>? GroupRemoved;
-    
+
     public async Task Connected(string contextConnectionId)
     {
         if (_nodeInfo.Length > 0)

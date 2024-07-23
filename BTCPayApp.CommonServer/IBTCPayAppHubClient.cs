@@ -43,7 +43,7 @@ public interface IBTCPayAppHubServer
     Task<CoinResponse[]> GetUTXOs(string[] identifiers);
     Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
 
-    Task SendPaymentUpdate(string identifier, LightningPayment lightningPayment);
+    Task SendInvoiceUpdate(string identifier, LightningInvoice lightningInvoice);
 }
 
 public class ServerEvent(string type)

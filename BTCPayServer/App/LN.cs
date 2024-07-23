@@ -102,8 +102,6 @@ public class BTCPayAppLightningClient:ILightningClient
 
         return await HubClient.GetLightningPayment(uint256.Parse(paymentHash));
     }
-    
-
     public async Task<Lightning.LightningPayment[]> ListPayments(CancellationToken cancellation = new CancellationToken())
     {
         return await ListPayments(new ListPaymentsParams(), cancellation);

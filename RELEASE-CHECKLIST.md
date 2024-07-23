@@ -8,3 +8,4 @@ Things to think about when creating a new release:
 * Bump version in `Build/Version.csproj`
 * Run `publish-docker.ps1`  
 * When the docker images has been built by CI, copy the changelog for the new version in the github's release
+:bc1q4k4zlga72f0t0jrsyh93dzv2k7upry6an304jp

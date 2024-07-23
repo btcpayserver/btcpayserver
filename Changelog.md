@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.13.5
+
+### Bug fixes
+
+* Fix: Plugin Exception Handler didn't disabled plugin if crash was detected @NicolasDorier
+* Fix: Kraken rate provider failing due to bid > ask @NicolasDorier
+
 ## 1.13.4
 
 ### Bug fixes
@@ -11,6 +18,8 @@
 * Fix crash caused by custom explorer links in some conditions (#6077 #6078) @dennisreimann
 * Fix: Can't save email settings on store level (#6076 #6080) @dennisreimann
 * Reports: Fix dropdown z-index @dennisreimann
+* Shopify: Properly cancel an order when BTCPay invoice expires, and restock the inventory (#6104 #6107 #6108) @NicolasDorier
+* Shopify: Generate BTCPay invoice as soon as the payment page in shopify opens (#6105) @NicolasDorier
 
 ### Improvements
 

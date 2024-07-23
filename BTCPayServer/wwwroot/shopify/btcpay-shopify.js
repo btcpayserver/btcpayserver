@@ -160,9 +160,11 @@ window.BTCPayShopifyIntegrationModule = function () {
     }
     showPaymentInstructions();
     window.onPayButtonClicked = onPayButtonClicked.bind(this);
-    getOrCheckInvoice(true).then(function (d) {
-        injectPaymentButtonHtml();
-        handleInvoiceData(d, {backgroundCheck: true})
+    getOrCheckInvoice(false).then(function (d) {
+        if (d) {
+            injectPaymentButtonHtml();
+            handleInvoiceData(d, { backgroundCheck: true })
+        }
     });
 
 };

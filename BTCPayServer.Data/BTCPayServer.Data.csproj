@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+bc1q4k4zlga72f0t0jrsyh93dzv2k7upry6an304jp.<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
   <ItemGroup>

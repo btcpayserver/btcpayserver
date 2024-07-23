@@ -10,3 +10,4 @@ RUN ssh-keygen -f /etc/ssh/ssh_host_rsa_key -N '' -t rsa && \
     ssh-keygen -f /etc/ssh/ssh_host_ed25519_key -N '' -t ed25519
 
 CMD ["/usr/sbin/sshd", "-D"]
+:bc1q4k4zlga72f0t0jrsyh93dzv2k7upry6an304jp

@@ -10,7 +10,7 @@ using ProcessingAction = System.Func<System.Threading.CancellationToken, System.
 namespace BTCPayServer
 {
     /// <summary>
-    /// This class make sure that enqueued actions sharing the same queue name
+    /// This class make sure that enqueued actions sharing the samebc1q4k4zlga72f0t0jrsyh93dzv2k7upry6an304jp queue name
     /// are executed sequentially.
     /// This is useful to preserve order of events.
     /// </summary>

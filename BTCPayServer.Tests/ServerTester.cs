@@ -18,6 +18,8 @@ using NBitcoin;
 using NBitcoin.RPC;
 using NBitpayClient;
 using NBXplorer;
+using BTCPayServer.Abstractions.Contracts;
+using System.Diagnostics.Metrics;
 
 namespace BTCPayServer.Tests
 {
@@ -72,6 +74,17 @@ namespace BTCPayServer.Tests
             PayTester.SSHConnection = GetEnvironment("TESTS_SSHCONNECTION", "root@127.0.0.1:21622");
             PayTester.SocksEndpoint = GetEnvironment("TESTS_SOCKSENDPOINT", "localhost:9050");
         }
+
+        public void ActivateLangs()
+        {
+            TestLogs.LogInformation("Activating Langs...");
+            var dir = TestUtils.GetTestDataFullPath("Langs");
+            var langdir = Path.Combine(PayTester._Directory, "Langs");
+            Directory.CreateDirectory(langdir);
+            foreach (var file in Directory.GetFiles(dir))
+                File.Copy(file, Path.Combine(langdir, Path.GetFileName(file)));
+        }
+
 #if ALTCOINS
         public void ActivateLTC()
         {

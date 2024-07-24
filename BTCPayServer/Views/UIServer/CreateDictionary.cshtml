@@ -1,0 +1,37 @@
+@using BTCPayServer.Abstractions.Models
+@model CreateDictionaryViewModel
+@{
+	ViewData.SetActivePage(ServerNavPages.Translations);
+	ViewData["Title"] = "Create a new dictionary";
+}
+<form method="post" class="d-flex flex-column">
+	<div class="form-group">
+		<div class="sticky-header">
+			<nav aria-label="breadcrumb">
+				<ol class="breadcrumb">
+					<li class="breadcrumb-item">
+						<a asp-action="ListDictionaries">Dictionaries</a>
+					</li>
+					<li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+				</ol>
+				<h2>@ViewData["Title"]</h2>
+			</nav>
+			<input type="submit" value="Create" class="btn btn-primary" id="Create" />
+		</div>
+
+		<div class="row">
+			<div class="col-xl-8 col-xxl-constrain">
+				<div class="form-group">
+					<label asp-for="Name" class="form-label"></label>
+					<input asp-for="Name" class="form-control" />
+					<span asp-validation-for="Name" class="text-danger"></span>
+				</div>
+
+				<label asp-for="Fallback" class="form-label"></label>
+				<select asp-for="Fallback" class="form-select w-auto" asp-items="@Model.DictionariesListItems"></select>
+				<span asp-validation-for="Fallback" class="text-danger"></span>
+				<div class="form-text">If a translation isn’t available in the new dictionary, it will be searched in the fallback.</div>
+			</div>
+		</div>
+	</div>
+</form>

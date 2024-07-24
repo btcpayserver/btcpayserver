@@ -9,6 +9,8 @@ using BTCPayServer.Hosting;
 using BTCPayServer.Services;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 using Xunit.Abstractions;
 using static BTCPayServer.Services.LocalizerService;
@@ -24,13 +26,59 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
-        [Trait("Integration", "Integration")]
+        [Trait("Selenium", "Selenium")]
         public async Task CanTranslateLoginPage()
         {
             using var tester = CreateSeleniumTester(newDb: true);
             tester.Server.ActivateLangs();
             await tester.StartAsync();
             await tester.Server.PayTester.RestartStartupTask<LoadTranslationsStartupTask>();
+
+            // Check if the Cypherpunk translation has been loaded from the file
+            tester.RegisterNewUser(true);
+            tester.CreateNewStore();
+            tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            tester.Driver.FindElement(By.Id("Select-Cypherpunk")).Click();
+            tester.Logout();
+            Assert.Contains("Cyphercode", tester.Driver.PageSource);
+            Assert.Contains("Yo at BTCPay Server", tester.Driver.PageSource);
+
+            // Create English (Custom) 
+            tester.LogIn();
+            tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            tester.Driver.FindElement(By.Id("CreateDictionary")).Click();
+            tester.Driver.FindElement(By.Name("Name")).SendKeys("English (Custom)");
+            tester.Driver.FindElement(By.Id("Create")).Click();
+            var translations = tester.Driver.FindElement(By.Name("Translations"));
+            var text = translations.Text;
+            text = text.Replace("Password => Password", "Password => Mot de passe");
+            translations.Clear();
+            translations.SendKeys("Password => Mot de passe");
+            tester.Driver.FindElement(By.Id("SaveButton")).Click();
+
+            // Check English (Custom) can be selected
+            tester.Driver.FindElement(By.Id("Select-English (Custom)")).Click();
+            tester.Logout();
+            Assert.Contains("Mot de passe", tester.Driver.PageSource);
+
+            // Check if we can remove English (Custom)
+            tester.LogIn();
+            tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            text = tester.Driver.PageSource;
+            Assert.Contains("Select-Cypherpunk", text);
+            Assert.DoesNotContain("Select-English (Custom)", text);
+            // Cypherpunk is loaded from file, can't edit
+            Assert.DoesNotContain("Delete-Cypherpunk", text);
+            // English (Custom) is selected, can't edit
+            Assert.DoesNotContain("Delete-English (Custom)", text);
+            tester.Driver.FindElement(By.Id("Select-Cypherpunk")).Click();
+            tester.Driver.FindElement(By.Id("Delete-English (Custom)")).Click();
+            tester.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+            tester.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+
+            text = tester.Driver.PageSource;
+            Assert.DoesNotContain("Select-English (Custom)", text);
+            Assert.Contains("English (Custom) deleted", text);
         }
 
         [Fact(Timeout = TestTimeout)]

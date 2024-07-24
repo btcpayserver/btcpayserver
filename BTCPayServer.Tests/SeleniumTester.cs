@@ -396,6 +396,10 @@ retry:
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
 
+        public void LogIn()
+        {
+            LogIn(CreatedUser, "123456");
+        }
         public void LogIn(string user, string password = "123456")
         {
             Driver.FindElement(By.Id("Email")).SendKeys(user);

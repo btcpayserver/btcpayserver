@@ -51,11 +51,11 @@
 							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName">Clone</a>
 							@if (!v.IsSelected)
 							{
-								<a asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName">Select</a>
+								<a id="Select-@v.DictionaryName" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName">Select</a>
 							}
 							@if (v.Editable && !v.IsSelected)
 							{
-								<a asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="DELETE">Remove</a>
+								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="DELETE">Remove</a>
 							}
 						</div>
 					</td>

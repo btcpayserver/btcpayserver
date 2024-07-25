@@ -71,9 +71,7 @@ using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
-
-
-
+using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 
 
 #if ALTCOINS
@@ -97,6 +95,8 @@ namespace BTCPayServer.Hosting
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
+                
+                o.UsePostgreSqlTriggers();
             });
             services.AddHttpClient();
             services.AddHttpClient(nameof(ExplorerClientProvider), httpClient =>

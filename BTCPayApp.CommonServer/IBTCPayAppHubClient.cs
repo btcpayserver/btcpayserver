@@ -34,7 +34,6 @@ public interface IBTCPayAppHubServer
     Task<bool> BroadcastTransaction(string tx);
     Task<decimal> GetFeeRate(int blockTarget);
     Task<BestBlockResponse> GetBestBlock();
-    Task<string> GetBlockHeader(string hash);
     
     Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds);
     Task<string> DeriveScript(string identifier);

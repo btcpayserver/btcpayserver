@@ -37,7 +37,7 @@ namespace BTCPayServer.Controllers
             var dictionaries = await this._localizer.GetDictionaries();
             return View(new CreateDictionaryViewModel()
             {
-                Name = fallback is not null ? $"{fallback} (Copy)" : "",
+                Name = fallback is not null ? $"Clone of {fallback}" : "",
                 Fallback = fallback ?? Translations.DefaultLanguage,
             }.SetDictionaries(dictionaries));
         }

@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Services
 @model BrandingViewModel;
 @inject IFileService FileService
@@ -16,7 +16,7 @@
 <form method="post" enctype="multipart/form-data">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
-        <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
 

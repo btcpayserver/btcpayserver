@@ -38,7 +38,7 @@ namespace BTCPayServer.Tests
             var supportUrl = "https://support.satoshisteaks.com/{InvoiceId}/";
             s.GoToStore();
             s.Driver.FindElement(By.Id("StoreWebsite")).SendKeys(storeUrl);
-            s.Driver.FindElement(By.Id("Save")).Click();
+            s.ClickPagePrimary();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
             s.GoToStore(StoreNavPages.CheckoutAppearance);
@@ -46,7 +46,7 @@ namespace BTCPayServer.Tests
             s.Driver.WaitForAndClick(By.Id("Presets_InStore"));
             Assert.True(s.Driver.SetCheckbox(By.Id("ShowPayInWalletButton"), true));
             s.Driver.FindElement(By.Id("SupportUrl")).SendKeys(supportUrl);
-            s.Driver.FindElement(By.Id("Save")).SendKeys(Keys.Enter);
+            s.ClickPagePrimary();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
             // Top up/zero amount invoices
@@ -105,7 +105,7 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
-            s.Driver.FindElement(By.Id("save")).Click();
+            s.ClickPagePrimary();
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
             Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
@@ -251,7 +251,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(StoreNavPages.CheckoutAppearance);
             s.Driver.SetCheckbox(By.Id("OnChainWithLnInvoiceFallback"), true);
             s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), false);
-            s.Driver.FindElement(By.Id("Save")).Click();
+            s.ClickPagePrimary();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
             invoiceId = s.CreateInvoice();
@@ -285,7 +285,7 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToStore(StoreNavPages.CheckoutAppearance);
             s.Driver.SetCheckbox(By.Id("LightningAmountInSatoshi"), true);
-            s.Driver.FindElement(By.Id("Save")).Click();
+            s.ClickPagePrimary();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
             s.GoToInvoiceCheckout(invoiceId);
             Assert.Contains("sats", s.Driver.FindElement(By.Id("AmountDue")).Text);
@@ -368,7 +368,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("5", displayExpirationTimer.GetAttribute("value"));
             displayExpirationTimer.Clear();
             displayExpirationTimer.SendKeys("10");
-            s.Driver.FindElement(By.Id("Save")).Click();
+            s.ClickPagePrimary();
             Assert.Contains("Store successfully updated", s.FindAlertMessage().Text);
 
             s.GoToInvoiceCheckout(invoiceId);
@@ -392,8 +392,7 @@ namespace BTCPayServer.Tests
             s.GoToHome();
             s.GoToLightningSettings();
             s.Driver.SetCheckbox(By.Id("LNURLEnabled"), false);
-            s.Driver.ScrollTo(By.Id("save"));
-            s.Driver.FindElement(By.Id("save")).Click();
+            s.ClickPagePrimary();
             Assert.Contains("BTC Lightning settings successfully updated", s.FindAlertMessage().Text);
 
             // Test:

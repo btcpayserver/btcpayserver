@@ -10,7 +10,7 @@
 <form method="post" autocomplete="off" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
         <h2>Email Server</h2>
-        <button type="submit" class="btn btn-primary" name="command" value="Save" id="Save">Save</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
     @if (Model.IsFallbackSetup())

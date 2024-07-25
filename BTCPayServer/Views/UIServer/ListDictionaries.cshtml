@@ -12,7 +12,7 @@
 </div>
 <partial name="_StatusMessage" />
 
-<p class="mb-0">
+<p class="mb-0" text-translate="true">
 	Dictionaries enable you to translate the BTCPay Server backend into different languages.
 </p>
 
@@ -20,8 +20,8 @@
 	<table class="table table-hover">
 		<thead>
 			<tr>
-				<th>Dictionary</th>
-				<th>Fallback</th>
+				<th text-translate="true">Dictionary</th>
+				<th text-translate="true">Fallback</th>
 				<th class="actions-col"></th>
 			</tr>
 		</thead>
@@ -42,14 +42,14 @@
 					<td>@v.Fallback</td>
 					<td class="actions-col">
 						<div class="d-inline-flex align-items-center gap-3">
-							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName">Clone</a>
+							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName" text-translate="true">Clone</a>
 							@if (!v.IsSelected)
 							{
-								<a id="Select-@v.DictionaryName" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName">Select</a>
+								<a id="Select-@v.DictionaryName" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName" text-translate="true">Select</a>
 							}
 							@if (v.Editable && !v.IsSelected)
 							{
-								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="DELETE">Remove</a>
+								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="DELETE" text-translate="true">Remove</a>
 							}
 						</div>
 					</td>

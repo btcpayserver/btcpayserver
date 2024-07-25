@@ -2063,7 +2063,7 @@ namespace BTCPayServer.Tests
 
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");
@@ -2108,7 +2108,7 @@ namespace BTCPayServer.Tests
             await s.Server.ExplorerNode.GenerateAsync(1);
             await s.FundStoreWallet(denomination: 50.0m);
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");
@@ -2122,7 +2122,7 @@ namespace BTCPayServer.Tests
 
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP2");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("100.0");
@@ -2225,7 +2225,7 @@ namespace BTCPayServer.Tests
             s.GenerateWallet("BTC", "", true, true);
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
 
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("External Test");
             s.Driver.FindElement(By.Id("Amount")).Clear();
             s.Driver.FindElement(By.Id("Amount")).SendKeys("0.001");
@@ -2276,7 +2276,7 @@ namespace BTCPayServer.Tests
             //Currently an onchain wallet is required to use the Lightning payouts feature..
             s.GenerateWallet("BTC", "", true, true);
             s.GoToStore(newStore.storeId, StoreNavPages.PullPayments);
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
 
             var paymentMethodOptions = s.Driver.FindElements(By.CssSelector("input[name='PayoutMethods']"));
             Assert.Equal(2, paymentMethodOptions.Count);
@@ -2344,7 +2344,7 @@ namespace BTCPayServer.Tests
 
             //auto-approve pull payments
             s.GoToStore(StoreNavPages.PullPayments);
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), true);
             s.Driver.FindElement(By.Id("Amount")).Clear();
@@ -2367,7 +2367,7 @@ namespace BTCPayServer.Tests
 
             // LNURL Withdraw support check with BTC denomination
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), true);
             s.Driver.FindElement(By.Id("Amount")).Clear();
@@ -2459,7 +2459,7 @@ namespace BTCPayServer.Tests
             }
 
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), false);
             s.Driver.FindElement(By.Id("Amount")).Clear();
@@ -2499,7 +2499,7 @@ namespace BTCPayServer.Tests
             
             // LNURL Withdraw support check with SATS denomination
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP SATS");
             s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), true);
             s.Driver.FindElement(By.Id("Amount")).Clear();
@@ -3122,7 +3122,7 @@ namespace BTCPayServer.Tests
 
             // Check that pull payment has lightning option
             s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
-            s.Driver.FindElement(By.Id("NewPullPayment")).Click();
+            s.ClickPagePrimary();
             Assert.Equal(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), PaymentMethodId.Parse(Assert.Single(s.Driver.FindElements(By.CssSelector("input[name='PayoutMethods']"))).GetAttribute("value")));
             s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
             s.Driver.FindElement(By.Id("Amount")).Clear();

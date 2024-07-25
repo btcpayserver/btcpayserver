@@ -11,13 +11,22 @@ namespace BTCPayServer.Services
             // Please run it before release.
             var knownTranslations =
 """
+Access Tokens
+Account
 Account key
 Account key path
 Add additional fee (network fee) to invoice …
+Add Address
 Add Exchange Rate Spread
 Add hop hints for private channels to the Lightning invoice
+Add Role
+Add Service
+Add User
+Add Webhook
+Additional Actions
 Admin API access token
 Admin must approve new users
+Administrator
 Allow anyone to create invoice
 Allow form for public use
 Allow payee to create invoices with custom amounts
@@ -27,10 +36,13 @@ Always include non-witness UTXO if available
 Amazon S3
 Amount
 API Key
+API Keys
 App
 App Name
 App Type
 Application
+Approve
+Archive this store
 Authenticator code
 Auto-detect language on checkout
 Automatically approve claims
@@ -40,12 +52,14 @@ Backend's language
 Batch size
 BIP39 Seed (12/24 word mnemonic phrase) or HD private key (xprv...)
 Brand Color
+Branding
 Buyer Email
 Callback Notification URL
 Can use hot wallet
 Can use RPC import
 Celebrate payment with confetti
 Check releases on GitHub and notify when new BTCPay Server version is available
+Checkout Appearance
 Colors to rotate between with animation when a payment is made. One color per line.
 Confirm new password
 Confirm password
@@ -53,8 +67,20 @@ Connection string
 Consider the invoice paid even if the paid amount is … % less than expected
 Consider the invoice settled when the payment transaction …
 Contact URL
+Contact Us
 Contribution Perks Template
 Count all invoices created on the store as part of the goal
+Create
+Create a new app
+Create Account
+Create Form
+Create Invoice
+Create Pull Payment
+Create Request
+Create Store
+Create Webhook
+Create your account
+Crowdfund
 Currency
 Current password
 Custom CSS
@@ -62,10 +88,12 @@ Custom HTML title to display on Checkout page
 Custom sound file for successful payment
 Custom Theme Extension Type
 Custom Theme File
+Dashboard
 Default currency
 Default language on checkout
 Default payment method on checkout
 Default role for users on a new store
+Delete this store
 Derivation scheme
 Derivation scheme format
 Description
@@ -92,6 +120,7 @@ Email
 Email address
 Email confirmation required
 Email confirmed?
+Emails
 Enable background animations on new payments
 Enable Disqus Comments
 Enable experimental features
@@ -105,18 +134,27 @@ Enable tips
 End date
 Error
 Expiration Date
+Export
 Extends the BTCPay Server Dark theme
 Extends the BTCPay Server Light theme
 Featured Image URL
 Fee rate (sat/vB)
+Files
+Forgot password?
 Form configuration (JSON)
+Forms
 Gap limit
+Generate
+Generate API Key
+Generate Key
 Google Cloud Storage
 GRPC SSL Cipher suite (GRPC_SSL_CIPHER_SUITES)
+Hide Sensitive Info
 Image
 Invoice currency
 Invoice expires if the full amount has not been paid after …
 Invoice metadata
+Invoices
 Is administrator?
 Is signing key
 Item Description
@@ -124,8 +162,15 @@ Keypad
 Lightning node (LNURL Auth)
 LNURL Classic Mode
 Local File System
+Log in
+Login Codes
 Logo
+Logout
+Logs
+Maintenance
 Make Crowdfund Public
+Manage Account
+Manage Plugins
 Master fingerprint
 Max sats
 Memo
@@ -133,6 +178,7 @@ Metadata
 Min sats
 Minimum acceptable expiration time for BOLT11 for refunds
 New password
+Next
 Non-admins can access the User Creation API Endpoint
 Non-admins can create Hot Wallets for their Store
 Non-admins can import Hot Wallets for their Store
@@ -140,6 +186,7 @@ Non-admins can use the Internal Lightning Node for their Store
 Non-admins cannot access the User Creation API Endpoint
 Notification Email
 Notification URL
+Notifications
 Only enable the payment method after user explicitly chooses it
 Optional seed passphrase
 Order Id
@@ -147,10 +194,17 @@ Override the block explorers used
 Pair to
 Password
 Password (leave blank to generate invite-link)
+Pay Button
 PayJoin BIP21
+Payment
 Payment invalid if transactions fails to confirm … after invoice expiration
+Payments
 Payout Methods
+Payout Processors
+Payouts
 Plugin server
+Plugins
+Point of Sale
 Point of Sale Style
 Policies
 Preferred Price Source
@@ -161,26 +215,41 @@ Profile Picture
 PSBT content
 PSBT to combine with…
 Public Key
+Pull Payments
 Rate Rules
+Rates
 Recommended fee confirmation target blocks
 Recovery Code
 Redirect invoice to redirect url automatically after paid
 Redirect URL
+Regenerate code
+Register
 Remember me
 Remember this machine
+Reporting
 Request contributor data on checkout
 Request customer data on checkout
+Request Pairing
+Requests
 Reset goal every
 REST Uri
 Role
+Roles
 Root fingerprint
+Save
 Scope
 Search engines can index this site
 Security device (FIDO2)
 Select the Default Currency during Store Creation
 Select the payout method used for refund
+Send test webhook
 Server Name
+Server Settings
+Services
+Set Password
+Settings
 Shop Name
+Shopify
 Show "Pay in wallet" button
 Show a timer … minutes before invoice expiration
 Show plugins in pre-release
@@ -197,7 +266,9 @@ Starting index
 Store
 Store Id
 Store Name
+Store Settings
 Store Website
+Submit
 Subtract fees from amount
 Support URL
 Supported Transaction Currencies
@@ -206,18 +277,27 @@ Test Email
 Text to display in the tip input
 Text to display on buttons allowing the user to enter a custom amount
 Text to display on each button for items with a specific price
+Theme
 Tip percentage amounts (comma separated)
+Translations
+Two-Factor Authentication
+Unarchive this store
 Unify on-chain and lightning payment URL/QR code
+Update Password
+Update Webhook
 Upload PSBT from file…
 Url of the Dynamic DNS service you are using
 Use custom theme
 Use SSL
 User can input custom amount
 User can input discount in %
+Users
 UTXOs to spend from
 Verification Code
 Wallet file
 Wallet file content
+Wallets
+Webhooks
 Welcome to {0}
 Your dynamic DNS hostname
 """;

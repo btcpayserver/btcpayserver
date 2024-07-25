@@ -95,7 +95,8 @@ namespace BTCPayServer.Controllers
             IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
             TransactionLinkProviders transactionLinkProviders,
-            LocalizerService localizer
+            LocalizerService localizer,
+            BTCPayServerEnvironment environment
         )
         {
             _policiesSettings = policiesSettings;
@@ -123,6 +124,7 @@ namespace BTCPayServer.Controllers
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
             _localizer = localizer;
+            Environment = environment;
         }
 
         [HttpGet("server/stores")]
@@ -325,6 +327,7 @@ namespace BTCPayServer.Controllers
         public IHttpClientFactory HttpClientFactory { get; }
         public IHostApplicationLifetime ApplicationLifetime { get; }
         public IHtmlHelper Html { get; }
+        public BTCPayServerEnvironment Environment { get; }
 
         [Route("server/policies")]
         public async Task<IActionResult> Policies()

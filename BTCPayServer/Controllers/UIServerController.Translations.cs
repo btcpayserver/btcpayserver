@@ -7,6 +7,7 @@ using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers
 {
@@ -78,6 +79,18 @@ namespace BTCPayServer.Controllers
             var d = await this._localizer.GetDictionary(dictionary);
             if (d is null)
                 return NotFound();
+            if (Environment.CheatMode && viewModel.Command == "Fake")
+            {
+                var t = await _localizer.GetTranslations(dictionary);
+                var jobj = JObject.Parse(t.Translations.ToJsonFormat());
+                foreach (var prop in jobj.Properties())
+                {
+                    prop.Value = "OK";
+                }
+                viewModel.Translations = Translations.CreateFromJson(jobj.ToString()).ToTextFormat();
+            }
+
+
             if (!Translations.TryCreateFromText(viewModel.Translations, out var translations))
             {
                 ModelState.AddModelError(nameof(viewModel.Translations), "Syntax error");

@@ -16,7 +16,7 @@
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
         <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Create, appType.Type)" id="@($"StoreNav-Create{appType.Type}")">
             <vc:icon symbol="nav-crowdfund" />
-            <span>@appType.Description</span>
+			<span text-translate="true">Crowdfund</span>
         </a>
     </li>
     @if (apps.Any())
@@ -24,7 +24,7 @@
         <li class="nav-item" not-permission="@Policies.CanModifyStoreSettings" permission="@Policies.CanViewStoreSettings">
             <span class="nav-link">
                 <vc:icon symbol="nav-crowdfund" />
-                <span>@appType.Description</span>
+				<span>Crowdfund</span>
             </span>
         </li>
     }

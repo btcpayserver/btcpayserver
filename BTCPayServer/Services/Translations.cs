@@ -10,6 +10,9 @@ using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Runtime.InteropServices;
+using Newtonsoft.Json.Linq;
+using static System.Net.Mime.MediaTypeNames;
+using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Services
 {
@@ -33,6 +36,22 @@ namespace BTCPayServer.Services
             {
                 return false;
             }
+        }
+
+        public static Translations CreateFromJson(string text)
+        {
+            text = (text ?? "{}");
+            var translations = new List<(string key, string? value)>();
+            foreach (var prop in JObject.Parse(text).Properties())
+            {
+                var v = prop.Value.Value<string>();
+                if (string.IsNullOrEmpty(v))
+                    translations.Add((prop.Name, prop.Name));
+                else
+                    translations.Add((prop.Name, v));
+            }
+            return new Translations(translations
+                                    .Select(t => KeyValuePair.Create(t.key, t.value)));
         }
         public static Translations CreateFromText(string text)
         {
@@ -116,7 +135,15 @@ namespace BTCPayServer.Services
         {
             return GetEnumerator();
         }
-
+        public string ToJsonFormat()
+        {
+            JObject obj = new JObject();
+            foreach (var record in Records)
+            {
+                obj.Add(record.Key, record.Value);
+            }
+            return obj.ToString(Newtonsoft.Json.Formatting.Indented);
+        }
         public string ToTextFormat()
         {
             return string.Join('\n', Records.OrderBy(r => r.Key).Select(r => $"{r.Key} => {r.Value}").ToArray());

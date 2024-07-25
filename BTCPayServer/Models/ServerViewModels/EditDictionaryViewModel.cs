@@ -6,6 +6,7 @@ public class EditDictionaryViewModel
 {
     public string Translations { get; set; }
     public int Lines { get; set; }
+    public string Command { get; set; }
 
     internal EditDictionaryViewModel SetTranslations(Translations translations)
     {

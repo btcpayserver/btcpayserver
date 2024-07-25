@@ -23,7 +23,7 @@
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
-            <h2>@ViewData["Title"]</h2>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
         <div permission="@Policies.CanModifyStoreSettings">
             @if (Model.Rules.Any())

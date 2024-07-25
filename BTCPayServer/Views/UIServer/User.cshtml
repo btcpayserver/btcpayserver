@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Contracts
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model UsersViewModel.UserViewModel
 @inject IFileService FileService
@@ -17,8 +17,8 @@
                 <li class="breadcrumb-item active" aria-current="page">User</li>
             </ol>
             <h2>@ViewData["Title"]</h2>
-        </nav>         
-        <button name="command" type="submit" class="btn btn-primary" value="Save" id="SaveUser">Save</button>
+        </nav>
+		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
     <div class="form-group">

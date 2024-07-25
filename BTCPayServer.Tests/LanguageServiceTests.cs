@@ -46,15 +46,15 @@ namespace BTCPayServer.Tests
             // Create English (Custom) 
             tester.LogIn();
             tester.GoToServer(Views.Server.ServerNavPages.Translations);
-            tester.Driver.FindElement(By.Id("CreateDictionary")).Click();
+            tester.ClickPagePrimary();
             tester.Driver.FindElement(By.Name("Name")).SendKeys("English (Custom)");
-            tester.Driver.FindElement(By.Id("Create")).Click();
+            tester.ClickPagePrimary();
             var translations = tester.Driver.FindElement(By.Name("Translations"));
             var text = translations.Text;
             text = text.Replace("Password => Password", "Password => Mot de passe");
             translations.Clear();
             translations.SendKeys("Password => Mot de passe");
-            tester.Driver.FindElement(By.Id("SaveButton")).Click();
+            tester.ClickPagePrimary();
 
             // Check English (Custom) can be selected
             tester.Driver.FindElement(By.Id("Select-English (Custom)")).Click();

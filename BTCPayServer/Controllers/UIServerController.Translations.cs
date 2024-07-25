@@ -13,20 +13,24 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/dictionaries")]
         public async Task<IActionResult> ListDictionaries()
         {
-            var dictionaries = await this._localizer.GetDictionaries();
+            var dictionaries = await _localizer.GetDictionaries();
             var vm = new ListDictionariesViewModel();
             foreach (var dictionary in dictionaries)
             {
-                vm.Dictionaries.Add(new()
+                var isSelected = _policiesSettings.LangDictionary == dictionary.DictionaryName ||
+                                  (_policiesSettings.LangDictionary is null && dictionary.Source == "Default");
+                var dict = new ListDictionariesViewModel.DictionaryViewModel
                 {
                     Editable = dictionary.Source == "Custom",
                     Source = dictionary.Source,
                     DictionaryName = dictionary.DictionaryName,
                     Fallback = dictionary.Fallback,
-                    IsSelected = 
-                    _policiesSettings.LangDictionary == dictionary.DictionaryName ||
-                    (_policiesSettings.LangDictionary is null && dictionary.Source == "Default")
-                });
+                    IsSelected = isSelected
+                };
+                if (isSelected)
+                    vm.Dictionaries.Insert(0, dict);
+                else
+                    vm.Dictionaries.Add(dict);
             }
             return View(vm);
         }

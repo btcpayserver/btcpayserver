@@ -29,15 +29,21 @@
 			@foreach (var v in Model.Dictionaries)
 			{
 				<tr>
-					<td>
+					<td class="d-flex flex-wrap align-items-center gap-2">
 						@if (!v.Editable)
 						{
-							<span class="@(v.IsSelected? "fw-bold" : "")">@v.DictionaryName</span>
+							<span >@v.DictionaryName</span>
 						}
 						else
 						{
-							<a class="@(v.IsSelected? "fw-bold" : "")" asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">@v.DictionaryName</a>
+							<a asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">@v.DictionaryName</a>
 						}
+                        @if (v.IsSelected)
+                        {
+                            <span class="badge bg-info">
+                                In use
+                            </span>
+                        }
 					</td>
 					<td>@v.Fallback</td>
 					<td class="actions-col">

@@ -2878,9 +2878,7 @@ namespace BTCPayServer.Tests
         {
             var settings = tester.PayTester.GetService<SettingsRepository>();
             await settings.UpdateSetting<MigrationSettings>(new MigrationSettings());
-            var migrationStartupTask = tester.PayTester.GetService<IServiceProvider>().GetServices<IStartupTask>()
-                .Single(task => task is MigrationStartupTask);
-            await migrationStartupTask.ExecuteAsync();
+            await tester.PayTester.RestartStartupTask<MigrationStartupTask>();
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]

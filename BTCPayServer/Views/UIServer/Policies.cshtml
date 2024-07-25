@@ -21,7 +21,7 @@
 <form method="post">
     <div class="sticky-header">
         <h2>@ViewData["Title"]</h2>
-        <button id="SaveButton" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
 
@@ -143,6 +143,15 @@
                             <span asp-validation-for="AllowSearchEngines" class="text-danger"></span>
                         </div>
                     </div>
+					<div class="form-check my-3">
+						<label asp-for="LangDictionary" class="form-label"></label>
+						<select asp-for="LangDictionary"
+								asp-items="@(new SelectList(ViewBag.LangDictionaries, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.LangDictionary))"
+								class="form-select">
+						</select>
+						<span asp-validation-for="LangDictionary" class="text-danger"></span>
+						<div class="form-text">Add or customize translations <a asp-action="ListDictionaries">here</a>.</div>
+					</div>
                     @if (ViewBag.UpdateUrlPresent)
                     {
                         <div class="d-flex my-3">

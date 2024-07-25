@@ -1,0 +1,67 @@
+@using BTCPayServer.Abstractions.Models
+@model ListDictionariesViewModel
+@{
+	ViewData.SetActivePage(ServerNavPages.Translations);
+	ViewData["Title"] = "Dictionaries";
+}
+
+<div class="sticky-header">
+	<h2>@ViewData["Title"]</h2>
+	<a id="page-primary" asp-action="CreateDictionary" class="btn btn-primary" role="button">
+		Create
+	</a>
+</div>
+<partial name="_StatusMessage" />
+
+
+<div class="d-flex mb-4">
+	<div class="flex-fill">
+		<p class="mb-0">
+			Dictionaries enable you to translate the BTCPay Server backend into different languages.
+		</p>
+	</div>
+</div>
+
+<div class="table-responsive">
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th>Dictionary</th>
+				<th>Fallback</th>
+				<th class="actions-col"></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var v in Model.Dictionaries)
+			{
+				<tr>
+					<td>
+						@if (!v.Editable)
+						{
+							<span class="@(v.IsSelected? "fw-bold" : "")">@v.DictionaryName</span>
+						}
+						else
+						{
+							<a class="@(v.IsSelected? "fw-bold" : "")" asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">@v.DictionaryName</a>
+						}
+					</td>
+					<td>@v.Fallback</td>
+					<td class="actions-col">
+						<div class="d-inline-flex align-items-center gap-3">
+							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName">Clone</a>
+							@if (!v.IsSelected)
+							{
+								<a id="Select-@v.DictionaryName" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName">Select</a>
+							}
+							@if (v.Editable && !v.IsSelected)
+							{
+								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="DELETE">Remove</a>
+							}
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<partial name="_Confirm" model="@(new ConfirmModel("Delete dictionary", "This dictionary will be removed from this server.", "Delete"))" />
+</div>

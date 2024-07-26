@@ -31,12 +31,8 @@
     <input type="hidden" asp-for="ReturnUrl" />
     @if (string.IsNullOrEmpty(Model.Address))
     {
-        <div class="d-grid gap-3 col-sm-10 col-md-8 col-lg-7 col-xxl-6 mx-auto">
-            <button id="generateButton" class="btn btn-primary" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
-            @if (env.CheatMode)
-            {
-                <button type="submit" name="command" value="fill-wallet" class="btn btn-info">Cheat Mode: Send transactions to this wallet</button>
-            }
+        <div class="payment-box mb-3">
+            <button id="generateButton" class="btn btn-primary w-100" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
         </div>
     }
     else
@@ -109,6 +105,12 @@
                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
                 <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
             </div>
+        </div>
+    }
+    @if (env.CheatMode)
+    {
+        <div class="payment-box mt-3">
+            <button type="submit" name="command" value="fill-wallet" class="btn btn-outline-info w-100">Cheat Mode: Send funds to this wallet</button>
         </div>
     }
 </form>

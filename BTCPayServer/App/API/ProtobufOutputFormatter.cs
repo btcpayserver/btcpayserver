@@ -9,6 +9,10 @@ namespace BTCPayServer.App.API;
 
 public class ProtobufOutputFormatter :  OutputFormatter
 {
+    public ProtobufOutputFormatter()
+    {
+        SupportedMediaTypes.Add("application/octet-stream");
+    }
     public override async Task WriteResponseBodyAsync(OutputFormatterWriteContext context)
     {
         if (context == null)

@@ -350,7 +350,7 @@ namespace BTCPayServer.Controllers
                 Address = address?.ToString(),
                 CryptoImage = GetImage(network),
                 PaymentLink = bip21.ToString(),
-                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
+                ReturnUrl = returnUrl,
                 SelectedLabels = labels ?? Array.Empty<string>()
             });
         }

@@ -230,6 +230,7 @@
                                     <span text-translate="true">Manage</span>
                                 </a>
                             </li>
+                            <li permission="@Policies.CanModifyServerSettings"><hr class="border my-2"></li>
                             @if (Model.Store != null && Model.ArchivedAppsCount > 0)
                             {
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">

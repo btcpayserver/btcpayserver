@@ -83,7 +83,6 @@
 
 	<ItemGroup>
 	  <None Include="Views\UIReports\StoreReports.cshtml" />
-	  <None Include="Views\UIServer\ListInstalledPlugins.cshtml" />
 	  <None Include="wwwroot\vendor\jquery\jquery.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
 	</ItemGroup>

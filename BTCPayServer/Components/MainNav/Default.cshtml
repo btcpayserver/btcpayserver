@@ -214,7 +214,7 @@
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
                                 <a asp-area="" asp-controller="UIServer" asp-action="ExplorePlugins" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Explore)" id="Nav-ExplorePlugins">
                                     <vc:icon symbol="nav-plugins-explore" />
-                                    <span>Explore</span>
+                                    <span text-translate="true">Explore</span>
                                 </a>
                             </li>
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
@@ -227,7 +227,7 @@
                                     {
                                         <vc:icon symbol="nav-plugins-manage" />
                                     }
-                                    <span text-translate="true">Manage Plugins</span>
+                                    <span text-translate="true">Manage</span>
                                 </a>
                             </li>
                             @if (Model.Store != null && Model.ArchivedAppsCount > 0)

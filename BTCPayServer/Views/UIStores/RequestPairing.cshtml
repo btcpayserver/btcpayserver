@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Client
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model PairingModel
@@ -30,14 +30,14 @@
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
                 </ol>
-                <h2>@ViewData["Title"]</h2>
+                <h2 text-translate="true">@ViewData["Title"]</h2>
             </nav>
         }
         else
         {
-            <h2>@ViewData["Title"]</h2>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
         }
-        <button id="ApprovePairing" type="submit" class="btn btn-primary mt-3" title="Approve this pairing demand">Approve</button>
+		<button id="page-primary" type="submit" class="btn btn-primary mt-3" title="Approve this pairing demand">Approve</button>
     </div>
     <partial name="_StatusMessage" />
     <div class="row">

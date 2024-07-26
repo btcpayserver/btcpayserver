@@ -5,10 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
-using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -325,14 +323,14 @@ retry:
                 }
             }
 
-            Driver.FindElement(By.Id("save")).Click();
+            ClickPagePrimary();
             Assert.Contains($"{cryptoCode} Lightning node updated.", FindAlertMessage().Text);
 
             var enabled = Driver.FindElement(By.Id($"{cryptoCode}LightningEnabled"));
             if (enabled.Selected == false)
             {
                 enabled.Click();
-                Driver.FindElement(By.Id("save")).Click();
+                ClickPagePrimary();
                 Assert.Contains($"{cryptoCode} Lightning settings successfully updated", FindAlertMessage().Text);
             }
         }
@@ -396,6 +394,10 @@ retry:
             Driver.FindElement(By.Id("Nav-Logout")).Click();
         }
 
+        public void LogIn()
+        {
+            LogIn(CreatedUser, "123456");
+        }
         public void LogIn(string user, string password = "123456")
         {
             Driver.FindElement(By.Id("Email")).SendKeys(user);
@@ -513,7 +515,7 @@ retry:
         {
             GoToInvoices(storeId);
 
-            Driver.FindElement(By.Id("CreateNewInvoice")).Click();
+            ClickPagePrimary();
             if (amount is decimal v)
                 Driver.FindElement(By.Id("Amount")).SendKeys(v.ToString(CultureInfo.InvariantCulture));
             var currencyEl = Driver.FindElement(By.Id("Currency"));
@@ -522,7 +524,7 @@ retry:
             Driver.FindElement(By.Id("BuyerEmail")).SendKeys(refundEmail);
             if (defaultPaymentMethod is not null)
                 new SelectElement(Driver.FindElement(By.Name("DefaultPaymentMethod"))).SelectByValue(defaultPaymentMethod);
-            Driver.FindElement(By.Id("Create")).Click();
+            ClickPagePrimary();
 
             var statusElement = FindAlertMessage(expectedSeverity);
             var inv = expectedSeverity == StatusMessageModel.StatusSeverity.Success ? statusElement.Text.Split(" ")[1] : null;
@@ -639,10 +641,22 @@ retry:
                 name = $"{type}-{Guid.NewGuid().ToString()[..14]}";
             Driver.FindElement(By.Id($"StoreNav-Create{type}")).Click();
             Driver.FindElement(By.Name("AppName")).SendKeys(name);
-            Driver.FindElement(By.Id("Create")).Click();
+            ClickPagePrimary();
             Assert.Contains("App successfully created", FindAlertMessage().Text);
             var appId = Driver.Url.Split('/')[4];
             return (name, appId);
+        }
+
+        public void ClickPagePrimary()
+        {
+            try
+            {
+                Driver.FindElement(By.Id("page-primary")).Click();
+            }
+            catch (NoSuchElementException)
+            {
+                Driver.WaitForAndClick(By.Id("page-primary"));
+            }
         }
     }
 }

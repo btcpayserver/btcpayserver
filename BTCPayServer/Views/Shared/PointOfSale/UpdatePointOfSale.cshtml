@@ -35,9 +35,9 @@
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
+        <h2 text-translate="true">@ViewData["Title"]</h2>
         <div>
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
             @if (Model.Archived)
             {
                 <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>

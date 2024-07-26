@@ -4,6 +4,8 @@ namespace BTCPayServer.Views.Server
     {
         Users, Emails, Policies, Branding, Services, Maintenance, Logs, Files, Plugins,
         Roles,
-        Stores, Explore
+        Stores,
+        Explore,
+        Translations
     }
 }

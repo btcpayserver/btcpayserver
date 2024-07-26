@@ -227,7 +227,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                         Stores = new[] { storeId },
                         PayoutIds = payoutIds
                     }, context)).Where(data =>
-                        PayoutMethodId.TryParse(data.PaymentMethodId, out var payoutMethodId) &&
+                        PayoutMethodId.TryParse(data.PayoutMethodId, out var payoutMethodId) &&
                         payoutMethodId == PayoutMethodId)
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == false);
                     foreach (var valueTuple in payouts)
@@ -252,7 +252,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                         Stores = new[] { storeId },
                         PayoutIds = payoutIds
                     }, context)).Where(data =>
-                        PayoutMethodId.TryParse(data.PaymentMethodId, out var payoutMethodId) &&
+                        PayoutMethodId.TryParse(data.PayoutMethodId, out var payoutMethodId) &&
                         payoutMethodId == PayoutMethodId)
                         .Select(data => (data, ParseProof(data) as PayoutTransactionOnChainBlob)).Where(tuple => tuple.Item2 != null && tuple.Item2.TransactionId != null && tuple.Item2.Accounted == true);
                     foreach (var valueTuple in payouts)
@@ -285,7 +285,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
         ctx.ChangeTracker.QueryTrackingBehavior = QueryTrackingBehavior.NoTracking;
         var payouts = await ctx.Payouts.Include(data => data.PullPaymentData)
             .Where(data => payoutIds.Contains(data.Id)
-                           && PayoutMethodId.ToString() == data.PaymentMethodId
+                           && PayoutMethodId.ToString() == data.PayoutMethodId
                            && data.State == PayoutState.AwaitingPayment)
             .ToListAsync();
 
@@ -428,7 +428,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                 .Include(o => o.StoreData)
                 .Include(o => o.PullPaymentData)
                 .Where(p => p.State == PayoutState.AwaitingPayment)
-                .Where(p => p.PaymentMethodId == paymentMethodId.ToString())
+                .Where(p => p.PayoutMethodId == paymentMethodId.ToString())
 #pragma warning disable CA1307 // Specify StringComparison
                 .Where(p => destination.Equals(p.Destination))
 #pragma warning restore CA1307 // Specify StringComparison
@@ -474,7 +474,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                 await _notificationSender.SendNotification(new StoreScope(payout.StoreDataId),
                     new ExternalPayoutTransactionNotification()
                     {
-                        PaymentMethod = payout.PaymentMethodId,
+                        PaymentMethod = payout.PayoutMethodId,
                         PayoutId = payout.Id,
                         StoreId = payout.StoreDataId
                     });

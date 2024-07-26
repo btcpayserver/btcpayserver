@@ -23,6 +23,11 @@ namespace BTCPayServer.Services
             set { LockSubscription = !value; }
         }
 
+        [DefaultValue("English")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [Display(Name = "Backend's language")]
+        public string LangDictionary { get; set; } = "English";
+
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Admin must approve new users")]
         public bool RequiresUserApproval { get; set; }

@@ -7,10 +7,6 @@
 <div id="AppTopItems-@Model.Id" class="widget app-top-items">
     <header class="mb-3">
         <h3>Top @(Model.AppType == CrowdfundAppType.AppType ? "Perks" : "Items")</h3>
-        @if (!string.IsNullOrEmpty(Model.AppUrl))
-        {
-            <a href="@Model.AppUrl">View All</a>
-        }
     </header>
     @if (Model.InitialRendering)
     {

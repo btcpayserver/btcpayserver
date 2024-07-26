@@ -1,4 +1,4 @@
-﻿@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Services
 @model BrandingViewModel;
 @inject IFileService FileService
@@ -15,8 +15,8 @@
 
 <form method="post" enctype="multipart/form-data">
     <div class="sticky-header">
-        <h2>@ViewData["Title"]</h2>
-        <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+		<h2 text-translate="true">@ViewData["Title"]</h2>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
 
@@ -64,8 +64,8 @@
                     <div class="form-text">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
                 }
             </div>
-            
-            <h3 class="mt-5 mb-3">Theme</h3>
+
+			<h3 class="mt-5 mb-3" text-translate="true">Theme</h3>
             <p>Use the default Light or Dark Themes, or provide a custom CSS theme file below.</p>
             
             <div class="d-flex align-items-center mb-3">

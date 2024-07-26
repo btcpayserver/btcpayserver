@@ -255,6 +255,80 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/logo": {
+            "post": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Uploads a logo for the store",
+                "description": "Uploads a logo for the store",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "The logo",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "Stores_UploadStoreLogo",
+                "responses": {
+                    "200": {
+                        "description": "Uploads a logo for the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The store could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Deletes the store logo",
+                "description": "Delete the store's logo",
+                "operationId": "Stores_DeleteStoreLogo",
+                "responses": {
+                    "200": {
+                        "description": "Store logo deleted successfully"
+                    },
+                    "404": {
+                        "description": "The store could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/roles": {
             "get": {
                 "tags": [

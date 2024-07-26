@@ -82,7 +82,7 @@
                                     </div>
                                 }
                             </dl>
-                            <a href="?print=true" class="flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank">Print</a>
+                            <a href="?print=true" class="flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank" id="ReceiptLinkPrint">Print</a>
                         </div>
                     }
                 </div>
@@ -173,9 +173,9 @@
                         </div>
                     }
                 }
-                @if (!string.IsNullOrEmpty(Model.OrderUrl))
+                @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
-                    <a href="@Model.OrderUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
+                    <a href="@Model.RedirectUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
                 }
             </div>
         </main>

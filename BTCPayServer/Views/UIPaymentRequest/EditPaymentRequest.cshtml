@@ -30,16 +30,16 @@
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
-            <h2>@ViewData["Title"]</h2>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
-                <button type="submit" class="btn btn-primary" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Create</button>
+                <button id="page-primary" type="submit" class="btn btn-primary" permission="@Policies.CanModifyPaymentRequests">Create</button>
             }
             else
             {
-                <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Save</button>
+				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" permission="@Policies.CanModifyPaymentRequests">Save</button>
                 <a class="btn btn-secondary" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest" target="_blank">View</a>
             }
         </div>

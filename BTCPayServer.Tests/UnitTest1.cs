@@ -80,6 +80,7 @@ using MarkPayoutRequest = BTCPayServer.Client.Models.MarkPayoutRequest;
 using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
+using PosViewType = BTCPayServer.Client.Models.PosViewType;
 
 namespace BTCPayServer.Tests
 {
@@ -160,10 +161,14 @@ namespace BTCPayServer.Tests
             {
                 errors.Remove(validationError);
             }
-            valid = !errors.Any();
-
+            if (errors.Any())
+            {
+                foreach (ValidationError error in errors)
+                {
+                    TestLogs.LogInformation($"Error Type: {error.ErrorType} - {error.Path}: {error.Message} - Value: {error.Value}");
+                } 
+            }
             Assert.Empty(errors);
-            Assert.True(valid);
         }
 
         [Fact]
@@ -2460,7 +2465,7 @@ namespace BTCPayServer.Tests
             var ctrl = acc.GetController<UINotificationsController>();
             var newVersion = MockVersionFetcher.MOCK_NEW_VERSION;
 
-            var vm = Assert.IsType<Models.NotificationViewModels.IndexViewModel>(
+            var vm = Assert.IsType<Models.NotificationViewModels.NotificationIndexViewModel>(
                 Assert.IsType<ViewResult>(await ctrl.Index()).Model);
 
             Assert.True(vm.Skip == 0);
@@ -2873,9 +2878,7 @@ namespace BTCPayServer.Tests
         {
             var settings = tester.PayTester.GetService<SettingsRepository>();
             await settings.UpdateSetting<MigrationSettings>(new MigrationSettings());
-            var migrationStartupTask = tester.PayTester.GetService<IServiceProvider>().GetServices<IStartupTask>()
-                .Single(task => task is MigrationStartupTask);
-            await migrationStartupTask.ExecuteAsync();
+            await tester.PayTester.RestartStartupTask<MigrationStartupTask>();
         }
 
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -2918,7 +2921,7 @@ namespace BTCPayServer.Tests
                 Password = "store@store.com",
                 Port = 1234,
                 Server = "store.com"
-            }), "", true));
+            }), ""));
 
             Assert.Equal("store@store.com", (await Assert.IsType<StoreEmailSender>(await emailSenderFactory.GetEmailSender(acc.StoreId)).GetEmailSettings()).Login);
         }
@@ -3109,20 +3112,20 @@ namespace BTCPayServer.Tests
             var client = await acc.CreateClient();
             var posController = acc.GetController<UIPointOfSaleController>();
 
-            var app = await client.CreatePointOfSaleApp(acc.StoreId, new CreatePointOfSaleAppRequest()
+            var app = await client.CreatePointOfSaleApp(acc.StoreId, new PointOfSaleAppRequest
             {
                 AppName = "Static",
-                DefaultView = Client.Models.PosViewType.Static,
+                DefaultView = PosViewType.Static,
                 Template = new PointOfSaleSettings().Template
             });
             var resp = await posController.ViewPointOfSale(app.Id, choiceKey: "green-tea");
             var invoiceId = GetInvoiceId(resp);
             await acc.PayOnChain(invoiceId);
 
-            app = await client.CreatePointOfSaleApp(acc.StoreId, new CreatePointOfSaleAppRequest()
+            app = await client.CreatePointOfSaleApp(acc.StoreId, new PointOfSaleAppRequest
             {
                 AppName = "Cart",
-                DefaultView = Client.Models.PosViewType.Cart,
+                DefaultView = PosViewType.Cart,
                 Template = new PointOfSaleSettings().Template
             });
             resp = await posController.ViewPointOfSale(app.Id, posData: new JObject()

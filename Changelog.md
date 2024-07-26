@@ -1,5 +1,33 @@
 # Changelog
 
+## 1.13.5
+
+### Bug fixes
+
+* Fix: Plugin Exception Handler didn't disabled plugin if crash was detected @NicolasDorier
+* Fix: Kraken rate provider failing due to bid > ask @NicolasDorier
+
+## 1.13.4
+
+### Bug fixes
+
+* LNUrl payouts failing due to amount restriction wouldn't be immediately cancelled (#6061) @Kukks
+* Fix row ordering and display issues in reporting (#6065 #6087, 597e2b0e) @NicolasDorier @dennisreimann
+* Parse Timespan strings in the API properly (#6012) @dennisreimann
+* "Return to Store" link in invoice receipt should return to the redirectUrl (#6079) @dennisreimann
+* Fix crash caused by custom explorer links in some conditions (#6077 #6078) @dennisreimann
+* Fix: Can't save email settings on store level (#6076 #6080) @dennisreimann
+* Reports: Fix dropdown z-index @dennisreimann
+* Shopify: Properly cancel an order when BTCPay invoice expires, and restock the inventory (#6104 #6107 #6108) @NicolasDorier
+* Shopify: Generate BTCPay invoice as soon as the payment page in shopify opens (#6105) @NicolasDorier
+
+### Improvements
+
+* Checkout: Display item description if present (#6082) @dennisreimann
+* Disable plugins if they crash the Dashboard page (#6099) @NicolasDorier
+* Hide empty values in the receipts (#6079) @dennisreimann
+* Greenfield: Add the invoice metadata of a Lightning Address (#6067 #6084) @dennisreimann
+
 ## 1.13.3
 
 ### Bug fixes

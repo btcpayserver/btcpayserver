@@ -86,7 +86,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     .Where(data =>
                         payoutIds.Contains(data.Id) &&
                         data.State == PayoutState.AwaitingPayment &&
-                        data.PaymentMethodId == pmiStr)
+                        data.PayoutMethodId == pmiStr)
                     .ToListAsync())
                 .Where(payout =>
                 {
@@ -185,13 +185,13 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                                 }
                                 else
                                 {
-                                    result = await TrypayBolt(client, blob, payoutData, lnurlResult.Item1, payoutHandler.Currency, cancellationToken);
+                                    result = await TrypayBolt(client, blob, payoutData, lnurlResult.Item1, cancellationToken);
                                 }
 
                                 break;
 
                             case BoltInvoiceClaimDestination item1:
-                                result = await TrypayBolt(client, blob, payoutData, item1.PaymentRequest, payoutHandler.Currency, cancellationToken);
+                                result = await TrypayBolt(client, blob, payoutData, item1.PaymentRequest, cancellationToken);
 
                                 break;
                             default:
@@ -245,13 +245,15 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
             if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
             {
+                
+                payoutData.State = PayoutState.Cancelled;
                 return (null, new ResultVM
                 {
                     PayoutId = payoutData.Id,
                     Result = PayResult.Error,
                     Destination = blob.Destination,
                     Message =
-                        $"The LNURL provided would not generate an invoice of {lm.MilliSatoshi}msats"
+                        $"The LNURL provided would not generate an invoice of {lm.ToDecimal(LightMoneyUnit.Satoshi)} sats"
                 });
             }
 
@@ -276,8 +278,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         }
 
         public static async Task<ResultVM> TrypayBolt(
-            ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest,
-            string payoutCurrency, CancellationToken cancellationToken)
+            ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, CancellationToken cancellationToken)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
             if (boltAmount > payoutBlob.CryptoAmount)
@@ -287,7 +288,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     PayoutId = payoutData.Id,
                     Result = PayResult.Error,
-                    Message = $"The BOLT11 invoice amount ({boltAmount} {payoutCurrency}) did not match the payout's amount ({payoutBlob.CryptoAmount.GetValueOrDefault()} {payoutCurrency})",
+                    Message = $"The BOLT11 invoice amount ({boltAmount} {payoutData.Currency}) did not match the payout's amount ({payoutBlob.CryptoAmount.GetValueOrDefault()} {payoutData.Currency})",
                     Destination = payoutBlob.Destination
                 };
             }

@@ -11,8 +11,8 @@
 }
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <h2>Store Settings</h2>
-        <button type="submit" class="btn btn-primary" id="Save">Save</button>
+		<h2 text-translate="true">Store Settings</h2>
+		<button id="page-primary" type="submit" class="btn btn-primary">Save</button>
     </div>
 
     <partial name="_StatusMessage" />
@@ -38,7 +38,7 @@
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
 
-            <h3 class="mt-5 mb-3">Branding</h3>
+			<h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
             <div class="form-group">
                 <label asp-for="BrandColor" class="form-label"></label>
                 <div class="input-group">
@@ -104,8 +104,8 @@
                     <div class="form-text">In order to upload a CSS file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
                 }
             </div>
-            
-            <h3 class="mt-5 mb-3">Payment</h3>
+
+			<h3 class="mt-5 mb-3" text-translate="true">Payment</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrency" class="form-label"></label>
                 <input asp-for="DefaultCurrency" class="form-control w-auto" currency-selection />
@@ -167,21 +167,21 @@
 </form>
 
 <div permission="@Policies.CanModifyStoreSettings">
-    <h3 class="mt-5 mb-3">Additional Actions</h3>
+	<h3 class="mt-5 mb-3" text-translate="true">Additional Actions</h3>
     <div id="danger-zone" class="d-flex flex-wrap align-items-center gap-3 mb-5 mt-2">
         <form asp-action="ToggleArchive" asp-route-storeId="@Model.Id" method="post">
             <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
                 @if (Model.Archived)
                 {
-                <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store">Unarchive this store</span>
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store" text-translate="true">Unarchive this store</span>
                 }
                 else
                 {
-                <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default">Archive this store</span>
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default" text-translate="true">Archive this store</span>
                 }
             </button>
         </form>
-        <a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
+		<a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE" text-translate="true">Delete this store</a>
     </div>
 </div>
 

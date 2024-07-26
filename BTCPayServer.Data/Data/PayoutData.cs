@@ -10,7 +10,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Data
 {
-    public class PayoutData
+    public partial class PayoutData
     {
         [Key]
         [MaxLength(30)]
@@ -18,12 +18,13 @@ namespace BTCPayServer.Data
         public DateTimeOffset Date { get; set; }
         public string PullPaymentDataId { get; set; }
         public string StoreDataId { get; set; }
+        public string Currency { get; set; }
         public PullPaymentData PullPaymentData { get; set; }
         [MaxLength(20)]
         public PayoutState State { get; set; }
         [MaxLength(20)]
         [Required]
-        public string PaymentMethodId { get; set; }
+        public string PayoutMethodId { get; set; }
         public string Blob { get; set; }
         public string Proof { get; set; }
 #nullable enable

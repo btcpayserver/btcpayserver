@@ -29,7 +29,7 @@ public class TransactionLinkProviders : Dictionary<string, TransactionLinkProvid
         {
             foreach ((var pmi, var prov) in this)
             {
-                var overrideLink = links.SingleOrDefault(item =>
+                var overrideLink = links.FirstOrDefault(item =>
                     item.CryptoCode.Equals(pmi, StringComparison.InvariantCultureIgnoreCase));
                 prov.OverrideBlockExplorerLink = overrideLink?.Link ?? prov.BlockExplorerLinkDefault;
             }

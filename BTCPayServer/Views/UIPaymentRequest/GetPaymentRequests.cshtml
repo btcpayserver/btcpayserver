@@ -30,7 +30,7 @@
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreatePaymentRequest" permission="@Policies.CanModifyPaymentRequests">
+	<a id="page-primary" asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyPaymentRequests">
         Create Request
     </a>
 </div>

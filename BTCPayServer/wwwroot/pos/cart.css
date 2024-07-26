@@ -7,11 +7,6 @@
     
     padding-top: 0;
 }
-@media (max-width: 400px) {
-    #PosCart .public-page-wrap {
-        --wrap-padding-horizontal: var(--btcpay-space-s);
-    }
-}
 
 #PosCart .offcanvas-backdrop {
     top: var(--mobile-header-height);
@@ -59,8 +54,19 @@
 }
 
 #RecentTransactionsToggle {
+    left: -.5rem;
+}
+#RecentTransactionsToggle.btn .icon {
     --icon-size: 1.5rem;
-    left: 0;
+}
+@media screen and (max-width: 400px) {
+    header {
+        padding-left: .5rem;
+        padding-right: .5rem;
+    }
+    #RecentTransactionsToggle {
+        left: -.125rem;
+    }
 }
 
 header .cart-toggle-btn {

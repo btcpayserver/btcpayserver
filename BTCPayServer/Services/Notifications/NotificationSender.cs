@@ -58,6 +58,11 @@ namespace BTCPayServer.Services.Notifications
             }
         }
 
+        public BaseNotification GetBaseNotification(NotificationData notificationData)
+        {
+            return notificationData.HasTypedBlob<BaseNotification>().GetBlob();
+        }
+
         private async Task<string[]> GetUsers(INotificationScope scope, string notificationIdentifier)
         {
             await using var ctx = _contextFactory.CreateContext();

@@ -23,16 +23,16 @@
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
-            <h2>@ViewData["Title"]</h2>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
-                <button type="submit" class="btn btn-primary" id="SaveButton">Create</button>
+				<button id="page-primary" type="submit" class="btn btn-primary">Create</button>
             }
             else
             {
-                <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton">Save</button>
+				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
                 <a class="btn btn-secondary" asp-action="ViewPullPayment" asp-route-pullPaymentId="@Model.Id" id="ViewPullPayment" target="_blank">View</a>
             }
         </div>

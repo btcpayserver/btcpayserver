@@ -9,11 +9,12 @@
 @using BTCPayServer.Client
 @model StoreDashboardViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
+	BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
+	ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
     var store = ViewContext.HttpContext.GetStoreData();
 }
 
-<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
 
 @if (Model.IsSetUp)

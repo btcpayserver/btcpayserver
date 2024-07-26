@@ -1,14 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications
 {
@@ -27,7 +24,6 @@ namespace BTCPayServer.Services.Notifications
             _eventAggregator = eventAggregator;
             _handlersByNotificationType = handlers.ToDictionary(h => h.NotificationType);
         }
-
 
         public async Task<(List<NotificationViewModel> Items, int? Count)> GetSummaryNotifications(string userId, bool cachedOnly)
         {
@@ -68,7 +64,7 @@ namespace BTCPayServer.Services.Notifications
 
             var queryables = GetNotificationsQueryable(dbContext, query);
             var items = (await queryables.withPaging.ToListAsync()).Select(ToViewModel).Where(model => model != null).ToList();
-
+            items = FilterNotifications(items, query);
             int? count = null;
             if (query.Seen is false)
             {
@@ -134,6 +130,34 @@ namespace BTCPayServer.Services.Notifications
             return (queryable, queryable2);
         }
 
+        private List<NotificationViewModel> FilterNotifications(List<NotificationViewModel> notifications, NotificationsQuery query)
+        {
+            if (!string.IsNullOrEmpty(query.SearchText))
+            {
+                notifications = notifications.Where(data => data.Body.Contains(query.SearchText)).ToList();
+            }
+            if (query.Type?.Length > 0)
+            {
+                if (query.Type?.Length > 0)
+                {
+                    if (query.Type.Contains("userupdate"))
+                    {
+                        notifications = notifications.Where(n => n.Type.Equals("inviteaccepted", StringComparison.OrdinalIgnoreCase) ||
+                                                                 n.Type.Equals("userapproval", StringComparison.OrdinalIgnoreCase)).ToList();
+                    }
+                    else
+                    {
+                        notifications = notifications.Where(n => query.Type.Contains(n.Type, StringComparer.OrdinalIgnoreCase)).ToList();
+                    }
+                }
+            }
+            if (query.StoreIds?.Length > 0)
+            {
+                notifications = notifications.Where(n => !string.IsNullOrEmpty(n.StoreId) && query.StoreIds.Contains(n.StoreId, StringComparer.OrdinalIgnoreCase)).ToList();
+            }
+            return notifications;
+        }
+
         public async Task<List<NotificationViewModel>> ToggleSeen(NotificationsQuery notificationsQuery, bool? setSeen)
         {
             await using var dbContext = _factory.CreateContext();
@@ -195,5 +219,8 @@ namespace BTCPayServer.Services.Notifications
         public int? Skip { get; set; }
         public int? Take { get; set; }
         public bool? Seen { get; set; }
+        public string SearchText { get; set; }
+        public string[] Type { get; set; }
+        public string[] StoreIds { get; set; }
     }
 }

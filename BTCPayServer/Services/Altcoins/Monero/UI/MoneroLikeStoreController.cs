@@ -253,12 +253,30 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                         }
                     }
 
-                    return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new
+                    try
                     {
-                        cryptoCode,
-                        StatusMessage = "View-only wallet files uploaded. If they are valid the wallet will soon become available."
-
+                        var response = await _MoneroRpcProvider.WalletRpcClients[cryptoCode].SendCommandAsync<OpenWalletRequest, OpenWalletResponse>("open_wallet", new OpenWalletRequest
+                        {
+                            Filename = "wallet",
+                            Password = viewModel.WalletPassword
+                        });
+                        if (response?.Error != null)
+                        {
+                            throw new Exception(response.Error.Message);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError(nameof(viewModel.AccountIndex), $"Could not open the wallet: {ex.Message}");
+                        return View(viewModel);
+                    }
+                    
+                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    {
+                        Severity = StatusMessageModel.StatusSeverity.Info,
+                        Message = $"View-only wallet files uploaded. The wallet will soon become available."
                     });
+                    return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new { cryptoCode });
                 }
             }
 
@@ -343,7 +361,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
             public IFormFile WalletKeysFile { get; set; }
             [Display(Name = "Wallet Password")]
             public string WalletPassword { get; set; }
-            [Display(Name = "Consider the invoice settled when the payment transaction ï¿½")]
+            [Display(Name = "Consider the invoice settled when the payment transaction …")]
             public MoneroLikeSettlementThresholdChoice SettlementConfirmationThresholdChoice { get; set; }
             [Display(Name = "Required Confirmations"), Range(0, 100)]
             public long? CustomSettlementConfirmationThreshold { get; set; }

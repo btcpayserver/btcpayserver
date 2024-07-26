@@ -1,4 +1,4 @@
-﻿@model CreateTokenViewModel
+@model CreateTokenViewModel
 @{
     var store = Context.GetStoreData();
     ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", store?.Id);
@@ -17,14 +17,14 @@
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
                 </ol>
-                <h2>@ViewData["Title"]</h2>
+                <h2 text-translate="true">@ViewData["Title"]</h2>
             </nav>
         }
         else
         {
-            <h2>@ViewData["Title"]</h2>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
         }
-        <input id="RequestPairing" type="submit" value="Request Pairing" class="btn btn-primary" />
+        <input id="page-primary" type="submit" value="Request Pairing" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />
     <div class="row">

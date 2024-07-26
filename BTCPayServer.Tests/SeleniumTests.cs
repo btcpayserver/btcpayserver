@@ -1544,7 +1544,6 @@ namespace BTCPayServer.Tests
             s.GenerateWallet("BTC", "", false, true);
             var walletId = new WalletId(storeId, "BTC");
             s.GoToWallet(walletId, WalletsNavPages.Receive);
-            s.Driver.FindElement(By.Id("generateButton")).Click();
             var addressStr = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
             var address = BitcoinAddress.Create(addressStr,
                 ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);

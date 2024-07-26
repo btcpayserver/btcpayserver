@@ -8,7 +8,7 @@
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
         <a asp-area="" asp-controller="UIPayButton" asp-action="PayButton" asp-route-storeId="@store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.PayButton)" id="StoreNav-PayButton">
             <vc:icon symbol="nav-pay-button"/>
-            <span>Pay Button</span>
+			<span text-translate="true">Pay Button</span>
         </a>
     </li>
 }

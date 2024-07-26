@@ -20,9 +20,11 @@ public class StoreBrandingViewModel
     {
         if (storeBlob == null)
             return new StoreBrandingViewModel();
-        var result = new StoreBrandingViewModel(storeBlob);
-        result.LogoUrl = await uriResolver.Resolve(request.GetAbsoluteRootUri(), storeBlob.LogoUrl);
-        result.CssUrl = await uriResolver.Resolve(request.GetAbsoluteRootUri(), storeBlob.CssUrl);
+        var result = new StoreBrandingViewModel(storeBlob)
+        {
+            LogoUrl = await uriResolver.Resolve(request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
+            CssUrl = await uriResolver.Resolve(request.GetAbsoluteRootUri(), storeBlob.CssUrl)
+        };
         return result;
     }
     private StoreBrandingViewModel(StoreBlob storeBlob)

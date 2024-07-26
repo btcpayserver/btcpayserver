@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayApp.VSS;
 using BTCPayServer.Abstractions.Constants;
@@ -40,13 +41,13 @@ public class VSSController : Controller, IVSSAPI
 
     [HttpPost(HttpVSSAPIClient.GET_OBJECT)]
     [MediaTypeConstraint("application/octet-stream")]
-    public async Task<GetObjectResponse> GetObjectAsync(GetObjectRequest request)
+    public async Task<GetObjectResponse> GetObjectAsync(GetObjectRequest request, CancellationToken cancellationToken)
     {
         
         var userId = _userManager.GetUserId(User);
         await using var dbContext = _dbContextFactory.CreateContext();
         var store = await dbContext.AppStorageItems.SingleOrDefaultAsync(data =>
-            data.Key == request.Key && data.UserId == userId);
+            data.Key == request.Key && data.UserId == userId, cancellationToken: cancellationToken);
         if (store == null)
         {
             return SetResult<GetObjectResponse>(
@@ -91,7 +92,7 @@ public class VSSController : Controller, IVSSAPI
 
     [HttpPost(HttpVSSAPIClient.PUT_OBJECTS)]
     [MediaTypeConstraint("application/octet-stream")]
-    public async Task<PutObjectResponse> PutObjectAsync(PutObjectRequest request)
+    public async Task<PutObjectResponse> PutObjectAsync(PutObjectRequest request, CancellationToken cancellationToken)
     {
 
         if (!VerifyGlobalVersion(request.GlobalVersion))
@@ -104,7 +105,7 @@ public class VSSController : Controller, IVSSAPI
         
         await using var dbContext = _dbContextFactory.CreateContext();
 
-        await using var dbContextTransaction = await dbContext.Database.BeginTransactionAsync();
+        await using var dbContextTransaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
         try
         {
             if (request.TransactionItems.Any())
@@ -113,7 +114,7 @@ public class VSSController : Controller, IVSSAPI
                 {
                     Key = data.Key, Value = data.Value.ToByteArray(), UserId = userId, Version = data.Version
                 });
-                await dbContext.AppStorageItems.AddRangeAsync(items);
+                await dbContext.AppStorageItems.AddRangeAsync(items, cancellationToken);
             }
 
             if (request.DeleteItems.Any())
@@ -121,15 +122,15 @@ public class VSSController : Controller, IVSSAPI
                 var deleteQuery = request.DeleteItems.Aggregate(
                     dbContext.AppStorageItems.Where(data => data.UserId == userId),
                     (current, key) => current.Where(data => data.Key == key.Key && data.Version == key.Version));
-                await deleteQuery.ExecuteDeleteAsync();
+                await deleteQuery.ExecuteDeleteAsync(cancellationToken: cancellationToken);
             }
 
-            await dbContext.SaveChangesAsync();
-            await dbContextTransaction.CommitAsync();
+            await dbContext.SaveChangesAsync(cancellationToken);
+            await dbContextTransaction.CommitAsync(cancellationToken);
         }
         catch (Exception e)
         {
-            await dbContextTransaction.RollbackAsync();
+            await dbContextTransaction.RollbackAsync(cancellationToken);
             return SetResult<PutObjectResponse>(BadRequest(new ErrorResponse()
             {
                 ErrorCode = ErrorCode.ConflictException, Message = e.Message
@@ -142,7 +143,7 @@ public class VSSController : Controller, IVSSAPI
 
     [HttpPost(HttpVSSAPIClient.DELETE_OBJECT)]
     [MediaTypeConstraint("application/octet-stream")]
-    public async Task<DeleteObjectResponse> DeleteObjectAsync(DeleteObjectRequest request)
+    public async Task<DeleteObjectResponse> DeleteObjectAsync(DeleteObjectRequest request, CancellationToken cancellationToken)
     {
         
 
@@ -150,7 +151,7 @@ public class VSSController : Controller, IVSSAPI
         await using var dbContext = _dbContextFactory.CreateContext();
         var store = await dbContext.AppStorageItems
             .Where(data => data.Key == request.KeyValue.Key && data.UserId == userId &&
-                           data.Version == request.KeyValue.Version).ExecuteDeleteAsync();
+                           data.Version == request.KeyValue.Version).ExecuteDeleteAsync(cancellationToken: cancellationToken);
         return store == 0
             ? SetResult<DeleteObjectResponse>(
                 new NotFoundObjectResult(new ErrorResponse()
@@ -161,13 +162,13 @@ public class VSSController : Controller, IVSSAPI
     }
 
     [HttpPost(HttpVSSAPIClient.LIST_KEY_VERSIONS)]
-    public async Task<ListKeyVersionsResponse> ListKeyVersionsAsync(ListKeyVersionsRequest request)
+    public async Task<ListKeyVersionsResponse> ListKeyVersionsAsync(ListKeyVersionsRequest request, CancellationToken cancellationToken)
     {
         var userId = _userManager.GetUserId(User);
         await using var dbContext = _dbContextFactory.CreateContext();
         var items = await dbContext.AppStorageItems
             .Where(data => data.UserId == userId)
-            .Select(data => new KeyValue() {Key = data.Key, Version = data.Version}).ToListAsync();
+            .Select(data => new KeyValue() {Key = data.Key, Version = data.Version}).ToListAsync(cancellationToken: cancellationToken);
         return new ListKeyVersionsResponse {KeyVersions = {items}};
     }
 }

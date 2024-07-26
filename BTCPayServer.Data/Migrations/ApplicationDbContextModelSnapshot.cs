@@ -28,18 +28,21 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Key")
                         .HasColumnType("text");
 
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("UserId")
                         .HasColumnType("text");
 
                     b.Property<byte[]>("Value")
                         .HasColumnType("bytea");
 
-                    b.Property<decimal>("Version")
-                        .HasColumnType("numeric(20,0)");
-
-                    b.HasKey("Key", "UserId");
+                    b.HasKey("Key", "Version", "UserId");
 
                     b.HasIndex("UserId");
+
+                    b.HasIndex("Key", "UserId")
+                        .IsUnique();
 
                     b.ToTable("AppStorageItems", t =>
                         {

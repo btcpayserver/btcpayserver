@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Configuration;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
@@ -17,8 +15,6 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Dapper;
-using Ganss.Xss;
-using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -87,26 +83,25 @@ namespace BTCPayServer.Services.Apps
             return await appType.GetInfo(appData);
         }
 
-        public async Task<IEnumerable<ItemStats>> GetItemStats(AppData appData)
+        public async Task<IEnumerable<AppItemStats>> GetItemStats(AppData appData)
         {
             if (GetAppType(appData.AppType) is not IHasItemStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
-            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData,
-                null, new[]
-                {
-                    InvoiceStatus.Processing.ToString(),
-                    InvoiceStatus.Settled.ToString()
-                });
+            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData, null,
+            [
+                InvoiceStatus.Processing.ToString(),
+                InvoiceStatus.Settled.ToString()
+            ]);
             return await salesType.GetItemStats(appData, paidInvoices);
         }
 
-        public static Task<SalesStats> GetSalesStatswithPOSItems(ViewPointOfSaleViewModel.Item[] items,
+        public static Task<AppSalesStats> GetSalesStatswithPOSItems(ViewPointOfSaleViewModel.Item[] items,
             InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var series = paidInvoices
-                .Aggregate(new List<InvoiceStatsItem>(), AggregateInvoiceEntitiesForStats(items))
+                .Aggregate([], AggregateInvoiceEntitiesForStats(items))
                 .GroupBy(entity => entity.Date)
-                .Select(entities => new SalesStatsItem
+                .Select(entities => new AppSalesStatsItem
                 {
                     Date = entities.Key,
                     Label = entities.Key.ToString("MMM dd", CultureInfo.InvariantCulture),
@@ -119,7 +114,7 @@ namespace BTCPayServer.Services.Apps
                 var date = (DateTimeOffset.UtcNow - TimeSpan.FromDays(i)).Date;
                 if (!series.Any(e => e.Date == date))
                 {
-                    series = series.Append(new SalesStatsItem
+                    series = series.Append(new AppSalesStatsItem
                     {
                         Date = date,
                         Label = date.ToString("MMM dd", CultureInfo.InvariantCulture)
@@ -127,23 +122,18 @@ namespace BTCPayServer.Services.Apps
                 }
             }
 
-            return Task.FromResult(new SalesStats
+            return Task.FromResult(new AppSalesStats
             {
                 SalesCount = series.Sum(i => i.SalesCount),
                 Series = series.OrderBy(i => i.Label)
             });
         }
 
-        public async Task<SalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
+        public async Task<AppSalesStats> GetSalesStats(AppData app, int numberOfDays = 7)
         {
             if (GetAppType(app.AppType) is not IHasSaleStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
-            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays),
-                new[]
-                {
-                    InvoiceStatus.Processing.ToString(),
-                    InvoiceStatus.Settled.ToString()
-                });
+            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays));
 
             return await salesType.GetSalesStats(app, paidInvoices, numberOfDays);
         }
@@ -537,27 +527,5 @@ retry:
         public string Id { get; set; }
         public int Count { get; set; }
         public decimal Price { get; set; }
-    }
-
-    public class ItemStats
-    {
-        public string ItemCode { get; set; }
-        public string Title { get; set; }
-        public int SalesCount { get; set; }
-        public decimal Total { get; set; }
-        public string TotalFormatted { get; set; }
-    }
-
-    public class SalesStats
-    {
-        public int SalesCount { get; set; }
-        public IEnumerable<SalesStatsItem> Series { get; set; }
-    }
-
-    public class SalesStatsItem
-    {
-        public DateTime Date { get; set; }
-        public string Label { get; set; }
-        public int SalesCount { get; set; }
     }
 }

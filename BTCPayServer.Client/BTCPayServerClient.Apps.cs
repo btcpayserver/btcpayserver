@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -56,6 +57,20 @@ public partial class BTCPayServerClient
     {
         if (appId == null) throw new ArgumentNullException(nameof(appId));
         return await SendHttpRequest<CrowdfundAppData>($"api/v1/apps/crowdfund/{appId}", null, HttpMethod.Get, token);
+    }
+
+    public virtual async Task<AppSalesStats> GetAppSales(string appId, int numberOfDays = 7, CancellationToken token = default)
+    {
+        if (appId == null) throw new ArgumentNullException(nameof(appId));
+        var queryPayload = new Dictionary<string, object> { { nameof(numberOfDays), numberOfDays } };
+        return await SendHttpRequest<AppSalesStats>($"api/v1/apps/{appId}/sales", queryPayload, HttpMethod.Get, token);
+    }
+
+    public virtual async Task<List<AppItemStats>> GetAppTopItems(string appId, int offset = 0, int count = 10, CancellationToken token = default)
+    {
+        if (appId == null) throw new ArgumentNullException(nameof(appId));
+        var queryPayload = new Dictionary<string, object> { { nameof(offset), offset }, { nameof(count), count } };
+        return await SendHttpRequest<List<AppItemStats>>($"api/v1/apps/{appId}/top-items", queryPayload, HttpMethod.Get, token);
     }
 
     public virtual async Task DeleteApp(string appId, CancellationToken token = default)

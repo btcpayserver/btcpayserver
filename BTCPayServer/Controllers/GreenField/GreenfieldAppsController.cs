@@ -226,6 +226,30 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok();
         }
 
+        [HttpGet("~/api/v1/apps/{appId}/sales")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetAppSales(string appId, [FromQuery] int numberOfDays = 7)
+        {
+            var app = await _appService.GetApp(appId, null, includeArchived: true);
+            if (app == null) return AppNotFound();
+
+            var stats = await _appService.GetSalesStats(app, numberOfDays);
+            return Ok(stats);
+        }
+
+        [HttpGet("~/api/v1/apps/{appId}/top-items")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> GetAppTopItems(string appId, [FromQuery] int offset = 0, [FromQuery] int count = 10)
+        {
+            var app = await _appService.GetApp(appId, null, includeArchived: true);
+            if (app == null) return AppNotFound();
+
+            var stats = (await _appService.GetItemStats(app)).ToList();
+            var max = Math.Min(count, stats.Count - offset); 
+            var items = stats.GetRange(offset, max);
+            return Ok(items);
+        }
+        
         private IActionResult AppNotFound()
         {
             return this.CreateAPIError(404, "app-not-found", "The app with specified ID was not found");

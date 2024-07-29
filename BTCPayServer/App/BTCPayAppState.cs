@@ -228,7 +228,7 @@ public class BTCPayAppState : IHostedService
                     ExplorerClient.Track(trackedSource);
                 }
 
-                await _hubContext.Groups.AddToGroupAsync(contextConnectionId, ts);
+                await AddToGroup(ts, contextConnectionId);
             }
             catch (Exception e)
             {

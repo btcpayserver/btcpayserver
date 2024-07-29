@@ -6,14 +6,12 @@ using System.Threading.Tasks;
 using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -37,33 +35,51 @@ public partial class AppApiController
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<Results<Ok<AccessTokenResponse>, Ok<SignupResult>, EmptyHttpResult, ProblemHttpResult>> Register(SignupRequest signup)
     {
-        var policiesSettings = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-        if (policiesSettings.LockSubscription)
+        var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
+        if (policies.LockSubscription)
             return TypedResults.Problem("This instance does not allow public user registration", statusCode: 401);
             
         var errorMessage = "Invalid signup attempt.";
         if (ModelState.IsValid)
         {
+            var isFirstAdmin = !(await userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
             var user = new ApplicationUser
             {
                 UserName = signup.Email,
                 Email = signup.Email,
-                RequiresEmailConfirmation = policiesSettings.RequiresConfirmedEmail,
-                RequiresApproval = policiesSettings.RequiresUserApproval,
-                Created = DateTimeOffset.UtcNow
+                RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
+                RequiresApproval = policies.RequiresUserApproval,
+                Created = DateTimeOffset.UtcNow,
+                Approved = isFirstAdmin // auto-approve first admin and users created by an admin
             };
+            
             var result = await userManager.CreateAsync(user, signup.Password);
             if (result.Succeeded)
             {
+                if (isFirstAdmin)
+                {
+                    await roleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
+                    await userManager.AddToRoleAsync(user, Roles.ServerAdmin);
+                    var settings = await settingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+                    if (settings.FirstRun)
+                    {
+                        settings.FirstRun = false;
+                        await settingsRepository.UpdateSetting(settings);
+                    }
+
+                    await settingsRepository.FirstAdminRegistered(policies, btcpayOptions.UpdateUrl != null, btcpayOptions.DisableRegistration, logs);
+                }
+
                 eventAggregator.Publish(new UserRegisteredEvent
                 {
                     RequestUri = Request.GetAbsoluteRootUri(),
-                    User = user
+                    User = user,
+                    Admin = isFirstAdmin
                 });
 
                 SignInResult? signInResult = null;
-                var requiresConfirmedEmail = policiesSettings.RequiresConfirmedEmail && !user.EmailConfirmed;
-                var requiresUserApproval = policiesSettings.RequiresUserApproval && !user.Approved;
+                var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
+                var requiresUserApproval = policies.RequiresUserApproval && !user.Approved;
                 if (!requiresConfirmedEmail && !requiresUserApproval)
                 {
                     signInManager.AuthenticationScheme = Scheme;

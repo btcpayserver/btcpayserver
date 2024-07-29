@@ -5,6 +5,7 @@ using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Logging;
@@ -18,7 +19,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -33,14 +33,15 @@ public partial class AppApiController(
     EventAggregator eventAggregator,
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
+    RoleManager<IdentityRole> roleManager,
     TimeProvider timeProvider,
-    ISettingsRepository settingsRepository,
+    SettingsRepository settingsRepository,
     UriResolver uriResolver,
     DefaultRulesCollection defaultRules,
     RateFetcher rateFactory,
-    LinkGenerator linkGenerator,
     UserLoginCodeService userLoginCodeService,
     Logs logs,
+    BTCPayServerOptions btcpayOptions,
     IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
     : Controller
 {

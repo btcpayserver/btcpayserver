@@ -80,6 +80,9 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<NewOnChainTransactionEvent>(OnNewTransaction));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<InvoiceEvent>(InvoiceChangedEvent));
+        // User events
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserUpdatedEvent>(UserUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserDeletedEvent>(UserDeletedEvent));
         // Store events
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreCreatedEvent>(StoreCreatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreUpdatedEvent>(StoreUpdatedEvent));
@@ -89,6 +92,18 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreRemovedEvent>(StoreUserRemovedEvent));
         _ = UpdateNodeInfo();
         return Task.CompletedTask;
+    }
+
+    private async Task UserUpdatedEvent(UserUpdatedEvent arg)
+    {
+        var ev = new ServerEvent("user-updated") { UserId = arg.User.Id };
+        await _hubContext.Clients.Group(arg.User.Id).NotifyServerEvent(ev);
+    }
+
+    private async Task UserDeletedEvent(UserDeletedEvent arg)
+    {
+        var ev = new ServerEvent("user-deleted") { UserId = arg.User.Id };
+        await _hubContext.Clients.Group(arg.User.Id).NotifyServerEvent(ev);
     }
 
     private async Task InvoiceChangedEvent(InvoiceEvent arg)

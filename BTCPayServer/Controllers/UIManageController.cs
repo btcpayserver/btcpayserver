@@ -6,6 +6,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Fido2;
 using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
@@ -45,6 +46,7 @@ namespace BTCPayServer.Controllers
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
         private readonly IFileService _fileService;
+        private readonly EventAggregator _eventAggregator;
         readonly StoreRepository _StoreRepository;
 
         public UIManageController(
@@ -63,8 +65,8 @@ namespace BTCPayServer.Controllers
           UriResolver uriResolver,
           IFileService fileService,
           UserLoginCodeService userLoginCodeService,
-          IHtmlHelper htmlHelper
-          )
+          IHtmlHelper htmlHelper,
+          EventAggregator eventAggregator)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -82,6 +84,7 @@ namespace BTCPayServer.Controllers
             _uriResolver = uriResolver;
             _fileService = fileService;
             _StoreRepository = storeRepository;
+            _eventAggregator = eventAggregator;
         }
 
         [HttpGet]
@@ -207,9 +210,9 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            if (needUpdate is true)
+            if (needUpdate && await _userManager.UpdateAsync(user) is { Succeeded: true })
             {
-                needUpdate = await _userManager.UpdateAsync(user) is { Succeeded: true };
+                _eventAggregator.Publish(new UserUpdatedEvent(user));
                 TempData[WellKnownTempData.SuccessMessage] = "Your profile has been updated";
             }
             else
@@ -348,6 +351,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _userService.DeleteUserAndAssociatedData(user);
+            _eventAggregator.Publish(new UserDeletedEvent(user));
             TempData[WellKnownTempData.SuccessMessage] = "Account successfully deleted.";
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(UIAccountController.Login), "UIAccount");

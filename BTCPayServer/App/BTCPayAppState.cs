@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -51,6 +51,7 @@ public class BTCPayAppState : IHostedService
     private CancellationTokenSource? _cts;
 
     public event EventHandler<(string, LightningInvoice)>? OnInvoiceUpdate;
+    public event EventHandler<string>? GroupRemoved;
 
     public BTCPayAppState(
         StoreRepository storeRepository,
@@ -77,8 +78,7 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable = new CompositeDisposable();
         _compositeDisposable.Add(_eventAggregator.Subscribe<NewBlockEvent>(OnNewBlock));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<NewOnChainTransactionEvent>(OnNewTransaction));
-        _compositeDisposable.Add(
-            _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<InvoiceEvent>(InvoiceChangedEvent));
         // Store events
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreCreatedEvent>(StoreCreatedEvent));
@@ -93,38 +93,44 @@ public class BTCPayAppState : IHostedService
 
     private async Task InvoiceChangedEvent(InvoiceEvent arg)
     {
-        await _hubContext.Clients.Group(arg.Invoice.StoreId).NotifyServerEvent(
-            new ServerEvent("invoice-updated") {StoreId = arg.Invoice.StoreId, InvoiceId = arg.InvoiceId});
+        var ev = new ServerEvent("invoice-updated") { StoreId = arg.Invoice.StoreId, InvoiceId = arg.InvoiceId };
+        await _hubContext.Clients.Group(arg.Invoice.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task UserNotificationsUpdatedEvent(UserNotificationsUpdatedEvent arg)
     {
-        await _hubContext.Clients.Group(arg.UserId)
-            .NotifyServerEvent(new ServerEvent("notifications-updated") {UserId = arg.UserId});
+        var ev = new ServerEvent("notifications-updated") { UserId = arg.UserId };
+        await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(ev);
     }
 
     private async Task StoreCreatedEvent(StoreCreatedEvent arg)
     {
-        await _hubContext.Clients.Group(arg.StoreId)
-            .NotifyServerEvent(new ServerEvent("store-created") {StoreId = arg.StoreId});
+        var ev = new ServerEvent("store-created") { StoreId = arg.StoreId };
+        
+        foreach (var su in arg.StoreUsers)
+        {
+            var cIds = Connections.Where(pair => pair.Value.UserId == su.UserId).Select(pair => pair.Key).ToArray();
+            await AddToGroup(arg.StoreId, cIds);
+        }
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task StoreUpdatedEvent(StoreUpdatedEvent arg)
     {
-        await _hubContext.Clients.Group(arg.StoreId)
-            .NotifyServerEvent(new ServerEvent("store-updated") {StoreId = arg.StoreId});
+        var ev = new ServerEvent("store-updated") { StoreId = arg.StoreId };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task StoreRemovedEvent(StoreRemovedEvent arg)
     {
-        await _hubContext.Clients.Group(arg.StoreId)
-            .NotifyServerEvent(new ServerEvent("store-removed") {StoreId = arg.StoreId});
+        var ev = new ServerEvent("store-removed") { StoreId = arg.StoreId };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task StoreUserAddedEvent(UserStoreAddedEvent arg)
     {
-        await AddToGroup(arg.StoreId, Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray());
-
+        var cIds = Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray();
+        await AddToGroup(arg.StoreId, cIds);
         var ev = new ServerEvent("user-store-added") {StoreId = arg.StoreId, UserId = arg.UserId};
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
     }
@@ -185,9 +191,7 @@ public class BTCPayAppState : IHostedService
 
     private async Task OnNewTransaction(NewOnChainTransactionEvent obj)
     {
-        if (obj.CryptoCode != "BTC")
-            return;
-
+        if (obj.CryptoCode != "BTC") return;
         var identifier = obj.NewTransactionEvent.TrackedSource.ToString()!;
         var explorer = _explorerClientProvider.GetExplorerClient(obj.CryptoCode);
         var expandedTx = await explorer.GetTransactionAsync(obj.NewTransactionEvent.TrackedSource,
@@ -207,8 +211,7 @@ public class BTCPayAppState : IHostedService
 
     private void OnNewBlock(NewBlockEvent obj)
     {
-        if (obj.CryptoCode != "BTC")
-            return;
+        if (obj.CryptoCode != "BTC") return;
         _hubContext.Clients.All.NewBlock(obj.Hash.ToString());
     }
 
@@ -261,7 +264,7 @@ public class BTCPayAppState : IHostedService
             }
         }
 
-        await Handshake(contextConnectionId, new AppHandshake() {Identifiers = result.Values.ToArray()});
+        await Handshake(contextConnectionId, new AppHandshake {Identifiers = result.Values.ToArray()});
         return result;
     }
 
@@ -347,8 +350,8 @@ public class BTCPayAppState : IHostedService
 
     public async Task InvoiceUpdate(string identifier, LightningInvoice lightningInvoice)
     {
-        _logger.LogInformation(
-            $"Invoice update for {identifier} {lightningInvoice.Amount} {lightningInvoice.PaymentHash}");
+        _logger.LogInformation("Invoice update for {Identifier} {Amount} {PaymentHash}",
+            identifier, lightningInvoice.Amount, lightningInvoice.PaymentHash);
         OnInvoiceUpdate?.Invoke(this, (identifier, lightningInvoice));
     }
 
@@ -357,7 +360,7 @@ public class BTCPayAppState : IHostedService
     //store id(s)
     //tracked sources
 
-    public async Task AddToGroup(string group, params string[] connectionIds)
+    private async Task AddToGroup(string group, params string[] connectionIds)
     {
         foreach (var connectionId in connectionIds)
         {
@@ -369,7 +372,7 @@ public class BTCPayAppState : IHostedService
         }
     }
 
-    public async Task RemoveFromGroup(string group, params string[] connectionIds)
+    private async Task RemoveFromGroup(string group, params string[] connectionIds)
     {
         foreach (var connectionId in connectionIds)
         {

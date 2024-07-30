@@ -26,7 +26,7 @@ namespace BTCPayServer.Controllers;
 
 public record ConnectedInstance(
     string UserId,
-    string DeviceIdentifier,
+    long? DeviceIdentifier,
     bool Master,
     // string ProvidedAccessKey,
     HashSet<string> Groups);
@@ -45,7 +45,7 @@ public class BTCPayAppState : IHostedService
     private DerivationSchemeParser _derivationSchemeParser;
 
 
-    public ConcurrentDictionary<string, ConnectedInstance> Connections { get; set; }
+    public ConcurrentDictionary<string, ConnectedInstance> Connections { get; set; } = new();
     
 
     private CancellationTokenSource? _cts;
@@ -266,24 +266,29 @@ public class BTCPayAppState : IHostedService
     }
 
 
-    public async Task<bool> DeviceMasterSignal(string contextConnectionId, string deviceIdentifier, bool active)
+    public async Task<bool> DeviceMasterSignal(string contextConnectionId, long deviceIdentifier, bool active)
     {
 
         if (!Connections.TryGetValue(contextConnectionId, out var connectedInstance))
         {
+            _logger.LogWarning("DeviceMasterSignal called on non existing connection");
             return false;
         }
-        if(!string.IsNullOrEmpty(connectedInstance.DeviceIdentifier) && connectedInstance.DeviceIdentifier != deviceIdentifier)
+        if(connectedInstance.DeviceIdentifier != null && connectedInstance.DeviceIdentifier != deviceIdentifier)
         {
+            _logger.LogWarning("DeviceMasterSignal called with different device identifier");
             return false;
         }
-        if(string.IsNullOrEmpty(connectedInstance.DeviceIdentifier))
+        if(connectedInstance.DeviceIdentifier == null)
         {
-            Connections[contextConnectionId] = connectedInstance with {DeviceIdentifier = deviceIdentifier};
+            _logger.LogInformation("DeviceMasterSignal called with device identifier {deviceIdentifier}", deviceIdentifier);
+            connectedInstance = connectedInstance with {DeviceIdentifier = deviceIdentifier};
+            Connections[contextConnectionId] = connectedInstance;
         }
         
         if(connectedInstance.Master == active)
         {
+            _logger.LogInformation("DeviceMasterSignal called with same active state");
             return true;
         }
         else if (active)
@@ -291,17 +296,22 @@ public class BTCPayAppState : IHostedService
             //check if there is any other master connection with the same user id
             if (Connections.Values.Any(c => c.UserId == connectedInstance.UserId && c.Master))
             {
+                _logger.LogWarning("DeviceMasterSignal called with active state but there is already a master connection");
                 return false;
             }
             else
             {
-                Connections[contextConnectionId] = connectedInstance with {Master = true};
+                _logger.LogInformation("DeviceMasterSignal called with active state");
+                connectedInstance = connectedInstance with {Master = true};
+                Connections[contextConnectionId] = connectedInstance;
                 return true;
             }
         }
         else
         {
-            Connections[contextConnectionId] = connectedInstance with {Master = false};
+            _logger.LogInformation("DeviceMasterSignal called with inactive state");
+            connectedInstance = connectedInstance with {Master = false};
+            Connections[contextConnectionId] = connectedInstance;
             return true;
             
         }
@@ -319,7 +329,7 @@ public class BTCPayAppState : IHostedService
 
     public async Task Connected(string contextConnectionId, string userId)
     {
-        Connections.TryAdd(contextConnectionId, new ConnectedInstance(userId, string.Empty, false,  new HashSet<string>()));
+        Connections.TryAdd(contextConnectionId, new ConnectedInstance(userId, null, false,  new HashSet<string>()));
         
         if (_nodeInfo.Length > 0)
             await _hubContext.Clients.Client(contextConnectionId).NotifyServerNode(_nodeInfo);

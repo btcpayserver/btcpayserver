@@ -15,6 +15,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Storage;
+using Microsoft.Extensions.Logging;
 using VSSProto;
 
 namespace BTCPayServer.App.API;
@@ -29,20 +31,21 @@ public class VSSController : Controller, IVSSAPI
     private readonly ApplicationDbContextFactory _dbContextFactory;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly BTCPayAppState _appState;
+    private readonly ILogger<VSSController> _logger;
 
     public VSSController(ApplicationDbContextFactory dbContextFactory,
-        UserManager<ApplicationUser> userManager, BTCPayAppState appState)
+        UserManager<ApplicationUser> userManager, BTCPayAppState appState, ILogger<VSSController> logger)
     {
         _dbContextFactory = dbContextFactory;
         _userManager = userManager;
         _appState = appState;
+        _logger = logger;
     }
 
     [HttpPost(HttpVSSAPIClient.GET_OBJECT)]
     [MediaTypeConstraint("application/octet-stream")]
     public async Task<GetObjectResponse> GetObjectAsync(GetObjectRequest request, CancellationToken cancellationToken)
     {
-        
         var userId = _userManager.GetUserId(User);
         await using var dbContext = _dbContextFactory.CreateContext();
         var store = await dbContext.AppStorageItems.SingleOrDefaultAsync(data =>
@@ -74,79 +77,79 @@ public class VSSController : Controller, IVSSAPI
 
     private bool VerifyGlobalVersion(long globalVersion)
     {
-        
         var userId = _userManager.GetUserId(User);
-       var conn = _appState.Connections.SingleOrDefault(pair => pair.Value.Master && pair.Value.UserId == userId);
+        var conn = _appState.Connections.SingleOrDefault(pair => pair.Value.Master && pair.Value.UserId == userId);
         if (conn.Key == null)
         {
             return false;
         }
-        // This has a high collision rate, but we're not expecting something insane here since we have auth and other checks in place. 
-        return globalVersion == conn.Value.DeviceIdentifier.GetHashCode();
+
+        return globalVersion == conn.Value.DeviceIdentifier;
     }
 
     [HttpPost(HttpVSSAPIClient.PUT_OBJECTS)]
     [MediaTypeConstraint("application/octet-stream")]
     public async Task<PutObjectResponse> PutObjectAsync(PutObjectRequest request, CancellationToken cancellationToken)
     {
-
         if (!VerifyGlobalVersion(request.GlobalVersion))
             return SetResult<PutObjectResponse>(BadRequest(new ErrorResponse()
             {
                 ErrorCode = ErrorCode.ConflictException, Message = "Global version mismatch"
             }));
-        
+
         var userId = _userManager.GetUserId(User);
-        
+
         await using var dbContext = _dbContextFactory.CreateContext();
-
-        await using var dbContextTransaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
-        try
+        return await dbContext.Database.CreateExecutionStrategy().ExecuteAsync(async async =>
         {
-            if (request.TransactionItems.Any())
+            await using var dbContextTransaction = await dbContext.Database.BeginTransactionAsync(cancellationToken);
+            try
             {
-                var items = request.TransactionItems.Select(data => new AppStorageItemData()
+                if (request.TransactionItems.Any())
                 {
-                    Key = data.Key, Value = data.Value.ToByteArray(), UserId = userId, Version = data.Version
-                });
-                await dbContext.AppStorageItems.AddRangeAsync(items, cancellationToken);
+                    var items = request.TransactionItems.Select(data => new AppStorageItemData()
+                    {
+                        Key = data.Key, Value = data.Value.ToByteArray(), UserId = userId, Version = data.Version
+                    });
+                    await dbContext.AppStorageItems.AddRangeAsync(items, cancellationToken);
+                }
+
+                if (request.DeleteItems.Any())
+                {
+                    var deleteQuery = request.DeleteItems.Aggregate(
+                        dbContext.AppStorageItems.Where(data => data.UserId == userId),
+                        (current, key) => current.Where(data => data.Key == key.Key && data.Version == key.Version));
+                    await deleteQuery.ExecuteDeleteAsync(cancellationToken: cancellationToken);
+                }
+
+                await dbContext.SaveChangesAsync(cancellationToken);
+                await dbContextTransaction.CommitAsync(cancellationToken);
+
+                return new PutObjectResponse();
             }
-
-            if (request.DeleteItems.Any())
+            catch (Exception e)
             {
-                var deleteQuery = request.DeleteItems.Aggregate(
-                    dbContext.AppStorageItems.Where(data => data.UserId == userId),
-                    (current, key) => current.Where(data => data.Key == key.Key && data.Version == key.Version));
-                await deleteQuery.ExecuteDeleteAsync(cancellationToken: cancellationToken);
+                _logger.LogError(e, "Error while processing transaction");
+                await dbContextTransaction.RollbackAsync(cancellationToken);
+                return SetResult<PutObjectResponse>(BadRequest(new ErrorResponse()
+                {
+                    ErrorCode = ErrorCode.ConflictException, Message = e.Message
+                }));
             }
-
-            await dbContext.SaveChangesAsync(cancellationToken);
-            await dbContextTransaction.CommitAsync(cancellationToken);
-        }
-        catch (Exception e)
-        {
-            await dbContextTransaction.RollbackAsync(cancellationToken);
-            return SetResult<PutObjectResponse>(BadRequest(new ErrorResponse()
-            {
-                ErrorCode = ErrorCode.ConflictException, Message = e.Message
-            }));
-        }
-
-
-        return new PutObjectResponse();
+        }, cancellationToken);
     }
 
     [HttpPost(HttpVSSAPIClient.DELETE_OBJECT)]
     [MediaTypeConstraint("application/octet-stream")]
-    public async Task<DeleteObjectResponse> DeleteObjectAsync(DeleteObjectRequest request, CancellationToken cancellationToken)
+    public async Task<DeleteObjectResponse> DeleteObjectAsync(DeleteObjectRequest request,
+        CancellationToken cancellationToken)
     {
-        
-
         var userId = _userManager.GetUserId(User);
         await using var dbContext = _dbContextFactory.CreateContext();
         var store = await dbContext.AppStorageItems
             .Where(data => data.Key == request.KeyValue.Key && data.UserId == userId &&
-                           data.Version == request.KeyValue.Version).ExecuteDeleteAsync(cancellationToken: cancellationToken);
+                           data.Version == request.KeyValue.Version)
+            .ExecuteDeleteAsync(cancellationToken: cancellationToken);
         return store == 0
             ? SetResult<DeleteObjectResponse>(
                 new NotFoundObjectResult(new ErrorResponse()
@@ -157,13 +160,15 @@ public class VSSController : Controller, IVSSAPI
     }
 
     [HttpPost(HttpVSSAPIClient.LIST_KEY_VERSIONS)]
-    public async Task<ListKeyVersionsResponse> ListKeyVersionsAsync(ListKeyVersionsRequest request, CancellationToken cancellationToken)
+    public async Task<ListKeyVersionsResponse> ListKeyVersionsAsync(ListKeyVersionsRequest request,
+        CancellationToken cancellationToken)
     {
         var userId = _userManager.GetUserId(User);
         await using var dbContext = _dbContextFactory.CreateContext();
         var items = await dbContext.AppStorageItems
             .Where(data => data.UserId == userId)
-            .Select(data => new KeyValue() {Key = data.Key, Version = data.Version}).ToListAsync(cancellationToken: cancellationToken);
+            .Select(data => new KeyValue() {Key = data.Key, Version = data.Version})
+            .ToListAsync(cancellationToken: cancellationToken);
         return new ListKeyVersionsResponse {KeyVersions = {items}};
     }
 }

@@ -132,10 +132,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/plugins/uninstall")]
-        public IActionResult UnInstallPlugin(
+        public async Task<IActionResult> UnInstallPlugin(
             [FromServices] PluginService pluginService, string plugin)
         {
-            pluginService.UninstallPlugin(plugin);
+            await pluginService.UninstallPlugin(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Message = "Plugin scheduled to be uninstalled.",
@@ -172,7 +172,7 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    pluginService.InstallPlugin(plugin);
+                    await pluginService.InstallPlugin(plugin);
                 }
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {

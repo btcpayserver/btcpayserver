@@ -14,7 +14,8 @@
         var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
         availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? ordered.FirstOrDefault());
     }
-    var recentPlugins = availableAndNotInstalled.OrderByDescending(c => c.BuildDate).Take(10).ToList();
+    var recentPlugins = availableAndNotInstalled.OrderByDescending(c => c.BuildDate).Take(5).ToList();
+    var popularPlugins = availableAndNotInstalled.Where(c => c.DownloadStat != null).OrderByDescending(c => c.DownloadStat).Take(5).ToList();
 }
 
 <style>
@@ -57,7 +58,7 @@
 
 @if (availableAndNotInstalled.Any())
 {
-    <h4 class="mb-4">Popular</h4>
+    <h4 class="mb-4">All</h4>
     <div class="row mb-4">
         @foreach (var plugin in availableAndNotInstalled)
         {
@@ -180,6 +181,40 @@ else
 
 @if (string.IsNullOrEmpty(Model.SearchText))
 {
+    @if (popularPlugins.Any())
+    {
+        <h4 class="mb-4">Popular</h4>
+        <div class="row mb-4">
+            @foreach (var plugin in popularPlugins)
+            {
+                Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
+                var recentPluginModalId = $"modal_{plugin.Identifier}";
+                <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#@recentPluginModalId">
+                        <div class="card h-100 bg-transparent border-0" id="@plugin.Identifier">
+                            <div class="card-body d-flex">
+                                <div class="me-3 d-flex justify-content-center align-items-center">
+                                    <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h4 class="card-title mb-0">@plugin.Name</h4>
+                                    </div>
+                                    <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">
+                                        @plugin.Description
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+}
+
+@if (string.IsNullOrEmpty(Model.SearchText))
+{
     @if (recentPlugins.Any())
     {
         <h4 class="mb-4">Recent</h4>
@@ -209,10 +244,6 @@ else
                 </div>
             }
         </div>
-    }
-    else
-    {
-        <p class="text-secondary">No plugin found for the matching criteria.</p>
     }
 }
 

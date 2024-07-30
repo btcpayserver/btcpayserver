@@ -43,6 +43,7 @@ namespace BTCPayServer.Plugins
         }
         public string ProjectSlug { get; set; }
         public long BuildId { get; set; }
+        public long? DownloadStat { get; set; }
         public BuildInfoClass BuildInfo { get; set; }
         public JObject ManifestInfo { get; set; }
         public string Documentation { get; set; }
@@ -63,6 +64,15 @@ namespace BTCPayServer.Plugins
                 queryString += $"&btcpayVersion={btcpayVersion}&";
             var result = await httpClient.GetStringAsync($"api/v1/plugins{queryString}");
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();
+        }
+
+        public async Task RecordDownloadedPlugin(string plugin, string action, string version = null)
+        {
+            var queryString = $"action={action}";
+            if (!string.IsNullOrEmpty(version))
+                queryString += $"&version={version}";
+            var content = new StringContent(string.Empty);
+            await httpClient.PostAsync($"api/v1/plugins/{plugin}/record-download?{queryString}", content);
         }
     }
 }

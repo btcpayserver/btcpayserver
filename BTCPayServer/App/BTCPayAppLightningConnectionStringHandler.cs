@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Controllers;
@@ -12,7 +13,6 @@ public class BTCPayAppLightningConnectionStringHandler:ILightningConnectionStrin
 {
     private readonly IHubContext<BTCPayAppHub, IBTCPayAppHubClient> _hubContext;
     private readonly BTCPayAppState _appState;
-    private readonly DefaultHubLifetimeManager<BTCPayAppHub> _lifetimeManager;
 
     public BTCPayAppLightningConnectionStringHandler(IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext, BTCPayAppState appState)
     {
@@ -30,20 +30,26 @@ public class BTCPayAppLightningConnectionStringHandler:ILightningConnectionStrin
         }
         
         
-        if (!kv.TryGetValue("group", out var key))
+        if (!kv.TryGetValue("user", out var user))
         {
-            error = $"The key 'group' is mandatory for app connection strings";
+            error = $"The key 'user' is mandatory for app connection strings";
             
             return null;
         }
 
-        if (!_appState.NodeToConnectionId.TryGetValue(key, out var connectionId) || !_appState.GroupToConnectionId.TryGetValues(key, out var conns) || !conns.Contains(connectionId))
+        try
         {
-            error = $"The group {key} is not connected";
+
+            var client =  new BTCPayAppLightningClient(_hubContext, _appState, user );
+            error = null;
+            return client;
+        }
+        catch (Exception e)
+        {
+            error = e.Message;
             return null;
         }
-        error = null;
-        return new BTCPayAppLightningClient(_hubContext, _appState, key );
+
     }
     
     

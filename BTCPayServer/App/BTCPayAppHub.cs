@@ -300,9 +300,9 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         await _appState.InvoiceUpdate(identifier, lightningInvoice);
     }
 
-    public async Task<bool> IdentifierActive(string group, bool active)
+    public async Task<bool> DeviceMasterSignal(string deviceIdentifier, bool active)
     {
-        return await _appState.IdentifierActive(group, Context.ConnectionId, active);
+        return await _appState.DeviceMasterSignal(Context.ConnectionId,deviceIdentifier,active);
     }
 
     public async Task<Dictionary<string, string>> Pair(PairRequest request)

@@ -27,7 +27,7 @@ public interface IBTCPayAppHubClient
 //methods available on the hub in the server
 public interface IBTCPayAppHubServer
 {
-    Task<bool> IdentifierActive(string group, bool active);
+    Task<bool> DeviceMasterSignal(string deviceIdentifier, bool active);
     
     Task<Dictionary<string,string>> Pair(PairRequest request);
     Task<AppHandshakeResponse> Handshake(AppHandshake request);

@@ -76,17 +76,13 @@ public class VSSController : Controller, IVSSAPI
     {
         
         var userId = _userManager.GetUserId(User);
-        if (!_appState.GroupToConnectionId.TryGetValues(userId, out var connections))
-        {
-            return false;
-        }
-        var node = _appState.NodeToConnectionId.SingleOrDefault(data => connections.Contains(data.Value));
-        if (node.Key == null || node.Value == null)
+       var conn = _appState.Connections.SingleOrDefault(pair => pair.Value.Master && pair.Value.UserId == userId);
+        if (conn.Key == null)
         {
             return false;
         }
         // This has a high collision rate, but we're not expecting something insane here since we have auth and other checks in place. 
-        return globalVersion ==( node.Key + node.Value).GetHashCode();
+        return globalVersion == conn.Value.DeviceIdentifier.GetHashCode();
     }
 
     [HttpPost(HttpVSSAPIClient.PUT_OBJECTS)]

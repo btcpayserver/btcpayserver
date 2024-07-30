@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -27,11 +28,14 @@ public class BTCPayAppLightningClient : ILightningClient
 
     public override string ToString()
     {
-        return $"type=app;group={_key}".ToLower();
+        return $"type=app;user={_key}".ToLower();
     }
 
-    public IBTCPayAppHubClient HubClient => _appState.NodeToConnectionId.TryGetValue(_key, out var connId)
-        ? _hubContext.Clients.Client(connId)
+    public IBTCPayAppHubClient HubClient => _appState.Connections.FirstOrDefault(pair => pair.Value.Master && pair.Value.UserId == _key) is
+    {
+        Key: not null
+    } connection
+        ? _hubContext.Clients.Client(connection.Key)
         : throw new InvalidOperationException("Connection not found");
 
 
@@ -109,13 +113,13 @@ public class BTCPayAppLightningClient : ILightningClient
         public Listener(BTCPayAppState btcPayAppState, string key)
         {
             _btcPayAppState = btcPayAppState;
-            btcPayAppState.GroupRemoved += BtcPayAppStateOnGroupRemoved;
+            btcPayAppState.MasterUserDisconnected += MasterUserDisconnected;
             _key = key;
             _cts = new CancellationTokenSource();
             _btcPayAppState.OnInvoiceUpdate += BtcPayAppStateOnOnInvoiceUpdate;
         }
 
-        private void BtcPayAppStateOnGroupRemoved(object sender, string e)
+        private void MasterUserDisconnected(object sender, string e)
         {
             if (e == _key)
                 _channel.Writer.Complete();
@@ -131,7 +135,7 @@ public class BTCPayAppLightningClient : ILightningClient
         {
             _cts?.Cancel();
             _btcPayAppState.OnInvoiceUpdate -= BtcPayAppStateOnOnInvoiceUpdate;
-            _btcPayAppState.GroupRemoved -= BtcPayAppStateOnGroupRemoved;
+            _btcPayAppState.MasterUserDisconnected -= MasterUserDisconnected;
             _channel.Writer.TryComplete();
         }
 

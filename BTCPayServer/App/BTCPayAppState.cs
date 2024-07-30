@@ -23,6 +23,13 @@ using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 
 namespace BTCPayServer.Controllers;
 
+
+public record ConnectedInstance(
+    string UserId,
+    string DeviceIdentifier,
+    bool Master,
+    // string ProvidedAccessKey,
+    HashSet<string> Groups);
 public class BTCPayAppState : IHostedService
 {
     private readonly StoreRepository _storeRepository;
@@ -37,11 +44,9 @@ public class BTCPayAppState : IHostedService
 
     private DerivationSchemeParser _derivationSchemeParser;
 
-    public readonly ConcurrentMultiDictionary<string, string> GroupToConnectionId =
-        new(StringComparer.InvariantCultureIgnoreCase);
 
-    public readonly ConcurrentDictionary<string, string> NodeToConnectionId =
-        new(StringComparer.InvariantCultureIgnoreCase);
+    public ConcurrentDictionary<string, ConnectedInstance> Connections { get; set; }
+    
 
     private CancellationTokenSource? _cts;
 
@@ -118,10 +123,7 @@ public class BTCPayAppState : IHostedService
 
     private async Task StoreUserAddedEvent(UserStoreAddedEvent arg)
     {
-        if (GroupToConnectionId.TryGetValues(arg.UserId, out var connectionIdsForUser))
-        {
-            await AddToGroup(arg.StoreId, connectionIdsForUser);
-        }
+        await AddToGroup(arg.StoreId, Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray());
 
         var ev = new ServerEvent("user-store-added") {StoreId = arg.StoreId, UserId = arg.UserId};
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
@@ -138,8 +140,7 @@ public class BTCPayAppState : IHostedService
         var ev = new ServerEvent("user-store-removed") {StoreId = arg.StoreId, UserId = arg.UserId};
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
 
-        if (GroupToConnectionId.TryGetValues(arg.UserId, out var connectionIdsForUser))
-            await RemoveFromGroup(arg.StoreId, connectionIdsForUser);
+        await RemoveFromGroup(arg.StoreId, Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray());
     }
 
     private string _nodeInfo = string.Empty;
@@ -265,61 +266,72 @@ public class BTCPayAppState : IHostedService
     }
 
 
-    public async Task<bool> IdentifierActive(string group, string contextConnectionId, bool active)
+    public async Task<bool> DeviceMasterSignal(string contextConnectionId, string deviceIdentifier, bool active)
     {
-        if (active)
-        {
-            if (NodeToConnectionId.TryGetValue(group, out var existingConnectionId))
-            {
-                return existingConnectionId == contextConnectionId;
-            }
 
-            if (GroupToConnectionId.ContainsValue(group, contextConnectionId) &&
-                NodeToConnectionId.TryAdd(group, contextConnectionId))
+        if (!Connections.TryGetValue(contextConnectionId, out var connectedInstance))
+        {
+            return false;
+        }
+        if(!string.IsNullOrEmpty(connectedInstance.DeviceIdentifier) && connectedInstance.DeviceIdentifier != deviceIdentifier)
+        {
+            return false;
+        }
+        if(string.IsNullOrEmpty(connectedInstance.DeviceIdentifier))
+        {
+            Connections[contextConnectionId] = connectedInstance with {DeviceIdentifier = deviceIdentifier};
+        }
+        
+        if(connectedInstance.Master == active)
+        {
+            return true;
+        }
+        else if (active)
+        {
+            //check if there is any other master connection with the same user id
+            if (Connections.Values.Any(c => c.UserId == connectedInstance.UserId && c.Master))
             {
+                return false;
+            }
+            else
+            {
+                Connections[contextConnectionId] = connectedInstance with {Master = true};
                 return true;
             }
-
-            // Should we check if the node actually works? Probably not as this call happens before the node is actually started 
-            // var connString ="type=app;group=" + group;
-            // _serviceProvider.GetService<LightningListener>()?.CheckConnection(ExplorerClient.CryptoCode, connString);
         }
         else
         {
-            if (NodeToConnectionId.TryGetValue(group, out var existingConnectionId) &&
-                existingConnectionId == contextConnectionId)
-            {
-                NodeToConnectionId.TryRemove(group, out _);
-                return true;
-            }
+            Connections[contextConnectionId] = connectedInstance with {Master = false};
+            return true;
+            
         }
-
-        return false;
     }
 
     public async Task Disconnected(string contextConnectionId)
     {
-        GroupToConnectionId.RemoveValue(contextConnectionId, out var groupsRemoved);
-        Array.ForEach(groupsRemoved, group =>
+        if (Connections.TryRemove(contextConnectionId, out var connectedInstance) && connectedInstance.Master)
         {
-            GroupRemoved?.Invoke(this, group);
-        });
+            MasterUserDisconnected?.Invoke(this, connectedInstance.UserId);
+        }
     }
-
-    public event EventHandler<string>? GroupRemoved;
+    
+    public event EventHandler<string>? MasterUserDisconnected;
 
     public async Task Connected(string contextConnectionId, string userId)
     {
+        Connections.TryAdd(contextConnectionId, new ConnectedInstance(userId, string.Empty, false,  new HashSet<string>()));
+        
         if (_nodeInfo.Length > 0)
             await _hubContext.Clients.Client(contextConnectionId).NotifyServerNode(_nodeInfo);
 
         await _hubContext.Clients.Client(contextConnectionId)
             .NotifyNetwork(_networkProvider.BTC.NBitcoinNetwork.ToString());
-        var userStores = await _storeRepository.GetStoresByUserId(userId);
-        await AddToGroup(contextConnectionId, userId);
-        foreach (var userStore in userStores)
+        
+        var groups = (await _storeRepository.GetStoresByUserId(userId)).Select(store => store.Id).ToArray().Concat(new[] {userId});
+     
+        foreach (var group in groups)
         {
-            await AddToGroup(contextConnectionId, userStore.Id);
+            await AddToGroup(group, contextConnectionId);
         }
     }
 
@@ -340,7 +352,10 @@ public class BTCPayAppState : IHostedService
         foreach (var connectionId in connectionIds)
         {
             await _hubContext.Groups.AddToGroupAsync(connectionId, group);
-            GroupToConnectionId.Add(group, connectionId);
+            if(Connections.TryGetValue(connectionId, out var connectedInstance))
+            {
+                connectedInstance.Groups.Add(group);
+            }
         }
     }
 
@@ -349,10 +364,9 @@ public class BTCPayAppState : IHostedService
         foreach (var connectionId in connectionIds)
         {
             await _hubContext.Groups.RemoveFromGroupAsync(connectionId, group);
-            GroupToConnectionId.Remove(group, connectionId, out var keyRemoved);
-            if (keyRemoved)
+            if(Connections.TryGetValue(connectionId, out var connectedInstance))
             {
-                GroupRemoved?.Invoke(this, group);
+                connectedInstance.Groups.Remove(group);
             }
         }
     }

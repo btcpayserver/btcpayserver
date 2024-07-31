@@ -249,7 +249,7 @@ namespace BTCPayServer.Controllers
                 await creationContext.BeforeFetchingRates();
                 await FetchRates(creationContext, cancellationToken);
 
-                await creationContext.CreatePaymentPrompts();
+                await creationContext.ActivatePrompts();
                 var contexts = creationContext.PaymentMethodContexts
                                               .Where(s => s.Value.Status is PaymentMethodContext.ContextStatus.WaitingForActivation or PaymentMethodContext.ContextStatus.Created)
                                               .Select(s => s.Value)
@@ -269,7 +269,7 @@ namespace BTCPayServer.Controllers
 
                     throw new BitpayHttpException(400, errors.ToString());
                 }
-                entity.SetPaymentPrompts(new PaymentPromptDictionary(contexts.Select(c => c.Prompt)));
+                entity.SetPaymentPrompts(new PaymentPromptDictionary(contexts.SelectMany(c => c.Prompts)));
             }
             else
             {

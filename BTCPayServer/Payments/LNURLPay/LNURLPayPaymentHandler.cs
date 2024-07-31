@@ -47,13 +47,14 @@ namespace BTCPayServer.Payments.Lightning
             Options = options;
         }
 
-        public Task BeforeFetchingRates(PaymentMethodContext context)
+        public Task CreatePrompts(PaymentMethodContext context)
         {
             // LNURL is already "Lazy" as the bolt11 is only created when needed
-            context.Prompt.Inactive = false;
-            context.Prompt.Currency = _network.CryptoCode;
-            context.Prompt.Divisibility = 11;
-            context.Prompt.PaymentMethodFee = 0.0m;
+            context.PromptTemplate.Inactive = false;
+            context.PromptTemplate.Currency = _network.CryptoCode;
+            context.PromptTemplate.Divisibility = 11;
+            context.PromptTemplate.PaymentMethodFee = 0.0m;
+            context.AddPrompt();
             return Task.CompletedTask;
         }
 
@@ -63,7 +64,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public BTCPayNetwork Network => _network;
 
-        public async Task ConfigurePrompt(PaymentMethodContext context)
+        public async Task ActivatePrompt(PaymentMethodContext context, PaymentPrompt prompt)
         {
             var handlers = _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>();
             var lightningHandler = (LightningLikePaymentHandler)handlers[PaymentTypes.LN.GetPaymentMethodId(_network.CryptoCode)];
@@ -78,7 +79,7 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = (await lightningHandler.GetNodeInfo(lnConfig, context.Logs, preferOnion)).FirstOrDefault();
 
             var lnUrlConfig = ParsePaymentMethodConfig(store.GetPaymentMethodConfigs()[PaymentMethodId]);
-            context.Prompt.Details = JObject.FromObject(new LNURLPayPaymentMethodDetails()
+            prompt.Details = JObject.FromObject(new LNURLPayPaymentMethodDetails()
             {
                 Bech32Mode = lnUrlConfig.UseBech32Scheme,
                 NodeInfo = nodeInfo?.ToString()

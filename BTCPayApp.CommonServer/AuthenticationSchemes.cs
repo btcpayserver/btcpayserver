@@ -1,4 +1,4 @@
-namespace BTCPayServer.Abstractions.Constants
+namespace BTCPayApp.CommonServer
 {
     public class AuthenticationSchemes
     {

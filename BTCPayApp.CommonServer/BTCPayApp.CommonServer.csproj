@@ -10,4 +10,7 @@
       <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.6" />
+    </ItemGroup>
 </Project>

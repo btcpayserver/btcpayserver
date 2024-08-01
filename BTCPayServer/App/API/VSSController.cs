@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayApp.CommonServer;
 using BTCPayApp.VSS;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.App.BackupStorage;

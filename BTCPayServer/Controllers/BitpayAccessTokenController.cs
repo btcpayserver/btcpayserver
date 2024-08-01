@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;

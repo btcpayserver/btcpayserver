@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Internal;
 using System.Threading;
+using BTCPayApp.CommonServer;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers;

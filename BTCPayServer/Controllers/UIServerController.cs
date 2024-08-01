@@ -39,7 +39,7 @@ using MimeKit;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Renci.SshNet;
-using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
+using AuthenticationSchemes = BTCPayApp.CommonServer.AuthenticationSchemes;
 
 namespace BTCPayServer.Controllers
 {

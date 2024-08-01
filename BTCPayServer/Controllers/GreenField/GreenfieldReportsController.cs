@@ -14,6 +14,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using System.Linq;
 using System.Threading;
+using BTCPayApp.CommonServer;
 
 namespace BTCPayServer.Controllers.GreenField;
 

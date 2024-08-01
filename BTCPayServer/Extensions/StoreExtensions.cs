@@ -1,9 +1,7 @@
 #nullable enable
-using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer

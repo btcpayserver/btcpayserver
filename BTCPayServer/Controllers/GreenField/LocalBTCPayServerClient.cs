@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;

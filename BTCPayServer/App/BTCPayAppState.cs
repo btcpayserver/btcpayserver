@@ -283,19 +283,26 @@ public class BTCPayAppState : IHostedService
         return result;
     }
 
-
+private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
     public async Task<bool> DeviceMasterSignal(string contextConnectionId, long deviceIdentifier, bool active)
     {
-
-        if (!Connections.TryGetValue(contextConnectionId, out var connectedInstance))
+        var result = false;
+        await _lock.WaitAsync();
+        ConnectedInstance? connectedInstance = null;
+        try
+        {
+        
+        if (!Connections.TryGetValue(contextConnectionId, out connectedInstance))
         {
             _logger.LogWarning("DeviceMasterSignal called on non existing connection");
-            return false;
+            result = false;
+            return result;
         }
-        if(connectedInstance.DeviceIdentifier != null && connectedInstance.DeviceIdentifier != deviceIdentifier)
+        else if(connectedInstance.DeviceIdentifier != null && connectedInstance.DeviceIdentifier != deviceIdentifier)
         {
             _logger.LogWarning("DeviceMasterSignal called with different device identifier");
-            return false;
+            result = false;
+            return result;
         }
         if(connectedInstance.DeviceIdentifier == null)
         {
@@ -307,7 +314,8 @@ public class BTCPayAppState : IHostedService
         if(connectedInstance.Master == active)
         {
             _logger.LogInformation("DeviceMasterSignal called with same active state");
-            return true;
+            result = true;
+            return result;
         }
         else if (active)
         {
@@ -315,14 +323,16 @@ public class BTCPayAppState : IHostedService
             if (Connections.Values.Any(c => c.UserId == connectedInstance.UserId && c.Master))
             {
                 _logger.LogWarning("DeviceMasterSignal called with active state but there is already a master connection");
-                return false;
+                result = false;
+                return result;
             }
             else
             {
                 _logger.LogInformation("DeviceMasterSignal called with active state");
                 connectedInstance = connectedInstance with {Master = true};
                 Connections[contextConnectionId] = connectedInstance;
-                return true;
+                result = true;
+                return result;
             }
         }
         else
@@ -330,8 +340,23 @@ public class BTCPayAppState : IHostedService
             _logger.LogInformation("DeviceMasterSignal called with inactive state");
             connectedInstance = connectedInstance with {Master = false};
             Connections[contextConnectionId] = connectedInstance;
-            return true;
+          
+            result = true;
+            return result;
             
+        }
+        }
+        finally
+        {
+            _lock.Release();
+            if (result && connectedInstance is not null)
+            {
+                var connIds = Connections.Where(pair => pair.Value.UserId == connectedInstance.UserId)
+                    .Select(pair => pair.Key)
+                    .ToList();
+                    
+                await _hubContext.Clients.Clients(connIds).MasterUpdated(active? deviceIdentifier : null);
+            }
         }
     }
 

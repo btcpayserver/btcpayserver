@@ -21,11 +21,21 @@ public class ElectrumWalletFileParser : IWalletFileParser
             public string? CoboVaultFirmwareVersion { get; set; }
         }
         public KeyStoreFormat? keystore { get; set; }
+        public KeyStoreFormat? x1 { get; set; }
+        public string? wallet_type { get; set; }
     }
     public bool TryParse(BTCPayNetwork network, string data, [MaybeNullWhen(false)] out DerivationSchemeSettings derivationSchemeSettings)
     {
         derivationSchemeSettings = null;
         var jobj = DeserializeObject<ElectrumFormat>(data);
+        if (jobj == null)
+            return false;
+
+        if (jobj.wallet_type == "2fa")
+        {
+            jobj.keystore = jobj.x1;
+        }
+
         if (jobj?.keystore is null)
             return false;
 

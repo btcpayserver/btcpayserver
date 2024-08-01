@@ -124,12 +124,13 @@ public class VSSController : Controller, IVSSAPI
 
                 await dbContext.SaveChangesAsync(cancellationToken);
                 await dbContextTransaction.CommitAsync(cancellationToken);
+                _logger.LogInformation($"VSS backup request processed: {string.Join(", ", request.TransactionItems.Select(data => data.Key))}");
 
                 return new PutObjectResponse();
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error while processing transaction");
+                _logger.LogError(e, "Error while processing vss backup request");
                 await dbContextTransaction.RollbackAsync(cancellationToken);
                 return SetResult<PutObjectResponse>(BadRequest(new ErrorResponse()
                 {

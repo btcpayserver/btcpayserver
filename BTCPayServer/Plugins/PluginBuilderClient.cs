@@ -42,10 +42,12 @@ namespace BTCPayServer.Plugins
             public IDictionary<string, JToken> AdditionalData { get; set; }
         }
         public string ProjectSlug { get; set; }
+        public string PluginLogo { get; set; }
         public long BuildId { get; set; }
         public long? DownloadStat { get; set; }
         public BuildInfoClass BuildInfo { get; set; }
         public JObject ManifestInfo { get; set; }
+        public JObject PublisherAccountDetails { get; set; }
         public string Documentation { get; set; }
     }
     public class PluginBuilderClient

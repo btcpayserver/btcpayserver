@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -60,6 +61,10 @@ namespace BTCPayServer.Plugins
                     p.Author = github.Owner;
                     p.AuthorLink = $"https://github.com/{github.Owner}";
                 }
+                p.PluginLogo = v.PluginLogo;
+                p.AuthorNostr = v.PublisherAccountDetails["nostr"]?.ToString();
+                p.AuthorTwitter = v.PublisherAccountDetails["twitter"]?.ToString();
+                p.AuthorEmail = v.PublisherAccountDetails["email"]?.ToString();
                 p.DownloadStat = v.DownloadStat;
                 p.BuildDate = v.BuildInfo.buildDate;
                 p.SystemPlugin = false;
@@ -129,7 +134,11 @@ namespace BTCPayServer.Plugins
             public string Documentation { get; set; }
             public string Source { get; set; }
             public string Author { get; set; }
+            public string PluginLogo { get; set; }
             public string AuthorLink { get; set; }
+            public string AuthorNostr { get; set; }
+            public string AuthorTwitter { get; set; }
+            public string AuthorEmail { get; set; }
 
             public void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
             {

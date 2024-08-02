@@ -69,8 +69,12 @@
                     <div class="card h-100 bg-transparent border-0" id="@plugin.Identifier">
                         <div class="card-body d-flex">
                             <div class="me-3 d-flex justify-content-center align-items-center">
-                                <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
+                                <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                                     alt="@plugin.Name Image"
+                                     class="rounded-4"
+                                     style="width: 80px; height: 80px;">
                             </div>
+
                             <div class="flex-grow-1">
                                 <div class="d-flex justify-content-between align-items-center mb-2">
                                     <h4 class="card-title mb-0">@plugin.Name</h4>
@@ -106,7 +110,7 @@
                                     </div>
 
                                     <div class="d-flex justify-content-between mt-3 flex-wrap">
-                                        <div class="d-flex flex-column gap-3 col-12 col-md-7 mb-3 mb-md-0">
+                                        <div class="d-flex flex-column gap-3 col-12 col-lg-7 mb-3 mb-md-0">
                                             <div class="d-flex flex-column gap-2 h-100">
                                                 <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3); min-height: 100px; flex-basis: 100px;"></div>
                                                 <div class="d-flex gap-2 flex-grow-1">
@@ -115,7 +119,7 @@
                                                 </div>
                                             </div>
                                         </div>
-                                        <div class="col-12 col-md-4 mt-3">
+                                        <div class="col-12 col-lg-4 mt-3">
                                             <div class="d-flex justify-content-between mb-2 w-100">
                                                 <strong>Version:</strong>
                                                 <span>@plugin.Version</span>
@@ -147,6 +151,22 @@
                                                 <div class="d-flex justify-content-between mb-2 w-100">
                                                     <strong>Documentation:</strong>
                                                     <span><a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                </div>
+                                                <hr />
+                                            }
+                                            @if (!string.IsNullOrEmpty(downloadInfo?.AuthorTwitter))
+                                            {
+                                                <div class="d-flex justify-content-between mb-2 w-100">
+                                                    <strong>Author Twitter:</strong>
+                                                    <span><a href="@downloadInfo.AuthorTwitter" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                </div>
+                                                <hr />
+                                            }
+                                            @if (!string.IsNullOrEmpty(downloadInfo?.AuthorEmail))
+                                            {
+                                                <div class="d-flex justify-content-between mb-2 w-100">
+                                                    <strong>Author Email:</strong>
+                                                    <span><a href="mailto:@downloadInfo.AuthorEmail" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">Send a mail</a></span>
                                                 </div>
                                                 <hr />
                                             }
@@ -194,7 +214,10 @@ else
                         <div class="card h-100 bg-transparent border-0" id="@plugin.Identifier">
                             <div class="card-body d-flex">
                                 <div class="me-3 d-flex justify-content-center align-items-center">
-                                    <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
+                                    <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                                         alt="@plugin.Name Image"
+                                         class="rounded-4"
+                                         style="width: 80px; height: 80px;">
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -228,7 +251,10 @@ else
                         <div class="card h-100 bg-transparent border-0" id="@plugin.Identifier">
                             <div class="card-body d-flex">
                                 <div class="me-3 d-flex justify-content-center align-items-center">
-                                    <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
+                                    <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                                         alt="@plugin.Name Image"
+                                         class="rounded-4"
+                                         style="width: 80px; height: 80px;">
                                 </div>
                                 <div class="flex-grow-1">
                                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -245,6 +271,34 @@ else
             }
         </div>
     }
+}
+
+
+@if (string.IsNullOrEmpty(Model.SearchText))
+{
+    <div class="mb-4">
+        <h4 class="mb-4">Upload Plugin</h4>
+        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
+            Upload Plugin
+        </button>
+        <div class="row collapse" id="manual-upload">
+            <div class="col col-xl-6 mb-4">
+                <div class="card">
+                    <div class="card-body">
+                        <h4 class="card-title">Add plugin manually</h4>
+                        <div class="alert alert-warning my-3">
+                            <h6 class="me-1">This is an extremely dangerous operation!</h6>
+                            Only upload plugins from trusted sources.
+                        </div>
+                        <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
+                            <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
+                            <button class="btn btn-primary" type="submit">Upload</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 }
 
 

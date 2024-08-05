@@ -115,7 +115,13 @@ namespace BTCPayServer.Hosting
             services.AddBTCPayServer(Configuration, Logs);
             services.AddProviderStorage();
             services.AddSession();
-            services.AddSignalR().AddNewtonsoftJsonProtocol();
+            services.AddSignalR().AddNewtonsoftJsonProtocol(options =>
+            {
+                NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(
+                    options.PayloadSerializerSettings);
+                options.PayloadSerializerSettings.Converters.Add(new BTCPayServer.Lightning.JsonConverters.LightMoneyJsonConverter());
+
+            });
             services.AddFido2(options =>
                 {
                     options.ServerName = "BTCPay Server";

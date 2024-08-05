@@ -9,6 +9,7 @@ public static class BTCPayAppExtensions
 {
     public static IServiceCollection AddBTCPayApp(this IServiceCollection serviceCollection)
     {
+        serviceCollection.AddGrpc();
         serviceCollection.AddSingleton<BTCPayAppState>();
         serviceCollection.AddSingleton<ILightningConnectionStringHandler, BTCPayAppLightningConnectionStringHandler>();
         serviceCollection.AddHostedService(serviceProvider => serviceProvider.GetRequiredService<BTCPayAppState>());

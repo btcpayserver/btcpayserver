@@ -312,10 +312,13 @@ namespace BTCPayServer.Controllers
         {
             var store = GetCurrentStore();
             var data = await _walletHistogramService.GetHistogram(store, walletId, type);
+            if (data == null) return NotFound();
+            
+            const int labelCount = 6;
+            var pointCount = data.Series.Count;  
+            var labelEvery = pointCount / labelCount;
 
-            return data == null
-                ? NotFound()
-                : Json(data);
+            return Json(data);
         }
 
         [HttpGet("{walletId}/receive")]

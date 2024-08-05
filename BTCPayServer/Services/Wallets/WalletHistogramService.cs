@@ -43,8 +43,7 @@ public class WalletHistogramService
 
                 var code = walletId.CryptoCode;
                 var to = DateTimeOffset.UtcNow;
-                var labelCount = 6;
-                (var days, var pointCount) = type switch
+                var (days, pointCount) = type switch
                 {
                     WalletHistogramType.Week => (7, 30),
                     WalletHistogramType.Month => (30, 30),
@@ -60,15 +59,12 @@ public class WalletHistogramService
                     new { code, wallet_id, from, to, interval });
                 var data = rows.AsList();
                 var series = new List<decimal>(pointCount);
-                var labels = new List<string>(labelCount);
-                var labelEvery = pointCount / labelCount;
+                var labels = new List<DateTimeOffset>(pointCount);
                 for (int i = 0; i < data.Count; i++)
                 {
                     var r = data[i];
                     series.Add((decimal)r.balance);
-                    labels.Add((i % labelEvery == 0)
-                        ? ((DateTime)r.date).ToString("MMM dd", CultureInfo.InvariantCulture)
-                        : null);
+                    labels.Add((DateTimeOffset)r.date);
                 }
                 series[^1] = balance;
                 return new WalletHistogramData
@@ -89,6 +85,6 @@ public class WalletHistogramData
 {
     public WalletHistogramType Type { get; set; }
     public List<decimal> Series { get; set; }
-    public List<string> Labels { get; set; }
+    public List<DateTimeOffset> Labels { get; set; }
     public decimal Balance { get; set; }
 }

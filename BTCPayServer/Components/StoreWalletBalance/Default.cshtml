@@ -1,7 +1,6 @@
 @using BTCPayServer.Services.Wallets
 @using BTCPayServer.Payments
 @model BTCPayServer.Components.StoreWalletBalance.StoreWalletBalanceViewModel
-@inject BTCPayNetworkProvider NetworkProvider
 <div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
     <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Wallet Balance</h6>
@@ -67,6 +66,7 @@
             const valueTransform = value => rate
                 ? DashboardUtils.displayDefaultCurrency(value, rate, defaultCurrency, divisibility).toString()
                 : value
+            const labelCount = 6
             const chartOpts = {
                 fullWidth: true,
                 showArea: true,
@@ -97,8 +97,14 @@
                     valueTransformFunction: valueTransform
                 })
                 const renderOpts = Object.assign({}, chartOpts, { low, plugins: [tooltip] });
+                const pointCount = series.length;
+                const labelEvery = pointCount / labelCount;
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
+                const dateFormatter = new Intl.DateTimeFormat('default', { month: 'short', day: 'numeric' })
                 const chart = new Chartist.Line(`#${id} .ct-chart`, {
-                    labels,
+                    labels: labels.map((date, i) => i % labelEvery == 0
+                        ? dateFormatter.format(new Date(date))
+                        : null),
                     series: [series]
                 }, renderOpts);
                 

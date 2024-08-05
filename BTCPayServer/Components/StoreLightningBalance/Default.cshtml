@@ -1,9 +1,11 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Services.Wallets
 @model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
-@if(!Model.InitialRendering && Model.Balance == null)
+@if (!Model.InitialRendering && Model.Balance == null)
 {
    return;
 }
-<div id="StoreLightningBalance-@Model.Store.Id" class="widget store-lightning-balance">
+<div id="StoreLightningBalance-@Model.StoreId" class="widget store-lightning-balance">
     <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
         <h6>Lightning Balance</h6>
         @if (Model.CryptoCode != Model.DefaultCurrency && Model.Balance != null)
@@ -128,12 +130,32 @@
                 </div>
             }
         </div>
-        @if (Model.Balance.OffchainBalance != null && Model.Balance.OnchainBalance != null)
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 @(Model.Series != null ? "my-3" : "mt-3")">
+            @if (Model.Balance.OffchainBalance != null && Model.Balance.OnchainBalance != null)
+            {
+                <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 ms-n1" type="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">
+                    <vc:icon symbol="caret-down"/>
+                    <span class="ms-1">Details</span>
+                </button>
+            }
+            @if (Model.Series != null)
+            {
+                <div class="btn-group only-for-js mt-1" role="group" aria-label="Period">
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodWeek-@Model.StoreId" value="@WalletHistogramType.Week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
+                    <label class="btn btn-link" for="StoreLightningBalancePeriodWeek-@Model.StoreId">1W</label>
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodMonth-@Model.StoreId" value="@WalletHistogramType.Month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
+                    <label class="btn btn-link" for="StoreLightningBalancePeriodMonth-@Model.StoreId">1M</label>
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodYear-@Model.StoreId" value="@WalletHistogramType.Year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
+                    <label class="btn btn-link" for="StoreLightningBalancePeriodYear-@Model.StoreId">1Y</label>
+                </div>
+            }
+        </div>
+        @if (Model.Series != null)
         {
-            <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 mt-3 ms-n1" type="button" data-bs-toggle="collapse" data-bs-target=".balance-details" aria-expanded="false" aria-controls="balanceDetailsOffchain balanceDetailsOnchain">
-                <vc:icon symbol="caret-down"/>
-                <span class="ms-1">Details</span>
-            </button>
+            <div class="ct-chart"></div>
+            <template>
+                @Safe.Json(Model)
+            </template>
         }
     }
     else
@@ -143,47 +165,18 @@
                 <span class="visually-hidden">Loading...</span>
             </div>
         </div>
+        <script src="~/Components/StoreLightningBalance/Default.cshtml.js" asp-append-version="true"></script>
         <script>
             (async () => {
-                const url = @Safe.Json(Url.Action("LightningBalance", "UIStores", new { storeId = Model.Store.Id, cryptoCode = Model.CryptoCode }));
-                const storeId = @Safe.Json(Model.Store.Id);
+                const url = @Safe.Json(Model.DataUrl);
+                const storeId = @Safe.Json(Model.StoreId);
                 const response = await fetch(url);
                 if (response.ok) {
                     document.getElementById(`StoreLightningBalance-${storeId}`).outerHTML = await response.text();
+                    const data = document.querySelector(`#StoreLightningBalance-${storeId} template`);
+                    if (data) window.storeLightningBalance.dataLoaded(JSON.parse(data.innerHTML));
                 }
             })();
         </script>
     }
 </div>
-<script>
-    (function () {
-        const storeId = @Safe.Json(Model.Store.Id);
-        const cryptoCode = @Safe.Json(Model.CryptoCode);
-        const defaultCurrency = @Safe.Json(Model.DefaultCurrency);
-        const divisibility = @Safe.Json(Model.CurrencyData.Divisibility);
-        const id = `StoreLightningBalance-${storeId}`;
-        
-        const render = rate => {
-            const currency = rate ? defaultCurrency : cryptoCode;
-            document.querySelectorAll(`#${id} .currency`).forEach(c => c.innerText = currency) 
-            document.querySelectorAll(`#${id} [data-balance]`).forEach(c => {
-                const value = Number.parseFloat(c.dataset.balance);
-                c.innerText = rate
-                    ? DashboardUtils.displayDefaultCurrency(value, rate, currency, divisibility)
-                    : value
-            });
-        };
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            delegate('change', `#${id} .currency-toggle input`, async e => {
-                const { target } = e;
-                if (target.value === defaultCurrency) {
-                    const rate = await DashboardUtils.fetchRate(`${cryptoCode}_${defaultCurrency}`);
-                    if (rate) render(rate);
-                } else {
-                    render(null);
-                }
-            });
-        });
-    })();
-</script>

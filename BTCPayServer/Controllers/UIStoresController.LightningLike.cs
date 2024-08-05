@@ -7,12 +7,15 @@ using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Components.StoreLightningBalance;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
+using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
@@ -81,6 +84,37 @@ public partial class UIStoresController
         }
 
         return View(vm);
+    }
+
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [HttpGet("{storeId}/lightning/{cryptoCode}/dashboard/balance")]
+    public IActionResult LightningBalanceDashboard(string storeId, string cryptoCode)
+    {
+        var store = HttpContext.GetStoreData();
+        if (store == null)
+            return NotFound();
+
+        return ViewComponent("StoreLightningBalance", new StoreLightningBalanceViewModel
+        {
+            Store = store,
+            CryptoCode = cryptoCode,
+            InitialRendering = false
+        });
+    }
+
+    [HttpGet("{storeId}/lightning/{cryptoCode}/dashboard/balance/{type}")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> LightningBalanceDashboard(string storeId, string cryptoCode, WalletHistogramType type)
+    {
+        var store = HttpContext.GetStoreData();
+        if (store == null)
+            return NotFound();
+        var lightningClient = await GetLightningClient(store, cryptoCode);
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+        var data = await _lnHistogramService.GetHistogram(lightningClient, type, cts.Token);
+        if (data == null) return NotFound();
+
+        return Json(data);
     }
 
     [HttpGet("{storeId}/lightning/{cryptoCode}/setup")]
@@ -320,5 +354,27 @@ public partial class UIStoresController
     private T? GetConfig<T>(PaymentMethodId paymentMethodId, StoreData store) where T: class
     {
         return store.GetPaymentMethodConfig<T>(paymentMethodId, _handlers);
+    }
+
+    private async Task<ILightningClient?> GetLightningClient(StoreData store, string cryptoCode)
+    {
+        var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+        var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+        var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, _handlers);
+        if (existing == null)
+            return null;
+
+        if (existing.GetExternalLightningUrl() is { } connectionString)
+        {
+            return _lightningClientFactory.Create(connectionString, network);
+        }
+        if (existing.IsInternalNode && _lightningNetworkOptions.InternalLightningByCryptoCode.TryGetValue(cryptoCode, out var internalLightningNode))
+        {
+            var result = await _authorizationService.AuthorizeAsync(HttpContext.User, null,
+                new PolicyRequirement(Policies.CanUseInternalLightningNode));
+            return result.Succeeded ? internalLightningNode : null;
+        }
+
+        return null;
     }
 }

@@ -148,12 +148,12 @@ public class BTCPayAppLightningClient : ILightningClient
 
     public async Task<LightningNodeInformation> GetInfo(CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotSupportedException();
+        return await  HubClient.GetLightningNodeInfo();
     }
 
     public async Task<LightningNodeBalance> GetBalance(CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+       return await HubClient.GetLightningBalance();
     }
 
     public async Task<PayResponse> Pay(PayInvoiceParams payParams,

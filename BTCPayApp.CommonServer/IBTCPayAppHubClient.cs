@@ -23,6 +23,8 @@ public interface IBTCPayAppHubClient
     Task<List<LightningInvoice>> GetLightningInvoices(ListInvoicesParams request);
     Task<PayResponse> PayInvoice(string bolt11, long? amountMilliSatoshi);
     Task MasterUpdated(long? deviceIdentifier);
+    Task<LightningNodeInformation> GetLightningNodeInfo();
+    Task<LightningNodeBalance> GetLightningBalance();
 }
 
 //methods available on the hub in the server

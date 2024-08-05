@@ -702,6 +702,12 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult<OnChainWalletOverviewData>(
                 await GetController<GreenfieldStoreOnChainWalletsController>().ShowOnChainWalletOverview(storeId, cryptoCode));
         }
+        
+        public override async Task<HistogramData> GetOnChainWalletHistogram(string storeId, string cryptoCode, string type, CancellationToken token = default)
+        {
+            return GetFromActionResult<HistogramData>(
+                await GetController<GreenfieldStoreOnChainWalletsController>().GetOnChainWalletHistogram(storeId, cryptoCode, type));
+        }
 
         public override async Task<OnChainWalletAddressData> GetOnChainWalletReceiveAddress(string storeId,
             string cryptoCode, bool forceGenerate = false,

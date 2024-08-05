@@ -16,6 +16,14 @@ public partial class BTCPayServerClient
     {
         return await SendHttpRequest<OnChainWalletOverviewData>($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet", null, HttpMethod.Get, token);
     }
+    
+    public virtual async Task<HistogramData> GetOnChainWalletHistogram(string storeId, string cryptoCode, HistogramType? type = null,
+        CancellationToken token = default)
+    {
+        var queryPayload = type == null ? null : new Dictionary<string, string> { ["type"] = type.ToString() };
+        return await SendHttpRequest<HistogramData>($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/histogram", queryPayload, HttpMethod.Get, token);
+    }
+    
     public virtual async Task<OnChainWalletFeeRateData> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null,
         CancellationToken token = default)
     {

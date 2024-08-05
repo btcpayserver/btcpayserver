@@ -2,12 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
-using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;
@@ -21,7 +19,6 @@ using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -59,6 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IFeeProviderFactory _feeProviderFactory;
         private readonly UTXOLocker _utxoLocker;
         private readonly TransactionLinkProviders _transactionLinkProviders;
+        private readonly WalletHistogramService _walletHistogramService;
 
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -75,6 +73,7 @@ namespace BTCPayServer.Controllers.Greenfield
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
             UTXOLocker utxoLocker,
+            WalletHistogramService walletHistogramService,
             TransactionLinkProviders transactionLinkProviders
         )
         {
@@ -92,6 +91,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
             _utxoLocker = utxoLocker;
+            _walletHistogramService = walletHistogramService;
             _transactionLinkProviders = transactionLinkProviders;
         }
 
@@ -99,14 +99,13 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet")]
         public async Task<IActionResult> ShowOnChainWalletOverview(string storeId, string cryptoCode)
         {
-            if (IsInvalidWalletRequest(cryptoCode, out var network,
-                    out var derivationScheme, out var actionResult))
+            if (IsInvalidWalletRequest(cryptoCode, out var network, out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var balance = await wallet.GetBalance(derivationScheme.AccountDerivation);
 
-            return Ok(new OnChainWalletOverviewData()
+            return Ok(new OnChainWalletOverviewData
             {
                 Label = derivationScheme.ToPrettyString(),
                 Balance = balance.Total.GetValue(network),
@@ -115,6 +114,20 @@ namespace BTCPayServer.Controllers.Greenfield
             });
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/histogram")]
+        public async Task<IActionResult> GetOnChainWalletHistogram(string storeId, string cryptoCode, [FromQuery] string type)
+        {
+            if (IsInvalidWalletRequest(cryptoCode, out _, out _, out var actionResult))
+                return actionResult;
+
+            var walletId = new WalletId(storeId, cryptoCode);
+            Enum.TryParse<WalletHistogramType>(type, true, out var histType);
+            var data = await _walletHistogramService.GetHistogram(Store, walletId, histType);
+
+            return Ok(data);
+        }
+        
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feerate")]
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null)

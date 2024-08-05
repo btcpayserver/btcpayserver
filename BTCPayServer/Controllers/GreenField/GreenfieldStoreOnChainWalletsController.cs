@@ -116,7 +116,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/histogram")]
-        public async Task<IActionResult> GetOnChainWalletHistogram(string storeId, string cryptoCode, [FromQuery] string type)
+        public async Task<IActionResult> GetOnChainWalletHistogram(string storeId, string cryptoCode, [FromQuery] string? type = null)
         {
             if (IsInvalidWalletRequest(cryptoCode, out _, out _, out var actionResult))
                 return actionResult;
@@ -124,8 +124,15 @@ namespace BTCPayServer.Controllers.Greenfield
             var walletId = new WalletId(storeId, cryptoCode);
             Enum.TryParse<WalletHistogramType>(type, true, out var histType);
             var data = await _walletHistogramService.GetHistogram(Store, walletId, histType);
+            if (data == null) return this.CreateAPIError(404, "histogram-not-found", "The wallet histogram was not found.");
 
-            return Ok(data);
+            return Ok(new HistogramData
+            {
+                Type = Enum.Parse<HistogramType>(data.Type.ToString(), true),
+                Balance = data.Balance,
+                Series = data.Series,
+                Labels = data.Labels
+            });
         }
         
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

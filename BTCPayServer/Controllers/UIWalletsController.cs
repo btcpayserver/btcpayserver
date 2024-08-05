@@ -46,6 +46,7 @@ using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
+using WalletHistogramType = BTCPayServer.Services.Wallets.WalletHistogramType;
 
 namespace BTCPayServer.Controllers
 {
@@ -313,10 +314,6 @@ namespace BTCPayServer.Controllers
             var store = GetCurrentStore();
             var data = await _walletHistogramService.GetHistogram(store, walletId, type);
             if (data == null) return NotFound();
-            
-            const int labelCount = 6;
-            var pointCount = data.Series.Count;  
-            var labelEvery = pointCount / labelCount;
 
             return Json(data);
         }

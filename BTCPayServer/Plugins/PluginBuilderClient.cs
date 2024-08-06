@@ -16,6 +16,7 @@ namespace BTCPayServer.Plugins
             public string gitCommit { get; set; }
             public string pluginDir { get; set; }
             public string gitRepository { get; set; }
+            public DateTime buildDate { get; set; }
 #nullable enable
             static Regex GithubRepositoryRegex = new Regex("^https://(www\\.)?github\\.com/([^/]+)/([^/]+)/?");
             public record GithubRepository(string Owner, string RepositoryName)
@@ -41,9 +42,12 @@ namespace BTCPayServer.Plugins
             public IDictionary<string, JToken> AdditionalData { get; set; }
         }
         public string ProjectSlug { get; set; }
+        public string PluginLogo { get; set; }
         public long BuildId { get; set; }
+        public long? DownloadStat { get; set; }
         public BuildInfoClass BuildInfo { get; set; }
         public JObject ManifestInfo { get; set; }
+        public JObject PublisherAccountDetails { get; set; }
         public string Documentation { get; set; }
     }
     public class PluginBuilderClient
@@ -62,6 +66,15 @@ namespace BTCPayServer.Plugins
                 queryString += $"&btcpayVersion={btcpayVersion}&";
             var result = await httpClient.GetStringAsync($"api/v1/plugins{queryString}");
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();
+        }
+
+        public async Task RecordDownloadedPlugin(string plugin, string action, string version = null)
+        {
+            var queryString = $"action={action}";
+            if (!string.IsNullOrEmpty(version))
+                queryString += $"&version={version}";
+            var content = new StringContent(string.Empty);
+            await httpClient.PostAsync($"api/v1/plugins/{plugin}/record-download?{queryString}", content);
         }
     }
 }

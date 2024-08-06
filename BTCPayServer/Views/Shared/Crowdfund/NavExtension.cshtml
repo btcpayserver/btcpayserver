@@ -12,14 +12,14 @@
 @if (store != null)
 {
     var appType = AppService.GetAppType(CrowdfundAppType.AppType)!;
-    var apps = Model.Apps.Where(app => app.AppType == appType.Type).ToList();
+    var apps = Model.Apps?.Where(app => app.AppType == appType.Type).ToList();
     <li class="nav-item" permission="@Policies.CanModifyStoreSettings">
         <a asp-area="" asp-controller="UIApps" asp-action="CreateApp" asp-route-storeId="@store.Id" asp-route-appType="@appType.Type" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Create, appType.Type)" id="@($"StoreNav-Create{appType.Type}")">
             <vc:icon symbol="nav-crowdfund" />
 			<span text-translate="true">Crowdfund</span>
         </a>
     </li>
-    @if (apps.Any())
+    @if (apps?.Any() is true)
     {
         <li class="nav-item" not-permission="@Policies.CanModifyStoreSettings" permission="@Policies.CanViewStoreSettings">
             <span class="nav-link">
@@ -27,18 +27,18 @@
 				<span>Crowdfund</span>
             </span>
         </li>
-    }
-    @foreach (var app in apps)
-    {
-        <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
-            <a asp-area="" asp-controller="UICrowdfund" asp-action="UpdateCrowdfund" asp-route-appId="@app.Id" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
-                <span>@app.AppName</span>
-            </a>
-        </li>
-        <li class="nav-item nav-item-sub" not-permission="@Policies.CanViewStoreSettings">
-            <a asp-area="" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@app.Id" class="nav-link">
-                <span>@app.AppName</span>
-            </a>
-        </li>
+        @foreach (var app in apps)
+        {
+            <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
+                <a asp-area="" asp-controller="UICrowdfund" asp-action="UpdateCrowdfund" asp-route-appId="@app.Id" class="nav-link @ViewData.ActivePageClass(AppsNavPages.Update, app.Id)" id="@($"StoreNav-App-{app.Id}")">
+                    <span>@app.AppName</span>
+                </a>
+            </li>
+            <li class="nav-item nav-item-sub" not-permission="@Policies.CanViewStoreSettings">
+                <a asp-area="" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@app.Id" class="nav-link">
+                    <span>@app.AppName</span>
+                </a>
+            </li>
+        }
     }
 }

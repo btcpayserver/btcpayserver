@@ -6,6 +6,8 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.Models;
+using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Plugins;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -49,8 +51,78 @@ namespace BTCPayServer.Controllers
             return View(res);
         }
 
+        [HttpGet("server/exploreplugins")]
+        public async Task<IActionResult> ExplorePlugins(
+            [FromServices] PluginService pluginService, ListPluginsViewModel model)
+        {
+            model = model ?? new ListPluginsViewModel();
+            IEnumerable<PluginService.AvailablePlugin> availablePlugins;
+            try
+            {
+                availablePlugins = await pluginService.GetRemotePlugins();
+            }
+            catch (Exception)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "Remote plugins lookup failed. Try again later."
+                });
+                availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
+            }
+            if (!string.IsNullOrEmpty(model.SearchText))
+            {
+                availablePlugins = availablePlugins.Where(c => c.Name.ToLower().Contains(model.SearchText.ToLower()));
+            }
+            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>();
+            foreach (var p in availablePlugins)
+                availablePluginsByIdentifier.TryAdd(p.Identifier, p);
+
+            model.Installed = pluginService.LoadedPlugins;
+            model.Available = availablePlugins;
+            model.CanShowRestart = true;
+            model.DownloadedPluginsByIdentifier = availablePluginsByIdentifier;
+            return View(model);
+        }
+
+        [HttpGet("server/installedplugins")]
+        public async Task<IActionResult> ListInstalledPlugins(
+            [FromServices] PluginService pluginService,
+            [FromServices] BTCPayServerOptions btcPayServerOptions)
+        {
+            IEnumerable<PluginService.AvailablePlugin> availablePlugins;
+            try
+            {
+                availablePlugins = await pluginService.GetRemotePlugins();
+            }
+            catch (Exception)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel()
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "Remote plugins lookup failed. Try again later."
+                });
+                availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
+            }
+            var availablePluginsByIdentifier = new Dictionary<string, AvailablePlugin>();
+            foreach (var p in availablePlugins)
+                availablePluginsByIdentifier.TryAdd(p.Identifier, p);
+            var res = new ListPluginsViewModel()
+            {
+                Installed = pluginService.LoadedPlugins,
+                Available = availablePlugins,
+                Commands = pluginService.GetPendingCommands(),
+                Disabled = pluginService.GetDisabledPlugins(),
+                CanShowRestart = true,
+                DownloadedPluginsByIdentifier = availablePluginsByIdentifier
+            };
+            return View(res);
+        }
+        
+
         public class ListPluginsViewModel
         {
+            public string SearchText { get; set; }
             public IEnumerable<IBTCPayServerPlugin> Installed { get; set; }
             public IEnumerable<PluginService.AvailablePlugin> Available { get; set; }
             public (string command, string plugin)[] Commands { get; set; }
@@ -60,10 +132,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("server/plugins/uninstall")]
-        public IActionResult UnInstallPlugin(
+        public async Task<IActionResult> UnInstallPlugin(
             [FromServices] PluginService pluginService, string plugin)
         {
-            pluginService.UninstallPlugin(plugin);
+            await pluginService.UninstallPlugin(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Message = "Plugin scheduled to be uninstalled.",
@@ -100,7 +172,7 @@ namespace BTCPayServer.Controllers
                 }
                 else
                 {
-                    pluginService.InstallPlugin(plugin);
+                    await pluginService.InstallPlugin(plugin);
                 }
                 TempData.SetStatusMessageModel(new StatusMessageModel()
                 {

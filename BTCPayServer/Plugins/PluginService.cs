@@ -62,14 +62,18 @@ namespace BTCPayServer.Plugins
                     p.AuthorLink = $"https://github.com/{github.Owner}";
                 }
                 p.PluginLogo = v.PluginLogo;
-                p.AuthorNostr = v.PublisherAccountDetails["nostr"]?.ToString();
-                p.AuthorTwitter = v.PublisherAccountDetails["twitter"]?.ToString();
-                p.AuthorEmail = v.PublisherAccountDetails["email"]?.ToString();
+                if (v.PublisherAccountDetails != null)
+                {
+                    p.AuthorNostr = v.PublisherAccountDetails["nostr"]?.ToString();
+                    p.AuthorTwitter = v.PublisherAccountDetails["twitter"]?.ToString();
+                    p.AuthorEmail = v.PublisherAccountDetails["email"]?.ToString();
+                }
                 p.DownloadStat = v.DownloadStat;
                 p.BuildDate = v.BuildInfo.buildDate;
                 p.SystemPlugin = false;
                 return p;
             }).ToArray();
+
         }
 
         public async Task DownloadRemotePlugin(string pluginIdentifier, string version)

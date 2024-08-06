@@ -84,6 +84,7 @@
                 var tooltipElement = getTooltipElement();
                 var pointValues = getPointValues();
                 var hideDelayTimer;
+                var containerRect;
 
                 options.template = tooltipElement.innerHTML;
 
@@ -178,7 +179,6 @@
                     var valueGroup;
                     var valueIndex;
                     var itemData;
-
                     var seriesData;
 
                     clearTimeout(hideDelayTimer);
@@ -241,7 +241,6 @@
 
                     // series name
                     textMarkup = textMarkup.replace(new RegExp('{{seriesName}}', 'gi'), seriesName || '');
-                    console.log(textMarkup)
                     tooltipElement.innerHTML = textMarkup;
                     tooltipElement.removeAttribute('hidden');
                     setTooltipPosition(triggerElement);
@@ -318,9 +317,11 @@
                  * @param Boolean ignoreClasses
                  */
                 function setTooltipPosition(relativeElement, ignoreClasses) {
+                    containerRect = chart.container.getBoundingClientRect();
                     var positionData = getTooltipPosition(relativeElement);
 
                     tooltipElement.style.transform = 'translate(' + positionData.left + 'px, ' + positionData.top + 'px)';
+                    tooltipElement.style.height = containerRect.height + options.offset.y + 'px';
 
                     if (ignoreClasses) {
                         return;
@@ -345,7 +346,7 @@
 
                     var boxData = relativeElement.getBoundingClientRect();
                     var left = boxData.left + window.scrollX + options.offset.x - width / 2 + boxData.width / 2;
-                    var top = boxData.top + window.scrollY - height + options.offset.y;
+                    var top = containerRect.top + window.scrollY + options.offset.y;
 
                     // Minimum horizontal collision detection
                     if (left + width > document.body.clientWidth) {

@@ -33,7 +33,7 @@ if (!window.appSales) {
                 }
             };
 
-            document.addEventListener('DOMContentLoaded', () => {
+            window.requestAnimationFrame(() => {
                 delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
                     const type = e.target.value;
                     await update(type);

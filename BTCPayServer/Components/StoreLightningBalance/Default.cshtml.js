@@ -3,9 +3,7 @@ if (!window.storeLightningBalance) {
         dataLoaded (model) {
             const { storeId, cryptoCode, defaultCurrency, currencyData: { divisibility } }  = model;
             const id = `StoreLightningBalance-${storeId}`;
-            const valueTransform = (value, label) => {
-                return DashboardUtils.displayCurrency(value, rate, defaultCurrency, divisibility) + ' ' + (rate ? defaultCurrency : cryptoCode);
-            }
+            const valueTransform = value => rate ? DashboardUtils.displayCurrency(value, rate, defaultCurrency, divisibility) : value
             const labelCount = 6
             const tooltip = Chartist.plugins.tooltip2({
                 template: '<div class="chartist-tooltip-value">{{value}}</div><div class="chartist-tooltip-line"></div>',
@@ -13,7 +11,9 @@ if (!window.storeLightningBalance) {
                     x: 0,
                     y: -16
                 },
-                valueTransformFunction: valueTransform
+                valueTransformFunction(value, label) {
+                    return valueTransform(value) + ' ' + (rate ? defaultCurrency : cryptoCode)
+                }
             })
             // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
             const dateFormatter = new Intl.DateTimeFormat('default', { month: 'short', day: 'numeric' })
@@ -52,8 +52,6 @@ if (!window.storeLightningBalance) {
                 } });
                 const pointCount = series.length;
                 const labelEvery = pointCount / labelCount;
-                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
-                const dateFormatter = new Intl.DateTimeFormat('default', { month: 'short', day: 'numeric' })
                 const chart = new Chartist.Line(`#${id} .ct-chart`, {
                     labels: labels,
                     series: [series]
@@ -84,7 +82,7 @@ if (!window.storeLightningBalance) {
             };
 
             render(data);
-            document.addEventListener('DOMContentLoaded', () => {
+            window.requestAnimationFrame(() => {
                 delegate('change', `#${id} [name="StoreLightningBalancePeriod-${storeId}"]`, async e => {
                     const type = e.target.value;
                     await update(type);

@@ -61,7 +61,7 @@ public class LightningHistogramService
                 var sum = txs.Sum(tx => tx.Amount);
                 balance -= sum;
                 series.Add(balance);
-                labels.Add(from + interval * i);
+                labels.Add(from + interval * (i - 1));
             }
             // reverse the lists
             series.Reverse();

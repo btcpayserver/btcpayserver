@@ -33,9 +33,11 @@ if (!window.appSales) {
                 }
             };
 
-            delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
-                const type = e.target.value;
-                await update(type);
+            document.addEventListener('DOMContentLoaded', () => {
+                delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
+                    const type = e.target.value;
+                    await update(type);
+                });
             });
         }
     };

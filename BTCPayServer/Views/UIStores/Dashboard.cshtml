@@ -30,8 +30,8 @@
             toDefaultCurrency(amount, rate) {
                 return Math.round((amount * rate) * 100) / 100;
             },
-            displayDefaultCurrency(amount, rate, currency, divisibility) {
-                const value = DashboardUtils.toDefaultCurrency(amount, rate);
+            displayCurrency(amount, rate, currency, divisibility) {
+                const value = rate ? DashboardUtils.toDefaultCurrency(amount, rate) : amount;
                 const locale = currency === 'USD' ? 'en-US' : navigator.language;
                 const isSats = currency === 'SATS';
                 if (isSats) currency = 'BTC';

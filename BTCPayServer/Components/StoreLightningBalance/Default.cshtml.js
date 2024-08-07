@@ -3,16 +3,30 @@ if (!window.storeLightningBalance) {
         dataLoaded (model) {
             const { storeId, cryptoCode, defaultCurrency, currencyData: { divisibility } }  = model;
             const id = `StoreLightningBalance-${storeId}`;
-            const valueTransform = value => rate
-                ? DashboardUtils.displayDefaultCurrency(value, rate, defaultCurrency, divisibility).toString()
-                : value
+            const valueTransform = (value, label) => {
+                return DashboardUtils.displayCurrency(value, rate, defaultCurrency, divisibility) + ' ' + (rate ? defaultCurrency : cryptoCode);
+            }
             const labelCount = 6
+            const tooltip = Chartist.plugins.tooltip2({
+                template: '<div class="chartist-tooltip-value">{{value}}</div><div class="chartist-tooltip-line"></div>',
+                offset: {
+                    x: 0,
+                    y: -16
+                },
+                valueTransformFunction: valueTransform
+            })
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
+            const dateFormatter = new Intl.DateTimeFormat('default', { month: 'short', day: 'numeric' })
             const chartOpts = {
                 fullWidth: true,
                 showArea: true,
+                //lineSmooth: false,
                 axisY: {
-                    labelInterpolationFnc: valueTransform
-                }
+                    //labelInterpolationFnc: valueTransform,
+                    showLabel: false,
+                    offset: 0
+                },
+                plugins: [tooltip]
             };
             const baseUrl = model.dataUrl;
             let data = model;
@@ -31,27 +45,22 @@ if (!window.storeLightningBalance) {
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
-                const tooltip = Chartist.plugins.tooltip2({
-                    template: '<div class="chartist-tooltip-value">{{value}}</div><div class="chartist-tooltip-line"></div>',
-                    offset: {
-                        x: 0,
-                        y: -16
-                    },
-                    valueTransformFunction: valueTransform
-                })
-                const renderOpts = Object.assign({}, chartOpts, { low, plugins: [tooltip] });
+                const renderOpts = Object.assign({}, chartOpts, { low, axisX: {
+                    labelInterpolationFnc(date, i) {
+                        return i % labelEvery == 0 ? dateFormatter.format(new Date(date)) : null
+                    }
+                } });
                 const pointCount = series.length;
                 const labelEvery = pointCount / labelCount;
                 // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/DateTimeFormat/DateTimeFormat
                 const dateFormatter = new Intl.DateTimeFormat('default', { month: 'short', day: 'numeric' })
                 const chart = new Chartist.Line(`#${id} .ct-chart`, {
-                    labels: labels.map((date, i) => i % labelEvery == 0
-                        ? dateFormatter.format(new Date(date))
-                        : null),
+                    labels: labels,
                     series: [series]
                 }, renderOpts);
 
                 // prevent y-axis labels from getting cut off
+                /*
                 window.setTimeout(() => {
                     const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
                     if (yLabels) {
@@ -62,6 +71,7 @@ if (!window.storeLightningBalance) {
                         chart.update(null, opts);
                     }
                 }, 0)
+                */
             };
 
             const update = async type => {
@@ -74,21 +84,22 @@ if (!window.storeLightningBalance) {
             };
 
             render(data);
-
-            delegate('change', `#${id} [name="StoreLightningBalancePeriod-${storeId}"]`, async e => {
-                const type = e.target.value;
-                await update(type);
+            document.addEventListener('DOMContentLoaded', () => {
+                delegate('change', `#${id} [name="StoreLightningBalancePeriod-${storeId}"]`, async e => {
+                    const type = e.target.value;
+                    await update(type);
+                })
+                delegate('change', `#${id} .currency-toggle input`, async e => {
+                    const { target } = e;
+                    if (target.value === defaultCurrency) {
+                        rate = await DashboardUtils.fetchRate(`${cryptoCode}_${defaultCurrency}`);
+                        if (rate) render(data);
+                    } else {
+                        rate = null;
+                        render(data);
+                    }
+                });
             })
-            delegate('change', `#${id} .currency-toggle input`, async e => {
-                const { target } = e;
-                if (target.value === defaultCurrency) {
-                    rate = await DashboardUtils.fetchRate(`${cryptoCode}_${defaultCurrency}`);
-                    if (rate) render(data);
-                } else {
-                    rate = null;
-                    render(data);
-                }
-            });
         }
     };
 }

@@ -208,12 +208,11 @@
                     if (typeof itemData == 'undefined') {
                         return;
                     }
-
                     meta = itemData.meta;
                     value = itemData.value || itemData;
 
                     if (typeof options.valueTransformFunction === 'function') {
-                        value = options.valueTransformFunction.call(chart, value);
+                        value = options.valueTransformFunction.call(chart, value, chart.data.labels[valueIndex], valueIndex);
                     }
 
                     // Remove the hover class and the aria-describedby attribute from the currently active triggers

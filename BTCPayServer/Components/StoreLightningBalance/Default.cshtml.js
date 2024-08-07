@@ -63,7 +63,6 @@ if (!window.storeLightningBalance) {
                     }
                 }, 0)
             };
-            console.log(baseUrl)
 
             const update = async type => {
                 const url = `${baseUrl}/${type}`;

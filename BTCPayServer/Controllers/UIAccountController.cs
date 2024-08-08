@@ -775,7 +775,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("/login/set-password")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SetPassword(SetPasswordViewModel model)
+        public async Task<IActionResult> SetPassword(SetPasswordViewModel model, string returnUrl = null)
         {
             if (!ModelState.IsValid)
             {
@@ -800,6 +800,18 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Success,
                     Message = hasPassword ? "Password successfully set." : "Account successfully created."
                 });
+                
+                // see if we can sign in user after accepting an invitation and setting the password 
+                if (needsInitialPassword && UserService.TryCanLogin(user, out _))
+                {
+                    var signInResult = await _signInManager.PasswordSignInAsync(user.Email!, model.Password, true, true);
+                    if (signInResult?.Succeeded is true)
+                    {
+                        _logger.LogInformation("User {Email} logged in", user.Email);
+                        return RedirectToLocal(returnUrl);
+                    }
+                }
+                
                 return RedirectToAction(nameof(Login));
             }
 

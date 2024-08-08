@@ -332,7 +332,7 @@ public partial class AppApiController
 
     [AllowAnonymous]
     [HttpPost("reset-password")]
-    public async Task<IActionResult> SetPassword(ResetPasswordRequest resetRequest)
+    public async Task<Results<Ok<AccessTokenResponse>, Ok, UnauthorizedHttpResult, EmptyHttpResult, ProblemHttpResult>> SetPassword(ResetPasswordRequest resetRequest)
     {
         var user = await userManager.FindByEmailAsync(resetRequest.Email);
         var needsInitialPassword = user != null && !await userManager.HasPasswordAsync(user);
@@ -340,7 +340,7 @@ public partial class AppApiController
         if (!UserService.TryCanLogin(user, out var message) && !needsInitialPassword || user == null)
         {
             _logger.LogWarning("User {Email} tried to reset password, but failed: {Message}", user?.Email ?? "(NO EMAIL)", message);
-            return Unauthorized(new GreenfieldAPIError(null, "Invalid request"));
+            return TypedResults.Problem("Invalid request", statusCode: 401);
         }
 
         IdentityResult result;
@@ -352,6 +352,21 @@ public partial class AppApiController
         {
             result = IdentityResult.Failed(userManager.ErrorDescriber.InvalidToken());
         }
-        return result.Succeeded ? Ok() : this.CreateAPIError(401, "unauthorized", result.ToString().Split(": ").Last());
+        
+        if (!result.Succeeded) return TypedResults.Problem(result.ToString().Split(": ").Last(), statusCode: 401);
+        
+        // see if we can sign in user after accepting an invitation and setting the password 
+        if (needsInitialPassword && UserService.TryCanLogin(user, out _))
+        {
+            signInManager.AuthenticationScheme = Scheme;
+            var signInResult = await signInManager.PasswordSignInAsync(user.Email!, resetRequest.NewPassword, true, true);
+            if (signInResult.Succeeded)
+            {
+                _logger.LogInformation("User {Email} logged in", user.Email);
+                return TypedResults.Empty;
+            }
+        }
+        
+        return TypedResults.Ok();
     }
 }

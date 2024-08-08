@@ -46,6 +46,7 @@ public interface IBTCPayAppHubServer
     Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
 
     Task SendInvoiceUpdate(string identifier, LightningInvoice lightningInvoice);
+    Task<long?> GetCurrentMaster();
 }
 
 public class ServerEvent(string type)

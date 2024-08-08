@@ -423,4 +423,14 @@ private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
             }
         }
     }
+
+    public async Task<long?> GetCurrentMaster(string contextConnectionId)
+    {
+        if (Connections.TryGetValue(contextConnectionId, out var connectedInstance) && connectedInstance.Master)
+        {
+            return connectedInstance.DeviceIdentifier;
+        }
+
+        return null;
+    }
 }

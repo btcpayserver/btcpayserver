@@ -1,6 +1,6 @@
 namespace BTCPayServer.Events;
 
-public class UserStoreAddedEvent(string storeId, string userId) : UserStoreEvent(storeId, userId)
+public class UserStoreAddedEvent(string storeId, string userId, string? detail = null) : UserStoreEvent(storeId, userId, detail)
 {
     protected override string ToString()
     {

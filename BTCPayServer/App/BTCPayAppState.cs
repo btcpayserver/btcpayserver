@@ -96,7 +96,7 @@ public class BTCPayAppState : IHostedService
 
     private async Task UserUpdatedEvent(UserUpdatedEvent arg)
     {
-        var ev = new ServerEvent("user-updated") { UserId = arg.User.Id };
+        var ev = new ServerEvent("user-updated") { UserId = arg.User.Id, Detail = arg.Detail };
         await _hubContext.Clients.Group(arg.User.Id).NotifyServerEvent(ev);
     }
 
@@ -108,7 +108,7 @@ public class BTCPayAppState : IHostedService
 
     private async Task InvoiceChangedEvent(InvoiceEvent arg)
     {
-        var ev = new ServerEvent("invoice-updated") { StoreId = arg.Invoice.StoreId, InvoiceId = arg.InvoiceId };
+        var ev = new ServerEvent("invoice-updated") { StoreId = arg.Invoice.StoreId, InvoiceId = arg.InvoiceId, Detail = arg.Invoice.Status.ToString() };
         await _hubContext.Clients.Group(arg.Invoice.StoreId).NotifyServerEvent(ev);
     }
 
@@ -132,7 +132,7 @@ public class BTCPayAppState : IHostedService
 
     private async Task StoreUpdatedEvent(StoreUpdatedEvent arg)
     {
-        var ev = new ServerEvent("store-updated") { StoreId = arg.StoreId };
+        var ev = new ServerEvent("store-updated") { StoreId = arg.StoreId, Detail = arg.Detail };
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
@@ -146,13 +146,13 @@ public class BTCPayAppState : IHostedService
     {
         var cIds = Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray();
         await AddToGroup(arg.StoreId, cIds);
-        var ev = new ServerEvent("user-store-added") {StoreId = arg.StoreId, UserId = arg.UserId};
+        var ev = new ServerEvent("user-store-added") {StoreId = arg.StoreId, UserId = arg.UserId, Detail = arg.Detail};
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
     }
 
     private async Task StoreUserUpdatedEvent(UserStoreUpdatedEvent arg)
     {
-        var ev = new ServerEvent("user-store-updated") {StoreId = arg.StoreId, UserId = arg.UserId};
+        var ev = new ServerEvent("user-store-updated") {StoreId = arg.StoreId, UserId = arg.UserId, Detail = arg.Detail};
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
     }
 

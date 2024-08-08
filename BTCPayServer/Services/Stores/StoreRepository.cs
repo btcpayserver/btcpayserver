@@ -327,8 +327,8 @@ namespace BTCPayServer.Services.Stores
             {
                 await ctx.SaveChangesAsync();
                 UserStoreEvent evt = added
-                    ? new UserStoreAddedEvent(storeId, userId)
-                    : new UserStoreUpdatedEvent(storeId, userId);
+                    ? new UserStoreAddedEvent(storeId, userId, userStore.StoreRoleId)
+                    : new UserStoreUpdatedEvent(storeId, userId, userStore.StoreRoleId);
                 _eventAggregator.Publish(evt);
                 return true;
             }

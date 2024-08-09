@@ -283,7 +283,7 @@ public class BTCPayAppState : IHostedService
         return result;
     }
 
-private readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
+private static  readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
     public async Task<bool> DeviceMasterSignal(string contextConnectionId, long deviceIdentifier, bool active)
     {
         var result = false;

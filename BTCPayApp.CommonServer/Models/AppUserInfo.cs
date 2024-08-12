@@ -57,7 +57,7 @@ public class AppUserInfo
 
 public class AppUserStoreInfo
 {
-    public string? Id { get; set; }
+    public string Id { get; set; } = null!;
     public string? Name { get; set; }
     public string? LogoUrl { get; set; }
     public string? RoleId { get; set; }

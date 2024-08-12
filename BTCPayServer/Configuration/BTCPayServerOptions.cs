@@ -62,8 +62,8 @@ namespace BTCPayServer.Configuration
 
             Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
 
-            if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != ChainName.Regtest)
-                throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
+            // if (conf.GetOrDefault<bool>("launchsettings", false) && NetworkType != ChainName.Regtest && conf.GetOrDefault<string>()
+            //     throw new ConfigException($"You need to run BTCPayServer with the run.sh or run.ps1 script");
 
             if (conf.GetOrDefault<string>("POSTGRES", null) == null)
             {

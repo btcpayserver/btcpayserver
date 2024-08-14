@@ -1,5 +1,4 @@
 using System.Text.Encodings.Web;
-using BTCPayServer.Components.QRCode;
 using BTCPayServer.Services.Mails;
 using MimeKit;
 using QRCoder;

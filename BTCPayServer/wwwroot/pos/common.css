@@ -137,6 +137,3 @@
     --btcpay-card-cap-padding-y: 0;
     height: 100%;
 }
-[data-within-iframe] #RecentTransactionsToggle {
-    display: none;
-}

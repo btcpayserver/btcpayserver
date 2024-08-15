@@ -175,7 +175,7 @@
                 }
                 @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
-                    <a href="@Model.RedirectUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
+                    <a href="@Model.RedirectUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank" id="StoreLink">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
                 }
             </div>
         </main>

@@ -38,7 +38,7 @@ public interface IBTCPayAppHubServer
     Task<decimal> GetFeeRate(int blockTarget);
     Task<BestBlockResponse> GetBestBlock();
     
-    Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds);
+    Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string identifier, string[] txIds, string[] outpoints);
     Task<string> DeriveScript(string identifier);
     Task TrackScripts(string identifier, string[] scripts);
     Task<string> UpdatePsbt(string[] identifiers, string psbt);
@@ -88,14 +88,13 @@ public class CoinResponse
 public class TxInfoResponse
 {
     public Dictionary<string,TransactionResponse> Txs { get; set; }
-    public Dictionary<string,string> Blocks { get; set; }
+    public Dictionary<string,string> BlockHeaders { get; set; }
     public Dictionary<string,int> BlockHeghts { get; set; }
 }
 
 public class TransactionResponse
 {
     public string? BlockHash { get; set; }
-    public int? BlockHeight { get; set; }
     public string Transaction { get; set; }
 }
 

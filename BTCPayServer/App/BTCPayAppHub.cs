@@ -13,6 +13,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
+using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.SignalR;
@@ -93,6 +94,7 @@ public class BlockHeaders : IEnumerable<RPCBlockHeader>
 [Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldBearer)]
 public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 {
+    private readonly NBXplorerConnectionFactory _connectionFactory;
     private readonly NBXplorerDashboard _nbXplorerDashboard;
     private readonly BTCPayAppState _appState;
     private readonly ExplorerClientProvider _explorerClientProvider;
@@ -108,7 +110,8 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         ExplorerClientProvider explorerClientProvider,
         IFeeProviderFactory feeProviderFactory,
         ILogger<BTCPayAppHub> logger,
-        UserManager<ApplicationUser> userManager) 
+        UserManager<ApplicationUser> userManager,
+        NBXplorerConnectionFactory connectionFactory) 
     {
         _nbXplorerDashboard = nbXplorerDashboard;
         _appState = appState;
@@ -116,14 +119,18 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         _feeProviderFactory = feeProviderFactory;
         _logger = logger;
         _userManager = userManager;
-        
+        _connectionFactory = connectionFactory;
+
         _network = btcPayNetworkProvider.BTC;
         _explorerClient =  _explorerClientProvider.GetExplorerClient(btcPayNetworkProvider.BTC);
     }
 
     public override async Task OnConnectedAsync()
     {
-        
+        if (!_connectionFactory.Available)
+        {
+            Context.Abort();
+        }
         var userId = _userManager.GetUserId(Context.User!)!;
         await _appState.Connected(Context.ConnectionId, userId);
         
@@ -184,32 +191,58 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         return bh;
     }
 
-    public async Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string[] txIds)
-    { 
+    public async Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string identifier, string[] txIds , string[] outpointsRaw)
+    {
         var cancellationToken = Context.ConnectionAborted;
-        var uints = txIds.Select(uint256.Parse).ToArray();
-        var txsFetch = await Task.WhenAll(uints.Select(uint256 =>
-            _explorerClient.GetTransactionAsync(uint256, cancellationToken)));
-
+        var outpoints = outpointsRaw.Select(OutPoint.Parse).ToArray();
+        var ts = TrackedSource.Parse(identifier,_explorerClient.Network);
+      
+        await using var conn = await _connectionFactory.OpenConnection();
+        var txs = await conn.QueryAsync("""
+                                        SELECT txs.blk_height, txs.blk_id, txs.raw FROM txs 
+                                        WHERE code = @code AND 
+                                              (tx_id = ANY(@tx_ids) OR 
+                                               tx_id IN (SELECT DISTINCT(ins.tx_id) 
+                                                         FROM ins
+                                                         INNER JOIN wallets_scripts 
+                                                         ON ins.script = wallets_scripts.script
+                                                         WHERE ins.code = @code 
+                                                         AND wallets_scripts.wallet_id = @wallet_id 
+                                                         AND (ins.spent_tx_id || '-' || ins.spent_idx) = ANY(@outpoints))
+                                              )
+                                        """,
+            new
+            {
+                code = _explorerClient.CryptoCode,
+                tx_ids = txIds,
+                outpoints = outpoints.Select(point => point.ToString()).ToArray(),
+                wallet_id = identifier.Replace("GROUP:", "G:")
+            });
+        var data = txs.Select(row => new
+        {
+            Height = (long?)row.blk_height,
+            BlockHash = (string?)row.blk_id,
+            Transaction = Transaction.Load((byte[])row.raw, _network.NBitcoinNetwork)
+        }).ToArray();
+        
+ 
+        var blocksToFetch = data.Where(row => row.BlockHash is not null).Select(row => (uint256.Parse(row.BlockHash!), row.Height!)).DistinctBy(x => x.Item1).ToArray();
+        
+        
         var batch = _explorerClient.RPCClient.PrepareBatch();
-        var headersTask = txsFetch.Where(result => result.BlockId is not null && result.BlockId != uint256.Zero)
-            .Distinct().ToDictionary(result => result.BlockId, result =>
-                batch.GetBlockHeaderAsync(result.BlockId, cancellationToken));
+        var headersTask = blocksToFetch.ToDictionary(result => result.Item1, result =>
+                (batch.GetBlockHeaderAsync(result.Item1, cancellationToken), result.Item2! ));
         await batch.SendBatchAsync(cancellationToken);
-        
-        var headerToHeight = (await Task.WhenAll(headersTask.Values)).ToDictionary(header => header.GetHash(),
-            header => txsFetch.First(result => result.BlockId == header.GetHash()).Height!);
-        
+        await Task.WhenAll(headersTask.Values.Select(kv => (Task) kv.Item1));
         return new TxInfoResponse
         {
-            Txs = txsFetch.ToDictionary(tx => tx.TransactionHash.ToString(), tx => new TransactionResponse
+            Txs = data.ToDictionary(tx => tx.Transaction.GetHash().ToString(), tx => new TransactionResponse
             {
-                BlockHash = tx.BlockId?.ToString(),
-                BlockHeight = (int?) tx.Height,
+                BlockHash = tx.BlockHash?.ToString(),
                 Transaction = tx.Transaction.ToHex()
             }),
-            Blocks = headersTask.ToDictionary(kv => kv.Key.ToString(), kv => Convert.ToHexString(kv.Value.Result.ToBytes()).ToLower()),
-            BlockHeghts = headerToHeight.ToDictionary(kv => kv.Key.ToString(), kv =>(int) kv.Value!)
+            BlockHeaders = headersTask.ToDictionary(kv => kv.Key.ToString(), kv => Convert.ToHexString(kv.Value.Item1.Result.ToBytes()).ToLower()),
+            BlockHeghts = headersTask.ToDictionary(kv => kv.Key.ToString(), kv => (int) kv.Value.Item2!)
         };
     }
 

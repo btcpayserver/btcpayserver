@@ -16,6 +16,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Mails;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -717,29 +718,49 @@ namespace BTCPayServer.Controllers
         [RateLimitsFilter(ZoneLimits.ForgotPassword, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                var user = await _userManager.FindByEmailAsync(model.Email);
-                if (!UserService.TryCanLogin(user, out _))
+                var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+                if(settings == null)
                 {
-                    // Don't reveal that the user does not exist or is not confirmed
+                    return RedirectToAction(nameof(EmailSmtpConfigurationError));
+                }
+                var client = await settings.CreateSmtpClient();
+                if (ModelState.IsValid)
+                {
+                    var user = await _userManager.FindByEmailAsync(model.Email);
+                    if (!UserService.TryCanLogin(user, out _))
+                    {
+                        // Don't reveal that the user does not exist or is not confirmed
+                        return RedirectToAction(nameof(ForgotPasswordConfirmation));
+                    }
+                    _eventAggregator.Publish(new UserPasswordResetRequestedEvent
+                    {
+                        User = user,
+                        RequestUri = Request.GetAbsoluteRootUri()
+                    });
                     return RedirectToAction(nameof(ForgotPasswordConfirmation));
                 }
-                _eventAggregator.Publish(new UserPasswordResetRequestedEvent
-                {
-                    User = user,
-                    RequestUri = Request.GetAbsoluteRootUri()
-                });
-                return RedirectToAction(nameof(ForgotPasswordConfirmation));
-            }
 
-            // If we got this far, something failed, redisplay form
-            return View(model);
+                // If we got this far, something failed, redisplay form
+                return View(model);
+            }
+            catch (Exception)
+            {
+                return RedirectToAction(nameof(EmailSmtpConfigurationError));
+            }
         }
 
         [HttpGet("/login/forgot-password/confirm")]
         [AllowAnonymous]
         public IActionResult ForgotPasswordConfirmation()
+        {
+            return View();
+        }
+
+        [HttpGet("/authentication/email/smtp-error")]
+        [AllowAnonymous]
+        public IActionResult EmailSmtpConfigurationError()
         {
             return View();
         }

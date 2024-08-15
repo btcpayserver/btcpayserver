@@ -1,0 +1,19 @@
+@{
+    ViewData["Title"] = "Email Server Configuration Required";
+    Layout = "_LayoutSignedOut";
+}
+
+<p>Email password reset functionality is not configured for this server. Please contact the server administrator to assist with account recovery.</p>
+
+<p style="margin-top: 2em;">
+    If you are the administrator, please follow these steps to
+    <a href="https://docs.btcpayserver.org/Notifications/#smtp-email-setup" target="_blank">configure email password resets</a>
+    or reset your admin password through
+    <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#forgot-btcpay-admin-password" target="_blank">command line</a>.
+</p>
+
+
+
+<p class="text-center mt-2 mb-0">
+    <a id="Login" style="font-size:1.15rem" asp-action="Login" asp-route-returnurl="@ViewData["ReturnUrl"]">Go back to Log in</a>
+</p>

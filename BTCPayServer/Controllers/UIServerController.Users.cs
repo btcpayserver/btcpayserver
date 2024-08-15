@@ -199,6 +199,46 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(User), new { userId });
         }
 
+        [HttpGet("server/users/{userId}/reset-password")]
+        public async Task<IActionResult> ResetUserPassword(string userId)
+        {
+            var user = await _UserManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "User not found"
+                });
+                return RedirectToAction(nameof(ListUsers));
+            }
+            return View(new ResetUserPasswordFromAdmin { Email = user.Email});
+        }
+
+        [HttpPost("server/users/{userId}/reset-password")]
+        public async Task<IActionResult> ResetUserPassword(string userId, ResetUserPasswordFromAdmin model)
+        {
+
+            var user = await _UserManager.FindByEmailAsync(model.Email);
+            if (user == null || user.Id != userId)
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Message = "User not found"
+                });
+                return RedirectToAction(nameof(ListUsers));
+            }
+
+            var result = await _UserManager.ResetPasswordAsync(user, await _UserManager.GeneratePasswordResetTokenAsync(user), model.Password);
+            TempData.SetStatusMessageModel(new StatusMessageModel
+            {
+                Severity = result.Succeeded ? StatusMessageModel.StatusSeverity.Success : StatusMessageModel.StatusSeverity.Error,
+                Message = result.Succeeded ? "Password successfully set" : "An error occurred while resetting user password"
+            });
+            return RedirectToAction(nameof(ListUsers));
+        }
+
         [HttpGet("server/users/new")]
         public IActionResult CreateUser()
         {
@@ -391,6 +431,24 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";
             return RedirectToAction(nameof(ListUsers));
         }
+    }
+
+    public class ResetUserPasswordFromAdmin
+    {
+        [Required]
+        [EmailAddress]
+        [Display(Name = "Email")]
+        public string Email { get; set; }
+
+        [StringLength(100, ErrorMessage = "The {0} must be at least {2} and at max {1} characters long.", MinimumLength = 6)]
+        [DataType(DataType.Password)]
+        [Display(Name = "Password")]
+        public string Password { get; set; }
+
+        [DataType(DataType.Password)]
+        [Display(Name = "Confirm password")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
+        public string ConfirmPassword { get; set; }
     }
 
     public class RegisterFromAdminViewModel

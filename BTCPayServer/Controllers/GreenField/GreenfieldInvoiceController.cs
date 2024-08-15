@@ -664,7 +664,9 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 statuses.Add(InvoiceStatus.Invalid);
             }
-            return new InvoiceData()
+            var store = request?.HttpContext.GetStoreData();
+            var receipt = store == null ? entity.ReceiptOptions : InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, entity.ReceiptOptions);
+            return new InvoiceData
             {
                 StoreId = entity.StoreId,
                 ExpirationTime = entity.ExpirationTime,
@@ -693,7 +695,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     RedirectAutomatically = entity.RedirectAutomatically,
                     RedirectURL = entity.RedirectURLTemplate
                 },
-                Receipt = entity.ReceiptOptions
+                Receipt = receipt
             };
         }
     }

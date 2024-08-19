@@ -2688,7 +2688,7 @@ textarea.form-control-lg {
   text-align: center;
   white-space: nowrap;
   background-color: var(--btcpay-form-bg-addon);
-  border: var(--btcpay-border-width) solid var(--btcpay-form-border);
+  border: var(--btcpay-border-width) solid var(--btcpay-form-bg-addon);
   border-radius: var(--btcpay-border-radius);
 }
 

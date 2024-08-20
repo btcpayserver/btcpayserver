@@ -388,11 +388,14 @@ private static  readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         }
     }
 
-    public async Task InvoiceUpdate(string identifier, LightningInvoice lightningInvoice)
+    public async Task InvoiceUpdate(string contextConnectionId, LightningInvoice lightningInvoice)
     {
-        _logger.LogInformation("Invoice update for {Identifier} {Amount} {PaymentHash}",
-            identifier, lightningInvoice.Amount, lightningInvoice.PaymentHash);
-        OnInvoiceUpdate?.Invoke(this, (identifier, lightningInvoice));
+        if (!Connections.TryGetValue(contextConnectionId, out var connectedInstance) || !connectedInstance.Master)
+        {
+            return;
+        }
+        
+        OnInvoiceUpdate?.Invoke(this, (connectedInstance.UserId, lightningInvoice));
     }
 
     //what are we adding to groups?

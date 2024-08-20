@@ -151,7 +151,7 @@
                                   class="bg-tile pb-2 rounded" />
                 </div>
                 <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
-                    <div class="offcanvas-header p-3">
+                    <div class="offcanvas-header justify-content-between p-3">
                         <h5 class="offcanvas-title">Edit Item</h5>
                         <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': itemChanged, 'btn-outline-secondary': !itemChanged }" v-on:click="hideOffcanvas" v-text="itemChanged ? 'Apply' : 'Close'"></button>
                     </div>

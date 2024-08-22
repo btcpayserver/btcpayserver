@@ -59,12 +59,11 @@ namespace BTCPayServer.Services
                     paymentContext.Logs.Write("Activating", InvoiceEventData.EventSeverity.Info);
                 try
                 {
-                    await paymentContext.BeforeFetchingRates();
-                    await paymentContext.CreatePaymentPrompt();
-                    if (paymentContext.Status == PaymentMethodContext.ContextStatus.Created)
+                    await paymentContext.CreatePrompts();
+                    foreach (var prompt in await paymentContext.ActivatePrompts())
                     {
-                        await _invoiceRepository.NewPaymentPrompt(invoice.Id, paymentContext);
-                        await paymentContext.ActivatingPaymentPrompt();
+                        await _invoiceRepository.NewPaymentPrompt(invoice.Id, paymentContext, prompt);
+                        await paymentContext.AfterSavingInvoice();
 
                         _eventAggregator.Publish(new InvoicePaymentMethodActivated(paymentMethodId, invoice));
                         _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));

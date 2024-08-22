@@ -662,13 +662,27 @@ retry:
 
             if (queryObject.OrderId is { Length: > 0 })
             {
-                var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
-                query = query.Where(i => orderIdSet.Contains(i.OrderId));
+                if (queryObject.OrderId is [var orderId])
+                {
+                    query = query.Where(i => i.OrderId == orderId);
+                }
+                else
+                {
+                    var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
+                    query = query.Where(i => orderIdSet.Contains(i.OrderId));
+                }
             }
             if (queryObject.ItemCode is { Length: > 0 })
             {
-                var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
-                query = query.Where(i => itemCodeSet.Contains(i.ItemCode));
+                if (queryObject.ItemCode is [var itemCode])
+                {
+                    query = query.Where(i => i.ItemCode == itemCode);
+                }
+                else
+                {
+                    var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
+                    query = query.Where(i => itemCodeSet.Contains(i.ItemCode));
+                }
             }
 
             var statusSet = queryObject.Status is { Length: > 0 }

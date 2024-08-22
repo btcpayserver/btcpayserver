@@ -140,35 +140,6 @@ namespace BTCPayServer.Services.Invoices
             return await ctx.Apps.Where(a => a.StoreDataId == storeId && a.TagAllInvoices).ToArrayAsync();
         }
 
-        public async Task UpdateInvoice(string invoiceId, UpdateCustomerModel data)
-        {
-retry:
-            using (var ctx = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
-                if (invoiceData == null)
-                    return;
-                var blob = invoiceData.GetBlob();
-                if (blob.Metadata.BuyerEmail == null && data.Email != null)
-                {
-                    if (MailboxAddressValidator.IsMailboxAddress(data.Email))
-                    {
-                        blob.Metadata.BuyerEmail = data.Email;
-                        invoiceData.SetBlob(blob);
-                        AddToTextSearch(ctx, invoiceData, blob.Metadata.BuyerEmail);
-                    }
-                }
-                try
-                {
-                    await ctx.SaveChangesAsync().ConfigureAwait(false);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    goto retry;
-                }
-            }
-        }
-
         public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
         {
 retry:

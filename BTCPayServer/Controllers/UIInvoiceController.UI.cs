@@ -1079,18 +1079,6 @@ namespace BTCPayServer.Controllers
             catch { try { webSocket.Dispose(); } catch { } }
         }
 
-        [HttpPost("i/{invoiceId}/UpdateCustomer")]
-        [HttpPost("invoice/UpdateCustomer")]
-        public async Task<IActionResult> UpdateCustomer(string invoiceId, [FromBody] UpdateCustomerModel data)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            await _InvoiceRepository.UpdateInvoice(invoiceId, data).ConfigureAwait(false);
-            return Ok("{}");
-        }
-
         [HttpGet("/stores/{storeId}/invoices")]
         [HttpGet("invoices")]
         [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewInvoices)]

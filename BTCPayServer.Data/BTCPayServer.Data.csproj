@@ -17,4 +17,7 @@
   <ItemGroup>
     <EmbeddedResource Include="DBScripts\*.sql" />
   </ItemGroup>
+  <ItemGroup>
+    <None Remove="DBScripts\001.InvoiceFunctions.sql" />
+  </ItemGroup>
 </Project>

@@ -201,9 +201,7 @@ retry:
                 {
                     StoreDataId = invoice.StoreId,
                     Id = invoice.Id,
-                    OrderId = invoice.Metadata.OrderId,
                     Status = invoice.Status.ToString(),
-                    ItemCode = invoice.Metadata.ItemCode,
                     Archived = false
                 };
                 invoiceData.SetBlob(invoice);
@@ -491,9 +489,6 @@ retry:
 
                 if (newOrderId != oldOrderId)
                 {
-                    // OrderId is saved in 2 places: (1) the invoice table and (2) in the metadata field. We are updating both for consistency.
-                    invoiceData.OrderId = newOrderId;
-
                     if (oldOrderId != null && (newOrderId is null || !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture)))
                     {
                         RemoveFromTextSearch(context, invoiceData, oldOrderId);
@@ -664,24 +659,24 @@ retry:
             {
                 if (queryObject.OrderId is [var orderId])
                 {
-                    query = query.Where(i => i.OrderId == orderId);
+                    query = query.Where(i => InvoiceData.GetOrderId(i.Blob2) == orderId);
                 }
                 else
                 {
                     var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
-                    query = query.Where(i => orderIdSet.Contains(i.OrderId));
+                    query = query.Where(i => orderIdSet.Contains(InvoiceData.GetOrderId(i.Blob2)));
                 }
             }
             if (queryObject.ItemCode is { Length: > 0 })
             {
                 if (queryObject.ItemCode is [var itemCode])
                 {
-                    query = query.Where(i => i.ItemCode == itemCode);
+                    query = query.Where(i => InvoiceData.GetItemCode(i.Blob2) == itemCode);
                 }
                 else
                 {
                     var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
-                    query = query.Where(i => itemCodeSet.Contains(i.ItemCode));
+                    query = query.Where(i => itemCodeSet.Contains(InvoiceData.GetItemCode(i.Blob2)));
                 }
             }
 

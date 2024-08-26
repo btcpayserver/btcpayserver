@@ -1,4 +1,4 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
+                                    @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model (Dictionary<string, object> Items, int Level)
 
 @functions {
@@ -7,11 +7,59 @@
         return Uri.TryCreate(source, UriKind.Absolute, out var uriResult) &&
                (uriResult.Scheme == Uri.UriSchemeHttp || uriResult.Scheme == Uri.UriSchemeHttps);
     }
+
+    private string RenderObject(object value)
+    {
+        if (value is string str)
+        {
+            return IsValidURL(str) ? $"<a href='{str}' target='_blank' rel='noreferrer noopener'>{str}</a>" : str;
+        }
+        else if (value is Dictionary<string, object> dict)
+        {
+            return RenderDictionary(dict);
+        }
+        else if (value is IEnumerable<object> list)
+        {
+            return RenderList(list);
+        }
+        else
+        {
+            return value?.ToString() ?? string.Empty;
+        }
+    }
+
+    private string RenderDictionary(Dictionary<string, object> dict)
+    {
+        var output = new System.Text.StringBuilder();
+        output.Append("<table class='table table-sm mb-4'>");
+
+        foreach (var (key, value) in dict)
+        {
+            output.Append($"<tr><th>{Html.Raw(key)}</th><td>{Html.Raw(RenderObject(value))}</td></tr>");
+        }
+
+        output.Append("</table>");
+        return output.ToString();
+    }
+
+    private string RenderList(IEnumerable<object> list)
+    {
+        var output = new System.Text.StringBuilder();
+        output.Append("<div class='ms-4'>");
+
+        foreach (var item in list)
+        {
+            output.Append($"<div class='mb-2'>{Html.Raw(RenderObject(item))}</div>");
+        }
+
+        output.Append("</div>");
+        return output.ToString();
+    }
+
 }
 
 @if (Model.Items.Any())
 {
-    @* Use titlecase and lowercase versions for backwards-compatibility *@
     string[] cartKeys = ["cart", "subtotal", "discount", "tip", "total"];
     <table class="table my-0" v-pre>
         @if (Model.Items.Keys.Any(key => cartKeys.Contains(key.ToLowerInvariant())))
@@ -21,58 +69,46 @@
             var hasSubtotal = Model.Items.TryGetValue("subtotal", out var subtotal) || Model.Items.TryGetValue("subTotal", out subtotal) || Model.Items.TryGetValue("Subtotal", out subtotal);
             var hasDiscount = Model.Items.TryGetValue("discount", out var discount) || Model.Items.TryGetValue("Discount", out discount);
             var hasTip = Model.Items.TryGetValue("tip", out var tip) || Model.Items.TryGetValue("Tip", out tip);
-            if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
-            {
-                <tbody>
-                @foreach (var (key, value) in cartDict)
+
+            <tbody>
+                @if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
                 {
-                    <tr>
-                        <th>@key</th>
-                        <td class="text-end">@value</td>
-                    </tr>
+                    @Html.Raw(RenderDictionary(cartDict))
                 }
-                </tbody>
-            }
-            else if (cart is ICollection<object> { Count: > 0 } cartCollection)
-            {
-                <tbody>
-                @foreach (var value in cartCollection)
+                else if (cart is ICollection<object> { Count: > 0 } cartCollection)
                 {
-                    <tr>
-                        <td>@value</td>
-                    </tr>
+                    @Html.Raw(RenderList(cartCollection))
                 }
-                </tbody>
-            }
+            </tbody>
             <tfoot style="border-top-width:0">
-            @if (hasSubtotal && (hasDiscount || hasTip))
-            {
-                <tr style="border-top-width:3px">
-                    <th>Subtotal</th>
-                    <td class="text-end">@subtotal</td>
-                </tr>
-            }
-            @if (hasDiscount)
-            {
-                <tr>
-                    <th>Discount</th>
-                    <td class="text-end">@discount</td>
-                </tr>
-            }
-            @if (hasTip)
-            {
-                <tr>
-                    <th>Tip</th>
-                    <td class="text-end">@tip</td>
-                </tr>
-            }
-            @if (hasTotal)
-            {
-                <tr style="border-top-width:3px">
-                    <th>Total</th>
-                    <td class="text-end">@total</td>
-                </tr>
-            }
+                @if (hasSubtotal && (hasDiscount || hasTip))
+                {
+                    <tr style="border-top-width:3px">
+                        <th>Subtotal</th>
+                        <td class="text-end">@Html.Raw(RenderObject(subtotal))</td>
+                    </tr>
+                }
+                @if (hasDiscount)
+                {
+                    <tr>
+                        <th>Discount</th>
+                        <td class="text-end">@Html.Raw(RenderObject(discount))</td>
+                    </tr>
+                }
+                @if (hasTip)
+                {
+                    <tr>
+                        <th>Tip</th>
+                        <td class="text-end">@Html.Raw(RenderObject(tip))</td>
+                    </tr>
+                }
+                @if (hasTotal)
+                {
+                    <tr style="border-top-width:3px">
+                        <th>Total</th>
+                        <td class="text-end">@Html.Raw(RenderObject(total))</td>
+                    </tr>
+                }
             </tfoot>
         }
         else
@@ -86,7 +122,16 @@
                         {
                             <th>@key</th>
                         }
-                        <td style="white-space:pre-wrap">@* Explicitely remove whitespace at front here *@@if (IsValidURL(str)){<a href="@str" target="_blank" rel="noreferrer noopener">@str</a>}else {@str.Trim()}</td>
+                        <td style="white-space:pre-wrap">
+                            @* Explicitely remove whitespace at front here *@@if (IsValidURL(str))
+                            {
+                                <a href="@str" target="_blank" rel="noreferrer noopener">@str</a>
+                            }
+                            else
+                            {
+                                @str.Trim()
+                            }
+                        </td>
                     }
                     else if (value is Dictionary<string, object> { Count: > 0 } subItems)
                     {

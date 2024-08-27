@@ -553,6 +553,9 @@ namespace BTCPayServer.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("Blob")
                         .HasColumnType("JSONB");
 
@@ -563,6 +566,12 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("Destination")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("OriginalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("OriginalCurrency")
                         .HasColumnType("text");
 
                     b.Property<string>("PayoutMethodId")
@@ -664,8 +673,14 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Blob")
                         .HasColumnType("JSONB");
 
+                    b.Property<string>("Currency")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset?>("EndDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Limit")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTimeOffset>("StartDate")
                         .HasColumnType("timestamp with time zone");

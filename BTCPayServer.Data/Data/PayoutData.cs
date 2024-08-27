@@ -18,7 +18,23 @@ namespace BTCPayServer.Data
         public DateTimeOffset Date { get; set; }
         public string PullPaymentDataId { get; set; }
         public string StoreDataId { get; set; }
+        /// <summary>
+        /// The currency of the payout (eg. BTC)
+        /// </summary>
         public string Currency { get; set; }
+        /// <summary>
+        /// The amount of the payout in Currency.
+        /// The Amount only get set when the payout is actually approved.
+        /// </summary>
+        public decimal? Amount { get; set; }
+        /// <summary>
+        /// The original currency of the payout (eg. USD)
+        /// </summary>
+        public string OriginalCurrency { get; set; }
+        /// <summary>
+        /// The amount of the payout in OriginalCurrency
+        /// </summary>
+        public decimal OriginalAmount { get; set; }
         public PullPaymentData PullPaymentData { get; set; }
         [MaxLength(20)]
         public PayoutState State { get; set; }

@@ -562,7 +562,6 @@
                             <tbody>
                                 @foreach (var refund in Model.Refunds)
                                 {
-                                    var blob = refund.PullPaymentData.GetBlob();
                                     <tr>
 
                                         <td>
@@ -576,7 +575,7 @@
                                             </span>
                                         </td>
                                         <td>
-                                            <span>@blob.Limit @blob.Currency</span>
+											<span>@refund.PullPaymentData.Limit @refund.PullPaymentData.Currency</span>
                                         </td>
                                         <td>
                                             <span>@refund.PullPaymentData.StartDate.ToBrowserDate()</span>

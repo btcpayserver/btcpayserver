@@ -29,6 +29,11 @@ namespace BTCPayServer.Tests
             BTCPayLogs.Configure(LoggerFactory);
         }
 
+        public DatabaseTester CreateDBTester()
+        {
+            return new DatabaseTester(TestLogs, LoggerFactory);
+        }
+
         public BTCPayNetworkProvider CreateNetworkProvider(ChainName chainName)
         {
             var conf = new ConfigurationRoot(new List<IConfigurationProvider>()

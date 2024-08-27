@@ -83,7 +83,6 @@ namespace BTCPayServer.Controllers
             if (pp is null)
                 return NotFound();
 
-            var blob = pp.GetBlob();
             var store = await _storeRepository.FindStore(pp.StoreId);
             if (store is null)
                 return NotFound();
@@ -98,9 +97,9 @@ namespace BTCPayServer.Controllers
                     Blob = o.GetBlob(_serializerSettings),
                     ProofBlob = _payoutHandlers.TryGet(o.GetPayoutMethodId())?.ParseProof(o)
                 });
-            var cd = _currencyNameTable.GetCurrencyData(blob.Currency, false);
-            var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Blob.Amount).Sum();
-            var amountDue = blob.Limit - totalPaid;
+            var cd = _currencyNameTable.GetCurrencyData(pp.Currency, false);
+            var totalPaid = payouts.Where(p => p.Entity.State != PayoutState.Cancelled).Select(p => p.Entity.OriginalAmount).Sum();
+            var amountDue = pp.Limit - totalPaid;
 
             ViewPullPaymentModel vm = new(pp, DateTimeOffset.UtcNow)
             {
@@ -113,9 +112,9 @@ namespace BTCPayServer.Controllers
                 Payouts = payouts.Select(entity => new ViewPullPaymentModel.PayoutLine
                 {
                     Id = entity.Entity.Id,
-                    Amount = entity.Blob.Amount,
-                    AmountFormatted = _displayFormatter.Currency(entity.Blob.Amount, blob.Currency),
-                    Currency = blob.Currency,
+                    Amount = entity.Entity.OriginalAmount,
+                    AmountFormatted = _displayFormatter.Currency(entity.Entity.OriginalAmount, entity.Entity.OriginalCurrency),
+                    Currency = entity.Entity.OriginalCurrency,
                     Status = entity.Entity.State,
                     Destination = entity.Blob.Destination,
                     PaymentMethod = PaymentMethodId.Parse(entity.Entity.PayoutMethodId),
@@ -126,7 +125,7 @@ namespace BTCPayServer.Controllers
             vm.IsPending &= vm.AmountDue > 0.0m;
             vm.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
             
-            if (_pullPaymentHostedService.SupportsLNURL(blob))
+            if (_pullPaymentHostedService.SupportsLNURL(pp))
             {
                 var url = Url.Action(nameof(UILNURLController.GetLNURLForPullPayment), "UILNURL", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, pullPaymentId = vm.Id }, Request.Scheme, Request.Host.ToString());
                 vm.LnurlEndpoint = url != null ? new Uri(url) : null;
@@ -222,7 +221,7 @@ namespace BTCPayServer.Controllers
             }
 
             var ppBlob = pp.GetBlob();
-            var supported = ppBlob.SupportedPaymentMethods;
+            var supported = ppBlob.SupportedPayoutMethods;
             PayoutMethodId payoutMethodId = null;
             IClaimDestination destination = null;
             IPayoutHandler payoutHandler = null;
@@ -260,7 +259,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Destination), error ?? "Invalid destination or payment method");
                 return await ViewPullPayment(pullPaymentId);
             }
-            var amtError = ClaimRequest.IsPayoutAmountOk(destination, vm.ClaimedAmount == 0 ? null : vm.ClaimedAmount, payoutHandler.Currency, ppBlob.Currency);
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination, vm.ClaimedAmount == 0 ? null : vm.ClaimedAmount, payoutHandler.Currency, pp.Currency);
             if (amtError.error is not null)
             {
                 ModelState.AddModelError(nameof(vm.ClaimedAmount), amtError.error);
@@ -294,7 +293,7 @@ namespace BTCPayServer.Controllers
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = $"Your claim request of {_displayFormatter.Currency(vm.ClaimedAmount, ppBlob.Currency, DisplayFormatter.CurrencyFormat.Symbol)} to {vm.Destination} has been submitted and is awaiting {(result.PayoutData.State == PayoutState.AwaitingApproval ? "approval" : "payment")}.",
+                Message = $"Your claim request of {_displayFormatter.Currency(vm.ClaimedAmount, pp.Currency, DisplayFormatter.CurrencyFormat.Symbol)} to {vm.Destination} has been submitted and is awaiting {(result.PayoutData.State == PayoutState.AwaitingApproval ? "approval" : "payment")}.",
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 

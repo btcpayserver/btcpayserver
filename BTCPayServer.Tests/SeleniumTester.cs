@@ -90,7 +90,15 @@ namespace BTCPayServer.Tests
         {
             if (amount is not null)
             {
-                Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				try
+				{
+					Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				}
+				// Sometimes the element is not available after a window switch... retry
+				catch (StaleElementReferenceException)
+				{
+					Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				}
                 Driver.FindElement(By.Id("test-payment-amount")).SendKeys(amount.ToString());
             }
             Driver.WaitUntilAvailable(By.Id("FakePayment"));

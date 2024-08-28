@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded",function () {
             calculation () {
                 if (!this.tipNumeric && !(this.discountNumeric > 0 || this.discountPercentNumeric > 0) && this.amounts.length < 2 && this.cart.length === 0) return null
                 let calc = ''
-                const hasAmounts = this.amounts.length && this.amounts.reduce((sum, amt) => sum + (amt || 0), 0) > 0;
+                const hasAmounts = this.amounts.length && this.amounts.reduce((sum, amt) => sum + parseFloat(amt || 0), 0) > 0;
                 if (this.cart.length) calc += this.cart.map(item => `${item.count} x ${item.title} (${this.formatCurrency(item.price, true)}) = ${this.formatCurrency((item.price||0) * item.count, true)}`).join(' + ')
                 if (this.cart.length && hasAmounts) calc += ' + '
                 if (hasAmounts) calc += this.amounts.map(amt => this.formatCurrency(amt || 0, true)).join(' + ')

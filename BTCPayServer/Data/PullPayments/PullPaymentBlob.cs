@@ -12,10 +12,7 @@ namespace BTCPayServer.Data
     {
         public string Name { get; set; }
         public string Description { get; set; }
-        public string Currency { get; set; }
         public int Divisibility { get; set; }
-        [JsonConverter(typeof(NumericStringJsonConverter))]
-        public decimal Limit { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal MinimumClaim { get; set; }
         public PullPaymentView View { get; set; } = new PullPaymentView();
@@ -27,7 +24,7 @@ namespace BTCPayServer.Data
 
 
         [JsonProperty(ItemConverterType = typeof(PayoutMethodIdJsonConverter))]
-        public PayoutMethodId[] SupportedPaymentMethods { get; set; }
+        public PayoutMethodId[] SupportedPayoutMethods { get; set; }
 
         public bool AutoApproveClaims { get; set; }
 

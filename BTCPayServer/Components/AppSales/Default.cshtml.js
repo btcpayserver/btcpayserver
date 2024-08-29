@@ -13,7 +13,7 @@ if (!window.appSales) {
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
-                document.querySelectorAll(`#${id} .sales-count`).innerText = data.salesCount;
+                document.querySelector(`#${id} .sales-count`).innerText = data.salesCount;
                 new Chartist.Bar(`#${id} .ct-chart`, {
                     labels,
                     series: [series]

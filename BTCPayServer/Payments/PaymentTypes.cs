@@ -1,8 +1,4 @@
 #nullable enable
-#if ALTCOINS
-using BTCPayServer.Services.Altcoins.Monero.Payments;
-using BTCPayServer.Services.Altcoins.Zcash.Payments;
-#endif
 
 namespace BTCPayServer.Payments
 {

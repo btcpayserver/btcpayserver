@@ -125,11 +125,7 @@ public class OnChainWalletReportProvider : ReportProvider
     {
 #if ALTCOINS
         if (network is Plugins.Altcoins.ElementsBTCPayNetwork elNetwork)
-        {
-            if (elNetwork.CryptoCode == elNetwork.NetworkCryptoCode)
-                return "";
-            return elNetwork.AssetId.ToString();
-        }
+            return elNetwork.IsNativeAsset ? "" : elNetwork.AssetId.ToString();
 #endif
         return null;
     }

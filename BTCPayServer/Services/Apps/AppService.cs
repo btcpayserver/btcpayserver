@@ -151,9 +151,13 @@ namespace BTCPayServer.Services.Apps
             {
                 // flatten single items from POS data
                 var data = e.Metadata.PosData?.ToObject<PosAppData>();
-                if (data is { Cart.Length: > 0 })
+                var hasCart = data is { Cart.Length: > 0 };
+                var hasAmounts = data is { Amounts.Length: > 0 };
+                var date = e.InvoiceTime.Date;
+                var itemCode = e.Metadata.ItemCode ?? typeof(Plugins.PointOfSale.PosViewType).DisplayName(Plugins.PointOfSale.PosViewType.Light.ToString());
+                if (hasCart)
                 {
-                    foreach (var lineItem in data.Cart)
+                    foreach (var lineItem in data!.Cart)
                     {
                         var item = items.FirstOrDefault(p => p.Id == lineItem.Id);
                         if (item == null)
@@ -165,18 +169,23 @@ namespace BTCPayServer.Services.Apps
                             {
                                 ItemCode = item.Id,
                                 FiatPrice = lineItem.Price,
-                                Date = e.InvoiceTime.Date
+                                Date = date
                             });
                         }
                     }
                 }
-                else
+                if (hasAmounts)
+                {
+                    res.AddRange(data!.Amounts.Select(amount => new InvoiceStatsItem { ItemCode = itemCode, FiatPrice = amount, Date = date }));
+                }
+                // no further info, just add the total amount
+                if (!hasCart && !hasAmounts)
                 {
                     res.Add(new InvoiceStatsItem
                     {
-                        ItemCode = e.Metadata.ItemCode ?? typeof(Plugins.PointOfSale.PosViewType).DisplayName(Plugins.PointOfSale.PosViewType.Light.ToString()),
+                        ItemCode = itemCode,
                         FiatPrice = e.PaidAmount.Net,
-                        Date = e.InvoiceTime.Date
+                        Date = date
                     });
                 }
                 return res;

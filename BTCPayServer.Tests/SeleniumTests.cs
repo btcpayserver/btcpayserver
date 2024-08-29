@@ -1769,10 +1769,6 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(s.Driver.FindElement(By.CssSelector("[data-value='test-label']")));
             });
 
-            //unreserve
-            s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
-            //generate it again, should be the same one as before as nothing got used in the meantime
-            s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text"));
             TestUtils.Eventually(() =>

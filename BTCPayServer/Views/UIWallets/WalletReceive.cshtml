@@ -45,12 +45,7 @@
                 <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
             </div>
             <div class="row mt-4">
-                <div class="col-12 col-sm-6">
-                    <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
-                </div>
-                <div class="col-12 col-sm-6 mt-4 mt-sm-0">
-                    <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
-                </div>
+                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
             </div>
         </noscript>
         <div class="nav flex-wrap align-items-center justify-content-center gap-2 mb-4">
@@ -100,10 +95,8 @@
                     </div>
                 </div>
             </div>
-    
-            <div class="d-grid gap-3 mt-4">
+            <div class="mt-4">
                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
-                <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
             </div>
         </div>
     }

@@ -315,7 +315,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("{walletId}/receive")]
         public async Task<IActionResult> WalletReceive([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
-            [FromQuery] string? returnUrl = null, [FromQuery] bool? unreserved = null)
+            [FromQuery] string? returnUrl = null)
         {
             if (walletId?.StoreId == null)
                 return NotFound();
@@ -326,7 +326,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
             var store = GetCurrentStore();
-            var address = unreserved is true ? null : (await _walletReceiveService.GetOrGenerate(walletId)).Address;
+            var address = (await _walletReceiveService.GetOrGenerate(walletId)).Address;
             var allowedPayjoin = paymentMethod.IsHotWallet && store.GetStoreBlob().PayJoinEnabled;
             var bip21 = network.GenerateBIP21(address?.ToString(), null);
             if (allowedPayjoin)
@@ -369,18 +369,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             switch (command)
             {
-                case "unreserve-current-address":
-                    var address = await _walletReceiveService.UnReserveAddress(walletId);
-                    if (!string.IsNullOrEmpty(address))
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel
-                        {
-                            AllowDismiss = true,
-                            Message = $"Address {address} was unreserved.",
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                        });
-                    }
-                    break;
                 case "generate-new-address":
                     await _walletReceiveService.GetOrGenerate(walletId, true);
                     break;
@@ -390,7 +378,7 @@ namespace BTCPayServer.Controllers
                         await SendFreeMoney(cheater, walletId, paymentMethod);
                     break;
             }
-            return RedirectToAction(nameof(WalletReceive), new { walletId, returnUrl = vm.ReturnUrl, unreserved = command == "unreserve-current-address" });
+            return RedirectToAction(nameof(WalletReceive), new { walletId, returnUrl = vm.ReturnUrl });
         }
 
         private async Task SendFreeMoney(Cheater cheater, WalletId walletId, DerivationSchemeSettings paymentMethod)

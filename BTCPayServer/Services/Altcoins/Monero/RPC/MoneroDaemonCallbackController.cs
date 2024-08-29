@@ -1,4 +1,3 @@
-#if ALTCOINS
 using BTCPayServer.Filters;
 using Microsoft.AspNetCore.Mvc;
 
@@ -37,4 +36,3 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC
 
     }
 }
-#endif

@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Generic;
 
@@ -17,4 +16,3 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Configuration
         public string WalletDirectory { get; set; }
     }
 }
-#endif

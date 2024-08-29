@@ -123,10 +123,8 @@ public class OnChainWalletReportProvider : ReportProvider
 
     private string? GetAssetId(BTCPayNetwork network)
     {
-#if ALTCOINS
         if (network is Plugins.Altcoins.ElementsBTCPayNetwork elNetwork)
             return elNetwork.IsNativeAsset ? "" : elNetwork.AssetId.ToString();
-#endif
         return null;
     }
 }

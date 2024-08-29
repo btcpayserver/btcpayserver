@@ -149,9 +149,8 @@ public partial class UIStoresController
                     Value = value,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
                     Enabled = !excludeFilters.Match(handler.PaymentMethodId) && strategy != null,
-#if ALTCOINS
                     Collapsed = network is Plugins.Altcoins.ElementsBTCPayNetwork { IsNativeAsset : false }  && string.IsNullOrEmpty(value)
-#endif
+
                 });
             }
             else if (handler is LightningLikePaymentHandler)

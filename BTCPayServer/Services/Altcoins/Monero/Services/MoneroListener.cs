@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -409,4 +408,3 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         }
     }
 }
-#endif

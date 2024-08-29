@@ -63,9 +63,9 @@ namespace BTCPayServer.Tests
             var bootstrap = Startup.CreateBootstrap(conf);
             var services = new PluginServiceCollection(new ServiceCollection(), bootstrap);
             var plugins = new List<BaseBTCPayServerPlugin>() { new BitcoinPlugin() };
-#if ALTCOINS
+
             plugins.Add(new BTCPayServer.Plugins.Altcoins.AltcoinsPlugin());
-#endif
+
             foreach (var p in plugins)
             {
                 p.Execute(services);

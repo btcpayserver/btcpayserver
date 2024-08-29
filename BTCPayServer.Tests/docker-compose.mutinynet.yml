@@ -2,7 +2,7 @@ version: "3"
 
 # Run `docker-compose up dev` for bootstrapping your development environment
 # Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
-# The Visual Studio launch setting `Docker-testnet` is configured to use this environment.
+# The Visual Studio launch setting `Docker-signet` is configured to use this environment.
 services:
 
   tests:
@@ -16,8 +16,8 @@ services:
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_DB: "Postgres"
-      TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver_testnet
-      TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer_testnet
+      TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver_mutinynet
+      TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer_mutinynet
       TESTS_HOSTNAME: tests
       TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-"false"}
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
@@ -71,15 +71,20 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:26.0
+    image: btcpayserver/mutinynet:c23afab47fbe
     environment:
-      BITCOIN_NETWORK: testnet
+      BITCOIN_NETWORK: signet
       BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |
         deprecatedrpc=signrawtransaction
         connect=bitcoind:39388
         fallbackfee=0.0002
         rpcallowip=0.0.0.0/0
+        [signet]
+        signetchallenge=512102f7561d208dd9ae99bf497273e16f389bdbd6c4742ddb8e6b216e64fa2928ad8f51ae
+        addnode=45.79.52.207:38333
+        dnsseed=0
+        signetblocktime=30
     depends_on:
       - nbxplorer
       - postgres
@@ -104,7 +109,7 @@ services:
     expose:
       - "32838"
     environment:
-      NBXPLORER_NETWORK: testnet
+      NBXPLORER_NETWORK: signet
       NBXPLORER_CHAINS: "btc"
       NBXPLORER_BTCRPCURL: http://bitcoind:43782/
       NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
@@ -114,7 +119,7 @@ services:
       NBXPLORER_MINGAPSIZE: 5
       NBXPLORER_MAXGAPSIZE: 10
       NBXPLORER_VERBOSE: 1
-      NBXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer_testnet
+      NBXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer_mutinynet
       NBXPLORER_EXPOSERPC: 1
       NBXPLORER_NOAUTH: 1
     depends_on:
@@ -122,9 +127,9 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:26.0
+    image: btcpayserver/mutinynet:c23afab47fbe
     environment:
-      BITCOIN_NETWORK: testnet
+      BITCOIN_NETWORK: signet
       BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
@@ -138,6 +143,11 @@ services:
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
+        [signet]
+        signetchallenge=512102f7561d208dd9ae99bf497273e16f389bdbd6c4742ddb8e6b216e64fa2928ad8f51ae
+        addnode=45.79.52.207:38333
+        dnsseed=0
+        signetblocktime=30
     ports:
       - "43782:43782"
       - "39388:39388"
@@ -156,7 +166,7 @@ services:
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
-      LIGHTNINGD_NETWORK: "testnet"
+      LIGHTNINGD_NETWORK: "signet"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
@@ -185,7 +195,7 @@ services:
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
-      LIGHTNINGD_NETWORK: "testnet"
+      LIGHTNINGD_NETWORK: "signet"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
@@ -221,7 +231,7 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_ENVIRONMENT: "testnet"
+      LND_ENVIRONMENT: "signet"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://merchant_lnd:8080
       LND_EXTRA_ARGS: |
@@ -259,7 +269,7 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_ENVIRONMENT: "testnet"
+      LND_ENVIRONMENT: "signet"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://customer_lnd:8080
       LND_EXTRA_ARGS: |

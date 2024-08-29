@@ -119,7 +119,6 @@
 
                         return;
                     }
-
                     chart.container.addEventListener('mouseover', delegate(triggerSelector, function(e) {
                         showTooltip(e.target);
                     }));
@@ -202,12 +201,9 @@
                     if (!seriesData) {
                         return;
                     }
-
                     itemData = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
-
-                    if (typeof itemData == 'undefined') {
-                        return;
-                    }
+                    if (!itemData && typeof seriesData == 'number') itemData = { value: seriesData, meta: chart.data.labels[seriesIndex] };
+                    if (typeof itemData == 'undefined') return;
 
                     meta = itemData.meta;
                     value = itemData.value || itemData;
@@ -241,7 +237,6 @@
 
                     // series name
                     textMarkup = textMarkup.replace(new RegExp('{{seriesName}}', 'gi'), seriesName || '');
-                    console.log(textMarkup)
                     tooltipElement.innerHTML = textMarkup;
                     tooltipElement.removeAttribute('hidden');
                     setTooltipPosition(triggerElement);

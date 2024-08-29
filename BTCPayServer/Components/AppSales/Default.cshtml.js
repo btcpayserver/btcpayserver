@@ -16,10 +16,10 @@ if (!window.appSales) {
                 const max = Math.max(...series);
                 const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
                 const tooltip = Chartist.plugins.tooltip2({
-                    template: 'Sales: {{value}}',
+                    template: '<div class="chartist-tooltip-inner">Sales: {{value}}</div>',
                     offset: {
                         x: 0,
-                        y: -16
+                        y: -8
                     }
                 });
                 new Chartist.Bar(`#${id} .ct-chart`, {
@@ -27,7 +27,8 @@ if (!window.appSales) {
                     series: [series]
                 }, {
                     low,
-                    plugins: [tooltip] 
+                    axisY: { onlyInteger: true },
+                    plugins: [tooltip]
                 });
             };
 

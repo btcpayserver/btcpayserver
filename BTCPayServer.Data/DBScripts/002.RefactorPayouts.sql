@@ -47,10 +47,15 @@ ALTER TABLE "Payouts" ADD COLUMN "OriginalCurrency" TEXT;
 
 
 UPDATE "Payouts" p
+SET
+    "OriginalCurrency" = "Currency",
+    "Blob" = "Blob" - 'Amount' - 'CryptoAmount'
+WHERE "PullPaymentDataId" IS NULL AND "OriginalCurrency" IS NULL;
+
+UPDATE "Payouts" p
 SET 
-    "OriginalCurrency" = CASE WHEN p."PullPaymentDataId" IS NULL THEN p."Currency" ELSE pp."Currency" END,
-    "Blob" = p."Blob" - 'Amount' - 'CryptoAmount'
+    "OriginalCurrency" = pp."Currency"
 FROM "PullPayments" pp
-WHERE pp."Id" = p."PullPaymentDataId" OR p."PullPaymentDataId" IS NULL;
+WHERE "OriginalCurrency" IS NULL AND pp."Id"=p."PullPaymentDataId";
 
 ALTER TABLE "Payouts" ALTER COLUMN "OriginalCurrency" SET NOT NULL;

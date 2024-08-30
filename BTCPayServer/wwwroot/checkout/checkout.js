@@ -92,6 +92,7 @@ function initApp() {
             const srvModel = initialSrvModel;
             return {
                 srvModel,
+                audioContext: new AudioContext(),
                 displayPaymentDetails: false,
                 remainingSeconds: srvModel.expirationSeconds,
                 emailAddressInput: "",
@@ -345,17 +346,12 @@ function initApp() {
                 return value ? value.replace(/\n/ig, '<br>') : '';
             },
             playSound (soundName) {
-                // sound
-                const sound = this[soundName + 'Sound'];
-                if (sound && !sound.playing) {
-                    const { audioContext, audioBuffer } = sound;
-                    const source = audioContext.createBufferSource();
-                    source.onended = () => { sound.playing = false; };
-                    source.buffer = audioBuffer;
-                    source.connect(audioContext.destination);
-                    source.start();
-                    sound.playing = true;
-                }
+                const audioBuffer = this[soundName + 'Sound'];
+                if (!audioBuffer || this.audioContext.state === 'suspended') return;
+                const source = this.audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(this.audioContext.destination);
+                source.start();
             },
             async celebratePayment (duration) {
                 // sound
@@ -375,12 +371,10 @@ function initApp() {
                 }
             },
             async prepareSound (url) {
-                const audioContext = new AudioContext();
                 const response = await fetch(url)
                 if (!response.ok) return console.error(`Could not load payment sound, HTTP error ${response.status}`);
                 const arrayBuffer = await response.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                return { audioContext, audioBuffer, playing: false };
+                return await this.audioContext.decodeAudioData(arrayBuffer);
             },
             async setupNFC () {
                 try {

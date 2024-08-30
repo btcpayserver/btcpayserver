@@ -10,28 +10,19 @@
 
     private string RenderObject(object value)
     {
-        if (value is string str)
+        return value switch
         {
-            return IsValidURL(str) ? $"<a href='{str}' target='_blank' rel='noreferrer noopener'>{str}</a>" : str;
-        }
-        else if (value is Dictionary<string, object> dict)
-        {
-            return RenderDictionary(dict);
-        }
-        else if (value is IEnumerable<object> list)
-        {
-            return RenderList(list);
-        }
-        else
-        {
-            return value?.ToString() ?? string.Empty;
-        }
+            string str => IsValidURL(str) ? $"<a href='{str}' target='_blank' rel='noreferrer noopener'>{str}</a>" : str,
+            Dictionary<string, object> dict => RenderDictionary(dict),
+            IEnumerable<object> list => RenderList(list),
+            _ => value?.ToString() ?? string.Empty
+        };
     }
 
     private string RenderDictionary(Dictionary<string, object> dict)
     {
         var output = new System.Text.StringBuilder();
-        output.Append("<table class='table table-sm mb-4'>");
+        output.Append("<table class='table table-sm w-100 m-0 mb-3'>");
 
         foreach (var (key, value) in dict)
         {
@@ -45,14 +36,10 @@
     private string RenderList(IEnumerable<object> list)
     {
         var output = new System.Text.StringBuilder();
-        output.Append("<div class='ms-4'>");
-
         foreach (var item in list)
         {
             output.Append($"<div class='mb-2'>{Html.Raw(RenderObject(item))}</div>");
         }
-
-        output.Append("</div>");
         return output.ToString();
     }
 
@@ -71,14 +58,18 @@
             var hasTip = Model.Items.TryGetValue("tip", out var tip) || Model.Items.TryGetValue("Tip", out tip);
 
             <tbody>
-                @if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
-                {
-                    @Html.Raw(RenderDictionary(cartDict))
-                }
-                else if (cart is ICollection<object> { Count: > 0 } cartCollection)
-                {
-                    @Html.Raw(RenderList(cartCollection))
-                }
+                <tr>
+                    <td colspan="2">
+                        @if (cart is Dictionary<string, object> { Keys.Count: > 0 } cartDict)
+                        {
+                            @Html.Raw(RenderDictionary(cartDict))
+                        }
+                        else if (cart is ICollection<object> { Count: > 0 } cartCollection)
+                        {
+                            @Html.Raw(RenderList(cartCollection))
+                        }
+                    </td>
+                </tr>
             </tbody>
             <tfoot style="border-top-width:0">
                 @if (hasSubtotal && (hasDiscount || hasTip))

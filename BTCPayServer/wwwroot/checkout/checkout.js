@@ -396,12 +396,16 @@ function initApp() {
                     };
 
                     await ndef.scan({ signal: this.nfc.readerAbortController.signal })
-                    ndef.onreadingerror = () => this.reportNfcError('Could not read NFC tag')
+                    ndef.onreadingerror = () => this.handleNFCError('Could not read NFC tag')
                     ndef.onreading = async ({ message }) => {
                         const record = message.records[0]
-                        const textDecoder = new TextDecoder('utf-8')
-                        const decoded = textDecoder.decode(record.data)
-                        this.$emit('read-nfc-data', decoded)
+                        if (record && record.data) {
+                            const textDecoder = new TextDecoder('utf-8')
+                            const decoded = textDecoder.decode(record.data)
+                            this.$emit('read-nfc-data', decoded)
+                        } else {
+                            this.handleNFCError('Could not read NFC tag: No data')
+                        }
                     }
 
                     if (inModal) {
@@ -436,7 +440,8 @@ function initApp() {
             handleNFCResult() { // child component reports result for handling the data
                 this.$set(this.nfc, 'submitting', false);
             },
-            handleNFCError(message) { // internal or via child component reporting failure of handling the data
+            handleNFCError(message) {
+                // internal or via child component reporting failure of handling the data
                 this.playSound('error');
                 this.$set(this.nfc, 'submitting', false);
                 this.$set(this.nfc, 'errorMessage', message);

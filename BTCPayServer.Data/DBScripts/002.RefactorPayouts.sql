@@ -7,6 +7,7 @@ UPDATE "Payouts" SET
     "Currency" = split_part("PayoutMethodId", '_', 1),
     "PayoutMethodId"=
         CASE
+            WHEN ("Blob"->>'Amount')::NUMERIC < 0 THEN 'TOPUP'
             WHEN split_part("PayoutMethodId", '_', 2) = 'LightningLike' THEN split_part("PayoutMethodId", '_', 1) || '-LN'
             ELSE split_part("PayoutMethodId", '_', 1) || '-CHAIN'
         END;

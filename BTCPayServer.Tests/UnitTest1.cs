@@ -1448,6 +1448,41 @@ namespace BTCPayServer.Tests
             Assert.Contains("DOGE_X", rateVm.Script, StringComparison.OrdinalIgnoreCase);
         }
 
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanTopUpPullPayment()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+            var pp = await client.CreatePullPayment(user.StoreId, new()
+            {
+                Currency = "BTC",
+                Amount = 1.0m,
+                PaymentMethods = [ "BTC-CHAIN" ]
+            });
+            var controller = user.GetController<UIInvoiceController>();
+            var invoice = await controller.CreateInvoiceCoreRaw(new()
+            {
+                Amount = 0.5m,
+                Currency = "BTC",
+            }, controller.HttpContext.GetStoreData(), controller.Url.Link(null, null), [PullPaymentHostedService.GetInternalTag(pp.Id)]);
+            await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new() { Status = InvoiceStatus.Settled });
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var payouts = await client.GetPayouts(pp.Id);
+                var payout = Assert.Single(payouts);
+                Assert.Equal("TOPUP", payout.PaymentMethod);
+                Assert.Equal(invoice.Id, payout.Destination);
+                Assert.Equal(-0.5m, payout.Amount);
+            });
+        }
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseDefaultCurrency()

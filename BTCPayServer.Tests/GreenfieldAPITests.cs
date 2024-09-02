@@ -3158,8 +3158,8 @@ namespace BTCPayServer.Tests
 
             await client.RemoveStorePaymentMethod(store.Id, "BTC-CHAIN");
             generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
-                new GenerateOnChainWalletRequest() { ExistingMnemonic = allMnemonic, AccountNumber = 1 });
-
+                new GenerateOnChainWalletRequest() { ExistingMnemonic = allMnemonic, AccountNumber = 1, Label = "test" });
+            Assert.Equal("test", generateResponse.Config.Label);
             Assert.Equal(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
 
             Assert.Equal(new Mnemonic("all all all all all all all all all all all all").DeriveExtKey()

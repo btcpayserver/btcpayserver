@@ -322,6 +322,10 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "label": {
+                        "type": "string",
+                        "description": "A label that will be shown in the UI"
+                    },
                     "existingMnemonic": {
                         "$ref": "#/components/schemas/Mnemonic"
                     },

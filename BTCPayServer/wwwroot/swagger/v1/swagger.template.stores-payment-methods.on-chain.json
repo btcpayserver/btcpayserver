@@ -177,14 +177,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "offset",

@@ -402,12 +402,14 @@
                         "x-enumNames": [
                             "Legacy",
                             "Segwit",
-                            "SegwitP2SH"
+                            "SegwitP2SH",
+                            "TaprootBIP86"
                         ],
                         "enum": [
                             "Legacy",
                             "Segwit",
-                            "SegwitP2SH"
+                            "SegwitP2SH",
+                            "TaprootBIP86"
                         ]
                     }
                 }

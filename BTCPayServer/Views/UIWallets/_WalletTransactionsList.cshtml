@@ -21,10 +21,8 @@
                 exclude-types="false"
                 display-inline="true"/>
         </td>
-        <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf")">
-            <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">
-                @transaction.Id
-            </a>
+        <td>
+            <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
         </td>
         <td class="amount-col">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")">@transaction.Balance</span>

@@ -14,7 +14,8 @@ namespace BTCPayServer.Models.ServerViewModels
             public string Id { get; set; }
             public string Email { get; set; }
             public string Name { get; set; }
-
+            [Display(Name = "Invitation URL")]
+            public string InvitationUrl { get; set; }
             [Display(Name = "Image")]
             public IFormFile ImageFile { get; set; }
             public string ImageUrl { get; set; }

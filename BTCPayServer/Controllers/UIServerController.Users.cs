@@ -58,18 +58,28 @@ namespace BTCPayServer.Controllers
                 .Skip(model.Skip)
                 .Take(model.Count)
                 .ToListAsync())
-                .Select(u => new UsersViewModel.UserViewModel
+                .Select(u =>
                 {
-                    Name = u.GetBlob()?.Name,
-                    ImageUrl = u.GetBlob()?.ImageUrl,
-                    Email = u.Email,
-                    Id = u.Id,
-                    EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
-                    Approved = u.RequiresApproval ? u.Approved : null,
-                    Created = u.Created,
-                    Roles = u.UserRoles.Select(role => role.RoleId),
-                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
-                    Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
+                    var blob = u.GetBlob();
+                    return new UsersViewModel.UserViewModel
+                    {
+                        Name = blob?.Name,
+                        ImageUrl = blob?.ImageUrl,
+                        Email = u.Email,
+                        Id = u.Id,
+                        InvitationUrl =
+                            string.IsNullOrEmpty(blob?.InvitationToken)
+                                ? null
+                                : _linkGenerator.InvitationLink(u.Id, blob.InvitationToken, Request.Scheme,
+                                    Request.Host, Request.PathBase),
+                        EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
+                        Approved = u.RequiresApproval ? u.Approved : null,
+                        Created = u.Created,
+                        Roles = u.UserRoles.Select(role => role.RoleId),
+                        Disabled = u.LockoutEnabled && u.LockoutEnd != null &&
+                                   DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
+                        Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
+                    };
                 })
                 .ToList();
             return View(model);
@@ -88,6 +98,7 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Name = blob?.Name,
+                InvitationUrl = string.IsNullOrEmpty(blob?.InvitationToken) ? null : _linkGenerator.InvitationLink(user.Id, blob.InvitationToken, Request.Scheme, Request.Host, Request.PathBase),
                 ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
@@ -262,9 +273,9 @@ namespace BTCPayServer.Controllers
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         AllowDismiss = false,
-                        Html = $"Account successfully created. {info} share this link with them: {callbackUrl}"
+                        Html = $"Account successfully created. {info} share this link with them:<br/>{callbackUrl}"
                     });
-                    return RedirectToAction(nameof(ListUsers));
+                    return RedirectToAction(nameof(User), new { userId = user.Id });
                 }
 
                 foreach (var error in result.Errors)

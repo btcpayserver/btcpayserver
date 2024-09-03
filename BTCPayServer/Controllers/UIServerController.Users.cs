@@ -262,7 +262,7 @@ namespace BTCPayServer.Controllers
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         AllowDismiss = false,
-                        Html = $"Account successfully created. {info} share this link with them:<br/><a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
+                        Html = $"Account successfully created. {info} share this link with them: {callbackUrl}"
                     });
                     return RedirectToAction(nameof(ListUsers));
                 }

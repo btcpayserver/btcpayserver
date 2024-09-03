@@ -371,7 +371,7 @@ namespace BTCPayServer.Tests
             var usr = RandomUtils.GetUInt256().ToString().Substring(64 - 20) + "@a.com";
             s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
             s.ClickPagePrimary();
-            var url = s.FindAlertMessage().FindElement(By.TagName("a")).Text;
+            var url = s.Driver.FindElement(By.Id("InvitationUrl")).GetAttribute("data-text");
 
             s.Logout();
             s.Driver.Navigate().GoToUrl(url);

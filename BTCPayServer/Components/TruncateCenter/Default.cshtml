@@ -6,7 +6,7 @@
     @if (Model.Elastic) classes += " truncate-center--elastic";
     var prefix = Model.IsVue ? ":" : "";
 }
-<span class="truncate-center @classes" id="@Model.Id" data-text="@Model.Text">
+<span class="truncate-center @classes" id="@Model.Id" @(prefix)data-text="@Model.Text">
     @if (Model.IsVue)
     {
         <span class="truncate-center-truncated" data-bs-toggle="tooltip" :title="@Model.Text">

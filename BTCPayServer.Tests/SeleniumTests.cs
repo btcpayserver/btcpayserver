@@ -1864,7 +1864,7 @@ namespace BTCPayServer.Tests
             // Check the tx sent earlier arrived
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
             s.Driver.WaitWalletTransactionsLoaded();
-            s.Driver.FindElement(By.PartialLinkText(tx.ToString()));
+            s.Driver.FindElement(By.CssSelector($"[data-text='{tx}']"));
 
             var walletTransactionUri = new Uri(s.Driver.Url);
 
@@ -1892,7 +1892,6 @@ namespace BTCPayServer.Tests
             var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             SetTransactionOutput(s, 0, jack, 0.01m);
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
-
             Assert.Contains(jack.ToString(), s.Driver.PageSource);
             Assert.Contains("0.01000000", s.Driver.PageSource);
             Assert.EndsWith("psbt/ready", s.Driver.Url);
@@ -3012,7 +3011,7 @@ namespace BTCPayServer.Tests
             // Topup Invoice test
             var i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            var lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
+            var lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center")).GetAttribute("data-text");
             var parsed = LNURL.LNURL.Parse(lnurl, out var tag);
             var fetchedReuqest =
                 Assert.IsType<LNURL.LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
@@ -3049,7 +3048,7 @@ namespace BTCPayServer.Tests
             i = s.CreateInvoice(storeId, 0.0000001m, cryptoCode);
             s.GoToInvoiceCheckout(i);
             // BOLT11 is also displayed for standard invoice (not LNURL, even if it is available)
-            var bolt11 = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LN .truncate-center-start")).Text;
+            var bolt11 = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LN .truncate-center")).GetAttribute("data-text");
             BOLT11PaymentRequest.Parse(bolt11, s.Server.ExplorerNode.Network);
             var invoiceId = s.Driver.Url.Split('/').Last();
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
@@ -3102,7 +3101,7 @@ namespace BTCPayServer.Tests
 
             i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
+            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center")).GetAttribute("data-text");
             Assert.StartsWith("lnurlp", lnurl);
             LNURL.LNURL.Parse(lnurl, out tag);
 
@@ -3115,7 +3114,7 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
             var invForPP = s.CreateInvoice(null, cryptoCode);
             s.GoToInvoiceCheckout(invForPP);
-            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
+            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center")).GetAttribute("data-text");
             LNURL.LNURL.Parse(lnurl, out tag);
 
             // Check that pull payment has lightning option

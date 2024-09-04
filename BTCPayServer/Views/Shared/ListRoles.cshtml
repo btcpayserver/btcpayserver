@@ -96,7 +96,7 @@
                     {
                         @foreach (var policy in role.Permissions)
                         {
-                            <code class="d-block text-break">@policy</code>
+                            <code class="d-block text-break">@Policies.DisplayName(policy)</code>
                         }
                     }
                 </td>

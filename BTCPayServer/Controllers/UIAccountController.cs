@@ -707,7 +707,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/login/forgot-password")]
         [AllowAnonymous]
-        public IActionResult ForgotPassword()
+        public ActionResult ForgotPassword()
         {
             return View();
         }
@@ -718,49 +718,30 @@ namespace BTCPayServer.Controllers
         [RateLimitsFilter(ZoneLimits.ForgotPassword, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            try
+            var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+            if (ModelState.IsValid && settings?.IsComplete() is true)
             {
-                var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
-                if(settings == null)
+                var user = await _userManager.FindByEmailAsync(model.Email);
+                if (!UserService.TryCanLogin(user, out _))
                 {
-                    return RedirectToAction(nameof(EmailSmtpConfigurationError));
-                }
-                var client = await settings.CreateSmtpClient();
-                if (ModelState.IsValid)
-                {
-                    var user = await _userManager.FindByEmailAsync(model.Email);
-                    if (!UserService.TryCanLogin(user, out _))
-                    {
-                        // Don't reveal that the user does not exist or is not confirmed
-                        return RedirectToAction(nameof(ForgotPasswordConfirmation));
-                    }
-                    _eventAggregator.Publish(new UserPasswordResetRequestedEvent
-                    {
-                        User = user,
-                        RequestUri = Request.GetAbsoluteRootUri()
-                    });
+                    // Don't reveal that the user does not exist or is not confirmed
                     return RedirectToAction(nameof(ForgotPasswordConfirmation));
                 }
+                _eventAggregator.Publish(new UserPasswordResetRequestedEvent
+                {
+                    User = user,
+                    RequestUri = Request.GetAbsoluteRootUri()
+                });
+                return RedirectToAction(nameof(ForgotPasswordConfirmation));
+            }
 
-                // If we got this far, something failed, redisplay form
-                return View(model);
-            }
-            catch (Exception)
-            {
-                return RedirectToAction(nameof(EmailSmtpConfigurationError));
-            }
+            // If we got this far, something failed, redisplay form
+            return View(model);
         }
 
         [HttpGet("/login/forgot-password/confirm")]
         [AllowAnonymous]
-        public IActionResult ForgotPasswordConfirmation()
-        {
-            return View();
-        }
-
-        [HttpGet("/authentication/email/smtp-error")]
-        [AllowAnonymous]
-        public IActionResult EmailSmtpConfigurationError()
+        public ActionResult ForgotPasswordConfirmation()
         {
             return View();
         }

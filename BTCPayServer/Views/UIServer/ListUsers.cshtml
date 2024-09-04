@@ -86,7 +86,7 @@
                         {
                             <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled">@(user.Disabled ? "Enable" : "Disable")</a>
                         }
-                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="user-edit">Password Reset</a>
+                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password">Password Reset</a>
                         <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
                         <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
                     </div>

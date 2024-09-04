@@ -1085,7 +1085,8 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     }
     
     .truncate-center-text {
-        display: none;
+        color: transparent;
+        position: absolute;
     }
 }
 

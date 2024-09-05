@@ -34,7 +34,7 @@
     <PackageReference Include="Newtonsoft.Json.Schema" Version="3.0.15" />
     <PackageReference Include="Selenium.Support" Version="4.1.1" />
     <PackageReference Include="Selenium.WebDriver" Version="4.22.0" />
-	<PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="125.0.6422.14100" />
+	<PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="128.0.6613.11900" />
 	<PackageReference Include="xunit" Version="2.6.6" />
 	<PackageReference Include="xunit.runner.visualstudio" Version="2.5.6">
       <PrivateAssets>all</PrivateAssets>

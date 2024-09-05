@@ -745,6 +745,14 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge] .dropdown-toggle")).Click();
             s.Driver.FindElements(By.CssSelector("[data-invoice-state-badge] .dropdown-menu button"))[0].Click();
             TestUtils.Eventually(() => Assert.Contains("Settled (marked)", s.Driver.PageSource));
+            
+            // zero amount invoice should redirect to receipt
+            var zeroAmountId = s.CreateInvoice(0);
+            s.GoToUrl($"/i/{zeroAmountId}");
+            Assert.EndsWith("/receipt", s.Driver.Url);
+            Assert.Contains("$0.00", s.Driver.PageSource);
+            s.GoToInvoice(zeroAmountId);
+            Assert.Equal("Settled", s.Driver.FindElement(By.CssSelector("[data-invoice-state-badge]")).Text);
         }
 
         [Fact(Timeout = TestTimeout)]

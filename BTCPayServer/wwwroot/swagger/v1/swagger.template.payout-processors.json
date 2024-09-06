@@ -569,8 +569,8 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethodId": {
-                        "$ref": "#/components/schemas/PaymentMethodId"
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     },
                     "intervalSeconds": {
                         "description": "How often should the processor run",
@@ -627,8 +627,8 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethodId": {
-                        "$ref": "#/components/schemas/PaymentMethodId"
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     },
                     "feeTargetBlock": {
                         "type": "number",

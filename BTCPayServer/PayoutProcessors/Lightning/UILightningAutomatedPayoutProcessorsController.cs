@@ -97,7 +97,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         activeProcessor ??= new PayoutProcessorData();
         activeProcessor.HasTypedBlob<LightningAutomatedPayoutBlob>().SetBlob(automatedTransferBlob.ToBlob());
         activeProcessor.StoreId = storeId;
-        activeProcessor.PaymentMethod = PayoutTypes.LN.GetPayoutMethodId(cryptoCode).ToString();
+        activeProcessor.PayoutMethodId = PayoutTypes.LN.GetPayoutMethodId(cryptoCode).ToString();
         activeProcessor.Processor = _lightningAutomatedPayoutSenderFactory.Processor;
         var tcs = new TaskCompletionSource();
         _eventAggregator.Publish(new PayoutProcessorUpdated()

@@ -54,7 +54,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         ApplicationDbContextFactory applicationDbContextFactory,
         PaymentMethodHandlerDictionary paymentHandlers,
         IPluginHookService pluginHookService,
-        EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PaymentMethod}"))
+        EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PayoutMethodId}"))
     {
         PaymentMethodId = paymentMethodId;
         _storeRepository = storeRepository;
@@ -114,7 +114,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 new PullPaymentHostedService.PayoutQuery()
                 {
                     States = new[] { PayoutState.AwaitingPayment },
-                    PayoutMethods = new[] { PayoutProcessorSettings.PaymentMethod },
+                    PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
                     Stores = new[] {PayoutProcessorSettings.StoreId}
                 }, context, CancellationToken);
 

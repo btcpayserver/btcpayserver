@@ -22,6 +22,10 @@ namespace BTCPayServer.Migrations
                 name: "IX_Payouts_Destination_State",
                 table: "Payouts",
                 newName: "IX_Payouts_DedupId_State");
+            migrationBuilder.RenameColumn(
+             name: "PaymentMethod",
+             table: "PayoutProcessors",
+             newName: "PayoutMethodId");
         }
 
         /// <inheritdoc />

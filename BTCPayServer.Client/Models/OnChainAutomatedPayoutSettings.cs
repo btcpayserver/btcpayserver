@@ -6,7 +6,7 @@ namespace BTCPayServer.Client.Models;
 
 public class OnChainAutomatedPayoutSettings
 {
-    public string PaymentMethodId { get; set; }
+    public string PayoutMethodId { get; set; }
 
     [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
     public TimeSpan IntervalSeconds { get; set; }

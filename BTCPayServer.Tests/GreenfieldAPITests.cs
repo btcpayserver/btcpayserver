@@ -2172,7 +2172,7 @@ namespace BTCPayServer.Tests
                     RefundVariant = RefundVariant.RateThen
                 });
             });
-            Assert.Contains("PaymentMethod: Please select one of the payment methods which were available for the original invoice", validationError.Message);
+            Assert.Contains("PayoutMethodId: Please select one of the payment methods which were available for the original invoice", validationError.Message);
 
             // test RefundVariant.RateThen
             var pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()

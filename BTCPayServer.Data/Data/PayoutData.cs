@@ -44,7 +44,14 @@ namespace BTCPayServer.Data
         public string Blob { get; set; }
         public string Proof { get; set; }
 #nullable enable
-        public string? Destination { get; set; }
+        /// <summary>
+        /// For example, BTC-CHAIN needs to ensure that only a single address is tied to an active payout.
+        /// If `PayoutBlob.Destination` is `bitcoin://1BvBMSeYstWetqTFn5Au4m4GFg7xJaNVN2?amount=0.1`
+        /// Then `DedupId` is `1BvBMSeYstWetqTFn5Au4m4GFg7xJaNVN2`
+        /// For Lightning, Destination could be the lightning address, BOLT11 or LNURL
+        /// But the `DedupId` would be the `PaymentHash`.
+        /// </summary>
+        public string? DedupId { get; set; }
 #nullable restore
         public StoreData StoreData { get; set; }
 
@@ -62,7 +69,7 @@ namespace BTCPayServer.Data
             builder.Entity<PayoutData>()
                 .HasIndex(o => o.State);
             builder.Entity<PayoutData>()
-                .HasIndex(x => new { DestinationId = x.Destination, x.State });
+                .HasIndex(x => new { DestinationId = x.DedupId, x.State });
 
             builder.Entity<PayoutData>()
                 .Property(o => o.Blob)

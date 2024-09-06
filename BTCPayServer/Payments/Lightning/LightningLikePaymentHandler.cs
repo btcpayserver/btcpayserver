@@ -90,7 +90,7 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
 
             var invoice = context.InvoiceEntity;
-            decimal due = Extensions.RoundUp(invoice.Price / paymentPrompt.Rate, _Network.Divisibility);
+            decimal due = Extensions.RoundUp(invoice.Price / paymentPrompt.Rate, paymentPrompt.Divisibility);
             try
             {
                 due = paymentPrompt.Calculate().Due;

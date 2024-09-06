@@ -144,7 +144,7 @@
     text-anchor: end; }
 
 .ct-grid {
-    stroke: rgba(128, 128, 128, .125);
+    stroke: rgba(128, 128, 128, .05);
     stroke-width: 1px;
     stroke-dasharray: 2px; }
 

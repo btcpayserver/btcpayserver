@@ -142,7 +142,6 @@ public partial class UIStoresController
             {
                 var strategy = derivationByCryptoCode.TryGet(network.CryptoCode);
                 var value = strategy?.ToPrettyString() ?? string.Empty;
-
                 derivationSchemes.Add(new StoreDerivationScheme
                 {
                     Crypto = network.CryptoCode,
@@ -151,9 +150,8 @@ public partial class UIStoresController
                     Value = value,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
                     Enabled = !excludeFilters.Match(handler.PaymentMethodId) && strategy != null,
-#if ALTCOINS
-                        Collapsed = network is Plugins.Altcoins.ElementsBTCPayNetwork elementsBTCPayNetwork && elementsBTCPayNetwork.NetworkCryptoCode != elementsBTCPayNetwork.CryptoCode && string.IsNullOrEmpty(value)
-#endif
+                    Collapsed = network is Plugins.Altcoins.ElementsBTCPayNetwork { IsNativeAsset : false }  && string.IsNullOrEmpty(value)
+
                 });
             }
             else if (handler is LightningLikePaymentHandler)

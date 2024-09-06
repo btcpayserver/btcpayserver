@@ -231,7 +231,7 @@ namespace BTCPayServer.Hosting
             var processors = await ctx.PayoutProcessors.ToArrayAsync();
             foreach (var processor in processors)
             {
-                processor.PaymentMethod = processor.GetPayoutMethodId().ToString();
+                processor.PayoutMethodId = processor.GetPayoutMethodId().ToString();
             }
             await ctx.SaveChangesAsync();
         }
@@ -636,7 +636,7 @@ WHERE cte.""Id""=p.""Id""
                     continue;
                 }
                 var claim = await handler?.ParseClaimDestination(payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings).Destination, default);
-                payoutData.Destination = claim.destination?.Id;
+                payoutData.DedupId = claim.destination?.Id;
             }
             await ctx.SaveChangesAsync();
         }

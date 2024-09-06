@@ -36,15 +36,6 @@
     <None Remove="Currencies.txt" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Altcoins)' != 'true'">
-    <Content Remove="Services\Altcoins\**\*" />
-    <Compile Remove="Plugins\Altcoins\**\*" />
-    <Content Remove="Views\UIMoneroLikeStore\**\*" />
-    <Content Remove="Views\UIZcashLikeStore\**\*" />
-    <Content Remove="Views\Shared\Monero\**\*" />
-    <Content Remove="Views\Shared\Zcash\**\*" />
-  </ItemGroup>
-
   <ItemGroup>
     <PackageReference Include="BTCPayServer.NTag424" Version="1.0.23" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.4" />

@@ -108,7 +108,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         activeProcessor ??= new PayoutProcessorData();
         activeProcessor.HasTypedBlob<OnChainAutomatedPayoutBlob>().SetBlob(automatedTransferBlob.ToBlob());
         activeProcessor.StoreId = storeId;
-        activeProcessor.PaymentMethod = PayoutTypes.CHAIN.GetPayoutMethodId(cryptoCode).ToString();
+        activeProcessor.PayoutMethodId = PayoutTypes.CHAIN.GetPayoutMethodId(cryptoCode).ToString();
         activeProcessor.Processor = _onChainAutomatedPayoutSenderFactory.Processor;
         var tcs = new TaskCompletionSource();
         _eventAggregator.Publish(new PayoutProcessorUpdated()

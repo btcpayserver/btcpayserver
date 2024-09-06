@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
@@ -135,14 +136,14 @@ namespace BTCPayServer.HostedServices
             o.EndDate = create.ExpiresAt is DateTimeOffset date2 ? new DateTimeOffset?(date2) : null;
             o.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
             o.StoreId = create.StoreId;
+            o.Currency = create.Currency;
+            o.Limit = create.Amount;
 
             o.SetBlob(new PullPaymentBlob()
             {
                 Name = create.Name ?? string.Empty,
                 Description = create.Description ?? string.Empty,
-                Currency = create.Currency,
-                Limit = create.Amount,
-                SupportedPaymentMethods = create.PayoutMethodIds,
+                SupportedPayoutMethods = create.PayoutMethodIds,
                 AutoApproveClaims = create.AutoApproveClaims,
                 View = new PullPaymentBlob.PullPaymentView
                 {
@@ -273,7 +274,7 @@ namespace BTCPayServer.HostedServices
 
             return await query.FirstOrDefaultAsync(data => data.Id == pullPaymentId);
         }
-
+        record TopUpRequest(string PullPaymentId, InvoiceEntity InvoiceEntity);
         class PayoutRequest
         {
             public PayoutRequest(TaskCompletionSource<ClaimRequest.ClaimResponse> completionSource,
@@ -336,8 +337,19 @@ namespace BTCPayServer.HostedServices
             {
                 payoutHandler.StartBackgroundCheck(Subscribe);
             }
-
+            _eventAggregator.Subscribe<Events.InvoiceEvent>(TopUpInvoiceCore);
             return new[] { Loop() };
+        }
+
+        private void TopUpInvoiceCore(InvoiceEvent evt)
+        {
+            if (evt.EventCode == InvoiceEventCode.Completed || evt.EventCode == InvoiceEventCode.MarkedCompleted)
+            {
+                foreach (var pullPaymentId in evt.Invoice.GetInternalTags("PULLPAY#"))
+                {
+                    _Channel.Writer.TryWrite(new TopUpRequest(pullPaymentId, evt.Invoice));
+                }
+            }
         }
 
         private void Subscribe(params Type[] events)
@@ -352,6 +364,11 @@ namespace BTCPayServer.HostedServices
         {
             await foreach (var o in _Channel.Reader.ReadAllAsync())
             {
+                if (o is TopUpRequest topUp)
+                {
+                    await HandleTopUp(topUp);
+                }
+
                 if (o is PayoutRequest req)
                 {
                     await HandleCreatePayout(req);
@@ -386,21 +403,52 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        public bool SupportsLNURL(PullPaymentBlob blob)
+        private async Task HandleTopUp(TopUpRequest topUp)
         {
-            var pms = blob.SupportedPaymentMethods.FirstOrDefault(id =>
+            var pp = await this.GetPullPayment(topUp.PullPaymentId, false);
+            using var ctx = _dbContextFactory.CreateContext();
+
+            var payout = new Data.PayoutData()
+            {
+                Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20)),
+                PayoutMethodId = PayoutMethodIds.TopUp.ToString(),
+                Date = DateTimeOffset.UtcNow,
+                State = PayoutState.Completed,
+                PullPaymentDataId = pp.Id,
+                StoreDataId = pp.StoreId
+            };
+            if (topUp.InvoiceEntity.Currency != pp.Currency ||
+                pp.Currency is not ("SATS" or "BTC"))
+                return;
+            payout.Currency = pp.Currency;
+            payout.Amount = -topUp.InvoiceEntity.Price;
+            payout.OriginalCurrency = payout.Currency;
+            payout.OriginalAmount = payout.Amount.Value;
+            var payoutBlob = new PayoutBlob()
+            {
+                Destination = topUp.InvoiceEntity.Id,
+                Metadata = new JObject()
+            };
+            payout.SetBlob(payoutBlob, _jsonSerializerSettings);
+            await ctx.Payouts.AddAsync(payout);
+            await ctx.SaveChangesAsync();
+        }
+
+        public bool SupportsLNURL(PullPaymentData pp, PullPaymentBlob blob = null)
+        {
+            blob ??= pp.GetBlob();
+            var pms = blob.SupportedPayoutMethods.FirstOrDefault(id =>
                 PayoutTypes.LN.GetPayoutMethodId(_networkProvider.DefaultNetwork.CryptoCode)
                 == id);
-            return pms is not null && _lnurlSupportedCurrencies.Contains(blob.Currency);
+            return pms is not null && _lnurlSupportedCurrencies.Contains(pp.Currency);
         }
 
         public Task<RateResult> GetRate(PayoutData payout, string explicitRateRule, CancellationToken cancellationToken)
         {
-            var ppBlob = payout.PullPaymentData?.GetBlob();
             var payoutPaymentMethod = payout.GetPayoutMethodId();
             var cryptoCode = _handlers.TryGetNetwork(payoutPaymentMethod)?.NBXplorerNetwork.CryptoCode;
             var currencyPair = new Rating.CurrencyPair(cryptoCode,
-                ppBlob?.Currency ?? cryptoCode);
+                payout.PullPaymentData?.Currency ?? cryptoCode);
             Rating.RateRule rule = null;
             try
             {
@@ -474,9 +522,9 @@ namespace BTCPayServer.HostedServices
                 payout.State = PayoutState.AwaitingPayment;
 
                 if (payout.PullPaymentData is null ||
-                    cryptoCode == payout.PullPaymentData.GetBlob().Currency)
+                    cryptoCode == payout.PullPaymentData.Currency)
                     req.Rate = 1.0m;
-                var cryptoAmount = payoutBlob.Amount / req.Rate;
+                var cryptoAmount = payout.OriginalAmount / req.Rate;
                 var payoutHandler = _handlers.TryGet(paymentMethod);
                 if (payoutHandler is null)
                     throw new InvalidOperationException($"No payout handler for {paymentMethod}");
@@ -489,13 +537,12 @@ namespace BTCPayServer.HostedServices
                     return;
                 }
 
-                payoutBlob.CryptoAmount = Extensions.RoundUp(cryptoAmount,
+                payout.Amount = Extensions.RoundUp(cryptoAmount,
                     network.Divisibility);
-                payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
 
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Approved, payout));
-                req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.Ok, payoutBlob.CryptoAmount));
+                req.Completion.SetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.Ok, payout.Amount));
             }
             catch (Exception ex)
             {
@@ -581,7 +628,7 @@ namespace BTCPayServer.HostedServices
 
                     ppBlob = pp.GetBlob();
 
-                    if (!ppBlob.SupportedPaymentMethods.Contains(req.ClaimRequest.PayoutMethodId))
+                    if (!ppBlob.SupportedPayoutMethods.Contains(req.ClaimRequest.PayoutMethodId))
                     {
                         req.Completion.TrySetResult(
                             new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.PaymentMethodNotSupported));
@@ -601,7 +648,7 @@ namespace BTCPayServer.HostedServices
                 if (req.ClaimRequest.Destination.Id != null)
                 {
                     if (await ctx.Payouts.AnyAsync(data =>
-                            data.Destination.Equals(req.ClaimRequest.Destination.Id) &&
+                            data.DedupId.Equals(req.ClaimRequest.Destination.Id) &&
                             data.State != PayoutState.Completed && data.State != PayoutState.Cancelled
                         ))
                     {
@@ -623,8 +670,8 @@ namespace BTCPayServer.HostedServices
                         .Where(p => p.State != PayoutState.Cancelled).ToListAsync();
 
                 var payouts = payoutsRaw?.Select(o => new { Entity = o, Blob = o.GetBlob(_jsonSerializerSettings) });
-                var limit = ppBlob?.Limit ?? 0;
-                var totalPayout = payouts?.Select(p => p.Blob.Amount)?.Sum();
+                var limit = pp?.Limit ?? 0;
+                var totalPayout = payouts?.Select(p => p.Entity.OriginalAmount)?.Sum();
                 var claimed = req.ClaimRequest.Value is decimal v ? v : limit - (totalPayout ?? 0);
                 if (totalPayout is not null && totalPayout + claimed > limit)
                 {
@@ -645,16 +692,17 @@ namespace BTCPayServer.HostedServices
                     State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
                     PayoutMethodId = req.ClaimRequest.PayoutMethodId.ToString(),
-                    Destination = req.ClaimRequest.Destination.Id,
+                    DedupId = req.ClaimRequest.Destination.Id,
                     StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId,
-                    Currency = payoutHandler.Currency
+                    Currency = payoutHandler.Currency,
+                    OriginalCurrency = pp?.Currency ?? payoutHandler.Currency
                 };
                 var payoutBlob = new PayoutBlob()
                 {
-                    Amount = claimed,
                     Destination = req.ClaimRequest.Destination.ToString(),
                     Metadata = req.ClaimRequest.Metadata ?? new JObject(),
                 };
+                payout.OriginalAmount = claimed;
                 payout.SetBlob(payoutBlob, _jsonSerializerSettings);
                 await ctx.Payouts.AddAsync(payout);
                 try
@@ -681,8 +729,7 @@ namespace BTCPayServer.HostedServices
                             if (approveResult.Result == PayoutApproval.Result.Ok)
                             {
                                 payout.State = PayoutState.AwaitingPayment;
-                                payoutBlob.CryptoAmount = approveResult.CryptoAmount;
-                                payout.SetBlob(payoutBlob, _jsonSerializerSettings);
+                                payout.Amount = approveResult.CryptoAmount;
                             }
                         }
                     }
@@ -692,7 +739,7 @@ namespace BTCPayServer.HostedServices
                         new PayoutNotification()
                         {
                             StoreId = payout.StoreDataId,
-                            Currency = ppBlob?.Currency ?? _handlers.TryGetNetwork(req.ClaimRequest.PayoutMethodId)?.NBXplorerNetwork.CryptoCode,
+                            Currency = pp?.Currency ?? _handlers.TryGetNetwork(req.ClaimRequest.PayoutMethodId)?.NBXplorerNetwork.CryptoCode,
                             Status = payout.State,
                             PaymentMethod = payout.PayoutMethodId,
                             PayoutId = payout.Id
@@ -809,30 +856,28 @@ namespace BTCPayServer.HostedServices
         public PullPaymentsModel.PullPaymentModel.ProgressModel CalculatePullPaymentProgress(PullPaymentData pp,
             DateTimeOffset now)
         {
-            var ppBlob = pp.GetBlob();
-
-            var ni = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
-            var nfi = _currencyNameTable.GetNumberFormatInfo(ppBlob.Currency, true);
+            var ni = _currencyNameTable.GetCurrencyData(pp.Currency, true);
+            var nfi = _currencyNameTable.GetNumberFormatInfo(pp.Currency, true);
             var totalCompleted = pp.Payouts
                 .Where(p => (p.State == PayoutState.Completed ||
                                                         p.State == PayoutState.InProgress))
-                .Select(o => o.GetBlob(_jsonSerializerSettings).Amount).Sum().RoundToSignificant(ni.Divisibility);
+                .Select(o => o.OriginalAmount).Sum().RoundToSignificant(ni.Divisibility);
             var totalAwaiting = pp.Payouts
                 .Where(p => (p.State == PayoutState.AwaitingPayment ||
                                                        p.State == PayoutState.AwaitingApproval)).Select(o =>
-                o.GetBlob(_jsonSerializerSettings).Amount).Sum().RoundToSignificant(ni.Divisibility);
+                o.OriginalAmount).Sum().RoundToSignificant(ni.Divisibility);
 
-            var currencyData = _currencyNameTable.GetCurrencyData(ppBlob.Currency, true);
+            var currencyData = _currencyNameTable.GetCurrencyData(pp.Currency, true);
             return new PullPaymentsModel.PullPaymentModel.ProgressModel()
             {
-                CompletedPercent = (int)(totalCompleted / ppBlob.Limit * 100m),
-                AwaitingPercent = (int)(totalAwaiting / ppBlob.Limit * 100m),
+                CompletedPercent = (int)(totalCompleted / pp.Limit * 100m),
+                AwaitingPercent = (int)(totalAwaiting / pp.Limit * 100m),
                 AwaitingFormatted = totalAwaiting.ToString("C", nfi),
                 Awaiting = totalAwaiting,
                 Completed = totalCompleted,
                 CompletedFormatted = totalCompleted.ToString("C", nfi),
-                Limit = ppBlob.Limit.RoundToSignificant(currencyData.Divisibility),
-                LimitFormatted = _displayFormatter.Currency(ppBlob.Limit, ppBlob.Currency),
+                Limit = pp.Limit.RoundToSignificant(currencyData.Divisibility),
+                LimitFormatted = _displayFormatter.Currency(pp.Limit, pp.Currency),
                 EndIn = pp.EndsIn() is { } end ? end.TimeString() : null,
             };
         }
@@ -845,6 +890,10 @@ namespace BTCPayServer.HostedServices
             return time;
         }
 
+        public static string GetInternalTag(string ppId)
+        {
+            return $"PULLPAY#{ppId}";
+        }
 
         class InternalPayoutPaidRequest
         {

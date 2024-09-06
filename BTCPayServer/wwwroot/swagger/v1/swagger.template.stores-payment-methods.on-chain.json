@@ -177,14 +177,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "offset",
@@ -329,6 +322,10 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
+                    "label": {
+                        "type": "string",
+                        "description": "A label that will be shown in the UI"
+                    },
                     "existingMnemonic": {
                         "$ref": "#/components/schemas/Mnemonic"
                     },
@@ -402,12 +399,14 @@
                         "x-enumNames": [
                             "Legacy",
                             "Segwit",
-                            "SegwitP2SH"
+                            "SegwitP2SH",
+                            "TaprootBIP86"
                         ],
                         "enum": [
                             "Legacy",
                             "Segwit",
-                            "SegwitP2SH"
+                            "SegwitP2SH",
+                            "TaprootBIP86"
                         ]
                     }
                 }

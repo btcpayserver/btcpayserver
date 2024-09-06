@@ -5,10 +5,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Lightning.CLightning;
-using BTCPayServer.Services;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
@@ -18,7 +16,6 @@ using NBitcoin;
 using NBitcoin.RPC;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.Support.Extensions;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 
@@ -93,7 +90,15 @@ namespace BTCPayServer.Tests
         {
             if (amount is not null)
             {
-                Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				try
+				{
+					Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				}
+				// Sometimes the element is not available after a window switch... retry
+				catch (StaleElementReferenceException)
+				{
+					Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				}
                 Driver.FindElement(By.Id("test-payment-amount")).SendKeys(amount.ToString());
             }
             Driver.WaitUntilAvailable(By.Id("FakePayment"));

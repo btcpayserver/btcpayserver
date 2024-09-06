@@ -1,4 +1,3 @@
-#if ALTCOINS
 #nullable enable
 using System.Globalization;
 using BTCPayServer.Payments;
@@ -26,4 +25,3 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         }
     }
 }
-#endif

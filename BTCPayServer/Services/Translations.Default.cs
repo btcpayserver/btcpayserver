@@ -60,6 +60,7 @@ Can use RPC import
 Celebrate payment with confetti
 Check releases on GitHub and notify when new BTCPay Server version is available
 Checkout Appearance
+Clone
 Colors to rotate between with animation when a payment is made. One color per line.
 Confirm new password
 Confirm password
@@ -72,6 +73,7 @@ Contribution Perks Template
 Count all invoices created on the store as part of the goal
 Create
 Create a new app
+Create a new dictionary
 Create Account
 Create Form
 Create Invoice
@@ -99,6 +101,9 @@ Derivation scheme format
 Description
 Description template of the lightning invoice
 Destination Address
+Dictionaries
+Dictionaries enable you to translate the BTCPay Server backend into different languages.
+Dictionary
 Disable public user registration
 Disable stores from using the server's email settings as backup
 Discourage search engines from indexing this site
@@ -137,6 +142,7 @@ Expiration Date
 Export
 Extends the BTCPay Server Dark theme
 Extends the BTCPay Server Light theme
+Fallback
 Featured Image URL
 Fee rate (sat/vB)
 Files
@@ -150,6 +156,7 @@ Generate Key
 Google Cloud Storage
 GRPC SSL Cipher suite (GRPC_SSL_CIPHER_SUITES)
 Hide Sensitive Info
+If a translation isn’t available in the new dictionary, it will be searched in the fallback.
 Image
 Invoice currency
 Invoice expires if the full amount has not been paid after …
@@ -177,6 +184,7 @@ Memo
 Metadata
 Min sats
 Minimum acceptable expiration time for BOLT11 for refunds
+Name
 New password
 Next
 Non-admins can access the User Creation API Endpoint
@@ -226,6 +234,7 @@ Regenerate code
 Register
 Remember me
 Remember this machine
+Remove
 Reporting
 Request contributor data on checkout
 Request customer data on checkout
@@ -240,6 +249,7 @@ Save
 Scope
 Search engines can index this site
 Security device (FIDO2)
+Select
 Select the Default Currency during Store Creation
 Select the payout method used for refund
 Send test webhook

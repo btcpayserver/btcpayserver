@@ -108,9 +108,14 @@
       },
       "PaymentMethodId": {
         "type": "string",
-        "description": "Payment method IDs are a combination of crypto code and payment type. Available payment method IDs for Bitcoin are:  \n- `\"BTC-CHAIN\"`: Onchain   \n-`\"BTC-LN\"`: Lightning   \n- `\"BTC-LNURL\"`: LNURL",
+        "description": "Payment method IDs. Available payment method IDs for Bitcoin are:  \n- `\"BTC-CHAIN\"`: Onchain   \n-`\"BTC-LN\"`: Lightning   \n- `\"BTC-LNURL\"`: LNURL",
           "example": "BTC-CHAIN"
-      }
+      },
+        "PayoutMethodId": {
+            "type": "string",
+            "description": "Payout method IDs. Available payment method IDs for Bitcoin are:  \n- `\"BTC-CHAIN\"`: Onchain   \n-`\"BTC-LN\"`: Lightning",
+            "example": "BTC-LN"
+        }
     },
     "securitySchemes": {
       "API_Key": {

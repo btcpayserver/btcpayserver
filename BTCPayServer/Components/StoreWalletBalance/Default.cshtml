@@ -80,9 +80,7 @@
             const chartOpts = {
                 fullWidth: true,
                 showArea: true,
-                //lineSmooth: false,
                 axisY: {
-                    //labelInterpolationFnc: valueTransform,
                     showLabel: false,
                     offset: 0
                 },
@@ -104,29 +102,15 @@
                 const low = Math.max(min - ((max - min) / 5), 0);
                 const renderOpts = Object.assign({}, chartOpts, { low, axisX: {
                     labelInterpolationFnc(date, i) {
-                        return i % labelEvery == 0 ? dateFormatter.format(new Date(date)) : null
+                        return i % labelEvery === 0 ? dateFormatter.format(new Date(date)) : null
                     }
                 } });
                 const pointCount = series.length;
                 const labelEvery = pointCount / labelCount;
-                const chart = new Chartist.Line(`#${id} .ct-chart`, {
+                new Chartist.Line(`#${id} .ct-chart`, {
                     labels: labels,
                     series: [series]
                 }, renderOpts);
-                
-                // prevent y-axis labels from getting cut off
-                /*
-                window.setTimeout(() => {
-                    const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
-                    if (yLabels) {
-                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 7.5)));
-                        const opts = Object.assign({}, renderOpts, { 
-                            axisY: Object.assign({}, renderOpts.axisY, { offset: width })
-                        });
-                        chart.update(null, opts);
-                    }
-                }, 0)
-                */
             };
             
             const update = async type => {

@@ -1163,19 +1163,19 @@ namespace BTCPayServer.Tests
             {
                 Destination = destination,
                 Amount = 1_000_000m,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
             }));
 
             await this.AssertAPIError("archived", async () => await unauthenticated.CreatePayout(pps[1].Id, new CreatePayoutRequest()
             {
                 Destination = destination,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             }));
 
             var payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
             {
                 Destination = destination,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             });
 
             payouts = await unauthenticated.GetPayouts(pps[0].Id);
@@ -1184,7 +1184,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(payout.Id, payout2.Id);
             Assert.Equal(destination, payout2.Destination);
             Assert.Equal(PayoutState.AwaitingApproval, payout.State);
-            Assert.Equal("BTC-CHAIN", payout2.PaymentMethod);
+            Assert.Equal("BTC-CHAIN", payout2.PayoutMethodId);
             Assert.Equal("BTC", payout2.CryptoCode);
             Assert.Null(payout.PaymentMethodAmount);
 
@@ -1195,14 +1195,14 @@ namespace BTCPayServer.Tests
             {
                 Destination = destination2,
                 Amount = 0.00001m,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             }));
 
             TestLogs.LogInformation("Can't create too low payout");
             await this.AssertAPIError("amount-too-low", async () => await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
             {
                 Destination = destination2,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             }));
 
             TestLogs.LogInformation("Can archive payout");
@@ -1218,7 +1218,7 @@ namespace BTCPayServer.Tests
             payout = await unauthenticated.CreatePayout(pps[0].Id, new CreatePayoutRequest()
             {
                 Destination = destination,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             });
 
             var start = RoundSeconds(DateTimeOffset.Now + TimeSpan.FromDays(7.0));
@@ -1236,7 +1236,7 @@ namespace BTCPayServer.Tests
             {
                 Amount = 1.0m,
                 Destination = destination,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             }));
 
             var expires = RoundSeconds(DateTimeOffset.Now - TimeSpan.FromDays(7.0));
@@ -1252,7 +1252,7 @@ namespace BTCPayServer.Tests
             {
                 Amount = 1.0m,
                 Destination = destination,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             }));
 
             await this.AssertValidationError(new[] { "ExpiresAt" }, async () => await client.CreatePullPayment(storeId, new Client.Models.CreatePullPaymentRequest()
@@ -1280,7 +1280,7 @@ namespace BTCPayServer.Tests
             payout = await unauthenticated.CreatePayout(pp.Id, new CreatePayoutRequest()
             {
                 Destination = destination,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             });
             await this.AssertAPIError("old-revision", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
             {
@@ -1314,7 +1314,7 @@ namespace BTCPayServer.Tests
             payout = await unauthenticated.CreatePayout(test3.Id, new CreatePayoutRequest()
             {
                 Destination = destination,
-                PaymentMethod = "BTC"
+                PayoutMethodId = "BTC"
             });
             payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
             // The payout should round the value of the payment down to the network of the payment method
@@ -1434,7 +1434,7 @@ namespace BTCPayServer.Tests
                 await nonApproved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
                 {
                     Amount = 100,
-                    PaymentMethod = "BTC",
+                    PayoutMethodId = "BTC",
                     Approved = true,
                     Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
                 });
@@ -1452,7 +1452,7 @@ namespace BTCPayServer.Tests
             await approved.CreatePayout(acc.StoreId, new CreatePayoutThroughStoreRequest()
             {
                 Amount = 100,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Approved = true,
                 Destination = new Key().GetAddress(ScriptPubKeyType.TaprootBIP86, Network.RegTest).ToString()
             });
@@ -1473,7 +1473,7 @@ namespace BTCPayServer.Tests
             var payout = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
             {
                 Approved = false,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Amount = 0.0001m,
                 Destination = address.ToString(),
 
@@ -1500,7 +1500,7 @@ namespace BTCPayServer.Tests
             payout = await client.CreatePayout(storeId, new CreatePayoutThroughStoreRequest()
             {
                 Approved = true,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Amount = 0.0001m,
                 Destination = address.ToString()
             });
@@ -1627,7 +1627,7 @@ namespace BTCPayServer.Tests
                 {
                     Amount = 10,
                     Above = true,
-                    PaymentMethod = "BTC",
+                    PaymentMethodId = "BTC",
                     CurrencyCode = "USD"
                 }
              }
@@ -1642,7 +1642,7 @@ namespace BTCPayServer.Tests
             //check that pmc equals the one we set
             Assert.Equal(10, pmc.Amount);
             Assert.True(pmc.Above);
-            Assert.Equal("BTC-CHAIN", pmc.PaymentMethod);
+            Assert.Equal("BTC-CHAIN", pmc.PaymentMethodId);
             Assert.Equal("USD", pmc.CurrencyCode);
             updatedStore = await client.UpdateStore(newStore.Id, new UpdateStoreRequest() { Name = "B" });
             Assert.Empty(newStore.PaymentMethodCriteria);
@@ -2230,7 +2230,7 @@ namespace BTCPayServer.Tests
             {
                 await client.RefundInvoice(user.StoreId, "lol fake invoice id", new RefundInvoiceRequest()
                 {
-                    PaymentMethod = method.PaymentMethodId,
+                    PayoutMethodId = method.PaymentMethodId,
                     RefundVariant = RefundVariant.RateThen
                 });
             });
@@ -2238,7 +2238,7 @@ namespace BTCPayServer.Tests
             // test validation error for when invoice is not yet in the state in which it can be refunded
             var apiError = await AssertAPIError("non-refundable", () => client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.RateThen
             }));
             Assert.Equal("Cannot refund this invoice", apiError.Message);
@@ -2256,20 +2256,20 @@ namespace BTCPayServer.Tests
             });
 
             // test validation for the payment method
-            var validationError = await AssertValidationError(new[] { "PaymentMethod" }, async () =>
+            var validationError = await AssertValidationError(new[] { "PayoutMethodId" }, async () =>
             {
                 await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
                 {
-                    PaymentMethod = "fake payment method",
+                    PayoutMethodId = "fake payment method",
                     RefundVariant = RefundVariant.RateThen
                 });
             });
-            Assert.Contains("PaymentMethod: Please select one of the payment methods which were available for the original invoice", validationError.Message);
+            Assert.Contains("PayoutMethodId: Please select one of the payment methods which were available for the original invoice", validationError.Message);
 
             // test RefundVariant.RateThen
             var pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.RateThen
             });
             Assert.Equal("BTC", pp.Currency);
@@ -2280,7 +2280,7 @@ namespace BTCPayServer.Tests
             // test RefundVariant.CurrentRate
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.CurrentRate
             });
             Assert.Equal("BTC", pp.Currency);
@@ -2290,7 +2290,7 @@ namespace BTCPayServer.Tests
             // test RefundVariant.Fiat
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.Fiat,
                 Name = "my test name"
             });
@@ -2304,7 +2304,7 @@ namespace BTCPayServer.Tests
             {
                 await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
                 {
-                    PaymentMethod = method.PaymentMethodId,
+                    PayoutMethodId = method.PaymentMethodId,
                     RefundVariant = RefundVariant.Custom,
                 });
             });
@@ -2313,7 +2313,7 @@ namespace BTCPayServer.Tests
 
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.Custom,
                 CustomAmount = 69420,
                 CustomCurrency = "JPY"
@@ -2325,7 +2325,7 @@ namespace BTCPayServer.Tests
             // should auto-approve if currencies match
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest()
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.Custom,
                 CustomAmount = 0.00069420m,
                 CustomCurrency = "BTC"
@@ -2337,7 +2337,7 @@ namespace BTCPayServer.Tests
             {
                 await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
                 {
-                    PaymentMethod = method.PaymentMethodId,
+                    PayoutMethodId = method.PaymentMethodId,
                     RefundVariant = RefundVariant.RateThen,
                     SubtractPercentage = 101
                 });
@@ -2347,7 +2347,7 @@ namespace BTCPayServer.Tests
             // should auto-approve
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.RateThen,
                 SubtractPercentage = 6.15m
             });
@@ -2360,7 +2360,7 @@ namespace BTCPayServer.Tests
             {
                 await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
                 {
-                    PaymentMethod = method.PaymentMethodId,
+                    PayoutMethodId = method.PaymentMethodId,
                     RefundVariant = RefundVariant.OverpaidAmount
                 });
             });
@@ -2390,7 +2390,7 @@ namespace BTCPayServer.Tests
 
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.OverpaidAmount
             });
             Assert.Equal("BTC", pp.Currency);
@@ -2400,7 +2400,7 @@ namespace BTCPayServer.Tests
             // once more with subtract percentage
             pp = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.OverpaidAmount,
                 SubtractPercentage = 21m
             });
@@ -2413,7 +2413,7 @@ namespace BTCPayServer.Tests
             await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new MarkInvoiceStatusRequest { Status = InvoiceStatus.Settled });
             var refund = await client.RefundInvoice(user.StoreId, invoice.Id, new RefundInvoiceRequest
             {
-                PaymentMethod = method.PaymentMethodId,
+                PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.CurrentRate
             });
             Assert.Equal(1.0m, refund.Amount);
@@ -3250,8 +3250,8 @@ namespace BTCPayServer.Tests
 
             await client.RemoveStorePaymentMethod(store.Id, "BTC-CHAIN");
             generateResponse = await client.GenerateOnChainWallet(store.Id, "BTC",
-                new GenerateOnChainWalletRequest() { ExistingMnemonic = allMnemonic, AccountNumber = 1 });
-
+                new GenerateOnChainWalletRequest() { ExistingMnemonic = allMnemonic, AccountNumber = 1, Label = "test" });
+            Assert.Equal("test", generateResponse.Config.Label);
             Assert.Equal(generateResponse.Mnemonic.ToString(), allMnemonic.ToString());
 
             Assert.Equal(new Mnemonic("all all all all all all all all all all all all").DeriveExtKey()
@@ -4110,7 +4110,7 @@ namespace BTCPayServer.Tests
                 new CreatePayoutThroughStoreRequest()
                 {
                     Approved = true,
-                    PaymentMethod = "BTC_LightningNetwork",
+                    PayoutMethodId = "BTC_LightningNetwork",
                     Destination = customerInvoice.BOLT11
                 });
             Assert.Equal(payout.Metadata.ToString(), new JObject().ToString()); //empty
@@ -4129,7 +4129,7 @@ namespace BTCPayServer.Tests
                 new CreatePayoutThroughStoreRequest()
                 {
                     Approved = true,
-                    PaymentMethod = "BTC",
+                    PayoutMethodId = "BTC",
                     Destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString(),
                     Amount = 0.0001m,
                     Metadata = JObject.FromObject(new
@@ -4160,7 +4160,7 @@ namespace BTCPayServer.Tests
                 {
                     Approved = true,
                     Amount = new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC),
-                    PaymentMethod = "BTC_LightningNetwork",
+                    PayoutMethodId = "BTC_LightningNetwork",
                     Destination = customerInvoice.BOLT11
                 });
             Assert.Equal(payout2.Amount, new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC));
@@ -4190,7 +4190,7 @@ namespace BTCPayServer.Tests
             {
                 Amount = 0.0001m,
                 Approved = true,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
 
@@ -4198,7 +4198,7 @@ namespace BTCPayServer.Tests
             {
                 Amount = 0.00001m,
                 Approved = false,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
 
@@ -4215,7 +4215,7 @@ namespace BTCPayServer.Tests
                 PullPaymentId = pullPayment.Id,
                 Amount = 10,
                 Approved = false,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
             await adminClient.ApprovePayout(admin.StoreId, notapprovedPayoutWithPullPayment.Id,
@@ -4346,7 +4346,7 @@ namespace BTCPayServer.Tests
                 PullPaymentId = pullPayment.Id,
                 Amount = 0.5m,
                 Approved = true,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
             TestLogs.LogInformation("Waiting before hook...");
@@ -4392,7 +4392,7 @@ namespace BTCPayServer.Tests
             {
                 Amount = 0.1m,
                 Approved = true,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
 
@@ -4408,7 +4408,7 @@ namespace BTCPayServer.Tests
             {
                 Amount = 0.3m,
                 Approved = true,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
 
@@ -4425,7 +4425,7 @@ namespace BTCPayServer.Tests
             {
                 Amount = 0.3m,
                 Approved = true,
-                PaymentMethod = "BTC",
+                PayoutMethodId = "BTC",
                 Destination = (await adminClient.GetOnChainWalletReceiveAddress(admin.StoreId, "BTC", true)).Address,
             });
 

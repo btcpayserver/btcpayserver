@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -7,6 +6,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -393,4 +393,3 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
         }
     }
 }
-#endif

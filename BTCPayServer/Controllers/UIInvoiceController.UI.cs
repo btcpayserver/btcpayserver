@@ -861,11 +861,6 @@ namespace BTCPayServer.Controllers
                 Request.Host,
                 Request.PathBase) : null;
 
-            var isAltcoinsBuild = false;
-#if ALTCOINS
-            isAltcoinsBuild = true;
-#endif
-
             var orderId = invoice.Metadata.OrderId;
             var supportUrl = !string.IsNullOrEmpty(storeBlob.StoreSupportUrl)
                 ? storeBlob.StoreSupportUrl
@@ -873,11 +868,6 @@ namespace BTCPayServer.Controllers
                     .Replace("{InvoiceId}", Uri.EscapeDataString(invoice.Id))
                 : null;
 
-            string GetPaymentMethodName(PaymentMethodId paymentMethodId)
-            {
-                _paymentModelExtensions.TryGetValue(paymentMethodId, out var extension);
-                return extension?.DisplayName ?? paymentMethodId.ToString();
-            }
             string GetPaymentMethodImage(PaymentMethodId paymentMethodId)
             {
                 _paymentModelExtensions.TryGetValue(paymentMethodId, out var extension);
@@ -886,7 +876,7 @@ namespace BTCPayServer.Controllers
             var model = new PaymentModel
             {
                 Activated = prompt.Activated,
-                PaymentMethodName = GetPaymentMethodName(paymentMethodId),
+                PaymentMethodName = _prettyName.PrettyName(paymentMethodId),
                 CryptoCode = prompt.Currency,
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = orderId,
@@ -942,15 +932,12 @@ namespace BTCPayServer.Controllers
                                           .Select(kv =>
                                           {
                                               var handler = _handlers[kv.PaymentMethodId];
-                                              var pmName = GetPaymentMethodName(kv.PaymentMethodId);
                                               return new PaymentModel.AvailableCrypto
                                               {
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
                                                   PaymentMethodId = kv.PaymentMethodId.ToString(),
                                                   CryptoCode = kv.Currency,
-                                                  PaymentMethodName = isAltcoinsBuild
-                                                      ? pmName
-                                                      : pmName.Replace("Bitcoin (", "").Replace(")", "").Replace("Lightning ", ""),
+                                                  PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId),
                                                   IsLightning = handler is ILightningPaymentHandler,
                                                   CryptoImage = Request.GetRelativePathOrAbsolute(GetPaymentMethodImage(kv.PaymentMethodId)),
                                                   Link = Url.Action(nameof(Checkout),
@@ -1080,18 +1067,6 @@ namespace BTCPayServer.Controllers
                 await webSocket.SendAsync(DummyBuffer, WebSocketMessageType.Binary, true, cts.Token);
             }
             catch { try { webSocket.Dispose(); } catch { } }
-        }
-
-        [HttpPost("i/{invoiceId}/UpdateCustomer")]
-        [HttpPost("invoice/UpdateCustomer")]
-        public async Task<IActionResult> UpdateCustomer(string invoiceId, [FromBody] UpdateCustomerModel data)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-            await _InvoiceRepository.UpdateInvoice(invoiceId, data).ConfigureAwait(false);
-            return Ok("{}");
         }
 
         [HttpGet("/stores/{storeId}/invoices")]

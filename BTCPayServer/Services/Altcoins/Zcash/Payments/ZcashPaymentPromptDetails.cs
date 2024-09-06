@@ -1,4 +1,3 @@
-#if ALTCOINS
 using BTCPayServer.Payments;
 
 namespace BTCPayServer.Services.Altcoins.Zcash.Payments
@@ -10,4 +9,3 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         public string DepositAddress { get; set; }
     }
 }
-#endif

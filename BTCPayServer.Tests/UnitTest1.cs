@@ -1448,6 +1448,41 @@ namespace BTCPayServer.Tests
             Assert.Contains("DOGE_X", rateVm.Script, StringComparison.OrdinalIgnoreCase);
         }
 
+
+        [Fact]
+        [Trait("Integration", "Integration")]
+        public async Task CanTopUpPullPayment()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync(true);
+            await user.RegisterDerivationSchemeAsync("BTC");
+            var client = await user.CreateClient();
+            var pp = await client.CreatePullPayment(user.StoreId, new()
+            {
+                Currency = "BTC",
+                Amount = 1.0m,
+                PaymentMethods = [ "BTC-CHAIN" ]
+            });
+            var controller = user.GetController<UIInvoiceController>();
+            var invoice = await controller.CreateInvoiceCoreRaw(new()
+            {
+                Amount = 0.5m,
+                Currency = "BTC",
+            }, controller.HttpContext.GetStoreData(), controller.Url.Link(null, null), [PullPaymentHostedService.GetInternalTag(pp.Id)]);
+            await client.MarkInvoiceStatus(user.StoreId, invoice.Id, new() { Status = InvoiceStatus.Settled });
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var payouts = await client.GetPayouts(pp.Id);
+                var payout = Assert.Single(payouts);
+                Assert.Equal("TOPUP", payout.PayoutMethodId);
+                Assert.Equal(invoice.Id, payout.Destination);
+                Assert.Equal(-0.5m, payout.Amount);
+            });
+        }
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUseDefaultCurrency()
@@ -2091,7 +2126,7 @@ namespace BTCPayServer.Tests
                     Amount = 0.0001m,
                     Destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString(),
                     Approved = true,
-                    PaymentMethod = "BTC"
+                    PayoutMethodId = "BTC"
                 });
             await user.AssertHasWebhookEvent(WebhookEventType.PayoutCreated,  (WebhookPayoutEvent x)=> Assert.Equal(payout.Id, x.PayoutId));
              await client.MarkPayout(user.StoreId, payout.Id, new MarkPayoutRequest(){ State = PayoutState.AwaitingApproval});
@@ -3210,7 +3245,7 @@ namespace BTCPayServer.Tests
                 var inv = await client.CreateInvoice(acc.StoreId, new CreateInvoiceRequest() { Amount = 10m, Currency = "USD" });
                 await acc.PayInvoice(inv.Id);
                 await client.MarkInvoiceStatus(acc.StoreId, inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled });
-                var refund = await client.RefundInvoice(acc.StoreId, inv.Id, new RefundInvoiceRequest() { RefundVariant = RefundVariant.Fiat, PaymentMethod = "BTC-CHAIN" });
+                var refund = await client.RefundInvoice(acc.StoreId, inv.Id, new RefundInvoiceRequest() { RefundVariant = RefundVariant.Fiat, PayoutMethodId = "BTC-CHAIN" });
 
                 async Task AssertData(string currency, decimal awaiting, decimal limit, decimal completed, bool fullyPaid)
                 {
@@ -3229,7 +3264,7 @@ namespace BTCPayServer.Tests
                 }
 
                 await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
-                var payout = await client.CreatePayout(refund.Id, new CreatePayoutRequest() { Destination = addr.ToString(), PaymentMethod = "BTC-CHAIN" });
+                var payout = await client.CreatePayout(refund.Id, new CreatePayoutRequest() { Destination = addr.ToString(), PayoutMethodId = "BTC-CHAIN" });
                 await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 await client.ApprovePayout(acc.StoreId, payout.Id, new ApprovePayoutRequest());
                 await AssertData("USD", awaiting: 10.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);

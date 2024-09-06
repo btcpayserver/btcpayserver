@@ -572,7 +572,7 @@ namespace BTCPayServer.Controllers
                     SourceLink = payoutSourceLink,
                     Date = item.Payout.Date,
                     PayoutId = item.Payout.Id,
-                    Amount = _displayFormatter.Currency(payoutBlob.Amount, ppBlob?.Currency ?? item.Payout.Currency),
+                    Amount = _displayFormatter.Currency(item.Payout.OriginalAmount, item.Payout.OriginalCurrency),
                     Destination = payoutBlob.Destination
                 };
                 var handler = _payoutHandlers

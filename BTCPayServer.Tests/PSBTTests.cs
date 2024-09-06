@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -121,13 +122,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
         }
 
-        private static string ExtractPSBT(SeleniumTester s)
-        {
-            var pageSource = s.Driver.PageSource;
-            var start = pageSource.IndexOf("id=\"psbt-base64\">");
-            start += "id=\"psbt-base64\">".Length;
-            var end = pageSource.IndexOf("<", start);
-            return pageSource[start..end];
-        }
+        private string ExtractPSBT(SeleniumTester s) => s.Driver.FindElement(By.Id("psbt-base64")).GetAttribute("innerText");
     }
 }

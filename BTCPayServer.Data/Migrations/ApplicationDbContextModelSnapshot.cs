@@ -296,16 +296,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Currency")
                         .HasColumnType("text");
 
-                    b.Property<string>("CustomerEmail")
-                        .HasColumnType("text");
-
                     b.Property<string>("ExceptionStatus")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ItemCode")
-                        .HasColumnType("text");
-
-                    b.Property<string>("OrderId")
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -323,8 +314,6 @@ namespace BTCPayServer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Created");
-
-                    b.HasIndex("OrderId");
 
                     b.HasIndex("StoreDataId");
 
@@ -593,6 +582,9 @@ namespace BTCPayServer.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
+                    b.Property<decimal?>("Amount")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("Blob")
                         .HasColumnType("JSONB");
 
@@ -602,7 +594,13 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset>("Date")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("Destination")
+                    b.Property<string>("DedupId")
+                        .HasColumnType("text");
+
+                    b.Property<decimal>("OriginalAmount")
+                        .HasColumnType("numeric");
+
+                    b.Property<string>("OriginalCurrency")
                         .HasColumnType("text");
 
                     b.Property<string>("PayoutMethodId")
@@ -632,7 +630,7 @@ namespace BTCPayServer.Migrations
 
                     b.HasIndex("StoreDataId");
 
-                    b.HasIndex("Destination", "State");
+                    b.HasIndex("DedupId", "State");
 
                     b.ToTable("Payouts");
                 });
@@ -649,7 +647,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Blob2")
                         .HasColumnType("JSONB");
 
-                    b.Property<string>("PaymentMethod")
+                    b.Property<string>("PayoutMethodId")
                         .HasColumnType("text");
 
                     b.Property<string>("Processor")
@@ -704,8 +702,14 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Blob")
                         .HasColumnType("JSONB");
 
+                    b.Property<string>("Currency")
+                        .HasColumnType("text");
+
                     b.Property<DateTimeOffset?>("EndDate")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal>("Limit")
+                        .HasColumnType("numeric");
 
                     b.Property<DateTimeOffset>("StartDate")
                         .HasColumnType("timestamp with time zone");

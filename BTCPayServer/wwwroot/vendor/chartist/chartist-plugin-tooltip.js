@@ -199,18 +199,13 @@
                     seriesData = chart.options.reverseData ? seriesData.reverse()[seriesIndex] : seriesData[seriesIndex];
                     seriesData = (!Array.isArray(seriesData) && typeof seriesData == 'object' && seriesData.data) ? seriesData.data : seriesData;
 
-                    if (!seriesData) {
-                        return;
-                    }
-
+                    if (!seriesData) return;
                     itemData = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
-
-                    if (typeof itemData == 'undefined') {
-                        return;
-                    }
+                    if (!itemData && typeof seriesData == 'number') itemData = { value: seriesData, meta: chart.data.labels[seriesIndex] };
+                    if (typeof itemData == 'undefined') return;
                     meta = itemData.meta;
                     value = itemData.value || itemData;
-
+                    if (typeof itemData == 'undefined') return;
                     if (typeof options.valueTransformFunction === 'function') {
                         value = options.valueTransformFunction.call(chart, value, chart.data.labels[valueIndex], valueIndex);
                     }
@@ -317,10 +312,12 @@
                  */
                 function setTooltipPosition(relativeElement, ignoreClasses) {
                     containerRect = chart.container.getBoundingClientRect();
-                    var positionData = getTooltipPosition(relativeElement);
+                    var isLine = tooltipElement.innerHTML.match('chartist-tooltip-line');
+                    var positionData = getTooltipPosition(relativeElement, isLine);
 
                     tooltipElement.style.transform = 'translate(' + positionData.left + 'px, ' + positionData.top + 'px)';
-                    tooltipElement.style.height = containerRect.height + options.offset.y + 'px';
+                    if (isLine)
+                        tooltipElement.style.height = containerRect.height + options.offset.y + 'px';
 
                     if (ignoreClasses) {
                         return;
@@ -336,7 +333,7 @@
                  * @param Element relativeElement
                  * @return Object positionData
                  */
-                function getTooltipPosition(relativeElement) {
+                function getTooltipPosition(relativeElement, isLine) {
                     var positionData = {
                         alignment: 'center',
                     };
@@ -345,7 +342,9 @@
 
                     var boxData = relativeElement.getBoundingClientRect();
                     var left = boxData.left + window.scrollX + options.offset.x - width / 2 + boxData.width / 2;
-                    var top = containerRect.top + window.scrollY + options.offset.y;
+                    var top = isLine
+                        ? containerRect.top + window.scrollY + options.offset.y
+                        : boxData.top + window.scrollY - height + options.offset.y;
 
                     // Minimum horizontal collision detection
                     if (left + width > document.body.clientWidth) {

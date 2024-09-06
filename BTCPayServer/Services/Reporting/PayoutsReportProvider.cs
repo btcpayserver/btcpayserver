@@ -67,14 +67,10 @@ public class PayoutsReportProvider : ReportProvider
             else
                 continue;
 
-            var ppBlob = payout.PullPaymentData?.GetBlob();
-            var currency = ppBlob?.Currency ?? payout.Currency;
-            if (currency is null)
-                continue;
             data.Add(payout.Currency);
-            data.Add(blob.CryptoAmount is decimal v ? _displayFormatter.ToFormattedAmount(v, payout.Currency) : null);
-            data.Add(currency);
-            data.Add(_displayFormatter.ToFormattedAmount(blob.Amount, currency));
+            data.Add(payout.Amount is decimal v ? _displayFormatter.ToFormattedAmount(v, payout.Currency) : null);
+            data.Add(payout.OriginalCurrency);
+            data.Add(_displayFormatter.ToFormattedAmount(payout.OriginalAmount, payout.OriginalCurrency));
             data.Add(blob.Destination);
             queryContext.Data.Add(data);
         }
@@ -90,37 +86,37 @@ public class PayoutsReportProvider : ReportProvider
                 new("Source", "string"),
                 new("State", "string"),
                 new("PaymentType", "string"),
-                new("Crypto", "string"),
-                new("CryptoAmount", "amount"),
                 new("Currency", "string"),
-                new("CurrencyAmount", "amount"),
+                new("Amount", "amount"),
+                new("OriginalCurrency", "string"),
+                new("OriginalAmount", "amount"),
                 new("Destination", "string")
             },
             Charts =
             {
                 new ()
                 {
-                    Name = "Aggregated crypto amount",
-                    Groups = { "Crypto", "PaymentType", "State" },
-                    Totals = { "Crypto" },
+                    Name = "Aggregated by currency",
+                    Groups = { "Currency", "PaymentType", "State" },
+                    Totals = { "Currency" },
                     HasGrandTotal = false,
-                    Aggregates = { "CryptoAmount" }
+                    Aggregates = { "Amount" }
                 },
                 new ()
                 {
-                    Name = "Aggregated amount",
-                    Groups = { "Currency", "State" },
-                    Totals = { "CurrencyAmount" },
+                    Name = "Aggregated by original currency",
+                    Groups = { "OriginalCurrency", "State" },
+                    Totals = { "OriginalAmount" },
                     HasGrandTotal = false,
-                    Aggregates = { "CurrencyAmount" }
+                    Aggregates = { "OriginalAmount" }
                 },
                 new ()
                 {
-                    Name = "Aggregated amount by Source",
-                    Groups = { "Currency", "State", "Source" },
-                    Totals = { "CurrencyAmount" },
+                    Name = "Aggregated by original currency, state and source",
+                    Groups = { "OriginalCurrency", "State", "Source" },
+                    Totals = { "OriginalAmount" },
                     HasGrandTotal = false,
-                    Aggregates = { "CurrencyAmount" }
+                    Aggregates = { "OriginalAmount" }
                 }
             }
         };

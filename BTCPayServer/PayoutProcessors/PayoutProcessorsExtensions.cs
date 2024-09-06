@@ -21,6 +21,6 @@ public static class PayoutProcessorsExtensions
 
     public static PayoutMethodId GetPayoutMethodId(this PayoutProcessorData data)
     {
-        return PayoutMethodId.Parse(data.PaymentMethod);
+        return PayoutMethodId.Parse(data.PayoutMethodId);
     }
 }

@@ -168,10 +168,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = pp.Id,
                 StartsAt = pp.StartDate,
                 ExpiresAt = pp.EndDate,
-                Amount = ppBlob.Limit,
+                Amount = pp.Limit,
                 Name = ppBlob.Name,
                 Description = ppBlob.Description,
-                Currency = ppBlob.Currency,
+                Currency = pp.Currency,
                 Archived = pp.Archived,
                 AutoApproveClaims = ppBlob.AutoApproveClaims,
                 BOLT11Expiration = ppBlob.BOLT11Expiration,
@@ -224,7 +224,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.UID), "The UID is required and should be 7 bytes");
                 return this.CreateValidationError(ModelState);
             }
-            if (!_pullPaymentService.SupportsLNURL(pp.GetBlob()))
+            if (!_pullPaymentService.SupportsLNURL(pp))
             {
                 return this.CreateAPIError(400, "lnurl-not-supported", "This pull payment currency should be BTC or SATS and accept lightning");
             }
@@ -339,8 +339,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (pp is null)
                 return PullPaymentNotFound();
 
-            var blob = pp.GetBlob();
-            if (_pullPaymentService.SupportsLNURL(blob))
+            if (_pullPaymentService.SupportsLNURL(pp))
             {
                 var lnurlEndpoint = new Uri(Url.Action("GetLNURLForPullPayment", "UILNURL", new
                 {
@@ -366,14 +365,14 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = p.Id,
                 PullPaymentId = p.PullPaymentDataId,
                 Date = p.Date,
-                Amount = blob.Amount,
-                PaymentMethodAmount = blob.CryptoAmount,
+                Amount = p.OriginalAmount,
+                PaymentMethodAmount = p.Amount,
                 Revision = blob.Revision,
                 State = p.State,
                 Metadata = blob.Metadata?? new JObject(),
             };
             model.Destination = blob.Destination;
-            model.PaymentMethod = p.PayoutMethodId;
+            model.PayoutMethodId = p.PayoutMethodId;
             model.CryptoCode = p.Currency;
             model.PaymentProof = p.GetProofBlobJson();
             return model;
@@ -383,16 +382,16 @@ namespace BTCPayServer.Controllers.Greenfield
         [AllowAnonymous]
         public async Task<IActionResult> CreatePayout(string pullPaymentId, CreatePayoutRequest request, CancellationToken cancellationToken)
         {
-            if (!PayoutMethodId.TryParse(request?.PaymentMethod, out var payoutMethodId))
+            if (!PayoutMethodId.TryParse(request?.PayoutMethodId, out var payoutMethodId))
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 
             var payoutHandler = _payoutHandlers.TryGet(payoutMethodId);
             if (payoutHandler is null)
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 
@@ -408,7 +407,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateValidationError(ModelState);
             }
             
-            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount, payoutHandler.Currency, ppBlob.Currency);
+            var amtError = ClaimRequest.IsPayoutAmountOk(destination.destination, request.Amount, payoutHandler.Currency, pp.Currency);
             if (amtError.error is not null)
             {
                 ModelState.AddModelError(nameof(request.Amount), amtError.error );
@@ -440,16 +439,16 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
-            if (request?.PaymentMethod is null || !PayoutMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
+            if (request?.PayoutMethodId is null || !PayoutMethodId.TryParse(request?.PayoutMethodId, out var paymentMethodId))
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 
             var payoutHandler = _payoutHandlers.TryGet(paymentMethodId);
             if (payoutHandler is null)
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 

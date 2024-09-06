@@ -239,12 +239,10 @@ namespace BTCPayServer.Tests
             Assert.Equal(id, id1);
             Assert.Equal(id, id2);
             Assert.Equal("LTC-LN", id.ToString());
-#if ALTCOINS
             id = PaymentMethodId.Parse("XMR");
             id1 = PaymentMethodId.Parse("XMR-MoneroLike");
             Assert.Equal(id, id1);
             Assert.Equal("XMR-CHAIN", id.ToString());
-#endif
         }
 
         [Fact]
@@ -476,7 +474,7 @@ namespace BTCPayServer.Tests
 
 #pragma warning restore CS0618
         }
-#if ALTCOINS
+
         [Fact]
         public void CanCalculateCryptoDue()
         {
@@ -647,7 +645,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(accounting.Paid, accounting.TotalDue);
 #pragma warning restore CS0618
         }
-#endif
 
         [Fact]
         public void DeterministicUTXOSorter()

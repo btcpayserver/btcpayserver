@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new OnChainAutomatedPayoutSettings()
             {
                 FeeBlockTarget = blob.FeeTargetBlock,
-                PaymentMethod = data.PaymentMethod,
+                PaymentMethodId = data.PaymentMethod,
                 IntervalSeconds = blob.Interval,
                 Threshold = blob.Threshold,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly

@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var blob = data.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob() ?? new LightningAutomatedPayoutBlob();
             return new LightningAutomatedPayoutSettings()
             {
-                PaymentMethod = data.PaymentMethod,
+                PaymentMethodId = data.PaymentMethod,
                 IntervalSeconds = blob.Interval,
                 CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly

@@ -569,7 +569,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethod": {
+                    "paymentMethodId": {
                         "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "intervalSeconds": {
@@ -627,7 +627,7 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethod": {
+                    "paymentMethodId": {
                         "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "feeTargetBlock": {

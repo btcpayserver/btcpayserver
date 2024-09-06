@@ -437,7 +437,7 @@
             "PaymentMethodCriteriaData": {
                 "type": "object",
                 "properties": {
-                    "paymentMethod": {
+                    "paymentMethodId": {
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/PaymentMethodId"

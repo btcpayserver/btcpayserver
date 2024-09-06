@@ -850,10 +850,6 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         public decimal PaymentMethodFee { get; set; }
         /// <summary>
-        /// Amount of fee already paid in the invoice's currency
-        /// </summary>
-        public decimal PaymentMethodFeeAlreadyPaid { get; set; }
-        /// <summary>
         /// Minimum required to be paid in order to accept invoice as paid
         /// </summary>
         public decimal MinimumTotalDue { get; set; }
@@ -884,6 +880,21 @@ namespace BTCPayServer.Services.Invoices
         public int Divisibility { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal PaymentMethodFee { get; set; }
+        /// <summary>
+        /// The additional fee applied by the payment handler when it's unable to charge the user the
+        /// exact amount due.
+        /// </summary>
+        [JsonConverter(typeof(NumericStringJsonConverter))]
+        public decimal TweakFee { get; set; }
+        /// <summary>
+        /// Add an additional fee to the payment method fee. See <see cref="TweakFee"/> for more information.
+        /// </summary>
+        /// <param name="value"></param>
+        public void AddTweakFee(decimal value)
+        {
+            TweakFee += value;
+            PaymentMethodFee += value;
+        }
         public string Destination { get; set; }
         public JToken Details { get; set; }
 
@@ -913,7 +924,6 @@ namespace BTCPayServer.Services.Invoices
             accounting.Due = Max(accounting.DueUncapped, 0.0m);
 
             accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, Divisibility);
-            accounting.PaymentMethodFeeAlreadyPaid = Coins(i.PaidFee / rate, Divisibility);
 
             accounting.MinimumTotalDue = Max(Smallest(Divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, Divisibility));
             return accounting;

@@ -585,7 +585,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethod}/activate": {
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods/{paymentMethodId}/activate": {
             "post": {
                 "tags": [
                     "Invoices"
@@ -611,13 +611,7 @@
                         }
                     },
                     {
-                        "name": "paymentMethod",
-                        "in": "path",
-                        "required": true,
-                        "description": "The payment method to activate",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "Activate an invoice payment method (if lazy payments mode is enabled)",
@@ -695,13 +689,8 @@
                     "type": "string",
                     "description": "Description of the pull payment"
                   },
-                  "paymentMethod": {
-                      "allOf": [
-                          {
-                              "$ref": "#/components/schemas/PaymentMethodId"
-                          }
-                      ],
-                    "description": "The payment method to use for the refund"
+                  "payoutMethodId": {
+                     "$ref": "#/components/schemas/PayoutMethodId"
                   },
                   "refundVariant": {
                     "type": "string",

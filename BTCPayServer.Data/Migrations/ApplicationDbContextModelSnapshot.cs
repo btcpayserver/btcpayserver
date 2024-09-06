@@ -618,7 +618,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Blob2")
                         .HasColumnType("JSONB");
 
-                    b.Property<string>("PaymentMethod")
+                    b.Property<string>("PayoutMethodId")
                         .HasColumnType("text");
 
                     b.Property<string>("Processor")

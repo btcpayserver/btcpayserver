@@ -215,7 +215,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
-                    PaymentMethod = criteria.PaymentMethod.ToString()
+                    PaymentMethodId = criteria.PaymentMethod.ToString()
                 }).ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }
@@ -277,7 +277,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         Currency = criteria.CurrencyCode,
                         Value = criteria.Amount
                     },
-                    PaymentMethod = PaymentMethodId.Parse(criteria.PaymentMethod)
+                    PaymentMethod = PaymentMethodId.Parse(criteria.PaymentMethodId)
                 }).ToList() ?? new List<PaymentMethodCriteria>();
             model.SetStoreBlob(blob);
         }
@@ -338,9 +338,9 @@ namespace BTCPayServer.Controllers.Greenfield
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
                     }
 
-                    if (string.IsNullOrEmpty(pmc.PaymentMethod) || PaymentMethodId.TryParse(pmc.PaymentMethod) is null)
+                    if (string.IsNullOrEmpty(pmc.PaymentMethodId) || PaymentMethodId.TryParse(pmc.PaymentMethodId) is null)
                     {
-                        request.AddModelError(data => data.PaymentMethodCriteria[index].PaymentMethod, "Payment method was invalid", this);
+                        request.AddModelError(data => data.PaymentMethodCriteria[index].PaymentMethodId, "Payment method was invalid", this);
                     }
 
                     if (pmc.Amount < 0)

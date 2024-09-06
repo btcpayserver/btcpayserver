@@ -231,7 +231,7 @@ namespace BTCPayServer.Hosting
             var processors = await ctx.PayoutProcessors.ToArrayAsync();
             foreach (var processor in processors)
             {
-                processor.PaymentMethod = processor.GetPayoutMethodId().ToString();
+                processor.PayoutMethodId = processor.GetPayoutMethodId().ToString();
             }
             await ctx.SaveChangesAsync();
         }

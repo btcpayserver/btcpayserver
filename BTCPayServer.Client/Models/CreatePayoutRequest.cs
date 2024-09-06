@@ -8,6 +8,6 @@ namespace BTCPayServer.Client.Models
         public string Destination { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal? Amount { get; set; }
-        public string PaymentMethod { get; set; }
+        public string PayoutMethodId { get; set; }
     }
 }

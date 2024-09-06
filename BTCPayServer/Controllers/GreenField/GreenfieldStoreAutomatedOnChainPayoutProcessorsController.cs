@@ -59,7 +59,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new OnChainAutomatedPayoutSettings()
             {
                 FeeBlockTarget = blob.FeeTargetBlock,
-                PaymentMethod = data.PaymentMethod,
+                PayoutMethodId = data.PayoutMethodId,
                 IntervalSeconds = blob.Interval,
                 Threshold = blob.Threshold,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers.Greenfield
             activeProcessor ??= new PayoutProcessorData();
             activeProcessor.HasTypedBlob<OnChainAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
-            activeProcessor.PaymentMethod = payoutMethodId.ToString();
+            activeProcessor.PayoutMethodId = payoutMethodId.ToString();
             activeProcessor.Processor = OnChainAutomatedPayoutSenderFactory.ProcessorName;
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()

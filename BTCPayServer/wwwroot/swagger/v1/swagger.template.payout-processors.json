@@ -246,7 +246,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethodId}": {
+        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}": {
             "get": {
                 "tags": [
                     "Stores (Payout Processors)"
@@ -263,7 +263,7 @@
                         }
                     },
                     {
-                        "$ref": "#/components/parameters/PaymentMethodId"
+                        "$ref": "#/components/parameters/PayoutMethodId"
                     }
                 ],
                 "description": "Get configured store Lightning automated payout processors",

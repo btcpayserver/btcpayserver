@@ -415,7 +415,6 @@ namespace BTCPayServer.HostedServices
                 Date = DateTimeOffset.UtcNow,
                 State = PayoutState.Completed,
                 PullPaymentDataId = pp.Id,
-                Destination = topUp.InvoiceEntity.Id,
                 StoreDataId = pp.StoreId
             };
             if (topUp.InvoiceEntity.Currency != pp.Currency ||
@@ -649,7 +648,7 @@ namespace BTCPayServer.HostedServices
                 if (req.ClaimRequest.Destination.Id != null)
                 {
                     if (await ctx.Payouts.AnyAsync(data =>
-                            data.Destination.Equals(req.ClaimRequest.Destination.Id) &&
+                            data.DedupId.Equals(req.ClaimRequest.Destination.Id) &&
                             data.State != PayoutState.Completed && data.State != PayoutState.Cancelled
                         ))
                     {
@@ -693,7 +692,7 @@ namespace BTCPayServer.HostedServices
                     State = PayoutState.AwaitingApproval,
                     PullPaymentDataId = req.ClaimRequest.PullPaymentId,
                     PayoutMethodId = req.ClaimRequest.PayoutMethodId.ToString(),
-                    Destination = req.ClaimRequest.Destination.Id,
+                    DedupId = req.ClaimRequest.Destination.Id,
                     StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId,
                     Currency = payoutHandler.Currency,
                     OriginalCurrency = pp?.Currency ?? payoutHandler.Currency

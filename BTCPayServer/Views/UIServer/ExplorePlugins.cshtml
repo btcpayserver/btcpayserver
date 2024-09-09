@@ -120,67 +120,61 @@
                                             </div>
                                         </div>
                                         <div class="col-12 col-lg-4 mt-3">
-                                            <div class="d-flex justify-content-between mb-2 w-100">
-                                                <strong>Version:</strong>
-                                                <span>@plugin.Version</span>
-                                            </div>
-                                            <hr />
-                                            @if (!string.IsNullOrEmpty(plugin.Author))
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <span>Developed By:</span>
-                                                    <span><a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">@plugin.Author</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            <div class="d-flex justify-content-between mb-2 w-100">
-                                                <span>Last Updated:</span>
-                                                <span>@plugin.BuildDate.ToTimeAgo()</span>
-                                            </div>
-                                            <hr />
-                                            @if (downloadInfo?.Source is not null)
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <strong>Source Code:</strong>
-                                                    <span><a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <strong>Documentation:</strong>
-                                                    <span><a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            @if (!string.IsNullOrEmpty(downloadInfo?.AuthorTwitter))
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <strong>Author Twitter:</strong>
-                                                    <span><a href="@downloadInfo.AuthorTwitter" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            @if (!string.IsNullOrEmpty(downloadInfo?.AuthorEmail))
-                                            {
-                                                <div class="d-flex justify-content-between mb-2 w-100">
-                                                    <strong>Author Email:</strong>
-                                                    <span><a href="mailto:@downloadInfo.AuthorEmail" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">Send a mail</a></span>
-                                                </div>
-                                                <hr />
-                                            }
-                                            <div class="d-flex justify-content-between mb-2 w-100">
-                                                <strong>Dependency:</strong>
-                                                <div>
-                                                    @foreach (var dependency in plugin.Dependencies)
-                                                    {
-                                                        <span>@dependency</span>
-                                                        <br />
-                                                    }
-                                                </div>
-                                            </div>
-                                            <hr />
+                                            <ul class="list-group list-group-flush">
+                                                <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                    <strong>Version:</strong>
+                                                    <span>@plugin.Version</span>
+                                                </li>
+                                                @if (!string.IsNullOrEmpty(plugin.Author))
+                                                {
+                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                        <strong>Developed By:</strong>
+                                                        <span><a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">@plugin.Author</a></span>
+                                                    </li>
+                                                }
+                                                <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                    <strong>Last Updated:</strong>
+                                                    <span>@plugin.BuildDate.ToTimeAgo()</span>
+                                                </li>
+                                                @if (downloadInfo?.Source is not null)
+                                                {
+                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                        <strong>Source Code:</strong>
+                                                        <span><a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                    </li>
+                                                }
+                                                @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
+                                                {
+                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                        <strong>Documentation:</strong>
+                                                        <span><a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                    </li>
+                                                }
+                                                @if (!string.IsNullOrEmpty(downloadInfo?.AuthorTwitter))
+                                                {
+                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                        <strong>Author Twitter:</strong>
+                                                        <span><a href="@downloadInfo.AuthorTwitter" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                    </li>
+                                                }
+                                                @if (!string.IsNullOrEmpty(downloadInfo?.AuthorEmail))
+                                                {
+                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                        <strong>Author Email:</strong>
+                                                        <span><a href="mailto:@downloadInfo.AuthorEmail" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">Send a mail</a></span>
+                                                    </li>
+                                                }
+                                                <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
+                                                    <strong>Dependency:</strong>
+                                                    <div>
+                                                        @foreach (var dependency in plugin.Dependencies)
+                                                        {
+                                                            <span>@dependency</span>
+                                                            <br />
+                                                        }
+                                                    </div>
+                                                </li>
+                                            </ul>
                                         </div>
                                     </div>
 

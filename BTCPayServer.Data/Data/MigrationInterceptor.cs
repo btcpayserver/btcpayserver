@@ -17,16 +17,14 @@ namespace BTCPayServer.Data
     {
         public interface IHasMigration
         {
-            bool ShouldMigrate();
-            void Migrate();
+            bool TryMigrate();
             bool Migrated { get; set; }
         }
         public static readonly MigrationInterceptor Instance = new MigrationInterceptor();
         public object InitializedInstance(MaterializationInterceptionData materializationData, object entity)
         {
-            if (entity is IHasMigration hasMigration && hasMigration.ShouldMigrate())
+            if (entity is IHasMigration hasMigration && hasMigration.TryMigrate())
             {
-                hasMigration.Migrate();
                 hasMigration.Migrated = true;
             }
             return entity;

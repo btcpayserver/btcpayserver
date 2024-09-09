@@ -147,5 +147,8 @@ namespace BTCPayServer.Data
                 return $"{splitted[0]}-CHAIN";
             throw new NotSupportedException("Unknown payment id " + paymentMethodId);
         }
+
+        // Make postgres happy
+        public static string SanitizeJSON(string json) => json.Replace("\\u0000", string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 }

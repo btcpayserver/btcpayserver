@@ -16,14 +16,15 @@ namespace BTCPayServer.Data
 {
     public partial class PaymentData : MigrationInterceptor.IHasMigration
     {
-        public void Migrate()
+        public bool TryMigrate()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             if (Currency is not null)
-                return;
+                return false;
             if (Blob is not (null or { Length: 0 }))
             {
                 Blob2 = MigrationExtensions.Unzip(Blob);
+                Blob2 = MigrationExtensions.SanitizeJSON(Blob2);
                 Blob = null;
             }
             var blob = JObject.Parse(Blob2);
@@ -158,9 +159,8 @@ namespace BTCPayServer.Data
 			Blob2 = blob.ToString(Formatting.None);
             Accounted = null;
 #pragma warning restore CS0618 // Type or member is obsolete
+            return true;
         }
-
-        public bool ShouldMigrate() => Currency is null;
         [NotMapped]
         public bool Migrated { get; set; }
 

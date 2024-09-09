@@ -218,7 +218,7 @@
                                 </a>
                             </li>
                             <li class="nav-item" permission="@Policies.CanModifyServerSettings">
-                                <a asp-area="" asp-controller="UIServer" asp-action="ListPlugins" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
+                                <a asp-area="" asp-controller="UIServer" asp-action="ManagePlugins" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Plugins)" id="Nav-ManagePlugins">
                                     @if (PluginService.GetDisabledPlugins().Any())
                                     {
                                         <span class="me-2 btcpay-status btcpay-status--disabled"></span>

@@ -10,7 +10,7 @@ public class EditDictionaryViewModel
 
     internal EditDictionaryViewModel SetTranslations(Translations translations)
     {
-        Translations = translations.ToTextFormat();
+        Translations = translations.ToJsonFormat();
         Lines = translations.Records.Count;
         return this;
     }

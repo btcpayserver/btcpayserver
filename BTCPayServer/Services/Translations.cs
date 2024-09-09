@@ -24,12 +24,12 @@ namespace BTCPayServer.Services
             public record Added(string Key, string Value) : Diff(Key);
             public record Modified(string Key, string NewValue, string OldValue) : Diff(Key);
         }
-        public static bool TryCreateFromText(string text, [MaybeNullWhen(false)] out Translations translations)
+        public static bool TryCreateFromJson(string text, [MaybeNullWhen(false)] out Translations translations)
         {
             translations = null;
             try
             {
-                translations = CreateFromText(text);
+                translations = CreateFromJson(text);
                 return true;
             }
             catch
@@ -143,10 +143,6 @@ namespace BTCPayServer.Services
                 obj.Add(record.Key, record.Value);
             }
             return obj.ToString(Newtonsoft.Json.Formatting.Indented);
-        }
-        public string ToTextFormat()
-        {
-            return string.Join('\n', Records.OrderBy(r => r.Key).Select(r => $"{r.Key} => {r.Value}").ToArray());
         }
     }
 }

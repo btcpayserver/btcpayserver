@@ -68,14 +68,6 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
                 pay.SetBlob(paymentEntity);
             }
         }
-        foreach (var entry in ctx.ChangeTracker.Entries<InvoiceData>())
-        {
-            entry.State = EntityState.Modified;
-        }
-        foreach (var entry in ctx.ChangeTracker.Entries<PaymentData>())
-        {
-            entry.State = EntityState.Modified;
-        }
         return invoices[^1].Created;
     }
 }

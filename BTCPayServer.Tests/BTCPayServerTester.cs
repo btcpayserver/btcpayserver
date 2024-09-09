@@ -178,6 +178,7 @@ namespace BTCPayServer.Tests
                             l.SetMinimumLevel(LogLevel.Information)
                             .AddFilter("Microsoft", LogLevel.Error)
                             .AddFilter("Hangfire", LogLevel.Error)
+                            .AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information)
                             .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
                             .AddProvider(LoggerProvider);
                         });

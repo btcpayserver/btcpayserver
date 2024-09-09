@@ -115,7 +115,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
 
                 return new ConfirmVM
                 {
-                    Amount = blob.CryptoAmount.Value,
+                    Amount = payoutData.Amount.Value,
                     Destination = blob.Destination,
                     PayoutId = payoutData.Id
                 };
@@ -242,7 +242,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var lnurlInfo =
                 (LNURLPayRequest)await LNURL.LNURL.FetchInformation(endpoint, "payRequest",
                     httpClient, cancellationToken);
-            var lm = new LightMoney(blob.CryptoAmount.Value, LightMoneyUnit.BTC);
+            var lm = new LightMoney(payoutData.Amount.Value, LightMoneyUnit.BTC);
             if (lm > lnurlInfo.MaxSendable || lm < lnurlInfo.MinSendable)
             {
                 
@@ -281,14 +281,14 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, CancellationToken cancellationToken)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
-            if (boltAmount > payoutBlob.CryptoAmount)
+            if (boltAmount > payoutData.Amount)
             {
                 payoutData.State = PayoutState.Cancelled;
                 return new ResultVM
                 {
                     PayoutId = payoutData.Id,
                     Result = PayResult.Error,
-                    Message = $"The BOLT11 invoice amount ({boltAmount} {payoutData.Currency}) did not match the payout's amount ({payoutBlob.CryptoAmount.GetValueOrDefault()} {payoutData.Currency})",
+                    Message = $"The BOLT11 invoice amount ({boltAmount} {payoutData.Currency}) did not match the payout's amount ({payoutData.Amount.GetValueOrDefault()} {payoutData.Currency})",
                     Destination = payoutBlob.Destination
                 };
             }
@@ -312,7 +312,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                     new PayInvoiceParams()
                     {
                         // CLN does not support explicit amount param if it is the same as the invoice amount
-                        Amount = payoutBlob.CryptoAmount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutBlob.CryptoAmount, LightMoneyUnit.BTC)
+                        Amount = payoutData.Amount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC)
                     }, cancellationToken);
                 if (result == null) throw new NoPaymentResultException();
                 

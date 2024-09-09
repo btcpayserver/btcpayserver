@@ -71,19 +71,9 @@ using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
-
-
-
-
-
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
 
-
-#if ALTCOINS
-using BTCPayServer.Services.Altcoins.Monero;
-using BTCPayServer.Services.Altcoins.Zcash;
-#endif
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
@@ -587,9 +577,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());
-
-            services.AddSingleton<PayoutBlobMigratorHostedService>();
-            services.AddSingleton<IHostedService, PayoutBlobMigratorHostedService>(o => o.GetRequiredService<PayoutBlobMigratorHostedService>());
 
             // Broken
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));

@@ -37,7 +37,7 @@
 			<div id="NotificationsList" v-pre>
 				@foreach (var n in Last5)
 				{
-					<a href="@NotificationUrl(n.Id)" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
+                    <a href="@NotificationUrl(n.Id)" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4" @key="@n.Id">
 						<div class="me-3">
 							<Icon Symbol="@NotificationIcon(n.Identifier)" />
 						</div>
@@ -99,6 +99,7 @@
 	{
 		UnseenCount = SeenCount(res.Count);
 		Last5 = res.Items;
+        StateHasChanged();
 	}
 
 	protected override async Task OnParametersSetAsync()
@@ -134,6 +135,7 @@
 		{
 			await _NotificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
 			UnseenCount = "0";
+            StateHasChanged();
 		}
 	}
 

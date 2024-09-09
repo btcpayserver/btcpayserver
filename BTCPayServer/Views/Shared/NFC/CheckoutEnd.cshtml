@@ -24,14 +24,14 @@ Vue.component("lnurl-withdraw-checkout", {
             } = this.model
             const lnurlwAvailable = 
                 // Either we have LN or LNURL available directly
-                !!availablePaymentMethods.find(pm => ['BTC_LNURLPAY', 'BTC_LightningLike'].includes(pm.paymentMethodId)) ||
+                !!availablePaymentMethods.find(pm => ['BTC-LNURL', 'BTC-LN'].includes(pm.paymentMethodId)) ||
                 // Or the BIP21 payment URL flags Lightning support
                 !!paymentUrl.match(/lightning=ln/i)
-            const isAvailable = activePaymentMethodId === 'BTC_LNURLPAY' || (
+            const isAvailable = activePaymentMethodId === 'BTC-LNURL' || (
                 // Unified QR/BIP21 case
-                (activePaymentMethodId === 'BTC' && isUnified && lnurlwAvailable) ||
+                (activePaymentMethodId === 'BTC-CHAIN' && isUnified && lnurlwAvailable) ||
                 // Lightning with LNURL available
-                (activePaymentMethodId === 'BTC_LightningLike' && lnurlwAvailable))
+                (activePaymentMethodId === 'BTC-LN' && lnurlwAvailable))
             return isAvailable && (this.nfcSupported || this.testFallback)
         },
         testFallback () {
@@ -100,7 +100,7 @@ Vue.component("lnurl-withdraw-checkout", {
             const body = JSON.stringify({ lnurl: data, invoiceId: this.model.invoiceId, amount: this.amount })
             const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
             const response = await fetch(this.url, opts)
-            
+
             // Handle response
             try {
                 const result = await response.text()

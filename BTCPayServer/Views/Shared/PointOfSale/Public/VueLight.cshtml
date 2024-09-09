@@ -81,7 +81,7 @@
         <vc:icon symbol="nav-mobile-menu"/>
     </button>
     <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1"  id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
-        <div class="offcanvas-header flex-wrap p-3">
+        <div class="offcanvas-header justify-content-between flex-wrap p-3">
             <h5 class="offcanvas-title" id="offcanvasExampleLabel">Products</h5>
             <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': cart.length > 0, 'btn-outline-secondary': cart.length === 0}" data-bs-dismiss="offcanvas" v-text="cart.length > 0 ? 'Apply' : 'Close'"></button>
             @if (Model.ShowSearch)

@@ -1,4 +1,3 @@
-#if ALTCOINS
 namespace BTCPayServer.Services.Altcoins.Monero.RPC
 {
     public class MoneroEvent
@@ -14,4 +13,3 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC
         }
     }
 }
-#endif

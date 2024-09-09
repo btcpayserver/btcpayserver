@@ -37,10 +37,6 @@ namespace BTCPayServer.Data
                 {
                     paymentData.Migrate();
                 }
-                else if (entity is PayoutData payoutData && payoutData.Currency is null)
-                {
-                    payoutData.Migrate();
-                }
                 return entity;
             }
         }
@@ -236,7 +232,6 @@ namespace BTCPayServer.Data
             var isTopup = blob["type"]?.Value<string>() is "TopUp";
             var amount = decimal.Parse(blob["price"].Value<string>(), CultureInfo.InvariantCulture);
             Amount = isTopup && amount == 0 ? null : decimal.Parse(blob["price"].Value<string>(), CultureInfo.InvariantCulture);
-            CustomerEmail = null;
             foreach (var prop in superflousProperties)
                 blob.Property(prop)?.Remove();
             if (blob["speedPolicy"] is JValue { Type: JTokenType.Integer, Value: 0 or 0L })

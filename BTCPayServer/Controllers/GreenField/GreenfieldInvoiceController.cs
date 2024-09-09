@@ -403,7 +403,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             PaymentPrompt? paymentPrompt = null;
             PayoutMethodId? payoutMethodId = null;
-            if (request.PaymentMethod is not null && PayoutMethodId.TryParse(request.PaymentMethod, out payoutMethodId))
+            if (request.PayoutMethodId is not null && PayoutMethodId.TryParse(request.PayoutMethodId, out payoutMethodId))
             {
                 var supported = _payoutHandlers.GetSupportedPayoutMethods(store);
                 if (supported.Contains(payoutMethodId))
@@ -414,7 +414,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (paymentPrompt is null)
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Please select one of the payment methods which were available for the original invoice");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Please select one of the payment methods which were available for the original invoice");
             }
             if (request.RefundVariant is null)
                 ModelState.AddModelError(nameof(request.RefundVariant), "`refundVariant` is mandatory");
@@ -567,10 +567,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = pp.Id,
                 StartsAt = pp.StartDate,
                 ExpiresAt = pp.EndDate,
-                Amount = ppBlob.Limit,
+                Amount = pp.Limit,
                 Name = ppBlob.Name,
                 Description = ppBlob.Description,
-                Currency = ppBlob.Currency,
+                Currency = pp.Currency,
                 Archived = pp.Archived,
                 AutoApproveClaims = ppBlob.AutoApproveClaims,
                 BOLT11Expiration = ppBlob.BOLT11Expiration,

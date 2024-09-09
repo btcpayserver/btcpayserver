@@ -115,12 +115,12 @@ namespace BTCPayServer
             }
 
             var blob = pp.GetBlob();
-            if (!_pullPaymentHostedService.SupportsLNURL(blob))
+            if (!_pullPaymentHostedService.SupportsLNURL(pp, blob))
             {
                 return NotFound();
             }
 
-            var unit = blob.Currency == "SATS" ? LightMoneyUnit.Satoshi : LightMoneyUnit.BTC;
+            var unit = pp.Currency == "SATS" ? LightMoneyUnit.Satoshi : LightMoneyUnit.BTC;
             var progress = _pullPaymentHostedService.CalculatePullPaymentProgress(pp, DateTimeOffset.UtcNow);
             var remaining = progress.Limit - progress.Completed - progress.Awaiting;
             var request = new LNURLWithdrawRequest

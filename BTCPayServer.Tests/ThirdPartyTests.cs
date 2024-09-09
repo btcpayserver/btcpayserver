@@ -133,7 +133,7 @@ namespace BTCPayServer.Tests
         public async Task CanQueryDirectProviders()
         {
             // TODO: Check once in a while whether or not they are working again
-            string[] brokenShitcoinCasinos = { };
+            string[] brokenShitcoinCasinos = { "binance", "coinbasepro" };
             var skipped = 0;
             var factory = FastTests.CreateBTCPayRateFactory();
             var directlySupported = factory.AvailableRateProviders.Where(s => s.Source == RateSource.Direct)
@@ -272,7 +272,8 @@ namespace BTCPayServer.Tests
                 "https://www.bitpay.com", // not allowing to be hit from circleci
                 "https://support.bitpay.com",
                 "https://www.coingecko.com", // unhappy service
-                "https://www.wasabiwallet.io" // Banning US, CI unhappy
+                "https://www.wasabiwallet.io", // Banning US, CI unhappy
+                "https://fullynoded.app" // Sometimes DNS doesn't work
             };
 
             foreach (var match in regex.Matches(text).OfType<Match>())

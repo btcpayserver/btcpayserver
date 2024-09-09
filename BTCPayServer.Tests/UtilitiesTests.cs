@@ -321,7 +321,7 @@ retry:
                 base.VisitTagHelper(node);
             }
 
-            private string ToString(IntermediateNode? node)
+            private string ToString(IntermediateNode node)
             {
                 return _txt.Substring(node.Source.Value.AbsoluteIndex, node.Source.Value.Length);
             }

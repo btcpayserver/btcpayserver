@@ -76,7 +76,7 @@ public class PayoutProcessorService : EventHostedServiceBase
         if (query.PayoutMethodIds is not null)
         {
             var paymentMethods = query.PayoutMethodIds.Select(d => d.ToString()).Distinct().ToArray();
-            queryable = queryable.Where(data => paymentMethods.Contains(data.PaymentMethod));
+            queryable = queryable.Where(data => paymentMethods.Contains(data.PayoutMethodId));
         }
 
         return await queryable.ToListAsync();
@@ -146,7 +146,7 @@ public class PayoutProcessorService : EventHostedServiceBase
             }
             catch(Exception ex)
             {
-                Logs.PayServer.LogWarning(ex, $"Payout processor ({data.PaymentMethod}) failed to start. Skipping...");
+                Logs.PayServer.LogWarning(ex, $"Payout processor ({data.PayoutMethodId}) failed to start. Skipping...");
                 return;
             }
             await processor.StartAsync(cancellationToken);

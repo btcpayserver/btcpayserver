@@ -24,9 +24,9 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GenerateOnChainWallet(string storeId,
             [ModelBinder(typeof(PaymentMethodIdModelBinder))]
             PaymentMethodId paymentMethodId,
-            GenerateWalletRequest request)
+            GenerateOnChainWalletRequest request)
         {
-
+            request ??= new GenerateOnChainWalletRequest();
             AssertCryptoCodeWallet(paymentMethodId, out var network, out _);
 
             if (!_walletProvider.IsAvailable(network))
@@ -34,6 +34,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError(503, "not-available",
                     $"{paymentMethodId} services are not currently available");
             }
+            if (request.Label is { Length: > 300 })
+                ModelState.AddModelError(nameof(request.Label), "Label is too long (Max 300 characters)");
 
             if (IsConfigured(paymentMethodId, out _))
             {
@@ -63,7 +65,17 @@ namespace BTCPayServer.Controllers.Greenfield
             GenerateWalletResponse response;
             try
             {
-                response = await client.GenerateWalletAsync(request);
+                response = await client.GenerateWalletAsync(new()
+                {
+                    AccountNumber = request.AccountNumber,
+                    ExistingMnemonic = request.ExistingMnemonic?.ToString(),
+                    WordList = request.WordList,
+                    WordCount = request.WordCount,
+                    ScriptPubKeyType = request.ScriptPubKeyType,
+                    Passphrase = request.Passphrase,
+                    ImportKeysToRPC = request.ImportKeysToRPC,
+                    SavePrivateKeys = request.SavePrivateKeys,
+                });
                 if (response == null)
                 {
                     return this.CreateAPIError(503, "not-available",
@@ -79,9 +91,9 @@ namespace BTCPayServer.Controllers.Greenfield
             var derivationSchemeSettings = new DerivationSchemeSettings(response.DerivationScheme, network);
 
             derivationSchemeSettings.Source =
-                string.IsNullOrEmpty(request.ExistingMnemonic) ? "NBXplorerGenerated" : "ImportedSeed";
+                request.ExistingMnemonic is null ? "NBXplorerGenerated" : "ImportedSeed";
             derivationSchemeSettings.IsHotWallet = request.SavePrivateKeys;
-
+            derivationSchemeSettings.Label = request.Label;
             var accountSettings = derivationSchemeSettings.GetSigningAccountKeySettings();
             accountSettings.AccountKeyPath = response.AccountKeyPath.KeyPath;
             accountSettings.RootFingerprint = response.AccountKeyPath.MasterFingerprint;

@@ -401,12 +401,10 @@ namespace BTCPayServer.Controllers
         {
             var c = this.ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode);
             var cashCow = cheater.GetCashCow(walletId.CryptoCode);
-#if ALTCOINS
             if (walletId.CryptoCode == "LBTC")
             {
                 await cashCow.SendCommandAsync("rescanblockchain");
             }
-#endif
             var addresses = Enumerable.Range(0, 200).Select(_ => c.GetUnusedAsync(paymentMethod.AccountDerivation, DerivationFeature.Deposit, reserve: true)).ToArray();
             
             await Task.WhenAll(addresses);

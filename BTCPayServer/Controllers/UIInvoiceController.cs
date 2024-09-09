@@ -64,6 +64,7 @@ namespace BTCPayServer.Controllers
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
         private readonly PaymentMethodViewProvider _viewProvider;
+        private readonly PrettyNameProvider _prettyName;
         private readonly AppService _appService;
         private readonly IFileService _fileService;
         private readonly UriResolver _uriResolver;
@@ -98,7 +99,8 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             TransactionLinkProviders transactionLinkProviders,
             Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
-            PaymentMethodViewProvider viewProvider)
+            PaymentMethodViewProvider viewProvider,
+            PrettyNameProvider prettyName)
         {
             _displayFormatter = displayFormatter;
             _CurrencyNameTable = currencyNameTable ?? throw new ArgumentNullException(nameof(currencyNameTable));
@@ -123,6 +125,7 @@ namespace BTCPayServer.Controllers
             _transactionLinkProviders = transactionLinkProviders;
             _paymentModelExtensions = paymentModelExtensions;
             _viewProvider = viewProvider;
+            _prettyName = prettyName;
             _fileService = fileService;
             _uriResolver = uriResolver;
             _defaultRules = defaultRules;

@@ -25,11 +25,6 @@ namespace BTCPayServer.Services
 #else
 			Build = "Release";
 #endif
-#if ALTCOINS
-            AltcoinsVersion = true;
-#else
-            AltcoinsVersion = false;
-#endif
 
             Environment = env;
             NetworkType = provider.NetworkType;
@@ -60,7 +55,6 @@ namespace BTCPayServer.Services
         {
             get; set;
         }
-        public bool AltcoinsVersion { get; set; }
 
         public bool IsDeveloping
         {
@@ -86,8 +80,6 @@ namespace BTCPayServer.Services
             txt.Append(CultureInfo.InvariantCulture, $"© BTCPay Server v{Version}");
             if (Commit != null)
                 txt.Append($"+{Commit}");
-            if (AltcoinsVersion)
-                txt.Append(" (Altcoins)");
             if (!Environment.IsProduction() || !Build.Equals("Release", StringComparison.OrdinalIgnoreCase))
             {
                 txt.Append(CultureInfo.InvariantCulture, $" Environment: {Environment.EnvironmentName} ({Build})");

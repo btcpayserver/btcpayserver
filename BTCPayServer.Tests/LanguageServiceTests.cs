@@ -50,10 +50,8 @@ namespace BTCPayServer.Tests
             tester.Driver.FindElement(By.Name("Name")).SendKeys("English (Custom)");
             tester.ClickPagePrimary();
             var translations = tester.Driver.FindElement(By.Name("Translations"));
-            var text = translations.Text;
-            text = text.Replace("Password => Password", "Password => Mot de passe");
             translations.Clear();
-            translations.SendKeys("Password => Mot de passe");
+            translations.SendKeys("{ \"Password\": \"Mot de passe\" }");
             tester.ClickPagePrimary();
 
             // Check English (Custom) can be selected
@@ -64,7 +62,7 @@ namespace BTCPayServer.Tests
             // Check if we can remove English (Custom)
             tester.LogIn();
             tester.GoToServer(Views.Server.ServerNavPages.Translations);
-            text = tester.Driver.PageSource;
+            var text = tester.Driver.PageSource;
             Assert.Contains("Select-Cypherpunk", text);
             Assert.DoesNotContain("Select-English (Custom)", text);
             // Cypherpunk is loaded from file, can't edit

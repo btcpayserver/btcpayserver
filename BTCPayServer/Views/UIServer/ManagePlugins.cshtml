@@ -104,7 +104,7 @@
         You need to restart BTCPay Server in order to update your active plugins.
         @if (Model.CanShowRestart)
         {
-            <form method="post" asp-action="Maintenance" class="mt-2">
+            <form method="post" asp-action="Maintenance">
                 <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
             </form>
         }
@@ -113,83 +113,76 @@
 
 @if (Model.Installed.Any())
 {
-    <div class="container-fluid mb-4">
-        @foreach (var plugin in Model.Installed.Where(i => !i.SystemPlugin))
-        {
-            Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
-            var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
-            var x = matchedAvailable.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? matchedAvailable.FirstOrDefault();
-            var updateAvailable = matchedAvailable.Any();
-            var modalId = $"modal_{plugin.Identifier}";
-            <div class="card mb-4">
-                <div class="card-body d-flex flex-md-row flex-column bg-transparent border-0">
-                    <div class="me-3 d-flex align-items-center">
-                        <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
+    foreach (var plugin in Model.Installed.Where(i => !i.SystemPlugin))
+    {
+        Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
+        var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
+        var x = matchedAvailable.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? matchedAvailable.FirstOrDefault();
+        var updateAvailable = matchedAvailable.Any();
+        var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command;
+        var exclusivePendingAction = true;
+        var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
+        <div class="card border-0 mb-4">
+            <div class="card-body d-flex flex-md-row flex-column bg-transparent border-0">
+                <div class="me-3 d-flex align-items-center">
+                    <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
+                </div>
+                <div class="flex-grow-1 align-self-center my-2 my-md-0">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h4 class="card-title mb-0">@plugin.Name</h4>
                     </div>
-                    <div class="flex-grow-1 align-self-center my-2 my-md-0">
-                        <div class="d-flex justify-content-between align-items-center mb-2">
-                            <h4 class="card-title mb-0">@plugin.Name</h4>
-                        </div>
-                        <span>@plugin.Version - System Plugin</span> 
-                        <p class="card-text">@plugin.Description</p>
-                    </div>
-                    @{
-                        var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command;
-                        var exclusivePendingAction = true;
-
-                        var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
+                    <span>@plugin.Version - System Plugin</span> 
+                    <p class="card-text">@plugin.Description</p>
+                </div>
+                <div class="d-flex flex-column gap-3 align-items-end">
+                    @if (pendingAction is not null && updateAvailable)
+                    {
+                        var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
+                        if (isUpdateAction)
+                        {
+                            exclusivePendingAction = versionOfPendingInstall == x.Version;
+                        }
                     }
-                    
-                    <div class="d-flex flex-column gap-3 align-items-end">
-                        @if (pendingAction is not null && updateAvailable)
+                    @if (pendingAction is not null)
+                    {
+                        <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier" class="w-100">
+                            <button type="submit" class="btn btn-outline-secondary  w-100">Cancel pending @pendingAction @(versionOfPendingInstall is null ? "" : $"of {versionOfPendingInstall}")</button>
+                        </form>
+                    }
+                    @if (pendingAction is null || !exclusivePendingAction)
+                    {
+                        if (updateAvailable && x != null)
                         {
-                            var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
-                            if (isUpdateAction)
+                            if (PluginManager.DependenciesMet(x.Dependencies, installed))
                             {
-                                exclusivePendingAction = versionOfPendingInstall == x.Version;
-                            }
-                        }
-                        @if (pendingAction is not null)
-                        {
-                            <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier" class="w-100">
-                                <button type="submit" class="btn btn-outline-secondary  w-100">Cancel pending @pendingAction @(versionOfPendingInstall is null ? "" : $"of {versionOfPendingInstall}")</button>
-                            </form>
-                        }
-                        @if (pendingAction is null || !exclusivePendingAction)
-                        {
-                            @if (updateAvailable && x != null)
-                            {
-                                if (PluginManager.DependenciesMet(x.Dependencies, installed))
-                                {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3 w-100">
-                                        <button type="submit" class="btn btn-secondary  w-100">Update</button>
-                                    </form>
-                                }
-                                else
-                                {
-                                    <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3 w-100">
-                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary  w-100">Schedule update</button>
-                                    </form>
-                                }
-                            }
-                            @if (DependentOn(plugin.Identifier))
-                            {
-                                <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
-                                    Uninstall <vc:icon symbol="warning" />
-                                </button>
+                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3 w-100">
+                                    <button type="submit" class="btn btn-secondary  w-100">Update</button>
+                                </form>
                             }
                             else
                             {
-                                <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier" class="w-100">
-                                    <button type="submit" class="btn btn-outline-danger w-100">Uninstall</button>
+                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3 w-100">
+                                    <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary  w-100">Schedule update</button>
                                 </form>
                             }
                         }
-                    </div>
+                        if (DependentOn(plugin.Identifier))
+                        {
+                            <button type="button" class="btn btn-outline-danger w-100" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
+                                Uninstall <vc:icon symbol="warning" />
+                            </button>
+                        }
+                        else
+                        {
+                            <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier" class="w-100">
+                                <button type="submit" class="btn btn-outline-danger w-100">Uninstall</button>
+                            </form>
+                        }
+                    }
                 </div>
             </div>
-        }
-    </div>
+        </div>
+    }
 }
 else
 {
@@ -198,31 +191,23 @@ else
 
 @if (Model.Commands.Any())
 {
-    <div class="mb-4">
-        <h3 class="mb-4">Pending Action</h3>
-        <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#pending-actions">
-            Pending Actions
-        </button>
-        <div class="row collapse" id="pending-actions">
-            <div class="col col-12 col-lg-6 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <h4 class="card-title">Pending actions</h4>
-                        <ul class="list-group list-group-flush">
-                            @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
-                            {
-                                <li class="list-group-item p-2">
-                                    <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                        <span class="my-2 me-3">@extComm.Key</span>
-                                        <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
-                                            <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
-                                        </form>
-                                    </div>
-                                </li>
-                            }
-                        </ul>
-                    </div>
-                </div>
+    <div class="my-5">
+        <h3>Pending Actions</h3>
+        <div class="row" id="pending-actions">
+            <div class="col col-12 col-lg-6">
+                <ul class="list-group list-group-flush">
+                    @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
+                    {
+                        <li class="list-group-item px-0">
+                            <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                <span class="my-2 me-3">@extComm.Key</span>
+                                <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
+                                    <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
+                                </form>
+                            </div>
+                        </li>
+                    }
+                </ul>
             </div>
         </div>
     </div>
@@ -234,8 +219,8 @@ else
         Upload Plugin
     </button>
     <div class="row collapse" id="manual-upload">
-        <div class="col col-xl-6 mb-4">
-            <div class="card">
+        <div class="col col-xl-6">
+            <div class="card border-0">
                 <div class="card-body">
                     <h4 class="card-title">Add plugin manually</h4>
                     <div class="alert alert-warning my-3">

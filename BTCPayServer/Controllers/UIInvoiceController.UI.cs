@@ -876,6 +876,13 @@ namespace BTCPayServer.Controllers
                 _paymentModelExtensions.TryGetValue(paymentMethodId, out var extension);
                 return extension?.Image ?? "";
             }
+
+			// Show the "Common divisibility" rather than the payment method disibility.
+			// For example, BTC has commonly 8 digits, but on lightning it has 11. In this case, pick 8.
+			if (this._CurrencyNameTable.GetCurrencyData(prompt.Currency, false)?.Divisibility is not int divisibility)
+				divisibility = prompt.Divisibility;
+
+			string ShowMoney(decimal value) => MoneyExtensions.ShowMoney(value, divisibility);
             var model = new PaymentModel
             {
                 Activated = prompt.Activated,
@@ -893,11 +900,11 @@ namespace BTCPayServer.Controllers
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 CryptoImage = Request.GetRelativePathOrAbsolute(GetPaymentMethodImage(paymentMethodId)),
                 BtcAddress = prompt.Destination,
-                BtcDue = accounting.ShowMoney(accounting.Due),
-                BtcPaid = accounting.ShowMoney(accounting.Paid),
+                BtcDue = ShowMoney(accounting.Due),
+                BtcPaid = ShowMoney(accounting.Paid),
                 InvoiceCurrency = invoice.Currency,
                 // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
-                OrderAmount = accounting.ShowMoney(accounting.TotalDue - (prompt.PaymentMethodFee - prompt.TweakFee)),
+                OrderAmount = ShowMoney(accounting.TotalDue - (prompt.PaymentMethodFee - prompt.TweakFee)),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 CustomerEmail = invoice.Metadata.BuyerEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),

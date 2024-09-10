@@ -9,6 +9,7 @@ using AngleSharp.Dom;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using Dapper;
 using Google.Apis.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -42,9 +43,13 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
             ctx.Invoices.Include(o => o.Payments).Where(i => i.Currency == null);
         return query.OrderByDescending(i => i.Created);
     }
+    protected override Task Reindex(ApplicationDbContext ctx, CancellationToken cancellationToken)
+    {
+		return ctx.Database.GetDbConnection().ExecuteAsync(new("REINDEX INDEX \"IX_Invoices_Created\";REINDEX INDEX \"PK_Invoices\";", cancellationToken: cancellationToken));
+    }
     protected override DateTimeOffset ProcessEntities(ApplicationDbContext ctx, List<InvoiceData> invoices)
     {
-        // Those clean up the JSON blobs, and mark entities as modified
+        // Those clean up the JSON blobs
         foreach (var inv in invoices)
         {
             var blob = inv.GetBlob();
@@ -70,4 +75,11 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
         }
         return invoices[^1].Created;
     }
+
+    protected override async Task PostMigrationCleanup(ApplicationDbContext ctx, CancellationToken cancellationToken)
+    {
+		// If this one never run it's not big deal...
+		await ctx.Database.GetDbConnection().ExecuteAsync(new("VACUUM (ANALYZE) \"Invoices\"", cancellationToken: cancellationToken));
+		Logs.LogInformation("Post migration VACUUM successfull");
+	}
 }

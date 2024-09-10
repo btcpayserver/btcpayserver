@@ -868,15 +868,15 @@ WHERE cte.""Id""=p.""Id""
 
         private async Task Migrate(CancellationToken cancellationToken)
         {
-            int cancellationTimeout = 60 * 60 * 24;
-            using (CancellationTokenSource timeout = new CancellationTokenSource(cancellationTimeout))
+            TimeSpan cancellationTimeout = TimeSpan.FromDays(1.0);
+            using (CancellationTokenSource timeout = new CancellationTokenSource((int)cancellationTimeout.TotalMilliseconds))
             using (CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(timeout.Token, cancellationToken))
             {
 retry:
                 try
                 {
                     _logger.LogInformation("Running the migration scripts...");
-                    var db = _DBContextFactory.CreateContext(o => o.CommandTimeout(cancellationTimeout + 1));
+                    var db = _DBContextFactory.CreateContext(o => o.CommandTimeout(((int)cancellationTimeout.TotalSeconds) + 1));
                     await db.Database.MigrateAsync(timeout.Token);
                     _logger.LogInformation("All migration scripts ran successfully");
                 }

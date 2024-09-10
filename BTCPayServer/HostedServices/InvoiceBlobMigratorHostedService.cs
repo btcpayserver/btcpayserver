@@ -23,7 +23,7 @@ namespace BTCPayServer.HostedServices;
 
 public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<InvoiceData>
 {
-    
+
     private readonly PaymentMethodHandlerDictionary _handlers;
 
     public InvoiceBlobMigratorHostedService(
@@ -45,7 +45,7 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
     }
     protected override Task Reindex(ApplicationDbContext ctx, CancellationToken cancellationToken)
     {
-		return ctx.Database.GetDbConnection().ExecuteAsync(new("REINDEX INDEX \"IX_Invoices_Created\";REINDEX INDEX \"PK_Invoices\";", cancellationToken: cancellationToken));
+        return ctx.Database.ExecuteSqlRawAsync("REINDEX INDEX \"IX_Invoices_Created\";REINDEX INDEX \"PK_Invoices\";", cancellationToken);
     }
     protected override DateTimeOffset ProcessEntities(ApplicationDbContext ctx, List<InvoiceData> invoices)
     {
@@ -78,8 +78,8 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
 
     protected override async Task PostMigrationCleanup(ApplicationDbContext ctx, CancellationToken cancellationToken)
     {
-		// If this one never run it's not big deal...
-		await ctx.Database.GetDbConnection().ExecuteAsync(new("VACUUM (ANALYZE) \"Invoices\"", cancellationToken: cancellationToken));
-		Logs.LogInformation("Post migration VACUUM successfull");
-	}
+        Logs.LogInformation("Post-migration VACUUM (ANALYZE)");
+        await ctx.Database.ExecuteSqlRawAsync("VACUUM (ANALYZE) \"Invoices\"", cancellationToken);
+        Logs.LogInformation("Post-migration VACUUM (ANALYZE) finished");
+    }
 }

@@ -109,12 +109,16 @@ public class LightningPendingPayoutListener : BaseAsyncService
                             break;
                         case PayoutLightningBlob payoutLightningBlob:
                             {
-                                var payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
-                                if (payment is null)
+                                LightningPayment payment = null;
+                                try
                                 {
-                                    continue;
+                                    payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
                                 }
-
+                                catch
+                                {
+                                }
+                                if (payment is null)
+                                    continue;
                                 switch (payment.Status)
                                 {
                                     case LightningPaymentStatus.Complete:

@@ -202,16 +202,13 @@ namespace BTCPayServer.Controllers
                 return NotFound();
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
-
             if (receipt.Enabled is not true)
             {
-                if (i.RedirectURL is not null)
-                {
-                    return Redirect(i.RedirectURL.ToString());
-                }
-                return NotFound();
-
+                return i.RedirectURL is not null
+                    ? Redirect(i.RedirectURL.ToString())
+                    : NotFound();
             }
+
             var storeBlob = store.GetStoreBlob();
             var vm = new InvoiceReceiptViewModel
             {
@@ -702,7 +699,16 @@ namespace BTCPayServer.Controllers
 
             var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
-                return NotFound();
+            {
+                // see if the invoice actually exists and is in a state for which we do not display the checkout
+                var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+                var store = invoice != null ? await _StoreRepository.GetStoreByInvoiceId(invoice.Id) : null;
+                var receipt = invoice != null && store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
+                var redirectUrl = invoice?.RedirectURL?.ToString();
+                return receipt?.Enabled is true
+                    ? RedirectToAction(nameof(InvoiceReceipt), new { invoiceId })
+                    : !string.IsNullOrEmpty(redirectUrl) ? Redirect(redirectUrl) : NotFound();
+            }
 
             if (view == "modal")
                 model.IsModal = true;

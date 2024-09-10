@@ -67,14 +67,23 @@ public abstract class BlobMigratorHostedService<TEntity> : IHostedService
 retry:
             List<TEntity> entities;
             DateTimeOffset progress;
-            await using (var ctx = ApplicationDbContextFactory.CreateContext())
+            await using (var ctx = ApplicationDbContextFactory.CreateContext(o => o.CommandTimeout((int)TimeSpan.FromDays(1.0).TotalSeconds)))
             {
                 var query = GetQuery(ctx, settings?.Progress).Take(batchSize);
                 entities = await query.ToListAsync(cancellationToken);
                 if (entities.Count == 0)
                 {
+                    var count = await GetQuery(ctx, null).CountAsync(cancellationToken);
+                    if (count != 0)
+                    {
+                        settings = new Settings() { Progress = null };
+                        Logs.LogWarning("Corruption detected, reindexing the table...");
+                        await Reindex(ctx, cancellationToken);
+                        goto retry;
+                    }
                     await SettingsRepository.UpdateSetting<Settings>(new Settings() { Complete = true }, SettingsKey);
                     Logs.LogInformation("Migration completed");
+                    await PostMigrationCleanup(ctx, cancellationToken);
                     return;
                 }
 
@@ -84,7 +93,7 @@ retry:
                     await ctx.SaveChangesAsync();
                     batchSize = BatchSize;
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (Exception ex) when (ex is DbUpdateConcurrencyException or TimeoutException or OperationCanceledException)
                 {
                     batchSize /= 2;
                     batchSize = Math.Max(1, batchSize);
@@ -95,6 +104,10 @@ retry:
             await SettingsRepository.UpdateSetting<Settings>(settings, SettingsKey);
         }
     }
+
+    protected abstract Task PostMigrationCleanup(ApplicationDbContext ctx, CancellationToken cancellationToken);
+
+    protected abstract Task Reindex(ApplicationDbContext ctx, CancellationToken cancellationToken);
     protected abstract IQueryable<TEntity> GetQuery(ApplicationDbContext ctx, DateTimeOffset? progress);
     protected abstract DateTimeOffset ProcessEntities(ApplicationDbContext ctx, List<TEntity> entities);
     public async Task ResetMigration()

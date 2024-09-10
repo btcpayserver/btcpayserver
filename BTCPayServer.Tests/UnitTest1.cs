@@ -2835,7 +2835,6 @@ namespace BTCPayServer.Tests
             Assert.Equal("coingecko", b.PreferredExchange);
         }
 
-
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanDoInvoiceMigrations()

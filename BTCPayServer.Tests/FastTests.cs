@@ -2235,7 +2235,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                     Data.InvoiceData data = new Data.InvoiceData();
                     obj = data;
                     data.Blob2 = v.Input.ToString();
-                    data.Migrate();
+                    data.TryMigrate();
                     var actual = JObject.Parse(data.Blob2);
                     AssertSameJson(v.Expected, actual);
                     if (!v.SkipRountripTest)
@@ -2255,7 +2255,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                     //data.
                     obj = data;
                     data.Blob2 = v.Input.ToString();
-                    data.Migrate();
+                    data.TryMigrate();
                     var actual = JObject.Parse(data.Blob2);
                     AssertSameJson(v.Expected, actual);
                     if (!v.SkipRountripTest)
@@ -2370,7 +2370,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 });
                 var data = new Data.InvoiceData();
                 data.Blob2 = o.ToString();
-                data.Migrate();
+                data.TryMigrate();
                 var migrated = JObject.Parse(data.Blob2);
                 return migrated["prompts"]["BTC-CHAIN"]["details"]["accountDerivation"].Value<string>();
             })

@@ -54,6 +54,7 @@ public class ServerEvent(string type)
     public string Type { get; } = type;
     public string? StoreId { get; init; }
     public string? UserId { get; init; }
+    public string? AppId { get; init; }
     public string? InvoiceId { get; init; }
     public string? Detail { get; set; }
 }

@@ -90,6 +90,10 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreAddedEvent>(StoreUserAddedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreUpdatedEvent>(StoreUserUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreRemovedEvent>(StoreUserRemovedEvent));
+        // App events
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppCreatedEvent>(AppCreatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppUpdatedEvent>(AppUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppDeletedEvent>(AppDeletedEvent));
         _ = UpdateNodeInfo();
         return Task.CompletedTask;
     }
@@ -162,6 +166,24 @@ public class BTCPayAppState : IHostedService
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
 
         await RemoveFromGroup(arg.StoreId, Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray());
+    }
+
+    private async Task AppCreatedEvent(AppCreatedEvent arg)
+    {
+        var ev = new ServerEvent("app-created") { StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
+    }
+
+    private async Task AppUpdatedEvent(AppUpdatedEvent arg)
+    {
+        var ev = new ServerEvent("app-updated") { StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
+    }
+
+    private async Task AppDeletedEvent(AppDeletedEvent arg)
+    {
+        var ev = new ServerEvent("app-deleted") { StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private string _nodeInfo = string.Empty;

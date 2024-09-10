@@ -3,7 +3,7 @@ using BTCPayServer.Data;
 
 namespace BTCPayServer.Events;
 
-public class StoreCreatedEvent(StoreData store, string? detail = null) : StoreEvent(store, detail)
+public class AppCreatedEvent(AppData app, string? detail = null) : AppEvent(app, detail ?? app.AppType)
 {
     protected override string ToString()
     {

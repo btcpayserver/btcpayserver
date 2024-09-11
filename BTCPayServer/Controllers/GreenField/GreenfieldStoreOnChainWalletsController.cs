@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet")]
         public async Task<IActionResult> ShowOnChainWalletOverview(string storeId, string paymentMethodId)
         {
             if (IsInvalidWalletRequest(paymentMethodId, out var network,
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/feerate")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate")]
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string paymentMethodId, int? blockTarget = null)
         {
             if (IsInvalidWalletRequest(paymentMethodId, out var network,
@@ -131,7 +131,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/address")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/address")]
         public async Task<IActionResult> GetOnChainWalletReceiveAddress(string storeId, string paymentMethodId,
             bool forceGenerate = false)
         {
@@ -163,7 +163,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/address")]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/address")]
         public async Task<IActionResult> UnReserveOnChainWalletReceiveAddress(string storeId, string paymentMethodId)
         {
             if (IsInvalidWalletRequest(paymentMethodId, out var network,
@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/transactions")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions")]
         public async Task<IActionResult> ShowOnChainWalletTransactions(
             string storeId,
             string paymentMethodId,
@@ -238,7 +238,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/transactions/{transactionId}")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/{transactionId}")]
         public async Task<IActionResult> GetOnChainWalletTransaction(string storeId, string paymentMethodId,
             string transactionId)
         {
@@ -263,7 +263,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPatch(
-            "~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/transactions/{transactionId}")]
+            "~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/{transactionId}")]
         public async Task<IActionResult> PatchOnChainWalletTransaction(
             string storeId,
             string paymentMethodId,
@@ -305,7 +305,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/utxos")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/utxos")]
         public async Task<IActionResult> GetOnChainWalletUTXOs(string storeId, string paymentMethodId)
         {
             if (IsInvalidWalletRequest(paymentMethodId, out var network,
@@ -347,7 +347,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/transactions")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions")]
         public async Task<IActionResult> CreateOnChainTransaction(string storeId, string paymentMethodId,
             [FromBody] CreateOnChainTransactionRequest request)
         {
@@ -629,7 +629,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetOnChainWalletObjects(string storeId, string paymentMethodId, string? type = null, [FromQuery(Name = "ids")] string[]? ids = null, bool? includeNeighbourData = null)
         {
@@ -644,7 +644,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var walletId = new WalletId(storeId, network.CryptoCode);
             return Ok((await _walletRepository.GetWalletObjects(new(walletId, type, ids) { IncludeNeighbours = includeNeighbourData ?? true })).Select(kv => kv.Value).Select(ToModel).ToArray());
         }
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects/{objectType}/{objectId}")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetOnChainWalletObject(string storeId, string paymentMethodId,
             string objectType, string objectId,
@@ -659,7 +659,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(ToModel(wo));
         }
 
-        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects/{objectType}/{objectId}")]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> RemoveOnChainWalletObject(string storeId, string paymentMethodId,
             string objectType, string objectId)
@@ -678,7 +678,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(404, "wallet-object-not-found", "This wallet object's can't be found");
         }
 
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> AddOrUpdateOnChainWalletObject(string storeId,
             string paymentMethodId,
@@ -707,7 +707,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects/{objectType}/{objectId}/links")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> AddOrUpdateOnChainWalletLinks(string storeId, string paymentMethodId,
             string objectType, string objectId,
@@ -737,7 +737,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}")]
+        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}")]
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> RemoveOnChainWalletLink(string storeId, string paymentMethodId,
             string objectType, string objectId,

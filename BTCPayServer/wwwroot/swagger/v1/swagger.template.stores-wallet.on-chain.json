@@ -1,6 +1,6 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -50,7 +50,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/feerate": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -110,7 +110,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/address": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/address": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -211,7 +211,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/transactions": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -373,7 +373,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/transactions/{transactionId}": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/{transactionId}": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -508,7 +508,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/utxos": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/utxos": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -561,7 +561,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/generate": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/generate": {
             "post": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -648,7 +648,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/preview": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"

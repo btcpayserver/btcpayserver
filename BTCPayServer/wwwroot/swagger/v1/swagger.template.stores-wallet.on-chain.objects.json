@@ -1,6 +1,6 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -140,7 +140,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects/{objectType}/{objectId}": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -281,7 +281,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects/{objectType}/{objectId}/links": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links": {
             "post": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -354,7 +354,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}": {
             "delete": {
                 "tags": [
                     "Store Wallet (On Chain)"

@@ -76,23 +76,24 @@ public class VSSController : Controller, IVSSAPI
         return default;
     }
 
-    private bool VerifyGlobalVersion(long globalVersion)
+    private bool VerifyMaster(long deviceIdentifier)
     {
         var userId = _userManager.GetUserId(User);
         var conn = _appState.Connections.SingleOrDefault(pair => pair.Value.Master && pair.Value.UserId == userId);
-        if (conn.Key == null)
+        if (conn.Key == null || _appState.IsMaster(userId, deviceIdentifier))
         {
             return false;
         }
+        
 
-        return globalVersion == conn.Value.DeviceIdentifier;
+        return deviceIdentifier == conn.Value.DeviceIdentifier;
     }
 
     [HttpPost(HttpVSSAPIClient.PUT_OBJECTS)]
     [MediaTypeConstraint("application/octet-stream")]
     public async Task<PutObjectResponse> PutObjectAsync(PutObjectRequest request, CancellationToken cancellationToken)
     {
-        if (!VerifyGlobalVersion(request.GlobalVersion))
+        if (!VerifyMaster(request.GlobalVersion))
             return SetResult<PutObjectResponse>(BadRequest(new ErrorResponse()
             {
                 ErrorCode = ErrorCode.ConflictException, Message = "Global version mismatch"
@@ -126,7 +127,7 @@ public class VSSController : Controller, IVSSAPI
                 await dbContext.SaveChangesAsync(cancellationToken);
                 await dbContextTransaction.CommitAsync(cancellationToken);
                 _logger.LogInformation($"VSS backup request processed: {string.Join(", ", request.TransactionItems.Select(data => data.Key))}");
-
+_appState.GracefulDisconnect(userId);
                 return new PutObjectResponse();
             }
             catch (Exception e)

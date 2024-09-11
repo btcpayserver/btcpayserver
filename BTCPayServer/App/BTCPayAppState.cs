@@ -46,12 +46,13 @@ public class BTCPayAppState : IHostedService
 
 
     public ConcurrentDictionary<string, ConnectedInstance> Connections { get; set; } = new();
-    
+    //TODO: persist
+    private readonly ConcurrentDictionary<string, long> _ungracefulMasterDisconnects = new();
+    private static  readonly SemaphoreSlim _lock = new(1, 1);
 
     private CancellationTokenSource? _cts;
 
     public event EventHandler<(string, LightningInvoice)>? OnInvoiceUpdate;
-    public event EventHandler<string>? GroupRemoved;
 
     public BTCPayAppState(
         StoreRepository storeRepository,
@@ -305,7 +306,6 @@ public class BTCPayAppState : IHostedService
         return result;
     }
 
-private static  readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
     public async Task<bool> DeviceMasterSignal(string contextConnectionId, long deviceIdentifier, bool active)
     {
         var result = false;
@@ -347,6 +347,14 @@ private static  readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
                 _logger.LogWarning("DeviceMasterSignal called with active state but there is already a master connection");
                 result = false;
                 return result;
+            }else if(_ungracefulMasterDisconnects.TryGetValue(connectedInstance.UserId, out var dI) && dI != deviceIdentifier)
+            {
+                _logger.LogWarning("DeviceMasterSignal called with active state but the master connection was ungracefully disconnected");
+                _ungracefulMasterDisconnects.TryRemove(connectedInstance.UserId, out _);
+                connectedInstance = connectedInstance with {Master = true};
+                Connections[contextConnectionId] = connectedInstance;
+                result = true;
+                return result;
             }
             else
             {
@@ -363,6 +371,7 @@ private static  readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
             connectedInstance = connectedInstance with {Master = false};
             Connections[contextConnectionId] = connectedInstance;
           
+            MasterUserDisconnected?.Invoke(this, connectedInstance.UserId);
             result = true;
             return result;
             
@@ -387,6 +396,7 @@ private static  readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         if (Connections.TryRemove(contextConnectionId, out var connectedInstance) && connectedInstance.Master)
         {
             MasterUserDisconnected?.Invoke(this, connectedInstance.UserId);
+            _ungracefulMasterDisconnects.TryAdd(connectedInstance.UserId, connectedInstance.DeviceIdentifier!.Value);
         }
     }
     
@@ -457,5 +467,14 @@ private static  readonly SemaphoreSlim _lock = new SemaphoreSlim(1, 1);
         }
 
         return null;
+    }
+
+    public bool IsMaster(string userId, long deviceIdentifier)
+    {
+        return Connections.Values.Any(c => c.Master && c.DeviceIdentifier == deviceIdentifier && c.UserId == userId) || _ungracefulMasterDisconnects.TryGetValue(userId, out var dI) && dI == deviceIdentifier;
+    }
+    public void GracefulDisconnect(string userId)
+    {
+        _ungracefulMasterDisconnects.TryRemove(userId, out _);
     }
 }

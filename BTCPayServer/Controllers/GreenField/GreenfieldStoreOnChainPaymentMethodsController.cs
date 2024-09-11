@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/preview")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/preview")]
         public IActionResult GetOnChainPaymentMethodPreview(
             string storeId,
             [ModelBinder(typeof(PaymentMethodIdModelBinder))]
@@ -87,7 +87,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/preview")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/onchain/preview")]
         public async Task<IActionResult> GetProposedOnChainPaymentMethodPreview(
             string storeId,
             [ModelBinder(typeof(PaymentMethodIdModelBinder))]

@@ -3384,6 +3384,12 @@ namespace BTCPayServer.Tests
             {
                 await viewOnlyClient.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
             });
+
+            // Testing if the rewrite rule to old API path is working
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.SendHttpRequest($"api/v1/stores/{walletId.StoreId}/payment-methods/onchain/{walletId.CryptoCode}/wallet/address", null as object);
+            });
             var address = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
             var address2 = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
             var address3 = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode, true);

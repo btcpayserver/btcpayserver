@@ -247,8 +247,6 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
-        readonly HttpClient _Http = new HttpClient();
-
         public BTCPayServerTester PayTester
         {
             get; set;

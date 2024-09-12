@@ -21,7 +21,7 @@ public partial class BTCPayServerClient
         CancellationToken token = default)
     {
         var queryPayload = type == null ? null : new Dictionary<string, string> { ["type"] = type.ToString() };
-        return await SendHttpRequest<HistogramData>($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/histogram", queryPayload, HttpMethod.Get, token);
+        return await SendHttpRequest<HistogramData>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/histogram", queryPayload, HttpMethod.Get, token);
     }
     
     public virtual async Task<OnChainWalletFeeRateData> GetOnChainFeeRate(string storeId, string cryptoCode, int? blockTarget = null,

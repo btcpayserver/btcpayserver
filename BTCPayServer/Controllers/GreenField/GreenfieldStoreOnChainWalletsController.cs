@@ -99,8 +99,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet")]
         public async Task<IActionResult> ShowOnChainWalletOverview(string storeId, string paymentMethodId)
         {
-            if (IsInvalidWalletRequest(paymentMethodId, out var network,
-                    out var derivationScheme, out var actionResult))
+            if (IsInvalidWalletRequest(paymentMethodId, out var network, out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
@@ -116,13 +115,13 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/histogram")]
-        public async Task<IActionResult> GetOnChainWalletHistogram(string storeId, string cryptoCode, [FromQuery] string? type = null)
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/histogram")]
+        public async Task<IActionResult> GetOnChainWalletHistogram(string storeId, string paymentMethodId, [FromQuery] string? type = null)
         {
-            if (IsInvalidWalletRequest(cryptoCode, out _, out _, out var actionResult))
+            if (IsInvalidWalletRequest(paymentMethodId, out var network, out var derivationScheme, out var actionResult))
                 return actionResult;
 
-            var walletId = new WalletId(storeId, cryptoCode);
+            var walletId = new WalletId(storeId, network.CryptoCode);
             Enum.TryParse<WalletHistogramType>(type, true, out var histType);
             var data = await _walletHistogramService.GetHistogram(Store, walletId, histType);
             if (data == null) return this.CreateAPIError(404, "histogram-not-found", "The wallet histogram was not found.");

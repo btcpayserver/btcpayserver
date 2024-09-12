@@ -17,7 +17,7 @@ namespace BTCPayServer.Client.Models
     public class RefundInvoiceRequest
     {
         public string? Name { get; set; } = null;
-        public string? PaymentMethod { get; set; }
+        public string? PayoutMethodId { get; set; }
         public string? Description { get; set; } = null;
         
         [JsonConverter(typeof(StringEnumConverter))]

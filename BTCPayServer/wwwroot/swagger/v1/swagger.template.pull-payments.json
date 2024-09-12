@@ -987,8 +987,8 @@
                         "example": "10399.18",
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
-                    "paymentMethod": {
-                        "$ref": "#/components/schemas/PaymentMethodId"
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     }
                 }
             },
@@ -1097,8 +1097,8 @@
                         "example": "10399.18",
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
-                    "paymentMethod": {
-                        "$ref": "#/components/schemas/PaymentMethodId"
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     },
                     "cryptoCode": {
                         "type": "string",

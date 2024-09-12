@@ -937,17 +937,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<GenerateOnChainWalletResponse>(
                 await GetController<GreenfieldStoreOnChainPaymentMethodsController>().GenerateOnChainWallet(storeId, Payments.PaymentMethodId.Parse(paymentMethodId),
-                    new GenerateWalletRequest()
-                    {
-                        Passphrase = request.Passphrase,
-                        AccountNumber = request.AccountNumber,
-                        ExistingMnemonic = request.ExistingMnemonic?.ToString(),
-                        WordCount = request.WordCount,
-                        WordList = request.WordList,
-                        SavePrivateKeys = request.SavePrivateKeys,
-                        ScriptPubKeyType = request.ScriptPubKeyType,
-                        ImportKeysToRPC = request.ImportKeysToRPC
-                    }));
+                    request));
         }
 
         public override async Task SendEmail(string storeId, SendEmailRequest request,

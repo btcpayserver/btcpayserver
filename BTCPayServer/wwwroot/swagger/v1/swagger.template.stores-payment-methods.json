@@ -293,6 +293,16 @@
                     "$ref": "#/components/schemas/PaymentMethodId"
                 },
                 "example": "BTC-CHAIN"
+            },
+            "PayoutMethodId": {
+                "name": "paymentMethodId",
+                "in": "path",
+                "required": true,
+                "description": "The payout method id",
+                "schema": {
+                    "$ref": "#/components/schemas/PayoutMethodId"
+                },
+                "example": "BTC-CHAIN"
             }
         },
         "schemas": {

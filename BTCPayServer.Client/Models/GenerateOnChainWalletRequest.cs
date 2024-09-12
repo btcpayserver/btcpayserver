@@ -10,6 +10,7 @@ namespace BTCPayServer.Client
 {
     public class GenerateOnChainWalletRequest
     {
+        public string Label { get; set; }
         public int AccountNumber { get; set; } = 0;
         [JsonConverter(typeof(MnemonicJsonConverter))]
         public Mnemonic ExistingMnemonic { get; set; }
@@ -29,6 +30,7 @@ namespace BTCPayServer.Client
     {
         public class ConfigData
         {
+            public string Label { get; set; }
             public string AccountDerivation { get; set; }
             [JsonExtensionData]
             IDictionary<string, JToken> AdditionalData { get; set; }

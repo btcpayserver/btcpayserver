@@ -9,6 +9,7 @@ using AngleSharp.Dom;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using Dapper;
 using Google.Apis.Logging;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -22,7 +23,7 @@ namespace BTCPayServer.HostedServices;
 
 public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<InvoiceData>
 {
-    
+
     private readonly PaymentMethodHandlerDictionary _handlers;
 
     public InvoiceBlobMigratorHostedService(
@@ -42,9 +43,13 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
             ctx.Invoices.Include(o => o.Payments).Where(i => i.Currency == null);
         return query.OrderByDescending(i => i.Created);
     }
+    protected override Task Reindex(ApplicationDbContext ctx, CancellationToken cancellationToken)
+    {
+        return ctx.Database.ExecuteSqlRawAsync("REINDEX INDEX \"IX_Invoices_Created\";REINDEX INDEX \"PK_Invoices\";", cancellationToken);
+    }
     protected override DateTimeOffset ProcessEntities(ApplicationDbContext ctx, List<InvoiceData> invoices)
     {
-        // Those clean up the JSON blobs, and mark entities as modified
+        // Those clean up the JSON blobs
         foreach (var inv in invoices)
         {
             var blob = inv.GetBlob();
@@ -68,14 +73,13 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
                 pay.SetBlob(paymentEntity);
             }
         }
-        foreach (var entry in ctx.ChangeTracker.Entries<InvoiceData>())
-        {
-            entry.State = EntityState.Modified;
-        }
-        foreach (var entry in ctx.ChangeTracker.Entries<PaymentData>())
-        {
-            entry.State = EntityState.Modified;
-        }
         return invoices[^1].Created;
+    }
+
+    protected override async Task PostMigrationCleanup(ApplicationDbContext ctx, CancellationToken cancellationToken)
+    {
+        Logs.LogInformation("Post-migration VACUUM (ANALYZE)");
+        await ctx.Database.ExecuteSqlRawAsync("VACUUM (ANALYZE) \"Invoices\"", cancellationToken);
+        Logs.LogInformation("Post-migration VACUUM (ANALYZE) finished");
     }
 }

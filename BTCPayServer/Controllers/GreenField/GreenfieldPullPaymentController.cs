@@ -371,7 +371,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Metadata = blob.Metadata?? new JObject(),
             };
             model.Destination = blob.Destination;
-            model.PaymentMethod = p.PayoutMethodId;
+            model.PayoutMethodId = p.PayoutMethodId;
             model.CryptoCode = p.Currency;
             model.PaymentProof = p.GetProofBlobJson();
             return model;
@@ -381,16 +381,16 @@ namespace BTCPayServer.Controllers.Greenfield
         [AllowAnonymous]
         public async Task<IActionResult> CreatePayout(string pullPaymentId, CreatePayoutRequest request, CancellationToken cancellationToken)
         {
-            if (!PayoutMethodId.TryParse(request?.PaymentMethod, out var payoutMethodId))
+            if (!PayoutMethodId.TryParse(request?.PayoutMethodId, out var payoutMethodId))
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 
             var payoutHandler = _payoutHandlers.TryGet(payoutMethodId);
             if (payoutHandler is null)
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 
@@ -438,16 +438,16 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
             }
 
-            if (request?.PaymentMethod is null || !PayoutMethodId.TryParse(request?.PaymentMethod, out var paymentMethodId))
+            if (request?.PayoutMethodId is null || !PayoutMethodId.TryParse(request?.PayoutMethodId, out var paymentMethodId))
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 
             var payoutHandler = _payoutHandlers.TryGet(paymentMethodId);
             if (payoutHandler is null)
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Invalid payment method");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Invalid payment method");
                 return this.CreateValidationError(ModelState);
             }
 

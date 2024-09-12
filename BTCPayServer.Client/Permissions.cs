@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace BTCPayServer.Client
 {
@@ -16,7 +18,7 @@ namespace BTCPayServer.Client
         public const string CanUseLightningNodeInStore = "btcpay.store.canuselightningnode";
         public const string CanModifyServerSettings = "btcpay.server.canmodifyserversettings";
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
-        public const string CanModifyStoreWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
+        public const string CanModifyWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
         public const string CanModifyStoreSettingsUnscoped = "btcpay.store.canmodifystoresettings:";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
         public const string CanViewReports = "btcpay.store.canviewreports";
@@ -48,7 +50,7 @@ namespace BTCPayServer.Client
                 yield return CanViewInvoices;
                 yield return CanCreateInvoice;
                 yield return CanModifyInvoices;
-                yield return CanModifyStoreWebhooks;
+                yield return CanModifyWebhooks;
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
                 yield return CanViewStoreSettings;
@@ -103,6 +105,16 @@ namespace BTCPayServer.Client
         public static bool IsUserPolicy(string policy)
         {
             return policy.StartsWith("btcpay.user", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static readonly CultureInfo _culture = new (CultureInfo.InvariantCulture.Name);
+        public static string DisplayName(string policy)
+        {
+            var p = policy.Split(".");
+            if (p.Length < 3 || p[0] != "btcpay") return policy;
+            var constName = typeof(Policies).GetFields().Select(f => f.Name).FirstOrDefault(f => f.Equals(p[^1], StringComparison.OrdinalIgnoreCase));
+            var perm = string.IsNullOrEmpty(constName) ? string.Join(' ', p[2..]) : Regex.Replace(constName, "([A-Z])", " $1", RegexOptions.Compiled).Trim();
+            return $"{_culture.TextInfo.ToTitleCase(p[1])}: {_culture.TextInfo.ToTitleCase(perm)}";
         }
     }
 
@@ -247,7 +259,7 @@ namespace BTCPayServer.Client
                 Policies.CanManagePullPayments,
                 Policies.CanModifyInvoices,
                 Policies.CanViewStoreSettings,
-                Policies.CanModifyStoreWebhooks,
+                Policies.CanModifyWebhooks,
                 Policies.CanModifyPaymentRequests,
                 Policies.CanManagePayouts,
                 Policies.CanUseLightningNodeInStore);

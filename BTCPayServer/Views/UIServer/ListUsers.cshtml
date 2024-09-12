@@ -55,6 +55,7 @@
                 { Disabled: true } => ("Disabled", "danger"),
                 { Approved: false } => ("Pending Approval", "warning"),
                 { EmailConfirmed: false } => ("Pending Email Verification", "warning"),
+                { InvitationUrl: not null } => ("Pending Invitation", "warning"),
                 _ => ("Active", "success")
             };
             var detailsId = $"user_details_{user.Id}";
@@ -68,7 +69,7 @@
                         }
                     </div>
                 </td>
-                <td>@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
+                <td class="@(user.Stores.Any() ? null : "text-muted")">@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
                    <span class="user-status badge bg-@status.Item2">@status.Item1</span>
@@ -82,12 +83,12 @@
                         {
                             <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Approve user" data-description="This will approve the user <strong>@Html.Encode(user.Email)</strong>." data-confirm="Approve">Approve</a>
                         }
+                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
                         @if (status.Item2 != "warning")
                         {
                             <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled">@(user.Disabled ? "Enable" : "Disable")</a>
                         }
                         <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password">Password Reset</a>
-                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
                         <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
                     </div>
                 </td>
@@ -101,7 +102,21 @@
             </tr>
             <tr id="@detailsId" class="user-details-row collapse">
                 <td colspan="6" class="border-top-0">
-                    @if (user.Stores.Any())
+                    @if (!string.IsNullOrEmpty(user.InvitationUrl))
+                    {
+                        <div class="payment-box m-0">
+                            <div class="qr-container">
+                                <vc:qr-code data="@user.InvitationUrl" />
+                            </div>
+                            <div class="input-group mt-3">
+                                <div class="form-floating">
+                                    <vc:truncate-center text="@user.InvitationUrl" padding="15" elastic="true" classes="form-control-plaintext"/>
+                                    <label>Invitation URL</label>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    else if (user.Stores.Any())
                     {
                         <ul class="mb-0 p-0">
                             @foreach (var store in user.Stores)
@@ -119,7 +134,7 @@
                     }
                     else
                     {
-                        <span class="text-secondary">No stores</span> 
+                        <span class="text-secondary">No stores</span>
                     }
                 </td>
             </tr>

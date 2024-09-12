@@ -430,7 +430,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                 .Where(p => p.State == PayoutState.AwaitingPayment)
                 .Where(p => p.PayoutMethodId == paymentMethodId.ToString())
 #pragma warning disable CA1307 // Specify StringComparison
-                .Where(p => destination.Equals(p.Destination))
+                .Where(p => destination.Equals(p.DedupId))
 #pragma warning restore CA1307 // Specify StringComparison
                 .FirstOrDefaultAsync();
 

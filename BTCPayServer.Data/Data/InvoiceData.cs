@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Newtonsoft.Json.Linq;
 
+
 namespace BTCPayServer.Data
 {
     public partial class InvoiceData : IHasBlobUntyped

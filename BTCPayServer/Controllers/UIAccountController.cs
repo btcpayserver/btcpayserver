@@ -829,7 +829,7 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
 
-            var user = await _userManager.FindByInvitationTokenAsync(userId, Uri.UnescapeDataString(code));
+            var user = await _userManager.FindByInvitationTokenAsync<ApplicationUser>(userId, Uri.UnescapeDataString(code));
             if (user == null)
             {
                 return NotFound();
@@ -843,6 +843,9 @@ namespace BTCPayServer.Controllers
                 User = user,
                 RequestUri = Request.GetAbsoluteRootUri()
             });
+            
+            // unset used token
+            await _userManager.UnsetInvitationTokenAsync<ApplicationUser>(user.Id);
             
             if (requiresEmailConfirmation)
             {

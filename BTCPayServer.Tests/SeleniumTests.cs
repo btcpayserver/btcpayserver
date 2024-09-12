@@ -19,6 +19,7 @@ using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Views.Manage;
 using BTCPayServer.Views.Server;
@@ -371,7 +372,7 @@ namespace BTCPayServer.Tests
             var usr = RandomUtils.GetUInt256().ToString().Substring(64 - 20) + "@a.com";
             s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
             s.ClickPagePrimary();
-            var url = s.FindAlertMessage().FindElement(By.TagName("a")).Text;
+            var url = s.Driver.FindElement(By.Id("InvitationUrl")).GetAttribute("data-text");
 
             s.Logout();
             s.Driver.Navigate().GoToUrl(url);
@@ -1872,7 +1873,7 @@ namespace BTCPayServer.Tests
             // Check the tx sent earlier arrived
             s.Driver.FindElement(By.Id($"StoreNav-Wallet{cryptoCode}")).Click();
             s.Driver.WaitWalletTransactionsLoaded();
-            s.Driver.FindElement(By.PartialLinkText(tx.ToString()));
+            s.Driver.FindElement(By.CssSelector($"[data-text='{tx}']"));
 
             var walletTransactionUri = new Uri(s.Driver.Url);
 
@@ -1900,13 +1901,12 @@ namespace BTCPayServer.Tests
             var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             SetTransactionOutput(s, 0, jack, 0.01m);
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
-
             Assert.Contains(jack.ToString(), s.Driver.PageSource);
             Assert.Contains("0.01000000", s.Driver.PageSource);
             Assert.EndsWith("psbt/ready", s.Driver.Url);
             s.Driver.FindElement(By.CssSelector("button[value=broadcast]")).Click();
             Assert.Equal(walletTransactionUri.ToString(), s.Driver.Url);
-            var bip21 = invoice.EntityToDTO(s.Server.PayTester.GetService<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>()).CryptoInfo.First().PaymentUrls.BIP21;
+            var bip21 = invoice.EntityToDTO(s.Server.PayTester.GetService<Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension>>(), s.Server.PayTester.GetService<CurrencyNameTable>()).CryptoInfo.First().PaymentUrls.BIP21;
             //let's make bip21 more interesting
             bip21 += "&label=Solid Snake&message=Snake? Snake? SNAAAAKE!";
             var parsedBip21 = new BitcoinUrlBuilder(bip21, Network.RegTest);
@@ -2690,9 +2690,9 @@ namespace BTCPayServer.Tests
             var sums = cartData.FindElements(By.CssSelector("tfoot tr"));
             Assert.Equal(2, items.Count);
             Assert.Equal(4, sums.Count);
-            Assert.Contains("Manual entry 1", items[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("Custom Amount 1", items[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1 234,00 €", items[0].FindElement(By.CssSelector("td")).Text);
-            Assert.Contains("Manual entry 2", items[1].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("Custom Amount 2", items[1].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("0,56 €", items[1].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Subtotal", sums[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1 234,56 €", sums[0].FindElement(By.CssSelector("td")).Text);
@@ -2713,9 +2713,9 @@ namespace BTCPayServer.Tests
             sums = paymentDetails.FindElements(By.CssSelector("tr.sums-data"));
             Assert.Equal(2, items.Count);
             Assert.Equal(4, sums.Count);
-            Assert.Contains("Manual entry 1", items[0].FindElement(By.CssSelector(".key")).Text);
+            Assert.Contains("Custom Amount 1", items[0].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("1 234,00 €", items[0].FindElement(By.CssSelector(".val")).Text);
-            Assert.Contains("Manual entry 2", items[1].FindElement(By.CssSelector(".key")).Text);
+            Assert.Contains("Custom Amount 2", items[1].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("0,56 €", items[1].FindElement(By.CssSelector(".val")).Text);
             Assert.Contains("Subtotal", sums[0].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("1 234,56 €", sums[0].FindElement(By.CssSelector(".val")).Text);
@@ -2776,7 +2776,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("1 x 1,00 € = 1,00 €", items[0].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Green Tea", items[1].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("2 x 1,00 € = 2,00 €", items[1].FindElement(By.CssSelector("td")).Text);
-            Assert.Contains("Manual entry 1", items[2].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("Custom Amount 1", items[2].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1,23 €", items[2].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Total", sums[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("4,23 €", sums[0].FindElement(By.CssSelector("td")).Text);
@@ -2795,7 +2795,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("1 x 1,00 € = 1,00 €", items[0].FindElement(By.CssSelector(".val")).Text);
             Assert.Contains("Green Tea", items[1].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("2 x 1,00 € = 2,00 €", items[1].FindElement(By.CssSelector(".val")).Text);
-            Assert.Contains("Manual entry 1", items[2].FindElement(By.CssSelector(".key")).Text);
+            Assert.Contains("Custom Amount 1", items[2].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("1,23 €", items[2].FindElement(By.CssSelector(".val")).Text);
             Assert.Contains("Total", sums[0].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("4,23 €", sums[0].FindElement(By.CssSelector(".val")).Text);
@@ -3020,7 +3020,7 @@ namespace BTCPayServer.Tests
             // Topup Invoice test
             var i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            var lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
+            var lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center")).GetAttribute("data-text");
             var parsed = LNURL.LNURL.Parse(lnurl, out var tag);
             var fetchedReuqest =
                 Assert.IsType<LNURL.LNURLPayRequest>(await LNURL.LNURL.FetchInformation(parsed, new HttpClient()));
@@ -3057,7 +3057,7 @@ namespace BTCPayServer.Tests
             i = s.CreateInvoice(storeId, 0.0000001m, cryptoCode);
             s.GoToInvoiceCheckout(i);
             // BOLT11 is also displayed for standard invoice (not LNURL, even if it is available)
-            var bolt11 = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LN .truncate-center-start")).Text;
+            var bolt11 = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LN .truncate-center")).GetAttribute("data-text");
             BOLT11PaymentRequest.Parse(bolt11, s.Server.ExplorerNode.Network);
             var invoiceId = s.Driver.Url.Split('/').Last();
             using (var resp = await s.Server.PayTester.HttpClient.GetAsync("BTC/lnurl/pay/i/" + invoiceId))
@@ -3110,7 +3110,7 @@ namespace BTCPayServer.Tests
 
             i = s.CreateInvoice(storeId, null, cryptoCode);
             s.GoToInvoiceCheckout(i);
-            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
+            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center")).GetAttribute("data-text");
             Assert.StartsWith("lnurlp", lnurl);
             LNURL.LNURL.Parse(lnurl, out tag);
 
@@ -3123,7 +3123,7 @@ namespace BTCPayServer.Tests
             Assert.Contains($"{cryptoCode} Lightning settings successfully updated", s.FindAlertMessage().Text);
             var invForPP = s.CreateInvoice(null, cryptoCode);
             s.GoToInvoiceCheckout(invForPP);
-            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center-start")).Text;
+            lnurl = s.Driver.FindElement(By.CssSelector("#Lightning_BTC-LNURL .truncate-center")).GetAttribute("data-text");
             LNURL.LNURL.Parse(lnurl, out tag);
 
             // Check that pull payment has lightning option

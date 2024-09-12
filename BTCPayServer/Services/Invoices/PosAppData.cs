@@ -11,6 +11,9 @@ public class PosAppData
     [JsonProperty(PropertyName = "cart")]
     public PosAppCartItem[] Cart { get; set; }
 
+    [JsonProperty(PropertyName = "amounts")]
+    public decimal[] Amounts { get; set; }
+
     [JsonProperty(PropertyName = "customAmount")]
     public decimal CustomAmount { get; set; }
 

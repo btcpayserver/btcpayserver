@@ -19,6 +19,8 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
@@ -494,7 +496,6 @@ namespace BTCPayServer.Tests
 
             var paymentMethod = entity.GetPaymentPrompts().TryGet(PaymentTypes.CHAIN.GetPaymentMethodId("BTC"));
             var accounting = paymentMethod.Calculate();
-            Assert.Equal(1.0m, accounting.ToSmallestUnit(Money.Satoshis(1.0m).ToDecimal(MoneyUnit.BTC)));
             Assert.Equal(1.1m, accounting.Due);
             Assert.Equal(1.1m, accounting.TotalDue);
 

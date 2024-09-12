@@ -22,7 +22,7 @@
 					Type = prettyName.PrettyName(payment.PaymentMethodId),
 					BOLT11 = offChainPaymentData.BOLT11,
 					PaymentProof = offChainPaymentData.Preimage?.ToString(),
-							Amount = DisplayFormatter.Currency(payment.Value, handler.Network.CryptoCode)
+					Amount = DisplayFormatter.Currency(payment.Value, handler.Network.CryptoCode, divisibility: payment.Divisibility)
 				};
 			})
         .Where(model => model != null)

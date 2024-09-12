@@ -59,18 +59,28 @@ namespace BTCPayServer.Controllers
                 .Skip(model.Skip)
                 .Take(model.Count)
                 .ToListAsync())
-                .Select(u => new UsersViewModel.UserViewModel
+                .Select(u =>
                 {
-                    Name = u.GetBlob()?.Name,
-                    ImageUrl = u.GetBlob()?.ImageUrl,
-                    Email = u.Email,
-                    Id = u.Id,
-                    EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
-                    Approved = u.RequiresApproval ? u.Approved : null,
-                    Created = u.Created,
-                    Roles = u.UserRoles.Select(role => role.RoleId),
-                    Disabled = u.LockoutEnabled && u.LockoutEnd != null && DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
-                    Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
+                    var blob = u.GetBlob();
+                    return new UsersViewModel.UserViewModel
+                    {
+                        Name = blob?.Name,
+                        ImageUrl = blob?.ImageUrl,
+                        Email = u.Email,
+                        Id = u.Id,
+                        InvitationUrl =
+                            string.IsNullOrEmpty(blob?.InvitationToken)
+                                ? null
+                                : _linkGenerator.InvitationLink(u.Id, blob.InvitationToken, Request.Scheme,
+                                    Request.Host, Request.PathBase),
+                        EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
+                        Approved = u.RequiresApproval ? u.Approved : null,
+                        Created = u.Created,
+                        Roles = u.UserRoles.Select(role => role.RoleId),
+                        Disabled = u.LockoutEnabled && u.LockoutEnd != null &&
+                                   DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
+                        Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
+                    };
                 })
                 .ToList();
             return View(model);
@@ -89,6 +99,7 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Name = blob?.Name,
+                InvitationUrl = string.IsNullOrEmpty(blob?.InvitationToken) ? null : _linkGenerator.InvitationLink(user.Id, blob.InvitationToken, Request.Scheme, Request.Host, Request.PathBase),
                 ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
@@ -201,16 +212,20 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("server/users/new")]
-        public IActionResult CreateUser()
+        public async Task<IActionResult> CreateUser()
         {
-            ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
-            return View();
+            await PrepareCreateUserViewData();
+            var vm = new RegisterFromAdminViewModel
+            {
+                SendInvitationEmail = ViewData["CanSendEmail"] is true
+            };
+            return View(vm);
         }
 
         [HttpPost("server/users/new")]
         public async Task<IActionResult> CreateUser(RegisterFromAdminViewModel model)
         {
-            ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
+            await PrepareCreateUserViewData();
             if (!_Options.CheatMode)
                 model.IsAdmin = false;
             if (ModelState.IsValid)
@@ -237,6 +252,7 @@ namespace BTCPayServer.Controllers
 
                     var tcs = new TaskCompletionSource<Uri>();
                     var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
+                    var sendEmail = model.SendInvitationEmail && ViewData["CanSendEmail"] is true;
 
                     _eventAggregator.Publish(new UserRegisteredEvent
                     {
@@ -244,23 +260,23 @@ namespace BTCPayServer.Controllers
                         Kind = UserRegisteredEventKind.Invite,
                         User = user,
                         InvitedByUser = currentUser,
+                        SendInvitationEmail = sendEmail,
                         Admin = model.IsAdmin,
                         CallbackUrlGenerated = tcs
                     });
                     
                     var callbackUrl = await tcs.Task;
-                    var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                    var info = settings.IsComplete()
-                        ? "An invitation email has been sent.<br/>You may alternatively"
-                        : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
+                    var info = sendEmail
+                        ? "An invitation email has been sent. You may alternatively"
+                        : "An invitation email has not been sent. You need to";
                     
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         AllowDismiss = false,
-                        Html = $"Account successfully created. {info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>"
+                        Html = $"Account successfully created. {info} share this link with them:<br/>{callbackUrl}"
                     });
-                    return RedirectToAction(nameof(ListUsers));
+                    return RedirectToAction(nameof(User), new { userId = user.Id });
                 }
 
                 foreach (var error in result.Errors)
@@ -392,6 +408,13 @@ namespace BTCPayServer.Controllers
             TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";
             return RedirectToAction(nameof(ListUsers));
         }
+
+        private async Task PrepareCreateUserViewData()
+        {
+            var emailSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            ViewData["CanSendEmail"] = emailSettings.IsComplete();
+            ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
+        }
     }
 
     public class RegisterFromAdminViewModel
@@ -416,5 +439,8 @@ namespace BTCPayServer.Controllers
 
         [Display(Name = "Email confirmed?")]
         public bool EmailConfirmed { get; set; }
+
+        [Display(Name = "Send invitation email")]
+        public bool SendInvitationEmail { get; set; } = true;
     }
 }

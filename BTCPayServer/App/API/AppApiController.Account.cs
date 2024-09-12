@@ -214,7 +214,7 @@ public partial class AppApiController
             return NotFound();
         }
 
-        var user = await userManager.FindByInvitationTokenAsync(invite.UserId, Uri.UnescapeDataString(invite.Code));
+        var user = await userManager.FindByInvitationTokenAsync<ApplicationUser>(invite.UserId, Uri.UnescapeDataString(invite.Code));
         if (user == null)
         {
             return NotFound();

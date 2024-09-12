@@ -5,8 +5,8 @@ namespace BTCPayApp.CommonServer.Models;
 public class SignupRequest
 {
     [Required]
-    public string? Email { get; init; }
+    public string Email { get; init; } = null!;
     
     [Required]
-    public string? Password { get; init; }
+    public string Password { get; init; } = null!;
 }

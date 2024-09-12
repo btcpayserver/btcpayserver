@@ -10,6 +10,6 @@ public class UserEvent(ApplicationUser user, string? detail = null)
 
     protected new virtual string ToString()
     {
-        return $"UserEvent: User \"{user.Email}\" ({user.Id})";
+        return $"UserEvent: User \"{User.Email}\" ({User.Id})";
     }
 }

@@ -1,3 +1,4 @@
+#nullable enable
 namespace BTCPayServer.Events;
 
 public class UserStoreAddedEvent(string storeId, string userId, string? detail = null) : UserStoreEvent(storeId, userId, detail)

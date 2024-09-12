@@ -2,8 +2,8 @@ namespace BTCPayApp.CommonServer.Models;
 
 public class AppInstanceInfo
 {
-    public string BaseUrl { get; set; }
-    public string ServerName { get; set; }
+    public string BaseUrl { get; set; } = null!;
+    public string ServerName { get; set; } = null!;
     public string? ContactUrl { get; set; }
     public string? LogoUrl { get; set; }
     public string? CustomThemeCssUrl { get; set; }

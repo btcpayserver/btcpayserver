@@ -83,7 +83,7 @@ curl -s -k -X PUT -H 'Content-Type: application/json' \
 # Fund Satoshis Steaks wallet
 btcaddress_satoshis_steaks=$(curl -s -k -X GET -H 'Content-Type: application/json' \
     -H "Authorization: token $admin_api_key" \
-    "$API_BASE/stores/$store_id_satoshis_steaks/payment-methods/onchain/BTC/wallet/address" | jq -r '.address')
+    "$API_BASE/stores/$store_id_satoshis_steaks/payment-methods/BTC-CHAIN/wallet/address" | jq -r '.address')
 
 ./docker-bitcoin-cli.sh sendtoaddress "$btcaddress_satoshis_steaks" 6.15 >/dev/null 2>&1
 
@@ -167,7 +167,7 @@ printf "Nakamoto Nuggets Cart POS ID: %s\n" "$cart_app_id_nakamoto_nuggets"
 # Fund Nakamoto Nuggets wallet
 btcaddress_nakamoto_nuggets=$(curl -s -k -X GET -H 'Content-Type: application/json' \
     -H "Authorization: token $admin_api_key" \
-    "$API_BASE/stores/$store_id_nakamoto_nuggets/payment-methods/onchain/BTC/wallet/address" | jq -r '.address')
+    "$API_BASE/stores/$store_id_nakamoto_nuggets/payment-methods/BTC-CHAIN/wallet/address" | jq -r '.address')
 
 ./docker-bitcoin-cli.sh sendtoaddress "$btcaddress_nakamoto_nuggets" 6.15 >/dev/null 2>&1
 

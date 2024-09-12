@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
@@ -3105,6 +3106,8 @@ namespace BTCPayServer.Tests
             });
 
             Assert.Equal(firstAddress, (await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC", xpub)).Addresses.First().Address);
+            // Testing if the rewrite rule to old API path is working
+            await viewOnlyClient.SendHttpRequest($"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", new JObject() { ["config"] = xpub.ToString() }, HttpMethod.Post);
 
             var method = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = JValue.CreateString(xpub.ToString())});
 
@@ -3383,6 +3386,12 @@ namespace BTCPayServer.Tests
             await AssertHttpError(403, async () =>
             {
                 await viewOnlyClient.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
+            });
+
+            // Testing if the rewrite rule to old API path is working
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.SendHttpRequest($"api/v1/stores/{walletId.StoreId}/payment-methods/onchain/{walletId.CryptoCode}/wallet/address", null as object);
             });
             var address = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);
             var address2 = await client.GetOnChainWalletReceiveAddress(walletId.StoreId, walletId.CryptoCode);

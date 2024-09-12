@@ -281,6 +281,10 @@ namespace BTCPayServer.Hosting
             var rewriteOptions = new RewriteOptions();
             rewriteOptions.AddRewrite("_blazor/(negotiate|initializers|disconnect)$", "/_blazor/$1", skipRemainingRules: true);
             rewriteOptions.AddRewrite("_blazor$", "/_blazor", skipRemainingRules: true);
+
+            // A rewrite rule to support the old API
+            rewriteOptions.AddRewrite("api/v1/stores/([^/]+)/payment-methods/[Oo]n[Cc]hain/([^/]+)/(preview|generate)", "/api/v1/stores/$1/payment-methods/$2-CHAIN/wallet/$3", skipRemainingRules: true);
+            rewriteOptions.AddRewrite("api/v1/stores/([^/]+)/payment-methods/[Oo]n[Cc]hain/([^/]+)(.*)", "/api/v1/stores/$1/payment-methods/$2-CHAIN$3", skipRemainingRules: true);
             app.UseRewriter(rewriteOptions);
 
             app.UseHeadersOverride();

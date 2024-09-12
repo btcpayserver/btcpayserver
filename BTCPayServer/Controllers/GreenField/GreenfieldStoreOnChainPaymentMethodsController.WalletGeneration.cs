@@ -19,7 +19,7 @@ namespace BTCPayServer.Controllers.Greenfield
     public partial class GreenfieldStoreOnChainPaymentMethodsController
     {
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/generate")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/generate")]
         [EnableCors(CorsPolicies.All)]
         public async Task<IActionResult> GenerateOnChainWallet(string storeId,
             [ModelBinder(typeof(PaymentMethodIdModelBinder))]

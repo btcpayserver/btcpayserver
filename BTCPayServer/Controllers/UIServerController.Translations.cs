@@ -88,11 +88,11 @@ namespace BTCPayServer.Controllers
                 {
                     prop.Value = "OK";
                 }
-                viewModel.Translations = Translations.CreateFromJson(jobj.ToString()).ToTextFormat();
+                viewModel.Translations = Translations.CreateFromJson(jobj.ToString()).ToJsonFormat();
             }
 
 
-            if (!Translations.TryCreateFromText(viewModel.Translations, out var translations))
+            if (!Translations.TryCreateFromJson(viewModel.Translations, out var translations))
             {
                 ModelState.AddModelError(nameof(viewModel.Translations), "Syntax error");
                 return View(viewModel);

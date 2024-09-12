@@ -1,6 +1,6 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -17,14 +17,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "type",
@@ -50,7 +43,10 @@
                         "in": "query",
                         "required": false,
                         "description": "Whether or not you should include neighbour's node data in the result (ie, `links.objectData`)",
-                        "schema": { "type": "boolean", "default": true }
+                        "schema": {
+                            "type": "boolean",
+                            "default": true
+                        }
                     }
                 ],
                 "description": "View wallet objects",
@@ -101,14 +97,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "Add/Update wallet objects",
@@ -151,7 +140,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -168,14 +157,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "objectType",
@@ -253,14 +235,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "objectType",
@@ -306,7 +281,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}/links": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links": {
             "post": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -323,14 +298,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "objectType",
@@ -386,7 +354,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/objects/{objectType}/{objectId}/links/{linkType}/{linkId}": {
             "delete": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -403,14 +371,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "objectType",

@@ -2,6 +2,10 @@ using BTCPayServer.Payments;
 
 namespace BTCPayServer.Payouts
 {
+    public class PayoutMethodIds
+    {
+        public static readonly PayoutMethodId TopUp = PayoutMethodId.Parse("TOPUP");
+    }
     public class PayoutTypes
     {
         public static readonly PayoutType LN = new("LN");

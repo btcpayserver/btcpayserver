@@ -57,7 +57,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var blob = data.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob() ?? new LightningAutomatedPayoutBlob();
             return new LightningAutomatedPayoutSettings()
             {
-                PaymentMethod = data.PaymentMethod,
+                PayoutMethodId = data.PayoutMethodId,
                 IntervalSeconds = blob.Interval,
                 CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers.Greenfield
             activeProcessor ??= new PayoutProcessorData();
             activeProcessor.HasTypedBlob<LightningAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
-            activeProcessor.PaymentMethod = pmi.ToString();
+            activeProcessor.PayoutMethodId = pmi.ToString();
             activeProcessor.Processor = LightningAutomatedPayoutSenderFactory.ProcessorName;
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()

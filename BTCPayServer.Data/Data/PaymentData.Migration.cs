@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
@@ -13,16 +14,17 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
-    public partial class PaymentData
+    public partial class PaymentData : MigrationInterceptor.IHasMigration
     {
-        public void Migrate()
+        public bool TryMigrate()
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             if (Currency is not null)
-                return;
+                return false;
             if (Blob is not (null or { Length: 0 }))
             {
                 Blob2 = MigrationExtensions.Unzip(Blob);
+                Blob2 = MigrationExtensions.SanitizeJSON(Blob2);
                 Blob = null;
             }
             var blob = JObject.Parse(Blob2);
@@ -157,7 +159,10 @@ namespace BTCPayServer.Data
 			Blob2 = blob.ToString(Formatting.None);
             Accounted = null;
 #pragma warning restore CS0618 // Type or member is obsolete
+            return true;
         }
+        [NotMapped]
+        public bool Migrated { get; set; }
 
         static readonly DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
         public static long DateTimeToMilliUnixTime(in DateTime time)

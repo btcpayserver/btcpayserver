@@ -1,4 +1,3 @@
-#if ALTCOINS
 namespace BTCPayServer.Services.Altcoins.Zcash.RPC
 {
     public class ZcashEvent
@@ -14,4 +13,3 @@ namespace BTCPayServer.Services.Altcoins.Zcash.RPC
         }
     }
 }
-#endif

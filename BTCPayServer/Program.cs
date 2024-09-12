@@ -61,6 +61,7 @@ namespace BTCPayServer
                             l.AddFilter("Events", LogLevel.Warning);
                         // Uncomment this to see EF queries
                         //l.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Trace);
+                        l.AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information);
                         l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
                         l.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);

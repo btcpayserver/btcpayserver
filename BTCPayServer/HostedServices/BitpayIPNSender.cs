@@ -11,6 +11,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
 using MimeKit;
@@ -45,6 +46,7 @@ namespace BTCPayServer.HostedServices
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly StoreRepository _StoreRepository;
         private readonly Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> _bitpayExtensions;
+        private readonly CurrencyNameTable _currencyNameTable;
         public const string NamedClient = "bitpay-ipn";
         public BitpayIPNSender(
             IHttpClientFactory httpClientFactory,
@@ -53,6 +55,7 @@ namespace BTCPayServer.HostedServices
             InvoiceRepository invoiceRepository,
             StoreRepository storeRepository,
             Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions,
+            CurrencyNameTable currencyNameTable,
             EmailSenderFactory emailSenderFactory)
         {
             _Client = httpClientFactory.CreateClient(NamedClient);
@@ -62,11 +65,12 @@ namespace BTCPayServer.HostedServices
             _EmailSenderFactory = emailSenderFactory;
             _StoreRepository = storeRepository;
             _bitpayExtensions = bitpayExtensions;
+            _currencyNameTable = currencyNameTable;
         }
 
         async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification, bool sendMail)
         {
-            var dto = invoice.EntityToDTO(_bitpayExtensions);
+            var dto = invoice.EntityToDTO(_bitpayExtensions, _currencyNameTable);
             var notification = new InvoicePaymentNotificationEventWrapper()
             {
                 Data = new InvoicePaymentNotification()

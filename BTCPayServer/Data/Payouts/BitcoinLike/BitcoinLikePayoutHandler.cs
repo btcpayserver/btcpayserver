@@ -424,18 +424,17 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(newTransaction.CryptoCode);
 
             await using var ctx = _dbContextFactory.CreateContext();
-            var payouts = await ctx.Payouts
+            var payout = await ctx.Payouts
                 .Include(o => o.StoreData)
                 .Include(o => o.PullPaymentData)
                 .Where(p => p.State == PayoutState.AwaitingPayment)
                 .Where(p => p.PayoutMethodId == paymentMethodId.ToString())
 #pragma warning disable CA1307 // Specify StringComparison
-                .Where(p => destination.Equals(p.Destination))
+                .Where(p => destination.Equals(p.DedupId))
 #pragma warning restore CA1307 // Specify StringComparison
-                .ToListAsync();
-            var payoutByDestination = payouts.ToDictionary(p => p.Destination);
+                .FirstOrDefaultAsync();
 
-            if (!payoutByDestination.TryGetValue(destination, out var payout))
+            if (payout is null)
                 return;
             var payoutBlob = payout.GetBlob(_jsonSerializerSettings);
             if (payout.Amount is null ||

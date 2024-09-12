@@ -3,6 +3,7 @@ using System.Linq;
 using BTCPayServer.Models;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
 
@@ -13,9 +14,11 @@ namespace BTCPayServer.Payments.Bitcoin
         public BitcoinPaymentMethodBitpayAPIExtension(
       PaymentMethodId paymentMethodId,
       IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
+      CurrencyNameTable currencyNameTable,
       PaymentMethodHandlerDictionary handlers)
         {
             PaymentMethodId = paymentMethodId;
+            _currencyNameTable = currencyNameTable;
             paymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
             handler = (BitcoinLikePaymentHandler)handlers[paymentMethodId];
         }
@@ -23,6 +26,16 @@ namespace BTCPayServer.Payments.Bitcoin
 
         private IPaymentLinkExtension paymentLinkExtension;
         private BitcoinLikePaymentHandler handler;
+        private readonly CurrencyNameTable _currencyNameTable;
+
+        internal static decimal ToSmallestUnit(int divisibility, decimal v)
+        {
+            for (int i = 0; i < divisibility; i++)
+            {
+                v *= 10.0m;
+            }
+            return v;
+        }
 
         public void PopulateCryptoInfo(Services.Invoices.InvoiceCryptoInfo cryptoInfo, InvoiceResponse dto, PaymentPrompt prompt, IUrlHelper urlHelper)
         {
@@ -32,8 +45,11 @@ namespace BTCPayServer.Payments.Bitcoin
                 BIP21 = paymentLinkExtension.GetPaymentLink(prompt, urlHelper),
             };
             var minerInfo = new MinerFeeInfo();
-            minerInfo.TotalFee = accounting.ToSmallestUnit(accounting.PaymentMethodFee);
 
+            if (_currencyNameTable.GetCurrencyData(prompt.Currency, false)?.Divisibility is int divisibility)
+            {
+                minerInfo.TotalFee = ToSmallestUnit(divisibility, accounting.PaymentMethodFee);
+            }
             minerInfo.SatoshiPerBytes = handler.ParsePaymentPromptDetails(prompt.Details).RecommendedFeeRate.SatoshiPerByte;
             dto.MinerFees.TryAdd(cryptoInfo.CryptoCode, minerInfo);
 

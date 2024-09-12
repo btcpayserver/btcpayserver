@@ -527,7 +527,7 @@ retry:
         {
             var server = new FakeServer();
             await server.Start();
-            var client = await CreateClient(Policies.CanModifyStoreWebhooks);
+            var client = await CreateClient(Policies.CanModifyWebhooks);
             var wh = await client.CreateWebhook(StoreId, new CreateStoreWebhookRequest()
             {
                 AutomaticRedelivery = false,

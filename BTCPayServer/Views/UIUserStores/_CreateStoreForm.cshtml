@@ -22,6 +22,6 @@
         <span asp-validation-for="PreferredExchange" class="text-danger"></span>
     </div>
     <div class="form-group mt-4">
-		<input type="submit" value="Create Store" class="btn btn-primary" id="Create" />
+		<input type="submit" value="Create Store" class="btn btn-primary @(Model.IsFirstStore ? "w-100" : null)" id="Create" />
     </div>
 </form>

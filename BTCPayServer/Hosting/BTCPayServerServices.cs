@@ -71,19 +71,9 @@ using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
-
-
-
-
-
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
 
-
-#if ALTCOINS
-using BTCPayServer.Services.Altcoins.Monero;
-using BTCPayServer.Services.Altcoins.Zcash;
-#endif
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices

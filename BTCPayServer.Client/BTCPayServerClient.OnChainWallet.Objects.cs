@@ -15,7 +15,7 @@ public partial class BTCPayServerClient
             parameters.Add("includeNeighbourData", v);
         try
         {
-            return await SendHttpRequest<OnChainWalletObjectData>($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}", parameters, HttpMethod.Get, token);
+            return await SendHttpRequest<OnChainWalletObjectData>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/objects/{objectId.Type}/{objectId.Id}", parameters, HttpMethod.Get, token);
         }
         catch (GreenfieldAPIException err) when (err.APIError.Code == "wallet-object-not-found")
         {
@@ -31,17 +31,17 @@ public partial class BTCPayServerClient
             parameters.Add("ids", ids);
         if (query?.IncludeNeighbourData is bool v)
             parameters.Add("includeNeighbourData", v);
-        return await SendHttpRequest<OnChainWalletObjectData[]>($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects", parameters, HttpMethod.Get, token);
+        return await SendHttpRequest<OnChainWalletObjectData[]>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/objects", parameters, HttpMethod.Get, token);
     }
     public virtual async Task RemoveOnChainWalletObject(string storeId, string cryptoCode, OnChainWalletObjectId objectId,
         CancellationToken token = default)
     {
-        await SendHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}", null, HttpMethod.Delete, token);
+        await SendHttpRequest($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/objects/{objectId.Type}/{objectId.Id}", null, HttpMethod.Delete, token);
     }
     public virtual async Task<OnChainWalletObjectData> AddOrUpdateOnChainWalletObject(string storeId, string cryptoCode, AddOnChainWalletObjectRequest request,
         CancellationToken token = default)
     {
-        return await SendHttpRequest<OnChainWalletObjectData>($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects", request, HttpMethod.Post, token);
+        return await SendHttpRequest<OnChainWalletObjectData>($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/objects", request, HttpMethod.Post, token);
     }
 
     public virtual async Task AddOrUpdateOnChainWalletLink(string storeId, string cryptoCode,
@@ -49,7 +49,7 @@ public partial class BTCPayServerClient
         AddOnChainWalletObjectLinkRequest request = null,
         CancellationToken token = default)
     {
-        await SendHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}/links", request, HttpMethod.Post, token);
+        await SendHttpRequest($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/objects/{objectId.Type}/{objectId.Id}/links", request, HttpMethod.Post, token);
     }
 
     public virtual async Task RemoveOnChainWalletLinks(string storeId, string cryptoCode,
@@ -57,6 +57,6 @@ public partial class BTCPayServerClient
         OnChainWalletObjectId link,
         CancellationToken token = default)
     {
-        await SendHttpRequest($"api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/objects/{objectId.Type}/{objectId.Id}/links/{link.Type}/{link.Id}", null, HttpMethod.Delete, token);
+        await SendHttpRequest($"api/v1/stores/{storeId}/payment-methods/{cryptoCode}-CHAIN/wallet/objects/{objectId.Type}/{objectId.Id}/links/{link.Type}/{link.Id}", null, HttpMethod.Delete, token);
     }
 }

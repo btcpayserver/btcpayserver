@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Generic;
 
@@ -19,4 +18,3 @@ namespace BTCPayServer.Services.Altcoins.Monero.Configuration
         public string Password { get; set; }
     }
 }
-#endif

@@ -59,6 +59,14 @@ namespace BTCPayServer.Tests
                     PullPaymentDataId = null as string,
                     PaymentMethodId = "BTC_LightningLike",
                     Blob = "{\"Amount\": \"10.0\", \"Revision\": 0, \"Destination\": \"address\", \"CryptoAmount\": null, \"MinimumConfirmation\": 1}"
+                },
+                new
+                {
+                    Id = "p4",
+                    StoreId = "store1",
+                    PullPaymentDataId = null as string,
+                    PaymentMethodId = "BTC_LightningLike",
+                    Blob = "{\"Amount\": \"-10.0\", \"Revision\": 0, \"Destination\": \"address\", \"CryptoAmount\": null, \"MinimumConfirmation\": 1}"
                 }
             };
             await conn.ExecuteAsync("INSERT INTO \"Payouts\"(\"Id\", \"StoreDataId\", \"PullPaymentDataId\", \"PaymentMethodId\", \"Blob\", \"State\", \"Date\") VALUES (@Id, @StoreId, @PullPaymentDataId, @PaymentMethodId, @Blob::JSONB, 'state', NOW())", parameters);
@@ -74,6 +82,9 @@ namespace BTCPayServer.Tests
             Assert.True(migrated);
 
             migrated = await conn.ExecuteScalarAsync<bool>("SELECT 't'::BOOLEAN FROM \"Payouts\" WHERE \"Id\"='p3' AND \"Amount\" IS NULL AND \"OriginalAmount\"=10.0 AND \"OriginalCurrency\"='BTC'");
+            Assert.True(migrated);
+
+            migrated = await conn.ExecuteScalarAsync<bool>("SELECT 't'::BOOLEAN FROM \"Payouts\" WHERE \"Id\"='p4' AND \"Amount\" IS NULL AND \"OriginalAmount\"=-10.0 AND \"OriginalCurrency\"='BTC' AND \"PayoutMethodId\"='TOPUP'");
             Assert.True(migrated);
         }
     }

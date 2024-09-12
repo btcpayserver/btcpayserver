@@ -89,7 +89,7 @@
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
                 const tooltip = Chartist.plugins.tooltip2({
-                    template: '{{value}}',
+                    template: '<div class="chartist-tooltip-value">{{value}}</div><div class="chartist-tooltip-line"></div>',
                     offset: {
                         x: 0,
                         y: -16

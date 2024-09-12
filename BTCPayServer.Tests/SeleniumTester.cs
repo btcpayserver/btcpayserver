@@ -55,6 +55,7 @@ namespace BTCPayServer.Tests
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
             options.AddArgument("start-maximized");
+            options.AddArgument("disable-search-engine-choice-screen");
             if (Server.PayTester.InContainer)
             {
                 // Shot in the dark to fix https://stackoverflow.com/questions/53902507/unknown-error-session-deleted-because-of-page-crash-from-unknown-error-cannot

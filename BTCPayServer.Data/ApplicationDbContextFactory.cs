@@ -1,6 +1,4 @@
 using System;
-using System.Runtime.CompilerServices;
-using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
@@ -23,7 +21,7 @@ namespace BTCPayServer.Data
         {
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
             builder.UseLoggerFactory(LoggerFactory);
-            builder.AddInterceptors(Data.InvoiceData.MigrationInterceptor.Instance);
+            builder.AddInterceptors(MigrationInterceptor.Instance);
             ConfigureBuilder(builder, npgsqlOptionsAction);
             return new ApplicationDbContext(builder.Options);
         }

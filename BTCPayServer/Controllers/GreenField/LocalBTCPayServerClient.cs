@@ -14,6 +14,7 @@ using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -1140,6 +1141,18 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<AppBaseData[]>(
                 await GetController<GreenfieldAppsController>().GetAllApps());
+        }
+
+        public override async Task<AppSalesStats> GetAppSales(string appId, int numberOfDays = 7, CancellationToken token = default)
+        {
+            return GetFromActionResult<AppSalesStats>(
+                await GetController<GreenfieldAppsController>().GetAppSales(appId, numberOfDays));
+        }
+
+        public override async Task<List<AppItemStats>> GetAppTopItems(string appId, int offset = 0, int count = 10, CancellationToken token = default)
+        {
+            return GetFromActionResult<List<AppItemStats>>(
+                await GetController<GreenfieldAppsController>().GetAppTopItems(appId, offset, count));
         }
 
         public override async Task DeleteApp(string appId, CancellationToken token = default)

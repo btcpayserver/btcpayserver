@@ -1711,7 +1711,7 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             user.GrantAccess();
             user.RegisterDerivationScheme("BTC");
-            var clientProfile = await user.CreateClient(Policies.CanModifyStoreWebhooks, Policies.CanCreateInvoice);
+            var clientProfile = await user.CreateClient(Policies.CanModifyWebhooks, Policies.CanCreateInvoice);
             var hook = await clientProfile.CreateWebhook(user.StoreId, new CreateStoreWebhookRequest()
             {
                 Url = fakeServer.ServerUri.AbsoluteUri,

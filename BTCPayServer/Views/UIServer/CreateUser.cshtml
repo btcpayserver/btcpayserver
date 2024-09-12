@@ -1,6 +1,9 @@
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Controllers.RegisterFromAdminViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Users, "Create account");
+    var canSendEmail = ViewData["CanSendEmail"] is true;
 }
 
 <form method="post" asp-action="CreateUser">
@@ -55,6 +58,17 @@
                     <span asp-validation-for="EmailConfirmed" class="text-danger"></span>
                 </div>
             }
+            <div class="d-flex my-3">
+                <input asp-for="SendInvitationEmail" type="checkbox" class="btcpay-toggle me-3" disabled="@(canSendEmail ? null : "disabled")" />
+                <div>
+                    <label asp-for="SendInvitationEmail" class="form-check-label"></label>
+                    <span asp-validation-for="SendInvitationEmail" class="text-danger"></span>
+                    @if (!canSendEmail)
+                    {
+                        <div class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </form>

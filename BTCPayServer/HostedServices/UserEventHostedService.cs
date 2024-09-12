@@ -73,11 +73,12 @@ public class UserEventHostedService(
                 emailSender = await emailSenderFactory.GetEmailSender();
                 if (isInvite)
                 {
-                    code = await userManager.GenerateInvitationTokenAsync(user);
+                    code = await userManager.GenerateInvitationTokenAsync<ApplicationUser>(user.Id);
                     callbackUrl = generator.InvitationLink(user.Id, code, uri.Scheme, host, uri.PathAndQuery);
                     ev.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
 
-                    emailSender.SendInvitation(user.GetMailboxAddress(), callbackUrl);
+                    if (ev.SendInvitationEmail)
+                        emailSender.SendInvitation(user.GetMailboxAddress(), callbackUrl);
                 }
                 else if (requiresEmailConfirmation)
                 {

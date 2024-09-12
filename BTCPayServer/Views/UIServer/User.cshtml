@@ -21,6 +21,22 @@
 		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
+
+    @if (!string.IsNullOrEmpty(Model.InvitationUrl))
+    {
+        <div class="payment-box mx-0 mb-5">
+            <div class="qr-container">
+                <vc:qr-code data="@Model.InvitationUrl" />
+            </div>
+            <div class="input-group mt-3">
+                <div class="form-floating">
+                    <vc:truncate-center text="@Model.InvitationUrl" padding="15" elastic="true" classes="form-control-plaintext" id="InvitationUrl"/>
+                    <label for="InvitationUrl">Invitation URL</label>
+                </div>
+            </div>
+        </div>
+    }
+    
     <div class="form-group">
         <label asp-for="Name" class="form-label"></label>
         <input asp-for="Name" class="form-control" />

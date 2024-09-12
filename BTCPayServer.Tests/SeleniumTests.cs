@@ -2690,9 +2690,9 @@ namespace BTCPayServer.Tests
             var sums = cartData.FindElements(By.CssSelector("tfoot tr"));
             Assert.Equal(2, items.Count);
             Assert.Equal(4, sums.Count);
-            Assert.Contains("Manual entry 1", items[0].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("Custom Amount 1", items[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1 234,00 €", items[0].FindElement(By.CssSelector("td")).Text);
-            Assert.Contains("Manual entry 2", items[1].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("Custom Amount 2", items[1].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("0,56 €", items[1].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Subtotal", sums[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1 234,56 €", sums[0].FindElement(By.CssSelector("td")).Text);
@@ -2713,9 +2713,9 @@ namespace BTCPayServer.Tests
             sums = paymentDetails.FindElements(By.CssSelector("tr.sums-data"));
             Assert.Equal(2, items.Count);
             Assert.Equal(4, sums.Count);
-            Assert.Contains("Manual entry 1", items[0].FindElement(By.CssSelector(".key")).Text);
+            Assert.Contains("Custom Amount 1", items[0].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("1 234,00 €", items[0].FindElement(By.CssSelector(".val")).Text);
-            Assert.Contains("Manual entry 2", items[1].FindElement(By.CssSelector(".key")).Text);
+            Assert.Contains("Custom Amount 2", items[1].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("0,56 €", items[1].FindElement(By.CssSelector(".val")).Text);
             Assert.Contains("Subtotal", sums[0].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("1 234,56 €", sums[0].FindElement(By.CssSelector(".val")).Text);
@@ -2776,7 +2776,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("1 x 1,00 € = 1,00 €", items[0].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Green Tea", items[1].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("2 x 1,00 € = 2,00 €", items[1].FindElement(By.CssSelector("td")).Text);
-            Assert.Contains("Manual entry 1", items[2].FindElement(By.CssSelector("th")).Text);
+            Assert.Contains("Custom Amount 1", items[2].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("1,23 €", items[2].FindElement(By.CssSelector("td")).Text);
             Assert.Contains("Total", sums[0].FindElement(By.CssSelector("th")).Text);
             Assert.Contains("4,23 €", sums[0].FindElement(By.CssSelector("td")).Text);
@@ -2795,7 +2795,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("1 x 1,00 € = 1,00 €", items[0].FindElement(By.CssSelector(".val")).Text);
             Assert.Contains("Green Tea", items[1].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("2 x 1,00 € = 2,00 €", items[1].FindElement(By.CssSelector(".val")).Text);
-            Assert.Contains("Manual entry 1", items[2].FindElement(By.CssSelector(".key")).Text);
+            Assert.Contains("Custom Amount 1", items[2].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("1,23 €", items[2].FindElement(By.CssSelector(".val")).Text);
             Assert.Contains("Total", sums[0].FindElement(By.CssSelector(".key")).Text);
             Assert.Contains("4,23 €", sums[0].FindElement(By.CssSelector(".val")).Text);

@@ -377,7 +377,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                 {
                                     for (var i = 0; i < amountsArray.Count; i++)
                                     {
-                                        cartData.Add($"Manual entry {i+1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                                        cartData.Add($"Custom Amount {i+1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                                     }
                                 }
                                 receiptData.Add("Cart", cartData);

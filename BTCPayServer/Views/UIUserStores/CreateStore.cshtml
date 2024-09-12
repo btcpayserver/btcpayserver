@@ -8,16 +8,27 @@
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script>
-	  const exchanges = @Safe.Json(DefaultRules.RecommendedExchanges);
-	  const recommended = document.querySelector("#PreferredExchange option[value='']")
-	  const updateRecommended = currency => {
-		  const source = exchanges[currency] || 'coingecko'
-		  const name = source.charAt(0).toUpperCase() + source.slice(1)
-		  recommended.innerText = `Recommendation (${name})`
-	  }
-	  updateRecommended(@Safe.Json(Model.DefaultCurrency))
-	  delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))
-	</script>
+        const exchanges = @Safe.Json(DefaultRules.RecommendedExchanges);
+        const exchangeSelect = document.querySelector("#PreferredExchange");
+        const savedDefaultCurrency = @Safe.Json(Model.DefaultCurrency);
+        const savedDefaultExchange = @Safe.Json(Model.PreferredExchange);
+        const recommended = exchangeSelect.querySelector("option[value='']");
+
+        const updateRecommended = currency => {
+            let source = (currency === savedDefaultCurrency)
+                ? (savedDefaultExchange || exchanges[currency] || 'coingecko')
+                : (exchanges[currency] || 'coingecko');
+
+            const optionToSelect = Array.from(exchangeSelect.options).find(option => option.value === source);
+            if (optionToSelect) {
+                exchangeSelect.value = optionToSelect.value;
+            }
+            const name = source.charAt(0).toUpperCase() + source.slice(1)
+            recommended.innerText = `Recommendation (${name})`
+        }
+        updateRecommended(@Safe.Json(Model.DefaultCurrency))
+        delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value));
+    </script>
 }
 
 @if (Model.IsFirstStore)

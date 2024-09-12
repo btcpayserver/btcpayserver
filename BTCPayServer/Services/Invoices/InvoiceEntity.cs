@@ -13,6 +13,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -521,11 +522,11 @@ namespace BTCPayServer.Services.Invoices
             return DateTimeOffset.UtcNow > ExpirationTime;
         }
 
-        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions)
+        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions, CurrencyNameTable currencyNameTable)
         {
-            return EntityToDTO(bitpayExtensions, null);
+            return EntityToDTO(bitpayExtensions, null, currencyNameTable);
         }
-        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions, IUrlHelper urlHelper)
+        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions, IUrlHelper urlHelper, CurrencyNameTable currencyNameTable)
         {
             ServerUrl = ServerUrl ?? "";
             InvoiceResponse dto = new InvoiceResponse
@@ -608,8 +609,11 @@ namespace BTCPayServer.Services.Invoices
                 // is for legacy compatibility with the Bitpay API
                 var paymentCode = GetPaymentCode(info.Currency, paymentId);
                 dto.PaymentCodes.Add(paymentCode, cryptoInfo.PaymentUrls);
-                dto.PaymentSubtotals.Add(paymentCode, accounting.ToSmallestUnit(subtotalPrice));
-                dto.PaymentTotals.Add(paymentCode, accounting.ToSmallestUnit(accounting.TotalDue));
+                if (info.Currency is not null && currencyNameTable.GetCurrencyData(info.Currency, true)?.Divisibility is int divisibility)
+                {
+                    dto.PaymentSubtotals.Add(paymentCode, BitcoinPaymentMethodBitpayAPIExtension.ToSmallestUnit(divisibility, subtotalPrice));
+                    dto.PaymentTotals.Add(paymentCode, BitcoinPaymentMethodBitpayAPIExtension.ToSmallestUnit(divisibility, accounting.TotalDue));
+                }
                 dto.SupportedTransactionCurrencies.TryAdd(cryptoCode, new InvoiceSupportedTransactionCurrency()
                 {
                     Enabled = true
@@ -810,7 +814,6 @@ namespace BTCPayServer.Services.Invoices
 
     public class PaymentMethodAccounting
     {
-        public int Divisibility { get; set; }
         /// <summary>Total amount of this invoice</summary>
         public decimal TotalDue { get; set; }
 
@@ -850,23 +853,9 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         public decimal PaymentMethodFee { get; set; }
         /// <summary>
-        /// Amount of fee already paid in the invoice's currency
-        /// </summary>
-        public decimal PaymentMethodFeeAlreadyPaid { get; set; }
-        /// <summary>
         /// Minimum required to be paid in order to accept invoice as paid
         /// </summary>
         public decimal MinimumTotalDue { get; set; }
-
-        public decimal ToSmallestUnit(decimal v)
-        {
-            for (int i = 0; i < Divisibility; i++)
-            {
-                v *= 10.0m;
-            }
-            return v;
-        }
-        public string ShowMoney(decimal v) => MoneyExtensions.ShowMoney(v, Divisibility);
     }
 
     public class PaymentPrompt
@@ -884,6 +873,26 @@ namespace BTCPayServer.Services.Invoices
         public int Divisibility { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal PaymentMethodFee { get; set; }
+        /// <summary>
+        /// A fee, hidden from UI, meant to be used when a payment method has a service provider which
+        /// have a different way of converting the invoice's amount into the currency of the payment method.
+        /// This fee can avoid under/over payments when this case happens.
+        /// 
+        /// Please use <see cref="AddTweakFee(decimal)"/> so that the tweak fee is also added to the <see cref="PaymentMethodFee"/>.
+        /// </summary>
+        [JsonConverter(typeof(NumericStringJsonConverter))]
+        public decimal TweakFee { get; set; }
+        /// <summary>
+        /// A fee, hidden from UI, meant to be used when a payment method has a service provider which
+        /// have a different way of converting the invoice's amount into the currency of the payment method.
+        /// This fee can avoid under/over payments when this case happens.
+        /// </summary>
+        /// <param name="value"></param>
+        public void AddTweakFee(decimal value)
+        {
+            TweakFee += value;
+            PaymentMethodFee += value;
+        }
         public string Destination { get; set; }
         public JToken Details { get; set; }
 
@@ -901,7 +910,6 @@ namespace BTCPayServer.Services.Invoices
                 accounting.TxRequired++;
                 grossDue += rate * PaymentMethodFee;
             }
-            accounting.Divisibility = Divisibility;
             accounting.TotalDue = Coins(grossDue / rate, Divisibility);
             accounting.Paid = Coins(i.PaidAmount.Gross / rate, Divisibility);
             accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), Divisibility);
@@ -913,7 +921,6 @@ namespace BTCPayServer.Services.Invoices
             accounting.Due = Max(accounting.DueUncapped, 0.0m);
 
             accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, Divisibility);
-            accounting.PaymentMethodFeeAlreadyPaid = Coins(i.PaidFee / rate, Divisibility);
 
             accounting.MinimumTotalDue = Max(Smallest(Divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, Divisibility));
             return accounting;

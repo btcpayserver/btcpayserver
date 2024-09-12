@@ -576,10 +576,10 @@ namespace BTCPayServer.Controllers
                             PaymentMethodRaw = data,
                             PaymentMethodId = paymentMethodId,
                             PaymentMethod = paymentMethodId.ToString(),
-                            TotalDue = _displayFormatter.Currency(accounting.TotalDue, data.Currency),
-                            Due = hasPayment ? _displayFormatter.Currency(accounting.Due, data.Currency) : null,
-                            Paid = hasPayment ? _displayFormatter.Currency(accounting.PaymentMethodPaid, data.Currency) : null,
-                            Overpaid = hasPayment ? _displayFormatter.Currency(overpaidAmount, data.Currency) : null,
+                            TotalDue = _displayFormatter.Currency(accounting.TotalDue, data.Currency, divisibility: data.Divisibility),
+                            Due = hasPayment ? _displayFormatter.Currency(accounting.Due, data.Currency, divisibility: data.Divisibility) : null,
+                            Paid = hasPayment ? _displayFormatter.Currency(accounting.PaymentMethodPaid, data.Currency, divisibility: data.Divisibility) : null,
+                            Overpaid = hasPayment ? _displayFormatter.Currency(overpaidAmount, data.Currency, divisibility: data.Divisibility) : null,
                             Address = data.Destination
                         };
                     }).ToList(),
@@ -876,6 +876,13 @@ namespace BTCPayServer.Controllers
                 _paymentModelExtensions.TryGetValue(paymentMethodId, out var extension);
                 return extension?.Image ?? "";
             }
+
+			// Show the "Common divisibility" rather than the payment method disibility.
+			// For example, BTC has commonly 8 digits, but on lightning it has 11. In this case, pick 8.
+			if (this._CurrencyNameTable.GetCurrencyData(prompt.Currency, false)?.Divisibility is not int divisibility)
+				divisibility = prompt.Divisibility;
+
+			string ShowMoney(decimal value) => MoneyExtensions.ShowMoney(value, divisibility);
             var model = new PaymentModel
             {
                 Activated = prompt.Activated,
@@ -893,10 +900,11 @@ namespace BTCPayServer.Controllers
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 CryptoImage = Request.GetRelativePathOrAbsolute(GetPaymentMethodImage(paymentMethodId)),
                 BtcAddress = prompt.Destination,
-                BtcDue = accounting.ShowMoney(accounting.Due),
-                BtcPaid = accounting.ShowMoney(accounting.Paid),
+                BtcDue = ShowMoney(accounting.Due),
+                BtcPaid = ShowMoney(accounting.Paid),
                 InvoiceCurrency = invoice.Currency,
-                OrderAmount = accounting.ShowMoney(accounting.TotalDue - accounting.PaymentMethodFee),
+                // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
+                OrderAmount = ShowMoney(accounting.TotalDue - (prompt.PaymentMethodFee - prompt.TweakFee)),
                 IsUnsetTopUp = invoice.IsUnsetTopUp(),
                 CustomerEmail = invoice.Metadata.BuyerEmail,
                 ExpirationSeconds = Math.Max(0, (int)(invoice.ExpirationTime - DateTimeOffset.UtcNow).TotalSeconds),
@@ -928,7 +936,8 @@ namespace BTCPayServer.Controllers
                 },
                 ReceivedConfirmations = handler is BitcoinLikePaymentHandler  bh ? invoice.GetAllBitcoinPaymentData(bh, false).FirstOrDefault()?.ConfirmationCount : null,
                 Status = invoice.Status.ToString(),
-                NetworkFee = prompt.PaymentMethodFee,
+                // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
+                NetworkFee = prompt.PaymentMethodFee - prompt.TweakFee,
                 IsMultiCurrency = invoice.GetPayments(false).Select(p => p.PaymentMethodId).Concat(new[] { prompt.PaymentMethodId }).Distinct().Count() > 1,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentPrompts()

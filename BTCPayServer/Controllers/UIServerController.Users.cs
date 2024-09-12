@@ -215,15 +215,8 @@ namespace BTCPayServer.Controllers
         {
             var user = await _UserManager.FindByIdAsync(userId);
             if (user == null)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "User not found"
-                });
-                return RedirectToAction(nameof(ListUsers));
-            }
-            return View(new ResetUserPasswordFromAdmin { Email = user.Email});
+                return NotFound();
+            return View(new ResetUserPasswordFromAdmin { Email = user.Email });
         }
 
         [HttpPost("server/users/{userId}/reset-password")]
@@ -232,14 +225,7 @@ namespace BTCPayServer.Controllers
 
             var user = await _UserManager.FindByEmailAsync(model.Email);
             if (user == null || user.Id != userId)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "User not found"
-                });
-                return RedirectToAction(nameof(ListUsers));
-            }
+                return NotFound();
 
             var result = await _UserManager.ResetPasswordAsync(user, await _UserManager.GeneratePasswordResetTokenAsync(user), model.Password);
             TempData.SetStatusMessageModel(new StatusMessageModel

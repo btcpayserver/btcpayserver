@@ -275,20 +275,6 @@
     </div>
 </form>
 
-@* @section PageFootContent {
-    <script>
-        delegate('click', '.revert-default', e => {
-            const $row = e.target.closest('[data-default]');
-            $row.querySelector('input.block-explorer-link').value = $row.dataset.default;
-        })
-        for (let element of document.getElementsByClassName("collapse-on-js")){
-            if (element.classList.contains("show")){
-                element.classList.remove("show");
-            }    
-        }
-    </script>
-} *@
-
 @section PageFootContent {
     <script>
         for (let element of document.getElementsByClassName("collapse-on-js")){

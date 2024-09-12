@@ -143,15 +143,15 @@ namespace BTCPayServer.Controllers
         {
             if (storeBlob is null)
                 storeBlob = new StoreBlob();
-            var defaultExchange = defaultRules.GetRecommendedExchange(storeBlob.DefaultCurrency);
+            var defaultExchange = storeBlob.PreferredExchange ?? defaultRules.GetRecommendedExchange(storeBlob.DefaultCurrency);
             var exchanges = rateFetcher.RateProviderFactory
                 .AvailableRateProviders
                 .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
                 .ToList();
-            var preferredExchange = storeBlob.PreferredExchange ?? defaultExchange;
-            var selectedExchange = exchanges.FirstOrDefault(f => f.Id == preferredExchange) ?? exchanges.First();
-            exchanges.Insert(0, new(null, $"Recommendation ({selectedExchange.DisplayName})", ""));
-            return new SelectList(exchanges, nameof(selectedExchange.Id), nameof(selectedExchange.DisplayName), selectedExchange.Id);
+            var exchange = exchanges.First(e => e.Id == defaultExchange);
+            exchanges.Insert(0, new(exchange.Id, $"Recommendation ({exchange.DisplayName})", ""));
+            var chosen = exchanges.FirstOrDefault(f => f.Id == storeBlob.PreferredExchange) ?? exchanges.First();
+            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
         }
 
     }

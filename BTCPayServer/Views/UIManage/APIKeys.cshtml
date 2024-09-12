@@ -7,14 +7,15 @@
 	Csp.UnsafeEval();
 }
 
+<div class="sticky-header">
+    <h2 text-translate="true">@ViewData["Title"]</h2>
+	<a id="page-primary" class="btn btn-primary" asp-action="AddApiKey">
+        Generate Key
+    </a>
+</div>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xl-10 col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
-            <a class="btn btn-primary" asp-action="AddApiKey" id="AddApiKey">
-                Generate Key
-            </a>
-        </div>
         <p>
             The <a asp-controller="UIHome" asp-action="SwaggerDocs" target="_blank">BTCPay Server Greenfield API</a> offers programmatic access to your instance. You can manage your BTCPay
             Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see <a href="https://docs.btcpayserver.org/Development/GreenFieldExample/" rel="noreferrer noopener">use case examples</a>).
@@ -46,7 +47,7 @@
                                 <div hidden class="gap-2 align-items-center">
                                     <code>@keyData.Id</code>
                                     <button type="button" class="btn btn-link d-flex p-0" data-clipboard="@keyData.Id">
-                                        <vc:icon symbol="copy" />
+                                        <vc:icon symbol="actions-copy" />
                                     </button>
                                 </div>
                             </td>

@@ -1,0 +1,67 @@
+@using BTCPayServer.Abstractions.Models
+@model ListDictionariesViewModel
+@{
+    ViewData.SetActivePage(ServerNavPages.Translations, "Dictionaries");
+}
+
+<div class="sticky-header">
+	<h2 text-translate="true">@ViewData["Title"]</h2>
+	<a id="page-primary" asp-action="CreateDictionary" class="btn btn-primary" role="button">
+		Create
+	</a>
+</div>
+<partial name="_StatusMessage" />
+
+<p class="mb-0" text-translate="true">
+	Dictionaries enable you to translate the BTCPay Server backend into different languages.
+</p>
+
+<div class="table-responsive">
+	<table class="table table-hover">
+		<thead>
+			<tr>
+				<th text-translate="true">Dictionary</th>
+				<th text-translate="true">Fallback</th>
+				<th class="actions-col"></th>
+			</tr>
+		</thead>
+		<tbody>
+			@foreach (var v in Model.Dictionaries)
+			{
+				<tr>
+					<td class="d-flex flex-wrap align-items-center gap-2">
+						@if (!v.Editable)
+						{
+							<span >@v.DictionaryName</span>
+						}
+						else
+						{
+							<a asp-action="EditDictionary" asp-route-dictionary="@v.DictionaryName">@v.DictionaryName</a>
+						}
+                        @if (v.IsSelected)
+                        {
+                            <span class="badge bg-info">
+                                In use
+                            </span>
+                        }
+					</td>
+					<td>@v.Fallback</td>
+					<td class="actions-col">
+						<div class="d-inline-flex align-items-center gap-3">
+							<a asp-action="CreateDictionary" asp-route-fallback="@v.DictionaryName" text-translate="true">Clone</a>
+							@if (!v.IsSelected)
+							{
+								<a id="Select-@v.DictionaryName" asp-action="SelectDictionary" asp-route-dictionary="@v.DictionaryName" text-translate="true">Select</a>
+							}
+							@if (v.Editable && !v.IsSelected)
+							{
+								<a id="Delete-@v.DictionaryName" asp-action="DeleteDictionary" asp-route-dictionary="@v.DictionaryName" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The dictionary <b>@Html.Encode(v.DictionaryName)</b> will be removed from this server." data-confirm-input="DELETE" text-translate="true">Remove</a>
+							}
+						</div>
+					</td>
+				</tr>
+			}
+		</tbody>
+	</table>
+	<partial name="_Confirm" model="@(new ConfirmModel("Delete dictionary", "This dictionary will be removed from this server.", "Delete"))" />
+</div>

@@ -31,16 +31,9 @@ using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.Authentication
 
 namespace BTCPayServer.Tests
 {
-    public enum TestDatabases
-    {
-        Postgres,
-        MySQL,
-    }
-
     public class BTCPayServerTester : IDisposable
     {
-        private readonly string _Directory;
-
+        internal readonly string _Directory;
         public ILoggerProvider LoggerProvider { get; }
 
         ILog TestLogs;
@@ -70,11 +63,6 @@ namespace BTCPayServer.Tests
             set;
         }
 
-        public string MySQL
-        {
-            get; set;
-        }
-
         public string Postgres
         {
             get; set;
@@ -90,9 +78,11 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
-        public TestDatabases TestDatabase
+        public async Task RestartStartupTask<T>()
         {
-            get; set;
+            var startupTask = GetService<IServiceProvider>().GetServices<Abstractions.Contracts.IStartupTask>()
+                .Single(task => task is T);
+            await startupTask.ExecuteAsync();
         }
 
         public bool MockRates { get; set; } = true;
@@ -158,9 +148,7 @@ namespace BTCPayServer.Tests
             if (!string.IsNullOrEmpty(SSHConnection))
                 config.AppendLine($"sshconnection={SSHConnection}");
 
-            if (TestDatabase == TestDatabases.MySQL && !String.IsNullOrEmpty(MySQL))
-                config.AppendLine($"mysql=" + MySQL);
-            else if (!String.IsNullOrEmpty(Postgres))
+            if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);
 
             if (!string.IsNullOrEmpty(ExplorerPostgres))
@@ -189,7 +177,7 @@ namespace BTCPayServer.Tests
                             l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                             l.SetMinimumLevel(LogLevel.Information)
                             .AddFilter("Microsoft", LogLevel.Error)
-                            .AddFilter("Hangfire", LogLevel.Error)
+                            .AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information)
                             .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
                             .AddProvider(LoggerProvider);
                         });

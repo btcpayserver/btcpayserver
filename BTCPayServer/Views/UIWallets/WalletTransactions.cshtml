@@ -4,9 +4,11 @@
 
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
+    var storeId = Context.GetRouteValue("storeId")?.ToString();
+    var cryptoCode = Context.GetRouteValue("cryptoCode")?.ToString();
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
+    var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
 
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
 }
 
@@ -120,6 +122,11 @@
     </script>
 }
 
+<div class="sticky-header">
+    <vc:wallet-nav wallet-id="wallet"/>
+</div>
+<partial name="_StatusMessage" />
+
 <div class="d-flex flex-wrap align-items-center justify-content-between gap-3" id="Dropdowns">
     @if (Model.Labels.Any())
     {
@@ -171,11 +178,13 @@
                 <th class="date-col">
                     <div class="d-flex align-items-center gap-1">
                         Date
-                        <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                            <vc:icon symbol="time" />
+                        </button>
                     </div>
                 </th>
                 <th class="text-start">Label</th>
-                <th>Transaction Id</th>
+                <th>Transaction</th>
                 <th class="amount-col">Amount</th>
                 <th></th>
             </tr>
@@ -193,7 +202,7 @@
                         </div>
                         <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
                             <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
-                                <vc:icon symbol="send" />
+                                <vc:icon symbol="actions-send" />
                                 Bump fee
                             </button>
                         </form>

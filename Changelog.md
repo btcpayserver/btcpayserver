@@ -1,5 +1,68 @@
 # Changelog
 
+## 1.13.5
+
+### Bug fixes
+
+* Fix: Plugin Exception Handler didn't disabled plugin if crash was detected @NicolasDorier
+* Fix: Kraken rate provider failing due to bid > ask @NicolasDorier
+
+## 1.13.4
+
+### Bug fixes
+
+* LNUrl payouts failing due to amount restriction wouldn't be immediately cancelled (#6061) @Kukks
+* Fix row ordering and display issues in reporting (#6065 #6087, 597e2b0e) @NicolasDorier @dennisreimann
+* Parse Timespan strings in the API properly (#6012) @dennisreimann
+* "Return to Store" link in invoice receipt should return to the redirectUrl (#6079) @dennisreimann
+* Fix crash caused by custom explorer links in some conditions (#6077 #6078) @dennisreimann
+* Fix: Can't save email settings on store level (#6076 #6080) @dennisreimann
+* Reports: Fix dropdown z-index @dennisreimann
+* Shopify: Properly cancel an order when BTCPay invoice expires, and restock the inventory (#6104 #6107 #6108) @NicolasDorier
+* Shopify: Generate BTCPay invoice as soon as the payment page in shopify opens (#6105) @NicolasDorier
+
+### Improvements
+
+* Checkout: Display item description if present (#6082) @dennisreimann
+* Disable plugins if they crash the Dashboard page (#6099) @NicolasDorier
+* Hide empty values in the receipts (#6079) @dennisreimann
+* Greenfield: Add the invoice metadata of a Lightning Address (#6067 #6084) @dennisreimann
+
+## 1.13.3
+
+### Bug fixes
+
+* Fix potential crash on receipt print page (#6045) @dennisreimann
+* Fix invoice paid for topping up a pull payment didn't top up. @NicolasDorier
+* Pull payment: Enable CORS for LNURL request (#6044) @dennisreimann 
+
+
+## 1.13.2
+
+### New features
+
+* Add refund reports (#5791) @NicolasDorier
+* Allow `lightning:` in html hyperlinks (#6002 #6001) @dennisreimann
+
+### Bug fixes
+
+* If you specified a 0 amount bolt 11 invoice for a payout, it would be incorrectly validated and not accepted. (#5943 #5819) @Kukks
+* Domain mapping constraint: Fix .onion case (#5948 #5917) @dennisreimann
+* Pull payment QR scan fixes (#5950) @dennisreimann
+* Server email settings: Fix missing password field (#5952 #5949) @dennisreimann
+* Fix: Some valid taproot PSBT couldn't parsed and show better error message (#5715 #5993) @NicolasDorier
+* Fix: Adding a label to a base58 addresses in the `Send Wallet` screen wasn't working (#6011) @NicolasDorier
+* Fix: When an invoice expires, the corresponding Shopify order remains pending instead of canceling (#6021 #6027) @Kukks
+
+### Improvements
+
+* Search: Display text filters in search input (#5986 #5984) @dennisreimann
+* POS: Allow overpay for articles with minimum price (#5997 #5995) @dennisreimann
+* Improve data display on receipt (#5896 #5882) @dennisreimann
+* Greenfield API clarifications (#5955) @ndeet
+* Improvements to receipts display for PoS @rockstardev
+* Fix layout on mobile on the dashboard (#5721 #6006) @dennisreimann
+
 ## 1.13.1
 
 ### Bug fixes

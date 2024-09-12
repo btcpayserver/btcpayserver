@@ -23,14 +23,14 @@
         Model.Search.ContainsFilter(key) && Model.Search.GetFilterBool(key) is true;
 }
 
-<div class="sticky-header d-sm-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2>
         @ViewData["Title"]
         <a href="#descriptor" data-bs-toggle="collapse">
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreatePaymentRequest" permission="@Policies.CanModifyPaymentRequests">
+	<a id="page-primary" asp-action="EditPaymentRequest" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyPaymentRequests">
         Create Request
     </a>
 </div>
@@ -86,7 +86,9 @@
                     <th class="date-col">
                         <div class="d-flex align-items-center gap-1">
                             Expiry
-                            <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                            <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                                <vc:icon symbol="time" />
+                            </button>
                         </div>
                     </th>
                     <th>Status</th>

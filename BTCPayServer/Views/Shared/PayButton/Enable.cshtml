@@ -3,8 +3,11 @@
 	ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
 }
 
+<div class="sticky-header">
+    <h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+
 <partial name="_StatusMessage" />
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 
 <div class="row">
 	<div class="col-xl-8 col-xxl-constrain">

@@ -1,5 +1,4 @@
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
 @model UILNURLController.EditLightningAddressVM
 @{
@@ -26,6 +25,13 @@
     </script>
 }
 
+<div class="sticky-header">
+    <h2 text-translate="true">@ViewData["Title"]</h2>
+	<a id="page-primary" data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary" role="button">
+        Add Address
+    </a>
+</div>
+
 <partial name="_StatusMessage" />
 
 @if (Context.Request.PathBase.ToString() != string.Empty)
@@ -37,13 +43,6 @@
     </div>
 }
 
-<div class="d-flex align-items-center justify-content-between mb-2">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-    <a data-bs-toggle="collapse" data-bs-target="#AddAddress" class="btn btn-primary" role="button">
-        Add Address
-    </a>
-</div>
-
 <form asp-action="EditLightningAddress" method="post">
     @{
         var showAddForm = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
@@ -51,7 +50,7 @@
      }
     
     <div class="collapse @(showAddForm ? "show": "")" id="AddAddress">
-        <div class="form-group pt-2">
+        <div class="form-group">
             <label asp-for="Add.Username" class="form-label"></label>
             <div class="input-group">
                 <input asp-for="Add.Username" class="form-control"/>
@@ -106,69 +105,64 @@
     
     @if (Model.Items.Any())
     {
-        <div class="row">
-            <div class="col">
-                <table class="table table-hover">
-                    <thead>
-                    <tr>
-                        <th>Address</th>
-                        <th>Settings</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    @for (var index = 0; index < Model.Items.Count; index++)
-                    {
-                        <input asp-for="Items[index].CurrencyCode" type="hidden"/>
-                        <input asp-for="Items[index].Min" type="hidden"/>
-                        <input asp-for="Items[index].Max" type="hidden"/>
-                        <input asp-for="Items[index].Username" type="hidden"/>
-                        <input asp-for="Items[index].InvoiceMetadata" type="hidden"/>
-                        var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
-                        <tr>
-                            <td>
-                                <div class="input-group" data-clipboard="@address">
-                                    <input type="text" class="form-control copy-cursor lightning-address-value" readonly="readonly" value="@address"/>
-                                    <button type="button" class="btn btn-outline-secondary px-3">
-                                        <vc:icon symbol="copy" />
-                                    </button>
-                                </div>
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Address</th>
+                <th>Settings</th>
+                <th class="text-end">Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @for (var index = 0; index < Model.Items.Count; index++)
+            {
+                <input asp-for="Items[index].CurrencyCode" type="hidden"/>
+                <input asp-for="Items[index].Min" type="hidden"/>
+                <input asp-for="Items[index].Max" type="hidden"/>
+                <input asp-for="Items[index].Username" type="hidden"/>
+                <input asp-for="Items[index].InvoiceMetadata" type="hidden"/>
+                var address = $"{Model.Items[index].Username}@{Context.Request.Host.ToUriComponent()}";
+                <tr>
+                    <td>
+                        <div class="input-group" data-clipboard="@address">
+                            <input type="text" class="form-control copy-cursor lightning-address-value" readonly="readonly" value="@address"/>
+                            <button type="button" class="btn btn-outline-secondary px-3">
+                                <vc:icon symbol="actions-copy" />
+                            </button>
+                        </div>
 
-                            </td>
-                            <td class="settings-holder align-middle">
-                                @if (Model.Items[index].Min.HasValue)
-                                {
-                                    <span>@Model.Items[index].Min min sats</span>
-                                }
-                                @if (Model.Items[index].Max.HasValue)
-                                {
-                                    <span>@Model.Items[index].Max max sats</span>
-                                }
-                                @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
-                                {
-                                    <span>tracked in @Model.Items[index].CurrencyCode</span>
-                                }
-                                @if (!string.IsNullOrEmpty(Model.Items[index].InvoiceMetadata))
-                                {
-                                    <span>with invoice metadata @Model.Items[index].InvoiceMetadata</span>
-                                }
-                            </td>
-                            <td class="text-end">
-                                <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")"
-				class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="REMOVE">
-                                    Remove
-                                </button>
-                            </td>
-                        </tr>
-                    }
-                    </tbody>
-                </table>
-            </div>
-        </div>
+                    </td>
+                    <td class="settings-holder align-middle">
+                        @if (Model.Items[index].Min.HasValue)
+                        {
+                            <span>@Model.Items[index].Min min sats</span>
+                        }
+                        @if (Model.Items[index].Max.HasValue)
+                        {
+                            <span>@Model.Items[index].Max max sats</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Items[index].CurrencyCode))
+                        {
+                            <span>tracked in @Model.Items[index].CurrencyCode</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Items[index].InvoiceMetadata))
+                        {
+                            <span>with invoice metadata @Model.Items[index].InvoiceMetadata</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")" class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="REMOVE">
+                            Remove
+                        </button>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
     }
     else
     {
-        <p class="text-secondary mt-3">
+        <p class="text-secondary">
             There are no Lightning Addresses yet.
         </p>
     }

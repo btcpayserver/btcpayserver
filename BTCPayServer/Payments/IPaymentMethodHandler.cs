@@ -173,7 +173,7 @@ namespace BTCPayServer.Payments
                     var rateResult = await fetching.Value;
                     Logs.Write($"The rating rule is {rateResult.Rule}", InvoiceEventData.EventSeverity.Info);
                     Logs.Write($"The evaluated rating rule is {rateResult.EvaluatedRule}", InvoiceEventData.EventSeverity.Info);
-                    if (rateResult is RateResult { BidAsk: var bidAsk })
+                    if (rateResult is RateResult { BidAsk: { } bidAsk })
                     {
                         InvoiceEntity.AddRate(fetching.Key, bidAsk.Bid);
                     }

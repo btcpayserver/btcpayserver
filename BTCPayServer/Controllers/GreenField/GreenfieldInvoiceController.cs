@@ -403,21 +403,18 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             PaymentPrompt? paymentPrompt = null;
             PayoutMethodId? payoutMethodId = null;
-            if (request.PaymentMethod is not null && PayoutMethodId.TryParse(request.PaymentMethod, out payoutMethodId))
+            if (request.PayoutMethodId is not null && PayoutMethodId.TryParse(request.PayoutMethodId, out payoutMethodId))
             {
                 var supported = _payoutHandlers.GetSupportedPayoutMethods(store);
                 if (supported.Contains(payoutMethodId))
                 {
-                    var paymentMethodId = PaymentMethodId.GetSimilarities([payoutMethodId], invoice.GetPayments(false).Select(p => p.PaymentMethodId))
-                        .OrderByDescending(o => o.similarity)
-                        .Select(o => o.b)
-                        .FirstOrDefault();
+                    var paymentMethodId = invoice.GetClosestPaymentMethodId([payoutMethodId]);
                     paymentPrompt = paymentMethodId is null ? null : invoice.GetPaymentPrompt(paymentMethodId);
                 }
             }
             if (paymentPrompt is null)
             {
-                ModelState.AddModelError(nameof(request.PaymentMethod), "Please select one of the payment methods which were available for the original invoice");
+                ModelState.AddModelError(nameof(request.PayoutMethodId), "Please select one of the payment methods which were available for the original invoice");
             }
             if (request.RefundVariant is null)
                 ModelState.AddModelError(nameof(request.RefundVariant), "`refundVariant` is mandatory");
@@ -426,6 +423,14 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var accounting = paymentPrompt.Calculate();
             var cryptoPaid = accounting.Paid;
+            var dueAmount = accounting.TotalDue;
+
+            // If no payment, but settled and marked, assume it has been fully paid
+            if (cryptoPaid is 0 && invoice is { Status: InvoiceStatus.Settled, ExceptionStatus: InvoiceExceptionStatus.Marked })
+            {
+                cryptoPaid = accounting.TotalDue;
+                dueAmount = 0;
+            }
             var cdCurrency = _currencyNameTable.GetCurrencyData(invoice.Currency, true);
             var paidCurrency = Math.Round(cryptoPaid * paymentPrompt.Rate, cdCurrency.Divisibility);
             var rateResult = await _rateProvider.FetchRate(
@@ -491,8 +496,6 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         return this.CreateValidationError(ModelState);
                     }
-                    
-                    var dueAmount = accounting.TotalDue;
                     createPullPayment.Currency = paymentPrompt.Currency;
                     createPullPayment.Amount = Math.Round(paidAmount - dueAmount, appliedDivisibility);
                     createPullPayment.AutoApproveClaims = true;
@@ -564,10 +567,10 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = pp.Id,
                 StartsAt = pp.StartDate,
                 ExpiresAt = pp.EndDate,
-                Amount = ppBlob.Limit,
+                Amount = pp.Limit,
                 Name = ppBlob.Name,
                 Description = ppBlob.Description,
-                Currency = ppBlob.Currency,
+                Currency = pp.Currency,
                 Archived = pp.Archived,
                 AutoApproveClaims = ppBlob.AutoApproveClaims,
                 BOLT11Expiration = ppBlob.BOLT11Expiration,

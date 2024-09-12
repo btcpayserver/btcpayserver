@@ -1,6 +1,9 @@
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Reflection.Metadata;
+using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services.Invoices;
 using NBitpayClient;
 using Newtonsoft.Json;
@@ -26,6 +29,28 @@ namespace BTCPayServer.Data
             invoiceData.Amount = blob.Price;
             invoiceData.HasTypedBlob<InvoiceEntity>().SetBlob(blob, DefaultSerializer);
         }
+#nullable enable
+        public static PayoutMethodId? GetClosestPayoutMethodId(this InvoiceData invoice, IEnumerable<PayoutMethodId> pmids)
+        {
+            var paymentMethodIds = invoice.Payments.Select(o => o.GetPaymentMethodId()).ToArray();
+            if (paymentMethodIds.Length == 0)
+                paymentMethodIds = invoice.GetBlob().GetPaymentPrompts().Select(p => p.PaymentMethodId).ToArray();
+            return PaymentMethodId.GetSimilarities(pmids, paymentMethodIds)
+                .OrderByDescending(o => o.similarity)
+                .Select(o => o.a)
+                .FirstOrDefault();
+        }
+        public static PaymentMethodId? GetClosestPaymentMethodId(this InvoiceEntity invoice, IEnumerable<PayoutMethodId> pmids)
+        {
+            var paymentMethodIds = invoice.GetPayments(false).Select(o => o.PaymentMethodId).ToArray();
+            if (paymentMethodIds.Length == 0)
+                paymentMethodIds = invoice.GetPaymentPrompts().Select(p => p.PaymentMethodId).ToArray();
+            return PaymentMethodId.GetSimilarities(pmids, paymentMethodIds)
+                .OrderByDescending(o => o.similarity)
+                .Select(o => o.b)
+                .FirstOrDefault();
+        }
+#nullable restore
         public static InvoiceEntity GetBlob(this InvoiceData invoiceData)
         {
 #pragma warning disable CS0618 // Type or member is obsolete

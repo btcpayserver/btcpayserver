@@ -45,6 +45,12 @@
 .lead :last-child {
     margin-bottom: 0;
 }
+@media screen and (max-width: 400px) {
+    .lead {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}
 .posItem {
     display: none;
     position: relative;
@@ -122,4 +128,12 @@
 .quantities .icon {
     width: 1rem;
     height: 1rem;
+}
+.tile.card {
+    --btcpay-card-cap-bg: transparent;
+    --btcpay-card-border-width: 0;
+    --btcpay-card-spacer-x: 0;
+    --btcpay-card-cap-padding-x: 0;
+    --btcpay-card-cap-padding-y: 0;
+    height: 100%;
 }

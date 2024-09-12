@@ -32,6 +32,77 @@
                     }
                 ]
             },
+            "put": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update current user information",
+                "description": "Update the current user",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "The email of the user",
+                                        "nullable": true
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The name of the user",
+                                        "nullable": true
+                                    },
+                                    "imageUrl": {
+                                        "type": "string",
+                                        "description": "The profile picture URL of the user",
+                                        "nullable": true
+                                    },
+                                    "currentPassword": {
+                                        "type": "string",
+                                        "description": "The current password of the user",
+                                        "nullable": true
+                                    },
+                                    "newPassword": {
+                                        "type": "string",
+                                        "description": "The new password of the user",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "operationId": "Users_UpdateCurrentUser",
+                "responses": {
+                    "200": {
+                        "description": "Information about the current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "Users"
@@ -51,6 +122,80 @@
                     {
                         "API_Key": [
                             "btcpay.user.candeleteuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/users/me/picture": {
+            "post": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Uploads a profile picture for the current user",
+                "description": "Uploads a profile picture for the current user",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "The profile picture",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "Users_UploadCurrentUserProfilePicture",
+                "responses": {
+                    "200": {
+                        "description": "Uploads a profile picture for the current user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Deletes user profile picture",
+                "description": "Deletes the user profile picture",
+                "operationId": "Users_DeleteCurrentUserProfilePicture",
+                "responses": {
+                    "200": {
+                        "description": "Profile picture deleted successfully"
+                    },
+                    "404": {
+                        "description": "The user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmodifyprofile"
                         ],
                         "Basic": []
                     }
@@ -105,6 +250,16 @@
                                         "type": "string",
                                         "description": "The email of the new user",
                                         "nullable": false
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "description": "The name of the new user",
+                                        "nullable": true
+                                    },
+                                    "imageUrl": {
+                                        "type": "string",
+                                        "description": "The profile picture URL of the new user",
+                                        "nullable": true
                                     },
                                     "password": {
                                         "type": "string",
@@ -186,7 +341,14 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "User found"
+                        "description": "User found",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
                     },
                     "401": {
                         "description": "Missing authorization for loading the user"
@@ -371,6 +533,16 @@
                         "type": "string",
                         "description": "The email of the user",
                         "nullable": false
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The name of the user",
+                        "nullable": true
+                    },
+                    "imageUrl": {
+                        "type": "string",
+                        "description": "The profile picture URL of the user",
+                        "nullable": true
                     },
                     "emailConfirmed": {
                         "type": "boolean",

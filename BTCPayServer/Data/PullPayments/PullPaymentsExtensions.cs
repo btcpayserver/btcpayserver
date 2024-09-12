@@ -11,18 +11,16 @@ namespace BTCPayServer.Data
 
         public static PullPaymentBlob GetBlob(this PullPaymentData data)
         {
-            var result = JsonConvert.DeserializeObject<PullPaymentBlob>(data.Blob);
-            result!.SupportedPaymentMethods = result.SupportedPaymentMethods.Where(id => id is not null).ToArray();
-            return result;
+            return JsonConvert.DeserializeObject<PullPaymentBlob>(data.Blob);
         }
         public static void SetBlob(this PullPaymentData data, PullPaymentBlob blob)
         {
             data.Blob = JsonConvert.SerializeObject(blob).ToString();
         }
 
-        public static bool IsSupported(this PullPaymentData data, PayoutMethodId paymentId)
+        public static bool IsSupported(this PullPaymentData data, PayoutMethodId payoutMethodId)
         {
-            return data.GetBlob().SupportedPaymentMethods.Contains(paymentId);
+            return data.GetBlob().SupportedPayoutMethods.Contains(payoutMethodId);
         }
     }
 }

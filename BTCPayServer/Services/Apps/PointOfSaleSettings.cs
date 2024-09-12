@@ -1,4 +1,3 @@
-using BTCPayServer.Client.Models;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
@@ -89,19 +88,17 @@ namespace BTCPayServer.Services.Apps
         public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
-        public bool ShowSearch { get; set; } = true;
-        public bool ShowCategories { get; set; } = true;
+        public bool ShowSearch { get; set; }
+        public bool ShowCategories { get; set; }
         public bool EnableTips { get; set; }
-
-        public string FormId { get; set; } = null;
-
+        public string FormId { get; set; }
         public const string BUTTON_TEXT_DEF = "Buy for {0}";
         public string ButtonText { get; set; } = BUTTON_TEXT_DEF;
         public const string CUSTOM_BUTTON_TEXT_DEF = "Pay";
         public string CustomButtonText { get; set; } = CUSTOM_BUTTON_TEXT_DEF;
         public const string CUSTOM_TIP_TEXT_DEF = "Do you want to leave a tip?";
         public string CustomTipText { get; set; } = CUSTOM_TIP_TEXT_DEF;
-        public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = new int[] { 15, 18, 20 };
+        public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = { 15, 18, 20 };
         public int[] CustomTipPercentages { get; set; } = CUSTOM_TIP_PERCENTAGES_DEF;
         public string Description { get; set; }
         public string NotificationUrl { get; set; }

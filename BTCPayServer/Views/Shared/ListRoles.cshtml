@@ -4,7 +4,6 @@
 @using BTCPayServer.Client
 @model BTCPayServer.Models.ServerViewModels.RolesViewModel
 @{
-    Layout = "_NavLayout.cshtml";
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
     if (string.IsNullOrEmpty(storeId))
@@ -20,21 +19,16 @@
         _ => null
     };
 
-    var sortIconClass = "fa-sort";
-    if (roleSortOrder != null)
-    {
-        sortIconClass = $"fa-sort-alpha-{roleSortOrder}";
-    }
-
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    const string sortByDesc = "Sort by name descending...";
+    const string sortByAsc = "Sort by name ascending...";
     var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
 }
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h3 class="mb-0">@ViewData["Title"]</h3>
-    <a class="btn btn-primary" role="button" id="CreateRole" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
+<div class="sticky-header">
+    <h2 text-translate="true">@ViewData["Title"]</h2>
+	<a id="page-primary" class="btn btn-primary" role="button" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
 </div>
+<partial name="_StatusMessage" />
 
 <div class="table-responsive">
     <table class="table table-hover">
@@ -49,14 +43,14 @@
                     class="text-nowrap"
                     title="@(nextRoleSortOrder == "desc" ? sortByAsc : sortByDesc)">
                     Role
-                    <i class="fa @(sortIconClass)"></i>
+                    <vc:icon symbol="actions-sort-alpha-@(roleSortOrder ?? nextRoleSortOrder ?? "desc")" />
                 </a>
             </th>
             <th>Scope</th>
             <th>Permissions</th>
             @if (showInUseColumn)
             {
-                <th class="text-center">In use</th>
+                <th class="text-center w-75px">In use</th>
             }
             <th class="actions-col" permission="@permission">Actions</th>
         </tr>
@@ -102,7 +96,7 @@
                     {
                         @foreach (var policy in role.Permissions)
                         {
-                            <code class="d-block text-break">@policy</code>
+                            <code class="d-block text-break">@Policies.DisplayName(policy)</code>
                         }
                     }
                 </td>
@@ -111,11 +105,11 @@
                     <td class="text-center">
                         @if (role.IsUsed is true)
                         {
-                            <span class="text-success fa fa-check"></span>
+                            <vc:icon symbol="checkmark" css-class="text-success"/>
                         }
                         else
                         {
-                            <span class="text-danger fa fa-times"></span>
+                            <vc:icon symbol="cross" css-class="text-danger"/>
                         }
                     </td>
                 }

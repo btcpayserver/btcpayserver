@@ -89,11 +89,14 @@ namespace BTCPayServer
             _pluginHookService = pluginHookService;
             _invoiceActivator = invoiceActivator;
         }
+
+        [EnableCors(CorsPolicies.All)]
         [HttpGet("withdraw/pp/{pullPaymentId}")]
         public Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, [FromQuery] string pr, CancellationToken cancellationToken)
         {
             return GetLNURLForPullPayment(cryptoCode, pullPaymentId, pr, pullPaymentId, cancellationToken);
         }
+
         [NonAction]
         internal async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, string k1, CancellationToken cancellationToken)
         {
@@ -112,12 +115,12 @@ namespace BTCPayServer
             }
 
             var blob = pp.GetBlob();
-            if (!_pullPaymentHostedService.SupportsLNURL(blob))
+            if (!_pullPaymentHostedService.SupportsLNURL(pp, blob))
             {
                 return NotFound();
             }
 
-            var unit = blob.Currency == "SATS" ? LightMoneyUnit.Satoshi : LightMoneyUnit.BTC;
+            var unit = pp.Currency == "SATS" ? LightMoneyUnit.Satoshi : LightMoneyUnit.BTC;
             var progress = _pullPaymentHostedService.CalculatePullPaymentProgress(pp, DateTimeOffset.UtcNow);
             var remaining = progress.Limit - progress.Completed - progress.Awaiting;
             var request = new LNURLWithdrawRequest
@@ -176,7 +179,7 @@ namespace BTCPayServer
                             lightningHandler.CreateLightningClient(pm);
                         var payResult = await UILightningLikePayoutController.TrypayBolt(client,
                             claimResponse.PayoutData.GetBlob(_btcPayNetworkJsonSerializerSettings),
-                            claimResponse.PayoutData, result, payoutHandler.Currency, cancellationToken);
+                            claimResponse.PayoutData, result, cancellationToken);
 
                         switch (payResult.Result)
                         {
@@ -303,11 +306,11 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var createInvoice = new CreateInvoiceRequest()
+            var createInvoice = new CreateInvoiceRequest
             {
-                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup? null:  item?.Price,
+                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? null : item?.Price,
                 Currency = currencyCode,
-                Checkout = new InvoiceDataBase.CheckoutOptions()
+                Checkout = new InvoiceDataBase.CheckoutOptions
                 {
                     RedirectURL = app.AppType switch
                     {
@@ -319,6 +322,7 @@ namespace BTCPayServer
                 AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
             };
 
+            var allowOverpay = item?.PriceType is not ViewPointOfSaleViewModel.ItemPriceType.Fixed;
             var invoiceMetadata = new InvoiceMetadata { OrderId = AppService.GetRandomOrderId() };
             if (item != null)
             {
@@ -333,7 +337,7 @@ namespace BTCPayServer
                 store.GetStoreBlob(),
                 createInvoice,
                 additionalTags: new List<string> { AppService.GetAppInternalTag(appId) },
-                allowOverpay: false);
+                allowOverpay: allowOverpay);
         }
 
         public class EditLightningAddressVM
@@ -529,7 +533,9 @@ namespace BTCPayServer
                 return this.CreateAPIError(null, e.Message);
             }
             lnurlRequest = await CreateLNUrlRequestFromInvoice(cryptoCode, i, store, blob, lnurlRequest, lnUrlMetadata, allowOverpay);
-            return lnurlRequest is null ? NotFound() : Ok(lnurlRequest);
+            return lnurlRequest is null
+                ? BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Unable to create LNURL request." })
+                : Ok(lnurlRequest);
         }
 
         private async Task<LNURLPayRequest> CreateLNUrlRequestFromInvoice(

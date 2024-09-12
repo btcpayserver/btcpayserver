@@ -1,10 +1,9 @@
 #nullable enable
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
-using Microsoft.AspNetCore.Http;
 
 namespace BTCPayServer.Services.Apps
 {
@@ -19,10 +18,10 @@ namespace BTCPayServer.Services.Apps
     }
     public interface IHasSaleStatsAppType
     {
-        Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
+        Task<AppSalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
     }
     public interface IHasItemStatsAppType
     {
-        Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
+        Task<IEnumerable<AppItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
     }
 }

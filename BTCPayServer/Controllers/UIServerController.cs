@@ -23,7 +23,6 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -69,7 +68,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
-        private readonly RateFetcher _rateFactory;
+        private readonly LocalizerService _localizer;
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -96,7 +95,8 @@ namespace BTCPayServer.Controllers
             IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
             TransactionLinkProviders transactionLinkProviders,
-            RateFetcher rateFactory
+            LocalizerService localizer,
+            BTCPayServerEnvironment environment
         )
         {
             _policiesSettings = policiesSettings;
@@ -123,7 +123,8 @@ namespace BTCPayServer.Controllers
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
-            _rateFactory = rateFactory;
+            _localizer = localizer;
+            Environment = environment;
         }
 
         [HttpGet("server/stores")]
@@ -326,26 +327,26 @@ namespace BTCPayServer.Controllers
         public IHttpClientFactory HttpClientFactory { get; }
         public IHostApplicationLifetime ApplicationLifetime { get; }
         public IHtmlHelper Html { get; }
+        public BTCPayServerEnvironment Environment { get; }
 
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
         {
+            await UpdateViewBag();
+            return View(_policiesSettings);
+        }
+
+        private async Task UpdateViewBag()
+        {
             ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
             ViewBag.AppsList = await GetAppSelectList();
-
-            var exchanges = _rateFactory.RateProviderFactory
-                .AvailableRateProviders.OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase).ToList();
-            exchanges.Insert(0, new(null, "Select a Default Provider", ""));
-            var defaultExchange = exchanges.First();
-            _policiesSettings.Exchanges = new SelectList(exchanges, nameof(defaultExchange.Id), nameof(defaultExchange.DisplayName), defaultExchange.Id);
-            return View(_policiesSettings);
+            ViewBag.LangDictionaries = await GetLangDictionariesSelectList();
         }
 
         [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
-        {   
-            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
-            ViewBag.AppsList = await GetAppSelectList();
+        {
+            await UpdateViewBag();
 
             if (command == "add-domain")
             {
@@ -394,9 +395,12 @@ namespace BTCPayServer.Controllers
                     domainToAppMappingItem.AppType = apps[domainToAppMappingItem.AppId];
                 }
             }
+            
 
             await _SettingsRepository.UpdateSetting(settings);
             _ = _transactionLinkProviders.RefreshTransactionLinkTemplates();
+            if (_policiesSettings.LangDictionary != settings.LangDictionary)
+                await _localizer.Load();
             TempData[WellKnownTempData.SuccessMessage] = "Policies updated successfully";
             return RedirectToAction(nameof(Policies));
         }
@@ -463,6 +467,12 @@ namespace BTCPayServer.Controllers
                     new SelectListItem($"{types[a.AppType]} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
             apps.Insert(0, new SelectListItem("(None)", null));
             return apps;
+        }
+
+        private async Task<List<SelectListItem>> GetLangDictionariesSelectList()
+        {
+            var dictionaries = await this._localizer.GetDictionaries();
+            return dictionaries.Select(d => new SelectListItem(d.DictionaryName, d.DictionaryName)).OrderBy(d => d.Value).ToList();
         }
 
         private static bool TryParseAsExternalService(TorService torService, [MaybeNullWhen(false)] out ExternalService externalService)

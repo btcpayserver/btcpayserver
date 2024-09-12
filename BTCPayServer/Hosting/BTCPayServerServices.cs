@@ -71,15 +71,9 @@ using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
+using Microsoft.Extensions.Localization;
+using Microsoft.AspNetCore.Mvc.Localization;
 
-
-
-
-
-#if ALTCOINS
-using BTCPayServer.Services.Altcoins.Monero;
-using BTCPayServer.Services.Altcoins.Zcash;
-#endif
 namespace BTCPayServer.Hosting
 {
     public static class BTCPayServerServices
@@ -91,6 +85,11 @@ namespace BTCPayServer.Hosting
         }
         public static IServiceCollection AddBTCPayServer(this IServiceCollection services, IConfiguration configuration, Logs logs)
         {
+            services.TryAddSingleton<IStringLocalizerFactory, LocalizerFactory>();
+            services.TryAddSingleton<IHtmlLocalizerFactory, LocalizerFactory>();
+            services.TryAddSingleton<LocalizerService>();
+            services.TryAddSingleton<ViewLocalizer>();
+
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);
             services.AddDbContext<ApplicationDbContext>((provider, o) =>
@@ -161,6 +160,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IUIExtension>(new UIExtension("Lightning/ViewLightningLikePaymentData", "store-invoices-payments"));
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
+            services.AddStartupTask<LoadTranslationsStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();
             services.AddSingleton<BTCPayServerEnvironment>();
@@ -291,6 +291,7 @@ namespace BTCPayServer.Hosting
                 });
             services.TryAddSingleton<BTCPayNetworkProvider>();
 
+            services.AddExceptionHandler<PluginExceptionHandler>();
             services.TryAddSingleton<AppService>();
             services.AddTransient<PluginService>();
             services.AddSingleton<PluginHookService>();
@@ -334,6 +335,8 @@ namespace BTCPayServer.Hosting
                 htmlSanitizer.AllowedAttributes.Add("webkitallowfullscreen");
                 htmlSanitizer.AllowedAttributes.Add("allowfullscreen");
                 htmlSanitizer.AllowedSchemes.Add("mailto");
+                htmlSanitizer.AllowedSchemes.Add("bitcoin");
+                htmlSanitizer.AllowedSchemes.Add("lightning");
                 return htmlSanitizer;
             });
 

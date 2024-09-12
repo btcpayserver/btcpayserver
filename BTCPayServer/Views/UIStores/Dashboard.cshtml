@@ -9,15 +9,13 @@
 @using BTCPayServer.Client
 @model StoreDashboardViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
+	BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
+	ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
     var store = ViewContext.HttpContext.GetStoreData();
 }
 
+<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
-
-<div class="d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">@ViewData["Title"]</h2>
-</div>
 
 @if (Model.IsSetUp)
 {
@@ -71,7 +69,7 @@
                         </div>
                     </div>
                     <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
-                        <vc:icon symbol="new-wallet"/>
+                        <vc:icon symbol="wallet-new"/>
                         <div class="content">
                             <h5 class="mb-0">Set up a wallet</h5>
                         </div>
@@ -115,7 +113,7 @@ else
             @if (!Model.WalletEnabled)
             {
                 <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
-                    <vc:icon symbol="new-wallet"/>
+                    <vc:icon symbol="wallet-new"/>
                     <div class="content">
                         <h5 class="mb-0">Set up a wallet</h5>
                     </div>
@@ -136,7 +134,7 @@ else
             if (!Model.LightningEnabled)
             {
                 <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Lightning" class="list-group-item list-group-item-action d-flex align-items-center order-1">
-                    <vc:icon symbol="new-wallet"/>
+                    <vc:icon symbol="wallet-new"/>
                     <div class="content">
                         <h5 class="mb-0">Set up a Lightning node</h5>
                     </div>

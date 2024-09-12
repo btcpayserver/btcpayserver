@@ -1,7 +1,6 @@
 ﻿@model RescanWalletModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(WalletsNavPages.Settings, "Rescan Wallet", walletId);
 }
 
@@ -14,27 +13,45 @@
             <p>This feature is disabled</p>
             @if (Model.IsFullySync)
             {
-                <p><span class="text-success fa fa-check-circle"></span> <span>The full node is synched</span></p>
+                <p>
+                    <vc:icon symbol="checkmark" css-class="text-success" />
+                    <span>The full node is synched</span>
+                </p>
             }
             else
             {
-                <p><span class="text-danger fa fa-times-circle"></span> <span>The full node is not synched</span></p>
+                <p>
+                    <vc:icon symbol="cross" css-class="text-danger" />
+                    <span>The full node is not synched</span>
+                </p>
             }
             @if (Model.IsServerAdmin)
             {
-                <p><span class="text-success fa fa-check-circle"></span> <span>You are server administrator</span></p>
+                <p>
+                    <vc:icon symbol="checkmark" css-class="text-success" />
+                    <span>You are server administrator</span>
+                </p>
             }
             else
             {
-                <p><span class="text-danger fa fa-times-circle"></span> <span>You are not server administrator</span></p>
+                <p>
+                    <vc:icon symbol="cross" css-class="text-danger" />
+                    <span>You are not server administrator</span>
+                </p>
             }
             @if (Model.IsSupportedByCurrency)
             {
-                <p><span class="text-success fa fa-check-circle"></span> <span>This full node support rescan of the UTXO set</span></p>
+                <p>
+                    <vc:icon symbol="checkmark" css-class="text-success" />
+                    <span>This full node support rescan of the UTXO set</span>
+                </p>
             }
             else
             {
-                <p><span class="text-danger fa fa-times-circle"></span> <span>This full node does not support rescan of the UTXO set</span></p>
+                <p>
+                    <vc:icon symbol="cross" css-class="text-danger" />
+                    <span>This full node does not support rescan of the UTXO set</span>
+                </p>
             }
         </div>
     </div>

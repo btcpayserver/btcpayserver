@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -8,6 +9,8 @@ using BTCPayServer.Data;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 
@@ -31,12 +34,13 @@ namespace BTCPayServer.Controllers.Greenfield
             var blob = data.GetBlob();
             if (blob is null)
                 return new LightningAddressData();
-            return new LightningAddressData()
+            return new LightningAddressData
             {
                 Username = data.Username,
                 Max = blob.Max,
                 Min = blob.Min,
-                CurrencyCode = blob.CurrencyCode
+                CurrencyCode = blob.CurrencyCode,
+                InvoiceMetadata = blob.InvoiceMetadata
             };
         }
 
@@ -83,16 +87,17 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(data.Min), "Minimum must be greater than 0 if provided.");
                 return this.CreateValidationError(ModelState);
             }
-
-            if (await _lightningAddressService.Set(new Data.LightningAddressData()
+            
+            if (await _lightningAddressService.Set(new Data.LightningAddressData
             {
                 StoreDataId = storeId,
                 Username = username
-            }.SetBlob(new LightningAddressDataBlob()
+            }.SetBlob(new LightningAddressDataBlob
             {
                 Max = data.Max,
                 Min = data.Min,
-                CurrencyCode = data.CurrencyCode
+                CurrencyCode = data.CurrencyCode,
+                InvoiceMetadata = data.InvoiceMetadata
             })))
             {
                 return await GetStoreLightningAddress(storeId, username);

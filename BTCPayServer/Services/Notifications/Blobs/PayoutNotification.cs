@@ -36,6 +36,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
+                vm.StoreId = notification.StoreId;
                 vm.Body = (notification.Status ?? PayoutState.AwaitingApproval) switch
                 {
                     PayoutState.AwaitingApproval => "A new payout is awaiting for approval",

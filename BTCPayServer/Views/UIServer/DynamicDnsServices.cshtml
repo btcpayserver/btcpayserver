@@ -3,23 +3,32 @@
 @{
     ViewData.SetActivePage(ServerNavPages.Services, "Dynamic DNS Settings");
 }
-
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>
+            <span>@ViewData["Title"]</span>
+            <small>
+                <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info" />
+                </a>
+            </small>
+        </h2>
+    </nav>
+    <div>
+        <form method="post" asp-action="DynamicDnsService">
+			<button id="page-primary" class="btn btn-primary mt-2" type="submit">Add Service</button>
+        </form>
+    </div>
+</div>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-md-8">
-        <div class="d-sm-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">
-                @ViewData["Title"]
-                <small>
-                    <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info" />
-                    </a>
-                </small>
-            </h3>
-            <form method="post" asp-action="DynamicDnsService">
-                <button id="AddDynamicDNS" class="btn btn-primary mt-2" type="submit">Add service</button>
-            </form>
-        </div>
-
         <div class="form-group">
             <p>
                 Dynamic DNS allows you to have a stable DNS name pointing to your server, even if your IP address changes regulary.
@@ -33,40 +42,42 @@
         
         @if (Model.Any())
         {
-            <table class="table table-sm table-responsive-md">
-                <thead>
-                <tr>
-                    <th>Hostname</th>
-                    <th>Last updated</th>
-                    <th class="text-center">Enabled</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var service in Model)
-                {
+            <div class="table-responsive-md">
+                <table class="table table-sm">
+                    <thead>
                     <tr>
-                        <td>@service.Settings.Hostname</td>
-                        <td>@service.LastUpdated</td>
-                        <td class="text-center">
-                            @if (service.Settings.Enabled)
-                            {
-                                <span class="text-success fa fa-check"></span>
-                            }
-                            else
-                            {
-                                <span class="text-danger fa fa-times"></span>
-                            }
-                        </td>
-                        <td class="text-end">
-                            <a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Edit</a>
-                            <span> - </span>
-                            <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Deleting the dynamic DNS service for <strong>@Html.Encode(service.Settings.Hostname)</strong> means your BTCPay Server will stop updating the associated DNS record periodically." data-confirm-input="DELETE">Delete</a>
-                        </td>
+                        <th>Hostname</th>
+                        <th>Last updated</th>
+                        <th class="text-center">Enabled</th>
+                        <th class="text-end">Actions</th>
                     </tr>
-                }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                    @foreach (var service in Model)
+                    {
+                        <tr>
+                            <td>@service.Settings.Hostname</td>
+                            <td>@service.LastUpdated</td>
+                            <td class="text-center">
+                                @if (service.Settings.Enabled)
+                                {
+                                    <vc:icon symbol="checkmark" css-class="text-success" />
+                                }
+                                else
+                                {
+                                    <vc:icon symbol="cross" css-class="text-danger" />
+                                }
+                            </td>
+                            <td class="text-end">
+                                <a asp-action="DynamicDnsService" asp-route-hostname="@service.Settings.Hostname">Edit</a>
+                                <span> - </span>
+                                <a asp-action="DeleteDynamicDnsService" asp-route-hostname="@service.Settings.Hostname" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Deleting the dynamic DNS service for <strong>@Html.Encode(service.Settings.Hostname)</strong> means your BTCPay Server will stop updating the associated DNS record periodically." data-confirm-input="DELETE">Delete</a>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
         }
         else
         {

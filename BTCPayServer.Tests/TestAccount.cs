@@ -527,7 +527,7 @@ retry:
         {
             var server = new FakeServer();
             await server.Start();
-            var client = await CreateClient(Policies.CanModifyStoreWebhooks);
+            var client = await CreateClient(Policies.CanModifyWebhooks);
             var wh = await client.CreateWebhook(StoreId, new CreateStoreWebhookRequest()
             {
                 AutomaticRedelivery = false,
@@ -669,7 +669,7 @@ retry:
             var db = (NpgsqlConnection)dbContext.Database.GetDbConnection();
             await db.OpenAsync();
             bool isHeader = true;
-            using (var writer = db.BeginTextImport("COPY \"Invoices\" (\"Id\",\"Blob\",\"Created\",\"CustomerEmail\",\"ExceptionStatus\",\"ItemCode\",\"OrderId\",\"Status\",\"StoreDataId\",\"Archived\",\"Blob2\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            using (var writer = db.BeginTextImport("COPY \"Invoices\" (\"Id\",\"Blob\",\"Created\",\"ExceptionStatus\",\"Status\",\"StoreDataId\",\"Archived\",\"Blob2\") FROM STDIN DELIMITER ',' CSV HEADER"))
             {
                 foreach (var invoice in oldInvoices)
                 {

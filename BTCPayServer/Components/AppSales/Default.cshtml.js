@@ -8,17 +8,27 @@ if (!window.appSales) {
             const data = model;
 
             const render = (data, period) => {
+                document.querySelector(`#${id} .sales-count`).innerText = data.salesCount;
+                
                 const series = data.series.map(s => s.salesCount);
                 const labels = data.series.map((s, i) => period === 'Month' ? (i % 5 === 0 ? s.label : '') : s.label);
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
-                document.querySelectorAll(`#${id} .sales-count`).innerText = data.salesCount;
+                const tooltip = Chartist.plugins.tooltip2({
+                    template: '<div class="chartist-tooltip-inner">Sales: {{value}}</div>',
+                    offset: {
+                        x: 0,
+                        y: -8
+                    }
+                });
                 new Chartist.Bar(`#${id} .ct-chart`, {
                     labels,
                     series: [series]
                 }, {
-                    low
+                    low,
+                    axisY: { onlyInteger: true },
+                    plugins: [tooltip]
                 });
             };
 

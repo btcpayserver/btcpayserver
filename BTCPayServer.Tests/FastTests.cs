@@ -20,6 +20,7 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
+using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
@@ -49,7 +50,6 @@ using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
-using OpenQA.Selenium.DevTools.V100.DOMSnapshot;
 using Xunit;
 using Xunit.Abstractions;
 using StoreData = BTCPayServer.Data.StoreData;
@@ -251,12 +251,10 @@ namespace BTCPayServer.Tests
             Assert.Equal(id, id1);
             Assert.Equal(id, id2);
             Assert.Equal("LTC-LN", id.ToString());
-#if ALTCOINS
             id = PaymentMethodId.Parse("XMR");
             id1 = PaymentMethodId.Parse("XMR-MoneroLike");
             Assert.Equal(id, id1);
             Assert.Equal("XMR-CHAIN", id.ToString());
-#endif
         }
 
         [Fact]
@@ -488,7 +486,7 @@ namespace BTCPayServer.Tests
 
 #pragma warning restore CS0618
         }
-#if ALTCOINS
+
         [Fact]
         public void CanCalculateCryptoDue()
         {
@@ -508,7 +506,6 @@ namespace BTCPayServer.Tests
 
             var paymentMethod = entity.GetPaymentPrompts().TryGet(PaymentTypes.CHAIN.GetPaymentMethodId("BTC"));
             var accounting = paymentMethod.Calculate();
-            Assert.Equal(1.0m, accounting.ToSmallestUnit(Money.Satoshis(1.0m).ToDecimal(MoneyUnit.BTC)));
             Assert.Equal(1.1m, accounting.Due);
             Assert.Equal(1.1m, accounting.TotalDue);
 
@@ -659,7 +656,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(accounting.Paid, accounting.TotalDue);
 #pragma warning restore CS0618
         }
-#endif
 
         [Fact]
         public void DeterministicUTXOSorter()
@@ -1299,17 +1295,22 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             filter = "status:abed, status:abed2";
             search = new SearchString(filter);
-            Assert.Equal("", search.TextSearch);
+            Assert.Null(search.TextSearch);
+            Assert.Null(search.TextFilters);
             Assert.Equal("status:abed, status:abed2", search.ToString());
             Assert.Throws<KeyNotFoundException>(() => search.Filters["test"]);
             Assert.Equal(2, search.Filters["status"].Count);
             Assert.Equal("abed", search.Filters["status"].First());
             Assert.Equal("abed2", search.Filters["status"].Skip(1).First());
 
-            filter = "StartDate:2019-04-25 01:00 AM, hekki";
+            filter = "StartDate:2019-04-25 01:00 AM, hekki,orderid:MYORDERID,orderid:MYORDERID_2";
             search = new SearchString(filter);
             Assert.Equal("2019-04-25 01:00 AM", search.Filters["startdate"].First());
             Assert.Equal("hekki", search.TextSearch);
+            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2", search.TextFilters);
+            Assert.Equal("orderid:MYORDERID,orderid:MYORDERID_2,hekki", search.TextCombined);
+            Assert.Equal("StartDate:2019-04-25 01:00 AM", search.WithoutSearchText());
+            Assert.Equal(filter, search.ToString());
 
             // modify search
             filter = $"status:settled,exceptionstatus:paidLate,unusual:true, fulltext searchterm, storeid:{storeId},startdate:2019-04-25 01:00:00";
@@ -2245,7 +2246,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                     Data.InvoiceData data = new Data.InvoiceData();
                     obj = data;
                     data.Blob2 = v.Input.ToString();
-                    data.Migrate();
+                    data.TryMigrate();
                     var actual = JObject.Parse(data.Blob2);
                     AssertSameJson(v.Expected, actual);
                     if (!v.SkipRountripTest)
@@ -2265,7 +2266,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                     //data.
                     obj = data;
                     data.Blob2 = v.Input.ToString();
-                    data.Migrate();
+                    data.TryMigrate();
                     var actual = JObject.Parse(data.Blob2);
                     AssertSameJson(v.Expected, actual);
                     if (!v.SkipRountripTest)
@@ -2380,7 +2381,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 });
                 var data = new Data.InvoiceData();
                 data.Blob2 = o.ToString();
-                data.Migrate();
+                data.TryMigrate();
                 var migrated = JObject.Parse(data.Blob2);
                 return migrated["prompts"]["BTC-CHAIN"]["details"]["accountDerivation"].Value<string>();
             })

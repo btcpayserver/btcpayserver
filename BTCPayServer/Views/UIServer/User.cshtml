@@ -1,11 +1,74 @@
-﻿@model UsersViewModel.UserViewModel
+@using BTCPayServer.Abstractions.Contracts
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model UsersViewModel.UserViewModel
+@inject IFileService FileService
 @{
     ViewData.SetActivePage(ServerNavPages.Users, Model.Email);
+    var canUpload = await FileService.IsAvailable();
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<form method="post" enctype="multipart/form-data">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="ListUsers">Users</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">User</li>
+            </ol>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
+        </nav>
+		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
 
-<form method="post">
+    @if (!string.IsNullOrEmpty(Model.InvitationUrl))
+    {
+        <div class="payment-box mx-0 mb-5">
+            <div class="qr-container">
+                <vc:qr-code data="@Model.InvitationUrl" />
+            </div>
+            <div class="input-group mt-3">
+                <div class="form-floating">
+                    <vc:truncate-center text="@Model.InvitationUrl" padding="15" elastic="true" classes="form-control-plaintext" id="InvitationUrl"/>
+                    <label for="InvitationUrl">Invitation URL</label>
+                </div>
+            </div>
+        </div>
+    }
+    
+    <div class="form-group">
+        <label asp-for="Name" class="form-label"></label>
+        <input asp-for="Name" class="form-control" />
+        <span asp-validation-for="Name" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <div class="d-flex align-items-center justify-content-between gap-2">
+            <label asp-for="ImageFile" class="form-label"></label>
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+            <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveImageFile" value="true">
+                <vc:icon symbol="cross" /> Remove
+            </button>
+            }
+        </div>
+        @if (canUpload)
+        {
+            <div class="d-flex align-items-center gap-3">
+                <input asp-for="ImageFile" type="file" class="form-control flex-grow">
+                @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                {
+                <img src="@Model.ImageUrl" alt="Profile picture" class="profile-picture" />
+                }
+            </div>
+            <span asp-validation-for="ImageFile" class="text-danger"></span>
+        }
+        else
+        {
+            <input asp-for="ImageFile" type="file" class="form-control" disabled>
+            <div class="form-text">In order to upload an image, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+        }
+    </div>
     <div class="form-check my-3">
         <input asp-for="IsAdmin" type="checkbox" class="form-check-input" />
         <label asp-for="IsAdmin" class="form-check-label">User is admin</label>
@@ -26,5 +89,4 @@
         </div>
         <input name="EmailConfirmed" type="hidden" value="false">
     }
-    <button name="command" type="submit" class="btn btn-primary mt-3" value="Save" id="SaveUser">Save</button>
 </form>

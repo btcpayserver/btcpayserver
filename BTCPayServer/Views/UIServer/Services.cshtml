@@ -1,9 +1,12 @@
-﻿@model BTCPayServer.Models.ServerViewModels.ServicesViewModel
+@model BTCPayServer.Models.ServerViewModels.ServicesViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Services, "Services");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
 
 <div class="mb-5">
     <h4 class="mb-3">Crypto services exposed by your server</h4>
@@ -64,7 +67,7 @@
                 <tr>
                     <td>@s.Name</td>
                     <td style="text-align: right">
-                        <a href="@s.Link" target="_blank" rel="noreferrer noopener">See information</a>
+                        <a href="@s.Link" rel="noreferrer noopener">See information</a>
                     </td>
                 </tr>
             }

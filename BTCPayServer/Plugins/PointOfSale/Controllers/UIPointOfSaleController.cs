@@ -348,11 +348,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         var receiptData = new JObject();
                         if (choice is not null)
                         {
-                            receiptData = JObject.FromObject(new Dictionary<string, string>
-                                {
-                                    {"Title", choice.Title},
-                                    {"Description", choice.Description},
-                                });
+                            var dict = new Dictionary<string, string> { { "Title", choice.Title } };
+                            if (!string.IsNullOrEmpty(choice.Description)) dict["Description"] = choice.Description;
+                            receiptData = JObject.FromObject(dict);
                         }
                         else if (jposData is not null)
                         {
@@ -379,7 +377,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                 {
                                     for (var i = 0; i < amountsArray.Count; i++)
                                     {
-                                        cartData.Add($"Manual entry {i+1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                                        cartData.Add($"Custom Amount {i+1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                                     }
                                 }
                                 receiptData.Add("Cart", cartData);

@@ -3,6 +3,16 @@ namespace BTCPayServer.Client.Models
     public class CreateApplicationUserRequest
     {
         /// <summary>
+        /// the name of the new user
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// the image url of the new user
+        /// </summary>
+        public string ImageUrl { get; set; }
+
+        /// <summary>
         /// the email AND username of the new user
         /// </summary>
         public string Email { get; set; }

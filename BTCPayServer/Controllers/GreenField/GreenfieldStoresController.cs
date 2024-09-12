@@ -3,12 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -27,31 +28,40 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IFileService _fileService;
+        private readonly UriResolver _uriResolver;
 
-        public GreenfieldStoresController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
+        public GreenfieldStoresController(
+            StoreRepository storeRepository,
+            UserManager<ApplicationUser> userManager,
+            IFileService fileService,
+            UriResolver uriResolver)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;
+            _fileService = fileService;
+            _uriResolver = uriResolver;
         }
         
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores")]
-        public Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
+        public async Task<ActionResult<IEnumerable<Client.Models.StoreData>>> GetStores()
         {
-            var stores = HttpContext.GetStoresData();
-            return Task.FromResult<ActionResult<IEnumerable<Client.Models.StoreData>>>(Ok(stores.Select(FromModel)));
+            var storesData = HttpContext.GetStoresData();
+            var stores = new List<Client.Models.StoreData>();
+            foreach (var storeData in storesData)
+            {
+                stores.Add(await FromModel(storeData));
+            }
+            return Ok(stores);
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}")]
-        public IActionResult GetStore(string storeId)
+        public async Task<IActionResult> GetStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return StoreNotFound();
-            }
-            return Ok(FromModel(store));
+            return store == null ? StoreNotFound() : Ok(await FromModel(store));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -59,10 +69,8 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> RemoveStore(string storeId)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return StoreNotFound();
-            }
+            if (store == null) return StoreNotFound();
+
             await _storeRepository.RemoveStore(storeId, _userManager.GetUserId(User));
             return Ok();
         }
@@ -72,17 +80,13 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> CreateStore(CreateStoreRequest request)
         {
             var validationResult = Validate(request);
-            if (validationResult != null)
-            {
-                return validationResult;
-            }
+            if (validationResult != null) return validationResult;
 
-            var store = new Data.StoreData();
-
+            var store = new StoreData();
             PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.CreateStore(_userManager.GetUserId(User), store);
-            return Ok(FromModel(store));
+            return Ok(await FromModel(store));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -90,24 +94,78 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStore(string storeId, UpdateStoreRequest request)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return StoreNotFound();
-            }
+            if (store == null) return StoreNotFound();
             var validationResult = Validate(request);
-            if (validationResult != null)
-            {
-                return validationResult;
-            }
+            if (validationResult != null) return validationResult;
 
             PaymentMethodId.TryParse(request.DefaultPaymentMethod, out var defaultPaymentMethodId);
-
             ToModel(request, store, defaultPaymentMethodId);
             await _storeRepository.UpdateStore(store);
-            return Ok(FromModel(store));
+            return Ok(await FromModel(store));
         }
 
-        internal static Client.Models.StoreData FromModel(StoreData data)
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpPost("~/api/v1/stores/{storeId}/logo")]
+        public async Task<IActionResult> UploadStoreLogo(string storeId, IFormFile file)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null) return StoreNotFound();
+
+            if (file is null)
+                ModelState.AddModelError(nameof(file), "Invalid file");
+            else if (file.Length > 1_000_000)
+                ModelState.AddModelError(nameof(file), "The uploaded image file should be less than 1MB");
+            else if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+            else if (!file.FileName.IsValidFileName())
+                ModelState.AddModelError(nameof(file.FileName), "Invalid filename");
+            else
+            {
+                var formFile = await file.Bufferize();
+                if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
+            try
+            {
+                var userId = _userManager.GetUserId(User)!;
+                var storedFile = await _fileService.AddFile(file!, userId);
+                var blob = store.GetStoreBlob();
+                blob.LogoUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
+                store.SetStoreBlob(blob);
+                await _storeRepository.UpdateStore(store);
+
+                return Ok(await FromModel(store));
+            }
+            catch (Exception e)
+            {
+                return this.CreateAPIError(404, "file-upload-failed", e.Message);
+            }
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/stores/{storeId}/logo")]
+        public async Task<IActionResult> DeleteStoreLogo(string storeId)
+        {
+            var store = HttpContext.GetStoreData();
+            if (store == null) return StoreNotFound();
+            
+            var blob = store.GetStoreBlob();
+            var fileId = (blob.LogoUrl as UnresolvedUri.FileIdUri)?.FileId;
+            if (!string.IsNullOrEmpty(fileId))
+            {
+                var userId = _userManager.GetUserId(User)!;
+                await _fileService.RemoveFile(fileId, userId);
+                blob.LogoUrl = null;
+                store.SetStoreBlob(blob);
+                await _storeRepository.UpdateStore(store);
+            }
+            return Ok();
+        }
+
+        internal async Task<Client.Models.StoreData> FromModel(StoreData data)
         {
             var storeBlob = data.GetStoreBlob();
             return new Client.Models.StoreData
@@ -117,9 +175,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
                 BrandColor = storeBlob.BrandColor,
-                CssUrl = storeBlob.CssUrl?.ToString(),
-                LogoUrl = storeBlob.LogoUrl?.ToString(),
-                PaymentSoundUrl = storeBlob.PaymentSoundUrl?.ToString(),
+                CssUrl = storeBlob.CssUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
+                LogoUrl = storeBlob.LogoUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
+                PaymentSoundUrl = storeBlob.PaymentSoundUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.PaymentSoundUrl),
                 SupportUrl = storeBlob.StoreSupportUrl,
                 SpeedPolicy = data.SpeedPolicy,
                 DefaultPaymentMethod = data.GetDefaultPaymentId()?.ToString(),
@@ -157,7 +215,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Above = criteria.Above,
                     Amount = criteria.Value.Value,
                     CurrencyCode = criteria.Value.Currency,
-                    PaymentMethod = criteria.PaymentMethod.ToString()
+                    PaymentMethodId = criteria.PaymentMethod.ToString()
                 }).ToList() ?? new List<PaymentMethodCriteriaData>()
             };
         }
@@ -219,7 +277,7 @@ namespace BTCPayServer.Controllers.Greenfield
                         Currency = criteria.CurrencyCode,
                         Value = criteria.Amount
                     },
-                    PaymentMethod = PaymentMethodId.Parse(criteria.PaymentMethod)
+                    PaymentMethod = PaymentMethodId.Parse(criteria.PaymentMethodId)
                 }).ToList() ?? new List<PaymentMethodCriteria>();
             model.SetStoreBlob(blob);
         }
@@ -280,9 +338,9 @@ namespace BTCPayServer.Controllers.Greenfield
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
                     }
 
-                    if (string.IsNullOrEmpty(pmc.PaymentMethod) || PaymentMethodId.TryParse(pmc.PaymentMethod) is null)
+                    if (string.IsNullOrEmpty(pmc.PaymentMethodId) || PaymentMethodId.TryParse(pmc.PaymentMethodId) is null)
                     {
-                        request.AddModelError(data => data.PaymentMethodCriteria[index].PaymentMethod, "Payment method was invalid", this);
+                        request.AddModelError(data => data.PaymentMethodCriteria[index].PaymentMethodId, "Payment method was invalid", this);
                     }
 
                     if (pmc.Amount < 0)

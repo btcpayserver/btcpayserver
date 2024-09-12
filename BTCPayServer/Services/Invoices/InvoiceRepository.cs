@@ -140,35 +140,6 @@ namespace BTCPayServer.Services.Invoices
             return await ctx.Apps.Where(a => a.StoreDataId == storeId && a.TagAllInvoices).ToArrayAsync();
         }
 
-        public async Task UpdateInvoice(string invoiceId, UpdateCustomerModel data)
-        {
-retry:
-            using (var ctx = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
-                if (invoiceData == null)
-                    return;
-                var blob = invoiceData.GetBlob();
-                if (blob.Metadata.BuyerEmail == null && data.Email != null)
-                {
-                    if (MailboxAddressValidator.IsMailboxAddress(data.Email))
-                    {
-                        blob.Metadata.BuyerEmail = data.Email;
-                        invoiceData.SetBlob(blob);
-                        AddToTextSearch(ctx, invoiceData, blob.Metadata.BuyerEmail);
-                    }
-                }
-                try
-                {
-                    await ctx.SaveChangesAsync().ConfigureAwait(false);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    goto retry;
-                }
-            }
-        }
-
         public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
         {
 retry:
@@ -230,9 +201,7 @@ retry:
                 {
                     StoreDataId = invoice.StoreId,
                     Id = invoice.Id,
-                    OrderId = invoice.Metadata.OrderId,
                     Status = invoice.Status.ToString(),
-                    ItemCode = invoice.Metadata.ItemCode,
                     Archived = false
                 };
                 invoiceData.SetBlob(invoice);
@@ -520,9 +489,6 @@ retry:
 
                 if (newOrderId != oldOrderId)
                 {
-                    // OrderId is saved in 2 places: (1) the invoice table and (2) in the metadata field. We are updating both for consistency.
-                    invoiceData.OrderId = newOrderId;
-
                     if (oldOrderId != null && (newOrderId is null || !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture)))
                     {
                         RemoveFromTextSearch(context, invoiceData, oldOrderId);
@@ -691,13 +657,27 @@ retry:
 
             if (queryObject.OrderId is { Length: > 0 })
             {
-                var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
-                query = query.Where(i => orderIdSet.Contains(i.OrderId));
+                if (queryObject.OrderId is [var orderId])
+                {
+                    query = query.Where(i => InvoiceData.GetOrderId(i.Blob2) == orderId);
+                }
+                else
+                {
+                    var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
+                    query = query.Where(i => orderIdSet.Contains(InvoiceData.GetOrderId(i.Blob2)));
+                }
             }
             if (queryObject.ItemCode is { Length: > 0 })
             {
-                var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
-                query = query.Where(i => itemCodeSet.Contains(i.ItemCode));
+                if (queryObject.ItemCode is [var itemCode])
+                {
+                    query = query.Where(i => InvoiceData.GetItemCode(i.Blob2) == itemCode);
+                }
+                else
+                {
+                    var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
+                    query = query.Where(i => itemCodeSet.Contains(InvoiceData.GetItemCode(i.Blob2)));
+                }
             }
 
             var statusSet = queryObject.Status is { Length: > 0 }
@@ -806,7 +786,7 @@ retry:
             {
                 "new" => "New",
                 "paid" or "processing" => "Processing",
-                "complete" or "confirmed" => "Settled",
+                "complete" or "confirmed" or "settled" => "Settled",
                 "expired" => "Expired",
                 "invalid" => "Invalid",
                 _ => null

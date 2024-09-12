@@ -74,14 +74,17 @@ namespace BTCPayServer.Tests
                 var controller = user.GetController<UIStoresController>();
                 var lightningVm = (LightningNodeViewModel)Assert.IsType<ViewResult>(controller.SetupLightningNode(user.StoreId, cryptoCode)).Model;
                 Assert.True(lightningVm.Enabled);
-                var response = await controller.SetLightningNodeEnabled(user.StoreId, cryptoCode, false);
-                Assert.IsType<RedirectToActionResult>(response);
 
                 // Get enabled state from settings
-                LightningSettingsViewModel lnSettingsModel;
+                var response = controller.LightningSettings(user.StoreId, cryptoCode);
+                var lnSettingsModel = (LightningSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
+                Assert.NotNull(lnSettingsModel?.ConnectionString);
+                Assert.True(lnSettingsModel.Enabled);
+                lnSettingsModel.Enabled = false;
+                response = await controller.LightningSettings(lnSettingsModel);
+                Assert.IsType<RedirectToActionResult>(response);
                 response = controller.LightningSettings(user.StoreId, cryptoCode);
                 lnSettingsModel = (LightningSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
-                Assert.NotNull(lnSettingsModel?.ConnectionString);
                 Assert.False(lnSettingsModel.Enabled);
 
                 // Setup wallet

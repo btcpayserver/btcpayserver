@@ -54,8 +54,7 @@ public class PayoutsReportProvider : ReportProvider
             data.Add(payout.Date);
             data.Add(payout.GetPayoutSource(_btcPayNetworkJsonSerializerSettings));
             data.Add(payout.State.ToString());
-            string? payoutCurrency;
-            if (PayoutMethodId.TryParse(payout.PaymentMethodId, out var pmi))
+            if (PayoutMethodId.TryParse(payout.PayoutMethodId, out var pmi))
             {
                 var handler = _handlers.TryGet(pmi);
                 if (handler is LightningLikePayoutHandler)
@@ -64,19 +63,14 @@ public class PayoutsReportProvider : ReportProvider
                     data.Add("On-Chain");
                 else
                     data.Add(pmi.ToString());
-                payoutCurrency = handler?.Currency;
             }
             else
                 continue;
 
-            var ppBlob = payout.PullPaymentData?.GetBlob();
-            var currency = ppBlob?.Currency ?? payoutCurrency;
-            if (currency is null)
-                continue;
-            data.Add(payoutCurrency);
-            data.Add(blob.CryptoAmount.HasValue && payoutCurrency is not null ? _displayFormatter.ToFormattedAmount(blob.CryptoAmount.Value, payoutCurrency) : null);
-            data.Add(currency);
-            data.Add(_displayFormatter.ToFormattedAmount(blob.Amount, currency));
+            data.Add(payout.Currency);
+            data.Add(payout.Amount is decimal v ? _displayFormatter.ToFormattedAmount(v, payout.Currency) : null);
+            data.Add(payout.OriginalCurrency);
+            data.Add(_displayFormatter.ToFormattedAmount(payout.OriginalAmount, payout.OriginalCurrency));
             data.Add(blob.Destination);
             queryContext.Data.Add(data);
         }
@@ -92,37 +86,37 @@ public class PayoutsReportProvider : ReportProvider
                 new("Source", "string"),
                 new("State", "string"),
                 new("PaymentType", "string"),
-                new("Crypto", "string"),
-                new("CryptoAmount", "amount"),
                 new("Currency", "string"),
-                new("CurrencyAmount", "amount"),
+                new("Amount", "amount"),
+                new("OriginalCurrency", "string"),
+                new("OriginalAmount", "amount"),
                 new("Destination", "string")
             },
             Charts =
             {
                 new ()
                 {
-                    Name = "Aggregated crypto amount",
-                    Groups = { "Crypto", "PaymentType", "State" },
-                    Totals = { "Crypto" },
+                    Name = "Aggregated by currency",
+                    Groups = { "Currency", "PaymentType", "State" },
+                    Totals = { "Currency" },
                     HasGrandTotal = false,
-                    Aggregates = { "CryptoAmount" }
+                    Aggregates = { "Amount" }
                 },
                 new ()
                 {
-                    Name = "Aggregated amount",
-                    Groups = { "Currency", "State" },
-                    Totals = { "CurrencyAmount" },
+                    Name = "Aggregated by original currency",
+                    Groups = { "OriginalCurrency", "State" },
+                    Totals = { "OriginalAmount" },
                     HasGrandTotal = false,
-                    Aggregates = { "CurrencyAmount" }
+                    Aggregates = { "OriginalAmount" }
                 },
                 new ()
                 {
-                    Name = "Aggregated amount by Source",
-                    Groups = { "Currency", "State", "Source" },
-                    Totals = { "CurrencyAmount" },
+                    Name = "Aggregated by original currency, state and source",
+                    Groups = { "OriginalCurrency", "State", "Source" },
+                    Totals = { "OriginalAmount" },
                     HasGrandTotal = false,
-                    Aggregates = { "CurrencyAmount" }
+                    Aggregates = { "OriginalAmount" }
                 }
             }
         };

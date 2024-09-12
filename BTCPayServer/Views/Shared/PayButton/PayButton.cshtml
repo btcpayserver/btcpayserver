@@ -174,9 +174,12 @@
     </script>
 }
 
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+
 <partial name="_StatusMessage" />
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 <div id="payButtonCtrl">
     <div class="row">
         <div class="col-xl-8">
@@ -412,7 +415,7 @@
         <div class="col-xxl-8">
             <pre><code id="mainCode" class="html"></code></pre>
             <button class="btn btn-outline-secondary" data-clipboard-target="#mainCode">
-                <vc:icon symbol="copy"/>&nbsp;Copy Code
+                <vc:icon symbol="actions-copy"/>&nbsp;Copy Code
             </button>
         </div>
     </div>

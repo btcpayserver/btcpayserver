@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Generate {Model.CryptoCode} Wallet", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Generate {Model.CryptoCode} Wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -17,7 +17,7 @@
     {
         <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hotwallet" id="GenerateHotwalletLink" class="list-group-item list-group-item-action">
             <div class="image">
-                <vc:icon symbol="hot-wallet"/>
+                <vc:icon symbol="wallet-hot"/>
             </div>
             <div class="content">
                 <h4>Hot wallet</h4>
@@ -34,7 +34,7 @@
     {
         <div class="list-group-item text-muted">
             <div class="image">
-                <vc:icon symbol="hot-wallet"/>
+                <vc:icon symbol="wallet-hot"/>
             </div>
             <div class="content">
                 <h4>Hot wallet</h4>
@@ -47,7 +47,7 @@
 <div class="list-group mt-4">
     <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="watchonly" id="GenerateWatchonlyLink" class="list-group-item list-group-item-action">
         <div class="image">
-            <vc:icon symbol="watchonly-wallet"/>
+            <vc:icon symbol="wallet-watchonly"/>
         </div>
         <div class="content">
             <h4>Watch-only wallet</h4>

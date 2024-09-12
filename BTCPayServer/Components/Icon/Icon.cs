@@ -1,16 +1,16 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace BTCPayServer.Components.Icon
+namespace BTCPayServer.Components.Icon;
+
+public class Icon : ViewComponent
 {
-    public class Icon : ViewComponent
+    public IViewComponentResult Invoke(string symbol, string cssClass = null)
     {
-        public IViewComponentResult Invoke(string symbol)
+        var vm = new IconViewModel
         {
-            var vm = new IconViewModel
-            {
-                Symbol = symbol
-            };
-            return View(vm);
-        }
+            Symbol = symbol,
+            CssClass = cssClass
+        };
+        return View(vm);
     }
 }

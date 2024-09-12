@@ -54,6 +54,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 }
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
+                vm.StoreId = notification.StoreId;
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIInvoiceController.Invoice),
                     "UIInvoice",
                     new { invoiceId = notification.InvoiceId }, _options.RootPath);
@@ -64,10 +65,11 @@ namespace BTCPayServer.Services.Notifications.Blobs
         {
         }
 
-        public InvoiceEventNotification(string invoiceId, string invoiceEvent)
+        public InvoiceEventNotification(string invoiceId, string invoiceEvent, string storeId)
         {
             InvoiceId = invoiceId;
             Event = invoiceEvent;
+            StoreId = storeId;
         }
 
         public static bool HandlesEvent(string invoiceEvent)
@@ -77,6 +79,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
         public string InvoiceId { get; set; }
         public string Event { get; set; }
+        public string StoreId { get; set; }
         public override string Identifier => Event is null ? TYPE : Event.ToStringLowerInvariant();
         public override string NotificationType => TYPE;
     }

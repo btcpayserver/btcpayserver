@@ -237,7 +237,7 @@ namespace BTCPayServer.HostedServices
                 if (InvoiceEventNotification.HandlesEvent(b.Name))
                 {
                     await _notificationSender.SendNotification(new StoreScope(b.Invoice.StoreId),
-                        new InvoiceEventNotification(b.Invoice.Id, b.Name));
+                        new InvoiceEventNotification(b.Invoice.Id, b.Name, b.Invoice.StoreId));
                 }
                 if (b.Name == InvoiceEvent.Created)
                 {

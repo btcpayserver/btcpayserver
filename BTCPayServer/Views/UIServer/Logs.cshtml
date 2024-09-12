@@ -1,9 +1,12 @@
-﻿@model BTCPayServer.Models.ServerViewModels.LogsViewModel
+@model BTCPayServer.Models.ServerViewModels.LogsViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Logs, "Logs");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
 
 <ul class="list-unstyled">
     @foreach (var file in Model.LogFiles)

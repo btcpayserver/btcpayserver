@@ -34,10 +34,10 @@
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
+    <div class="sticky-header">
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+        <div>
+			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
             @if (Model.Archived)
             {
                 <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>
@@ -58,8 +58,11 @@
 
     <input type="hidden" asp-for="StoreId" />
     <input type="hidden" asp-for="Archived" />
-    <div asp-validation-summary="ModelOnly"></div>
 
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="ModelOnly"></div>
+    }
     <div class="row">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
             <div class="row">

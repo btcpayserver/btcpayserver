@@ -85,7 +85,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
             }
 
             foreach (IGrouping<string, PayoutData> payoutByStoreByPaymentMethod in payoutByStore.GroupBy(data =>
-                         data.PaymentMethodId))
+                         data.PayoutMethodId))
             {
                 var pmi = PaymentMethodId.Parse(payoutByStoreByPaymentMethod.Key);
                 var pm = store.GetPaymentMethodConfigs(_handlers)
@@ -109,12 +109,16 @@ public class LightningPendingPayoutListener : BaseAsyncService
                             break;
                         case PayoutLightningBlob payoutLightningBlob:
                             {
-                                var payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
-                                if (payment is null)
+                                LightningPayment payment = null;
+                                try
                                 {
-                                    continue;
+                                    payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
                                 }
-
+                                catch
+                                {
+                                }
+                                if (payment is null)
+                                    continue;
                                 switch (payment.Status)
                                 {
                                     case LightningPaymentStatus.Complete:

@@ -2,6 +2,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using NBitcoin;
 
 namespace BTCPayServer.Models.WalletViewModels
@@ -9,15 +10,15 @@ namespace BTCPayServer.Models.WalletViewModels
     public class WalletPSBTCombineViewModel
     {
         public string OtherPSBT { get; set; }
-        [Display(Name = "PSBT to combine with...")]
+        [Display(Name = "PSBT to combine with…")]
         public string PSBT { get; set; }
-        [Display(Name = "Upload PSBT from file...")]
+        [Display(Name = "Upload PSBT from file…")]
         public IFormFile UploadedPSBTFile { get; set; }
 
         public string BackUrl { get; set; }
         public string ReturnUrl { get; set; }
 
-        public PSBT GetSourcePSBT(Network network)
+        public PSBT GetSourcePSBT(Network network, ModelStateDictionary modelState)
         {
             if (!string.IsNullOrEmpty(OtherPSBT))
             {
@@ -25,12 +26,12 @@ namespace BTCPayServer.Models.WalletViewModels
                 {
                     return NBitcoin.PSBT.Parse(OtherPSBT, network);
                 }
-                catch
-                { }
+                catch (Exception ex)
+                { modelState.AddModelError(nameof(OtherPSBT), ex.Message); }
             }
             return null;
         }
-        public async Task<PSBT> GetPSBT(Network network)
+        public async Task<PSBT> GetPSBT(Network network, ModelStateDictionary modelState)
         {
             if (UploadedPSBTFile != null)
             {
@@ -45,8 +46,9 @@ namespace BTCPayServer.Models.WalletViewModels
                 {
                     return NBitcoin.PSBT.Load(bytes, network);
                 }
-                catch
+                catch (FormatException ex)
                 {
+                    modelState.AddModelError(nameof(UploadedPSBTFile), ex.Message);
                     return null;
                 }
             }
@@ -56,8 +58,10 @@ namespace BTCPayServer.Models.WalletViewModels
                 {
                     return NBitcoin.PSBT.Parse(PSBT, network);
                 }
-                catch
-                { }
+                catch (FormatException ex)
+                {
+                    modelState.AddModelError(nameof(UploadedPSBTFile), ex.Message);
+                }
             }
             return null;
         }

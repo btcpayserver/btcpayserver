@@ -1,11 +1,14 @@
-﻿@model GenerateRecoveryCodesViewModel
+@model GenerateRecoveryCodesViewModel
 @{
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Recovery codes");
 }
 
+<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
+
 <div class="alert alert-warning" role="alert">
     <h5>
-        <span class="fa fa-warning"></span>
+        <vc:icon symbol="warning" />
         Put these codes in a safe place
     </h5>
     <p class="mb-0">
@@ -14,7 +17,7 @@
 </div>
 <div class="row">
     <div class="col-md-12">
-        @for(var row = 0; row < Model.RecoveryCodes.Count(); row += 2)
+        @for(var row = 0; row < Model.RecoveryCodes.Length; row += 2)
         {
             <code>@Model.RecoveryCodes[row]</code><text>&nbsp;</text><code>@Model.RecoveryCodes[row + 1]</code><br />
         }

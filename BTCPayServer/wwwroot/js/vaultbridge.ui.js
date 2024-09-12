@@ -89,21 +89,23 @@ var vaultui = (function () {
         * @param {VaultFeedback} feedback
         */
         function show(feedback) {
-            var icon = $(".vault-feedback.vault-feedback" + self.currentFeedback + " " + ".vault-feedback-icon");
-            icon.removeClass();
-            icon.addClass("vault-feedback-icon mt-1 me-2");
+            const $icon = document.querySelector(`.vault-feedback.vault-feedback${self.currentFeedback} .vault-feedback-icon`);
+            let iconClasses = '';
             if (feedback.type == "?") {
-                icon.addClass("fa fa-question-circle feedback-icon-loading");
+                iconClasses = "icon-dots feedback-icon-loading";
             }
             else if (feedback.type == "ok") {
-                icon.addClass("fa fa-check-circle feedback-icon-success");
+                iconClasses = "icon-checkmark feedback-icon-success";
+                $icon.innerHTML = $icon.innerHTML.replace("#dots", "#checkmark");
             }
             else if (feedback.type == "failed") {
-                icon.addClass("fa fa-times-circle feedback-icon-failed");
+                iconClasses = "icon-cross feedback-icon-failed";
+                $icon.innerHTML = $icon.innerHTML.replace("#dots", "#cross");
                 showRetry();
             }
-            var content = $(".vault-feedback.vault-feedback" + self.currentFeedback + " " + ".vault-feedback-content");
-            content.html(feedback.txt);
+            $icon.setAttribute('class', `vault-feedback-icon icon me-2 ${iconClasses}`);
+            const $content = document.querySelector(`.vault-feedback.vault-feedback${self.currentFeedback} .vault-feedback-content`);
+            $content.innerHTML = feedback.txt;
             if (feedback.type === 'ok')
                 self.currentFeedback++;
             if (feedback.type === 'failed')

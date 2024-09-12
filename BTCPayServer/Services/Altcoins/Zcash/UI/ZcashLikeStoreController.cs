@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -308,4 +307,3 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
         }
     }
 }
-#endif

@@ -78,7 +78,6 @@ public partial class UIStoresController
         var model = new CreateTokenViewModel();
         ViewBag.HidePublicKey = storeId == null;
         ViewBag.ShowStores = storeId == null;
-        ViewBag.ShowMenu = storeId != null;
         model.StoreId = storeId;
         return View(model);
     }
@@ -143,7 +142,6 @@ public partial class UIStoresController
         var model = new CreateTokenViewModel();
         ViewBag.HidePublicKey = true;
         ViewBag.ShowStores = true;
-        ViewBag.ShowMenu = false;
         var stores = (await _storeRepo.GetStoresByUserId(userId)).Where(data => data.HasPermission(userId, Policies.CanModifyStoreSettings)).ToArray();
 
         model.Stores = new SelectList(stores, nameof(CurrentStore.Id), nameof(CurrentStore.StoreName));

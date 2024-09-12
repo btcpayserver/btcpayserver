@@ -1,36 +1,137 @@
-@model BTCPayServer.Models.NotificationViewModels.IndexViewModel
+@model BTCPayServer.Models.NotificationViewModels.NotificationIndexViewModel
 @{
     ViewData["Title"] = "Notifications";
+    string status = ViewBag.Status;
+    var statusFilterCount = CountArrayFilter("type");
+    var storesFilterCount = CountArrayFilter("storeid");
 }
 
-<partial name="_StatusMessage" />
+@functions
+{
+    private int CountArrayFilter(string type) =>
+        Model.Search.ContainsFilter(type) ? Model.Search.GetFilterArray(type).Length : 0;
 
-<div class="d-flex flex-wrap align-items-center justify-content-between mb-2">
-    <h2>@ViewData["Title"]</h2>
-    <a id="NotificationSettings" asp-controller="UIManage" asp-action="NotificationSettings" class="btn btn-secondary">
-        Settings                
+    private bool HasArrayFilter(string type, string key = null) =>
+        Model.Search.ContainsFilter(type) && (key is null || Model.Search.GetFilterArray(type).Contains(key));
+}
+
+@section PageHeadContent
+{
+    <style>
+        .dropdown > .btn {
+            min-width: 7rem;
+            padding-left: 1rem;
+            text-align: left;
+        }
+        @@media (max-width: 568px) {
+            #SearchText {
+                width: 100%;
+            }
+        } 
+    </style>
+}
+
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+    <a id="NotificationSettings" asp-controller="UIManage" asp-action="NotificationSettings" class="btn btn-secondary d-flex align-items-center">
+        <vc:icon symbol="nav-store-settings" />
     </a>
 </div>
+<partial name="_StatusMessage" />
+<form asp-route-status="@Model.Status" class="d-flex flex-wrap align-items-center gap-md-4 gap-sm-0 mb-4 col-xxl-8" asp-action="Index" method="get">
+    <input asp-for="Count" type="hidden" />
+    <input asp-for="TimezoneOffset" type="hidden" />
+    <input type="hidden" asp-for="Status" value="@Model.Status" />
+
+    <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
+        <input asp-for="SearchText" class="form-control" placeholder="Search…" />
+    </div>
+
+    <div class="btn-group col-12 col-md-auto mb-3 mb-md-0" role="group" aria-label="View Notification">
+        <a class="btn @((status == "All") ? "btn-primary" : "btn-outline-secondary")"
+           asp-controller="UINotifications"
+           asp-action="Index"
+           asp-route-Status="All">
+            All
+        </a>
+        <a class="btn @((status == "Unread") ? "btn-primary" : "btn-outline-secondary")"
+           asp-controller="UINotifications"
+           asp-action="Index"
+           asp-route-Status="Unread">
+            Unread
+        </a>
+    </div>
+
+    <div class="dropdown col-12 col-md-auto mb-3 mb-md-0">
+        <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (statusFilterCount > 0)
+            {
+                <span>@statusFilterCount Type</span>
+            }
+            else
+            {
+                <span>All Type</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "invoicestate")" class="dropdown-item @(HasArrayFilter("type", "invoicestate") ? "custom-active" : "")">Invoice</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "payout")" class="dropdown-item @(HasArrayFilter("type", "payout") ? "custom-active" : "")">Payouts</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "newversion")" class="dropdown-item @(HasArrayFilter("type", "newversion") ? "custom-active" : "")">New Version</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "pluginupdate")" class="dropdown-item @(HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")">Plugin Updates</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "userupdate")" class="dropdown-item @(HasArrayFilter("type", "userupdate") ? "custom-active" : "")">User Updates</a>
+        </div>
+    </div>
+
+    <div class="dropdown col-12 col-md-auto">
+        <button id="StoresOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @if (storesFilterCount > 0)
+            {
+                <span>@storesFilterCount Store@(storesFilterCount > 1 ? "s" : "")</span>
+            }
+            else
+            {
+                <span>All Stores</span>
+            }
+        </button>
+        <div class="dropdown-menu" aria-labelledby="StoresOptionsToggle">
+            @foreach (var store in Model.Stores)
+            {
+                <a asp-action="Index"
+                   asp-route-count="@Model.Count"
+                   asp-route-status="@Model.Status"
+                   asp-route-searchTerm="@Model.Search.Toggle("storeid", store.Id)"
+                   class="dropdown-item @(HasArrayFilter("storeid", store.Id) ? "custom-active" : "")">
+                    @store.StoreName
+                </a>
+            }
+        </div>
+    </div>
+</form>
+
+
+
 @if (Model.Items.Count > 0)
 {
     <form method="post" asp-action="MassAction">
         @if (Model.Items.Any())
         {
-            <div class="table-responsive-md">
+            <div class="table-responsive">
                 <table class="table table-hover mass-action">
                     <thead class="mass-action-head">
                         <tr>
                             <th class="mass-action-select-col only-for-js">
                                 <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select-all" />
                             </th>
+                            <th>Message</th>
                             <th class="date-col">
                                 <div class="d-flex align-items-center gap-1">
                                     Date
-                                    <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format" title="Switch date format"></button>
+                                    <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                                        <vc:icon symbol="time" />
+                                    </button>
                                 </div>
                             </th>
-                            <th>Message</th>
-                            <th></th>
+                            <th class="text-end text-success">Actions</th>
                         </tr>
                     </thead>
                     <thead class="mass-action-actions">
@@ -38,30 +139,31 @@
                             <th class="mass-action-select-col only-for-js">
                                 <input type="checkbox" class="form-check-input mass-action-select-all" />
                             </th>
-                            <th colspan="6">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
+                            <th colspan="3">
+                                <div class="d-flex flex-wrap align-items-center justify-content-start gap-3">
+                                    <div class="d-inline-flex align-items-center gap-3">
+                                        @if (Model.Status == "Unread")
+                                        {
+                                            <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
+                                                <vc:icon symbol="actions-show" />
+                                                Mark as seen
+                                            </button>
+                                        }
+                                        <button type="submit" name="command" value="delete" class="btn btn-link gap-1">
+                                            <vc:icon symbol="actions-trash" />
+                                            Delete
+                                        </button>
+                                    </div>
+                                    <div class="vr"></div>
                                     <div>
                                         <strong class="mass-action-selected-count">0</strong>
                                         selected
-                                    </div>
-                                    <div class="d-inline-flex align-items-center gap-3">
-                                        <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
-                                            <i class="fa fa-eye"></i>
-                                            Mark seen
-                                        </button>
-                                        <button type="submit" name="command" value="mark-unseen" class="btn btn-link gap-1">
-                                            <i class="fa fa-eye-slash"></i>
-                                            Mark unseen
-                                        </button>
-                                        <button type="submit" name="command" value="delete" class="btn btn-link gap-1">
-                                            <i class="fa fa-trash-o"></i>
-                                            Delete
-                                        </button>
                                     </div>
                                 </div>
                             </th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @foreach (var item in Model.Items)
                         {
@@ -69,18 +171,22 @@
                                 <td class="only-for-js mass-action-select-col">
                                     <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select" value="@item.Id" />
                                 </td>
-                                <td class="date-col">@item.Created.ToBrowserDate()</td>
                                 <td>
                                     @item.Body
                                 </td>
+                                <td class="date-col fw-normal">@item.Created.ToTimeAgo()</td>
+
                                 <td class="text-end">
                                     <div class="d-inline-flex align-items-center gap-3">
-                                        <button class="btn btn-link p-0 btn-toggle-seen" type="submit" name="command" value="flip-individual:@(item.Id)">
-                                            <span>Mark</span>&nbsp;<span class="seen-text"></span>
-                                        </button>
                                         @if (!string.IsNullOrEmpty(item.ActionLink))
                                         {
                                             <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
+                                        }
+                                        @if (!item.Seen)
+                                        {
+                                            <button class="btn btn-link p-0 btn-toggle-seen text-nowrap" type="submit" name="command" value="flip-individual:@(item.Id)">
+                                                <span>Mark as seen</span>
+                                            </button>
                                         }
                                     </div>
                                 </td>
@@ -101,18 +207,13 @@ else
     </p>
 }
 
+
+
+
 <style>
     .notification-row.loading {
         cursor: wait;
         pointer-events: none;
-    }
-
-    .seen-text::after {
-        content: "seen";
-    }
-
-    tr.seen td .seen-text::after {
-        content: "unseen";
     }
 
     tr td {

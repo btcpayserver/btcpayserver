@@ -1,9 +1,7 @@
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
-@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
 
 <div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.Store.Id">
@@ -34,34 +32,36 @@
     }
     else if (Model.Invoices.Any())
     {
-        <table class="table table-hover mt-3 mb-0">
-            <thead>
-            <tr>
-                <th class="w-125px">Date</th>
-                <th class="text-nowrap">Invoice Id</th>
-                <th>Status</th>
-                <th class="text-end">Amount</th>
-            </tr>
-            </thead>
-            <tbody>
-            @foreach (var invoice in Model.Invoices)
-            {
+        <div class="table-responsive mt-3 mb-0">
+            <table class="table table-hover mb-0">
+                <thead>
                 <tr>
-                    <td>@invoice.Date.ToTimeAgo()</td>
-                    <td>
-                        <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
-                    </td>
-                    <td>
-                        <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
-                           is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
-                    </td>
-                    <td class="text-end">
-                        <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
-                    </td>
+                    <th class="w-125px">Date</th>
+                    <th class="text-nowrap">Invoice Id</th>
+                    <th>Status</th>
+                    <th class="text-end">Amount</th>
                 </tr>
-            }
-            </tbody>
-        </table>
+                </thead>
+                <tbody>
+                @foreach (var invoice in Model.Invoices)
+                {
+                    <tr>
+                        <td>@invoice.Date.ToTimeAgo()</td>
+                        <td>
+                            <a asp-controller="UIInvoice" asp-action="Invoice" asp-route-invoiceId="@invoice.InvoiceId" class="text-break">@invoice.InvoiceId</a>
+                        </td>
+                        <td>
+                            <vc:invoice-status state="invoice.Status" payments="invoice.Details.Payments" invoice-id="@invoice.InvoiceId"
+                               is-archived="invoice.Details.Archived" has-refund="invoice.HasRefund" />
+                        </td>
+                        <td class="text-end">
+                            <span data-sensitive>@DisplayFormatter.Currency(invoice.Amount, invoice.Currency)</span>
+                        </td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        </div>
     }
     else
     {

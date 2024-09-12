@@ -66,11 +66,11 @@ namespace BTCPayServer.Controllers.Greenfield
 
         protected JsonHttpException ErrorPaymentMethodNotConfigured()
         {
-            return new JsonHttpException(this.CreateAPIError(404, "paymentmethod-not-configured", "The lightning node is not set up"));
+            return new JsonHttpException(this.CreateAPIError(404, "paymentmethod-not-configured", "The payment method is not configured"));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/preview")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview")]
         public IActionResult GetOnChainPaymentMethodPreview(
             string storeId,
             [ModelBinder(typeof(PaymentMethodIdModelBinder))]
@@ -87,7 +87,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/preview")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview")]
         public async Task<IActionResult> GetProposedOnChainPaymentMethodPreview(
             string storeId,
             [ModelBinder(typeof(PaymentMethodIdModelBinder))]

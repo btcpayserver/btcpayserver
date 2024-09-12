@@ -11,6 +11,7 @@ public class UserRegisteredEvent
     public UserRegisteredEventKind Kind { get; set; } = UserRegisteredEventKind.Registration;
     public Uri RequestUri { get; set; }
     public ApplicationUser InvitedByUser { get; set; }
+    public bool SendInvitationEmail { get; set; }
     public TaskCompletionSource<Uri> CallbackUrlGenerated;
 }
 

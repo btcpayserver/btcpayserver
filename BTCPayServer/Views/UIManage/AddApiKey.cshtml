@@ -25,15 +25,26 @@
     </script>
 }
 
-<h3 class="mb-3">@ViewData["Title"]</h3>
-
-<div class="row">
-    <div class="col-xl-10 col-xxl-constrain">
-        <p>Generate a new api key to use BTCPay through its API.</p>
-        
-        <form method="post" asp-action="AddApiKey" id="Permissions">
-            <div asp-validation-summary="All"></div>
-        
+<form method="post" asp-action="AddApiKey" id="Permissions">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="APIKeys">API Keys</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
+        </nav>
+		<button id="page-primary" type="submit" class="btn btn-primary">Generate API Key</button>
+    </div>
+    <p>Generate a new api key to use BTCPay through its API.</p>
+    <div class="row">
+        <div class="col-xl-10 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <div class="form-group">
                 <label asp-for="Label" class="form-label"></label>
                 <input asp-for="Label" class="form-control"/>
@@ -133,8 +144,6 @@
                     }
                 }
             </div>
-        
-            <button type="submit" class="btn btn-primary" id="Generate">Generate API Key</button>
-        </form>
+        </div>
     </div>
-</div>
+</form>

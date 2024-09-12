@@ -298,11 +298,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.items.splice(newIndex, 0, this.items.splice(oldIndex, 1)[0])
             },
             showOffcanvas() {
-                if (window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
+                if (this.editorOffcanvas && window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
                     this.editorOffcanvas.show();
             },
             hideOffcanvas() {
-                this.editorOffcanvas.hide();
+                if (this.editorOffcanvas)
+                    this.editorOffcanvas.hide();
             }
         },
         mounted() {

@@ -142,7 +142,7 @@
 						<span asp-validation-for="LangDictionary" class="text-danger"></span>
 						<div class="form-text">Add or customize translations <a asp-action="ListDictionaries">here</a>.</div>
 					</div>
-                    <div class="d-flex">
+                    <div class="form-group d-flex">
                         <input asp-for="AllowSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
                         <div>
                             <label asp-for="AllowSearchEngines" class="form-check-label"></label>
@@ -154,7 +154,7 @@
                     </div>
                     @if (ViewBag.UpdateUrlPresent)
                     {
-                        <div class="d-flex">
+                        <div class="form-group d-flex">
                             <input asp-for="CheckForNewVersions" type="checkbox" class="btcpay-toggle me-3"/>
                             <div>
                                 <label asp-for="CheckForNewVersions" class="form-check-label"></label>

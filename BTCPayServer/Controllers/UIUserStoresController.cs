@@ -75,7 +75,7 @@ namespace BTCPayServer.Controllers
                 Exchanges = GetExchangesSelectList(new StoreBlob
                 {
                     DefaultCurrency = policySettings?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency,
-                    PreferredExchange = policySettings.DefaultExchangeProvider ?? null
+                    PreferredExchange = policySettings?.DefaultExchangeProvider ?? null
                 })
             };
 
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
                 vm.Exchanges = GetExchangesSelectList(new StoreBlob
                 {
                     DefaultCurrency = policySettings?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency,
-                    PreferredExchange = policySettings.DefaultExchangeProvider ?? null
+                    PreferredExchange = policySettings?.DefaultExchangeProvider ?? null
                 });
                 return View(vm);
             }

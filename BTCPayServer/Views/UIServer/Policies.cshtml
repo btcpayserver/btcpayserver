@@ -193,7 +193,13 @@
                 <div class="form-group mb-3">
                     <label asp-for="DefaultCurrency" class="form-label"></label>
                     <input asp-for="DefaultCurrency" placeholder="@StoreBlob.StandardDefaultCurrency" class="form-control" currency-selection />
+                </div
+
+                <div class="form-group mb-3 d-none" id="DefaultExchangeProviderForm">
+                    <label asp-for="DefaultExchangeProvider" class="form-label"></label>
+                    <select asp-for="DefaultExchangeProvider" asp-items="@Model.Exchanges" placeholder="Default Store Exchange Provider" class="form-select"></select>
                 </div>
+
                 <div class="form-group mb-5">
                     <label asp-for="RootAppId" class="form-label"></label>
                     <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select"></select>
@@ -269,7 +275,7 @@
     </div>
 </form>
 
-@section PageFootContent {
+@* @section PageFootContent {
     <script>
         delegate('click', '.revert-default', e => {
             const $row = e.target.closest('[data-default]');
@@ -281,4 +287,27 @@
             }    
         }
     </script>
+} *@
+
+@section PageFootContent {
+    <script>
+        for (let element of document.getElementsByClassName("collapse-on-js")){
+            if (element.classList.contains("show")) {
+                element.classList.remove("show");
+            }    
+        }
+        function toggleExchangeProviderVisibility() {
+            const currencyInput = document.getElementById("DefaultCurrency");
+            const exchangeDiv = document.getElementById("DefaultExchangeProviderForm");
+            const defaultCurrency = @Safe.Json(Model.DefaultCurrency);
+            exchangeDiv.classList[currencyInput.value.trim() !== "" || defaultCurrency !== "" ? "remove" : "add"]("d-none");
+        }
+        delegate('click', '.revert-default', e => {
+            const $row = e.target.closest('[data-default]');
+            $row.querySelector('input.block-explorer-link').value = $row.dataset.default;
+        })
+        delegate('input', '#DefaultCurrency', toggleExchangeProviderVisibility)
+        toggleExchangeProviderVisibility();
+    </script>
 }
+

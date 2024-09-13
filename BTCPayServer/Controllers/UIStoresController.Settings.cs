@@ -75,7 +75,7 @@ public partial class UIStoresController
         blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
         if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
         {
-            ModelState.AddModelError(nameof(model.BrandColor), "Invalid color");
+            ModelState.AddModelError(nameof(model.BrandColor), "The brand color needs to be a valid hex color code");
             return View(model);
         }
         blob.BrandColor = model.BrandColor;

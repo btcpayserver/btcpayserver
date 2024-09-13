@@ -186,8 +186,8 @@ h2 .icon.icon-info {
     top: -.0125em;
 }
 
-#descriptor p {
-    max-width: 40em;
+#mainContent section p {
+    max-width: 46em;
 }
 
 /* Invoices */

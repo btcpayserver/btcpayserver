@@ -38,7 +38,12 @@
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
 
-			<h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
+            <h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
+            <p>
+                The custom color, logo and CSS are applied on the public/customer-facing pages (Invoice, Payment Request, Pull Payment, etc.).
+                The brand color is used as the accent color for buttons, links, etc. It might get adapted to fit the light/dark color scheme.
+            </p>
+
             <div class="form-group">
                 <label asp-for="BrandColor" class="form-label"></label>
                 <div class="input-group">
@@ -94,9 +99,6 @@
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
-                    <div class="form-text">
-                        Use this CSS to customize the public/customer-facing pages of this store. (Invoice, Payment Request, Pull Payment, etc.) 
-                    </div>
                 }
                 else
                 {

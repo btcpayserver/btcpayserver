@@ -76,17 +76,17 @@ public class VSSController : Controller, IVSSAPI
         return default;
     }
 
-    private bool VerifyMaster(long deviceIdentifier)
+    private async Task<bool> VerifyMaster(long deviceIdentifier)
     {
         var userId = _userManager.GetUserId(User);
-        return _appState.IsMaster(userId, deviceIdentifier);
+        return await _appState.IsMaster(userId, deviceIdentifier);
     }
 
     [HttpPost(HttpVSSAPIClient.PUT_OBJECTS)]
     [MediaTypeConstraint("application/octet-stream")]
     public async Task<PutObjectResponse> PutObjectAsync(PutObjectRequest request, CancellationToken cancellationToken)
     {
-        if (!VerifyMaster(request.GlobalVersion))
+        if (!await VerifyMaster(request.GlobalVersion))
             return SetResult<PutObjectResponse>(BadRequest(new ErrorResponse()
             {
                 ErrorCode = ErrorCode.ConflictException, Message = "Global version mismatch"
@@ -119,8 +119,9 @@ public class VSSController : Controller, IVSSAPI
 
                 await dbContext.SaveChangesAsync(cancellationToken);
                 await dbContextTransaction.CommitAsync(cancellationToken);
-                _logger.LogInformation($"VSS backup request processed: {string.Join(", ", request.TransactionItems.Select(data => data.Key))}");
-_appState.GracefulDisconnect(userId);
+                _logger.LogInformation(
+                    $"VSS backup request processed: {string.Join(", ", request.TransactionItems.Select(data => data.Key))}");
+                await _appState.GracefulDisconnect(userId);
                 return new PutObjectResponse();
             }
             catch (Exception e)
@@ -162,7 +163,7 @@ _appState.GracefulDisconnect(userId);
         var userId = _userManager.GetUserId(User);
         await using var dbContext = _dbContextFactory.CreateContext();
         var items = await dbContext.AppStorageItems
-            .Where(data => data.UserId == userId)
+            .Where(data => data.UserId == userId && data.Key != "masterDevice")
             .Select(data => new KeyValue() {Key = data.Key, Version = data.Version})
             .ToListAsync(cancellationToken: cancellationToken);
         return new ListKeyVersionsResponse {KeyVersions = {items}};

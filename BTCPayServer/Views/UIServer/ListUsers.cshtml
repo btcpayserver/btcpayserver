@@ -86,9 +86,11 @@
                         <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
                         @if (status.Item2 != "warning")
                         {
-                            <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled">@(user.Disabled ? "Enable" : "Disable")</a>
+                                <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" 
+                                class="@(user.Disabled ? "enable-user" : "disable-user")">@(user.Disabled ? "Enable" : "Disable")</a>
                         }
-                        <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
+                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password">Password Reset</a>
+                        <a asp-action="DeleteUser" asp-route-userId="@user.Id" class="delete-user">Remove</a>
                     </div>
                 </td>
                 <td class="text-end">

@@ -16,6 +16,7 @@ using BTCPayServer.Filters;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.AccountViewModels;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Mails;
 using Fido2NetLib;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
@@ -706,7 +707,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/login/forgot-password")]
         [AllowAnonymous]
-        public IActionResult ForgotPassword()
+        public ActionResult ForgotPassword()
         {
             return View();
         }
@@ -717,7 +718,8 @@ namespace BTCPayServer.Controllers
         [RateLimitsFilter(ZoneLimits.ForgotPassword, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            if (ModelState.IsValid)
+            var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
+            if (ModelState.IsValid && settings?.IsComplete() is true)
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (!UserService.TryCanLogin(user, out _))
@@ -739,7 +741,7 @@ namespace BTCPayServer.Controllers
 
         [HttpGet("/login/forgot-password/confirm")]
         [AllowAnonymous]
-        public IActionResult ForgotPasswordConfirmation()
+        public ActionResult ForgotPasswordConfirmation()
         {
             return View();
         }

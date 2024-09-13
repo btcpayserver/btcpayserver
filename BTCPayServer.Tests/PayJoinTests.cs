@@ -383,10 +383,6 @@ namespace BTCPayServer.Tests
                     Assert.Equal(2, payments.Count);
                     var originalPayment = payments[0];
                     var coinjoinPayment = payments[1];
-                    Assert.Equal(-1,
-                        handler.ParsePaymentDetails(originalPayment.Details).ConfirmationCount);
-                    Assert.Equal(0,
-                        handler.ParsePaymentDetails(coinjoinPayment.Details).ConfirmationCount);
                     Assert.False(originalPayment.Accounted);
                     Assert.True(coinjoinPayment.Accounted);
                     Assert.Equal(originalPayment.Value,

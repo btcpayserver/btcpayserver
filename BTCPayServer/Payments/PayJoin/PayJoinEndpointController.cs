@@ -500,7 +500,6 @@ namespace BTCPayServer.Payments.PayJoin
             var outpoint = new OutPoint(ctx.OriginalTransaction.GetHash(), originalPaymentOutput.Index);
             var details = new BitcoinLikePaymentData(outpoint, ctx.OriginalTransaction.RBF, paymentAddressIndex)
             {
-                ConfirmationCount = -1,
                 PayjoinInformation = new PayjoinInformation()
                 {
                     CoinjoinTransactionHash = GetExpectedHash(newPsbt, coins),

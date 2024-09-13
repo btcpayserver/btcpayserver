@@ -17,13 +17,11 @@ namespace BTCPayServer.Payments.Bitcoin
         public BitcoinLikePaymentData(OutPoint outpoint, bool rbf, KeyPath keyPath)
         {
             Outpoint = outpoint;
-            ConfirmationCount = 0;
             RBF = rbf;
             KeyPath = keyPath;
         }
         [JsonConverter(typeof(SaneOutpointJsonConverter))]
         public OutPoint Outpoint { get; set; }
-        public long ConfirmationCount { get; set; }
         [JsonProperty("RBF")]
         public bool RBF { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]

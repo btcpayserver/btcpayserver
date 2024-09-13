@@ -170,27 +170,6 @@ retry:
             _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoiceId));
         }
 
-        public async Task ExtendInvoiceMonitor(string invoiceId)
-        {
-retry:
-            using (var ctx = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
-
-                var invoice = invoiceData.GetBlob();
-                invoice.MonitoringExpiration = invoice.MonitoringExpiration.AddHours(1);
-                invoiceData.SetBlob(invoice);
-                try
-                {
-                    await ctx.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    goto retry;
-                }
-            }
-        }
-
         public async Task CreateInvoiceAsync(InvoiceCreationContext creationContext)
         {
             var invoice = creationContext.InvoiceEntity;
@@ -354,20 +333,6 @@ retry:
                 {
                     goto retry;
                 }
-            }
-        }
-
-        public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
-        {
-            using var context = _applicationDbContextFactory.CreateContext();
-            if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
-            {
-                context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateException) { } // Already exists
             }
         }
 

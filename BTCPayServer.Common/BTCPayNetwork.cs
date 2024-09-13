@@ -93,7 +93,6 @@ namespace BTCPayServer
         public virtual bool WalletSupported { get; set; } = true;
         public virtual bool ReadonlyWallet { get; set; } = false;
         public virtual bool VaultSupported { get; set; } = false;
-        public int MaxTrackedConfirmation { get; set; } = 6;
         public bool SupportPayJoin { get; set; } = false;
         public bool SupportLightning { get; set; } = true;
 

@@ -145,6 +145,7 @@ namespace BTCPayServer.Data
 			Created = MilliUnixTimeToDateTime(blob["receivedTime"].Value<long>());
             cryptoData.RemoveIfValue<bool>("rbf", false);
             cryptoData.Remove("legacy");
+            cryptoData.Remove("confirmationCount");
             cryptoData.Remove("networkFee");
             cryptoData.Remove("paymentType");
             cryptoData.RemoveIfNull("outpoint");

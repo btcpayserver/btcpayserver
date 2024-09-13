@@ -598,7 +598,6 @@
       "paymentMethodFee": "0.000002",
       "divisibility": 8,
       "details": {
-        "confirmationCount": 1414,
         "outpoint": "3a6659e189f83f649c0010305def1b8fb78efdbe8c0ce44d56c8c22fff742b55-61"
       }
     },
@@ -626,7 +625,6 @@
       "destination": "3AD9r1UyXXNFA2o3cucBwqX58xNaXvrdsv",
       "divisibility": 8,
       "details": {
-        "confirmationCount": 19,
         "rbf": true,
         "outpoint": "a8be47ca93a1583f60b25fb1279b6c162af731024d169f8d1cd0d29d1d391132-0"
       },
@@ -687,7 +685,6 @@
       "destination": "bc1qdamnd0fjegj4a5efrwx4gvjc69zufmu7ntf5ft",
       "divisibility": 8,
       "details": {
-        "confirmationCount": 6,
         "keyPath": "0/708",
         "outpoint": "2017d89529e7b41569ed1a0f7495f62307c8c1b51a6277669204c3cecce20e2e-22"
       },
@@ -720,7 +717,6 @@
       "divisibility": 8,
       "destination": "bc1qdamnd0fjegj4a5efrwx4gvjc69zufmu7ntf5ft",
       "details": {
-        "confirmationCount": 6,
         "keyPath": "0/708",
         "outpoint": "2017d89529e7b41569ed1a0f7495f62307c8c1b51a6277669204c3cecce20e2e-22",
         "RBF": true

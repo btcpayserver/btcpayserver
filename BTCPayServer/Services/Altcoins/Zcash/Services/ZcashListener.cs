@@ -329,12 +329,11 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
                 SubaccountIndex = subaccountIndex,
                 SubaddressIndex = subaddressIndex,
                 TransactionId = txId,
-                ConfirmationCount = confirmations,
                 BlockHeight = blockHeight
             };
             var paymentData = new Data.PaymentData()
             {
-                Status = GetStatus(details, invoice.SpeedPolicy) ? PaymentStatus.Settled : PaymentStatus.Processing,
+                Status = GetStatus(details, invoice.SpeedPolicy, confirmations) ? PaymentStatus.Settled : PaymentStatus.Processing,
                 Amount = ZcashMoney.Convert(totalAmount),
                 Created = DateTimeOffset.UtcNow,
                 Id = $"{txId}#{subaccountIndex}#{subaddressIndex}",
@@ -362,18 +361,18 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
             }
         }
 
-        private bool GetStatus(ZcashLikePaymentData details, SpeedPolicy speedPolicy)
+        private bool GetStatus(ZcashLikePaymentData details, SpeedPolicy speedPolicy, long confirmations)
         {
 			switch (speedPolicy)
 			{
 				case SpeedPolicy.HighSpeed:
-					return details.ConfirmationCount >= 0;
+					return confirmations >= 0;
 				case SpeedPolicy.MediumSpeed:
-					return details.ConfirmationCount >= 1;
+					return confirmations >= 1;
 				case SpeedPolicy.LowMediumSpeed:
-					return details.ConfirmationCount >= 2;
+					return confirmations >= 2;
 				case SpeedPolicy.LowSpeed:
-					return details.ConfirmationCount >= 6;
+					return confirmations >= 6;
 				default:
 					return false;
 			}

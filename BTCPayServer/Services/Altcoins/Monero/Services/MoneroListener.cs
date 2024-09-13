@@ -331,14 +331,13 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 SubaccountIndex = subaccountIndex,
                 SubaddressIndex = subaddressIndex,
                 TransactionId = txId,
-                ConfirmationCount = confirmations,
                 BlockHeight = blockHeight,
                 LockTime = locktime,
                 InvoiceSettledConfirmationThreshold = promptDetails.InvoiceSettledConfirmationThreshold
             };
             var paymentData = new Data.PaymentData()
             {
-                Status = GetStatus(details, invoice.SpeedPolicy) ? PaymentStatus.Settled : PaymentStatus.Processing,
+                Status = GetStatus(details, invoice.SpeedPolicy, confirmations) ? PaymentStatus.Settled : PaymentStatus.Processing,
                 Amount = MoneroMoney.Convert(totalAmount),
                 Created = DateTimeOffset.UtcNow,
                 Id = $"{txId}#{subaccountIndex}#{subaddressIndex}",
@@ -368,24 +367,24 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             }
         }
 
-        private bool GetStatus(MoneroLikePaymentData details, SpeedPolicy speedPolicy)
+        private bool GetStatus(MoneroLikePaymentData details, SpeedPolicy speedPolicy, long confirmations)
         {
-            if (details.ConfirmationCount < details.LockTime)
+            if (confirmations < details.LockTime)
             {
                 return false;
             }
             if (details.InvoiceSettledConfirmationThreshold is { } v)
-                return details.ConfirmationCount >= v;
+                return confirmations >= v;
             switch (speedPolicy)
             {
                 case SpeedPolicy.HighSpeed:
-                    return details.ConfirmationCount >= 0;
+                    return confirmations >= 0;
                 case SpeedPolicy.MediumSpeed:
-                    return details.ConfirmationCount >= 1;
+                    return confirmations >= 1;
                 case SpeedPolicy.LowMediumSpeed:
-                    return details.ConfirmationCount >= 2;
+                    return confirmations >= 2;
                 case SpeedPolicy.LowSpeed:
-                    return details.ConfirmationCount >= 6;
+                    return confirmations >= 6;
                 default:
                     return false;
             }

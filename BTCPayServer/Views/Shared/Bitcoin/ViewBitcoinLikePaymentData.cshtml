@@ -21,15 +21,6 @@
 			m.Crypto = network.CryptoCode;
             m.DepositAddress = BitcoinAddress.Create(payment.Destination, network.NBitcoinNetwork);
 
-            var confirmationCount = onChainPaymentData.ConfirmationCount;
-            if (confirmationCount >= network.MaxTrackedConfirmation)
-            {
-                m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
-            }
-            else
-            {
-                m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-            }
             if (onChainPaymentData.PayjoinInformation is PayjoinInformation pj)
             {
                 payjoinInformation = pj;
@@ -76,7 +67,6 @@
                             </a>
                         </th>
                     }
-                    <th class="text-end">Confirmations</th>
                     <th class="w-150px text-end">Paid</th>
                 </tr>
                 </thead>
@@ -96,7 +86,6 @@
                         {
                             <td class="text-end text-nowrap">@payment.NetworkFee</td>
                         }
-                        <td class="text-end">@payment.Confirmations</td>
                         <td class="payment-value text-end text-nowrap">
                             <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Value, payment.Crypto)</span>
                             @if (!string.IsNullOrEmpty(payment.AdditionalInformation))

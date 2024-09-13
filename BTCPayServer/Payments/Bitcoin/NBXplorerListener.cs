@@ -177,7 +177,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                             {
                                                 Id = output.outPoint.ToString(),
                                                 Created = DateTimeOffset.UtcNow,
-                                                Status = IsSettled(invoice, details) ? PaymentStatus.Settled : PaymentStatus.Processing,
+                                                Status = IsSettled(invoice, details, evt.TransactionData.Confirmations) ? PaymentStatus.Settled : PaymentStatus.Processing,
                                                 Amount = ((Money)output.matchedOutput.Value).ToDecimal(MoneyUnit.BTC),
                                                 Currency = network.CryptoCode
                                             }.Set(invoice, handler, details);
@@ -303,18 +303,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
 
                 bool updated = false;
-                if (paymentData.ConfirmationCount != tx.Confirmations)
-                {
-                    var oldStatus = payment.Status;
-                    var oldConfCount = paymentData.ConfirmationCount;
-                    paymentData.ConfirmationCount = Math.Min(tx.Confirmations, wallet.Network.MaxTrackedConfirmation);
-                    if (oldConfCount != paymentData.ConfirmationCount)
-                    {
-                        payment.SetDetails(handler, paymentData);
-                        updated = true;
-                    }
-                }
-
                 var prevStatus = payment.Status;
                 // If a payment is replacing another, use the same network fee as the replaced one.
                 if (accounted)
@@ -335,7 +323,7 @@ namespace BTCPayServer.Payments.Bitcoin
                             updated = true;
                         }
                     }
-                    payment.Status = IsSettled(invoice, paymentData) ? PaymentStatus.Settled : PaymentStatus.Processing;
+                    payment.Status = IsSettled(invoice, paymentData, tx.Confirmations) ? PaymentStatus.Settled : PaymentStatus.Processing;
                 }
                 else
                 {
@@ -347,10 +335,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 {
                     paymentEntitiesByPrevOut.TryAdd(prevout, payment);
                 }
-
-                // if needed add invoice back to pending to track number of confirmations
-                if (paymentData.ConfirmationCount < wallet.Network.MaxTrackedConfirmation)
-                    await _InvoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
 
                 if (updated)
                     updatedPaymentEntities.Add(payment);
@@ -372,23 +356,23 @@ namespace BTCPayServer.Payments.Bitcoin
             return invoice;
         }
 
-        public static bool IsSettled(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+        static bool IsSettled(InvoiceEntity invoice, BitcoinLikePaymentData paymentData, long confirmations)
         {
             if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
             {
-                return paymentData.ConfirmationCount >= 1 || !paymentData.RBF;
+                return confirmations >= 1 || !paymentData.RBF;
             }
             else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
             {
-                return paymentData.ConfirmationCount >= 1;
+                return confirmations >= 1;
             }
             else if (invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed)
             {
-                return paymentData.ConfirmationCount >= 2;
+                return confirmations >= 2;
             }
             else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
             {
-                return paymentData.ConfirmationCount >= 6;
+                return confirmations >= 6;
             }
             return false;
         }

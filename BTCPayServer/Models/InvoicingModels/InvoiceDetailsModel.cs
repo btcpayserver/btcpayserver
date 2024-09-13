@@ -13,7 +13,6 @@ namespace BTCPayServer.Models.InvoicingModels
     public class OnchainPaymentViewModel
     {
         public string Crypto { get; set; }
-        public string Confirmations { get; set; }
         public BitcoinAddress DepositAddress { get; set; }
         public string Amount { get; set; }
         public string TransactionId { get; set; }

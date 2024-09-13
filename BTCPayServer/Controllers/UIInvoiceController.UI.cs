@@ -926,15 +926,6 @@ namespace BTCPayServer.Controllers
                     NetworkFeeMode.Never => 0,
                     _ => throw new NotImplementedException()
                 },
-                RequiredConfirmations = invoice.SpeedPolicy switch
-                {
-                    SpeedPolicy.HighSpeed => 0,
-                    SpeedPolicy.MediumSpeed => 1,
-                    SpeedPolicy.LowMediumSpeed => 2,
-                    SpeedPolicy.LowSpeed => 6,
-                    _ => null
-                },
-                ReceivedConfirmations = handler is BitcoinLikePaymentHandler  bh ? invoice.GetAllBitcoinPaymentData(bh, false).FirstOrDefault()?.ConfirmationCount : null,
                 Status = invoice.Status.ToString(),
                 // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
                 NetworkFee = prompt.PaymentMethodFee - prompt.TweakFee,

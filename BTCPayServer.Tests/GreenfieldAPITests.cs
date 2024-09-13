@@ -2371,6 +2371,14 @@ namespace BTCPayServer.Tests
             invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest { Amount = 5000.0m, Currency = "USD" });
             methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
             method = methods.First();
+            Assert.Equal(JTokenType.Null, method.AdditionalData["accountDerivation"].Type);
+            Assert.NotNull(method.AdditionalData["keyPath"]);
+
+            methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id, includeSensitive: true);
+            method = methods.First();
+            Assert.Equal(JTokenType.String, method.AdditionalData["accountDerivation"].Type);
+            var clientViewOnly = await user.CreateClient(Policies.CanViewInvoices);
+            await AssertApiError(403, "missing-permission", () => clientViewOnly.GetInvoicePaymentMethods(user.StoreId, invoice.Id, includeSensitive: true));
 
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>
             {

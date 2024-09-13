@@ -39,7 +39,6 @@ namespace BTCPayServer.Data
         public DbSet<PaymentRequestData> PaymentRequests { get; set; }
         public DbSet<PaymentData> Payments { get; set; }
         public DbSet<PayoutData> Payouts { get; set; }
-        public DbSet<PendingInvoiceData> PendingInvoices { get; set; }
         public DbSet<PlannedTransaction> PlannedTransactions { get; set; }
         public DbSet<PullPaymentData> PullPayments { get; set; }
         public DbSet<RefundData> Refunds { get; set; }

@@ -31,7 +31,7 @@ namespace BTCPayServer.Data
         [Obsolete("Use Status instead")]
         public bool? Accounted { get; set; }
         public PaymentStatus? Status { get; set; }
-
+        public static bool IsPending(PaymentStatus? status) => throw new NotSupportedException();
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<PaymentData>()
@@ -48,6 +48,7 @@ namespace BTCPayServer.Data
             builder.Entity<PaymentData>()
                     .Property(o => o.Amount)
                     .HasColumnType("NUMERIC");
+            builder.HasDbFunction(typeof(PaymentData).GetMethod(nameof(IsPending), new[] { typeof(PaymentStatus?) }), b => b.HasName("is_pending"));
         }
     }
 }

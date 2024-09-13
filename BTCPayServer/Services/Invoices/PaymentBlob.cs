@@ -19,5 +19,11 @@ namespace BTCPayServer.Services.Invoices
             Details = JToken.FromObject(details, handler.Serializer);
             return this;
         }
+        public T GetDetails<T>(IPaymentMethodHandler handler) where T : class
+        {
+            if (handler.Id != handler.Id)
+                return null;
+            return handler.ParsePaymentDetails(Details) as T;
+        }
     }
 }

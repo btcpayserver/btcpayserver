@@ -3,6 +3,7 @@
 @using BTCPayServer.Components.TruncateCenter
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Altcoins.Zcash.Payments
+@using BTCPayServer.Services.Altcoins.Zcash.Services
 @using BTCPayServer.Services.Altcoins.Zcash.UI
 @using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
@@ -20,15 +21,11 @@
 		m.Crypto = handler.Network.CryptoCode;
         m.DepositAddress = payment.Destination;
         m.Amount = payment.Value.ToString(CultureInfo.InvariantCulture);
-        var confirmationCount = onChainPaymentData.ConfirmationCount;
-		if (confirmationCount >= handler.Network.MaxTrackedConfirmation)
-        {
-			m.Confirmations = "At least " + (handler.Network.MaxTrackedConfirmation);
-        }
-        else
-        {
-            m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-        }
+
+		var confReq = ZcashListener.ConfirmationsRequired(payment.InvoiceEntity.SpeedPolicy);
+		var confCount = onChainPaymentData.ConfirmationCount;
+		confCount = Math.Min(confReq, confCount);
+		m.Confirmations = $"{confCount} / {confReq}";
 
         m.TransactionId = onChainPaymentData.TransactionId;
         m.ReceivedTime = payment.ReceivedTime;

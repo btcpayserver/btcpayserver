@@ -175,6 +175,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
                 BrandColor = storeBlob.BrandColor,
+                ApplyBrandColorToBackend = storeBlob.ApplyBrandColorToBackend,
                 CssUrl = storeBlob.CssUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
                 LogoUrl = storeBlob.LogoUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
                 PaymentSoundUrl = storeBlob.PaymentSoundUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.PaymentSoundUrl),
@@ -255,6 +256,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
             blob.BrandColor = restModel.BrandColor;
+            blob.ApplyBrandColorToBackend = restModel.ApplyBrandColorToBackend;
             blob.LogoUrl = restModel.LogoUrl is null ? null : UnresolvedUri.Create(restModel.LogoUrl);
             blob.CssUrl = restModel.CssUrl is null ? null : UnresolvedUri.Create(restModel.CssUrl);
             blob.PaymentSoundUrl = restModel.PaymentSoundUrl is null ? null : UnresolvedUri.Create(restModel.PaymentSoundUrl);

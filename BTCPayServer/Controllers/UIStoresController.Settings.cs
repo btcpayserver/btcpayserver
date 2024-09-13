@@ -34,6 +34,7 @@ public partial class UIStoresController
             LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
             CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
             BrandColor = storeBlob.BrandColor,
+            ApplyBrandColorToBackend = storeBlob.ApplyBrandColorToBackend,
             NetworkFeeMode = storeBlob.NetworkFeeMode,
             AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
             PaymentTolerance = storeBlob.PaymentTolerance,
@@ -75,10 +76,11 @@ public partial class UIStoresController
         blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
         if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
         {
-            ModelState.AddModelError(nameof(model.BrandColor), "Invalid color");
+            ModelState.AddModelError(nameof(model.BrandColor), "The brand color needs to be a valid hex color code");
             return View(model);
         }
         blob.BrandColor = model.BrandColor;
+        blob.ApplyBrandColorToBackend = model.ApplyBrandColorToBackend && !string.IsNullOrEmpty(model.BrandColor);
 
         var userId = GetUserId();
         if (userId is null)

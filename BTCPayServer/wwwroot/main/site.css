@@ -1,6 +1,6 @@
 /* Variables */
 :root {
-    --chart-main-rgb: 68, 164, 49;
+    --chart-main-rgb: var(--btcpay-primary-rgb);
     --chart-series-a-rgb: var(--chart-main-rgb);
     --chart-series-b-rgb: 245, 0, 0;
     --chart-series-c-rgb: 0, 109, 242;
@@ -186,8 +186,8 @@ h2 .icon.icon-info {
     top: -.0125em;
 }
 
-#descriptor p {
-    max-width: 40em;
+#mainContent section p {
+    max-width: 46em;
 }
 
 /* Invoices */

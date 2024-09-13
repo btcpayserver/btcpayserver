@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 
@@ -26,7 +27,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public string Image => _network.CryptoImagePath;
         public string Badge => "";
 
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public Task ModifyPaymentModel(PaymentModelContext context)
         {
             if (context.Model.Activated)
             {
@@ -38,6 +39,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
                 context.Model.InvoiceBitcoinUrl = "";
                 context.Model.InvoiceBitcoinUrlQR = "";
             }
+            return Task.CompletedTask;
         }
     }
 }

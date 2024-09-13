@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Threading.Tasks;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -16,6 +18,7 @@ namespace BTCPayServer.Payments.Bitcoin
     {
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly BTCPayNetwork _Network;
+        private readonly BTCPayWallet _wallet;
         private readonly DisplayFormatter _displayFormatter;
         private readonly IPaymentLinkExtension paymentLinkExtension;
         private readonly IPaymentLinkExtension? lnPaymentLinkExtension;
@@ -27,11 +30,13 @@ namespace BTCPayServer.Payments.Bitcoin
             BTCPayNetwork network,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
             DisplayFormatter displayFormatter,
+            BTCPayWalletProvider walletProvider,
             PaymentMethodHandlerDictionary handlers)
         {
             PaymentMethodId = paymentMethodId;
             _handlers = handlers;
             _Network = network;
+            _wallet = walletProvider.GetWallet(network.CryptoCode);
             _displayFormatter = displayFormatter;
             paymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
             var lnPmi = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
@@ -44,7 +49,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public string Image => _Network.CryptoImagePath;
         public string Badge => "";
         public PaymentMethodId PaymentMethodId { get; }
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public async Task ModifyPaymentModel(PaymentModelContext context)
         {
             var prompt = context.Prompt;
             if (!_handlers.TryGetValue(PaymentMethodId, out var o) || o is not BitcoinLikePaymentHandler handler)
@@ -53,6 +58,21 @@ namespace BTCPayServer.Payments.Bitcoin
             context.Model.ShowRecommendedFee = context.StoreBlob.ShowRecommendedFee;
             context.Model.FeeRate = details.RecommendedFeeRate.SatoshiPerByte;
 
+            if (context.InvoiceEntity.Status == Client.Models.InvoiceStatus.Processing)
+            {
+                foreach (var paymentData in context.InvoiceEntity.GetAllBitcoinPaymentData(handler, true))
+                {
+                    var required = NBXplorerListener.ConfirmationRequired(context.InvoiceEntity, paymentData);
+                    var tx = await _wallet.GetTransactionAsync(paymentData.Outpoint.Hash);
+                    var received = tx?.Confirmations ?? 0;
+                    if (required > received)
+                    {
+                        context.Model.RequiredConfirmations = required;
+                        context.Model.ReceivedConfirmations = received;
+                        break;
+                    }
+                }
+            }
             
             var bip21Case = _Network.SupportLightning && context.StoreBlob.OnChainWithLnInvoiceFallback;
             var amountInSats = bip21Case && context.StoreBlob.LightningAmountInSatoshi && context.Model.CryptoCode == "BTC";

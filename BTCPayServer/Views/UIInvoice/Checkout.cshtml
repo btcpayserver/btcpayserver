@@ -127,6 +127,7 @@
                         </span>
                         <h4 v-t="'payment_received'" class="mb-4"></h4>
                         <p class="text-center" v-t="'payment_received_body'"></p>
+                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_received_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
                         <div id="PaymentDetails" class="payment-details">
                             <dl class="mb-0">
                                 <div>

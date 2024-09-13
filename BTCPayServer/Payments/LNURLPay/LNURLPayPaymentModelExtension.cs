@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Payments.Lightning;
 using NBitcoin;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Payments.LNURLPay
 {
@@ -37,7 +38,7 @@ namespace BTCPayServer.Payments.LNURLPay
         public string Badge => "⚡";
 
         private const string UriScheme = "lightning:";
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public Task ModifyPaymentModel(PaymentModelContext context)
         {
             var lnurl = paymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
             if (lnurl is not null)
@@ -51,6 +52,7 @@ namespace BTCPayServer.Payments.LNURLPay
             {
                 BitcoinPaymentModelExtension.PreparePaymentModelForAmountInSats(context.Model, context.Prompt.Rate, _displayFormatter);
             }
+            return Task.CompletedTask;
         }
     }
 }

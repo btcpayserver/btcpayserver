@@ -6,6 +6,7 @@ using BTCPayServer.Services;
 using Org.BouncyCastle.Crypto.Modes.Gcm;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -37,13 +38,13 @@ namespace BTCPayServer.Payments.Lightning
 
         public string Image => Network.LightningImagePath;
         public string Badge => "⚡";
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public Task ModifyPaymentModel(PaymentModelContext context)
         {
             if (!Handlers.TryGetValue(PaymentMethodId, out var o) || o is not LightningLikePaymentHandler handler)
-                return;
+                return Task.CompletedTask;
             var paymentPrompt = context.InvoiceEntity.GetPaymentPrompt(PaymentMethodId);
             if (paymentPrompt is null)
-                return;
+                return Task.CompletedTask;
             context.Model.InvoiceBitcoinUrl = _PaymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
             if (context.Model.InvoiceBitcoinUrl is not null)
                 context.Model.InvoiceBitcoinUrlQR = $"lightning:{context.Model.InvoiceBitcoinUrl.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
@@ -52,6 +53,7 @@ namespace BTCPayServer.Payments.Lightning
             {
                 BitcoinPaymentModelExtension.PreparePaymentModelForAmountInSats(context.Model, paymentPrompt.Rate, _displayFormatter);
             }
+            return Task.CompletedTask;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
@@ -18,6 +19,6 @@ namespace BTCPayServer.Payments
         string DisplayName { get; }
         string Image { get; }
         string Badge { get; }
-        void ModifyPaymentModel(PaymentModelContext context);
+        Task ModifyPaymentModel(PaymentModelContext context);
     }
 }

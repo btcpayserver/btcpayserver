@@ -538,12 +538,6 @@ public partial class UIStoresController
             }
         }
 
-        if (store.SpeedPolicy != vm.SpeedPolicy)
-        {
-            store.SpeedPolicy = vm.SpeedPolicy;
-            needUpdate = true;
-        }
-
         if (needUpdate)
         {
             store.SetPaymentMethodConfig(handler, derivation);
@@ -593,6 +587,12 @@ public partial class UIStoresController
         blob.ShowRecommendedFee = vm.ShowRecommendedFee;
         blob.RecommendedFeeBlockTarget = vm.RecommendedFeeBlockTarget;
         blob.PayJoinEnabled = vm.PayJoinEnabled;
+
+        if (store.SpeedPolicy != vm.SpeedPolicy)
+        {
+            store.SpeedPolicy = vm.SpeedPolicy;
+            needUpdate = true;
+        }
 
         if (store.SetStoreBlob(blob))
         {

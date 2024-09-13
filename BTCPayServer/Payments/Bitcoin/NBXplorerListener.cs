@@ -356,26 +356,19 @@ namespace BTCPayServer.Payments.Bitcoin
             return invoice;
         }
 
+        internal static int ConfirmationRequired(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+            => (invoice, paymentData) switch
+            {
+                ({ SpeedPolicy: SpeedPolicy.HighSpeed }, { RBF: true }) => 1,
+                ({ SpeedPolicy: SpeedPolicy.HighSpeed }, _) => 0,
+                ({ SpeedPolicy: SpeedPolicy.MediumSpeed }, _) => 1,
+                ({ SpeedPolicy: SpeedPolicy.LowMediumSpeed }, _) => 2,
+                ({ SpeedPolicy: SpeedPolicy.LowSpeed }, _) => 6,
+                _ => 6,
+            };
+
         static bool IsSettled(InvoiceEntity invoice, BitcoinLikePaymentData paymentData, long confirmations)
-        {
-            if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
-            {
-                return confirmations >= 1 || !paymentData.RBF;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
-            {
-                return confirmations >= 1;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed)
-            {
-                return confirmations >= 2;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
-            {
-                return confirmations >= 6;
-            }
-            return false;
-        }
+            => ConfirmationRequired(invoice,paymentData) <= confirmations;
 
         private async Task<int> FindPaymentViaPolling(BTCPayWallet wallet, BTCPayNetwork network)
         {

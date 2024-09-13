@@ -1631,7 +1631,6 @@ namespace BTCPayServer.Tests
             s.GenerateWallet("BTC", "", false, true);
             var walletId = new WalletId(storeId, "BTC");
             s.GoToWallet(walletId, WalletsNavPages.Receive);
-            s.Driver.FindElement(By.Id("generateButton")).Click();
             var addressStr = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
             var address = BitcoinAddress.Create(addressStr,
                 ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
@@ -1836,7 +1835,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
 
             //generate a receiving address
-            s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             // no previous page in the wizard, hence no back button
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
@@ -1858,10 +1856,6 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(s.Driver.FindElement(By.CssSelector("[data-value='test-label']")));
             });
 
-            //unreserve
-            s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
-            //generate it again, should be the same one as before as nothing got used in the meantime
-            s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text"));
             TestUtils.Eventually(() =>

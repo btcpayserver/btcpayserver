@@ -191,6 +191,8 @@ namespace BTCPayServer.Data
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
         public string BrandColor { get; set; }
+        public bool ApplyBrandColorToBackend { get; set; }
+        
         [JsonConverter(typeof(UnresolvedUriJsonConverter))]
         public UnresolvedUri LogoUrl { get; set; }
         [JsonConverter(typeof(UnresolvedUriJsonConverter))]

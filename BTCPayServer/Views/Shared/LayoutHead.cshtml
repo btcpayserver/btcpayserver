@@ -5,9 +5,11 @@
 @{
     ViewData.TryGetValue("StoreBranding", out var storeBranding);
     var store = Context.GetStoreData();
-    if (storeBranding == null && store != null)
+    var storeBlob = store?.GetStoreBlob();
+    var isBackend = store != null && storeBranding == null; 
+    if (isBackend && storeBlob.ApplyBrandColorToBackend)
     {
-        storeBranding = await StoreBrandingViewModel.CreateAsync(Context.Request, UriResolver, store.GetStoreBlob());
+        storeBranding = await StoreBrandingViewModel.CreateAsync(Context.Request, UriResolver, storeBlob);
     }
 }
 <meta charset="utf-8" />

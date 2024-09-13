@@ -1,4 +1,3 @@
-using System;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
@@ -10,6 +9,7 @@ namespace BTCPayServer.Models;
 public class StoreBrandingViewModel
 {
     public string BrandColor { get; set; }
+    public bool ApplyBrandColorToBackend { get; set; }
     public string LogoUrl { get; set; }
     public string CssUrl { get; set; }
     
@@ -30,5 +30,6 @@ public class StoreBrandingViewModel
     private StoreBrandingViewModel(StoreBlob storeBlob)
     {
         BrandColor = storeBlob.BrandColor;
+        ApplyBrandColorToBackend = storeBlob.ApplyBrandColorToBackend;
     }
 }

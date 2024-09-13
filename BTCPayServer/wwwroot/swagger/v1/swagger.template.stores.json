@@ -509,6 +509,11 @@
                         "nullable": true,
                         "example": "#F7931A"
                     },
+                    "applyBrandColorToBackend": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Apply the brand color to the store's backend as well"
+                    },
                     "defaultCurrency": {
                         "type": "string",
                         "description": "The default currency of the store",

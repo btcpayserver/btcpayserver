@@ -19,6 +19,7 @@ public class TruncateCenter : ViewComponent
     {
         if (string.IsNullOrEmpty(text))
             return new HtmlContentViewComponentResult(new StringHtmlContent(string.Empty));
+
         var vm = new TruncateCenterViewModel
         {
             Classes = classes,
@@ -28,12 +29,15 @@ public class TruncateCenter : ViewComponent
             Copy = copy,
             Text = text,
             Link = link,
-            Id = id
+            Id = id,
+            IsTruncated = text.Length > 2 * padding
         };
-        if (!isVue && text.Length > 2 * padding)
+        if (!vm.IsVue)
         {
-            vm.Start = text[..padding];
-            vm.End = text[^padding..];
+            vm.Start = vm.IsTruncated ? text[..padding] : text;
+            vm.End = vm.IsTruncated ? text[^padding..] : string.Empty;
+            if (!vm.Elastic && vm.IsTruncated)
+                vm.Start = $"{vm.Start}…";
         }
         return View(vm);
     }

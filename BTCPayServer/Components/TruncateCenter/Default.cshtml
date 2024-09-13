@@ -1,7 +1,6 @@
 @model BTCPayServer.Components.TruncateCenter.TruncateCenterViewModel
 @{
     var classes = string.IsNullOrEmpty(Model.Classes) ? string.Empty : Model.Classes.Trim();
-    var isTruncated = !string.IsNullOrEmpty(Model.Start) && !string.IsNullOrEmpty(Model.End);
     @if (Model.Copy) classes += " truncate-center--copy";
     @if (Model.Elastic) classes += " truncate-center--elastic";
     var prefix = Model.IsVue ? ":" : "";
@@ -24,8 +23,8 @@
     }
     else
     {
-        <span class="truncate-center-truncated" @(isTruncated ? $"data-bs-toggle=tooltip title={Model.Text}" : "")>
-            <span class="truncate-center-start">@(Model.Elastic || !isTruncated ? Model.Text[..^Model.Padding] : $"{Model.Start}…")</span>
+        <span class="truncate-center-truncated" @(Model.IsTruncated ? $"data-bs-toggle=tooltip title={Model.Text}" : "")>
+            <span class="truncate-center-start">@Model.Start</span>
             <span class="truncate-center-end">@Model.End</span>
         </span>
         <span class="truncate-center-text">@Model.Text</span>

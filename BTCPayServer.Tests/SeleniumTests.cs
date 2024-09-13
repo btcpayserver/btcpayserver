@@ -403,6 +403,84 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanManageUsers()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            //Create Users
+            s.RegisterNewUser();
+            var user = s.AsTestAccount();
+            s.Logout();
+            s.GoToRegister();
+            s.RegisterNewUser(true);
+            var admin = s.AsTestAccount();
+            s.GoToHome();
+            s.GoToServer(ServerNavPages.Users);
+
+            // Manage user password reset
+            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .reset-password")).Click();
+            s.Driver.WaitForElement(By.Id("Password")).SendKeys("Password@1!");
+            s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("Password@1!");
+            s.ClickPagePrimary();
+            Assert.Contains("Password successfully set", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            // Manage user status (disable and enable)
+            // Disable user
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .disable-user")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
+            Assert.Contains("User disabled", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+            //Enable user
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .enable-user")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
+            Assert.Contains("User enabled", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            // Manage user details (edit)
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-edit")).Click();
+            s.Driver.WaitForElement(By.Id("Name")).SendKeys("Test User");
+            s.ClickPagePrimary();
+            Assert.Contains("User successfully updated", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            // Manage user deletion
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .delete-user")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
+            Assert.Contains("User deleted", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            s.Driver.AssertNoError();
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanRequireApprovalForNewAccounts()
         {
             using var s = CreateSeleniumTester();

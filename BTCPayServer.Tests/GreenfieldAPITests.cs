@@ -1622,6 +1622,7 @@ namespace BTCPayServer.Tests
                 CssUrl = "https://example.org/style.css",
                 LogoUrl = "https://example.org/logo.svg",
                 BrandColor = "#003366",
+                ApplyBrandColorToBackend = true,
                 PaymentMethodCriteria = new List<PaymentMethodCriteriaData>
             {
                 new()
@@ -1637,6 +1638,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("https://example.org/style.css", updatedStore.CssUrl);
             Assert.Equal("https://example.org/logo.svg", updatedStore.LogoUrl);
             Assert.Equal("#003366", updatedStore.BrandColor);
+            Assert.True(updatedStore.ApplyBrandColorToBackend);
             var s = (await client.GetStore(newStore.Id));
             Assert.Equal("B", s.Name);
             var pmc = Assert.Single(s.PaymentMethodCriteria);

@@ -21,7 +21,7 @@
         <div class="col-xxl-constrain col-xl-8">
             @if (!ViewContext.ModelState.IsValid)
             {
-                <div asp-validation-summary="All"></div>
+                <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
             }
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
@@ -38,15 +38,29 @@
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
 
-			<h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
-            <div class="form-group">
+            <h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
+            <p>
+                The custom color, logo and CSS are applied on the public/customer-facing pages (Invoice, Payment Request, Pull Payment, etc.).
+                The brand color is used as the accent color for buttons, links, etc. It might get adapted to fit the light/dark color scheme.
+            </p>
+
+            <div>
                 <label asp-for="BrandColor" class="form-label"></label>
-                <div class="input-group">
-                    <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
-                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem;font-size:0.9rem" />
+                <div class="d-flex flex-wrap">
+                    <div class="form-group me-4">
+                        <div class="input-group">
+                            <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
+                            <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem;font-size:0.9rem" />
+                        </div>
+                        <span asp-validation-for="BrandColor" class="text-danger"></span>
+                    </div>
+                    <div class="form-group d-flex align-items-center">
+                        <input asp-for="ApplyBrandColorToBackend" type="checkbox" class="btcpay-toggle me-3" disabled="@(string.IsNullOrEmpty(Model.BrandColor))"/>
+                        <label asp-for="ApplyBrandColorToBackend" class="form-check-label"></label>
+                    </div>
                 </div>
-                <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>
+                
             <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="LogoFile" class="form-label"></label>
@@ -94,9 +108,6 @@
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
-                    <div class="form-text">
-                        Use this CSS to customize the public/customer-facing pages of this store. (Invoice, Payment Request, Pull Payment, etc.) 
-                    </div>
                 }
                 else
                 {
@@ -193,13 +204,17 @@
     (() => {
         const $colorValue = document.getElementById('BrandColor');
         const $colorInput = document.getElementById('BrandColorInput');
+        const $applyToBackend = document.getElementById('ApplyBrandColorToBackend');
         delegate('change', '#BrandColor', e => {
             const value = e.target.value;
-			if (value.match(@Safe.Json(@ColorPalette.Pattern)))
+			if (value.match(@Safe.Json(ColorPalette.Pattern)))
 				$colorInput.value = value;
+            $applyToBackend.disabled = !value;
         });
         delegate('change', '#BrandColorInput', e => {
-            $colorValue.value = e.target.value;
+            const value = e.target.value;
+            $colorValue.value = value;
+            $applyToBackend.disabled = !value;
         });
     })();
     </script>

@@ -15,7 +15,6 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Logging;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
@@ -35,16 +34,13 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBXplorer;
-using NBXplorer.Client;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 using WalletHistogramType = BTCPayServer.Services.Wallets.WalletHistogramType;
 
@@ -331,7 +327,7 @@ namespace BTCPayServer.Controllers
             if (network == null)
                 return NotFound();
             var store = GetCurrentStore();
-            var address = _walletReceiveService.Get(walletId)?.Address;
+            var address = (await _walletReceiveService.GetOrGenerate(walletId)).Address;
             var allowedPayjoin = paymentMethod.IsHotWallet && store.GetStoreBlob().PayJoinEnabled;
             var bip21 = network.GenerateBIP21(address?.ToString(), null);
             if (allowedPayjoin)
@@ -355,7 +351,7 @@ namespace BTCPayServer.Controllers
                 Address = address?.ToString(),
                 CryptoImage = GetImage(network),
                 PaymentLink = bip21.ToString(),
-                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
+                ReturnUrl = returnUrl,
                 SelectedLabels = labels ?? Array.Empty<string>()
             });
         }
@@ -374,18 +370,6 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             switch (command)
             {
-                case "unreserve-current-address":
-                    var address = await _walletReceiveService.UnReserveAddress(walletId);
-                    if (!string.IsNullOrEmpty(address))
-                    {
-                        TempData.SetStatusMessageModel(new StatusMessageModel
-                        {
-                            AllowDismiss = true,
-                            Message = $"Address {address} was unreserved.",
-                            Severity = StatusMessageModel.StatusSeverity.Success,
-                        });
-                    }
-                    break;
                 case "generate-new-address":
                     await _walletReceiveService.GetOrGenerate(walletId, true);
                     break;

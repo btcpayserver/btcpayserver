@@ -25,6 +25,9 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Brand Color")]
         public string BrandColor { get; set; }
 
+        [Display(Name = "Apply the brand color to the store's backend as well")]
+        public bool ApplyBrandColorToBackend { get; set; }
+        
         [Display(Name = "Logo")]
         public IFormFile LogoFile { get; set; }
         public string LogoUrl { get; set; }

@@ -538,12 +538,6 @@ public partial class UIStoresController
             }
         }
 
-        if (store.SpeedPolicy != vm.SpeedPolicy)
-        {
-            store.SpeedPolicy = vm.SpeedPolicy;
-            needUpdate = true;
-        }
-
         if (needUpdate)
         {
             store.SetPaymentMethodConfig(handler, derivation);
@@ -596,6 +590,12 @@ public partial class UIStoresController
 
         if (store.SetStoreBlob(blob))
         {
+            needUpdate = true;
+        }
+
+        if (store.SpeedPolicy != vm.SpeedPolicy)
+        {
+            store.SpeedPolicy = vm.SpeedPolicy;
             needUpdate = true;
         }
 

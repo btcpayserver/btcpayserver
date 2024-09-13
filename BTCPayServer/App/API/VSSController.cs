@@ -79,14 +79,7 @@ public class VSSController : Controller, IVSSAPI
     private bool VerifyMaster(long deviceIdentifier)
     {
         var userId = _userManager.GetUserId(User);
-        var conn = _appState.Connections.SingleOrDefault(pair => pair.Value.Master && pair.Value.UserId == userId);
-        if (conn.Key == null || _appState.IsMaster(userId, deviceIdentifier))
-        {
-            return false;
-        }
-        
-
-        return deviceIdentifier == conn.Value.DeviceIdentifier;
+        return _appState.IsMaster(userId, deviceIdentifier);
     }
 
     [HttpPost(HttpVSSAPIClient.PUT_OBJECTS)]

@@ -350,7 +350,7 @@ public class BTCPayAppState : IHostedService
             }else if(_ungracefulMasterDisconnects.TryGetValue(connectedInstance.UserId, out var dI) && dI != deviceIdentifier)
             {
                 _logger.LogWarning("DeviceMasterSignal called with active state but the master connection was ungracefully disconnected");
-                _ungracefulMasterDisconnects.TryRemove(connectedInstance.UserId, out _);
+               
                 connectedInstance = connectedInstance with {Master = true};
                 Connections[contextConnectionId] = connectedInstance;
                 result = true;
@@ -361,6 +361,7 @@ public class BTCPayAppState : IHostedService
                 _logger.LogInformation("DeviceMasterSignal called with active state");
                 connectedInstance = connectedInstance with {Master = true};
                 Connections[contextConnectionId] = connectedInstance;
+                _ungracefulMasterDisconnects.TryRemove(connectedInstance.UserId, out _);
                 result = true;
                 return result;
             }

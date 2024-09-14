@@ -1,21 +1,47 @@
 @using BTCPayServer.Plugins
 @model BTCPayServer.Models.ServerViewModels.ListPluginsViewModel
+@inject PluginService PluginService
 @{
     ViewData.SetActivePage(ServerNavPages.Explore, "Explore Plugins");
 
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-    var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
-    var availableAndNotInstalledx = Model.Available
-        .Where(plugin => !installed.ContainsKey(plugin.Identifier))
+
+    var availablePluginsList = Model.Available
         .GroupBy(plugin => plugin.Identifier)
+        .Select(group =>
+        {
+            var ordered = group.OrderByDescending(plugin => plugin.Version).ToArray();
+            return ordered.FirstOrDefault(plugin => PluginManager.DependenciesMet(plugin.Dependencies, installed))
+                   ?? ordered.First();
+        })
         .ToList();
-    foreach (var availableAndNotInstalledItem in availableAndNotInstalledx)
+
+    var availablePlugins = Model.Available.GroupBy(plugin => plugin.Identifier).ToList();
+
+    var recentPlugins = availablePluginsList.OrderByDescending(c => c.BuildDate).Take(9).ToList();
+    var popularPlugins = availablePluginsList.Where(c => c.DownloadStat != null).OrderByDescending(c => c.DownloadStat).Take(5).ToList();
+
+    bool DependentOn(string plugin)
     {
-        var ordered = availableAndNotInstalledItem.OrderByDescending(plugin => plugin.Version).ToArray();
-        availableAndNotInstalled.Add(ordered.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? ordered.FirstOrDefault());
+        foreach (var installedPlugin in Model.Installed)
+        {
+            if (installedPlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.InvariantCultureIgnoreCase)))
+            {
+                return true;
+            }
+        }
+
+        var pendingInstalls = Model.Commands.Where(tuple => tuple.command != "uninstall").Select(tuple => tuple.plugin).Distinct();
+        foreach (var pendingInstall in pendingInstalls)
+        {
+            if (Model.Available.Any(availablePlugin => availablePlugin.Identifier.Equals(pendingInstall, StringComparison.InvariantCultureIgnoreCase) &&
+                                                       availablePlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.InvariantCultureIgnoreCase))))
+            {
+                return true;
+            }
+        }
+        return false;
     }
-    var recentPlugins = availableAndNotInstalled.OrderByDescending(c => c.BuildDate).Take(9).ToList();
-    var popularPlugins = availableAndNotInstalled.Where(c => c.DownloadStat != null).OrderByDescending(c => c.DownloadStat).Take(5).ToList();
 }
 
 <style>
@@ -108,16 +134,21 @@
 }
 
 
-@if (availableAndNotInstalled.Any())
+@if (availablePluginsList.Any())
 {
     @if (string.IsNullOrEmpty(Model.SearchText))
     {
         <h4 class="mb-4">All</h4>
     }
     <div class="row mb-4">
-        @foreach (var plugin in availableAndNotInstalled)
+        @foreach (var plugin in availablePluginsList)
         {
             Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
+
+            var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
+            var x = matchedAvailable.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? matchedAvailable.FirstOrDefault();
+            var updateAvailable = matchedAvailable.Any();
+
             var availablePluginModalId = $"modal_{plugin.Identifier}";
             <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
                 <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#@availablePluginModalId">
@@ -156,9 +187,69 @@
                                         </div>
                                         <div class="col-lg-5">
                                             <div class="d-flex flex-column align-items-end">
-                                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
-                                                    <button type="submit" class="btn btn-primary">Install</button>
-                                                </form>
+
+                                                @{
+                                                    var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command;
+                                                    var exclusivePendingAction = true;
+
+                                                    var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
+                                                }
+
+                                                <div class="card-footer border-0 pb-3 d-flex gap-2">
+                                                    @if (pendingAction is not null && updateAvailable)
+                                                    {
+                                                        var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
+                                                        if (isUpdateAction)
+                                                        {
+                                                            exclusivePendingAction = versionOfPendingInstall == x.Version;
+                                                        }
+                                                    }
+                                                    @if (pendingAction is not null)
+                                                    {
+                                                        <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
+                                                            <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction @(versionOfPendingInstall is null ? "" : $"of {versionOfPendingInstall}")</button>
+                                                        </form>
+                                                    }
+                                                    @if (pendingAction is null || !exclusivePendingAction)
+                                                    {
+                                                        @if (updateAvailable && x != null)
+                                                        {
+                                                            if (PluginManager.DependenciesMet(x.Dependencies, installed))
+                                                            {
+                                                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                                                    <button type="submit" class="btn btn-secondary">Update</button>
+                                                                </form>
+                                                            }
+                                                            else
+                                                            {
+                                                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
+                                                                    <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
+                                                                </form>
+                                                            }
+                                                        }
+                                                        @if (!installed.ContainsKey(plugin.Identifier))
+                                                        {
+                                                            <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
+                                                                <button type="submit" class="btn btn-primary">Install</button>
+                                                            </form>
+                                                        }
+                                                        else
+                                                        {
+                                                            @if (DependentOn(plugin.Identifier))
+                                                            {
+                                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
+                                                                    Uninstall <vc:icon symbol="warning" />
+                                                                </button>
+                                                            }
+                                                            else
+                                                            {
+                                                                <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
+                                                                    <button type="submit" class="btn btn-outline-danger">Uninstall</button>
+                                                                </form>
+                                                            }
+                                                        }
+                                                    }
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -194,28 +285,28 @@
                                                 {
                                                     <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
                                                         <strong>Source Code:</strong>
-                                                        <span><a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                        <span><a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">View</a></span>
                                                     </li>
                                                 }
                                                 @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
                                                 {
                                                     <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
                                                         <strong>Documentation:</strong>
-                                                        <span><a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                        <span><a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">View</a></span>
                                                     </li>
                                                 }
                                                 @if (!string.IsNullOrEmpty(downloadInfo?.AuthorTwitter))
                                                 {
                                                     <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
                                                         <strong>Author Twitter:</strong>
-                                                        <span><a href="@downloadInfo.AuthorTwitter" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">View</a></span>
+                                                        <span><a href="@downloadInfo.AuthorTwitter" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">View</a></span>
                                                     </li>
                                                 }
                                                 @if (!string.IsNullOrEmpty(downloadInfo?.AuthorEmail))
                                                 {
                                                     <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
                                                         <strong>Author Email:</strong>
-                                                        <span><a href="mailto:@downloadInfo.AuthorEmail" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">Send a mail</a></span>
+                                                        <span><a href="mailto:@downloadInfo.AuthorEmail" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">Send a mail</a></span>
                                                     </li>
                                                 }
                                                 <li class="list-group-item d-flex justify-content-between bg-transparent px-0">

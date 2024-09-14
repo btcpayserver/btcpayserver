@@ -4,9 +4,6 @@
 @{
     ViewData.SetActivePage(ServerNavPages.Plugins, "Manage Plugins");
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-    var availableAndInstalled = Model.Available.Where(plugin => installed.ContainsKey(plugin.Identifier))
-    .GroupBy(plugin => plugin.Identifier).ToList();
-    
 
     bool DependentOn(string plugin)
     {
@@ -70,6 +67,18 @@
 
 <partial name="_StatusMessage" />
 
+@if (Model.Commands.Any())
+{
+    <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+        You need to restart BTCPay Server in order to update your active plugins.
+        @if (Model.CanShowRestart)
+        {
+            <form method="post" asp-action="Maintenance">
+                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
+            </form>
+        }
+    </div>
+}
 
 @if (Model.Installed.Where(i => !i.SystemPlugin).Any())
 {
@@ -85,7 +94,10 @@
         <div class="card border-0 mb-4">
             <div class="card-body d-flex flex-md-row flex-column bg-transparent border-0">
                 <div class="me-3 d-flex align-items-center">
-                    <img src="~/img/icons/icon-512x512.png" alt="@plugin.Name Image" class="rounded-4" style="width: 80px; height: 80px;">
+                    <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                         alt="@plugin.Name Image"
+                         class="rounded-4"
+                         style="width: 80px; height: 80px;">
                 </div>
                 <div class="flex-grow-1 align-self-center my-2 my-md-0">
                     <div class="d-flex justify-content-between align-items-center mb-2">
@@ -159,6 +171,36 @@ else
     </div>
 }
 
+
+@if (Model.Commands.Any())
+{
+    <div class="my-5">
+        <h3>Pending Actions</h3>
+        <div class="row" id="pending-actions">
+            <div class="col col-12 col-lg-6">
+                <ul class="list-group list-group-flush">
+                    @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
+                    {
+                        var lastCommand = extComm.Last().command.ToLower();
+                        if (lastCommand is not ("delete" or "update"))
+                        {
+                            <li class="list-group-item px-0">
+                                <div class="d-flex flex-wrap align-items-center justify-content-between">
+                                    <span class="my-2 me-3">@extComm.Key</span>
+                                    <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
+                                        <button type="submit" class="btn btn-outline-secondary">Cancel pending @lastCommand</button>
+                                    </form>
+                                </div>
+                            </li>
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+
+
 @if (Model.Disabled.Any())
 {
     <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
@@ -185,42 +227,5 @@ else
                 </li>
             }
         </ul>
-    </div>
-}
-
-@if (Model.Commands.Any())
-{
-    <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
-        You need to restart BTCPay Server in order to update your active plugins.
-        @if (Model.CanShowRestart)
-        {
-            <form method="post" asp-action="Maintenance">
-                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
-            </form>
-        }
-    </div>
-}
-
-@if (Model.Commands.Any())
-{
-    <div class="my-5">
-        <h3>Pending Actions</h3>
-        <div class="row" id="pending-actions">
-            <div class="col col-12 col-lg-6">
-                <ul class="list-group list-group-flush">
-                    @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
-                    {
-                        <li class="list-group-item px-0">
-                            <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                <span class="my-2 me-3">@extComm.Key</span>
-                                <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
-                                    <button type="submit" class="btn btn-outline-secondary">Cancel pending @extComm.Last().command</button>
-                                </form>
-                            </div>
-                        </li>
-                    }
-                </ul>
-            </div>
-        </div>
     </div>
 }

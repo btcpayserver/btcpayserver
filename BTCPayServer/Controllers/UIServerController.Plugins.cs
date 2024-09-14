@@ -77,6 +77,8 @@ public partial class UIServerController
         model.Installed = pluginService.LoadedPlugins;
         model.Available = availablePlugins;
         model.CanShowRestart = true;
+        model.Commands = pluginService.GetPendingCommands();
+        model.Disabled = pluginService.GetDisabledPlugins();
         model.DownloadedPluginsByIdentifier = availablePluginsByIdentifier;
         return View(model);
     }

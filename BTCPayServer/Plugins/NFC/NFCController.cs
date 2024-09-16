@@ -48,15 +48,15 @@ namespace BTCPayServer.Plugins.NFC
         public async Task<IActionResult> SubmitLNURLWithdrawForInvoice([FromBody] SubmitRequest request)
         {
             var invoice = await _invoiceRepository.GetInvoice(request.InvoiceId);
-            if (invoice?.Status is not InvoiceStatusLegacy.New)
+            if (invoice?.Status is not InvoiceStatus.New)
             {
                 return NotFound();
             }
 
-            var methods = invoice.GetPaymentMethods();
-            PaymentMethod lnPaymentMethod = null;
-            if (!methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LNURLPay), out var lnurlPaymentMethod) &&
-                !methods.TryGetValue(new PaymentMethodId("BTC", PaymentTypes.LightningLike), out lnPaymentMethod))
+            var methods = invoice.GetPaymentPrompts();
+            PaymentPrompt lnPaymentMethod = null;
+            if (!methods.TryGetValue(PaymentTypes.LNURL.GetPaymentMethodId("BTC"), out var lnurlPaymentMethod) &&
+                !methods.TryGetValue(PaymentTypes.LN.GetPaymentMethodId("BTC"), out lnPaymentMethod))
             {
                 return BadRequest("Destination for LNURL-Withdraw was not specified");
             }
@@ -101,13 +101,11 @@ namespace BTCPayServer.Plugins.NFC
             string bolt11 = null;
             if (lnPaymentMethod is not null)
             {
-                if (lnPaymentMethod.GetPaymentMethodDetails() is LightningLikePaymentMethodDetails { Activated: false } lnPMD)
+                if (!lnPaymentMethod.Activated)
                 {
                     var store = await _storeRepository.FindStore(invoice.StoreId);
-                    await _invoiceActivator.ActivateInvoicePaymentMethod(lnPaymentMethod.GetId(), invoice, store);
+                    await _invoiceActivator.ActivateInvoicePaymentMethod(invoice.Id, lnPaymentMethod.PaymentMethodId);
                 }
-
-                lnPMD = lnPaymentMethod.GetPaymentMethodDetails() as LightningLikePaymentMethodDetails;
                 LightMoney due;
                 if (invoice.Type == InvoiceType.TopUp && request.Amount is not null)
                 {
@@ -127,9 +125,9 @@ namespace BTCPayServer.Plugins.NFC
                     return BadRequest("Invoice amount is not payable with the LNURL allowed amounts.");
                 }
 
-                if (lnPMD?.Activated is true)
+                if (lnPaymentMethod.Activated)
                 {
-                    bolt11 = lnPMD.BOLT11;
+                    bolt11 = lnPaymentMethod.Destination;
                 }
             }
 

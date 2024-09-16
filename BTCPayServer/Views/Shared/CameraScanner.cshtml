@@ -51,6 +51,12 @@
                     <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :style="{width: `${decoder.getProgress() * 100}%`}" id="progressbar"></div>
                 </div>
             </div>
+            <div v-else-if="bbqrDecoder">
+                <div class="my-3">BBQR: {{bbqrDecoder.total}} parts, {{bbqrDecoder.progress * 100}}% completed</div>
+                <div class="progress">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" :style="{width: `${bbqrDecoder.progress * 100}%`}" id="progressbar"></div>
+                </div>
+            </div>
             <div class="mt-3 text-center">
                 <button type="button" class="btn btn-primary me-1" v-if="qrData" v-on:click="submitData">Submit</button>
                 <button type="button" class="btn btn-secondary me-1" v-if="qrData" v-on:click="retry">Retry</button>
@@ -85,6 +91,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 				noStreamApiSupport: false,
 				qrData: null,
 				decoder: null,
+				bbqrDecoder: null,
 				errorMessage: null,
 				successMessage: null,
 				camera: 0,
@@ -135,6 +142,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
                 this.successMessage = null;
 				this.errorMessage = null;
                 this.decoder = null;
+                this.bbqrDecoder = null;
 			},
 			close() {
 				if (this.modalId) {
@@ -146,12 +154,51 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 			onDecode(content) {
 				if (this.qrData) return;
                 const isUR = content.toLowerCase().startsWith("ur:");
-                console.debug(1, content);
-                
+                const isBBQr = content.startsWith("B$");
+                console.debug(content);
                 try {
-                    if (!isUR) {
+                    if (isBBQr){
+                        this.decoder = null;
+                        const total = parseInt(content.substr(4, 2), 36);
+                        const current = parseInt(content.substr(6, 2), 36);
+                        const format = content.substr(2,1);
+                        const type = content.substr(3, 1);
+                        
+                        if (!this.bbqrDecoder || 
+                                this.bbqrDecoder.total !== total || 
+                                this.bbqrDecoder.format !== format || 
+                                this.bbqrDecoder.type !== type) {
+                            this.bbqrDecoder = {
+                                total,
+                                format,
+                                type,
+                                data: new Array(total),
+                                progress: 1/total
+                            };
+                        }
+                        this.bbqrDecoder.data[current] = content;
+                        
+                        const progress = this.bbqrDecoder.data.filter(value => value !== undefined).length / total;
+                        this.bbqrDecoder.progress = progress;
+                        if (progress >= 1) {
+                            try {
+                                const joinResult = BBQr.joinQRs(this.bbqrDecoder.data);
+                                function buf2hex(buffer) { // buffer is an ArrayBuffer
+                                  return [...new Uint8Array(buffer)]
+                                      .map(x => x.toString(16).padStart(2, '0'))
+                                      .join('');
+                                }
+                                const result = buf2hex(joinResult.raw);
+                                this.setQrData(result);   
+                                this.successMessage = `BBQr ${type} decoded`;
+                            }catch (error){
+                                this.errorMessage = error.message;
+                            }
+                        }                       
+                    } else if (!isUR) {
                         this.setQrData(content);
                     } else {
+                        this.bbqrDecoder = null;
                         this.decoder = this.decoder || new window.URlib.URRegistryDecoder();
                         if (this.decoder.receivePart(content)) {
                             if (this.decoder.isComplete()) {

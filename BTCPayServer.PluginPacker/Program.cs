@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
@@ -109,9 +110,22 @@ namespace BTCPayServer.PluginPacker
 
         private static Type[] GetAllExtensionTypesFromAssembly(Assembly assembly)
         {
-            return assembly.GetTypes().Where(type =>
+            return GetLoadableTypes(assembly).Where(type =>
                 typeof(IBTCPayServerPlugin).IsAssignableFrom(type) &&
                 !type.IsAbstract).ToArray();
+        }
+        static Type[] GetLoadableTypes(Assembly assembly)
+        {
+            if (assembly == null)
+                throw new ArgumentNullException(nameof(assembly));
+            try
+            {
+                return assembly.GetTypes();
+            }
+            catch (ReflectionTypeLoadException e)
+            {
+                return e.Types.Where(t => t != null).ToArray();
+            }
         }
     }
 }

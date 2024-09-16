@@ -1,10 +1,5 @@
-@using BTCPayServer.Abstractions.Extensions;
-@using BTCPayServer.Client.Models;
 @using BTCPayServer.Models.StoreReportsViewModels;
-@using BTCPayServer.Views.Invoice;
 @using BTCPayServer.Views.Stores;
-@using BTCPayServer.Abstractions.Services;
-@using Microsoft.AspNetCore.Routing;
 @inject Safe Safe
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model StoreReportsViewModel
@@ -20,21 +15,20 @@
         #app .table-responsive { max-height: 80vh; }
         #app #charts { gap: var(--btcpay-space-l) var(--btcpay-space-xxl); }
         #app #charts article { flex: 1 1 450px; }
+        main .dropdown-menu.show { z-index: 99999; }
     </style>
 }
 
 <div class="sticky-header">
-    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-        <h2 class="mb-0">
-            @ViewData["Title"]
-            <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener" title="More information...">
-                <vc:icon symbol="info" />
-            </a>
-        </h2>
-        <div class="d-flex flex-wrap gap-3">
-	        <a cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="StoreReports" asp-route-fakeData="true" asp-route-viewName="@Model.Request?.ViewName">Create fake date</a>
-	        <button id="exportCSV" class="btn btn-primary text-nowrap" type="button">Export</button>
-        </div>
+    <h2>
+        @ViewData["Title"]
+        <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener" title="More information...">
+            <vc:icon symbol="info" />
+        </a>
+    </h2>
+    <div>
+        <a cheat-mode="true" class="btn btn-outline-info text-nowrap" asp-action="StoreReports" asp-route-fakeData="true" asp-route-viewName="@Model.Request?.ViewName">Create fake data</a>
+		<button id="page-primary" class="btn btn-primary text-nowrap" type="button">Export</button>
     </div>
 </div>
 <div class="d-flex flex-column flex-sm-row align-items-center gap-3 mb-l">
@@ -52,7 +46,7 @@
 			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
 			   placeholder="Start Date" />
 		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
-			<span class="fa fa-times"></span>
+            <vc:icon symbol="close" />
 		</button>
 	</div>
 	<div class="input-group">
@@ -60,7 +54,7 @@
 			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
 			   placeholder="End Date" />
 		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
-			<span class="fa fa-times"></span>
+            <vc:icon symbol="close" />
 		</button>
     </div>
 </div>
@@ -80,8 +74,8 @@
                     <tbody>
                     <tr v-for="(row, rowIndex) in chart.rows">
                         <td v-for="(group, groupIndex) in row.groups" :rowspan="group.rowCount">
-                            <template v-if="group.name === true"><span class="text-success"><vc:icon symbol="checkmark" /></span></template>
-                            <template v-else-if="group.name === false"><span class="text-danger"><vc:icon symbol="cross" /></span></template>
+                            <template v-if="group.name === true"><vc:icon symbol="checkmark" css-class="text-success" /></template>
+                            <template v-else-if="group.name === false"><vc:icon symbol="cross" css-class="text-danger" /></template>
                             <template v-else-if="['Settled', 'Processing', 'Invalid', 'Expired', 'New', 'Pending'].includes(group.name)">
                                 <span class="badge" :class="`badge-${group.name.toLowerCase()}`">{{ displayValue(group.name) }}</span>
                             </template>
@@ -111,12 +105,14 @@
                 <tr>
                     <th v-for="field in srv.result.fields" :class="{ 'text-end': ['integer', 'decimal', 'amount'].includes(field.type) }">
                         <a class="text-nowrap sort-column"
+                           ref="sort"
                            href="#"
                            :data-field="field.name"
-                           @@click.prevent="srv.sortBy(field.name)"
+                           :data-sort="srv.fieldViews[field.name].sortBy"
+                           @@click.prevent="srv.sortBy(field.name, $event)"
                            :title="srv.fieldViews[field.name].sortByTitle">
                             {{ titleCase(field.name) }}
-                            <span :class="srv.fieldViews[field.name].sortIconClass" />
+                            <vc:icon symbol="actions-sort" />
                         </a>
                     </th>
                 </tr>
@@ -133,12 +129,12 @@
                         <template v-else-if="srv.result.fields[columnIndex].type === 'tx_id'">
                             <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" link="getExplorerUrl(value, row[columnIndex-1])" />
                         </template>
-                        <template v-else-if="value && ['Address', 'PaymentId'].includes(srv.result.fields[columnIndex].name)" >
+                        <template v-else-if="value && ['Address'].includes(srv.result.fields[columnIndex].name)" >
                             <vc:truncate-center text="value" is-vue="true" padding="15" classes="truncate-center-id" />
                         </template>
                         <template v-else-if="srv.result.fields[columnIndex].type === 'datetime'">{{ displayDate(value) }}</template>
-                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === true" class="text-success"><vc:icon symbol="checkmark" /></span>
-                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === false" class="text-danger"><vc:icon symbol="cross" /></span>
+                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === true"><vc:icon symbol="checkmark" css-class="text-success" /></span>
+                        <span v-else-if="srv.result.fields[columnIndex].type === 'boolean' && value === false"><vc:icon symbol="cross" css-class="text-danger"/></span>
                         <span v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value >= 0 || typeof value === 'object' && value.d >= 0)" class="text-success">{{ displayValue(value) }}</span>
                         <span v-else-if="['BalanceChange'].includes(srv.result.fields[columnIndex].name) && (value < 0 || typeof value === 'object' && value.d < 0)" class="text-danger">{{ displayValue(value) }}</span>
                         <span v-else-if="['State'].includes(srv.result.fields[columnIndex].name)" class="badge" :class="`badge-${value.toLowerCase()}`">{{ displayValue(value) }}</span>

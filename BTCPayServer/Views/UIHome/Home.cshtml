@@ -1,11 +1,15 @@
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model HomeViewModel;
+@inject SettingsRepository SettingsRepository
 @{
-    ViewData["Title"] = "BTCPay Server";
+    var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+    ViewData["Title"] = string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName;
 }
 
 <partial name="_StatusMessage" />
 
-<h2>Welcome to your BTCPay Server</h2>
+<h2 text-translate="true">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h2>
 
 @if (!Model.HasStore)
 {
@@ -13,7 +17,7 @@
 
     <div class="list-group mt-4" id="SetupGuide">
         <a asp-controller="UIUserStores" asp-action="CreateStore" id="SetupGuide-Store" class="list-group-item list-group-item-action d-flex align-items-center">
-            <vc:icon symbol="new-store"/>
+            <vc:icon symbol="wallet-new"/>
             <div class="content">
                 <h5 class="mb-0">Create your store</h5>
             </div>

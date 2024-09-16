@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -29,7 +30,7 @@ namespace BTCPayServer.Tests
             using var s = CreateSeleniumTester(newDb: true);
             await s.StartAsync();
 
-            var u1 = s.RegisterNewUser(true);
+            s.RegisterNewUser(true);
             var hot = s.CreateNewStore();
             var seed = s.GenerateWallet(isHotWallet: true);
             var cold = s.CreateNewStore();
@@ -121,13 +122,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
         }
 
-        private static string ExtractPSBT(SeleniumTester s)
-        {
-            var pageSource = s.Driver.PageSource;
-            var start = pageSource.IndexOf("id=\"psbt-base64\">");
-            start += "id=\"psbt-base64\">".Length;
-            var end = pageSource.IndexOf("<", start);
-            return pageSource[start..end];
-        }
+        private string ExtractPSBT(SeleniumTester s) => s.Driver.FindElement(By.Id("psbt-base64")).GetAttribute("innerText");
     }
 }

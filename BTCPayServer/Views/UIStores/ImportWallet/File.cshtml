@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Import your wallet file", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Import your wallet file", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -45,6 +45,10 @@
         <td>Electrum</td>
         <td>File ❯ Save backup (not encrypted with a password)</td>
     </tr>
+	<tr>
+		<td>Sparrow</td>
+		<td>File ❯ Export wallet… ❯ Electrum: export file…</td>
+	</tr>
     <tr>
         <td>Wasabi</td>
         <td>Tools ❯ Wallet Manager ❯ Open Wallets Folder</td>

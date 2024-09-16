@@ -7,7 +7,9 @@ using BTCPayServer.Data;
 using BTCPayServer.Data.Payouts.LightningLike;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -21,30 +23,33 @@ public class LightningPendingPayoutListener : BaseAsyncService
     private readonly LightningClientFactoryService _lightningClientFactoryService;
     private readonly ApplicationDbContextFactory _applicationDbContextFactory;
     private readonly PullPaymentHostedService _pullPaymentHostedService;
-    private readonly LightningLikePayoutHandler _lightningLikePayoutHandler;
     private readonly StoreRepository _storeRepository;
     private readonly IOptions<LightningNetworkOptions> _options;
     private readonly BTCPayNetworkProvider _networkProvider;
+    private readonly PayoutMethodHandlerDictionary _payoutHandlers;
+    private readonly PaymentMethodHandlerDictionary _handlers;
     public static int SecondsDelay = 60 * 10;
 
     public LightningPendingPayoutListener(
         LightningClientFactoryService lightningClientFactoryService,
         ApplicationDbContextFactory applicationDbContextFactory,
         PullPaymentHostedService pullPaymentHostedService,
-        LightningLikePayoutHandler lightningLikePayoutHandler,
         StoreRepository storeRepository,
         IOptions<LightningNetworkOptions> options,
         BTCPayNetworkProvider networkProvider,
+        PayoutMethodHandlerDictionary payoutHandlers,
+        PaymentMethodHandlerDictionary handlers,
         ILogger<LightningPendingPayoutListener> logger) : base(logger)
     {
         _lightningClientFactoryService = lightningClientFactoryService;
         _applicationDbContextFactory = applicationDbContextFactory;
         _pullPaymentHostedService = pullPaymentHostedService;
-        _lightningLikePayoutHandler = lightningLikePayoutHandler;
         _storeRepository = storeRepository;
         _options = options;
 
         _networkProvider = networkProvider;
+        _payoutHandlers = payoutHandlers;
+        _handlers = handlers;
     }
 
     private async Task Act()
@@ -53,14 +58,14 @@ public class LightningPendingPayoutListener : BaseAsyncService
         var networks = _networkProvider.GetAll()
             .OfType<BTCPayNetwork>()
             .Where(network => network.SupportLightning)
-            .ToDictionary(network => new PaymentMethodId(network.CryptoCode, PaymentTypes.LightningLike));
+            .ToDictionary(network => PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode));
 
 
         var payouts = await PullPaymentHostedService.GetPayouts(
             new PullPaymentHostedService.PayoutQuery()
             {
                 States = new PayoutState[] { PayoutState.InProgress },
-                PaymentMethods = networks.Keys.Select(id => id.ToString()).ToArray()
+                PayoutMethods = networks.Keys.Select(id => id.ToString()).ToArray()
             }, context);
         var storeIds = payouts.Select(data => data.StoreDataId).Distinct();
         var stores = (await Task.WhenAll(storeIds.Select(_storeRepository.FindStore)))
@@ -68,6 +73,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
 
         foreach (IGrouping<string, PayoutData> payoutByStore in payouts.GroupBy(data => data.StoreDataId))
         {
+            //this should never happen
             if (!stores.TryGetValue(payoutByStore.Key, out var store))
             {
                 foreach (PayoutData payoutData in payoutByStore)
@@ -79,12 +85,13 @@ public class LightningPendingPayoutListener : BaseAsyncService
             }
 
             foreach (IGrouping<string, PayoutData> payoutByStoreByPaymentMethod in payoutByStore.GroupBy(data =>
-                         data.PaymentMethodId))
+                         data.PayoutMethodId))
             {
                 var pmi = PaymentMethodId.Parse(payoutByStoreByPaymentMethod.Key);
-                var pm = store.GetSupportedPaymentMethods(_networkProvider)
-                    .OfType<LightningSupportedPaymentMethod>()
-                    .FirstOrDefault(method => method.PaymentId == pmi);
+                var pm = store.GetPaymentMethodConfigs(_handlers)
+                    .Where(c => c.Value is LightningPaymentMethodConfig && c.Key == pmi)
+                    .Select(c => (LightningPaymentMethodConfig)c.Value)
+                    .FirstOrDefault();
                 if (pm is null)
                 {
                     continue;
@@ -94,19 +101,24 @@ public class LightningPendingPayoutListener : BaseAsyncService
                     pm.CreateLightningClient(networks[pmi], _options.Value, _lightningClientFactoryService);
                 foreach (PayoutData payoutData in payoutByStoreByPaymentMethod)
                 {
-                    var proof = _lightningLikePayoutHandler.ParseProof(payoutData);
+                    var handler = _payoutHandlers.TryGet(payoutData.GetPayoutMethodId());
+                    var proof = handler is null ? null : handler.ParseProof(payoutData);
                     switch (proof)
                     {
                         case null:
                             break;
                         case PayoutLightningBlob payoutLightningBlob:
                             {
-                                var payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
-                                if (payment is null)
+                                LightningPayment payment = null;
+                                try
                                 {
-                                    continue;
+                                    payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
                                 }
-
+                                catch
+                                {
+                                }
+                                if (payment is null)
+                                    continue;
                                 switch (payment.Status)
                                 {
                                     case LightningPaymentStatus.Complete:

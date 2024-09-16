@@ -45,6 +45,12 @@ namespace BTCPayServer
 #endif
                 conf = confBuilder.Build();
 
+
+                var confirm = conf.GetOrDefault<bool>("EXPERIMENTALV2_CONFIRM", false);
+                if(!confirm)
+                {
+                    throw new ConfigException("You are running an experimental version of BTCPay Server that is the basis for v2. Many things will change and break, including irreversible database migrations. THERE IS NO WAY BACK. Please confirm you understand this by setting the setting EXPERIMENTALV2_CONFIRM=true");
+                }
                 var builder = new WebHostBuilder()
                     .UseKestrel()
                     .UseConfiguration(conf)
@@ -53,6 +59,9 @@ namespace BTCPayServer
                         l.AddFilter("Microsoft", LogLevel.Error);
                         if (!conf.GetOrDefault<bool>("verbose", false))
                             l.AddFilter("Events", LogLevel.Warning);
+                        // Uncomment this to see EF queries
+                        //l.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Trace);
+                        l.AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information);
                         l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
                         l.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);

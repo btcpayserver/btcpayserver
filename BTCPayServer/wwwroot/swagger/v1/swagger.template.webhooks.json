@@ -693,10 +693,10 @@
                                 "nullable": false
                             },
                             "metadata": {
-                              "type": "object",
-                              "description": "User-supplied metadata added to the invoice at the time of its creation",
-                              "nullable": false
-                          }
+                                "type": "object",
+                                "description": "User-supplied metadata added to the invoice at the time of its creation",
+                                "nullable": false
+                            }
                         }
                     }
                 ]
@@ -779,7 +779,7 @@
                                 "description": "Whether this payment has been sent after expiration of the invoice",
                                 "nullable": false
                             },
-                            "paymentMethod": {
+                            "paymentMethodId": {
                                 "allOf": [
                                     {
                                         "$ref": "#/components/schemas/PaymentMethodId"
@@ -1112,6 +1112,420 @@
                         "application/json": {
                             "schema": {
                                 "$ref": "#/components/schemas/WebhookInvoiceSettledEvent"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PaymentRequestCreated": {
+            "post": {
+                "operationId": "Webhook_PaymentRequestCreated",
+                "summary": "PaymentRequestCreated",
+                "description": "A new payment request has been created",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "paymentRequestId": {
+                                        "type": "string",
+                                        "description": "The id of the payment request",
+                                        "nullable": false
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Completed",
+                                            "Expired"
+                                        ],
+                                        "description": "The status of the payment request",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PaymentRequestUpdated": {
+            "post": {
+                "operationId": "Webhook_PaymentRequestUpdated",
+                "summary": "PaymentRequestUpdated",
+                "description": "A payment request has been updated",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "paymentRequestId": {
+                                        "type": "string",
+                                        "description": "The id of the payment request",
+                                        "nullable": false
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Completed",
+                                            "Expired"
+                                        ],
+                                        "description": "The status of the payment request",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PaymentRequestArchived": {
+            "post": {
+                "operationId": "Webhook_PaymentRequestArchved",
+                "summary": "PaymentRequestArchived",
+                "description": "A payment request has been archived",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "paymentRequestId": {
+                                        "type": "string",
+                                        "description": "The id of the payment request",
+                                        "nullable": false
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Completed",
+                                            "Expired"
+                                        ],
+                                        "description": "The status of the payment request",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PaymentRequestStatusChanged": {
+            "post": {
+                "operationId": "Webhook_PaymentRequestStatusChanged",
+                "summary": "PaymentRequestStatusChanged",
+                "description": "A payment request has had its status changed",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "paymentRequestId": {
+                                        "type": "string",
+                                        "description": "The id of the payment request",
+                                        "nullable": false
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "Pending",
+                                            "Completed",
+                                            "Expired"
+                                        ],
+                                        "description": "The status of the payment request",
+                                        "nullable": false
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PayoutCreated": {
+            "post": {
+                "operationId": "Webhook_PayoutCreated",
+                "summary": "PayoutCreated",
+                "description": "A payout has been created",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "payoutId": {
+                                        "type": "string",
+                                        "description": "The id of the payout",
+                                        "nullable": false
+                                    },
+                                    "pullPaymentId": {
+                                        "type": "string",
+                                        "description": "The id of the pull payment this payout belongs to",
+                                        "nullable": true
+                                    },
+                                    "payoutState": {
+                                        "$ref": "#/components/schemas/PayoutState"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PayoutApproved": {
+            "post": {
+                "operationId": "Webhook_PayoutApproved",
+                "summary": "PayoutApproved",
+                "description": "A payout has been approved",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "payoutId": {
+                                        "type": "string",
+                                        "description": "The id of the payout",
+                                        "nullable": false
+                                    },
+                                    "pullPaymentId": {
+                                        "type": "string",
+                                        "description": "The id of the pull payment this payout belongs to",
+                                        "nullable": true
+                                    },
+                                    "payoutState": {
+                                        "$ref": "#/components/schemas/PayoutState"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "PayoutUpdated": {
+            "post": {
+                "operationId": "Webhook_PayoutUpdated",
+                "summary": "PayoutUpdated",
+                "description": "A payout has been updated",
+                "parameters": [
+                    {
+                        "in": "header",
+                        "name": "BTCPay-Sig",
+                        "required": true,
+                        "description": "The HMAC of the body's byte with the secret's of the webhook. `sha256=HMAC256(UTF8(webhook's secret), body)`",
+                        "schema": {
+                            "type": "string",
+                            "example": "sha256=b438519edde5c8144a4f9bcec51a9d346eca6506887c2ceeae1c0092884a97b9"
+                        }
+                    }
+                ],
+                "tags": [
+                    "Webhooks"
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "payoutId": {
+                                        "type": "string",
+                                        "description": "The id of the payout",
+                                        "nullable": false
+                                    },
+                                    "pullPaymentId": {
+                                        "type": "string",
+                                        "description": "The id of the pull payment this payout belongs to",
+                                        "nullable": true
+                                    },
+                                    "payoutState": {
+                                        "$ref": "#/components/schemas/PayoutState"
+                                    }
+                                }
                             }
                         }
                     }

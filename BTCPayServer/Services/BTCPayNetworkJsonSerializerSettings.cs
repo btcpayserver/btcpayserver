@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Payouts;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -37,26 +38,17 @@ namespace BTCPayServer.Services
                 {
                     serializer.Converters.Add(converter);
                 }
-                _Serializers.Add(network.CryptoCode, serializer);
+                // TODO: Get rid of this serializer
+                _Serializers.Add(PayoutTypes.CHAIN.GetPayoutMethodId(network.CryptoCode), serializer);
+                _Serializers.Add(PayoutTypes.LN.GetPayoutMethodId(network.CryptoCode), serializer);
             }
         }
 
-        readonly Dictionary<string, JsonSerializerSettings> _Serializers = new Dictionary<string, JsonSerializerSettings>();
-
-        public JsonSerializerSettings GetSerializer(Network network)
+        readonly Dictionary<PayoutMethodId, JsonSerializerSettings> _Serializers = new Dictionary<PayoutMethodId, JsonSerializerSettings>();
+        public JsonSerializerSettings GetSerializer(PayoutMethodId payoutMethodId)
         {
-            ArgumentNullException.ThrowIfNull(network);
-            return GetSerializer(network.NetworkSet.CryptoCode);
-        }
-        public JsonSerializerSettings GetSerializer(BTCPayNetwork network)
-        {
-            ArgumentNullException.ThrowIfNull(network);
-            return GetSerializer(network.CryptoCode);
-        }
-        public JsonSerializerSettings GetSerializer(string cryptoCode)
-        {
-            ArgumentNullException.ThrowIfNull(cryptoCode);
-            _Serializers.TryGetValue(cryptoCode, out var serializer);
+            ArgumentNullException.ThrowIfNull(payoutMethodId);
+            _Serializers.TryGetValue(payoutMethodId, out var serializer);
             return serializer;
         }
     }

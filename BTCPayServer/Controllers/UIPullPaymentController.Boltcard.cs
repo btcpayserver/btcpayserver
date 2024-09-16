@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers
             public record OtherIssuer() : CardOrigin;
             public record ThisIssuerReset(BoltcardRegistration Registration) : ThisIssuer(Registration);
         }
-        [HttpGet]
+
         [Route("pull-payments/{pullPaymentId}/nfc/bridge")]
         public async Task<IActionResult> VaultNFCBridgeConnection(string pullPaymentId)
         {
@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
             var pp = await _pullPaymentHostedService.GetPullPayment(pullPaymentId, false);
             if (pp is null)
                 return NotFound();
-            if (!_pullPaymentHostedService.SupportsLNURL(pp.GetBlob()))
+            if (!_pullPaymentHostedService.SupportsLNURL(pp))
                 return BadRequest();
 
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");

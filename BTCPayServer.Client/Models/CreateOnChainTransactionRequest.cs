@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using BTCPayServer.Client.JsonConverters;
 using BTCPayServer.JsonConverters;
 using NBitcoin;
 using NBitcoin.JsonConverters;
@@ -21,7 +22,7 @@ namespace BTCPayServer.Client.Models
         public bool ProceedWithPayjoin { get; set; } = true;
         public bool ProceedWithBroadcast { get; set; } = true;
         public bool NoChange { get; set; } = false;
-        [JsonProperty(ItemConverterType = typeof(OutpointJsonConverter))]
+        [JsonProperty(ItemConverterType = typeof(SaneOutpointJsonConverter))]
         public List<OutPoint> SelectedInputs { get; set; } = null;
         public List<CreateOnChainTransactionRequestDestination> Destinations { get; set; }
         [JsonProperty("rbf")]

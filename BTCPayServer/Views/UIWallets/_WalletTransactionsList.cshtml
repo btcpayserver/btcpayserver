@@ -21,24 +21,17 @@
                 exclude-types="false"
                 display-inline="true"/>
         </td>
-        <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf")">
-            <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">
-                @transaction.Id
-            </a>
+        <td>
+            <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
         </td>
         <td class="amount-col">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")">@transaction.Balance</span>
         </td>
         <td class="text-end">
-            <div class="dropstart d-inline-block">
-                @if (string.IsNullOrEmpty(transaction.Comment))
-                {
-                    <span class="fa fa-comment cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
-                }
-                else
-                {
-                    <span class="fa fa-commenting cursor-pointer" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></span>
-                }
+            <div class="d-inline-block">
+                <button class="btn btn-link p-0 @(!string.IsNullOrEmpty(transaction.Comment) ? "text-primary" : "text-secondary")" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <vc:icon symbol="actions-comment" />
+                </button>
                 <div class="dropdown-menu">
                     <form asp-action="ModifyTransaction" method="post" style="width:260px;" asp-route-walletId="@Context.GetRouteValue("walletId")">
                         <input type="hidden" name="transactionId" value="@transaction.Id" />

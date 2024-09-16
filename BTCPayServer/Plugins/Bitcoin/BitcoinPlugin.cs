@@ -17,11 +17,10 @@ namespace BTCPayServer.Plugins.Bitcoin
         public override void Execute(IServiceCollection applicationBuilder)
         {
             var services = (PluginServiceCollection)applicationBuilder;
-            var onChain = new Payments.PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike);
+            var onChain = Payments.PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
             var nbxplorerNetworkProvider = services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>();
             var nbxplorerNetwork = nbxplorerNetworkProvider.GetFromCryptoCode("BTC");
             var chainName = nbxplorerNetwork.NBitcoinNetwork.ChainName;
-            var selectedChains = services.BootstrapServices.GetRequiredService<SelectedChains>();
             if (!services.BootstrapServices.GetRequiredService<SelectedChains>().Contains("BTC"))
                 return;
             var blockExplorerLink = chainName == ChainName.Mainnet ? "https://mempool.space/tx/{0}" :
@@ -48,7 +47,7 @@ namespace BTCPayServer.Plugins.Bitcoin
             }.SetDefaultElectrumMapping(chainName);
            
             applicationBuilder.AddBTCPayNetwork(network);
-            applicationBuilder.AddTransactionLinkProvider(onChain, defaultTransactionLinkProvider);
+            applicationBuilder.AddTransactionLinkProvider(network.CryptoCode, defaultTransactionLinkProvider);
         }
     }
 }

@@ -5,6 +5,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using BTCPayServer.Services.Rates;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
 
@@ -21,30 +22,29 @@ namespace BTCPayServer.Models
             Id = data.Id;
             StoreId = data.StoreId;
             var blob = data.GetBlob();
-            PaymentMethods = blob.SupportedPaymentMethods;
-            BitcoinOnly = blob.SupportedPaymentMethods.All(p => p.CryptoCode == "BTC");
-            SelectedPaymentMethod = PaymentMethods.First().ToString();
+            PayoutMethodIds = blob.SupportedPayoutMethods;
+            BitcoinOnly = blob.SupportedPayoutMethods.All(p => p == PayoutTypes.CHAIN.GetPayoutMethodId("BTC") || p == PayoutTypes.LN.GetPayoutMethodId("BTC"));
+            SelectedPayoutMethod = PayoutMethodIds.First().ToString();
             Archived = data.Archived;
             AutoApprove = blob.AutoApproveClaims;
             Title = blob.View.Title;
             Description = blob.View.Description;
-            Amount = blob.Limit;
-            Currency = blob.Currency;
+            Amount = data.Limit;
+            Currency = data.Currency;
             Description = blob.View.Description;
             ExpiryDate = data.EndDate is DateTimeOffset dt ? (DateTime?)dt.UtcDateTime : null;
             Email = blob.View.Email;
             MinimumClaim = blob.MinimumClaim;
-            IsPending = !data.IsExpired();
-            var period = data.GetPeriod(now);
+            IsPending = !data.IsExpired(now);
             if (data.Archived)
             {
                 Status = "Archived";
             }
-            else if (data.IsExpired())
+            else if (data.IsExpired(now))
             {
                 Status = "Expired";
             }
-            else if (period is null)
+            else if (!data.HasStarted(now))
             {
                 Status = "Not yet started";
             }
@@ -53,13 +53,10 @@ namespace BTCPayServer.Models
                 Status = string.Empty;
             }
 
-            ResetIn = string.Empty;
-            if (period?.End is DateTimeOffset pe)
+            EndsIn = string.Empty;
+            if (data.EndsIn(now) is TimeSpan e)
             {
-                var resetIn = (pe - DateTimeOffset.UtcNow);
-                if (resetIn < TimeSpan.Zero)
-                    resetIn = TimeSpan.Zero;
-                ResetIn = resetIn.TimeString();
+                EndsIn = e.TimeString();
             }
         }
 
@@ -67,12 +64,15 @@ namespace BTCPayServer.Models
 
         public string StoreId { get; set; }
 
-        public string SelectedPaymentMethod { get; set; }
+        public string SelectedPayoutMethod { get; set; }
 
-        public PaymentMethodId[] PaymentMethods { get; set; }
+        public PayoutMethodId[] PayoutMethodIds { get; set; }
+
+        public string SetupDeepLink { get; set; }
+        public string ResetDeepLink { get; set; }
 
         public string HubPath { get; set; }
-        public string ResetIn { get; set; }
+        public string EndsIn { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }
         public bool IsPending { get; set; }

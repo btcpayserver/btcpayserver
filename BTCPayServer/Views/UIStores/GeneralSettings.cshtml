@@ -6,19 +6,23 @@
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
-	Layout = "../Shared/_NavLayout.cshtml";
 	ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
 	var canUpload = await FileService.IsAvailable();
 }
+<form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+		<h2 text-translate="true">Store Settings</h2>
+		<button id="page-primary" type="submit" class="btn btn-primary">Save</button>
+    </div>
 
-<div class="row">
-    <div class="col-xxl-constrain col-xl-8">
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All"></div>
-        }
-        <form method="post" enctype="multipart/form-data">
-            <h3 class="mb-3">General</h3>
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+            }
             <div class="form-group">
                 <label asp-for="Id" class="form-label"></label>
                 <input asp-for="Id" readonly class="form-control" />
@@ -33,31 +37,37 @@
                 <input asp-for="StoreWebsite" class="form-control" />
                 <span asp-validation-for="StoreWebsite" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="StoreSupportUrl" class="form-label"></label>
-                <input asp-for="StoreSupportUrl" class="form-control" />
-                <span asp-validation-for="StoreSupportUrl" class="text-danger"></span>
-                <div class="form-text">
-                    For support requests, can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and nostr.",
-                </div>
-            </div>
-            
-            <h3 class="mt-5 mb-3">Branding</h3>
-            <div class="form-group">
+
+            <h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
+            <p>
+                The custom color, logo and CSS are applied on the public/customer-facing pages (Invoice, Payment Request, Pull Payment, etc.).
+                The brand color is used as the accent color for buttons, links, etc. It might get adapted to fit the light/dark color scheme.
+            </p>
+
+            <div>
                 <label asp-for="BrandColor" class="form-label"></label>
-                <div class="input-group">
-                    <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
-                    <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem;font-size:0.9rem" />
+                <div class="d-flex flex-wrap">
+                    <div class="form-group me-4">
+                        <div class="input-group">
+                            <input id="BrandColorInput" class="form-control form-control-color flex-grow-0" type="color" style="width:3rem" aria-describedby="BrandColorValue" value="@Model.BrandColor" />
+                            <input asp-for="BrandColor" class="form-control form-control-color flex-grow-0 font-monospace" pattern="@ColorPalette.Pattern" style="width:5.5rem;font-size:0.9rem" />
+                        </div>
+                        <span asp-validation-for="BrandColor" class="text-danger"></span>
+                    </div>
+                    <div class="form-group d-flex align-items-center">
+                        <input asp-for="ApplyBrandColorToBackend" type="checkbox" class="btcpay-toggle me-3" disabled="@(string.IsNullOrEmpty(Model.BrandColor))"/>
+                        <label asp-for="ApplyBrandColorToBackend" class="form-check-label"></label>
+                    </div>
                 </div>
-                <span asp-validation-for="BrandColor" class="text-danger"></span>
             </div>
+                
             <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="LogoFile" class="form-label"></label>
-                    @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                    @if (!string.IsNullOrEmpty(Model.LogoUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
-                            <span class="fa fa-times"></span> Remove
+                            <vc:icon symbol="cross" /> Remove
                         </button>
                     }
                 </div>
@@ -65,16 +75,12 @@
                 {
                     <div class="d-flex align-items-center gap-3">
                         <input asp-for="LogoFile" type="file" class="form-control flex-grow">
-                        @if (!string.IsNullOrEmpty(Model.LogoFileId))
+                        @if (!string.IsNullOrEmpty(Model.LogoUrl))
                         {
-                            <img src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId))" alt="@Model.StoreName" class="rounded-circle" style="width:2.1rem;height:2.1rem;"/>
+                            <img src="@Model.LogoUrl" alt="@Model.StoreName Logo" style="height:2.1rem;max-width:10.5rem;"/>
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
-                    <div class="form-text">
-                        Please upload an image with square dimension, as it will be displayed in 1:1 format and circular.
-                        Size should be around 100✕100px.
-                    </div>
                 }
                 else
                 {
@@ -85,10 +91,10 @@
             <div class="form-group">
                 <div class="d-flex align-items-center justify-content-between gap-2">
                     <label asp-for="CssFile" class="form-label"></label>
-                    @if (!string.IsNullOrEmpty(Model.CssFileId))
+                    @if (!string.IsNullOrEmpty(Model.CssUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCssFile" value="true">
-                            <span class="fa fa-times"></span> Remove
+                            <vc:icon symbol="cross" /> Remove
                         </button>
                     }
                 </div>
@@ -96,15 +102,12 @@
                 {
                     <div class="d-flex align-items-center gap-3">
                         <input asp-for="CssFile" type="file" class="form-control flex-grow">
-                        @if (!string.IsNullOrEmpty(Model.CssFileId))
+                        @if (!string.IsNullOrEmpty(Model.CssUrl))
                         {
-                            <a href="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CssFileId))" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
+                            <a href="@Model.CssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
                         }
                     </div>
                     <span asp-validation-for="LogoFile" class="text-danger"></span>
-                    <div class="form-text">
-                        Use this CSS to customize the public/customer-facing pages of this store. (Invoice, Payment Request, Pull Payment, etc.) 
-                    </div>
                 }
                 else
                 {
@@ -112,8 +115,8 @@
                     <div class="form-text">In order to upload a CSS file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
                 }
             </div>
-            
-            <h3 class="mt-5 mb-3">Payment</h3>
+
+			<h3 class="mt-5 mb-3" text-translate="true">Payment</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrency" class="form-label"></label>
                 <input asp-for="DefaultCurrency" class="form-control w-auto" currency-selection />
@@ -121,7 +124,7 @@
             </div>
             <div class="form-group d-flex align-items-center">
                 <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-3"/>
-                <label asp-for="AnyoneCanCreateInvoice" class="form-label mb-0 me-1"></label>
+                <label asp-for="AnyoneCanCreateInvoice" class="form-check-label me-1"></label>
                 <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
                     <vc:icon symbol="info"/>
                 </a>
@@ -170,32 +173,30 @@
                 </div>
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
             </div>
-            
-            <button type="submit" class="btn btn-primary mt-2" id="Save">Save</button>
-        </form>
-        <h3 class="mt-5 mb-3">Additional Actions</h3>
-        <div id="danger-zone" class="d-flex flex-wrap align-items-center gap-3 mb-5 mt-2">
-            <form asp-action="ToggleArchive" asp-route-storeId="@Model.Id" method="post" permission="@Policies.CanModifyStoreSettings">
-                <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
-                    @if (Model.Archived)
-                    {
-                        <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store">Unarchive this store</span>
-                    }
-                    else
-                    {
-                        <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default">Archive this store</span>
-                    }
-                </button>
-            </form>
-            @if (Model.CanDelete)
-            {
-                <a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE">Delete this store</a>
-            }
         </div>
+    </div>
+</form>
+
+<div permission="@Policies.CanModifyStoreSettings">
+	<h3 class="mt-5 mb-3" text-translate="true">Additional Actions</h3>
+    <div id="danger-zone" class="d-flex flex-wrap align-items-center gap-3 mb-5 mt-2">
+        <form asp-action="ToggleArchive" asp-route-storeId="@Model.Id" method="post">
+            <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
+                @if (Model.Archived)
+                {
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store" text-translate="true">Unarchive this store</span>
+                }
+                else
+                {
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default" text-translate="true">Archive this store</span>
+                }
+            </button>
+        </form>
+		<a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE" text-translate="true">Delete this store</a>
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
@@ -203,13 +204,17 @@
     (() => {
         const $colorValue = document.getElementById('BrandColor');
         const $colorInput = document.getElementById('BrandColorInput');
+        const $applyToBackend = document.getElementById('ApplyBrandColorToBackend');
         delegate('change', '#BrandColor', e => {
             const value = e.target.value;
-			if (value.match(@Safe.Json(@ColorPalette.Pattern)))
+			if (value.match(@Safe.Json(ColorPalette.Pattern)))
 				$colorInput.value = value;
+            $applyToBackend.disabled = !value;
         });
         delegate('change', '#BrandColorInput', e => {
-            $colorValue.value = e.target.value;
+            const value = e.target.value;
+            $colorValue.value = value;
+            $applyToBackend.disabled = !value;
         });
     })();
     </script>

@@ -1,4 +1,4 @@
-﻿ <Project Sdk="Microsoft.NET.Sdk.Web">
+ <Project Sdk="Microsoft.NET.Sdk.Web">
   <Import Project="../Build/Version.csproj" Condition="Exists('../Build/Version.csproj')" />
   <Import Project="../Build/Common.csproj" />
 
@@ -36,23 +36,14 @@
     <None Remove="Currencies.txt" />
   </ItemGroup>
 
-  <ItemGroup Condition="'$(Altcoins)' != 'true'">
-    <Content Remove="Services\Altcoins\**\*" />
-    <Compile Remove="Plugins\Altcoins\**\*" />
-    <Content Remove="Views\UIMoneroLikeStore\**\*" />
-    <Content Remove="Views\UIZcashLikeStore\**\*" />
-    <Content Remove="Views\Shared\Monero\**\*" />
-    <Content Remove="Views\Shared\Zcash\**\*" />
-  </ItemGroup>
-
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.19" />
+    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.23" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.5.3" />
-    <PackageReference Include="CsvHelper" Version="15.0.5" />
-    <PackageReference Include="Dapper" Version="2.1.24" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.6.0" />
+    <PackageReference Include="CsvHelper" Version="32.0.3" />
+    <PackageReference Include="Dapper" Version="2.1.35" />
     <PackageReference Include="Fido2" Version="2.0.2" />
     <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
     <PackageReference Include="LNURL" Version="0.0.34" />
@@ -77,42 +68,12 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.0" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.6" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.7" />
   </ItemGroup>
 
 	<ItemGroup>
 	  <None Include="Views\UIReports\StoreReports.cshtml" />
-	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.svg" />
-	  <None Include="wwwroot\vendor\font-awesome\fonts\fontawesome-webfont.woff2" />
-	  <None Include="wwwroot\vendor\font-awesome\less\animated.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\bordered-pulled.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\core.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\fixed-width.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\font-awesome.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\icons.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\larger.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\list.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\mixins.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\path.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\rotated-flipped.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\screen-reader.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\stacked.less" />
-	  <None Include="wwwroot\vendor\font-awesome\less\variables.less" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\font-awesome.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_animated.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_bordered-pulled.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_core.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_fixed-width.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_icons.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_larger.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_list.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_mixins.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_path.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_rotated-flipped.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_screen-reader.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_stacked.scss" />
-	  <None Include="wwwroot\vendor\font-awesome\scss\_variables.scss" />
 	  <None Include="wwwroot\vendor\jquery\jquery.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
 	</ItemGroup>
@@ -141,6 +102,9 @@
     <Watch Remove="Views\Shared\LocalhostBrowserSupport.cshtml" />
     <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
     <Watch Remove="Views\UIReports\StoreReports.cshtml" />
+    <Watch Remove="Views\UIServer\CreateDictionary.cshtml" />
+    <Watch Remove="Views\UIServer\EditDictionary.cshtml" />
+    <Watch Remove="Views\UIServer\ListDictionaries.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>
@@ -216,5 +180,5 @@
 	  </Content>
 	</ItemGroup>
 
-	<ProjectExtensions><VisualStudio><UserProperties wwwroot_4swagger_4v1_4swagger_1template_1invoices_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1misc_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1pull-payments_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1serverinfo_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1stores_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1users_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1webhooks_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" /></VisualStudio></ProjectExtensions>
+	<ProjectExtensions><VisualStudio><UserProperties wwwroot_4swagger_4v1_4swagger_1template_1invoices_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1misc_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1pull-payments_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1serverinfo_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1stores_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1stores-payment-methods_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1users_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" wwwroot_4swagger_4v1_4swagger_1template_1webhooks_1json__JsonSchema="https://raw.githubusercontent.com/OAI/OpenAPI-Specification/master/schemas/v3.0/schema.json" /></VisualStudio></ProjectExtensions>
 </Project>

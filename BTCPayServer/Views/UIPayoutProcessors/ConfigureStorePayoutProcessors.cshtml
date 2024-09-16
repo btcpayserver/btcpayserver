@@ -1,21 +1,19 @@
 @using BTCPayServer.Views.Stores
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
 @model List<BTCPayServer.PayoutProcessors.UIPayoutProcessorsController.StorePayoutProcessorsView>
 @{
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
-    Layout = "../Shared/_NavLayout.cshtml";
     var storeId = Context.GetStoreData().Id;
     ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "Payout Processors", storeId);
 }
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+<p>Payout Processors allow BTCPay Server to handle payouts in an automated way.</p>
+
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
-        </div>
-        <p>Payout Processors allow BTCPay Server to handle payouts in an automated way.</p>
-
         @if (Model.Any())
         {
             foreach (var processorsView in Model)
@@ -25,7 +23,7 @@
                     <thead>
                     <tr>
                         <th>Payment Method</th>
-                        <th class="text-end">Actions</th>
+                        <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -33,9 +31,9 @@
                     {
                         <tr>
                             <td>
-                                @conf.Key.ToPrettyString()
+                                @conf.Key.ToString()
                             </td>
-                            <td class="text-end">
+                            <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                                 @if (conf.Value is null)
                                 {
                                     <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Configure</a>
@@ -47,7 +45,7 @@
                                     @if (await processorsView.Factory.CanRemove())
                                     {
                                         <span>-</span>
-                                        <a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @Html.Encode(processorsView.Factory.FriendlyName) for @Html.Encode(conf.Key.CryptoCode) will be removed from your store.">Remove</a>
+											<a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @Html.Encode(processorsView.Factory.FriendlyName) (@Html.Encode(conf.Key.ToString())) will be removed from your store.">Remove</a>
                                     }
                                 }
                             </td>
@@ -66,7 +64,7 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete payout processor", "This payout processor will be removed from this store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete payout processor", "This payout processor will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>
 }

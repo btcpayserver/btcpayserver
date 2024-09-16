@@ -1,30 +1,18 @@
 using System.ComponentModel.DataAnnotations;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Validation;
 
-namespace BTCPayServer.Models.ServerViewModels
+namespace BTCPayServer.Models.ServerViewModels;
+
+public class ServerEmailsViewModel : EmailsViewModel
 {
-    public class EmailsViewModel
-    {
-        public EmailsViewModel()
-        {
+    [Display(Name = "Allow Stores use the Server's SMTP email settings as their default")]
+    public bool EnableStoresToUseServerEmailSettings { get; set; }
 
-        }
-        public EmailsViewModel(EmailSettings settings)
-        {
-            Settings = settings;
-            PasswordSet = !string.IsNullOrEmpty(settings?.Password);
-        }
-        public EmailSettings Settings
-        {
-            get; set;
-        }
-        public bool PasswordSet { get; set; }
-        [MailboxAddressAttribute]
-        [Display(Name = "Test Email")]
-        public string TestEmail
-        {
-            get; set;
-        }
+    public ServerEmailsViewModel()
+    {
+    }
+
+    public ServerEmailsViewModel(EmailSettings settings) : base(settings)
+    {
     }
 }

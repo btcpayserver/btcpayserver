@@ -100,14 +100,19 @@
 
 @Html.HiddenFor(a => a.Count)
 
-<div class="sticky-header d-sm-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2>
         @ViewData["Title"]
         <a href="#descriptor" data-bs-toggle="collapse">
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a id="CreateNewInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchTerm="@Model.SearchTerm" class="btn btn-primary mt-3 mt-sm-0">
+	<a id="page-primary"
+       permission="@Policies.CanCreateInvoice"
+       asp-action="CreateInvoice" 
+       asp-route-storeId="@Model.StoreId" 
+       asp-route-searchTerm="@Model.SearchTerm" 
+       class="btn btn-primary mt-3 mt-sm-0">
         Create Invoice
     </a>
 </div>
@@ -154,8 +159,8 @@
                             <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
                                    data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
                                    placeholder="Start Date" />
-                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                <span class="fa fa-times"></span>
+                            <button type="button" class="btn btn-secondary input-group-clear" title="Clear">
+                                <vc:icon symbol="close" />
                             </button>
                         </div>
                     </div>
@@ -167,8 +172,8 @@
                             <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
                                    data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
                                    placeholder="End Date" />
-                            <button type="button" class="btn btn-primary input-group-clear" title="Clear">
-                                <span class="fa fa-times"></span>
+                            <button type="button" class="btn btn-secondary input-group-clear" title="Clear">
+                                <vc:icon symbol="close" />
                             </button>
                         </div>
                     </div>
@@ -281,7 +286,9 @@
                         <th class="date-col">
                             <div class="d-flex align-items-center gap-1">
                                 Date
-                                <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                                    <vc:icon symbol="time" />
+                                </button>
                             </div>
                         </th>
                         <th class="text-nowrap">Invoice Id</th>
@@ -304,18 +311,18 @@
                                 </div>
                                 <div class="d-inline-flex align-items-center gap-3">
                                     <button type="submit" name="command" value="archive" id="ArchiveSelected" class="btn btn-link">
-                                        <vc:icon symbol="archive" />
+                                        <vc:icon symbol="actions-archive" />
                                         Archive
                                     </button>
                                     @if (HasBooleanFilter("includearchived"))
                                     {
                                         <button type="submit" name="command" value="unarchive" id="UnarchiveSelected" class="btn btn-link">
-                                            <vc:icon symbol="archive" />
+                                            <vc:icon symbol="actions-archive" />
                                             Unarchive
                                         </button>
                                     }
                                     <button type="submit" name="command" value="cpfp" id="BumpFee" class="btn btn-link">
-                                        <vc:icon symbol="send" />
+                                        <vc:icon symbol="actions-send" />
                                         Bump fee
                                     </button>
                                 </div>

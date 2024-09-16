@@ -9,10 +9,7 @@ document.addEventListener("DOMContentLoaded",function () {
                 fontSize: displayFontSize,
                 defaultFontSize: displayFontSize,
                 keys: ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+'],
-                amounts: [null],
-                recentTransactions: [],
-                recentTransactionsLoading: false,
-                dateFormatter: new Intl.DateTimeFormat('default', { dateStyle: 'short', timeStyle: 'short' })
+                persistState: false
             }
         },
         computed: {
@@ -33,8 +30,12 @@ document.addEventListener("DOMContentLoaded",function () {
                 }
             },
             calculation () {
-                if (!this.tipNumeric && !(this.discountNumeric > 0 || this.discountPercentNumeric > 0) && this.amounts.length < 2) return null
-                let calc = this.amounts.map(amt => this.formatCurrency(amt, true)).join(' + ')
+                if (!this.tipNumeric && !(this.discountNumeric > 0 || this.discountPercentNumeric > 0) && this.amounts.length < 2 && this.cart.length === 0) return null
+                let calc = ''
+                const hasAmounts = this.amounts.length && this.amounts.reduce((sum, amt) => sum + parseFloat(amt || 0), 0) > 0;
+                if (this.cart.length) calc += this.cart.map(item => `${item.count} x ${item.title} (${this.formatCurrency(item.price, true)}) = ${this.formatCurrency((item.price||0) * item.count, true)}`).join(' + ')
+                if (this.cart.length && hasAmounts) calc += ' + '
+                if (hasAmounts) calc += this.amounts.map(amt => this.formatCurrency(amt || 0, true)).join(' + ')
                 if (this.discountNumeric > 0 || this.discountPercentNumeric > 0) calc += ` - ${this.formatCurrency(this.discountNumeric, true)} (${this.discountPercent}%)`
                 if (this.tipNumeric > 0) calc += ` + ${this.formatCurrency(this.tipNumeric, true)}`
                 if (this.tipPercent) calc += ` (${this.tipPercent}%)`
@@ -58,9 +59,6 @@ document.addEventListener("DOMContentLoaded",function () {
                         this.fontSize = Math.min(this.fontSize * gamma, this.defaultFontSize);
                     }
                 });
-            },
-            amounts (values) {
-                this.amount = values.reduce((total, current) => total + parseFloat(current || '0'), 0);
             }
         },
         methods: {
@@ -71,9 +69,8 @@ document.addEventListener("DOMContentLoaded",function () {
                     padR = parseFloat(styles.paddingRight);
                 return width - padL - padR;
             },
-            clear() {
-                this.amounts = [null];
-                this.tip = this.discount = this.tipPercent = this.discountPercent = null;
+            clearKeypad() {
+                this.clear();
                 this.mode = 'amounts';
             },
             applyKeyToValue(key, value, divisibility) {
@@ -91,7 +88,7 @@ document.addEventListener("DOMContentLoaded",function () {
                     if (key === 'C') {
                         if (!lastAmount && lastIndex === 0) {
                             // clear completely
-                            this.clear();
+                            this.clearKeypad();
                         } else if (!lastAmount) {
                             // remove latest value
                             this.amounts.pop();
@@ -118,37 +115,13 @@ document.addEventListener("DOMContentLoaded",function () {
             doubleClick (key) {
                 if (key === 'C') {
                     // clear completely
-                    this.clear();
-                }
-            },
-            closeModal() {
-                bootstrap.Modal.getInstance(this.$refs.RecentTransactions).hide();
-            },
-            displayDate(val) {
-                const date = new Date(val);
-                return this.dateFormatter.format(date);
-            },
-            async loadRecentTransactions() {
-                this.recentTransactionsLoading = true;
-                const { url } = this.$refs.RecentTransactions.dataset;
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) {
-                        this.recentTransactions = await response.json();
-                    }
-                } catch (error) {
-                    console.error(error);
-                } finally {
-                    this.recentTransactionsLoading = false;
+                    this.clearKeypad();
                 }
             }
         },
         created() {
             // We need to unset state in case user clicks the browser back button
             window.addEventListener('pagehide', () => { this.payButtonLoading = false })
-        },
-        mounted() {
-            this.$refs.RecentTransactions.addEventListener('show.bs.modal', this.loadRecentTransactions);
         }
     });
 });

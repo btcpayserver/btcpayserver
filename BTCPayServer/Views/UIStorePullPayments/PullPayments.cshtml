@@ -1,5 +1,4 @@
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.Client.Models
@@ -9,25 +8,15 @@
     var storeId = Context.GetStoreData().Id;
     ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull Payments", storeId);
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
-    string startDateSortOrder = null;
-    switch (nextStartDateSortOrder)
+    var startDateSortOrder = nextStartDateSortOrder switch
     {
-        case "asc":
-            startDateSortOrder = "desc";
-            break;
-        case "desc":
-            startDateSortOrder = "asc";
-            break;
-    }
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
 
-    var sortIconClass = "fa-sort";
-    if (startDateSortOrder != null)
-    {
-        sortIconClass = $"fa-sort-alpha-{startDateSortOrder}";
-    }
-
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    const string sortByDesc = "Sort by date descending...";
+    const string sortByAsc = "Sort by date ascending...";
 }
 
 @section PageHeadContent {
@@ -38,14 +27,14 @@
     </style>
 }
 
-<div class="sticky-header d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2>
         @ViewData["Title"]
         <a href="#descriptor" data-bs-toggle="collapse">
             <vc:icon symbol="info" />
         </a>
     </h2>
-    <a permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="NewPullPayment" asp-route-storeId="@storeId" class="btn btn-primary" role="button" id="NewPullPayment">
+    <a id="page-primary" permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="NewPullPayment" asp-route-storeId="@storeId" class="btn btn-primary" role="button">
         Create Pull Payment
     </a>
 </div>
@@ -87,11 +76,6 @@
             <span>Completed:&nbsp;<span class="float-end">@pp.Progress.CompletedFormatted</span></span>
             <br />
             <span>Limit:&nbsp;<span class="float-end">@pp.Progress.LimitFormatted</span></span>
-            @if (pp.Progress.ResetIn != null)
-            {
-                <br />
-                <span>Resets in:&nbsp;<span class="float-end">@pp.Progress.ResetIn</span></span>
-            }
             @if (pp.Progress.EndIn != null)
             {
                 <br />
@@ -111,9 +95,11 @@
                            class="text-nowrap"
                            title="@(nextStartDateSortOrder == "desc" ? sortByAsc : sortByDesc)">
                             Start
-                            <span class="fa @(sortIconClass)"></span>
+                            <vc:icon symbol="actions-sort-@(startDateSortOrder ?? nextStartDateSortOrder ?? "desc")" />
                         </a>
-                        <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                            <vc:icon symbol="time" />
+                        </button>
                     </div>
                 </th>
                 <th scope="col">Name</th>

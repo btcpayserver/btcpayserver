@@ -16,10 +16,7 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql("UPDATE \"Stores\" SET \"StoreBlob\"=jsonb_set(\"StoreBlob\", \'{preferredExchange}\', \'{\"oasis_trade\": \"oasisdev\", \"gdax\":\"coinbasepro\", \"coinaverage\":\"coingecko\"}\'::jsonb->(\"StoreBlob\"->>\'preferredExchange\')) WHERE \"StoreBlob\"->>\'preferredExchange\' = ANY (ARRAY[\'oasis_trade\', \'gdax\', \'coinaverage\']);");
-            }
+            migrationBuilder.Sql("UPDATE \"Stores\" SET \"StoreBlob\"=jsonb_set(\"StoreBlob\", \'{preferredExchange}\', \'{\"oasis_trade\": \"oasisdev\", \"gdax\":\"coinbasepro\", \"coinaverage\":\"coingecko\"}\'::jsonb->(\"StoreBlob\"->>\'preferredExchange\')) WHERE \"StoreBlob\"->>\'preferredExchange\' = ANY (ARRAY[\'oasis_trade\', \'gdax\', \'coinaverage\']);");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

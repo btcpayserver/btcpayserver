@@ -17,13 +17,13 @@
 	@if (UnseenCount == "0")
 	{
 		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="Notifications">
-			<Icon Symbol="notifications" />
+			<Icon Symbol="nav-notifications" />
 		</a>
 	}
 	else
 	{
 		<button id="NotificationsHandle" class="mainMenuButton" title="Notifications" type="button" data-bs-toggle="dropdown">
-			<Icon Symbol="notifications" />
+			<Icon Symbol="nav-notifications" />
 			<span class="badge rounded-pill bg-danger p-1 ms-1" id="NotificationsBadge">@UnseenCount</span>
 		</button>
 	}
@@ -37,7 +37,7 @@
 			<div id="NotificationsList" v-pre>
 				@foreach (var n in Last5)
 				{
-					<a href="@NotificationUrl(n.Id)" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4">
+                    <a href="@NotificationUrl(n.Id)" class="notification d-flex align-items-center dropdown-item border-bottom border-light py-3 px-4" @key="@n.Id">
 						<div class="me-3">
 							<Icon Symbol="@NotificationIcon(n.Identifier)" />
 						</div>
@@ -99,6 +99,7 @@
 	{
 		UnseenCount = SeenCount(res.Count);
 		Last5 = res.Items;
+        StateHasChanged();
 	}
 
 	protected override async Task OnParametersSetAsync()
@@ -134,6 +135,7 @@
 		{
 			await _NotificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
 			UnseenCount = "0";
+            StateHasChanged();
 		}
 	}
 
@@ -149,7 +151,9 @@
 			"external-payout-transaction" => "notifications-payout",
 			"payout_awaitingapproval" => "notifications-payout",
 			"payout_awaitingpayment" => "notifications-payout-approved",
-			"newversion" => "notifications-new-version",
+            "inviteaccepted" => "notifications-account",
+			"newuserrequiresapproval" => "notifications-account",
+            "newversion" => "notifications-new-version",
 			_ => "note"
 		};
 	}

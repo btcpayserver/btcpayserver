@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Confirm addresses", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Confirm addresses", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -19,8 +19,10 @@
 {
     <div asp-validation-summary="All"></div>
 }
-
-<partial name="LocalhostBrowserSupport" />
+@if (Model.Method is WalletSetupMethod.Hardware)
+{
+	<partial name="LocalhostBrowserSupport" />
+}
 
 <template id="modal-template">
     <div class="modal-dialog" role="document">
@@ -45,6 +47,7 @@
         </form>
     </div>
 </template>
+
 <div id="btcpayservervault" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true"></div>
 
 <form method="post" asp-controller="UIStores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
@@ -54,7 +57,7 @@
     <input asp-for="RootFingerprint" type="hidden" />
     <input asp-for="KeyPath" type="hidden" />
 
-    <div class="mb-3 table-responsive-sm">
+    <div class="table-responsive-sm">
         <table class="table table-hover w-auto mx-auto">
             <thead>
             <tr>
@@ -109,7 +112,6 @@
             document.querySelectorAll("[data-address]").forEach(link => {
                 link.addEventListener("click", async event => {
                     event.preventDefault();
-
                     const $link = event.currentTarget;
                     const address = JSON.parse($link.dataset.address);
                     const rootedKeyPath = JSON.parse($link.dataset.rootedKeyPath);
@@ -130,8 +132,9 @@
                         vaultUI.closeBridge();
                     });
 
-                    while (!await vaultUI.askForDevice()) {}
+                    $$modal.modal("show");
 
+                    while (!await vaultUI.askForDevice()) {}
                     await vaultUI.askForDisplayAddress(rootedKeyPath);
 
                     $$modal.modal("hide");

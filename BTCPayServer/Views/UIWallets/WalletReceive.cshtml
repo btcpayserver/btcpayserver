@@ -31,12 +31,8 @@
     <input type="hidden" asp-for="ReturnUrl" />
     @if (string.IsNullOrEmpty(Model.Address))
     {
-        <div class="d-grid gap-3 col-sm-10 col-md-8 col-lg-7 col-xxl-6 mx-auto">
-            <button id="generateButton" class="btn btn-primary" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
-            @if (env.CheatMode)
-            {
-                <button type="submit" name="command" value="fill-wallet" class="btn btn-info">Cheat Mode: Send transactions to this wallet</button>
-            }
+        <div class="payment-box mb-3">
+            <button id="generateButton" class="btn btn-primary w-100" type="submit" name="command" value="generate-new-address">Generate next available @Model.CryptoCode address</button>
         </div>
     }
     else
@@ -49,12 +45,7 @@
                 <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
             </div>
             <div class="row mt-4">
-                <div class="col-12 col-sm-6">
-                    <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
-                </div>
-                <div class="col-12 col-sm-6 mt-4 mt-sm-0">
-                    <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
-                </div>
+                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
             </div>
         </noscript>
         <div class="nav flex-wrap align-items-center justify-content-center gap-2 mb-4">
@@ -66,8 +57,11 @@
                 <div class="tab-pane payment-box" id="link-tab" role="tabpanel">
                     <div class="qr-container" data-clipboard="@Model.PaymentLink">
                         <vc:qr-code data="@Model.PaymentLink"/>
-                        <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
-                    </div>
+						@if (Model.CryptoImage is not null)
+						{
+							<img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+						}
+					</div>
                     <div class="input-group mt-3">
                         <div class="form-floating">
                             <vc:truncate-center text="@Model.PaymentLink" padding="15" elastic="true" classes="form-control-plaintext" id="PaymentLink" />
@@ -78,8 +72,11 @@
                 <div class="tab-pane payment-box show active" id="address-tab" role="tabpanel">
                     <div class="qr-container" data-clipboard="@Model.Address">
                         <vc:qr-code data="@Model.Address"/>
-                        <img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
-                    </div>
+						@if (Model.CryptoImage is not null)
+						{
+							<img src="@Model.CryptoImage" class="qr-icon" alt="@Model.CryptoCode"/>
+						}
+					</div>
                     <div class="input-group mt-3">
                         <div class="form-floating">
                             <vc:truncate-center text="@Model.Address" padding="15" elastic="true" classes="form-control-plaintext" id="Address" />
@@ -98,11 +95,15 @@
                     </div>
                 </div>
             </div>
-    
-            <div class="d-grid gap-3 mt-4">
+            <div class="mt-4">
                 <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
-                <button type="submit" name="command" value="unreserve-current-address" class="btn btn-secondary w-100">Unreserve this address</button>
             </div>
+        </div>
+    }
+    @if (env.CheatMode)
+    {
+        <div class="payment-box mt-3">
+            <button type="submit" name="command" value="fill-wallet" class="btn btn-outline-info w-100">Cheat Mode: Send funds to this wallet</button>
         </div>
     }
 </form>

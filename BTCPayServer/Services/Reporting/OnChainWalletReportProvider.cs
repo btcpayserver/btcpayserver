@@ -3,6 +3,9 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Data;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Dapper;
 using NBitcoin;
@@ -14,18 +17,18 @@ public class OnChainWalletReportProvider : ReportProvider
     public OnChainWalletReportProvider(
         NBXplorerConnectionFactory NbxplorerConnectionFactory,
         StoreRepository storeRepository,
-        BTCPayNetworkProvider networkProvider,
+        PaymentMethodHandlerDictionary handlers,
         WalletRepository walletRepository)
     {
         this.NbxplorerConnectionFactory = NbxplorerConnectionFactory;
         StoreRepository = storeRepository;
-        NetworkProvider = networkProvider;
+        _handlers = handlers;
         WalletRepository = walletRepository;
     }
 
     private NBXplorerConnectionFactory NbxplorerConnectionFactory { get; }
     private StoreRepository StoreRepository { get; }
-    private BTCPayNetworkProvider NetworkProvider { get; }
+    private PaymentMethodHandlerDictionary _handlers;
     private WalletRepository WalletRepository { get; }
     public override string Name => "Wallets";
     ViewDefinition CreateViewDefinition()
@@ -68,9 +71,10 @@ public class OnChainWalletReportProvider : ReportProvider
         if (store is null)
             return;
         var interval = DateTimeOffset.UtcNow - queryContext.From;
-        foreach (var settings in store.GetDerivationSchemeSettings(NetworkProvider))
+        foreach (var (pmi, settings) in store.GetPaymentMethodConfigs<DerivationSchemeSettings>(_handlers))
         {
-            var walletId = new WalletId(store.Id, settings.Network.CryptoCode);
+            var network = ((IHasNetwork)_handlers[pmi]).Network;
+            var walletId = new WalletId(store.Id, network.CryptoCode);
             var command = new CommandDefinition(
             commandText:
             "SELECT r.tx_id, r.seen_at, t.blk_id, t.blk_height, r.balance_change " +
@@ -79,9 +83,9 @@ public class OnChainWalletReportProvider : ReportProvider
             "ORDER BY r.seen_at",
             parameters: new
             {
-                asset_id = GetAssetId(settings.Network),
-                wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(settings.Network.CryptoCode, settings.AccountDerivation.ToString()),
-                code = settings.Network.CryptoCode,
+                asset_id = GetAssetId(network),
+                wallet_id = NBXplorer.Client.DBUtils.nbxv1_get_wallet_id(network.CryptoCode, settings.AccountDerivation.ToString()),
+                code = network.CryptoCode,
                 interval
             },
             cancellationToken: cancellation);
@@ -95,11 +99,11 @@ public class OnChainWalletReportProvider : ReportProvider
                 var values = queryContext.AddData();
                 var balanceChange = Money.Satoshis((long)r.balance_change).ToDecimal(MoneyUnit.BTC);
                 values.Add(date);
-                values.Add(settings.Network.CryptoCode);
+                values.Add(network.CryptoCode);
                 values.Add((string)r.tx_id);
                 values.Add(null);
                 values.Add((long?)r.blk_height is not null);
-                values.Add(new FormattedAmount(balanceChange, settings.Network.Divisibility).ToJObject());
+                values.Add(new FormattedAmount(balanceChange, network.Divisibility).ToJObject());
             }
             var objects = await WalletRepository.GetWalletObjects(new GetWalletObjectsQuery
             {
@@ -119,14 +123,8 @@ public class OnChainWalletReportProvider : ReportProvider
 
     private string? GetAssetId(BTCPayNetwork network)
     {
-#if ALTCOINS
         if (network is Plugins.Altcoins.ElementsBTCPayNetwork elNetwork)
-        {
-            if (elNetwork.CryptoCode == elNetwork.NetworkCryptoCode)
-                return "";
-            return elNetwork.AssetId.ToString();
-        }
-#endif
+            return elNetwork.IsNativeAsset ? "" : elNetwork.AssetId.ToString();
         return null;
     }
 }

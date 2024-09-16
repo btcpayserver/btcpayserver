@@ -1,59 +1,61 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
 @model List<BTCPayServer.Data.FormData>
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
     ViewData.SetActivePage(StoreNavPages.Forms, "Forms");
     var storeId = Context.GetCurrentStoreId();
 }
 
+<div class="sticky-header">
+    <h2>
+        <span>@ViewData["Title"]</span>
+        <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+            <vc:icon symbol="info" />
+        </a>
+    </h2>
+	<a id="page-primary" asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyStoreSettings">
+        Create Form
+    </a>
+</div>
+
 <div class="row">
     <div class="col-xxl-constrain col-xl-10">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-			<h3 class="mb-0">
-				<span>@ViewData["Title"]</span>
-				<a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
-					<vc:icon symbol="info" />
-				</a>
-			</h3>
-            <a asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateForm">
-                Create Form
-            </a>
-        </div>
         @if (Model.Any())
         {
-            <table class="table table-hover table-responsive-md">
-                <thead>
-                    <tr>
-                        <th>Name</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var item in Model)
-                    {
+            <div class="table-responsive-md mt-0">
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <td>
-                                <a asp-action="Modify" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Edit-@item.Name">@item.Name</a>
-                            </td>
-                            
-                            <td class="text-end">
-                                <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="DELETE">Remove</a> - 
-                                <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name">View</a>
-                            </td>
+                            <th>Name</th>
+                            <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>
+                                    <a asp-action="Modify" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Edit-@item.Name" permission="@Policies.CanModifyStoreSettings">@item.Name</a>
+                                    <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" not-permission="@Policies.CanModifyStoreSettings">@item.Name</a>
+                                </td>
+                                <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
+                                    <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="DELETE">Remove</a> - 
+                                    <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name">View</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
         }
         else
         {
-            <p class="text-secondary mt-3">
+            <p class="text-secondary">
                 There are no forms yet.
             </p>
         }
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete form", "This form will be removed from this store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete form", "This form will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />

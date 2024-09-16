@@ -42,15 +42,7 @@ namespace BTCPayServer.Controllers
                 psbtDestination.Amount = Money.Coins(transactionOutput.Amount.Value);
                 psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
             }
-
-            if (network.SupportRBF)
-            {
-                if (sendModel.AllowFeeBump is WalletSendModel.ThreeStateBool.Yes)
-                    psbtRequest.RBF = true;
-                if (sendModel.AllowFeeBump is WalletSendModel.ThreeStateBool.No)
-                    psbtRequest.RBF = false;
-            }
-
+            psbtRequest.RBF = network.SupportRBF ? true : null;
             psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO;
 
             psbtRequest.FeePreference = new FeePreference();
@@ -87,7 +79,7 @@ namespace BTCPayServer.Controllers
             // we just assume that it is 20 blocks
             var assumedFeeRate = await fr.GetFeeRateAsync(20);
 
-            var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(NetworkProvider, network.CryptoCode))?.AccountDerivation;
+            var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(_handlers, network.CryptoCode))?.AccountDerivation;
             if (derivationScheme is null)
                 return NotFound();
 
@@ -159,13 +151,12 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletPSBTViewModel vm, string command = null)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
+            var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
 
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
 
             if (psbt is null || vm.InvalidPSBT)
             {
-                ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
                 return View("WalletSigningOptions", new WalletSigningOptionsModel
                 {
                     SigningContext = vm.SigningContext,
@@ -249,10 +240,9 @@ namespace BTCPayServer.Controllers
             vm.NBXSeedAvailable = await CanUseHotWallet() && derivationSchemeSettings.IsHotWallet;
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
 
-            var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
+            var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT)
             {
-                ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
                 return View(vm);
             }
             if (psbt is null)
@@ -485,7 +475,7 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletPSBTViewModel vm, string command, CancellationToken cancellationToken = default)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            PSBT psbt = await vm.GetPSBT(network.NBitcoinNetwork);
+            PSBT psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT || psbt is null)
             {
                 if (vm.InvalidPSBT)
@@ -645,16 +635,14 @@ namespace BTCPayServer.Controllers
             WalletId walletId, WalletPSBTCombineViewModel vm)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var psbt = await vm.GetPSBT(network.NBitcoinNetwork);
+            var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (psbt == null)
             {
-                ModelState.AddModelError(nameof(vm.PSBT), "Invalid PSBT");
                 return View(vm);
             }
-            var sourcePSBT = vm.GetSourcePSBT(network.NBitcoinNetwork);
-            if (sourcePSBT == null)
+            var sourcePSBT = vm.GetSourcePSBT(network.NBitcoinNetwork, ModelState);
+            if (sourcePSBT is null)
             {
-                ModelState.AddModelError(nameof(vm.OtherPSBT), "Invalid PSBT");
                 return View(vm);
             }
             sourcePSBT = sourcePSBT.Combine(psbt);

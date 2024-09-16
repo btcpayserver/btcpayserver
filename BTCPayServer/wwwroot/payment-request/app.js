@@ -161,11 +161,11 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                     icon: "exclamation-triangle"
                 });
             });
-            eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
-                var onChain = type.toLowerCase() === "btclike";
+            eventAggregator.$on("payment-received", function (amount, currency, prettyPMI, pmi) {
+                var onChain = pmi.endsWith('-CHAIN');
                 var amountFormatted = parseFloat(amount).noExponents();
                 var icon = onChain ? "plus" : "bolt";
-                var title = "New payment of " + amountFormatted + " " + cryptoCode + " " + (onChain ? "On Chain" : "LN");
+                var title = "New payment of " + amountFormatted + " " + currency + " " + prettyPMI;
                 Vue.toasted.success(title, Object.assign({}, toastOptions), { icon });
             });
             eventAggregator.$on("info-updated", function (model) {

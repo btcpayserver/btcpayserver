@@ -9,6 +9,9 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Hwi;
 using BTCPayServer.ModelBinders;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -22,17 +25,15 @@ namespace BTCPayServer.Controllers
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanModifyStoreSettings)]
     public class UIVaultController : Controller
     {
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly IAuthorizationService _authorizationService;
 
-        public UIVaultController(BTCPayNetworkProvider networks, IAuthorizationService authorizationService)
+        public UIVaultController(PaymentMethodHandlerDictionary handlers, IAuthorizationService authorizationService)
         {
-            Networks = networks;
+            _handlers = handlers;
             _authorizationService = authorizationService;
         }
 
-        public BTCPayNetworkProvider Networks { get; }
-
-        [HttpGet]
         [Route("{cryptoCode}/xpub")]
         [Route("wallets/{walletId}/xpub")]
         public async Task<IActionResult> VaultBridgeConnection(string cryptoCode = null,
@@ -46,8 +47,7 @@ namespace BTCPayServer.Controllers
             using (var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10)))
             {
                 var cancellationToken = cts.Token;
-                var network = Networks.GetNetwork<BTCPayNetwork>(cryptoCode);
-                if (network == null)
+                if (!_handlers.TryGetValue(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), out var h) || h is not IHasNetwork { Network: var network })
                     return NotFound();
                 var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
                 var vaultClient = new VaultClient(websocket);
@@ -60,7 +60,11 @@ namespace BTCPayServer.Controllers
                 HDFingerprint? fingerprint = null;
                 string password = null;
                 var websocketHelper = new WebSocketHelper(websocket);
-
+                async Task FetchFingerprint()
+                {
+                    fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), cancellationToken)).ExtPubKey.ParentFingerprint;
+                    device = new HwiDeviceClient(hwi, DeviceSelectors.FromFingerprint(fingerprint.Value), deviceEntry.Model, fingerprint) { Password = password };
+                }
                 async Task<bool> RequireDeviceUnlocking()
                 {
                     if (deviceEntry == null)
@@ -91,6 +95,13 @@ namespace BTCPayServer.Controllers
                             return true;
                         }
                     }
+                    if (IsTrezorOne(deviceEntry) && password is null)
+                    {
+                        fingerprint = null; // There will be a new fingerprint
+                        device = new HwiDeviceClient(hwi, DeviceSelectors.FromDeviceType("trezor", deviceEntry.Path), deviceEntry.Model, null);
+                        await websocketHelper.Send("{ \"error\": \"need-passphrase\"}", cancellationToken);
+                        return true;
+                    }
                     return false;
                 }
 
@@ -118,7 +129,7 @@ namespace BTCPayServer.Controllers
                                 }
                                 if (fingerprint is null)
                                 {
-                                    fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), cancellationToken)).ExtPubKey.ParentFingerprint;
+                                    await FetchFingerprint();
                                 }
                                 await websocketHelper.Send("{ \"info\": \"ready\"}", cancellationToken);
                                 o = JObject.Parse(await websocketHelper.NextMessageAsync(cancellationToken));
@@ -211,14 +222,26 @@ namespace BTCPayServer.Controllers
                                 var factory = network.NBXplorerNetwork.DerivationStrategyFactory;
                                 if (fingerprint is null)
                                 {
-                                    fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), cancellationToken)).ExtPubKey.ParentFingerprint;
+                                    await FetchFingerprint();
                                 }
                                 result["fingerprint"] = fingerprint.Value.ToString();
 
                                 DerivationStrategyBase strategy = null;
-                                KeyPath keyPath = null;
-                                BitcoinExtPubKey xpub = null;
 
+                                KeyPath keyPath = (addressType switch
+                                {
+                                    "taproot" => new KeyPath("86'"),
+                                    "segwit" => new KeyPath("84'"),
+                                    "segwitWrapped" => new KeyPath("49'"),
+                                    "legacy" => new KeyPath("44'"),
+                                    _ => null
+                                })?.Derive(network.CoinType).Derive(accountNumber, true);
+                                if (keyPath is null)
+                                {
+                                    await websocketHelper.Send("{ \"error\": \"invalid-addresstype\"}", cancellationToken);
+                                    continue;
+                                }
+                                BitcoinExtPubKey xpub = await device.GetXPubAsync(keyPath);
                                 if (!network.NBitcoinNetwork.Consensus.SupportSegwit && addressType != "legacy")
                                 {
                                     await websocketHelper.Send("{ \"error\": \"segwit-notsupported\"}", cancellationToken);
@@ -232,8 +255,6 @@ namespace BTCPayServer.Controllers
                                 }
                                 if (addressType == "taproot")
                                 {
-                                    keyPath = new KeyPath("86'").Derive(network.CoinType).Derive(accountNumber, true);
-                                    xpub = await device.GetXPubAsync(keyPath);
                                     strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
                                     {
                                         ScriptPubKeyType = ScriptPubKeyType.TaprootBIP86
@@ -241,8 +262,6 @@ namespace BTCPayServer.Controllers
                                 }
                                 else if (addressType == "segwit")
                                 {
-                                    keyPath = new KeyPath("84'").Derive(network.CoinType).Derive(accountNumber, true);
-                                    xpub = await device.GetXPubAsync(keyPath);
                                     strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
                                     {
                                         ScriptPubKeyType = ScriptPubKeyType.Segwit
@@ -250,8 +269,6 @@ namespace BTCPayServer.Controllers
                                 }
                                 else if (addressType == "segwitWrapped")
                                 {
-                                    keyPath = new KeyPath("49'").Derive(network.CoinType).Derive(accountNumber, true);
-                                    xpub = await device.GetXPubAsync(keyPath);
                                     strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
                                     {
                                         ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH
@@ -259,18 +276,12 @@ namespace BTCPayServer.Controllers
                                 }
                                 else if (addressType == "legacy")
                                 {
-                                    keyPath = new KeyPath("44'").Derive(network.CoinType).Derive(accountNumber, true);
-                                    xpub = await device.GetXPubAsync(keyPath);
                                     strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
                                     {
                                         ScriptPubKeyType = ScriptPubKeyType.Legacy
                                     });
                                 }
-                                else
-                                {
-                                    await websocketHelper.Send("{ \"error\": \"invalid-addresstype\"}", cancellationToken);
-                                    continue;
-                                }
+
                                 result.Add(new JProperty("strategy", strategy.ToString()));
                                 result.Add(new JProperty("accountKey", xpub.ToString()));
                                 result.Add(new JProperty("keyPath", keyPath.ToString()));
@@ -315,7 +326,6 @@ askdevice:
                                 fingerprint = device.Fingerprint;
                                 JObject json = new JObject();
                                 json.Add("model", model);
-                                json.Add("fingerprint", device.Fingerprint?.ToString());
                                 await websocketHelper.Send(json.ToString(), cancellationToken);
                                 break;
                         }
@@ -386,6 +396,10 @@ askdevice:
         {
             return deviceEntry.Model.Contains("Trezor_T", StringComparison.OrdinalIgnoreCase);
         }
+        private static bool IsTrezorOne(HwiEnumerateEntry deviceEntry)
+        {
+            return deviceEntry.Model.Contains("trezor_1", StringComparison.OrdinalIgnoreCase);
+        }
 
         public StoreData CurrentStore
         {
@@ -397,11 +411,8 @@ askdevice:
 
         private DerivationSchemeSettings GetDerivationSchemeSettings(WalletId walletId)
         {
-            var paymentMethod = CurrentStore
-                            .GetSupportedPaymentMethods(Networks)
-                            .OfType<DerivationSchemeSettings>()
-                            .FirstOrDefault(p => p.PaymentId.PaymentType == Payments.PaymentTypes.BTCLike && p.PaymentId.CryptoCode == walletId.CryptoCode);
-            return paymentMethod;
+            var pmi = Payments.PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
+            return CurrentStore.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, _handlers);
         }
     }
 }

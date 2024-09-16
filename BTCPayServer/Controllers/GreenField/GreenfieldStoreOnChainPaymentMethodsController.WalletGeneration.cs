@@ -6,36 +6,41 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
     public partial class GreenfieldStoreOnChainPaymentMethodsController
     {
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/generate")]
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/generate")]
         [EnableCors(CorsPolicies.All)]
-        public async Task<IActionResult> GenerateOnChainWallet(string storeId, string cryptoCode,
-            GenerateWalletRequest request)
+        public async Task<IActionResult> GenerateOnChainWallet(string storeId,
+            [ModelBinder(typeof(PaymentMethodIdModelBinder))]
+            PaymentMethodId paymentMethodId,
+            GenerateOnChainWalletRequest request)
         {
-
-            AssertCryptoCodeWallet(cryptoCode, out var network, out var wallet);
+            request ??= new GenerateOnChainWalletRequest();
+            AssertCryptoCodeWallet(paymentMethodId, out var network, out _);
 
             if (!_walletProvider.IsAvailable(network))
             {
                 return this.CreateAPIError(503, "not-available",
-                    $"{cryptoCode} services are not currently available");
+                    $"{paymentMethodId} services are not currently available");
             }
+            if (request.Label is { Length: > 300 })
+                ModelState.AddModelError(nameof(request.Label), "Label is too long (Max 300 characters)");
 
-            var method = GetExistingBtcLikePaymentMethod(cryptoCode);
-            if (method != null)
+            if (IsConfigured(paymentMethodId, out _))
             {
                 return this.CreateAPIError("already-configured",
-                    $"{cryptoCode} wallet is already configured for this store");
+                    $"{paymentMethodId} wallet is already configured for this store");
             }
 
             var canUseHotWallet = await CanUseHotWallet();
@@ -60,25 +65,35 @@ namespace BTCPayServer.Controllers.Greenfield
             GenerateWalletResponse response;
             try
             {
-                response = await client.GenerateWalletAsync(request);
+                response = await client.GenerateWalletAsync(new()
+                {
+                    AccountNumber = request.AccountNumber,
+                    ExistingMnemonic = request.ExistingMnemonic?.ToString(),
+                    WordList = request.WordList,
+                    WordCount = request.WordCount,
+                    ScriptPubKeyType = request.ScriptPubKeyType,
+                    Passphrase = request.Passphrase,
+                    ImportKeysToRPC = request.ImportKeysToRPC,
+                    SavePrivateKeys = request.SavePrivateKeys,
+                });
                 if (response == null)
                 {
                     return this.CreateAPIError(503, "not-available",
-                        $"{cryptoCode} services are not currently available");
+                        $"{paymentMethodId} services are not currently available");
                 }
             }
             catch (Exception e)
             {
                 return this.CreateAPIError(503, "not-available",
-                    $"{cryptoCode} error: {e.Message}");
+                    $"{paymentMethodId} error: {e.Message}");
             }
 
             var derivationSchemeSettings = new DerivationSchemeSettings(response.DerivationScheme, network);
 
             derivationSchemeSettings.Source =
-                string.IsNullOrEmpty(request.ExistingMnemonic) ? "NBXplorerGenerated" : "ImportedSeed";
+                request.ExistingMnemonic is null ? "NBXplorerGenerated" : "ImportedSeed";
             derivationSchemeSettings.IsHotWallet = request.SavePrivateKeys;
-
+            derivationSchemeSettings.Label = request.Label;
             var accountSettings = derivationSchemeSettings.GetSigningAccountKeySettings();
             accountSettings.AccountKeyPath = response.AccountKeyPath.KeyPath;
             accountSettings.RootFingerprint = response.AccountKeyPath.MasterFingerprint;
@@ -86,16 +101,22 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var store = Store;
             var storeBlob = store.GetStoreBlob();
-            store.SetSupportedPaymentMethod(new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike),
+            var handler = _handlers[paymentMethodId];
+            store.SetPaymentMethodConfig(_handlers[paymentMethodId],
                 derivationSchemeSettings);
             store.SetStoreBlob(storeBlob);
             await _storeRepository.UpdateStore(store);
-            var rawResult = GetExistingBtcLikePaymentMethod(cryptoCode, store);
-            var result = new OnChainPaymentMethodDataWithSensitiveData(rawResult.CryptoCode, rawResult.DerivationScheme,
-                rawResult.Enabled, rawResult.Label, rawResult.AccountKeyPath, response.GetMnemonic(), derivationSchemeSettings.PaymentId.ToStringNormalized());
+            
+            var result = new GenerateOnChainWalletResponse()
+            {
+                Enabled = !storeBlob.IsExcluded(paymentMethodId),
+                PaymentMethodId = paymentMethodId.ToString(),
+                Config = ((JObject)JToken.FromObject(derivationSchemeSettings, handler.Serializer.ForAPI())).ToObject<GenerateOnChainWalletResponse.ConfigData>(handler.Serializer.ForAPI())
+            };
+            result.Mnemonic = response.GetMnemonic();
             _eventAggregator.Publish(new WalletChangedEvent()
             {
-                WalletId = new WalletId(storeId, cryptoCode)
+                WalletId = new WalletId(storeId, network.CryptoCode)
             });
             return Ok(result);
         }

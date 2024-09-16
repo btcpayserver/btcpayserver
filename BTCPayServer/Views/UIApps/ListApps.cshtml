@@ -5,17 +5,35 @@
 @inject AppService AppService
 @{
     ViewData.SetActivePage(AppsNavPages.Index, "Apps");
-    var storeNameSortOrder = (string)ViewData["StoreNameSortOrder"];
-    var appNameSortOrder = (string)ViewData["AppNameSortOrder"];
-    var appTypeSortOrder = (string)ViewData["AppTypeSortOrder"];
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    var nextAppNameSortOrder = (string)ViewData["AppNameNextSortOrder"];
+    var nextAppTypeSortOrder = (string)ViewData["AppTypeNextSortOrder"];
+    var nextStoreNameSortOrder = (string)ViewData["StoreNameNextSortOrder"];
+    var appNameSortOrder = nextAppNameSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    var appTypeSortOrder = nextAppTypeSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    var storeNameSortOrder = nextStoreNameSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    const string sortByDesc = "Sort by descending...";
+    const string sortByAsc = "Sort by ascending...";
 }
 
 <partial name="_StatusMessage" />
 
-<div class="d-sm-flex align-items-center justify-content-between mb-2">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2>
         @ViewData["Title"]
         <small>
             <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
@@ -23,101 +41,99 @@
             </a>
         </small>
     </h2>
-    <a asp-action="CreateApp" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary mt-3 mt-sm-0" role="button" id="CreateNewApp">Create a new app</a>
+	<a id="page-primary" asp-action="CreateApp" asp-route-storeId="@Context.GetStoreData().Id" class="btn btn-primary" role="button">Create a new app</a>
 </div>
 
-<div class="row">
-    <div class="col-lg-12">
-        @if (Model.Apps.Any())
-        {
-            <table class="table table-hover table-responsive-md">
-                <thead>
+<div class="table-responsive-md">
+    @if (Model.Apps.Any())
+    {
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>
+                    <a
+                        asp-action="ListApps"
+                        asp-route-storeId="@Context.GetStoreData().Id"
+                        asp-route-sortOrder="@(nextAppNameSortOrder ?? "asc")"
+                        asp-route-sortOrderColumn="AppName"
+                        class="text-nowrap"
+                        title="@(appNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                    >
+                        Name
+                        <vc:icon symbol="actions-sort-alpha-@(appNameSortOrder ?? nextAppNameSortOrder ?? "desc")" />
+                    </a>
+                </th>
+                <th>
+                    <a
+                        asp-action="ListApps"
+                        asp-route-storeId="@Context.GetStoreData().Id"
+                        asp-route-sortOrder="@(nextAppTypeSortOrder ?? "asc")"
+                        asp-route-sortOrderColumn="AppType"
+                        class="text-nowrap"
+                        title="@(appTypeSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                    >
+                        App Type
+                        <vc:icon symbol="actions-sort-alpha-@(appTypeSortOrder ?? nextAppTypeSortOrder ?? "desc")" />
+                    </a>
+                </th>
+                <th>
+                    <a
+                        asp-action="ListApps"
+                        asp-route-storeId="@Context.GetStoreData().Id"
+                        asp-route-sortOrder="@(nextStoreNameSortOrder ?? "asc")"
+                        asp-route-sortOrderColumn="StoreName"
+                        class="text-nowrap"
+                        title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
+                    >
+                        Store
+                        <vc:icon symbol="actions-sort-alpha-@(storeNameSortOrder ?? nextStoreNameSortOrder ?? "desc")" />
+                    </a>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var app in Model.Apps)
+            {
+                var appType = AppService.GetAppType(app.AppType)!;
+                var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = app.AppType };
+                var url = await appType.ConfigureLink(appData);
                 <tr>
-                    <th>
-                        <a
-                            asp-action="ListApps"
-                            asp-route-storeId="@Context.GetStoreData().Id"
-                            asp-route-sortOrder="@(appNameSortOrder ?? "asc")"
-                            asp-route-sortOrderColumn="AppName"
-                            class="text-nowrap"
-                            title="@(appNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
-                        >
-                            Name
-                            <span class="fa @(appNameSortOrder == "asc" ? "fa-sort-alpha-desc" : appNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
-                        </a>
-                    </th>
-                    <th>
-                        <a
-                            asp-action="ListApps"
-                            asp-route-storeId="@Context.GetStoreData().Id"
-                            asp-route-sortOrder="@(appTypeSortOrder ?? "asc")"
-                            asp-route-sortOrderColumn="AppType"
-                            class="text-nowrap"
-                            title="@(appTypeSortOrder == "desc" ? sortByDesc : sortByAsc)"
-                        >
-                            App Type
-                            <span class="fa @(appTypeSortOrder == "asc" ? "fa-sort-alpha-desc" : appTypeSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
-                        </a>
-                    </th>
-                    <th>
-                        <a
-                            asp-action="ListApps"
-                            asp-route-storeId="@Context.GetStoreData().Id"
-                            asp-route-sortOrder="@(storeNameSortOrder ?? "asc")"
-                            asp-route-sortOrderColumn="StoreName"
-                            class="text-nowrap"
-                            title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
-                        >
-                            Store
-                            <span class="fa @(storeNameSortOrder == "asc" ? "fa-sort-alpha-desc" : storeNameSortOrder == "desc" ? "fa-sort-alpha-asc" : "fa-sort")" />
-                        </a>
-                    </th>
+                    <td>
+                        <a href="@url" permission="@Policies.CanModifyStoreSettings" id="App-@app.Id">@app.AppName</a>
+                        <span not-permission="@Policies.CanModifyStoreSettings">@app.AppName</span>
+                        @if (app.Archived)
+                        {
+                            <span class="badge bg-info ms-2">archived</span>
+                        }
+                    </td>
+                    <td>
+                        @AppService.GetAvailableAppTypes()[app.AppType]
+                        @{
+                            var viewStyle = @app.ViewStyle;
+                        }
+                        @if (!string.IsNullOrEmpty(viewStyle))
+                        {
+                            <span>-</span>
+                            <span>@viewStyle</span>
+                        }
+                    </td>
+                    <td>
+                        <span permission="@Policies.CanModifyStoreSettings">
+                            <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@app.StoreId">@app.StoreName</a>
+                        </span>
+                        <span not-permission="@Policies.CanModifyStoreSettings">@app.StoreName</span>
+                    </td>
                 </tr>
-                </thead>
-                <tbody>
-                @foreach (var app in Model.Apps)
-                {
-                    var appType = AppService.GetAppType(app.AppType)!;
-                    var appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = app.AppType };
-                    var url = await appType.ConfigureLink(appData);
-                    <tr>
-                        <td>
-                            <a href="@url" permission="@Policies.CanModifyStoreSettings" id="App-@app.Id">@app.AppName</a>
-                            <span not-permission="@Policies.CanModifyStoreSettings">@app.AppName</span>
-                            @if (app.Archived)
-                            {
-                                <span class="badge bg-info ms-2">archived</span>
-                            }
-                        </td>
-                        <td>
-                            @AppService.GetAvailableAppTypes()[app.AppType]
-                            @{
-                                var viewStyle = @app.ViewStyle;
-                            }
-                            @if (!string.IsNullOrEmpty(viewStyle))
-                            {
-                                <span>-</span>
-                                <span>@viewStyle</span>
-                            }
-                        </td>
-                        <td>
-                            <span permission="@Policies.CanModifyStoreSettings">
-                                <a asp-controller="UIStores" asp-action="GeneralSettings" asp-route-storeId="@app.StoreId">@app.StoreName</a>
-                            </span>
-                            <span not-permission="@Policies.CanModifyStoreSettings">@app.StoreName</span>
-                        </td>
-                    </tr>
-                }
-                </tbody>
-            </table>
-        }
-        else
-        {
-            <p class="text-secondary mt-3">
-                There are no apps yet.
-            </p>
-        }
-    </div>
+            }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-secondary mt-3">
+            There are no apps yet.
+        </p>
+    }
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />

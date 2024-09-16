@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -15,11 +14,13 @@ using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services.Altcoins.Zcash.Configuration;
 using BTCPayServer.Services.Altcoins.Zcash.Payments;
 using BTCPayServer.Services.Altcoins.Zcash.RPC.Models;
 using BTCPayServer.Services.Altcoins.Zcash.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -38,16 +39,16 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
         private readonly ZcashLikeConfiguration _ZcashLikeConfiguration;
         private readonly StoreRepository _StoreRepository;
         private readonly ZcashRPCProvider _ZcashRpcProvider;
-        private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
 
         public UIZcashLikeStoreController(ZcashLikeConfiguration ZcashLikeConfiguration,
             StoreRepository storeRepository, ZcashRPCProvider ZcashRpcProvider,
-            BTCPayNetworkProvider btcPayNetworkProvider)
+            PaymentMethodHandlerDictionary handlers)
         {
             _ZcashLikeConfiguration = ZcashLikeConfiguration;
             _StoreRepository = storeRepository;
             _ZcashRpcProvider = ZcashRpcProvider;
-            _BtcPayNetworkProvider = btcPayNetworkProvider;
+            _handlers = handlers;
         }
 
         public StoreData StoreData => HttpContext.GetStoreData();
@@ -55,8 +56,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
         [HttpGet()]
         public async Task<IActionResult> GetStoreZcashLikePaymentMethods()
         {
-            var Zcash = StoreData.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
-                .OfType<ZcashSupportedPaymentMethod>();
+            var Zcash = StoreData.GetPaymentMethodConfigs<ZcashPaymentMethodConfig>(_handlers);
 
             var excludeFilters = StoreData.GetStoreBlob().GetExcludedPaymentMethods();
 
@@ -67,7 +67,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
             return View(new ZcashLikePaymentMethodListViewModel()
             {
                 Items = _ZcashLikeConfiguration.ZcashLikeConfigurationItems.Select(pair =>
-                    GetZcashLikePaymentMethodViewModel(Zcash, pair.Key, excludeFilters,
+                    GetZcashLikePaymentMethodViewModel(StoreData, pair.Key, excludeFilters,
                         accountsList[pair.Key].Result))
             });
         }
@@ -87,10 +87,11 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
         }
 
         private ZcashLikePaymentMethodViewModel GetZcashLikePaymentMethodViewModel(
-            IEnumerable<ZcashSupportedPaymentMethod> Zcash, string cryptoCode,
+            StoreData store, string cryptoCode,
             IPaymentFilter excludeFilters, GetAccountsResponse accountsResponse)
         {
-            var settings = Zcash.SingleOrDefault(method => method.CryptoCode == cryptoCode);
+            var Zcash = store.GetPaymentMethodConfigs<ZcashPaymentMethodConfig>(_handlers);
+            var settings = Zcash.SingleOrDefault(method => ((IHasNetwork)_handlers[method.Key]).Network.CryptoCode == cryptoCode).Value;
             _ZcashRpcProvider.Summaries.TryGetValue(cryptoCode, out var summary);
             _ZcashLikeConfiguration.ZcashLikeConfigurationItems.TryGetValue(cryptoCode,
                 out var configurationItem);
@@ -104,7 +105,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
                 WalletFileFound = System.IO.File.Exists(fileAddress),
                 Enabled =
                     settings != null &&
-                    !excludeFilters.Match(new PaymentMethodId(cryptoCode, ZcashPaymentType.Instance)),
+                    !excludeFilters.Match(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode)),
                 Summary = summary,
                 CryptoCode = cryptoCode,
                 AccountIndex = settings?.AccountIndex ?? accountsResponse?.SubaddressAccounts?.FirstOrDefault()?.AccountIndex ?? 0,
@@ -122,8 +123,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
                 return NotFound();
             }
 
-            var vm = GetZcashLikePaymentMethodViewModel(StoreData.GetSupportedPaymentMethods(_BtcPayNetworkProvider)
-                    .OfType<ZcashSupportedPaymentMethod>(), cryptoCode,
+            var vm = GetZcashLikePaymentMethodViewModel(StoreData, cryptoCode,
                 StoreData.GetStoreBlob().GetExcludedPaymentMethods(), await GetAccounts(cryptoCode));
             return View(nameof(GetStoreZcashLikePaymentMethod), vm);
         }
@@ -237,9 +237,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
             if (!ModelState.IsValid)
             {
 
-                var vm = GetZcashLikePaymentMethodViewModel(StoreData
-                        .GetSupportedPaymentMethods(_BtcPayNetworkProvider)
-                        .OfType<ZcashSupportedPaymentMethod>(), cryptoCode,
+                var vm = GetZcashLikePaymentMethodViewModel(StoreData, cryptoCode,
                     StoreData.GetStoreBlob().GetExcludedPaymentMethods(), await GetAccounts(cryptoCode));
 
                 vm.Enabled = viewModel.Enabled;
@@ -250,13 +248,13 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
 
             var storeData = StoreData;
             var blob = storeData.GetStoreBlob();
-            storeData.SetSupportedPaymentMethod(new ZcashSupportedPaymentMethod()
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+            storeData.SetPaymentMethodConfig(_handlers[pmi], new ZcashPaymentMethodConfig()
             {
-                AccountIndex = viewModel.AccountIndex,
-                CryptoCode = viewModel.CryptoCode
+                AccountIndex = viewModel.AccountIndex
             });
 
-            blob.SetExcluded(new PaymentMethodId(viewModel.CryptoCode, ZcashPaymentType.Instance), !viewModel.Enabled);
+            blob.SetExcluded(PaymentTypes.CHAIN.GetPaymentMethodId(viewModel.CryptoCode), !viewModel.Enabled);
             storeData.SetStoreBlob(blob);
             await _StoreRepository.UpdateStore(storeData);
             return RedirectToAction("GetStoreZcashLikePaymentMethods",
@@ -309,4 +307,3 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
         }
     }
 }
-#endif

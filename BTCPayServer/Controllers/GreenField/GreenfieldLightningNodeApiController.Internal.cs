@@ -9,6 +9,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -22,19 +23,20 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldInternalLightningNodeApiController : GreenfieldLightningNodeApiController
     {
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
+        private readonly PaymentMethodHandlerDictionary _handlers;
 
         public GreenfieldInternalLightningNodeApiController(
-            BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings policiesSettings, LightningClientFactoryService lightningClientFactory,
+            PoliciesSettings policiesSettings, LightningClientFactoryService lightningClientFactory,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            IAuthorizationService authorizationService) : base(
-            btcPayNetworkProvider, policiesSettings, authorizationService)
+            IAuthorizationService authorizationService,
+            PaymentMethodHandlerDictionary handlers
+            ) : base(policiesSettings, authorizationService, handlers)
         {
-            _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningClientFactory = lightningClientFactory;
             _lightningNetworkOptions = lightningNetworkOptions;
+            _handlers = handlers;
         }
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
@@ -135,7 +137,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         protected override async Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = GetNetwork(cryptoCode);
             if (network is null)
                 throw ErrorCryptoCodeNotFound();
             if (!_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,

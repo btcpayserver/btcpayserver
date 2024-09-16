@@ -1,9 +1,9 @@
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Models.WalletViewModels.NewPullPaymentModel
 @{
-    ViewData.SetActivePage(StoreNavPages.PullPayments, "New pull payment", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.PullPayments, "Create Pull Payment", storeId);
 }
 
 @section PageHeadContent {
@@ -16,9 +16,17 @@
 }
 
 <form method="post" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-action="NewPullPayment">
-    <div class="sticky-header d-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <input type="submit" value="Create" class="btn btn-primary" id="Create"/>
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="PullPayments" asp-route-storeId="@storeId">Pull Payments</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
+        </nav>
+		<input id="page-primary" type="submit" value="Create" class="btn btn-primary"/>
     </div>
 
     <partial name="_StatusMessage"/>
@@ -51,17 +59,17 @@
                 </div>
             </div>
             <div class="form-group mb-4">
-                <label asp-for="PaymentMethods" class="form-label"></label>
-                @foreach (var item in Model.PaymentMethodItems)
+                <label asp-for="PayoutMethods" class="form-label"></label>
+                @foreach (var item in Model.PayoutMethodsItem)
                 {
                     <div class="form-check mb-2">
                         <label class="form-label">
-                            <input name="PaymentMethods" class="form-check-input" type="checkbox" value="@item.Value" @(item.Selected ? "checked" : "")>
+                            <input name="PayoutMethods" class="form-check-input" type="checkbox" value="@item.Value" @(item.Selected ? "checked" : "")>
                             @item.Text
                         </label>
                     </div>
                 }
-                <span asp-validation-for="PaymentMethods" class="text-danger mt-0"></span>
+                <span asp-validation-for="PayoutMethods" class="text-danger mt-0"></span>
             </div>
         </div>
         <div class="col-lg-9">
@@ -75,35 +83,10 @@
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">
-                        <h2 class="accordion-header" id="additional-custom-css-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
-                                Custom CSS
-                                <vc:icon symbol="caret-down"/>
-                            </button>
-                        </h2>
-                        <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
-                            <div class="accordion-body">
-                                <div class="form-group">
-                                    <label asp-for="CustomCSSLink" class="form-label"></label>
-                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener" title="More information...">
-                                        <vc:icon symbol="info" />
-                                    </a>
-                                    <input asp-for="CustomCSSLink" class="form-control"/>
-                                    <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="EmbeddedCSS" class="form-label"></label>
-                                    <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                                    <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-lightning-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-lightning" aria-expanded="false" aria-controls="additional-lightning">
                                 Lightning network settings
-                                <vc:icon symbol="caret-down"/>
+                                <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
                         <div id="additional-lightning" class="accordion-collapse collapse" aria-labelledby="additional-lightning-header">
@@ -111,7 +94,7 @@
                                 <div class="form-group">
                                     <label asp-for="BOLT11Expiration" class="form-label"></label>
                                     <div class="input-group">
-                                        <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:12ch;"/>
+                                        <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:12ch;" />
                                         <span class="input-group-text">days</span>
                                     </div>
                                     <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>

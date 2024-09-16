@@ -1,6 +1,6 @@
 @model WalletSendModel
 
-<div class="form-group hide-when-js mt-4">
+<div class="form-group hide-when-js">
     <label asp-for="SelectedInputs" class="form-label"></label>
     <select multiple="multiple" asp-for="SelectedInputs" class="form-select">
         @foreach (var input in Model.InputsAvailable)
@@ -9,7 +9,12 @@
         }
     </select>
 </div>
-<div id="coin-selection-app" class="only-for-js mt-4" v-cloak>
+<style>
+    #coin-selection-app .btn-link { --btcpay-btn-color: var(--btcpay-body-text-muted); }
+    #coin-selection-app .btn-link:hover { --btcpay-btn-color: var(--btcpay-body-link-accent); }
+    #coin-selection-app .btn-link.active { --btcpay-btn-active-color: var(--btcpay-body-link); }
+</style>
+<div id="coin-selection-app" class="only-for-js" v-cloak>
     <div class="d-sm-flex justify-content-between align-items-center">
         <h5 class="mb-sm-0">Coin selection</h5>
         <span class="text-muted text-end">
@@ -18,11 +23,13 @@
             <span>/ {{items.length}} total (@Model.CurrentBalance&nbsp;@Model.CryptoCode)</span>
         </span>
     </div>
-    <div class="input-group my-3">
-        <input type="text" v-model="filter" class="form-control" placeholder="Filter by transaction id, amount, label, comment.."/>
-        <button type="button" class="btn btn-secondary" title="Clear" v-on:click="filter=''" :disabled="!filter">
-            <span class="fa fa-times"></span>
-        </button>
+    <input type="text" v-model="filter" class="form-control my-3" placeholder="Filter by transaction id, amount, label, comment.."/>
+    <div class="d-flex gap-3 my-2 align-items-center">
+        <span>Sort by</span>
+        <div class="btn-group gap-3" role="group">
+          <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('amount')}" v-on:click="sortBy('amount')">Amount</button>
+          <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('confs')}" v-on:click="sortBy('confs')">Confirmations</button>
+        </div>
     </div>
     <ul class="list-group list-group-flush mb-3" v-show="filteredItems.length">
         <li class="list-group-item py-2 cursor-pointer gap-2 align-items-center justify-content-between"
@@ -48,42 +55,51 @@
                     </span>
                 </div>
                 <span v-if="item.comment" data-bs-toggle="tooltip" v-tooltip="item.comment" class="badge bg-info rounded-pill" style="min-width:2em">
-                    <span class="fa fa-info"></span>
+                    <vc:icon symbol="info" />
                 </span>
                 <span class="text-muted text-nowrap flex-shrink-0 ms-2">{{item.amount}} @Model.CryptoCode</span>
-                <span :class="{'bg-success' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"
-                      class="badge"
+                <span :class="{'bg-secondary' : item.confirmations > 0, 'bg-warning' : item.confirmations <= 0}"
+                      class="badge d-inline-flex align-items-center gap-1 py-1"
                       data-bs-toggle="tooltip"
                       v-tooltip="`${item.confirmations} confirmation${item.confirmations === 1 ? '' : 's'}`">
-                    {{item.confirmations}} <span class="fa fa-cube"></span>
+                    {{item.confirmations}} <vc:icon symbol="block" />
                 </span>
             </div>
         </li>
     </ul>
     
-    <ul class="pagination" v-show="currentItems.length > pageSize">
-        <li class="page-item" :class="{'disabled' : pageStart == 0}">
-            <a class="page-link" tabindex="-1" href="#" v-on:click="page = page -1">«</a>
-        </li>
-        <li class="page-item disabled">
-            <span class="page-link">
-                Showing {{pageStart+1}}-{{pageEnd}} of {{currentItems.length}}
-            </span>
-        </li>
-        <li class="page-item" :class="{'disabled' : pageEnd>= currentItems.length}">
-            <a class="page-link" href="#" v-on:click="page = page +1">»</a>
-        </li>
-    </ul>
-
-    <div class="btn-group btn-group-sm">
-        <button type="button" :disabled="selectedInputs.length === 0" v-on:click="showSelectedOnly = !showSelectedOnly" class="btn btn-sm btn-secondary">
-            <template v-if="showSelectedOnly">Show all</template>
-            <template v-else>Show selected only</template>
-        </button>
-        <button type="button" :disabled="showSelectedOnly" v-on:click="showUnconfirmedOnly = !showUnconfirmedOnly" class="btn btn-sm btn-secondary" v-if="hasUnconfirmed">
-            <template v-if="showUnconfirmedOnly">Show unconfirmed coins</template>
-            <template v-else>Hide unconfirmed coins</template>
-        </button>
+    <div class="d-grid d-sm-flex flex-wrap gap-3 justify-content-between">
+        <ul class="pagination">
+            <li class="page-item" :class="{'disabled' : pageStart == 0}">
+                <a class="page-link p-0" tabindex="-1" href="#" v-on:click.prevent="page = page -1">«</a>
+            </li>
+            <li class="page-item disabled">
+                <span class="page-link p-0">
+                    Showing {{pageStart+1}}-{{pageEnd}} of {{currentItems.length}}
+                </span>
+            </li>
+            <li class="page-item" :class="{'disabled' : pageEnd>= currentItems.length}">
+                <a class="page-link p-0" href="#" v-on:click.prevent="page = page +1">»</a>
+            </li>
+        </ul>
+        <div class="btn-group gap-3">
+            <button type="button" :disabled="selectedInputs.length === 0" v-on:click="showSelectedOnly = !showSelectedOnly; page = 0" class="btn btn-link p-0">
+                <template v-if="showSelectedOnly">Show all</template>
+                <template v-else>Show selected only</template>
+            </button>
+            <button type="button" :disabled="showSelectedOnly" v-on:click="showUnconfirmedOnly = !showUnconfirmedOnly; page = 0" class="btn btn-link p-0" v-if="hasUnconfirmed">
+                <template v-if="showUnconfirmedOnly">Show unconfirmed coins</template>
+                <template v-else>Hide unconfirmed coins</template>
+            </button>
+        </div>
+        <div class="d-flex gap-2 align-items-center">
+            <span class="text-muted">Page Size:</span>
+            <div class="btn-group gap-3" role="group">
+              <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 10}" v-on:click="pageSize = 10; page = 0">10</button>
+              <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 25}" v-on:click="pageSize = 25; page = 0">25</button>
+              <button type="button" class="btn btn-link p-0" :class="{active: pageSize === 50}" v-on:click="pageSize = 50; page = 0">50</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -111,7 +127,8 @@ document.addEventListener("DOMContentLoaded", function () {
             page: 0,
             pageSize: 10,
             showSelectedOnly: false,
-            showUnconfirmedOnly: false
+            showUnconfirmedOnly: false,
+            sortOrder: 'amount-desc'
         },
         watch: {
             filter: function() {
@@ -130,7 +147,8 @@ document.addEventListener("DOMContentLoaded", function () {
         },
         computed: {
             currentItems: function() {
-                return this.showSelectedOnly ? this.selectedItems : this.items.filter(i=> (!this.showUnconfirmedOnly || i.confirmations ));
+                const items = this.showSelectedOnly ? this.selectedItems : this.items.filter(i=> (!this.showUnconfirmedOnly || i.confirmations ));
+                return this.sorted(items);
             },
             pageStart: function() {
                 return this.page === 0 ? 0 : this.page * this.pageSize;
@@ -199,6 +217,20 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         },
         methods: {
+            sorted: function(items) {
+                switch (this.sortOrder) {
+                    case 'amount-desc': return items.sort((a, b) => b.amount - a.amount)
+                    case 'amount-asc': return items.sort((a, b) => a.amount - b.amount)
+                    case 'confs-desc': return items.sort((a, b) => b.confirmations - a.confirmations)
+                    case 'confs-asc': return items.sort((a, b) => a.confirmations - b.confirmations)
+                    default: return items;
+                }
+            },
+            sortBy: function(type) {
+                this.sortOrder = this.sortOrder === `${type}-desc` ? `${type}-asc` : `${type}-desc`
+                // reset page
+                this.page = 0;
+            },
             handle: function() {
                 if (this.selectedInputs.length == 0) {
                     this.showSelectedOnly = false;

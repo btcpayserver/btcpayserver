@@ -21,11 +21,8 @@ public class FormData
             .WithMany(o => o.Forms).OnDelete(DeleteBehavior.Cascade);
         builder.Entity<FormData>().HasIndex(o => o.StoreId);
 
-        if (databaseFacade.IsNpgsql())
-        {
-            builder.Entity<FormData>()
-                .Property(o => o.Config)
-                .HasColumnType("JSONB");
-        }
+        builder.Entity<FormData>()
+            .Property(o => o.Config)
+            .HasColumnType("JSONB");
     }
 }

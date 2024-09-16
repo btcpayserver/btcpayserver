@@ -1,5 +1,5 @@
 let app, origData;
-srv.sortBy = function (field) {
+srv.sortBy = function (field, event) {
     for (let key in this.fieldViews) {
         if (this.fieldViews.hasOwnProperty(key)) {
             const sortedField = field === key;
@@ -8,21 +8,24 @@ srv.sortBy = function (field) {
             if (sortedField && (fieldView.sortBy === "" || fieldView.sortBy === "desc")) {
                 fieldView.sortByTitle = "asc";
                 fieldView.sortBy = "asc";
-                fieldView.sortIconClass = "fa fa-sort-alpha-asc";
             }
             else if (sortedField && (fieldView.sortByTitle === "asc")) {
                 fieldView.sortByTitle = "desc";
                 fieldView.sortBy = "desc";
-                fieldView.sortIconClass = "fa fa-sort-alpha-desc";
             }
             else {
                 fieldView.sortByTitle = "";
                 fieldView.sortBy = "";
-                fieldView.sortIconClass = "fa fa-sort";
             }
         }
     }
     this.applySort();
+    document.querySelectorAll('.sort-column').forEach($a => {
+        $a.innerHTML = $a.innerHTML.replace(/#actions-sort-(asc|desc)"/, '#actions-sort"')
+    })
+    const { sort } = event.currentTarget.dataset;
+    const next = sort === '' || sort === 'desc' ? 'asc' : 'desc';
+    event.currentTarget.innerHTML = event.currentTarget.innerHTML.replace(`#actions-sort"`, `#actions-sort-${next}"`)
 }
 
 srv.applySort = function () {
@@ -73,8 +76,7 @@ srv.updateFieldViews = function () {
             this.fieldViews[field.name] =
             {
                 sortBy: "",
-                sortByTitle: "",
-                sortIconClass: "fa fa-sort"
+                sortByTitle: ""
             };
         }
     }
@@ -185,7 +187,7 @@ function downloadCSV() {
 
     // Convert ISO8601 dates to YYYY-MM-DD HH:mm:ss so the CSV easily integrate with Excel
     modifyFields(srv.result.fields, data, 'amount', displayValue)
-    modifyFields(srv.result.fields, data, 'datetime', v => v? moment(v).format('YYYY-MM-DD hh:mm:ss'): v);
+    modifyFields(srv.result.fields, data, 'datetime', v => v ? moment(v).format('YYYY-MM-DD HH:mm:ss') : v);
     const csv = Papa.unparse({ fields: srv.result.fields.map(f => f.name), data });
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, "export.csv");

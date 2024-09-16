@@ -6,14 +6,12 @@ namespace BTCPayServer.Client.Models
     {
         public GreenfieldValidationError()
         {
-
         }
+
         public GreenfieldValidationError(string path, string message)
         {
-            if (path == null)
-                throw new ArgumentNullException(nameof(path));
-            if (message == null)
-                throw new ArgumentNullException(nameof(message));
+            if (path == null) throw new ArgumentNullException(nameof(path));
+            if (message == null) throw new ArgumentNullException(nameof(message));
             Path = path;
             Message = message;
         }

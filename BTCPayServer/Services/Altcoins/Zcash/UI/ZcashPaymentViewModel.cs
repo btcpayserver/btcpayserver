@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 
 namespace BTCPayServer.Services.Altcoins.Zcash.UI
@@ -14,4 +13,3 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
         public string TransactionLink { get; set; }
     }
 }
-#endif

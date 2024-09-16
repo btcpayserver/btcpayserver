@@ -1,19 +1,23 @@
+@using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Stores
 @using LNURL
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @inject StoreRepository StoreRepository
+@inject PaymentMethodHandlerDictionary Handlers
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @inject DisplayFormatter DisplayFormatter
 @{
-    var store = await StoreRepository.FindStore(Model.StoreId);
-    Layout = "PointOfSale/Public/_Layout";
-    Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
-    var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
-    var supported = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
-    if (supported != null && !store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
+	var store = await StoreRepository.FindStore(Model.StoreId);
+	Layout = "PointOfSale/Public/_Layout";
+	Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
+	var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
+	var pmi = PaymentTypes.LNURL.GetPaymentMethodId(cryptoCode);
+	var supported = store.GetPaymentMethodConfig<LNURLPaymentMethodConfig>(pmi, Handlers);
+	if (supported is not null && !store.GetEnabledPaymentIds().Contains(pmi))
     {
         supported = null;
     }
@@ -35,7 +39,7 @@ else
 {
     <div class="alert alert-info alert-dismissible d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none fade show" role="alert">
         <button type="button" class="btn btn-info me-4 border border-light" onclick="window.print()">
-            <i class="fa fa-print"></i>&nbsp;Print
+            <vc:icon symbol="pos-print" />&nbsp;Print
         </button>
         This view is intended for printing only —
         
@@ -72,9 +76,10 @@ else
             {
                 var item = Model.Items[x];
                 var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+                if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && item.Price == 0) continue;
                 <div class="d-flex flex-wrap">
-                    <div class="card px-0" data-id="@x">
-                        <div class="card-body p-3 d-flex flex-column gap-2">
+                    <div class="tile card w-100" data-id="@x">
+                        <div class="card-body pt-0 d-flex flex-column gap-2">
                             <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                             <div class="d-flex gap-2 align-items-center">
                                 <span class="fw-semibold">
@@ -111,7 +116,7 @@ else
                             {
                                 var lnurlEndpoint = new Uri(Url.Action("GetLNURLForApp", "UILNURL", new
                                 {
-                                    cryptoCode = supported.CryptoCode,
+									cryptoCode = cryptoCode,
                                     appid = Model.AppId,
                                     ItemCode = item.Id
                                 }, Context.Request.Scheme, Context.Request.Host.ToString()));

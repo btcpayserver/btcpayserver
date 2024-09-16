@@ -53,7 +53,7 @@ namespace BTCPayServer.Services.Rates
     /// <summary>
     /// This class is a decorator which handle caching and pre-emptive query to the underlying rate provider
     /// </summary>
-    public class BackgroundFetcherRateProvider : IRateProvider
+    public class BackgroundFetcherRateProvider : IContextualRateProvider
     {
         public class LatestFetch
         {
@@ -63,6 +63,9 @@ namespace BTCPayServer.Services.Rates
             public DateTimeOffset Updated;
             public DateTimeOffset Expiration;
             public Exception Exception;
+
+            public IRateContext Context { get; internal set; }
+
             internal PairRate[] GetResult()
             {
                 if (Expiration <= DateTimeOffset.UtcNow)
@@ -110,7 +113,7 @@ namespace BTCPayServer.Services.Rates
 
         public void LoadState(BackgroundFetcherState state)
         {
-            if (state.LastRequested is DateTimeOffset lastRequested)
+            if (state.LastRequested is DateTimeOffset)
                 this.LastRequested = state.LastRequested;
             if (state.LastUpdated is DateTimeOffset updated && state.Rates is List<BackgroundFetcherRate> rates)
             {
@@ -185,7 +188,7 @@ namespace BTCPayServer.Services.Rates
             {
                 try
                 {
-                    await Fetch(cancellationToken);
+                    await Fetch(_Latest?.Context, cancellationToken);
                 }
                 catch { } // Exception is inside _Latest
                 return _Latest;
@@ -194,7 +197,11 @@ namespace BTCPayServer.Services.Rates
         }
 
         LatestFetch _Latest;
-        public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
+        public Task<PairRate[]> GetRatesAsync(IRateContext context, CancellationToken cancellationToken)
+        {
+            return GetRatesAsyncCore(context, cancellationToken);
+        }
+        async Task<PairRate[]> GetRatesAsyncCore(IRateContext context, CancellationToken cancellationToken)
         {
             LastRequested = DateTimeOffset.UtcNow;
             var latest = _Latest;
@@ -202,7 +209,11 @@ namespace BTCPayServer.Services.Rates
             {
                 latest = null;
             }
-            return (latest ?? (await Fetch(cancellationToken))).GetResult();
+            return (latest ?? (await Fetch(context, cancellationToken))).GetResult();
+        }
+        public Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
+        {
+            return GetRatesAsyncCore(null, cancellationToken);
         }
 
         /// <summary>
@@ -224,15 +235,16 @@ namespace BTCPayServer.Services.Rates
 
         public RateSourceInfo RateSourceInfo => _Inner.RateSourceInfo;
 
-        private async Task<LatestFetch> Fetch(CancellationToken cancellationToken)
+        private async Task<LatestFetch> Fetch(IRateContext context, CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var previous = _Latest;
             var fetch = new LatestFetch();
             try
             {
-                var rates = await _Inner.GetRatesAsync(cancellationToken);
+                var rates = await _Inner.GetRatesAsyncWithMaybeContext(context, cancellationToken);
                 fetch.Latest = rates;
+                fetch.Context = context;
                 fetch.Updated = DateTimeOffset.UtcNow;
                 fetch.Expiration = fetch.Updated + ValidatyTime;
                 fetch.NextRefresh = fetch.Updated + RefreshRate;

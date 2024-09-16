@@ -1,17 +1,28 @@
-﻿@using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Abstractions.Models
 @model LndSeedBackupViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Services, "LND Seed Backup");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
 
 @if (Model.IsWalletUnlockPresent)
 {
     <div class="row">
         <div class="col-lg-8">
             <div class="form-group">
-                <p>The LND seed backup is useful to recover funds of your LND wallet in case of a corruption of your server.</p>
+                <p>The LND seed backup is useful to recover on-chain funds of your LND wallet in case of a corruption of your server.</p>
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
             <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button">See confidential seed information</button>
@@ -26,15 +37,23 @@
             else
             {
                 <div class="form-group @(Model.Removed ? "" : "collapse")">
-                    <div class="input-group">
-                        <label asp-for="Seed" class="input-group-text"><span class="input-group-addon fa fa-eye"></span><span class="ms-2">Seed</span></label>
-                        <textarea asp-for="Seed" class="form-control" readonly rows="3"></textarea>
+                    <div class="form-group">
+                        <label asp-for="Seed" class="form-label"></label>
+                        <div class="input-group">
+                            <input asp-for="Seed" type="password" class="form-control" value="@Model.Seed">
+                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle seed visibility" data-toggle-password="#Seed">
+                                <vc:icon symbol="actions-show" />
+                            </button>
+                        </div>
                     </div>
-                </div>
-                <div class="form-group collapse">
-                    <div class="input-group">
-                        <label asp-for="WalletPassword" class="input-group-text"><span class="input-group-addon fa fa-lock"></span><span class="ms-2">Password</span></label>
-                        <input asp-for="WalletPassword" class="form-control" readonly />
+                    <div class="form-group">
+                        <label asp-for="WalletPassword" class="form-label">Password</label>
+                        <div class="input-group">
+                            <input asp-for="WalletPassword" type="password" class="form-control" value="@Model.WalletPassword">
+                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle password visibility" data-toggle-password="#WalletPassword">
+                                <vc:icon symbol="actions-show" />
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <div class="form-group collapse">

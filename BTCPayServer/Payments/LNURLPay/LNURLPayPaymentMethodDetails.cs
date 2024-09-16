@@ -9,10 +9,8 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments
 {
-    public class LNURLPayPaymentMethodDetails : LightningLikePaymentMethodDetails
+    public class LNURLPayPaymentMethodDetails : LigthningPaymentPromptDetails
     {
-        public LightningSupportedPaymentMethod LightningSupportedPaymentMethod { get; set; }
-
         [JsonConverter(typeof(LightMoneyJsonConverter))]
         public LightMoney GeneratedBoltAmount { get; set; }
         public bool Bech32Mode { get; set; }
@@ -20,30 +18,5 @@ namespace BTCPayServer.Payments
         public string ProvidedComment { get; set; }
         public string ConsumedLightningAddress { get; set; }
         public LNURLPayRequest PayRequest { get; set; }
-
-        public override PaymentType GetPaymentType()
-        {
-            return LNURLPayPaymentType.Instance;
-        }
-
-        public override string GetAdditionalDataPartialName()
-        {
-            if (string.IsNullOrEmpty(ProvidedComment) && string.IsNullOrEmpty(ConsumedLightningAddress))
-            {
-                return null;
-            }
-
-            return "LNURL/AdditionalPaymentMethodDetails";
-        }
-
-        public override JObject GetAdditionalData()
-        {
-            var result = base.GetAdditionalData();
-            if (!string.IsNullOrEmpty(ProvidedComment))
-                result.Add("providedComment", new JValue(ProvidedComment));
-            if (!string.IsNullOrEmpty(ConsumedLightningAddress))
-                result.Add("consumedLightningAddress", new JValue(ConsumedLightningAddress));
-            return result;
-        }
     }
 }

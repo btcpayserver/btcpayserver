@@ -25,16 +25,11 @@
 	ViewData.SetBlazorAllowed(false);
 }
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PullPayment-@Model.Id">
 <head>
     <partial name="LayoutHead"/>
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
-    <style>
-        .no-marker > ul {
-            list-style-type: none;
-        }
-    </style>
 </head>
 <body class="min-vh-100">
     <div id="app" class="d-flex flex-column min-vh-100 pb-l">
@@ -48,22 +43,26 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button">
-                                            <span class="fa fa-qrcode fa-2x" title="LNURL-Withdraw"></span>
+                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button" title="LNURL-Withdraw">
+                                            <vc:icon symbol="qr-code" />
                                         </button>
                                     }
                                     <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
-                                    @if (Model.PaymentMethods.Length == 1)
+                                    @if (Model.BitcoinOnly)
+									{
+										<span class="input-group-text">BTC</span>
+									}
+									else if (Model.PayoutMethodIds.Length == 1)
                                     {
-                                        <input type="hidden" asp-for="SelectedPaymentMethod">
-                                        <span class="input-group-text">@Model.PaymentMethods.First().ToPrettyString()</span>
+                                        <input type="hidden" asp-for="SelectedPayoutMethod">
+                                        <span class="input-group-text">@Model.PayoutMethodIds.First().ToString()</span>
                                     }
-                                    else if (!Model.BitcoinOnly)
+                                    else
                                     {
-                                        <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))"></select>
+                                        <select class="form-select w-auto" asp-for="SelectedPayoutMethod" asp-items="Model.PayoutMethodIds.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
                                     }
                                     <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan destination with camera" id="scandestination-button">
-                                        <i class="fa fa-camera"></i>
+                                        <vc:icon symbol="scan-qr"/>
                                     </button>
                                 </div>
                             </div>
@@ -109,15 +108,15 @@
                                     Copy Link
                                 </button>
                                 <button type="button" class="btn btn-link fw-semibold d-print-none p-0" page-qr>
-                                    <span class="fa fa-qrcode"></span> Show QR
+                                    <vc:icon symbol="qr-code" /> Show QR
                                 </button>
                             </div>
-                            @if (!string.IsNullOrEmpty(Model.ResetIn))
+                            @if (!string.IsNullOrEmpty(Model.EndsIn))
                             {
                                 <p>
-                                    <span class="text-muted text-nowrap">Reset in</span>
+                                    <span class="text-muted text-nowrap">Ends in</span>
                                     &nbsp;
-                                    <span class="text-nowrap">@Model.ResetIn</span>
+                                    <span class="text-nowrap">@Model.EndsIn</span>
                                 </p>
                             }
                             @if (!string.IsNullOrEmpty(Model.Description))
@@ -172,7 +171,7 @@
                                                     <td class="text-break">
                                                         @invoice.Destination
                                                     </td>
-                                                    <td class="text-nowrap">@invoice.PaymentMethod.ToPrettyString()</td>
+                                                    <td class="text-nowrap">@invoice.PaymentMethod.ToString()</td>
                                                     <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
                                                     <td class="text-end text-nowrap">
                                                         @if (!string.IsNullOrEmpty(invoice.Link))
@@ -207,15 +206,15 @@
             </p>
 			@if (Model.LnurlEndpoint is not null)
 			{
-            <p>
-                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
-					Setup Boltcard
-                </a>
-                <span>&nbsp;|&nbsp;</span>
-                <a asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
-                    Reset Boltcard
-                </a>
-            </p>
+				<p id="BoltcardActions">
+					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
+						Setup Boltcard
+					</a>
+					<span>&nbsp;|&nbsp;</span>
+					<a id="ResetBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
+						Reset Boltcard
+					</a>
+				</p>
 			}
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 Powered by <partial name="_StoreFooterLogo" />
@@ -231,6 +230,14 @@
     <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			if (isMobile) {
+				document.getElementById("SetupBoltcard").setAttribute('target', '_blank');
+				document.getElementById("SetupBoltcard").setAttribute('href', @Safe.Json(Model.SetupDeepLink));
+				document.getElementById("ResetBoltcard").setAttribute('target', '_blank');
+				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(Model.ResetDeepLink));
+			}
+
             window.qrApp = initQRShow({});
             delegate('click', 'button[page-qr]', event => {
                 qrApp.title = "Pull Payment QR";

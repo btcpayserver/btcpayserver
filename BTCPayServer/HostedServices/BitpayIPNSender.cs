@@ -5,11 +5,13 @@ using System.Net.Http;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
 using MimeKit;
@@ -43,6 +45,8 @@ namespace BTCPayServer.HostedServices
         readonly InvoiceRepository _InvoiceRepository;
         private readonly EmailSenderFactory _EmailSenderFactory;
         private readonly StoreRepository _StoreRepository;
+        private readonly Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> _bitpayExtensions;
+        private readonly CurrencyNameTable _currencyNameTable;
         public const string NamedClient = "bitpay-ipn";
         public BitpayIPNSender(
             IHttpClientFactory httpClientFactory,
@@ -50,6 +54,8 @@ namespace BTCPayServer.HostedServices
             EventAggregator eventAggregator,
             InvoiceRepository invoiceRepository,
             StoreRepository storeRepository,
+            Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions,
+            CurrencyNameTable currencyNameTable,
             EmailSenderFactory emailSenderFactory)
         {
             _Client = httpClientFactory.CreateClient(NamedClient);
@@ -58,11 +64,13 @@ namespace BTCPayServer.HostedServices
             _InvoiceRepository = invoiceRepository;
             _EmailSenderFactory = emailSenderFactory;
             _StoreRepository = storeRepository;
+            _bitpayExtensions = bitpayExtensions;
+            _currencyNameTable = currencyNameTable;
         }
 
         async Task Notify(InvoiceEntity invoice, InvoiceEvent invoiceEvent, bool extendedNotification, bool sendMail)
         {
-            var dto = invoice.EntityToDTO();
+            var dto = invoice.EntityToDTO(_bitpayExtensions, _currencyNameTable);
             var notification = new InvoicePaymentNotificationEventWrapper()
             {
                 Data = new InvoicePaymentNotification()
@@ -76,7 +84,7 @@ namespace BTCPayServer.HostedServices
                     PosData = dto.PosData,
                     Price = dto.Price,
                     Status = dto.Status,
-                    BuyerFields = invoice.RefundMail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.RefundMail) },
+                    BuyerFields = invoice.Metadata.BuyerEmail == null ? null : new Newtonsoft.Json.Linq.JObject() { new JProperty("buyerEmail", invoice.Metadata.BuyerEmail) },
                     PaymentSubtotals = dto.PaymentSubtotals,
                     PaymentTotals = dto.PaymentTotals,
                     AmountPaid = dto.AmountPaid,
@@ -98,17 +106,18 @@ namespace BTCPayServer.HostedServices
             // So here, we just override the status expressed by the notification
             if (invoiceEvent.Name == InvoiceEvent.Confirmed)
             {
-                notification.Data.Status = InvoiceState.ToString(InvoiceStatusLegacy.Confirmed);
+                notification.Data.Status = "confirmed";
             }
             if (invoiceEvent.Name == InvoiceEvent.PaidInFull)
             {
-                notification.Data.Status = InvoiceState.ToString(InvoiceStatusLegacy.Paid);
+                notification.Data.Status = "paid";
             }
             //////////////////
 
             // We keep backward compatibility with bitpay by passing BTC info to the notification
             // we don't pass other info, as it is a bad idea to use IPN data for logic processing (can be faked)
-            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => c.GetpaymentMethodId() == new PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike) && !string.IsNullOrEmpty(c.Address));
+            var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
+            var btcCryptoInfo = dto.CryptoInfo.FirstOrDefault(c => PaymentMethodId.Parse(c.PaymentType) == btc && !string.IsNullOrEmpty(c.Address));
             if (btcCryptoInfo != null)
             {
 #pragma warning disable CS0618
@@ -135,7 +144,7 @@ namespace BTCPayServer.HostedServices
 
                 (await _EmailSenderFactory.GetEmailSender(invoice.StoreId)).SendEmail(
                     notificationEmail,
-                    $"{storeName} Invoice Notification - ${invoice.StoreId}",
+                    $"Invoice Notification - ${invoice.StoreId}",
                     emailBody);
             }
 

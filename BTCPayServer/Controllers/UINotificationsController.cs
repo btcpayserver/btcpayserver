@@ -1,17 +1,13 @@
 using System;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.NotificationViewModels;
-using BTCPayServer.Security;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
-using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,31 +19,48 @@ namespace BTCPayServer.Controllers
     [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController : Controller
     {
+        private readonly StoreRepository _storeRepo;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
 
         public UINotificationsController(
+            StoreRepository storeRepo,
             UserManager<ApplicationUser> userManager,
             NotificationManager notificationManager)
         {
+            _storeRepo = storeRepo;
             _userManager = userManager;
             _notificationManager = notificationManager;
         }
 
         [HttpGet]
-        public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
+        public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
+            model ??= new NotificationIndexViewModel { Skip = 0 };
+            var timezoneOffset = model.TimezoneOffset ?? 0;
+            model.Status ??= "Unread";
+            ViewBag.Status = model.Status;
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "UIHome");
 
-            var res = await _notificationManager.GetNotifications(new NotificationsQuery()
-            {
-                Skip = skip,
-                Take = count,
-                UserId = userId
-            });
+            var stores = await _storeRepo.GetStoresByUserId(userId);
+            model.Stores = stores.Where(store => !store.Archived).OrderBy(s => s.StoreName).ToList();
 
-            var model = new IndexViewModel() { Skip = skip, Count = count, Items = res.Items, Total = res.Count };
+            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
+            var fs = new SearchString(searchTerm, timezoneOffset);
+            model.Search = fs;
+
+            var res = await _notificationManager.GetNotifications(new NotificationsQuery
+            {
+                Skip = model.Skip,
+                Take = model.Count,
+                UserId = userId,
+                SearchText = model.SearchText,
+                Type = fs.GetFilterArray("type"),
+                StoreIds = fs.GetFilterArray("storeid"),
+                Seen = model.Status == "Unread" ? false : null
+            });
+            model.Items = res.Items;
 
             return View(model);
         }
@@ -58,7 +71,7 @@ namespace BTCPayServer.Controllers
         {
             if (ValidUserClaim(out var userId))
             {
-                await _notificationManager.ToggleSeen(new NotificationsQuery() { Ids = new[] { id }, UserId = userId }, null);
+                await _notificationManager.ToggleSeen(new NotificationsQuery { Ids = [id], UserId = userId }, null);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -71,9 +84,9 @@ namespace BTCPayServer.Controllers
             if (ValidUserClaim(out var userId))
             {
                 var items = await
-                    _notificationManager.ToggleSeen(new NotificationsQuery()
+                    _notificationManager.ToggleSeen(new NotificationsQuery
                     {
-                        Ids = new[] { id },
+                        Ids = [id],
                         UserId = userId
                     }, true);
 
@@ -148,7 +161,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            await _notificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
+            await _notificationManager.ToggleSeen(new NotificationsQuery { Seen = false, UserId = userId }, true);
             return LocalRedirect(returnUrl);
         }
 

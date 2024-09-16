@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using Amazon.Auth.AccessControlPolicy;
@@ -13,27 +15,32 @@ using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using ExchangeSharp;
+using Microsoft.AspNetCore.Html;
+using Microsoft.AspNetCore.Razor.Language;
+using Microsoft.AspNetCore.Razor.Language.Intermediate;
+using Microsoft.AspNetCore.Razor.TagHelpers;
+using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using OpenQA.Selenium.DevTools.V100.Network;
 using OpenQA.Selenium.Support.UI;
 using Xunit;
 using Xunit.Abstractions;
-using static BTCPayServer.Tests.TransifexClient;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace BTCPayServer.Tests
 {
     /// <summary>
     /// This class hold easy to run utilities for dev time
     /// </summary>
-    public class UtilitiesTests
+    public class UtilitiesTests : UnitTestBase
     {
         public ITestOutputHelper Logs { get; }
 
-        public UtilitiesTests(ITestOutputHelper logs)
+        public UtilitiesTests(ITestOutputHelper logs) : base(logs)
         {
             Logs = logs;
         }
@@ -200,24 +207,31 @@ namespace BTCPayServer.Tests
 
                     if (!askedPrompt)
                     {
-                        driver.FindElement(By.XPath("//a[contains(text(), \"New chat\")]")).Click();
+                        driver.FindElements(By.XPath("//button[contains(@class,'text-token-text-primary')]")).Where(e => e.Displayed).First().Click();
                         Thread.Sleep(200);
                         var input = driver.FindElement(By.XPath("//textarea[@data-id]"));
                         input.SendKeys($"I am translating a checkout crypto payment page, and I want you to translate it from English (en-US) to {languageCurrent} ({jsonLangCode}).");
                         input.SendKeys(Keys.LeftShift + Keys.Enter);
-                        input.SendKeys("Reply only with the translation of the sentences I will give you and nothing more." + Keys.Enter);
+                        input.SendKeys("Reply only with the translation of the sentences I will give you and nothing more, and do not translate what is inside `{{` and `}}`." + Keys.Enter);
                         WaitCanWritePrompt(driver);
                         askedPrompt = true;
                     }
                     english = english.Replace('\n', ' ');
+
                     driver.FindElement(By.XPath("//textarea[@data-id]")).SendKeys(english + Keys.Enter);
                     WaitCanWritePrompt(driver);
-                    var elements = driver.FindElements(By.XPath("//div[contains(@class,'markdown') and contains(@class,'prose')]//p"));
-                    var result = elements.Last().Text;
+                    string result = GetLastResponse(driver);
                     langFile.Words[translation.Key] = result;
                 }
                 langFile.Save();
             }
+        }
+
+        private static string GetLastResponse(ChromeDriver driver)
+        {
+            var elements = driver.FindElements(By.XPath("//div[contains(@class,'markdown') and contains(@class,'prose')]//p"));
+            var result = elements.LastOrDefault()?.Text;
+            return result;
         }
 
         private static TransifexClient GetTransifexClient()
@@ -227,18 +241,191 @@ namespace BTCPayServer.Tests
 
         private void WaitCanWritePrompt(IWebDriver driver)
         {
-
+            bool stopGenerating = false;
 retry:
             Thread.Sleep(200);
             try
             {
-                driver.FindElement(By.XPath("//*[contains(text(), \"Regenerate response\")]"));
+                var el = driver.FindElement(By.XPath("//button[contains(@aria-label, 'Stop generating')]"));
+                if (!el.Enabled)
+                    goto retry;
+                stopGenerating = true;
+                goto retry;
+            }
+            catch
+            {
+                if (!stopGenerating)
+                    goto retry;
+            }
+            try
+            {
+                var el = driver.FindElement(By.XPath("//button[contains(@data-testid, 'send-button')]"));
+                if (!el.Displayed)
+                    goto retry;
             }
             catch
             {
                 goto retry;
             }
             Thread.Sleep(200);
+        }
+
+        class TranslatedKeyNodeWalker : IntermediateNodeWalker
+        {
+            private List<string> _defaultTranslatedKeys;
+            private string _txt;
+
+            public TranslatedKeyNodeWalker(List<string> defaultTranslatedKeys)
+            {
+                _defaultTranslatedKeys = defaultTranslatedKeys;
+            }
+
+            public TranslatedKeyNodeWalker(List<string> defaultTranslatedKeys, string txt) : this(defaultTranslatedKeys)
+            {
+                _txt = txt;
+            }
+
+            public override void VisitTagHelper(TagHelperIntermediateNode node)
+            {
+                if (node.TagName == "input")
+                {
+                    foreach (var tagHelper in node.TagHelpers)
+                    {
+                        if (tagHelper.Name.EndsWith("TranslateTagHelper"))
+                        {
+                            var inner = ToString(node);
+                            if (inner.Contains("type=\"submit\""))
+                            {
+                                var m = Regex.Match(inner, "value=\"(.*?)\"");
+                                if (m.Success)
+                                {
+                                    _defaultTranslatedKeys.Add(m.Groups[1].Value);
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+                foreach (var tagHelper in node.TagHelpers)
+                {
+                    if (tagHelper.Name.EndsWith("TranslateTagHelper"))
+                    {
+                        var htmlContent = node.FindDescendantNodes<HtmlContentIntermediateNode>().FirstOrDefault();
+                        if (htmlContent is not null)
+                        {
+                            var inner = ToString(htmlContent);
+                            _defaultTranslatedKeys.Add(inner);
+                        }
+                    }
+                }
+                base.VisitTagHelper(node);
+            }
+
+            private string ToString(IntermediateNode node)
+            {
+                return _txt.Substring(node.Source.Value.AbsoluteIndex, node.Source.Value.Length);
+            }
+        }
+
+        /// <summary>
+        /// This utilities crawl through the cs files in search for
+        /// Display attributes, then update Translations.Default to list them
+        /// </summary>
+        [Trait("Utilities", "Utilities")]
+        [Fact]
+        public async Task UpdateDefaultTranslations()
+        {
+            var soldir = TestUtils.TryGetSolutionDirectoryInfo();
+            List<string> defaultTranslatedKeys = new List<string>();
+
+            // Go through all cs files, and find [Display] and [DisplayName] attributes
+            foreach (var file in soldir.EnumerateFiles("*.cs", SearchOption.AllDirectories))
+            {
+                var txt = File.ReadAllText(file.FullName);
+                var tree = CSharpSyntaxTree.ParseText(txt, new CSharpParseOptions(LanguageVersion.Default));
+                var walker = new DisplayNameWalker();
+                walker.Visit(tree.GetRoot());
+                foreach (var k in walker.Keys)
+                {
+                    defaultTranslatedKeys.Add(k);
+                }
+            }
+
+            // Go through all cshtml file, search for text-translate or ViewLocalizer usage
+            using (var tester = CreateServerTester())
+            {
+                await tester.StartAsync();
+                var engine = tester.PayTester.GetService<RazorProjectEngine>();
+                foreach (var file in soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories))
+                {
+                    var filePath = file.FullName;
+                    var txt = File.ReadAllText(file.FullName);
+                    if (txt.Contains("ViewLocalizer"))
+                    {
+                        var matches = Regex.Matches(txt, "ViewLocalizer\\[\"(.*?)\"[\\],]");
+                        foreach (Match match in matches)
+                        {
+                            defaultTranslatedKeys.Add(match.Groups[1].Value);
+                        }
+                    }
+
+                    filePath = filePath.Replace(Path.Combine(soldir.FullName, "BTCPayServer"), "/");
+                    var item = engine.FileSystem.GetItem(filePath);
+                        
+                    var node = (DocumentIntermediateNode)engine.Process(item).Items[typeof(DocumentIntermediateNode)];
+                    var w = new TranslatedKeyNodeWalker(defaultTranslatedKeys, txt);
+                    w.Visit(node);
+                }
+
+            }
+            defaultTranslatedKeys = defaultTranslatedKeys.Select(d => d.Trim()).Distinct().OrderBy(o => o).ToList();
+            var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
+            var defaultTranslation = File.ReadAllText(path);
+            var startIdx = defaultTranslation.IndexOf("\"\"\"");
+            var endIdx = defaultTranslation.LastIndexOf("\"\"\"");
+            var content = defaultTranslation.Substring(0, startIdx + 3);
+            content += "\n" + String.Join('\n', defaultTranslatedKeys) + "\n";
+            content += defaultTranslation.Substring(endIdx);
+            File.WriteAllText(path, content);
+        }
+        class DisplayNameWalker : CSharpSyntaxWalker
+        {
+            public List<string> Keys = new List<string>();
+            public bool InAttribute = false;
+            public override void VisitAttribute(AttributeSyntax node)
+            {
+                InAttribute = true;
+                base.VisitAttribute(node);
+                InAttribute = false;
+            }
+            public override void VisitIdentifierName(IdentifierNameSyntax node)
+            {
+                if (InAttribute)
+                {
+                    InAttribute = node.Identifier.Text switch
+                    {
+                        "Display" => true,
+                        "DisplayAttribute" => true,
+                        "DisplayName" => true,
+                        "DisplayNameAttribute" => true,
+                        _ => false
+                    };
+                }
+            }
+            public override void VisitAttributeArgument(AttributeArgumentSyntax node)
+            {
+                if (InAttribute)
+                {
+                    var name = node.Expression switch
+                    {
+                        LiteralExpressionSyntax les => les.Token.ValueText,
+                        IdentifierNameSyntax ins => ins.Identifier.Text,
+                        _ => throw new InvalidOperationException("Unknown node")
+                    };
+                    Keys.Add(name);
+                    InAttribute = false;
+                }
+            }
         }
 
         /// <summary>
@@ -409,7 +596,7 @@ retry:
                 content.Headers.TryAddWithoutValidation("Content-Type", "application/vnd.api+json;profile=\"bulk\"");
                 message.Content = content;
                 using var response = await Client.SendAsync(message);
-                var str = await response.Content.ReadAsStringAsync();
+                await response.Content.ReadAsStringAsync();
             }).ToArray());
         }
 
@@ -500,15 +687,7 @@ retry:
         {
             var fullPath = Path.Combine(GetFolder(folder), $"{lang}.json");
             var proj = "o:btcpayserver:p:btcpayserver";
-            string resource;
-            if (folder == TranslationFolder.CheckoutV1)
-            {
-                resource = $"{proj}:r:enjson";
-            }
-            else // file == v2
-            {
-                resource = $"{proj}:r:checkout-v2";
-            }
+            var resource = $"{proj}:r:checkout-v2";
             var words = new Dictionary<string, string>();
             if (File.Exists(fullPath))
             {

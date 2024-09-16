@@ -1,10 +1,9 @@
 @model EditWebhookViewModel
-@using  BTCPayServer.Client.Models;
 @using BTCPayServer.HostedServices.Webhooks
 @inject WebhookSender WebhookSender 
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook Settings", Context.GetStoreData().Id);
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook", storeId);
 }
 
 @section PageHeadContent {
@@ -14,10 +13,29 @@
     </style>
 }
 
-<div class="row">
-    <div class="col-xxl-constrain col-xl-8">
-        <form method="post">
-            <h3 class="mb-3">@ViewData["Title"]</h3>
+<form method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="Webhooks" asp-route-storeId="@storeId">Webhooks</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
+        </nav>
+        @if (Model.IsNew)
+        {
+            <button id="page-primary" name="add" type="submit" class="btn btn-primary" value="New">Add Webhook</button>
+        }
+        else
+        {
+			<button id="page-primary" name="update" type="submit" class="btn btn-primary" value="Save" >Update Webhook</button>
+        }
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
             <div class="form-group">
                 <label asp-for="PayloadUrl" class="form-label">Payload URL</label>
                 <input asp-for="PayloadUrl" class="form-control" />
@@ -26,10 +44,10 @@
             <div class="form-group">
                 <label asp-for="Secret" class="form-label"></label>
                 <div class="input-group">
-                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret" data-toggle="password">
-                    <span class="input-group-text">
-                        <i class="fa fa-eye"></i>
-                    </span>
+                    <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret">
+                    <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle password visibility" data-toggle-password="#Secret">
+                        <vc:icon symbol="actions-show" />
+                    </button>
                 </div>
                 <div class="form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</div>
             </div>
@@ -66,15 +84,11 @@
                     }
                 </div>
             </div>
-            @if (Model.IsNew)
-            {
-                <button name="add" type="submit" class="btn btn-primary mb-5 mt-2" value="New" id="New">Add webhook</button>
-            }
-            else
-            {
-                <button name="update" type="submit" class="btn btn-primary mb-5 mt-2" value="Save" id="Save">Update webhook</button>
-            }
-        </form>
+        </div>
+    </div>
+</form>
+<div class="row">
+    <div class="col-xxl-constrain col-xl-8">
         @if (!Model.IsNew && Model.Deliveries.Count > 0)
         {
             <h4 class="mb-3">Recent deliveries</h4>
@@ -83,30 +97,32 @@
                 {
                     <li class="list-group-item ">
                         <form asp-action="RedeliverWebhook"
-                              asp-route-storeId="@this.Context.GetRouteValue("storeId")"
-                              asp-route-webhookId="@this.Context.GetRouteValue("webhookId")"
+                              asp-route-storeId="@Context.GetRouteValue("storeId")"
+                              asp-route-webhookId="@Context.GetRouteValue("webhookId")"
                               asp-route-deliveryId="@delivery.Id"
                               method="post">
                             <div class="d-flex align-items-center">
                                 <span class="d-flex align-items-center flex-fill me-3">
                                     @if (delivery.Success)
                                     {
-                                        <span class="d-flex align-items-center fa fa-check text-success" title="Success"></span>
+                                        <vc:icon symbol="checkmark" css-class="text-success" />
                                     }
                                     else
                                     {
-                                        <span class="d-flex align-items-center fa fa-times text-danger" title="@delivery.ErrorMessage"></span>
+                                        <span title="@delivery.ErrorMessage">
+                                            <vc:icon symbol="cross" css-class="text-danger" />
+                                        </span>
                                     }
                                     @if (!delivery.Pruned) {
-                                    <span class="ms-3">
-                                        <a asp-action="WebhookDelivery"
-                                           asp-route-storeId="@this.Context.GetRouteValue("storeId")"
-                                           asp-route-webhookId="@this.Context.GetRouteValue("webhookId")"
-                                           asp-route-deliveryId="@delivery.Id"
-                                           class="btn btn-link delivery-content" target="_blank">
-                                            @delivery.Id
-                                        </a>
-                                    </span>
+                                        <span class="ms-3">
+                                            <a asp-action="WebhookDelivery"
+                                               asp-route-storeId="@this.Context.GetRouteValue("storeId")"
+                                               asp-route-webhookId="@this.Context.GetRouteValue("webhookId")"
+                                               asp-route-deliveryId="@delivery.Id"
+                                               class="btn btn-link delivery-content" target="_blank">
+                                                @delivery.Id
+                                            </a>
+                                        </span>
                                     }
                                 </span>
                                 <span class="d-flex align-items-center">

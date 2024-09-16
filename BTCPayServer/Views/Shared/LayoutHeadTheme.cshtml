@@ -1,14 +1,9 @@
 @using BTCPayServer.Services
-@using BTCPayServer.Abstractions.Contracts
 @inject ThemeSettings Theme
-@inject IFileService FileService
+@inject UriResolver UriResolver
 
 <script>if (window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true') { document.documentElement.setAttribute('data-hide-sensitive-info', 'true')}</script>
-@if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CssUri))
-{   // legacy customization with CSS URI - keep it for backwards-compatibility
-    <link href="@Context.Request.GetRelativePathOrAbsolute(Theme.CssUri)" rel="stylesheet" asp-append-version="true" />
-}
-else if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CustomThemeFileId))
+@if (Theme.CustomTheme && Theme.CustomThemeCssUrl is not null)
 {   // new customization uses theme file id provided by upload
     @if (Theme.CustomThemeExtension != ThemeExtension.Custom)
     {   // needs to be added for light and dark, because dark extends light
@@ -17,8 +12,9 @@ else if (Theme.CustomTheme && !string.IsNullOrEmpty(Theme.CustomThemeFileId))
     @if (Theme.CustomThemeExtension == ThemeExtension.Dark)
     {
         <link href="~/main/themes/default-dark.css" rel="stylesheet" asp-append-version="true" />
-    }
-    <link href="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Theme.CustomThemeFileId))" rel="stylesheet" asp-append-version="true" />
+	}
+	var themeUrl = await UriResolver.Resolve(this.Context.Request.GetAbsoluteRootUri(), Theme.CustomThemeCssUrl);
+	<link href="@themeUrl" rel="stylesheet" asp-append-version="true" />
 }
 else
 {

@@ -1,0 +1,116 @@
+@using BTCPayServer.Abstractions.Contracts
+@using BTCPayServer.Services
+@model BrandingViewModel;
+@inject IFileService FileService
+@{
+    ViewData.SetActivePage(ServerNavPages.Branding, "Branding");
+    var canUpload = await FileService.IsAvailable();
+    var themeExtension = ((ThemeExtension[])Enum.GetValues(typeof(ThemeExtension))).Select(t =>
+        new SelectListItem(typeof(ThemeExtension).DisplayName(t.ToString()), t == ThemeExtension.Custom ? null : t.ToString()));
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+}
+
+<form method="post" enctype="multipart/form-data">
+    <div class="sticky-header">
+		<h2 text-translate="true">@ViewData["Title"]</h2>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <div class="form-group">
+                <label asp-for="ServerName" class="form-label"></label>
+                <input asp-for="ServerName" class="form-control" />
+                <div class="form-text">You can give this server a custom name, which will appear on public facing pages.</div>
+                <span asp-validation-for="ServerName" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="ContactUrl" class="form-label"></label>
+                <input asp-for="ContactUrl" class="form-control" />
+                <div class="form-text">
+                    Add an email address or an external URL where users can contact you for support requests
+                    through a "Contact Us" button, displayed at the bottom of the public facing pages.
+                </div>
+                <span asp-validation-for="ContactUrl" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <label asp-for="LogoFile" class="form-label"></label>
+                    @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                    {
+                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
+                            <vc:icon symbol="cross" /> Remove
+                        </button>
+                    }
+                </div>
+                @if (canUpload)
+                {
+                    <div class="d-flex align-items-center gap-3">
+                        <input asp-for="LogoFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.LogoUrl))
+                        {
+                            <img src="@Model.LogoUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;"/>
+                        }
+                    </div>
+                    <span asp-validation-for="LogoFile" class="text-danger"></span>
+                }
+                else
+                {
+                    <input asp-for="LogoFile" type="file" class="form-control" disabled>
+                    <div class="form-text">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                }
+            </div>
+
+			<h3 class="mt-5 mb-3" text-translate="true">Theme</h3>
+            <p>Use the default Light or Dark Themes, or provide a custom CSS theme file below.</p>
+            
+            <div class="d-flex align-items-center mb-3">
+                <input asp-for="CustomTheme" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomThemeSettings" aria-expanded="@(Model.CustomTheme)" aria-controls="CustomThemeSettings" />
+                <div>
+                    <label asp-for="CustomTheme" class="form-check-label"></label>
+                    <div class="text-muted">
+                        <a href="https://docs.btcpayserver.org/Development/Theme/" target="_blank" rel="noreferrer noopener">Adjust the design</a>
+                        of your BTCPay Server instance to your needs.
+                    </div>
+                </div>
+            </div>
+            <div class="collapse @(Model.CustomTheme ? "show" : "")" id="CustomThemeSettings">
+                <div class="form-group pt-2">
+                    <label asp-for="CustomThemeExtension" class="form-label" data-required></label>
+                    <select asp-for="CustomThemeExtension" asp-items="@themeExtension" class="form-select w-auto"></select>
+                </div>
+                <div class="form-group mb-0">
+                    <div class="d-flex align-items-center justify-content-between gap-2">
+                        <label asp-for="CustomThemeFile" class="form-label" data-required></label>
+                        @if (!string.IsNullOrEmpty(Model.CustomThemeCssUrl))
+                        {
+                            <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveCustomThemeFile" value="true">
+                                <vc:icon symbol="cross" /> Remove
+                            </button>
+                        }
+                    </div>
+                    @if (canUpload)
+                    {
+                        <div class="d-flex align-items-center gap-3">
+                            <input asp-for="CustomThemeFile" type="file" class="form-control flex-grow">
+                            @if (!string.IsNullOrEmpty(Model.CustomThemeCssUrl))
+                            {
+                                <a href="@Model.CustomThemeCssUrl" target="_blank" rel="noreferrer noopener" class="text-nowrap">Custom CSS</a>
+                            }
+                        </div>
+                        <span asp-validation-for="CustomThemeFile" class="text-danger"></span>
+                    }
+                    else
+                    {
+                        <input asp-for="CustomThemeFile" type="file" class="form-control" disabled>
+                        <p class="form-text text-muted">In order to upload a theme file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</form>

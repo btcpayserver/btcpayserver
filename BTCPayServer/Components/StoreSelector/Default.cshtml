@@ -1,10 +1,8 @@
-@using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Client
 @using BTCPayServer.Components.MainLogo
 @using BTCPayServer.Services
+@using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
 @inject BTCPayServerEnvironment Env
-@inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @functions {
     @* ReSharper disable once CSharpWarnings::CS1998 *@
@@ -38,13 +36,13 @@ else
     <div id="StoreSelector">
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
             <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "empty-state" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoFileId))
+                @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoUrl))
                 {
-                    <img class="logo" src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CurrentStoreLogoFileId))" alt="@Model.CurrentDisplayName" />
+                    <img class="logo" src="@Model.CurrentStoreLogoUrl" alt="@Model.CurrentDisplayName" />
                 }
                 else
                 {
-                    <vc:icon symbol="store"/>
+                    <vc:icon symbol="nav-store"/>
                 }
                 <span>@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</span>
                 <vc:icon symbol="caret-down"/>
@@ -53,19 +51,23 @@ else
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
+                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected && ViewData.ActivePageClass(ServerNavPages.Stores) != "active" ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                     </li>
                 }
                 @if (Model.Options.Any())
                 {
                     <li><hr class="dropdown-divider"></li>
                 }
-                <li ><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Create)" id="StoreSelectorCreate">Create Store</a></li>
+                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Create)" id="StoreSelectorCreate">Create Store</a></li>
                 @if (Model.ArchivedCount > 0)
                 {
                     <li><hr class="dropdown-divider"></li>
-                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.IsActivePage(StoreNavPages.Index)" id="StoreSelectorArchived">@Model.ArchivedCount Archived Store@(Model.ArchivedCount == 1 ? "" : "s")</a></li>
+                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Index)" id="StoreSelectorArchived">@Model.ArchivedCount Archived Store@(Model.ArchivedCount == 1 ? "" : "s")</a></li>
                 }
+                @*
+                <li permission="@Policies.CanModifyServerSettings"><hr class="dropdown-divider"></li>
+                <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.ActivePageClass(ServerNavPages.Stores)" id="StoreSelectorAdminStores">Admin Store Overview</a></li>
+                *@
             </ul>
         </div>
     </div>

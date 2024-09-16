@@ -2,43 +2,61 @@
 @{
     ViewData.SetActivePage(ManageNavPages.Notifications, "Notification Settings");
 }
-<h3 class="mb-3">@ViewData["Title"]</h3>
 
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <form method="post" asp-action="NotificationSettings">
+<form method="post" asp-action="NotificationSettings">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-controller="UINotifications" asp-action="Index">Notifications</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
+        </nav>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="update">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
             @if (Model.All)
             {
-                <div>
-                    All notifications are disabled.
-                    <button type="submit" class="btn btn-primary" name="command" value="enable-all">Enable</button>
-                </div>
+                <p>All notifications are disabled.</p>
+                <button type="submit" class="btn btn-primary" name="command" value="enable-all">Enable notifications</button>
             }
             else
             {
-                <div class="form-group">
-                    <p>Do not receive notifications for</p>
-                    <div class="card">
-                        <ul class="list-group list-group-flush">
-                            @for (var index = 0; index < Model.DisabledNotifications.Count; index++)
-                            {
-                                var item = Model.DisabledNotifications[index];
-                                <li class="list-group-item">
-                                    <input type="hidden"  asp-for="DisabledNotifications[index].Value"/> 
-                                    <input type="checkbox" asp-for="DisabledNotifications[index].Selected" class="form-check-input form-check-inline"/>
-                                    <label class="mb-0 cursor-pointer" asp-for="DisabledNotifications[index].Selected">
-                                        @item.Text
-                                    </label>
-                                </li>
-                            }
-                        </ul>
+                <p>To disable notification for a feature, kindly toggle off the specified feature.</p>
+                @for (var index = 0; index < Model.DisabledNotifications.Count; index++)
+                {
+                    var item = Model.DisabledNotifications[index];
+                    <div class="d-flex align-items-center my-3">
+                        <input type="hidden" asp-for="DisabledNotifications[index].Value" />
+                        <input type="checkbox" asp-for="DisabledNotifications[index].Selected" class="btcpay-toggle me-3" />
+                        <label class="form-check-label cursor-pointer" asp-for="DisabledNotifications[index].Selected">
+                            @item.Text
+                        </label>
                     </div>
-                </div>
-                <div class="form-group mt-4">
-                    <button type="submit" class="btn btn-primary" name="command" value="update">Save</button>
-                    <button type="submit" class="btn btn-secondary ms-3" name="command" value="disable-all">Disable all</button>
+                }
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-secondary" name="command" value="disable-all">Disable all notifications</button>
                 </div>
             }
-        </form>
+        </div>
     </div>
-</div>
+</form>
+
+<script>
+    function toggleAllCheckboxes(checkbox) {
+        var checkboxes = document.querySelectorAll('.btcpay-toggle');
+        var label = document.getElementById('toggleAllLabel');
+        var isChecked = checkbox.checked;
+
+        checkboxes.forEach(function (item) {
+            item.checked = isChecked;
+        });
+
+        label.textContent = isChecked ? 'Disable All' : 'Enable All';
+    }
+</script>
+

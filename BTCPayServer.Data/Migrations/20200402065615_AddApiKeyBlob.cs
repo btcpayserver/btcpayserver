@@ -10,12 +10,9 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropColumn(
-                    name: "Permissions",
-                    table: "ApiKeys");
-            }
+            migrationBuilder.DropColumn(
+                name: "Permissions",
+                table: "ApiKeys");
 
             migrationBuilder.AddColumn<byte[]>(
                 name: "Blob",
@@ -25,12 +22,9 @@ namespace BTCPayServer.Migrations
 
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            if (this.SupportDropColumn(migrationBuilder.ActiveProvider))
-            {
-                migrationBuilder.DropColumn(
-                    name: "Blob",
-                    table: "ApiKeys");
-            }
+            migrationBuilder.DropColumn(
+                name: "Blob",
+                table: "ApiKeys");
 
             migrationBuilder.AddColumn<string>(
                 name: "Permissions",

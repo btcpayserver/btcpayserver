@@ -1,498 +1,327 @@
-@inject BTCPayServer.Services.LanguageService langService
-@inject BTCPayServer.Services.BTCPayServerEnvironment env
+@using BTCPayServer.Services
+@using BTCPayServer.Abstractions.Contracts
+@inject LanguageService LangService
+@inject BTCPayServerEnvironment Env
+@inject IEnumerable<IUIExtension> UiExtensions 
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model PaymentModel
 @{
 	Layout = null;
+	ViewData["Title"] = Model.HtmlTitle;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
+	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
+	var displayedPaymentMethods = Model.AvailableCryptos.Where(c => c.Displayed).ToList();
 }
-
+@functions {
+    private string ToJsValue(object value)
+    {
+        return Safe.Json(value).ToString()?.Replace("\"", "'");
+    }
+}
 <!DOCTYPE html>
-<html>
+<html lang="@Model.DefaultLang" class="@(Model.IsModal ? "checkout-modal" : "")"@(Env.IsDeveloping ? " data-devenv" : "")>
 <head>
-    <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-    <META NAME="robots" CONTENT="noindex,nofollow">
-    <title>@Model.HtmlTitle</title>
-    <link href="~/vendor/font-awesome/css/font-awesome.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/vendor/vex/css/vex.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/main/fonts/Roboto.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/main/fonts/RobotoMono.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/checkout/css/default.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/checkout/css/vex-extrastyles.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/checkout/css/vex-theme-btcpay.css" asp-append-version="true"  rel="stylesheet" />
-    <link href="~/vendor/jquery-prettydropdowns/prettydropdowns.css" asp-append-version="true"  rel="stylesheet" />
-
-    <script>
-        var initialSrvModel = @Safe.Json(Model);
+    <partial name="LayoutHead"/>
+    <meta name="robots" content="noindex,nofollow">
+    <link href="~/checkout/checkout.css" asp-append-version="true" rel="stylesheet" />
+    @if (!string.IsNullOrEmpty(Model.PaymentSoundUrl))
+    {
+        <link rel="preload" href="@Model.PaymentSoundUrl" as="audio" />
+    }
+    @if (!string.IsNullOrEmpty(Model.NfcReadSoundUrl))
+    {
+        <link rel="preload" href="@Model.NfcReadSoundUrl" as="audio" />
+    }
+    @if (!string.IsNullOrEmpty(Model.ErrorSoundUrl))
+    {
+        <link rel="preload" href="@Model.ErrorSoundUrl" as="audio" />
+    }
+</head>
+<body class="min-vh-100">
+    <div id="Checkout" class="public-page-wrap" v-cloak>
+		@if (Model.ShowStoreHeader)
+		{
+			<partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
+		}
+		<main class="tile">
+            <nav v-if="isModal">
+                <button type="button" v-if="isModal" id="close" v-on:click="close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </nav>
+            <section id="payment" v-if="isActive">
+                <div v-if="srvModel.itemDesc && srvModel.itemDesc !== srvModel.storeName" v-text="srvModel.itemDesc" class="fw-semibold text-center text-muted mb-3"></div>
+                <div class="d-flex justify-content-center mt-1 text-center">
+                    @if (Model.IsUnsetTopUp)
+                    {
+                        <h2 id="AmountDue" v-t="'any_amount'"></h2>
+                    }
+                    else
+                    {
+                        <h2 id="AmountDue" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="asNumber(srvModel.btcDue)" data-clipboard-hover :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                    }
+                </div>
+                <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
+                    <div>
+                        <div class="timer" v-if="showTimer">
+                            <span class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden"></span></span>
+                            <span v-t="'expiry_info'"></span> <span class="expiryTime">{{timeText}}</span>
+                        </div>
+                        <div class="payment-due" v-if="showPaymentDueInfo">
+                            <vc:icon symbol="info" />
+                            <span v-t="'partial_payment_info'"></span>
+                        </div>
+                        <div v-if="showPaymentDueInfo" v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
+                    </div>
+                </div>
+                <button id="DetailsToggle" class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                    <span class="fw-semibold" v-t="'view_details'"></span>
+                    <vc:icon symbol="caret-down" />
+                </button>
+                <div id="PaymentDetails" class="payment-details" v-collapsible="displayPaymentDetails">
+                    <payment-details
+                        :srv-model="srvModel"
+                        :is-active="isActive"
+                        :order-amount="orderAmount"
+                        :btc-paid="btcPaid"
+                        :btc-due="btcDue"
+                        :show-recommended-fee="showRecommendedFee"
+                        class="pb-4" />
+                </div>
+                @if (displayedPaymentMethods.Count > 1 || hasPaymentPlugins)
+                {
+                    <div class="mt-3 mb-2">
+                        <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
+                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
+                            @foreach (var crypto in displayedPaymentMethods)
+                            {
+                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId"
+                                   class="btcpay-pill m-0 payment-method"
+                                   :class="{ active: pmId === @ToJsValue(crypto.PaymentMethodId) }"
+                                   v-on:click.prevent="changePaymentMethod(@ToJsValue(crypto.PaymentMethodId))">
+                                    @crypto.PaymentMethodName
+                                </a>
+                            }
+                            @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
+                        </div>
+                    </div>
+                }
+                <component v-if="paymentMethodComponent" :is="paymentMethodComponent"
+                           :model="srvModel"
+                           :nfc-scanning="nfc.scanning"
+                           :nfc-supported="nfc.supported"
+                           :nfc-error-message="nfc.errorMessage"
+                           v-on:start-nfc-scan="startNFCScan"
+                           v-on:handle-nfc-data="handleNFCData"
+                           v-on:handle-nfc-error="handleNFCError"
+                           v-on:handle-nfc-result="handleNFCResult" />
+            </section>
+            <section id="result" v-else>
+                <div v-if="isProcessing" id="processing" key="processing">
+                    <div class="top">
+                        <span class="icn">
+                            <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
+                            <vc:icon symbol="checkout-sent" />
+                        </span>
+                        <h4 v-t="'payment_received'" class="mb-4"></h4>
+                        <p class="text-center" v-t="'payment_received_body'"></p>
+                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_received_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
+                        <div id="PaymentDetails" class="payment-details">
+                            <dl class="mb-0">
+                                <div>
+                                    <dt v-t="'invoice_id'"></dt>
+                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                </div>
+                                <div v-if="srvModel.orderId">
+                                    <dt v-t="'order_id'"></dt>
+                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" :data-clipboard-confirm="$t('copy_confirm')"></dd>
+                                </div>
+                            </dl>
+                            <payment-details
+                                :srv-model="srvModel"
+                                :is-active="isActive"
+                                :order-amount="orderAmount"
+                                :btc-paid="btcPaid"
+                                :btc-due="btcDue"
+                                :show-recommended-fee="showRecommendedFee"
+                                v-collapsible="displayPaymentDetails" />
+                        </div>
+                        <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                            <span class="fw-semibold" v-t="'view_details'"></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </div>
+                    <div class="buttons mt-3" v-if="storeLink || isModal">
+                        <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
+                    </div>
+                </div>
+                <div v-if="isSettled" id="settled" key="settled">
+                    <div class="top">
+                        <span class="icn">
+                            <div id="confetti" v-if="srvModel.celebratePayment" v-on:click="celebratePayment(5000)"></div>
+                            <vc:icon symbol="checkout-complete" />
+                        </span>
+                        <h4 v-t="'invoice_paid'"></h4>
+                        <div id="PaymentDetails" class="payment-details">
+                            <dl class="mb-0">
+                                <div>
+                                    <dt v-t="'invoice_id'"></dt>
+                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" data-clipboard-hover="start"></dd>
+                                </div>
+                                <div v-if="srvModel.orderId">
+                                    <dt v-t="'order_id'"></dt>
+                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" data-clipboard-hover="start"></dd>
+                                </div>
+                            </dl>
+                            <payment-details
+                                :srv-model="srvModel"
+                                :is-active="isActive"
+                                :order-amount="orderAmount"
+                                :btc-paid="btcPaid"
+                                :btc-due="btcDue"
+                                :show-recommended-fee="showRecommendedFee"
+                                class="mb-5" />
+                        </div>
+                    </div>
+                    <div class="buttons" v-if="srvModel.receiptLink || storeLink || isModal">
+                        <a v-if="srvModel.receiptLink" class="btn btn-primary rounded-pill w-100" :href="srvModel.receiptLink" :target="isModal ? '_top' : null" v-t="'view_receipt'" id="ReceiptLink"></a>
+                        <a v-if="storeLink" class="btn btn-secondary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-secondary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
+                    </div>
+                </div>
+                <div v-if="isInvalid" id="unpaid" key="unpaid">
+                    <div class="top">
+                        <span class="icn">
+                            <vc:icon symbol="checkout-expired" />
+                        </span>
+                        <h4 v-t="'invoice_expired'"></h4>
+                        <div id="PaymentDetails" class="payment-details">
+                            <dl class="mb-0">
+                                <div>
+                                    <dt v-t="'invoice_id'"></dt>
+                                    <dd v-text="srvModel.invoiceId" :data-clipboard="srvModel.invoiceId" data-clipboard-hover="start"></dd>
+                                </div>
+                                <div v-if="srvModel.orderId">
+                                    <dt v-t="'order_id'"></dt>
+                                    <dd v-text="srvModel.orderId" :data-clipboard="srvModel.orderId" data-clipboard-hover="start"></dd>
+                                </div>
+                            </dl>
+                            <payment-details
+                                :srv-model="srvModel"
+                                :is-active="isActive"
+                                :order-amount="orderAmount"
+                                :btc-paid="btcPaid"
+                                :btc-due="btcDue"
+                                :show-recommended-fee="showRecommendedFee"
+                                v-collapsible="displayPaymentDetails" />
+                        </div>
+                        <button class="d-flex align-items-center gap-1 btn btn-link payment-details-button" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
+                            <span class="fw-semibold" v-t="'view_details'"></span>
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                        <p class="text-center mt-3" v-html="replaceNewlines($t(isPaidPartial ? 'invoice_paidpartial_body' : 'invoice_expired_body', { storeName: srvModel.storeName, minutes: srvModel.maxTimeMinutes }))"></p>
+                    </div>
+                    <div class="buttons" v-if="(isPaidPartial && srvModel.storeSupportUrl) || storeLink || isModal">
+                        <a v-if="isPaidPartial && srvModel.storeSupportUrl" class="btn btn-primary rounded-pill w-100" :href="srvModel.storeSupportUrl" v-t="'contact_us'" id="ContactLink"></a>
+                        <a v-if="storeLink" class="btn btn-primary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
+                        <button v-else-if="isModal" class="btn btn-primary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
+                    </div>
+                </div>
+            </section>
+        </main>
+        @if (Env.CheatMode)
+        {
+            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-settled="isSettled" :is-processing="isProcessing" :payment-method-id="pmId" :crypto-code="srvModel.cryptoCode"></checkout-cheating>
+        }
+        <footer class="store-footer">
+            <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
+                {{$t("powered_by")}} <partial name="_StoreFooterLogo" />
+            </a>
+            <select asp-for="DefaultLang" asp-items="@LangService.GetLanguageSelectListItems()" class="form-select" v-on:change="changeLanguage"></select>
+        </footer>
+    </div>
+    <noscript>
+        <div class="p-5 text-center">
+            <h2>Javascript is currently disabled in your browser.</h2>
+            <h5>Please enable Javascript and refresh this page for the best experience.</h5>
+            <p>
+                Alternatively, click below to continue to our
+                <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId">HTML-only invoice</a>.
+            </p>
+        </div>
+    </noscript>
+    <script type="text/x-template" id="payment-details">
+        <dl>
+            <div v-if="orderAmount > 0" id="PaymentDetails-TotalPrice" key="TotalPrice">
+                <dt v-t="'total_price'"></dt>
+                <dd :data-clipboard="asNumber(srvModel.orderAmount)" data-clipboard-hover="start">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+            </div>
+            <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat" key="TotalFiat">
+                <dt v-t="'total_fiat'"></dt>
+                <dd :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
+            </div>
+            <div v-if="srvModel.rate && srvModel.cryptoCode" id="PaymentDetails-ExchangeRate" key="ExchangeRate">
+                <dt v-t="'exchange_rate'"></dt>
+                <dd :data-clipboard="asNumber(srvModel.rate)" data-clipboard-hover="start">
+                    <template v-if="srvModel.cryptoCode === 'sats'">1 sat = {{ srvModel.rate }}</template>
+                    <template v-else>1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}</template>
+                </dd>
+            </div>
+            <div v-if="srvModel.networkFee" id="PaymentDetails-NetworkCost" key="NetworkCost">
+                <dt v-t="'network_cost'"></dt>
+                <dd :data-clipboard="asNumber(srvModel.networkFee)" data-clipboard-hover="start">
+                    <div v-if="srvModel.txCountForFee > 0" v-t="{ path: 'tx_count', args: { count: srvModel.txCount } }"></div>
+                    <div v-text="`${srvModel.networkFee} ${srvModel.cryptoCode}`"></div>
+                </dd>
+            </div>
+            <div v-if="btcPaid > 0" id="PaymentDetails-AmountPaid" key="AmountPaid">
+                <dt v-t="'amount_paid'"></dt>
+                <dd :data-clipboard="asNumber(srvModel.btcPaid)" data-clipboard-hover="start" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
+            </div>
+            <div v-if="btcDue > 0" id="PaymentDetails-AmountDue" key="AmountDue">
+                <dt v-t="'amount_due'"></dt>
+                <dd :data-clipboard="asNumber(srvModel.btcDue)" data-clipboard-hover="start" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
+            </div>
+            <div v-if="showRecommendedFee" id="PaymentDetails-RecommendedFee" key="RecommendedFee">
+                <dt v-t="'recommended_fee'"></dt>
+                <dd :data-clipboard="asNumber(srvModel.feeRate)" data-clipboard-hover="start" v-t="{ path: 'fee_rate', args: { feeRate: srvModel.feeRate } }"></dd>
+            </div>
+        </dl>
     </script>
-    <script src="~/vendor/jquery/jquery.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/bootstrap/bootstrap.bundle.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/clipboard.js/clipboard.js" asp-append-version="true"></script>
+    <script>
+	    const i18nUrl = @Safe.Json($"{Model.RootPath}misc/translations/checkout/{{{{lng}}}}?v={Env.Version}");
+        const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
+        const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));
+        const availableLanguages = @Safe.Json(LangService.GetLanguages().Select(language => language.Code));
+        const initialSrvModel = @Safe.Json(Model);
+        const qrOptions = { margin: 0, type: 'svg', color: { dark: '#000', light: '#fff' } };
+        window.exports = {};
+    </script>
+    @if (Model.CelebratePayment)
+    {
+        <script src="~/vendor/dom-confetti/dom-confetti.min.js" asp-append-version="true"></script>
+    }
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/i18next.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/i18nextHttpBackend.min.js" asp-append-version="true"></script>
     <script src="~/vendor/i18next/vue-i18next.js" asp-append-version="true"></script>
-    <script src="~/vendor/jquery-prettydropdowns/jquery.prettydropdowns.js" asp-append-version="true"></script>
-    <script src="~/vendor/vex/js/vex.combined.min.js" asp-append-version="true"></script>
+    <script src="~/js/copy-to-clipboard.js" asp-append-version="true"></script>
+    <script src="~/js/vue-utils.js" asp-append-version="true"></script>
     <script src="~/main/utils.js" asp-append-version="true"></script>
-    <script src="~/checkout/js/checkout.js" asp-append-version="true"></script>
-    <script src="~/checkout/js/querystring.js" asp-append-version="true"></script>
-
-    <script>vex.defaultOptions.className = 'vex-theme-btcpay'</script>
-
-    @if (!string.IsNullOrEmpty(Model.CustomCSSLink))
+    <script src="~/checkout/checkout.js" asp-append-version="true"></script>
+    @if (Env.CheatMode)
     {
-        <link href="@Model.CustomCSSLink" rel="stylesheet" asp-append-version="true"/>
+        <partial name="Checkout-Cheating" model="@Model" />
     }
-
-    @if (Model.IsModal)
+	@foreach (var extensionPartial in Model.ExtensionPartials)
     {
-        <style type="text/css">
-            body {
-                background: rgba(25, 25, 25, 0.9);
-            }
-
-            .close-icon {
-                display: flex;
-            }
-        </style>
+		<partial name="@extensionPartial" model="@Model" />
     }
-</head>
-<body>
-    <noscript>
-        <div style="padding:2em;text-align:center;">
-            <h2>Javascript is currently disabled in your browser.</h2>
-            <h5>Please enable Javascript and refresh this page for the best experience.</h5>
-
-            <p>Alternatively, click below to continue to our HTML-only invoice.</p>
-
-            <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId" style="text-decoration:underline;color:blue">
-                Continue to javascript-disabled invoice &gt;
-            </a>
-        </div>
-    </noscript>
-
-    <!--[if lte IE 8]>
-    <div style="padding:2em;text-align:center;">
-      <form asp-action="CheckoutNoScript" method="GET">
-        <button style="text-decoration: underline; color: blue">Continue to legacy browser compatible invoice page
-        </button>
-      </form>
-    </div>
-    <![endif]-->
-
-    <invoice>
-        <div class="no-bounce" id="checkoutCtrl" v-cloak>
-            <div class="modal page" style="min-height:100vh">
-                <div class="modal-dialog open opened" role="document" v-bind:class="{ 'expired': invoiceUnpayable, 'paid': invoicePaid, 'enter-purchaser-email': showEmailForm}">
-                    <div class="modal-content long">
-                        <div class="content">
-                            <div class="invoice">
-                                <partial name="Checkout-Body" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div style="margin-top: 10px; text-align: center;">
-                        @* Not working because of nsSeparator: false, keySeparator: false,
-                            {{$t("nested.lang")}} >>
-                        *@
-
-                        <select asp-for="DefaultLang"
-                                class="cmblang reverse invisible"
-                                asp-items="@langService.GetLanguageSelectListItems()"></select>
-
-                        <script>
-                            $(function () {
-                                // REVIEW: don't use initDropdown method but rather directly initialize select whenever you are using it
-                                $("#DefaultLang").val(startingLanguage);
-                                var languageSelectorPrettyDropdown = initDropdown("#DefaultLang");
-
-                                languageSelectorPrettyDropdown.change(function () {
-                                    changeLanguage(languageSelectorPrettyDropdown.val());
-                                });
-
-                                languageSelectorPrettyDropdown.keypress(function (event) {
-                                    if (event.keyCode == 13) {
-                                        languageSelectorPrettyDropdown.click();
-                                    }
-                                });
-                            });
-
-                            function initDropdown(selector) {
-                                return $(selector).prettyDropdown({
-                                    classic: true,
-                                    height: 32,
-                                    reverse: true,
-                                    hoverIntent: -1
-                                });
-                            }
-                        </script>
-                    </div>
-                    <div class="powered__by__btcpayserver">
-                        Powered by <a target="_blank" href="https://github.com/btcpayserver/btcpayserver" rel="noreferrer noopener">BTCPay Server</a>
-                    </div>
-                    @if (env.CheatMode)
-                    {
-                        <partial name="Checkout-Testing" />
-                    }
-                </div>
-            </div>
-        </div>
-    </invoice>
-    <script>
-    var availableLanguages = @Safe.Json(langService.GetLanguages().Select((language) => language.Code));
-    var defaultLang = @Safe.Json(Model.DefaultLang);
-    var fallbackLanguage = "en";
-    startingLanguage = computeStartingLanguage();
-    i18next
-        .use(window.i18nextHttpBackend)
-        .init({
-            backend: {
-                loadPath: @Safe.Json($"{Model.RootPath}misc/translations/checkout-v1/{{{{lng}}}}?v={env.Version}")
-            },
-            lng: startingLanguage,
-            fallbackLng: fallbackLanguage,
-            nsSeparator: false,
-            keySeparator: false
-        });
-
-    function computeStartingLanguage() {
-        if (urlParams.lang && isLanguageAvailable(urlParams.lang)) {
-            return urlParams.lang;
-        }
-        else if (isLanguageAvailable(defaultLang)) {
-            return defaultLang;
-        } else {
-            return fallbackLanguage;
-        }
-    }
-
-    function changeLanguage(lang) {
-        if (isLanguageAvailable(lang)) {
-            i18next.changeLanguage(lang);
-        }
-    }
-
-    function isLanguageAvailable(languageCode) {
-        return availableLanguages.indexOf(languageCode) >= 0;
-    }
-
-    var i18n = new VueI18next(i18next);
-    Vue.config.ignoredElements = [
-        'line-items',
-        'low-fee-timeline',
-        // Ignoring custom HTML5 elements, eg: bp-spinner
-        /^bp-/
-    ];
-    var eventBus = new Vue();
-    var checkoutCtrl = new Vue({
-        i18n: i18n,
-        el: '#checkoutCtrl',
-        data: {
-            srvModel: initialSrvModel,
-            end: new Date(),
-            expirationPercentage: 0,
-            timerText: "@Model.TimeLeft",
-            emailAddressInput: "",
-            emailAddressInputDirty: false,
-            emailAddressInputInvalid: false,
-            emailAddressFormSubmitting: false,
-            lineItemsExpanded: false,
-            changingCurrencies: false,
-            loading: true,
-            isModal: initialSrvModel.isModal,
-            nfc: {
-                supported: 'NDEFReader' in window,
-                scanning: false,
-                submitting: false,
-                errorMessage: null,
-                permissionGranted: false,
-                readerAbortController: null
-            }
-        },
-        computed: {
-            expiringSoon: function(){
-                return this.expirationPercentage >= 75 && !this.invoiceUnpayable && !this.invoicePaid;
-            },
-            showPaymentUI: function(){
-                return !this.showEmailForm && !this.invoiceUnpayable && !this.invoicePaid;
-            },
-            showEmailForm: function(){
-                return this.srvModel.requiresRefundEmail && (!this.srvModel.customerEmail || !this.validateEmail(this.srvModel.customerEmail)) && !this.invoiceUnpayable;
-            },
-            showRecommendedFee: function(){
-                return  this.srvModel.showRecommendedFee && this.srvModel.feeRate != 0;
-            },
-            invoiceUnpayable: function(){
-                return  ["expired", "invalid"].indexOf(this.srvModel.status) >= 0;
-            },
-            invoicePaid: function(){
-                return  ["complete", "confirmed", "paid"].indexOf(this.srvModel.status) >= 0;
-            },
-            storeLink () {
-                return this.srvModel.merchantRefLink && this.srvModel.merchantRefLink !== this.srvModel.receiptLink
-                    ? this.srvModel.merchantRefLink
-                    : null;
-            }
-        },
-        mounted: async function(){
-            this.startProgressTimer();
-            this.listenIn();
-            this.onDataCallback(this.srvModel);
-            if (this.srvModel.status === "new" && this.srvModel.txCount > 1) {
-                this.onlyExpandLineItems();
-            }
-            window.parent.postMessage("loaded", "*");
-            jQuery("invoice").fadeOut(0).fadeIn(300);
-            window.closePaymentMethodDialog = this.closePaymentMethodDialog.bind(this);
-            this.loading = false;
-            if (this.nfc.supported) {
-                this.setupNFC();
-            }
-        },
-        beforeDestroy () {
-            if (this.nfc.readerAbortController) {
-                this.nfc.readerAbortController.abort()
-            }
-        },
-        methods: {
-            onlyExpandLineItems: function() {
-                if (!this.lineItemsExpanded) {
-                    this.toggleLineItems();
-                }},
-            toggleLineItems: function() {
-                this.lineItemsExpanded ? $("line-items").slideUp() : $("line-items").slideDown();
-                this.lineItemsExpanded = !this.lineItemsExpanded;
-            },
-            openPaymentMethodDialog: function() {
-                var content = $("#vexPopupDialog").html();
-                vex.open({
-                    unsafeContent: content
-                });
-            },
-            closePaymentMethodDialog: function(currencyId) {
-                vex.closeAll();
-                this.changeCurrency(currencyId);
-            },
-            changeCurrency: function (currency) {
-                if (currency !== null && this.srvModel.paymentMethodId !== currency) {
-                    this.changingCurrencies = true;
-                    this.srvModel.paymentMethodId = currency;
-                    this.fetchData();
-                    this.closePaymentMethodDialog(null);
-                }
-            },
-            close: function(){
-                $("invoice").fadeOut(300, function () {
-                    window.parent.postMessage("close", "*");
-                });
-            },
-            validateEmail: function (email) {
-                var re = /^(([^<>()\[\]\\.,;:\s@@"]+(\.[^<>()\[\]\\.,;:\s@@"]+)*)|(".+"))@@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-                return re.test(email);
-            },
-            startProgressTimer: function(){
-                var timeLeftS = this.endDate? (this.endDate.getTime() - new Date().getTime())/1000 : this.srvModel.expirationSeconds;
-                this.expirationPercentage = 100 - ((timeLeftS / this.srvModel.maxTimeSeconds) * 100);
-                this.timerText = this.updateTimerText(timeLeftS);
-                if( this.expirationPercentage < 100 &&  (this.srvModel.status === "paidPartial" || this.srvModel.status === "new")){
-                    setTimeout(this.startProgressTimer, 500);
-                }
-            },
-            updateTimerText: function (timer) {
-                if (timer >= 0) {
-                    var minutes = parseInt(timer / 60, 10);
-                    minutes = minutes < 10 ? "0" + minutes : minutes;
-                    var seconds = parseInt(timer % 60, 10);
-                    seconds = seconds < 10 ? "0" + seconds : seconds;
-                    return minutes + ":" + seconds;
-                } else {
-                    return "00:00";
-                }
-            },
-            listenIn: function(){
-                var self = this;
-                var socket = null;
-                var supportsWebSockets = 'WebSocket' in window && window.WebSocket.CLOSING === 2;
-                if (supportsWebSockets) {
-                    var loc = window.location, ws_uri;
-                    if (loc.protocol === "https:") {
-                        ws_uri = "wss:";
-                    } else {
-                        ws_uri = "ws:";
-                    }
-                    ws_uri += "//" + loc.host;
-                    ws_uri += loc.pathname + "/status/ws?invoiceId=" + this.srvModel.invoiceId;
-
-                    try {
-                        socket = new WebSocket(ws_uri);
-                        socket.onmessage = function (e) {
-                            if (e.data === "ping")
-                                return;
-                            self.fetchData();
-                        };
-                        socket.onerror = function (e) {
-                            console.error("Error while connecting to websocket for invoice notifications (callback)");
-                        };
-                    }
-                    catch (e) {
-                        console.error("Error while connecting to websocket for invoice notifications");
-                    }
-                }
-                var self = this;
-                function watcher(){
-                    setTimeout(function(){
-                        if (socket === null || socket.readyState !== 1) {
-                            self.fetchData();
-                        }
-                        watcher();
-                    }, 2000);
-                }
-                watcher();
-            },
-            fetchData: function(){
-                var self = this;
-                $.ajax({
-                    url: window.location.pathname + "/status?invoiceId=" + this.srvModel.invoiceId + "&paymentMethodId=" + this.srvModel.paymentMethodId,
-                    type: "GET",
-                    cache: false
-                })
-                .done(function (data) {
-                    self.onDataCallback.bind(self)(data);
-                })
-            },
-            onDataCallback : function(jsonData){
-                if (this.srvModel.status !== jsonData.status) {
-                    window.parent.postMessage({ "invoiceId": this.srvModel.invoiceId, "status": jsonData.status }, "*");
-                }
-                if (jsonData.paymentMethodId === this.srvModel.paymentMethodId) {
-                    this.changingCurrencies = false;
-                }
-                // expand line items to show details on amount due for multi-transaction payment
-                if (this.srvModel.txCount === 1 && jsonData.txCount > 1) {
-                    this.onlyExpandLineItems();
-                }
-                var newEnd = new Date();
-                newEnd.setSeconds(newEnd.getSeconds()+ jsonData.expirationSeconds);
-                this.endDate = newEnd;
-                // updating ui
-                this.srvModel = jsonData;
-
-                eventBus.$emit("data-fetched", this.srvModel);
-                if (this.invoicePaid && jsonData.redirectAutomatically && jsonData.merchantRefLink) {
-                    this.loading = true;
-                    setTimeout(function () {
-                        if (this.isModal && window.top.location == jsonData.merchantRefLink){
-                            this.close();
-                        } else {
-                            window.top.location = jsonData.merchantRefLink;
-                        }
-                    }.bind(this), 2000);
-                }
-            },
-            onEmailChange: function(){
-                this.emailAddressInputDirty = true;
-                this.emailAddressInputInvalid = false;
-            },
-            onEmailSubmit : function(){
-                var self = this;
-                if (this.validateEmail(this.emailAddressInput)) {
-                    this.emailAddressFormSubmitting = true;
-                    // Push the email to a server, once the reception is confirmed move on
-                    $.ajax({
-                        url: window.location.pathname + "/UpdateCustomer?invoiceId=" +this.srvModel.invoiceId,
-                        type: "POST",
-                        data: JSON.stringify({ Email: this.emailAddressInput }),
-                        contentType: "application/json; charset=utf-8"
-                    })
-                    .done(function () {
-                        self.srvModel.customerEmail = self.emailAddressInput;
-                    }).always(function () {
-                        self.emailAddressFormSubmitting = false;
-                    });
-                } else {
-                    this.emailAddressInputInvalid = true;
-                }
-            },
-            async setupNFC () {
-                try {
-                    this.$set(this.nfc, 'permissionGranted', navigator.permissions && (await navigator.permissions.query({ name: 'nfc' })).state === 'granted');
-                } catch (e) {}
-                if (this.nfc.permissionGranted) {
-                    await this.startNFCScan();
-                }
-            },
-            async startNFCScan () {
-                if (this.nfc.scanning) return;
-                this.$set(this.nfc, 'scanning', true);
-                try {
-                    const inModal = window.self !== window.top;
-                    const ndef = inModal ? new NDEFReaderWrapper() : new NDEFReader();
-                    this.nfc.readerAbortController = new AbortController()
-                    this.nfc.readerAbortController.signal.onabort = () => {
-                        this.$set(this.nfc, 'scanning', false);
-                    };
-            
-                    await ndef.scan({ signal: this.nfc.readerAbortController.signal })
-                    ndef.onreadingerror = () => this.reportNfcError('Could not read NFC tag')
-                    ndef.onreading = async ({ message }) => {
-                        const record = message.records[0]
-                        const textDecoder = new TextDecoder('utf-8')
-                        const decoded = textDecoder.decode(record.data)
-                        this.$emit('read-nfc-data', decoded)
-                    }
-            
-                    if (inModal) {
-                        // receive messages from iframe
-                        window.addEventListener('message', async event => {
-                            // deny messages from other origins
-                            if (event.origin !== window.location.origin) return
-            
-                            const { action, data } = event.data
-                            switch (action) {
-                                case 'nfc:data':
-                                    this.$emit('read-nfc-data', data)
-                                    break;
-                                case 'nfc:error':
-                                    this.handleNFCError('Could not read NFC tag')
-                                    break;
-                            }
-                        });
-                    }
-            
-                    // we came here, so the user must have allowed NFC access
-                    this.$set(this.nfc, 'permissionGranted', true);
-                } catch (error) {
-                    this.handleNFCError(`NFC scan failed: ${error}`);
-                }
-            },
-            handleNFCData() { // child component reports it is handling the data
-                this.$set(this.nfc, 'errorMessage', null);
-                this.$set(this.nfc, 'successMessage', null);
-                this.$set(this.nfc, 'submitting', true);
-            },
-            handleNFCResult(message) { // child component reports result for handling the data
-                this.$set(this.nfc, 'submitting', false);
-                this.$set(this.nfc, 'successMessage', message);
-            },
-            handleNFCError(message) { // internal or via child component reporting failure of handling the data
-                this.$set(this.nfc, 'submitting', false);
-                this.$set(this.nfc, 'errorMessage', message);
-            }
-        }
-    });
-    </script>
-
-    @foreach (var paymentMethodHandler in PaymentMethodHandlerDictionary.Select(handler => handler.GetCheckoutUISettings()).Where(settings => settings != null))
-    {
-        <partial name="@paymentMethodHandler.ExtensionPartial" model="@Model" />
-    }
+    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })
 </body>
 </html>

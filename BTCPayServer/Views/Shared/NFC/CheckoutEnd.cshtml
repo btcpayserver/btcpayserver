@@ -1,21 +1,8 @@
 <template id="lnurl-withdraw-template">
     <div v-if="display" class="mt-4" id="NFC">
         <div v-if="nfcErrorMessage" class="alert alert-danger" v-text="nfcErrorMessage"></div>
-        <template v-if="isV2">
-            <button class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
-                    :disabled="nfcScanning || submitting" v-on:click="handleClick">{{btnText}}</button>
-        </template>
-        <template v-else>
-            <bp-loading-button>
-                <button class="action-button" style="margin: 0 45px;width:calc(100% - 90px) !important" :disabled="nfcScanning || submitting" v-on:click="handleClick" id="PayByNFC"
-                        :class="{ 'action-button': nfcSupported, 'btn btn-text w-100': !nfcSupported  }">
-                    <span class="button-text">{{btnText}}</span>
-                    <div class="loader-wrapper">
-                        @await Html.PartialAsync("~/Views/UIInvoice/Checkout-Spinner.cshtml")
-                    </div>
-                </button>
-            </bp-loading-button>
-        </template>
+        <button class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
+                :disabled="nfcScanning || submitting" v-on:click="handleClick">{{btnText}}</button>
     </div>
 </template>
 <script>
@@ -23,7 +10,6 @@ Vue.component("lnurl-withdraw-checkout", {
     template: "#lnurl-withdraw-template",
     props: {
         model: Object,
-        isV2: Boolean,
         nfcSupported: Boolean,
         nfcScanning: Boolean,
         nfcErrorMessage: String
@@ -38,14 +24,14 @@ Vue.component("lnurl-withdraw-checkout", {
             } = this.model
             const lnurlwAvailable = 
                 // Either we have LN or LNURL available directly
-                !!availablePaymentMethods.find(pm => ['BTC_LNURLPAY', 'BTC_LightningLike'].includes(pm.paymentMethodId)) ||
+                !!availablePaymentMethods.find(pm => ['BTC-LNURL', 'BTC-LN'].includes(pm.paymentMethodId)) ||
                 // Or the BIP21 payment URL flags Lightning support
                 !!paymentUrl.match(/lightning=ln/i)
-            const isAvailable = activePaymentMethodId === 'BTC_LNURLPAY' || (
+            const isAvailable = activePaymentMethodId === 'BTC-LNURL' || (
                 // Unified QR/BIP21 case
-                (activePaymentMethodId === 'BTC' && isUnified && lnurlwAvailable) ||
+                (activePaymentMethodId === 'BTC-CHAIN' && isUnified && lnurlwAvailable) ||
                 // Lightning with LNURL available
-                (activePaymentMethodId === 'BTC_LightningLike' && lnurlwAvailable))
+                (activePaymentMethodId === 'BTC-LN' && lnurlwAvailable))
             return isAvailable && (this.nfcSupported || this.testFallback)
         },
         testFallback () {
@@ -54,14 +40,14 @@ Vue.component("lnurl-withdraw-checkout", {
         btnText () {
             if (this.nfcSupported) {
                 if (this.submitting) {
-                    return this.isV2 ? this.$t('submitting_nfc') : 'Submitting NFC …'
+                    return this.$t('submitting_nfc')
                 } else if (this.nfcScanning) {
-                    return this.isV2 ? this.$t('scanning_nfc') : 'Scanning NFC …'
+                    return this.$t('scanning_nfc')
                 } else {
-                    return this.isV2 ? this.$t('pay_by_nfc') : 'Pay by NFC'
+                    return this.$t('pay_by_nfc')
                 }
             } else {
-                return this.isV2 ? this.$t('pay_by_lnurl') : 'Pay by LNURL-Withdraw'
+                return this.$t('pay_by_lnurl')
             }
         }
     },
@@ -114,7 +100,7 @@ Vue.component("lnurl-withdraw-checkout", {
             const body = JSON.stringify({ lnurl: data, invoiceId: this.model.invoiceId, amount: this.amount })
             const opts = { method: 'POST', headers: { 'Content-Type': 'application/json' }, body }
             const response = await fetch(this.url, opts)
-            
+
             // Handle response
             try {
                 const result = await response.text()

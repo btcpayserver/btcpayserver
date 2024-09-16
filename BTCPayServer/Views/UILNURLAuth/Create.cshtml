@@ -2,19 +2,20 @@
 @model Uri
 @{
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Register your Lightning node for LNURL Auth");
-    Dictionary<string, string> formats = new Dictionary<string, string>()
+    var formats = new Dictionary<string, string>
     {
         { "Bech32", LNURL.EncodeUri(Model, "login", true).ToString().ToUpperInvariant() },
         { "URI", LNURL.EncodeUri(Model, "login", false).ToString().ToUpperInvariant() }
     };
 }
 
-<h3 class="mb-3">@ViewData["Title"]</h3>
+<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
 
 <p>Scan the QR code with your Lightning wallet to link it to your user account.</p>
 
 <div id="info-message" class="d-inline-block">
-    <ul class="nav justify-content-center my-2">
+    <ul class="nav justify-content-center btcpay-pills align-items-center gap-2 my-2">
         @for (int i = 0; i < formats.Count; i++)
         {
             var mode = formats.ElementAt(i);

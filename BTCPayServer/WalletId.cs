@@ -1,49 +1,41 @@
+#nullable enable
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.RegularExpressions;
 using BTCPayServer.Payments;
 
 namespace BTCPayServer
 {
-    public class WalletId
+    public record WalletId
     {
         static readonly Regex _WalletStoreRegex = new Regex("^S-([a-zA-Z0-9]{30,60})-([a-zA-Z]{2,5})$");
-        public static bool TryParse(string str, out WalletId walletId)
+        public static bool TryParse(string str, [MaybeNullWhen(false)] out WalletId walletId)
         {
             ArgumentNullException.ThrowIfNull(str);
             walletId = null;
-            WalletId w = new WalletId();
             var match = _WalletStoreRegex.Match(str);
             if (!match.Success)
                 return false;
-            w.StoreId = match.Groups[1].Value;
-            w.CryptoCode = match.Groups[2].Value.ToUpperInvariant();
-            walletId = w;
+            var storeId = match.Groups[1].Value;
+            var cryptoCode = match.Groups[2].Value.ToUpperInvariant();
+            walletId = new WalletId(storeId, cryptoCode);
             return true;
-        }
-        public WalletId()
-        {
-
         }
         public WalletId(string storeId, string cryptoCode)
         {
+            ArgumentNullException.ThrowIfNull(storeId);
+            ArgumentNullException.ThrowIfNull(cryptoCode);
             StoreId = storeId;
             CryptoCode = cryptoCode;
         }
-        public string StoreId { get; set; }
-        public string CryptoCode { get; set; }
+        public string StoreId { get; }
+        public string CryptoCode { get; }
 
         public PaymentMethodId GetPaymentMethodId()
         {
-            return new PaymentMethodId(CryptoCode, PaymentTypes.BTCLike);
+            return PaymentTypes.CHAIN.GetPaymentMethodId(CryptoCode);
         }
-        public override bool Equals(object obj)
-        {
-            WalletId item = obj as WalletId;
-            if (item == null)
-                return false;
-            return ToString().Equals(item.ToString(), StringComparison.InvariantCulture);
-        }
-
+       
         public static WalletId Parse(string id)
         {
             if (TryParse(id, out var v))
@@ -51,24 +43,6 @@ namespace BTCPayServer
             throw new FormatException("Invalid WalletId");
         }
 
-        public static bool operator ==(WalletId a, WalletId b)
-        {
-            if (System.Object.ReferenceEquals(a, b))
-                return true;
-            if (((object)a == null) || ((object)b == null))
-                return false;
-            return a.ToString() == b.ToString();
-        }
-
-        public static bool operator !=(WalletId a, WalletId b)
-        {
-            return !(a == b);
-        }
-
-        public override int GetHashCode()
-        {
-            return ToString().GetHashCode(StringComparison.Ordinal);
-        }
         public override string ToString()
         {
             if (StoreId == null || CryptoCode == null)

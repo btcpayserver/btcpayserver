@@ -12,11 +12,12 @@ namespace BTCPayServer
         {
             switch (m)
             {
+                case null:
+                    return 0m;
                 case Money money:
                     return money.ToDecimal(MoneyUnit.BTC);
                 case MoneyBag mb:
                     return mb.Select(money => money.GetValue(network)).Sum();
-#if ALTCOINS
                 case AssetMoney assetMoney:
                     if (network is BTCPayServer.Plugins.Altcoins.ElementsBTCPayNetwork elementsBTCPayNetwork)
                     {
@@ -25,7 +26,6 @@ namespace BTCPayServer
                             : 0;
                     }
                     throw new NotSupportedException("IMoney type not supported");
-#endif
                 default:
                     throw new NotSupportedException("IMoney type not supported");
             }

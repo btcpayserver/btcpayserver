@@ -36,6 +36,19 @@
                             "nullable": true,
                             "type": "number"
                         }
+                    },
+                    {
+                        "name": "storeId",
+                        "in": "query",
+                        "required": false,
+                        "description": "Array of store ids to fetch the notifications for",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
+                            }
+                        },
+                        "example": "&storeId=ABCDE&storeId=FGHIJ"
                     }
                 ],
                 "description": "View current user's notifications",
@@ -203,6 +216,80 @@
                     }
                 ]
             }
+        },
+        "/api/v1/users/me/notification-settings": {
+            "get": {
+                "tags": [
+                    "Notifications (Current User)"
+                ],
+                "summary": "Get notification settings",
+                "description": "View information about your notification settings",
+                "operationId": "Notifications_GetNotificationSettings",
+                "responses": {
+                    "200": {
+                        "description": "The current user's notification settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationSettingsData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the notification settings"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmanagenotificationsforuser"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Notifications (Current User)"
+                ],
+                "summary": "Update notification settings",
+                "description": "Updates the current user's notification settings",
+                "operationId": "Notifications_UpdateNotification",
+                "responses": {
+                    "200": {
+                        "description": "The current user's notification settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/NotificationSettingsData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the notification settings"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.user.canmanagenotificationsforuser"
+                        ],
+                        "Basic": []
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateNotificationSettingsRequest"
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "components": {
@@ -239,6 +326,11 @@
                         "format": "html",
                         "description": "The html body of the notifications"
                     },
+                    "storeId": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "If related to a store, the store id of the notification"
+                    },
                     "link": {
                         "type": "string",
                         "format": "uri",
@@ -253,6 +345,117 @@
                         "type": "boolean",
                         "description": "If the notification has been seen by the user"
                     }
+                }
+            },
+            "UpdateNotificationSettingsRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "disabled": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "description": "List of the notification type identifiers, which should be disabled. Can also be a single item 'all'.",
+                        "example": ["newversion", "pluginupdate"],
+                        "nullable": false
+                    }
+                }
+            },
+            "NotificationSettingsData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "notifications": {
+                        "type": "array",
+                        "description": "The notification types",
+                        "items": {
+                            "$ref": "#/components/schemas/NotificationSettingsItemData"
+                        }
+                    }
+                },
+                "example": [
+                    {
+                        "identifier": "newversion",
+                        "name": "New version",
+                        "enabled": false
+                    },
+                    {
+                        "identifier": "newuserrequiresapproval",
+                        "name": "New user requires approval",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "inviteaccepted",
+                        "name": "User accepted invitation",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "pluginupdate",
+                        "name": "Plugin update",
+                        "enabled": false
+                    },
+                    {
+                        "identifier": "invoicestate",
+                        "name": "All invoice updates",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "invoicestate_invoice_paidAfterExpiration",
+                        "name": "Invoice was paid after expiration",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "invoicestate_invoice_expiredPaidPartial",
+                        "name": "Invoice expired with partial payments",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "invoicestate_invoice_failedToConfirm",
+                        "name": "Invoice has payments that failed to confirm on time",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "invoicestate_invoice_confirmed",
+                        "name": "Invoice is settled",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "payout",
+                        "name": "Payouts",
+                        "enabled": true
+                    },
+                    {
+                        "identifier": "external-payout-transaction",
+                        "name": "External payout approval",
+                        "enabled": true
+                    }
+                ]
+            },
+            "NotificationSettingsItemData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "identifier": {
+                        "type": "string",
+                        "description": "The identifier of the notification type",
+                        "nullable": false
+                    },
+                    "name": {
+                        "type": "string",
+                        "description": "The description of the notification type",
+                        "nullable": false
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "If the notification type is enabled",
+                        "nullable": false
+                    }
+                },
+                "example": {
+                    "identifier": "newversion",
+                    "name": "New version",
+                    "enabled": false
                 }
             }
         }

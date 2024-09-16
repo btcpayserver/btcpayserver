@@ -1,6 +1,6 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc.ActionConstraints;
 using Microsoft.Extensions.DependencyInjection;
@@ -25,7 +25,7 @@ namespace BTCPayServer.Filters
         {
             var req = context.RouteContext.HttpContext.Request;
             var policies = context.RouteContext.HttpContext.RequestServices.GetService<PoliciesSettings>();
-            var mapping = policies?.DomainToAppMapping?.ToList() ?? new List<PoliciesSettings.DomainToAppMappingItem>();
+            var mapping = policies?.DomainToAppMapping?.ToList() ?? [];
             if (policies is { RootAppId: { } rootAppId, RootAppType: { } rootAppType })
             {
                 mapping.Add(new PoliciesSettings.DomainToAppMappingItem
@@ -37,11 +37,11 @@ namespace BTCPayServer.Filters
             }
 
             // If we have an appId, we can redirect to the canonical domain
-            if ((string)context.RouteContext.RouteData.Values["appId"] is string appId)
+            if ((string)context.RouteContext.RouteData.Values["appId"] is { } appId)
             {
                 var redirectDomain = mapping.FirstOrDefault(item => item.AppId == appId)?.Domain;
                 // App is accessed via path, redirect to canonical domain
-                if (!string.IsNullOrEmpty(redirectDomain) && req.Method != "POST" && !req.HasFormContentType)
+                if (!string.IsNullOrEmpty(redirectDomain) && req.Method != "POST" && !req.HasFormContentType && !req.IsOnion())
                 {
                     var uri = new UriBuilder(req.Scheme, redirectDomain);
                     if (req.Host.Port.HasValue)

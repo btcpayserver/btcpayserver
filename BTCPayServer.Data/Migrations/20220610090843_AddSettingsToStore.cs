@@ -14,14 +14,13 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxlength = migrationBuilder.IsMySql() ? 255 : null;
             migrationBuilder.CreateTable(
                 name: "StoreSettings",
                 columns: table => new
                 {
-                    Name = table.Column<string>(nullable: false, maxLength: maxlength),
-                    StoreId = table.Column<string>(nullable: false, maxLength: maxlength),
-                    Value = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true)
+                    Name = table.Column<string>(nullable: false, maxLength: null),
+                    StoreId = table.Column<string>(nullable: false, maxLength: null),
+                    Value = table.Column<string>(type: "JSONB", nullable: true)
                 },
                 constraints: table =>
                 {

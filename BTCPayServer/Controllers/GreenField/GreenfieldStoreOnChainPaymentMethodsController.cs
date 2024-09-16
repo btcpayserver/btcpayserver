@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -9,8 +10,11 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
+using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
@@ -19,6 +23,9 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
+using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Asn1.X509.Qualified;
+using static Org.BouncyCastle.Math.EC.ECCurve;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -33,157 +40,94 @@ namespace BTCPayServer.Controllers.Greenfield
         public PoliciesSettings PoliciesSettings { get; }
 
         private readonly StoreRepository _storeRepository;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly BTCPayWalletProvider _walletProvider;
         private readonly IAuthorizationService _authorizationService;
         private readonly ExplorerClientProvider _explorerClientProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly EventAggregator _eventAggregator;
 
         public GreenfieldStoreOnChainPaymentMethodsController(
             StoreRepository storeRepository,
-            BTCPayNetworkProvider btcPayNetworkProvider,
             BTCPayWalletProvider walletProvider,
             IAuthorizationService authorizationService,
             ExplorerClientProvider explorerClientProvider,
             PoliciesSettings policiesSettings,
+            PaymentMethodHandlerDictionary handlers,
             EventAggregator eventAggregator)
         {
             _storeRepository = storeRepository;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
             _walletProvider = walletProvider;
             _authorizationService = authorizationService;
             _explorerClientProvider = explorerClientProvider;
             _eventAggregator = eventAggregator;
             PoliciesSettings = policiesSettings;
-        }
-
-        public static IEnumerable<OnChainPaymentMethodData> GetOnChainPaymentMethods(StoreData store,
-            BTCPayNetworkProvider networkProvider, bool? enabled)
-        {
-            var blob = store.GetStoreBlob();
-            var excludedPaymentMethods = blob.GetExcludedPaymentMethods();
-
-            return store.GetSupportedPaymentMethods(networkProvider)
-                .Where((method) => method.PaymentId.PaymentType == PaymentTypes.BTCLike)
-                .OfType<DerivationSchemeSettings>()
-                .Select(strategy =>
-                    new OnChainPaymentMethodData(strategy.PaymentId.CryptoCode,
-                        strategy.AccountDerivation.ToString(), !excludedPaymentMethods.Match(strategy.PaymentId),
-                        strategy.Label, strategy.GetSigningAccountKeySettings().GetRootedKeyPath(),
-                        strategy.PaymentId.ToStringNormalized()))
-                .Where((result) => enabled is null || enabled == result.Enabled)
-                .ToList();
-        }
-
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain")]
-        public ActionResult<IEnumerable<OnChainPaymentMethodData>> GetOnChainPaymentMethods(
-            string storeId,
-            [FromQuery] bool? enabled)
-        {
-            return Ok(GetOnChainPaymentMethods(Store, _btcPayNetworkProvider, enabled));
-        }
-
-        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
-        public ActionResult<OnChainPaymentMethodData> GetOnChainPaymentMethod(
-            string storeId,
-            string cryptoCode)
-        {
-            AssertCryptoCodeWallet(cryptoCode, out BTCPayNetwork _, out BTCPayWallet _);
-            var method = GetExistingBtcLikePaymentMethod(cryptoCode);
-            if (method is null)
-            {
-                throw ErrorPaymentMethodNotConfigured();
-            }
-
-            return Ok(method);
+            _handlers = handlers;
         }
 
         protected JsonHttpException ErrorPaymentMethodNotConfigured()
         {
-            return new JsonHttpException(this.CreateAPIError(404, "paymentmethod-not-configured", "The lightning node is not set up"));
+            return new JsonHttpException(this.CreateAPIError(404, "paymentmethod-not-configured", "The payment method is not configured"));
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview")]
         public IActionResult GetOnChainPaymentMethodPreview(
             string storeId,
-            string cryptoCode,
-            int offset = 0, int amount = 10)
+            [ModelBinder(typeof(PaymentMethodIdModelBinder))]
+            PaymentMethodId paymentMethodId,
+            int offset = 0, int count = 10)
         {
-            AssertCryptoCodeWallet(cryptoCode, out var network, out _);
-
-            var paymentMethod = GetExistingBtcLikePaymentMethod(cryptoCode);
-            if (string.IsNullOrEmpty(paymentMethod?.DerivationScheme))
+            AssertCryptoCodeWallet(paymentMethodId, out var network, out _);
+            if (!IsConfigured(paymentMethodId, out var settings))
             {
                 throw ErrorPaymentMethodNotConfigured();
             }
-
-            try
-            {
-                var strategy = DerivationSchemeSettings.Parse(paymentMethod.DerivationScheme, network);
-                var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-
-                var line = strategy.AccountDerivation.GetLineFor(deposit);
-                var result = new OnChainPaymentMethodPreviewResultData();
-                for (var i = offset; i < amount; i++)
-                {
-                    var address = line.Derive((uint)i);
-                    result.Addresses.Add(
-                        new OnChainPaymentMethodPreviewResultData.OnChainPaymentMethodPreviewResultAddressItem()
-                        {
-                            KeyPath = deposit.GetKeyPath((uint)i).ToString(),
-                            Address = address.ScriptPubKey.GetDestinationAddress(strategy.Network.NBitcoinNetwork)
-                                .ToString()
-                        });
-                }
-
-                return Ok(result);
-            }
-            catch
-            {
-                ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
-                    "Invalid Derivation Scheme");
-                return this.CreateValidationError(ModelState);
-            }
+            return Ok(GetPreviewResultData(offset, count, network, settings.AccountDerivation));
         }
 
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/preview")]
-        public IActionResult GetProposedOnChainPaymentMethodPreview(
+        [HttpPost("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview")]
+        public async Task<IActionResult> GetProposedOnChainPaymentMethodPreview(
             string storeId,
-            string cryptoCode,
-            [FromBody] UpdateOnChainPaymentMethodRequest paymentMethodData,
-            int offset = 0, int amount = 10)
+            [ModelBinder(typeof(PaymentMethodIdModelBinder))]
+            PaymentMethodId paymentMethodId,
+            [FromBody] UpdatePaymentMethodRequest request = null,
+            int offset = 0, int count = 10)
         {
-            AssertCryptoCodeWallet(cryptoCode, out var network, out _);
-
-            if (string.IsNullOrEmpty(paymentMethodData?.DerivationScheme))
+            if (request is null)
             {
-                ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
-                    "Missing derivationScheme");
+                ModelState.AddModelError(nameof(request), "Missing body");
+                return this.CreateValidationError(ModelState);
             }
+            if (request.Config is null)
+            {
+                ModelState.AddModelError(nameof(request.Config), "Missing config");
+                return this.CreateValidationError(ModelState);
+            }
+            AssertCryptoCodeWallet(paymentMethodId, out var network, out _);
 
+            var handler = _handlers.GetBitcoinHandler(network);
+            var ctx = new PaymentMethodConfigValidationContext(_authorizationService, ModelState, request.Config, User, Store.GetPaymentMethodConfig(paymentMethodId));
+            await handler.ValidatePaymentMethodConfig(ctx);
+            if (ctx.MissingPermission is not null)
+            {
+                return this.CreateAPIPermissionError(ctx.MissingPermission.Permission, ctx.MissingPermission.Message);
+            }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            DerivationSchemeSettings strategy;
-            try
-            {
-                strategy = DerivationSchemeSettings.Parse(paymentMethodData.DerivationScheme, network);
-            }
-            catch
-            {
-                ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
-                    "Invalid Derivation Scheme");
-                return this.CreateValidationError(ModelState);
-            }
 
+            var settings = handler.ParsePaymentMethodConfig(ctx.Config);
+            var result = GetPreviewResultData(offset, count, network, settings.AccountDerivation);
+            return Ok(result);
+        }
+
+        private static OnChainPaymentMethodPreviewResultData GetPreviewResultData(int offset, int count, BTCPayNetwork network, DerivationStrategyBase strategy)
+        {
             var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-            var line = strategy.AccountDerivation.GetLineFor(deposit);
+            var line = strategy.GetLineFor(deposit);
             var result = new OnChainPaymentMethodPreviewResultData();
-            for (var i = offset; i < amount; i++)
+            for (var i = offset; i < count; i++)
             {
                 var derivation = line.Derive((uint)i);
                 result.Addresses.Add(
@@ -192,120 +136,33 @@ namespace BTCPayServer.Controllers.Greenfield
                         OnChainPaymentMethodPreviewResultAddressItem()
                     {
                         KeyPath = deposit.GetKeyPath((uint)i).ToString(),
-                        Address = strategy.Network.NBXplorerNetwork.CreateAddress(strategy.AccountDerivation,
-                                line.KeyPathTemplate.GetKeyPath((uint)i),
-                                derivation.ScriptPubKey).ToString()
+                        Address =
+                            network.NBXplorerNetwork.CreateAddress(strategy, deposit.GetKeyPath((uint)i), derivation.ScriptPubKey)
+                                .ToString()
                     });
             }
-
-            return Ok(result);
+            return result;
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpDelete("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
-        public async Task<IActionResult> RemoveOnChainPaymentMethod(
-            string storeId,
-            string cryptoCode,
-            int offset = 0, int amount = 10)
+        private void AssertCryptoCodeWallet(PaymentMethodId paymentMethodId, out BTCPayNetwork network, out BTCPayWallet wallet)
         {
-            AssertCryptoCodeWallet(cryptoCode, out _, out _);
-
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-            var store = Store;
-            store.SetSupportedPaymentMethod(id, null);
-            await _storeRepository.UpdateStore(store);
-            _eventAggregator.Publish(new WalletChangedEvent()
-            {
-                WalletId = new WalletId(storeId, cryptoCode)
-            });
-            return Ok();
-        }
-
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpPut("~/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}")]
-        public async Task<IActionResult> UpdateOnChainPaymentMethod(
-            string storeId,
-            string cryptoCode,
-            [FromBody] UpdateOnChainPaymentMethodRequest request)
-        {
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-            AssertCryptoCodeWallet(cryptoCode, out var network, out var wallet);
-
-            if (string.IsNullOrEmpty(request?.DerivationScheme))
-            {
-                ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
-                    "Missing derivationScheme");
-            }
-
-            if (!ModelState.IsValid)
-                return this.CreateValidationError(ModelState);
-
-            try
-            {
-                var store = Store;
-                var storeBlob = store.GetStoreBlob();
-                var strategy = DerivationSchemeSettings.Parse(request.DerivationScheme, network);
-                if (strategy != null)
-                    await wallet.TrackAsync(strategy.AccountDerivation);
-                strategy.Label = request.Label;
-                var signing = strategy.GetSigningAccountKeySettings();
-                if (request.AccountKeyPath is RootedKeyPath r)
-                {
-                    signing.AccountKeyPath = r.KeyPath;
-                    signing.RootFingerprint = r.MasterFingerprint;
-                }
-                else
-                {
-                    signing.AccountKeyPath = null;
-                    signing.RootFingerprint = null;
-                }
-
-                store.SetSupportedPaymentMethod(id, strategy);
-                storeBlob.SetExcluded(id, !request.Enabled);
-                store.SetStoreBlob(storeBlob);
-                await _storeRepository.UpdateStore(store);
-                _eventAggregator.Publish(new WalletChangedEvent()
-                {
-                    WalletId = new WalletId(storeId, cryptoCode)
-                });
-                return Ok(GetExistingBtcLikePaymentMethod(cryptoCode, store));
-            }
-            catch
-            {
-                ModelState.AddModelError(nameof(OnChainPaymentMethodData.DerivationScheme),
-                    "Invalid Derivation Scheme");
-                return this.CreateValidationError(ModelState);
-            }
-        }
-
-        private void AssertCryptoCodeWallet(string cryptoCode, out BTCPayNetwork network, out BTCPayWallet wallet)
-        {
-            network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network is null)
-                throw new JsonHttpException(this.CreateAPIError(404, "unknown-cryptocode", "This crypto code isn't set up in this BTCPay Server instance"));
-
+            if (!_handlers.TryGetValue(paymentMethodId, out var h) || h is not BitcoinLikePaymentHandler handler)
+                throw new JsonHttpException(this.CreateAPIError(404, "unknown-paymentMethodId", "This payment method id isn't set up in this BTCPay Server instance"));
+            network = handler.Network;
             wallet = _walletProvider.GetWallet(network);
             if (wallet is null)
                 throw ErrorPaymentMethodNotConfigured();
         }
 
-        private OnChainPaymentMethodData GetExistingBtcLikePaymentMethod(string cryptoCode, StoreData store = null)
+        bool IsConfigured(PaymentMethodId paymentMethodId, [MaybeNullWhen(false)] out DerivationSchemeSettings settings)
         {
-            store ??= Store;
-            var storeBlob = store.GetStoreBlob();
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.BTCLike);
-            var paymentMethod = store
-                .GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                .OfType<DerivationSchemeSettings>()
-                .FirstOrDefault(method => method.PaymentId == id);
-
-            var excluded = storeBlob.IsExcluded(id);
-            return paymentMethod == null
-                ? null
-                : new OnChainPaymentMethodData(paymentMethod.PaymentId.CryptoCode,
-                    paymentMethod.AccountDerivation.ToString(), !excluded, paymentMethod.Label,
-                    paymentMethod.GetSigningAccountKeySettings().GetRootedKeyPath(),
-                    paymentMethod.PaymentId.ToStringNormalized());
+            var store = Store;
+            var conf = store.GetPaymentMethodConfig(paymentMethodId);
+            settings = null;
+            if (conf is (null or { Type: JTokenType.Null }))
+                return false;
+            settings = ((BitcoinLikePaymentHandler)_handlers[paymentMethodId]).ParsePaymentMethodConfig(conf);
+            return settings?.AccountDerivation is not null;
         }
     }
 }

@@ -3,7 +3,21 @@
     ViewData.SetActivePage(ServerNavPages.Files, $"Local Filesystem Storage");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Files">Files</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="Storage">Storage Provider</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">Provider</li>
+        </ol>
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
 
 <p>Any uploaded files are being saved on the same machine that hosts BTCPay; please pay attention to your storage space.</p>
 <div class="row">

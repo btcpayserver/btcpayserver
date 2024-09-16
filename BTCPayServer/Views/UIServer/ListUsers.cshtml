@@ -3,42 +3,26 @@
 @{
     ViewData.SetActivePage(ServerNavPages.Users);
     var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];
-    String userEmailSortOrder = null;
-    switch (nextUserEmailSortOrder)
+    var userEmailSortOrder = nextUserEmailSortOrder switch
     {
-        case "asc":
-            userEmailSortOrder = "desc";
-            break;
-        case "desc":
-            userEmailSortOrder = "asc";
-            break;
-    }
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
 
-    var sortIconClass = "fa-sort";
-    if (userEmailSortOrder != null)
-    {
-        sortIconClass = $"fa-sort-alpha-{userEmailSortOrder}";
-    }
-
-    var sortByDesc = "Sort by descending...";
-    var sortByAsc = "Sort by ascending...";
+    const string sortByDesc = "Sort by email descending...";
+    const string sortByAsc = "Sort by email ascending...";
 }
-
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h3 class="mb-0">@ViewData["Title"]</h3>
-    <a asp-action="CreateUser" class="btn btn-primary" role="button" id="CreateUser">
+<div class="sticky-header">
+    <h2 text-translate="true">@ViewData["Title"]</h2>
+	<a id="page-primary" asp-action="CreateUser" class="btn btn-primary" role="button">
         Add User
     </a>
 </div>
+<partial name="_StatusMessage" />
 
-<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px">
-    <div class="input-group">
-        <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
-        <button type="submit" class="btn btn-secondary" title="Search by email">
-            <span class="fa fa-search"></span> Search
-        </button>
-    </div>
-    <span asp-validation-for="SearchTerm" class="text-danger"></span>
+<form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px" method="get">
+    <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
 </form>
 
 <div class="table-responsive">
@@ -53,58 +37,106 @@
                     title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
                 >
                     Email
-                    <span class="fa @(sortIconClass)" />
+                    <vc:icon symbol="actions-sort-alpha-@(userEmailSortOrder ?? nextUserEmailSortOrder ?? "desc")" />
                 </a>
             </th>
-            <th >Created</th>
-            <th class="text-center">Verified</th>
-            <th class="text-center">Enabled</th>
-            <th class="text-end">Actions</th>
+            <th>Stores</th>
+            <th>Created</th>
+            <th>Status</th>
+            <th class="actions-col"></th>
+            <th></th>
         </tr>
         </thead>
-        <tbody>
+        <tbody id="UsersList">
         @foreach (var user in Model.Users)
         {
-            <tr>
-                <td class="d-flex align-items-center">
-                    <span class="me-2">@user.Email</span>
-                    @foreach (var role in user.Roles)
-                    {
-                        <span class="badge bg-info">@Model.Roles[role]</span>
-                    }
+            var status = user switch
+            {
+                { Disabled: true } => ("Disabled", "danger"),
+                { Approved: false } => ("Pending Approval", "warning"),
+                { EmailConfirmed: false } => ("Pending Email Verification", "warning"),
+                { InvitationUrl: not null } => ("Pending Invitation", "warning"),
+                _ => ("Active", "success")
+            };
+            var detailsId = $"user_details_{user.Id}";
+            <tr id="user_@user.Id" class="user-overview-row mass-action-row">
+                <td>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="user-email">@user.Email</span>
+                        @foreach (var role in user.Roles)
+                        {
+                            <span class="badge bg-info">@Model.Roles[role]</span>
+                        }
+                    </div>
                 </td>
+                <td class="@(user.Stores.Any() ? null : "text-muted")">@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
                 <td>@user.Created?.ToBrowserDate()</td>
-                <td class="text-center">
-                    @if (user.Verified)
-                    {
-                        <span class="text-success fa fa-check"></span>
-                    }
-                    else
-                    {
-                        <span class="text-danger fa fa-times"></span>
-                    }
+                <td>
+                   <span class="user-status badge bg-@status.Item2">@status.Item1</span>
                 </td>
-                <td class="text-center">
-                    @if (!user.Disabled)
-                    {
-                        <span class="text-success fa fa-check" title="User is enabled"></span>
-                    }
-                    else
-                    {
-                        <span class="text-danger fa fa-times" title="User is disabled"></span>
-                    }
+                <td class="actions-col">
+                    <div class="d-inline-flex align-items-center gap-3">
+                        @if (user is { EmailConfirmed: false, Disabled: false }) {
+                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Send verification email" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>." data-confirm="Send">Resend email</a>
+                        }
+                        @if (user is { Approved: false, Disabled: false })
+                        {
+                            <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Approve user" data-description="This will approve the user <strong>@Html.Encode(user.Email)</strong>." data-confirm="Approve">Approve</a>
+                        }
+                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
+                        @if (status.Item2 != "warning")
+                        {
+                                <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" 
+                                class="@(user.Disabled ? "enable-user" : "disable-user")">@(user.Disabled ? "Enable" : "Disable")</a>
+                        }
+                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password">Password Reset</a>
+                        <a asp-action="DeleteUser" asp-route-userId="@user.Id" class="delete-user">Remove</a>
+                    </div>
                 </td>
                 <td class="text-end">
-                    @if (!user.Verified && !user.Disabled) {
-                        <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>.">Resend verification email</a>
-                        <span>-</span>
+                    <div class="d-inline-flex align-items-center gap-2">
+                        <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
+                            <vc:icon symbol="caret-down" />
+                        </button>
+                    </div>
+                </td>
+            </tr>
+            <tr id="@detailsId" class="user-details-row collapse">
+                <td colspan="6" class="border-top-0">
+                    @if (!string.IsNullOrEmpty(user.InvitationUrl))
+                    {
+                        <div class="payment-box m-0">
+                            <div class="qr-container">
+                                <vc:qr-code data="@user.InvitationUrl" />
+                            </div>
+                            <div class="input-group mt-3">
+                                <div class="form-floating">
+                                    <vc:truncate-center text="@user.InvitationUrl" padding="15" elastic="true" classes="form-control-plaintext"/>
+                                    <label>Invitation URL</label>
+                                </div>
+                            </div>
+                        </div>
                     }
-                    <a asp-action="User" asp-route-userId="@user.Id">Edit</a> <span> - </span> <a asp-action="DeleteUser" asp-route-userId="@user.Id">Remove</a>
-                    - <a asp-action="ToggleUser"
-                         asp-route-enable="@user.Disabled"
-                         asp-route-userId="@user.Id">
-                        @(user.Disabled ? "Enable" : "Disable")
-                    </a>
+                    else if (user.Stores.Any())
+                    {
+                        <ul class="mb-0 p-0">
+                            @foreach (var store in user.Stores)
+                            {
+                                <li class="py-1 d-flex gap-2">
+                                    <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@store.StoreData.Id">@store.StoreData.StoreName</a>
+                                    <span class="badge bg-light">@store.StoreRoleId</span>
+                                    @if (store.StoreData.Archived)
+                                    {
+                                        <span class="badge bg-info">archived</span>
+                                    }
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <span class="text-secondary">No stores</span>
+                    }
                 </td>
             </tr>
         }

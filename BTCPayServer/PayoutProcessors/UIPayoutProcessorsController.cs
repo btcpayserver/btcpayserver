@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -34,7 +35,7 @@ public class UIPayoutProcessorsController : Controller
 
     [HttpGet("~/stores/{storeId}/payout-processors")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public async Task<IActionResult> ConfigureStorePayoutProcessors(string storeId)
     {
         var activeProcessors =
@@ -42,15 +43,12 @@ public class UIPayoutProcessorsController : Controller
                 new PayoutProcessorService.PayoutProcessorQuery() { Stores = new[] { storeId } }))
             .GroupBy(data => data.Processor);
 
-        var paymentMethods = HttpContext.GetStoreData().GetEnabledPaymentMethods(_btcPayNetworkProvider)
-            .Select(method => method.PaymentId).ToList();
-
         return View(_payoutProcessorFactories.Select(factory =>
         {
             var conf = activeProcessors.FirstOrDefault(datas => datas.Key == factory.Processor)
-                           ?.ToDictionary(data => data.GetPaymentMethodId(), data => data) ??
-                       new Dictionary<PaymentMethodId, PayoutProcessorData>();
-            foreach (PaymentMethodId supportedPaymentMethod in factory.GetSupportedPaymentMethods())
+                           ?.ToDictionary(data => data.GetPayoutMethodId(), data => data) ??
+                       new Dictionary<PayoutMethodId, PayoutProcessorData>();
+            foreach (var supportedPaymentMethod in factory.GetSupportedPayoutMethods())
             {
                 conf.TryAdd(supportedPaymentMethod, null);
             }
@@ -83,7 +81,7 @@ public class UIPayoutProcessorsController : Controller
 
     public class StorePayoutProcessorsView
     {
-        public Dictionary<PaymentMethodId, PayoutProcessorData> Configured { get; set; }
+        public Dictionary<PayoutMethodId, PayoutProcessorData> Configured { get; set; }
         public IPayoutProcessorFactory Factory { get; set; }
     }
 }

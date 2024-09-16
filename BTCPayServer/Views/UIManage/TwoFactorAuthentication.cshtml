@@ -1,11 +1,12 @@
-@using Fido2NetLib
 @using BTCPayServer.Abstractions.Models
 @model TwoFactorAuthenticationViewModel
 @{
     ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Two-Factor Authentication");
 }
-<h3 class="mb-3">@ViewData["Title"]</h3>
-
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
         <p>
@@ -23,7 +24,7 @@
             {
                 <div class="alert alert-danger">
                     <h4 class="alert-heading mb-3">
-                        <span class="fa fa-warning"></span>
+                        <vc:icon symbol="warning" />
                         You have no recovery codes left.
                     </h4>
                     <p class="mb-0">You must <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
@@ -33,7 +34,7 @@
             {
                 <div class="alert alert-danger">
                     <h4 class="alert-heading mb-3">
-                        <span class="fa fa-warning"></span>
+                        <vc:icon symbol="warning" />
                         You only have 1 recovery code left.
                     </h4>
                     <p class="mb-0">You can <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
@@ -43,7 +44,7 @@
             {
                 <div class="alert alert-warning">
                     <h4 class="alert-heading mb-3">
-                        <span class="fa fa-warning"></span>
+                        <vc:icon symbol="warning" />
                         You only have @Model.RecoveryCodesLeft recovery codes left.
                     </h4>
                     <p class="mb-0">You should <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>

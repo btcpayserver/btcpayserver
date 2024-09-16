@@ -1,38 +1,35 @@
 @using BTCPayServer.Client.Models
-@using BTCPayServer.Payments
+@using BTCPayServer.Payouts
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
-@using BTCPayServer.PayoutProcessors
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
-@inject IEnumerable<IPayoutHandler> PayoutHandlers;
-@inject PayoutProcessorService _payoutProcessorService;
-@inject IEnumerable<IPayoutProcessorFactory> _payoutProcessorFactories;
+@inject PayoutMethodHandlerDictionary PayoutHandlers;
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
     ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
-    Model.PaginationQuery.Add("paymentMethodId", Model.PaymentMethodId);
+    Model.PaginationQuery.Add("payoutMethodId", Model.PayoutMethodId);
     Model.PaginationQuery.Add("payoutState", Model.PayoutState);
     var stateActions = new List<(string Action, string Text)>();
-    if (PaymentMethodId.TryParse(Model.PaymentMethodId, out var paymentMethodId))
+    if (PayoutMethodId.TryParse(Model.PayoutMethodId, out var payoutMethodId))
     {
-        var payoutHandler = PayoutHandlers.FindPayoutHandler(paymentMethodId);
+		var payoutHandler = PayoutHandlers.TryGet(payoutMethodId);
         if (payoutHandler is null)
             return;
         stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
     }
+
     switch (Model.PayoutState)
     {
         case PayoutState.AwaitingApproval:
+            if (!Model.HasPayoutProcessor) stateActions.Add(("approve-pay", "Approve & Send"));
             stateActions.Add(("approve", "Approve"));
-            stateActions.Add(("approve-pay", "Approve & Send"));
             stateActions.Add(("cancel", "Cancel"));
             break;
         case PayoutState.AwaitingPayment:
-            stateActions.Add(("pay", "Send"));
+            if (!Model.HasPayoutProcessor) stateActions.Add(("pay", "Send"));
             stateActions.Add(("cancel", "Cancel"));
             stateActions.Add(("mark-paid", "Mark as already paid"));
             break;
@@ -59,8 +56,8 @@
     </script>
 }
 
-<div class="sticky-header d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2 class="my-1">
         @ViewData["Title"]
         <a href="#descriptor" data-bs-toggle="collapse">
             <vc:icon symbol="info" />
@@ -87,11 +84,7 @@
 
 <partial name="_StatusMessage" />
 
-@if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
-{
-    Stores = new[] { storeId },
-    PaymentMethods = new[] { Model.PaymentMethodId }
-})).Any())
+@if (!Model.HasPayoutProcessor)
 {
     <div class="alert alert-info mb-5" role="alert" permission="@Policies.CanModifyStoreSettings">
         <strong>Pro tip:</strong> There are supported but unconfigured Payout Processors for this payout payment method.<br/>
@@ -101,22 +94,22 @@
 }
 
 <form method="post" id="Payouts">
-    <input type="hidden" asp-for="PaymentMethodId" />
+    <input type="hidden" asp-for="PayoutMethodId" />
     <input type="hidden" asp-for="PayoutState" />
     <div class="d-flex justify-content-between mb-4">
         <ul class="nav mb-1 gap-2">
-            @foreach (var state in Model.PaymentMethods)
+            @foreach (var state in Model.PayoutMethods)
             {
                 <li class="nav-item py-0">
                     <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"
                        asp-route-payoutState="@Model.PayoutState"
-                       asp-route-paymentMethodId="@state.ToString()"
+                       asp-route-payoutMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
-                       class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PayoutMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">
-                        @state.ToPrettyString()
-                        @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
+                        @state.ToString()
+                        @if (Model.PayoutMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
                         {
                             <span class="badge rounded-pill fw-semibold pe-0">@count</span>
                         }
@@ -134,7 +127,7 @@
                    asp-route-storeId="@Context.GetRouteValue("storeId")"
                    asp-route-payoutState="@state.Key"
                    asp-route-pullPaymentId="@Model.PullPaymentId"
-                   asp-route-paymentMethodId="@Model.PaymentMethodId"
+                   asp-route-payoutMethodId="@Model.PayoutMethodId"
                    class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">
                     @state.Key.GetStateString()
                     @if (state.Value > 0)
@@ -160,7 +153,9 @@
                         <th class="date-col">
                             <div class="d-flex align-items-center gap-1">
                                 Date
-                                <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                                    <vc:icon symbol="time" />
+                                </button>
                             </div>
                         </th>
                         <th>Source</th>

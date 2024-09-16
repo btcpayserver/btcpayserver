@@ -16,7 +16,7 @@ public class PayoutProcessorData : IHasBlobUntyped
     public string Id { get; set; }
     public string StoreId { get; set; }
     public StoreData Store { get; set; }
-    public string PaymentMethod { get; set; }
+    public string PayoutMethodId { get; set; }
     public string Processor { get; set; }
 
     [Obsolete("Use Blob2 instead")]
@@ -29,16 +29,13 @@ public class PayoutProcessorData : IHasBlobUntyped
             .HasOne(o => o.Store)
             .WithMany(data => data.PayoutProcessors).OnDelete(DeleteBehavior.Cascade);
 
-        if (databaseFacade.IsNpgsql())
-        {
-            builder.Entity<PayoutProcessorData>()
-                .Property(o => o.Blob2)
-                .HasColumnType("JSONB");
-        }
+        builder.Entity<PayoutProcessorData>()
+            .Property(o => o.Blob2)
+            .HasColumnType("JSONB");
     }
 
     public override string ToString()
     {
-        return $"{Processor} {PaymentMethod} {StoreId}";
+        return $"{Processor} {PayoutMethodId} {StoreId}";
     }
 }

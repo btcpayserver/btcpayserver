@@ -36,12 +36,12 @@
                 buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
 
                 <div class="col posItem posItem--displayed@(x == 0 ? " posItem--first" : null)@(x == Model.Items.Length - 1 && !Model.ShowCustomAmount ? " posItem--last" : null)">
-                    <div class="card h-100 px-0" data-id="@x">
+                    <div class="tile card" data-id="@x">
                         @if (!string.IsNullOrWhiteSpace(item.Image))
                         {
                             <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
                         }
-                        <div class="card-body p-3 d-flex flex-column gap-2 mb-auto">
+                        <div class="card-body d-flex flex-column gap-2 mb-auto">
                             <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                             <div class="d-flex gap-2 align-items-center">
                                 @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
@@ -64,11 +64,10 @@
                                 <p class="card-text">@Safe.Raw(item.Description)</p>
                             }
                         </div>
-                        <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                        <div class="card-footer">
                             @if (inStock)
                             {
                                 <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
-                                    <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                     <input type="hidden" name="choiceKey" value="@item.Id" />
                                     @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum)
                                     {
@@ -94,7 +93,6 @@
                         </div>
                         <div class="card-footer bg-transparent border-0 pb-3">
                             <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
-                                <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                 <div class="input-group mb-2">
                                     <span class="input-group-text">@Model.CurrencySymbol</span>
                                     <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount" required>

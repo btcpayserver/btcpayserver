@@ -1,0 +1,52 @@
+@using BTCPayServer.Abstractions.Models
+@model EditDictionaryViewModel
+@{
+	ViewData.SetActivePage(ServerNavPages.Translations);
+	ViewData["Title"] = Context.GetRouteValue("dictionary");
+}
+
+<form method="post" class="d-flex flex-column">
+	<div class="sticky-header">
+		<nav aria-label="breadcrumb">
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item">
+					<a asp-action="ListDictionaries">Dictionaries</a>
+				</li>
+				<li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+			</ol>
+			<h2 text-translate="true">@ViewData["Title"]</h2>
+		</nav>
+		<div>
+			<button cheat-mode="true" class="btn btn-outline-info" name="command" value="Fake">Fill fake</button>
+			<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+		</div>
+	</div>
+	<partial name="_StatusMessage" />
+
+	<div class="d-flex mb-4">
+		<div class="flex-fill">
+			<p>
+
+				Translations are formatted as JSON <b>{ "Key": "Translation", "Key2": "Translation2" }</b>; for example, <b>{ "Welcome": "Bienvenue" }</b> translates <b>Welcome</b> to <b>Bienvenue</b>.
+			</p>
+			<p class="mb-0">
+				To use the translation from this dictionary's fallback, you can:
+				<ul>
+					<li>Remove the translation from this dictionary.</li>
+					<li>Set the translation to match the string in the fallback.</li>
+				</ul>
+			</p>
+			<p class="mb-0">Please note that not all text is translatable, and future updates may modify existing translations or introduce new translatable phrases.</p>
+		</div>
+	</div>
+
+	<div class="row">
+		<div class="col-xl-8 col-xxl-constrain d-flex flex-column">
+			<div class="form-group">
+				<label asp-for="Translations" class="form-label"></label>
+				<textarea asp-for="Translations" class="form-control translation-editor" rows="@Model.Lines" cols="40"></textarea>
+				<span asp-validation-for="Translations" class="text-danger"></span>
+			</div>
+		</div>
+	</div>
+</form>

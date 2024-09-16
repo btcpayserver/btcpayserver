@@ -3,64 +3,59 @@
 @inject LightningClientFactoryService LightningClientFactoryService
 @inject BTCPayNetworkProvider NetworkProvider
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData["NavPartialName"] = "../UILightning/_Nav";
-    ViewData.SetActivePage(StoreNavPages.LightningSettings, $"{Model.CryptoCode} Lightning Settings", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.LightningSettings, $"{Model.CryptoCode} Lightning Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <div class="mb-5">
-            <h3 class="mb-3">@ViewData["Title"]</h3>
-            <div class="text-break mb-3">
-                <span class="me-3" id="NodeType">@Model.LightningNodeType Node</span>
-                @if (Model.LightningNodeType != LightningNodeType.Internal)
-                {
-                    <span class="me-3" id="CustomNodeInfo">
-                        @try
-                        {
-                            var client = LightningClientFactoryService.Create(Model.ConnectionString, NetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode));
-                            <span>@client.GetDisplayName()</span>
-                            var uri = client.GetServerUri();
-                            if (uri is not null)
+<form method="post">
+    <div class="sticky-header">
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+		<button id="page-primary" name="command" type="submit" value="save" class="btn btn-primary">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            <div class="mb-5">
+                <div class="text-break mb-3">
+                    <span class="me-3" id="NodeType">@Model.LightningNodeType Node</span>
+                    @if (Model.LightningNodeType != LightningNodeType.Internal)
+                    {
+                        <span class="me-3" id="CustomNodeInfo">
+                            @try
                             {
-                                <span>(@uri.Host)</span>
+                                var client = LightningClientFactoryService.Create(Model.ConnectionString, NetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode));
+                                <span>@client.GetDisplayName()</span>
+                                var uri = client.GetServerUri();
+                                if (uri is not null)
+                                {
+                                    <span>(@uri.Host)</span>
+                                }
                             }
-                        }
-                        catch (Exception)
-                        {
-                            @Model.ConnectionString
-                        }
-                    </span>
-                }
+                            catch (Exception)
+                            {
+                                @Model.ConnectionString
+                            }
+                        </span>
+                    }
 
-                <a class="me-3"
-                   asp-controller="UIPublicLightningNodeInfo"
-                   asp-action="ShowLightningNodeInfo"
-                   asp-route-cryptoCode="@Model.CryptoCode"
-                   asp-route-storeId="@Model.StoreId"
-                   target="_blank"
-                   id="PublicNodeInfo">
-                    Public Node Info
-                </a>
-                <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink">
-                    Change connection
-                </a>
-            </div>
+                    <a class="me-3"
+                       asp-controller="UIPublicLightningNodeInfo"
+                       asp-action="ShowLightningNodeInfo"
+                       asp-route-cryptoCode="@Model.CryptoCode"
+                       asp-route-storeId="@Model.StoreId"
+                       target="_blank"
+                       id="PublicNodeInfo">
+                        Public Node Info
+                    </a>
+                    <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink">
+                        Change connection
+                    </a>
+                </div>
+
+                <div class="d-flex align-items-center">
+                    <input type="checkbox" asp-for="Enabled" class="btcpay-toggle me-3" id="@($"{Model.CryptoCode}LightningEnabled")" />
+                    <label asp-for="Enabled" class="form-check-label"></label>
+                </div>
             
-            <form method="post"
-                  asp-action="SetLightningNodeEnabled"
-                  asp-route-cryptoCode="@Model.CryptoCode"
-                  asp-route-storeId="@Model.StoreId"
-                  class="d-flex align-items-center mt-4"
-                  style="min-width:7rem">
-                <button type="submit" class="btcpay-toggle me-3 @if (Model.Enabled) { @("btcpay-toggle--active") }" name="Enabled" value="@(Model.Enabled ? "false" : "true")" id="@($"{Model.CryptoCode}LightningEnabled")">@(Model.Enabled ? "Disable" : "Enable")</button>
-                <span>
-                    Enabled
-                </span>
-            </form>
-            
-            <form method="post" class="mt-n2 text-center">
                 <div class="text-start">
                     <h3 class="mt-5 mb-3">Payment</h3>
                     <div class="form-check my-3">
@@ -91,15 +86,15 @@
                     <h3 class="mt-5 mb-3" id="ln-url">LNURL</h3>
                     <div class="form-group d-flex align-items-center">
                         <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
-                        <label asp-for="LNURLEnabled" class="form-label mb-0 me-1"></label>
+                        <label asp-for="LNURLEnabled" class="form-check-label"></label>
                     </div>
 
                     <div class="collapse @(Model.LNURLEnabled ? "show" : "")" id="LNURLSettings">
                         <div class="form-group">
                             <label class="form-group d-flex align-items-center">
                                 <input type="checkbox" asp-for="LNURLBech32Mode" class="btcpay-toggle me-3" />
-                                <div class="">
-                                    <label asp-for="LNURLBech32Mode" class="form-label mb-0 me-1"></label>
+                                <div>
+                                    <label asp-for="LNURLBech32Mode" class="form-check-label"></label>
                                     <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
                                     <div class="form-text">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</div>
                                 </div>
@@ -108,19 +103,15 @@
                         <div class="form-group mb-3">
                             <div class="d-flex align-items-center">
                                 <input type="checkbox" asp-for="LUD12Enabled" class="btcpay-toggle me-3" />
-                                <label asp-for="LUD12Enabled" class="form-label mb-0 me-1"></label>
+                                <label asp-for="LUD12Enabled" class="form-check-label"></label>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                <div class="text-start mt-4">
-                    <button id="save" name="command" type="submit" value="save" class="btn btn-primary me-2">Save</button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
-</div>
+</form>
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>

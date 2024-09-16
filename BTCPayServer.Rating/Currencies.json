@@ -1,4 +1,4 @@
-﻿[
+[
    {
       "name":"Afghan Afghani",
       "code":"AFN",
@@ -58,7 +58,7 @@
    {
       "name":"Argentine Peso",
       "code":"ARS",
-      "divisibility":2,
+      "divisibility":0,
       "symbol":null,
       "crypto":false
    },
@@ -289,7 +289,7 @@
    {
       "name":"Colombian Peso",
       "code":"COP",
-      "divisibility":2,
+      "divisibility":0,
       "symbol":null,
       "crypto":false
    },

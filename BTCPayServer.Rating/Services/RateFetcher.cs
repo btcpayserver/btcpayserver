@@ -22,7 +22,7 @@ namespace BTCPayServer.Services.Rates
         public BidAsk BidAsk { get; set; }
         public TimeSpan Latency { get; internal set; }
     }
-
+#nullable enable
     public class RateFetcher
     {
         private readonly RateProviderFactory _rateProviderFactory;
@@ -34,12 +34,12 @@ namespace BTCPayServer.Services.Rates
 
         public RateProviderFactory RateProviderFactory => _rateProviderFactory;
 
-        public async Task<RateResult> FetchRate(CurrencyPair pair, RateRules rules, CancellationToken cancellationToken)
+        public async Task<RateResult> FetchRate(CurrencyPair pair, RateRules rules, IRateContext? context, CancellationToken cancellationToken)
         {
-            return await FetchRates(new HashSet<CurrencyPair>(new[] { pair }), rules, cancellationToken).First().Value;
+            return await FetchRates(new HashSet<CurrencyPair>(new[] { pair }), rules, context, cancellationToken).First().Value;
         }
 
-        public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRules rules, CancellationToken cancellationToken)
+        public Dictionary<CurrencyPair, Task<RateResult>> FetchRates(HashSet<CurrencyPair> pairs, RateRules rules, IRateContext? context, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(rules);
 
@@ -54,7 +54,7 @@ namespace BTCPayServer.Services.Rates
                 {
                     if (!fetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
                     {
-                        fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, cancellationToken);
+                        fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, context, cancellationToken);
                         fetchingExchanges.Add(requiredExchange.Exchange, fetching);
                     }
                     dependentQueries.Add(fetching);
@@ -64,7 +64,7 @@ namespace BTCPayServer.Services.Rates
             return fetchingRates;
         }
 
-        public Task<RateResult> FetchRate(RateRule rateRule, CancellationToken cancellationToken)
+        public Task<RateResult> FetchRate(RateRule rateRule, IRateContext? context, CancellationToken cancellationToken)
         {
             ArgumentNullException.ThrowIfNull(rateRule);
             var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
@@ -73,7 +73,7 @@ namespace BTCPayServer.Services.Rates
             {
                 if (!fetchingExchanges.TryGetValue(requiredExchange.Exchange, out var fetching))
                 {
-                    fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, cancellationToken);
+                    fetching = _rateProviderFactory.QueryRates(requiredExchange.Exchange, context, cancellationToken);
                     fetchingExchanges.Add(requiredExchange.Exchange, fetching);
                 }
                 dependentQueries.Add(fetching);

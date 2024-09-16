@@ -18,13 +18,13 @@
             <div class="d-flex flex-column justify-content-center gap-4">
                 <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
                 <section class="tile">
-                    <h2 class="h4 card-subtitle text-center text-secondary mt-1 mb-3">
+                    <h2 class="h4 card-subtitle text-center text-secondary mt-1 mb-3" id="LightningNodeTitle">
                         <span>@Model.CryptoCode</span>
                         Lightning Node
                     </h2>
                     <h4 class="d-flex align-items-center justify-content-center gap-2 my-4">
                         <span class="btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")" style="margin-top:.1rem;"></span>
-                        @(Model.Available ? "Online" : "Unavailable")
+                        <span id="LightningNodeStatus">@(Model.Available ? "Online" : "Unavailable")</span>
                     </h4>
                     @if (Model.Available)
                     {
@@ -46,16 +46,20 @@
                                 {
                                     var nodeInfo = Model.NodeInfo[i];
                                     var title = nodeInfo.IsTor ? "Tor" : "Clearnet";
+                                    var id = $"LightningNodeUrl{title}";
                                     var value = nodeInfo.ToString();
                                     <div class="tab-pane fade @(i == 0 ? "show active" : "")" id="nodeInfo-@i" role="tabpanel" aria-labelledby="nodeInfo-tab-@i">
                                         <div class="payment-box">
                                             <div class="qr-container">
                                                 <vc:qr-code data="@value" />
-                                                <img src="@Model.CryptoImage" alt="@Model.CryptoCode" class="qr-icon" />
-                                            </div>
+												@if (Model.CryptoImage is not null)
+												{
+													<img src="@Model.CryptoImage" alt="@Model.CryptoCode" class="qr-icon" />
+												}
+											</div>
                                             <div class="input-group mt-3">
                                                 <div class="form-floating">
-                                                    <vc:truncate-center text="@value" padding="15" elastic="true" classes="form-control-plaintext" />
+                                                    <vc:truncate-center text="@value" padding="15" elastic="true" classes="form-control-plaintext" id="@id"/>
                                                     <label>@title</label>
                                                 </div>
                                             </div>

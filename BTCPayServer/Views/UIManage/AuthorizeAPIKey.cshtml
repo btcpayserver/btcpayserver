@@ -32,8 +32,6 @@
     </form>
 }
 
-<partial name="_StatusMessage" />
-
 <form method="post" asp-action="AuthorizeAPIKey">
     <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
     <input type="hidden" asp-for="Permissions" value="@Model.Permissions"/>
@@ -45,8 +43,11 @@
         <h1>@ViewData["Title"]</h1>
         <p class="lead text-secondary mt-3">@(displayName ?? "An application") is requesting access to your BTCPay Server account.</p>
     </header>
-    <div asp-validation-summary="All"></div>
-    
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All"></div>
+    }
+
     @if (Model.NeedsStorePermission && store == null)
     {
         @if (!Model.Stores.Any())

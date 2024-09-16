@@ -1,62 +1,69 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebhooksViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().Id);
 }
+
+
+<div class="sticky-header">
+    <h2 text-translate="true">@ViewData["Title"]</h2>
+	<a id="page-primary" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
+        Create Webhook
+    </a>
+</div>
+<partial name="_StatusMessage" />
+<p>Webhooks allow BTCPay Server to send HTTP events related to your store to another server.</p>
+
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <div class="d-flex align-items-center justify-content-between mb-3">
-            <h3 class="mb-0">@ViewData["Title"]</h3>
-            <a id="CreateWebhook" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
-                Create Webhook
-            </a>
-        </div>
-        <p>Webhooks allow BTCPay Server to send HTTP events related to your store to another server.</p>
-
         @if (Model.Webhooks.Any())
         {
-            <table class="table table-hover table-responsive-md">
-                <thead>
-                    <tr>
-                        <th>Status</th>
-                        <th>Url</th>
-                        <th class="text-end">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var wh in Model.Webhooks)
-                    {
+            <div class="table-responsive-md">
+                <table class="table table-hover">
+                    <thead>
                         <tr>
-                            <td class="align-baseline">
-                                @if (wh.LastDeliverySuccessful)
-                                {
-                                    <span class="fa fa-check text-success"
-                                          id="delivery-status-icon"
-                                          data-bs-toggle="tooltip"
-                                          title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery " + @wh.LastDeliveryTimeStamp?.ToTimeAgo())"></span>
-                                }
-                                else
-                                {
-                                    <span class="fa fa-times text-danger"
-                                          id="delivery-status-icon"
-                                          data-bs-toggle="tooltip"
-                                          data-bs-html="true"
-                                          title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>"></span>
-                                }
-                            </td>
-                            <td class="d-block text-break">@wh.Url</td>
-                            <td class="text-end text-md-nowrap">
-                                <a asp-action="TestWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
-                                <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
-                                <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE">Delete</a>
-                            </td>
+                            <th>Status</th>
+                            <th>Url</th>
+                            <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                         </tr>
-                    }
-                </tbody>
-            </table>
-
-            <partial name="_Confirm" model="@(new ConfirmModel("Delete Webhook", "This webhook will be removed from this store.", "Delete"))" />
+                    </thead>
+                    <tbody>
+                        @foreach (var wh in Model.Webhooks)
+                        {
+                            <tr>
+                                <td class="align-baseline">
+                                    @if (wh.LastDeliverySuccessful)
+                                    {
+                                        <span id="delivery-status-icon"
+                                              data-bs-toggle="tooltip"
+                                              title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery " + @wh.LastDeliveryTimeStamp?.ToTimeAgo())">
+                                            <vc:icon symbol="checkmark" css-class="text-success" />
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span id="delivery-status-icon"
+                                              data-bs-toggle="tooltip"
+                                              data-bs-html="true"
+                                              title="Error: @wh.LastDeliveryErrorMessage. <br/> Delivery last attempted <span id='last-delivery-time'>@wh.LastDeliveryTimeStamp?.ToTimeAgo()</span>">
+                                            <vc:icon symbol="cross" css-class="text-danger" />
+                                        </span>
+                                    }
+                                </td>
+                                <td class="d-block text-break">@wh.Url</td>
+                                <td class="actions-col text-md-nowrap" permission="@Policies.CanModifyStoreSettings">
+                                    <a asp-action="TestWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
+                                    <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
+                                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE">Delete</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <partial name="_Confirm" model="@(new ConfirmModel("Delete Webhook", "This webhook will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
         }
         else
         {

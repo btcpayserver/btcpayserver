@@ -1,11 +1,27 @@
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Components.MainLogo
+@using System.Text
+@inject SettingsRepository SettingsRepository
 @{
     Layout = "_LayoutSimple";
     ViewBag.ShowTitle ??= true;
     ViewBag.ShowLeadText ??= false;
+    // obfuscate email on public page, decode via JS (see below)
+    var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+    var contactUrl = settings.ContactUrl;
+    if (contactUrl?.StartsWith("mailto:") is true)
+    {
+        contactUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(contactUrl));
+    }
 }
 
 @section PageHeadContent {
     <style>
+        .alert {
+            max-width: 35em;
+            margin: var(--btcpay-space-l) auto;
+        }
         .account-form {
             max-width: 35em;
             margin: 0 auto var(--btcpay-space-xl);
@@ -33,7 +49,7 @@
             <vc:main-logo />
         </a>
 
-        <h1 class="h2 mb-3">Welcome to your BTCPay&nbsp;Server</h1>
+		<h1 class="h2 mb-3" text-translate="true">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h1>
         @if (ViewBag.ShowLeadText)
         {
             <p class="lead">
@@ -49,10 +65,26 @@
 <div class="account-form">
     @if (ViewBag.ShowTitle)
     {
-	  <h4 v-pre>@ViewData["Title"]</h4>
+        <h4>@ViewData["Title"]</h4>
     }
     @RenderBody()
 </div>
+
+@if (!string.IsNullOrWhiteSpace(contactUrl))
+{
+    <p class="text-center mt-n5 mb-5 pt-2">
+        <a class="text-secondary" href="@contactUrl" id="ContactLink">Contact Us</a>
+    </p>
+    @if (contactUrl != settings.ContactUrl)
+    {
+        <script>
+            (function() {
+                const link = document.getElementById('ContactLink')
+                link.setAttribute('href', atob(link.getAttribute('href')))
+            })()
+        </script>
+    }
+}
 
 <div class="row justify-content-center mt-5">
     <div class="col">

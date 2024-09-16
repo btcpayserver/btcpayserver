@@ -1,13 +1,12 @@
 @using BTCPayServer.Services
-@using BTCPayServer.Abstractions.Contracts
 @inject ThemeSettings Theme
-@inject IFileService FileService
+@inject UriResolver UriResolver
 @model BTCPayServer.Components.MainLogo.MainLogoViewModel
 
-@if (!string.IsNullOrEmpty(Theme.LogoFileId))
+@if (Theme.LogoUrl is not null)
 {
-    var logoSrc = await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Theme.LogoFileId);
-    <img src="@logoSrc" alt="BTCPay Server" class="main-logo main-logo-custom @Model.CssClass" />
+	var logoUrl = await UriResolver.Resolve(this.Context.Request.GetAbsoluteRootUri(), Theme.LogoUrl);
+	<img src="@logoUrl" alt="BTCPay Server" class="main-logo main-logo-custom @Model.CssClass" />
 }
 else
 {

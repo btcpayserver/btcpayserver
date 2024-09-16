@@ -1,4 +1,5 @@
-﻿@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
+@model BTCPayServer.Models.StoreViewModels.CreateStoreViewModel
+@inject DefaultRulesCollection DefaultRules
 @{
     Layout = Model.IsFirstStore ? "_LayoutWizard" : "_Layout";
     ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? "Create your first store" : "Create a new store");
@@ -7,12 +8,12 @@
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script>
-	  const exchanges = @Safe.Json(StoreBlob.RecommendedExchanges);
+	  const exchanges = @Safe.Json(DefaultRules.RecommendedExchanges);
 	  const recommended = document.querySelector("#PreferredExchange option[value='']")
 	  const updateRecommended = currency => {
 		  const source = exchanges[currency] || 'coingecko'
 		  const name = source.charAt(0).toUpperCase() + source.slice(1)
-		  recommended.innerText = `${name} (Recommended)`
+		  recommended.innerText = `Recommendation (${name})`
 	  }
 	  updateRecommended(@Safe.Json(Model.DefaultCurrency))
 	  delegate('change', '#DefaultCurrency', e => updateRecommended(e.target.value))
@@ -28,9 +29,8 @@
     }
     @section PageHeadContent {
         <style>
-            #FirstStore { max-width: 27rem; margin: 0 auto; text-align: center; }
-            #FirstStore .main-logo { height: 4rem; width: 18rem; }
-            #FirstStore .main-logo.main-logo-btcpay { height: 4.5rem; width: 2.5rem; }
+            #FirstStore, .alert { max-width: 26.5rem; margin: var(--btcpay-space-l) auto; text-align: center; }
+            #FirstStore .main-logo { height: 4.5rem; max-width: 18rem; }
             #FirstStore .main-logo-btcpay .main-logo-btcpay--large { display: none; }
             #FirstStore .form-control, #FirstStore .form-select { width: 100%; }
             #FirstStore .form-text { font-size: var(--btcpay-font-size-s); }
@@ -46,14 +46,14 @@
         <p class="lead text-secondary">Create a store to begin accepting payments.</p>
 
         <div class="text-start">
-            <partial name="_StatusMessage"/>
             <partial name="_CreateStoreForm" model="Model" />
         </div>
     </div>
 }
 else
 {
-    <h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+	<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
+    <partial name="_StatusMessage" />
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <partial name="_CreateStoreForm" model="Model" />

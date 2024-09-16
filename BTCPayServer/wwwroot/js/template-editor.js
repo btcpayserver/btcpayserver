@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         data () {
             return {
-                errors: [],
+                errors: {},
                 editingItem: null,
                 categoriesSelect: null,
                 customPriceOptions: [
@@ -106,74 +106,79 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         },
         methods: {
-            validate () {
-                this.errors = [];
-                
+            toId(value) {
+                return value.toLowerCase().trim().replace(/\W+/gi, '-')
+            },
+            onTitleChange(e) {
+                const $input = e.target;
+                $input.classList.toggle('is-invalid', !$input.checkValidity())
+                if (!$input.checkValidity()) {
+                    Vue.set(this.errors, 'title', 'Title is required')
+                } else if (this.editingItem.title.startsWith('-')){
+                    Vue.set(this.errors, 'title', 'Title cannot start with "-"')
+                } else if (!this.editingItem.title.trim()){
+                    Vue.set(this.errors, 'title', 'Title is required')
+                } else {
+                    Vue.delete(this.errors, 'title')
+                }
+                // set id from title if not set
+                if (!this.editingItem.id) {
+                    this.editingItem.id = this.toId(this.editingItem.title)
+                    Vue.delete(this.errors, 'id')
+                }
+            },
+            onIdChange(e) {
+                // set id from title if not set
+                if (!this.editingItem.id) this.editingItem.id = this.toId(this.editingItem.title)
+                // validate
+                const $input = e.target;
+                $input.classList.toggle('is-invalid', !$input.checkValidity())
                 if (this.editingItem.id) {
                     const existingItem = this.$parent.items.find(i => i.id === this.editingItem.id);
                     if (existingItem && existingItem.id !== this.item.id)
-                        this.errors.push(`An item with the ID "${this.editingItem.id}" already exists`);
+                        Vue.set(this.errors, 'id', `An item with the ID "${this.editingItem.id}" already exists`)
                     if (this.editingItem.id.startsWith('-'))
-                        this.errors.push('ID cannot start with "-"');
+                        Vue.set(this.errors, 'id', 'ID cannot start with "-"')
                     else if (this.editingItem.id.trim() === '')
-                        this.errors.push('ID is required');
+                        Vue.set(this.errors, 'id', 'ID is required')
+                    else
+                        Vue.delete(this.errors, 'id')
                 } else {
-                    this.errors.push('ID is required');
+                    Vue.set(this.errors, 'id', 'ID is required')
                 }
-                
-                const { inputTitle, inputPrice, inputInventory } = this.$refs
-                Object.keys(this.$refs).forEach(ref => {
-                    if (ref.startsWith('input')) {
-                        const $ref = this.$refs[ref];
-                        $ref.classList.toggle('is-invalid', !$ref.checkValidity())
-                    }
-                })
-                
-                if (this.editingItem.priceType !== 'Topup' && !inputPrice.checkValidity()) {
-                    this.errors.push('Price must be a valid number');
-                }
-                
-                if (!inputTitle.checkValidity()) {
-                    this.errors.push('Title is required');
-                } else if (this.editingItem.title.startsWith('-')){
-                    this.errors.push('Title cannot start with "-"');
-                } else if (!this.editingItem.title.trim()){
-                    this.errors.push('Title is required');
-                }
-                
-                if (!inputInventory.checkValidity()) {
-                    this.errors.push('Inventory must not be set or be a valid number (>=0)');
-                }
-                
-                return this.errors.length === 0;
             },
-            apply() {
-                // set id from title if not set
-                if (!this.editingItem.id) this.editingItem.id = this.editingItem.title.toLowerCase().trim();
-                // validate
-                if (!this.validate()) return;
-                // set item props
-                Object.keys(this.editingItem).forEach(prop => {
-                    const value = this.editingItem[prop];
-                    Vue.set(this.$parent.selectedItem, prop, value);
-                })
-                // remove empty/non-existing props on item
-                Object.keys(this.item).forEach(prop => {
-                    const value = this.editingItem[prop];
-                    if (typeof value === 'undefined' || value === null) {
-                        Vue.delete(this.$parent.selectedItem, prop);
-                    }
-                })
-                // update categories
-                this.categoriesSelect.clearOptions();
-                this.categoriesSelect.addOptions(this.allCategories.map(value => ({ value, text: value })));
+            onInventoryChange(e) {
+                const $input = e.target;
+                $input.classList.toggle('is-invalid', !$input.checkValidity())
+                if (!$input.checkValidity()) {
+                    Vue.set(this.errors, 'inventory', 'Inventory must not be set or be a valid number (>=0)')
+                }
+            },
+            onPriceChange(e) {
+                const $input = e.target;
+                $input.classList.toggle('is-invalid', !$input.checkValidity())
+                if (this.editingItem.priceType !== 'Topup' && !$input.checkValidity()) {
+                     Vue.set(this.errors, 'price', 'Price must be a valid number')
+                } else {
+                    Vue.delete(this.errors, 'price')
+                }
+            },
+            onPriceTypeChange(e) {
+                const $input = e.target;
+                $input.classList.toggle('is-invalid', !$input.checkValidity())
+                if ($input.value === 'Topup') {
+                    Vue.set(this.editingItem, 'price', null)
+                }
             }
         },
         watch: {
-            item: function (newItem) {
-                this.errors = [];
-                this.editingItem = newItem ? { ...newItem } : null;
+            item(newItem) {
+                this.errors = {};
+                this.editingItem = newItem;
                 if (this.editingItem != null) {
+                    // update categories
+                    this.categoriesSelect.clearOptions();
+                    this.categoriesSelect.addOptions(this.allCategories.map(value => ({ value, text: value })));
                     this.categoriesSelect.setValue(this.editingItem.categories);
                 }
             }
@@ -187,11 +192,11 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             this.categoriesSelect.on('change', () => {
                 const value = this.categoriesSelect.getValue();
-                this.editingItem.categories = Array.from(value.split(',').reduce((res,  item) => {
+                Vue.set(this.editingItem, 'categories', Array.from(value.split(',').reduce((res,  item) => {
                     const category = item.trim();
                     if (category) res.add(category);
                     return res;
-                }, new Set()));
+                }, new Set())))
             });
         },
         beforeDestroy() {
@@ -230,7 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 items,
                 selectedItem: null,
-                editorOffcanvas: null
+                selectedItemInitial: null,
+                editorOffcanvas: null,
             }
         },
         computed: {
@@ -242,6 +248,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     (item.categories || []).forEach(category => { res.add(category); });
                     return res;
                 }, new Set()));
+            },
+            itemChanged() {
+                return this.selectedItem && this.selectedItemInitial && (
+                    this.selectedItem.id !== this.selectedItemInitial.id ||
+                    this.selectedItem.title !== this.selectedItemInitial.title ||
+                    this.selectedItem.price !== this.selectedItemInitial.price ||
+                    this.selectedItem.image !== this.selectedItemInitial.image ||
+                    this.selectedItem.disabled !== this.selectedItemInitial.disabled ||
+                    this.selectedItem.inventory !== this.selectedItemInitial.inventory ||
+                    this.selectedItem.priceType !== this.selectedItemInitial.priceType ||
+                    this.selectedItem.categories !== this.selectedItemInitial.categories ||
+                    this.selectedItem.description !== this.selectedItemInitial.description
+                )
             }
         },
         methods: {
@@ -249,7 +268,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const items = parseConfig(event.target.value)
                 if (!items) return
                 this.items = items
-                this.selectedItem = null
+                this.selectedItem = this.selectedItemInitial = null
             },
             addItem(event) {
                 const length = this.items.push({
@@ -263,27 +282,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     inventory: null,
                     disabled: false
                 })
-                this.selectedItem = this.items[length - 1]
-                this.showOffcanvas()
+                this.selectItem(null, length - 1)
             },
             selectItem(event, index) {
                 this.selectedItem = this.items[index]
+                this.selectedItemInitial = { ...this.selectedItem } // pristine copy
                 this.showOffcanvas()
             },
             removeItem(event, index) {
                 this.items.splice(index, 1)
-                this.selectedItem = null
+                this.selectedItem = this.selectedItemInitial = null
             },
             sortItems(event) {
                 const { newIndex, oldIndex } = event
                 this.items.splice(newIndex, 0, this.items.splice(oldIndex, 1)[0])
             },
             showOffcanvas() {
-                if (window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
+                if (this.editorOffcanvas && window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
                     this.editorOffcanvas.show();
             },
             hideOffcanvas() {
-                this.editorOffcanvas.hide();
+                if (this.editorOffcanvas)
+                    this.editorOffcanvas.hide();
             }
         },
         mounted() {

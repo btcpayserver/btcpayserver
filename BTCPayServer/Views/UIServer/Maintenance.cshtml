@@ -1,23 +1,23 @@
-﻿@model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
+@model BTCPayServer.Models.ServerViewModels.MaintenanceViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Maintenance, "Maintenance");
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
 
 <form method="post">
     <div class="row mb-5">
         <div class="col-xl-8 col-xxl-constrain">
-            <h4 class="mb-2">Domain name</h4>
-            <p>You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/FAQ/Deployment/#how-to-change-your-btcpay-server-domain-name" target="_blank" rel="noreferrer noopener">this guide</a>.</p>
-
-            <div class="d-flex">
-                <input asp-for="DNSDomain" class="form-control flex-fill" disabled="@(Model.CanUseSSH ? null : "disabled")" />
+            <div class="form-group">
+                <label asp-for="DNSDomain" class="form-label"></label>
+                <input asp-for="DNSDomain" class="form-control" disabled="@(Model.CanUseSSH ? null : "disabled")" />
+                <div class="form-text">You can change the domain name of your server by following <a href="https://docs.btcpayserver.org/FAQ/Deployment/#how-to-change-your-btcpay-server-domain-name" target="_blank" rel="noreferrer noopener">this guide</a>.</div>
                 <span asp-validation-for="DNSDomain" class="text-danger"></span>
-                <button name="command" type="submit" class="btn btn-secondary ms-3" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">
-                    Confirm
-                </button>
             </div>
+            <button name="command" type="submit" class="btn btn-secondary" value="changedomain" title="Change domain" disabled="@(Model.CanUseSSH ? null : "disabled")">Change Domain</button>
 
             <h4 class="mt-5 mb-2">Restart</h4>
             <p>Restart BTCPay Server and related services.</p>

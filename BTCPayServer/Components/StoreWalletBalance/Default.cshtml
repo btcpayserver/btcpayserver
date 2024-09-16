@@ -39,7 +39,7 @@
     {
         <div class="ct-chart"></div>
     }
-    else if (!Model.Store.GetSupportedPaymentMethods(NetworkProvider).Any(method => method.PaymentId.PaymentType == BitcoinPaymentType.Instance && method.PaymentId.CryptoCode == Model.CryptoCode))
+	else if (Model.Store.GetPaymentMethodConfig(PaymentTypes.CHAIN.GetPaymentMethodId(Model.CryptoCode)) is null)
     {
         <p>
             We would like to show you a chart of your balance but you have not yet <a href="@Url.Action("SetupWallet", "UIStores", new {storeId = Model.Store.Id, cryptoCode = Model.CryptoCode})">configured a wallet</a>.
@@ -64,13 +64,14 @@
             
             const id = `StoreWalletBalance-${storeId}`;
             const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
+            const valueTransform = value => rate
+                ? DashboardUtils.displayDefaultCurrency(value, rate, defaultCurrency, divisibility).toString()
+                : value
             const chartOpts = {
                 fullWidth: true,
                 showArea: true,
                 axisY: {
-                    labelInterpolationFnc: value => rate
-                        ? DashboardUtils.displayDefaultCurrency(value, rate, defaultCurrency, divisibility).toString()
-                        : value
+                    labelInterpolationFnc: valueTransform
                 }
             };
             
@@ -80,16 +81,22 @@
                 document.querySelectorAll(`#${id} .currency`).forEach(c => c.innerText = currency) 
                 document.querySelectorAll(`#${id} [data-balance]`).forEach(c => {
                     const value = Number.parseFloat(c.dataset.balance);
-                    c.innerText = rate
-                        ? DashboardUtils.displayDefaultCurrency(value, rate, currency, divisibility)
-                        : value
+                    c.innerText = valueTransform(value)
                 });
                 if (!series) return;
                 
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = Math.max(min - ((max - min) / 5), 0);
-                const renderOpts = Object.assign({}, chartOpts, { low });
+                const tooltip = Chartist.plugins.tooltip2({
+                    template: '<div class="chartist-tooltip-value">{{value}}</div><div class="chartist-tooltip-line"></div>',
+                    offset: {
+                        x: 0,
+                        y: -16
+                    },
+                    valueTransformFunction: valueTransform
+                })
+                const renderOpts = Object.assign({}, chartOpts, { low, plugins: [tooltip] });
                 const chart = new Chartist.Line(`#${id} .ct-chart`, {
                     labels,
                     series: [series]

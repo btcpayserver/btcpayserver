@@ -8,6 +8,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Services;
 using BTCPayServer.Services.PaymentRequests;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -80,7 +81,7 @@ namespace BTCPayServer.PaymentRequest
                 await _PaymentRequestController.CancelUnpaidPendingInvoice(prId, false);
             switch (result)
             {
-                case OkObjectResult okObjectResult:
+                case OkObjectResult:
                     await Clients.Group(prId).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
                     break;
 
@@ -105,17 +106,20 @@ namespace BTCPayServer.PaymentRequest
     {
         private readonly IHubContext<PaymentRequestHub> _HubContext;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
+        private readonly PrettyNameProvider _prettyNameProvider;
         private readonly PaymentRequestService _PaymentRequestService;
 
 
         public PaymentRequestStreamer(EventAggregator eventAggregator,
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
+            PrettyNameProvider prettyNameProvider,
             PaymentRequestService paymentRequestService,
             Logs logs) : base(eventAggregator, logs)
         {
             _HubContext = hubContext;
             _PaymentRequestRepository = paymentRequestRepository;
+            _prettyNameProvider = prettyNameProvider;
             _PaymentRequestService = paymentRequestService;
         }
 
@@ -165,15 +169,15 @@ namespace BTCPayServer.PaymentRequest
                     if (invoiceEvent.Name is InvoiceEvent.ReceivedPayment or InvoiceEvent.MarkedCompleted or InvoiceEvent.MarkedInvalid)
                     {
                         await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
-                        var data = invoiceEvent.Payment?.GetCryptoPaymentData();
-                        if (data != null)
+                        if (invoiceEvent.Payment != null)
                         {
                             await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
                                 new object[]
                                 {
-                                    data.GetValue(),
+                                    invoiceEvent.Payment.Value,
                                     invoiceEvent.Payment.Currency,
-                                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType.ToString()
+                                    _prettyNameProvider.PrettyName(invoiceEvent.Payment.PaymentMethodId),
+                                    invoiceEvent.Payment.PaymentMethodId.ToString()
                                 }, cancellationToken);
                         }
                     }

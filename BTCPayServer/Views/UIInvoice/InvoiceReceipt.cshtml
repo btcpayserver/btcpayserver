@@ -35,8 +35,8 @@
         #InvoiceSummary { gap: var(--btcpay-space-l); }
         #PaymentDetails table tbody tr:first-child td { padding-top: 1rem; }
         #PaymentDetails table tbody:not(:last-child) tr:last-child > th,td { padding-bottom: 1rem; }
-        #posData td > table:last-child { margin-bottom: 0 !important; }
-        #posData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
+        #AdditionalData td > table:last-child, #CartData td > table:last-child { margin-bottom: 0 !important; }
+        #AdditionalData table > tbody > tr:first-child > td > h4, #CartData table > tbody > tr:first-child > td > h4 { margin-top: 0 !important; }
     </style>
 </head>
 <body class="min-vh-100">
@@ -62,7 +62,7 @@
                     {
                         if (Model.ReceiptOptions.ShowQR is true)
                         {
-                            <vc:qr-code data="@Context.Request.GetCurrentUrl()"></vc:qr-code>
+                            <vc:qr-code data="@Context.Request.GetCurrentUrl()" />
                         }
                         <div class="d-flex gap-4 mb-0 flex-fill">
                             <dl class="d-flex flex-column gap-4 mb-0 flex-fill">
@@ -82,7 +82,7 @@
                                     </div>
                                 }
                             </dl>
-                            <a href="?print=true" class="flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank">Print</a>
+                            <a href="?print=true" class="flex-grow-0 align-self-start btn btn-secondary d-print-none fs-4" target="_blank" id="ReceiptLinkPrint">Print</a>
                         </div>
                     }
                 </div>
@@ -99,6 +99,15 @@
                             <h2 class="h4 mb-3">Additional Data</h2>
                             <div class="table-responsive my-0">
                                 <partial name="PosData" model="(Model.AdditionalData, 1)"/>
+                            </div>
+                        </div>
+                    }
+                    if (Model.CartData?.Any() is true)
+                    {
+                        <div id="CartData" class="tile">
+                            <h2 class="h4 mb-3">Cart</h2>
+                            <div class="table-responsive my-0">
+                                <partial name="PosData" model="(Model.CartData, 1)" />
                             </div>
                         </div>
                     }
@@ -164,9 +173,9 @@
                         </div>
                     }
                 }
-                @if (!string.IsNullOrEmpty(Model.OrderUrl))
+                @if (!string.IsNullOrEmpty(Model.RedirectUrl))
                 {
-                    <a href="@Model.OrderUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
+                    <a href="@Model.RedirectUrl" class="btn btn-secondary rounded-pill mx-auto mt-3" rel="noreferrer noopener" target="_blank">Return to @(string.IsNullOrEmpty(Model.StoreName) ? "store" : Model.StoreName)</a>
                 }
             </div>
         </main>

@@ -16,19 +16,16 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
-using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -68,8 +65,10 @@ namespace BTCPayServer.Controllers
         private readonly IFileService _fileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
         private readonly LinkGenerator _linkGenerator;
+        private readonly UriResolver _uriResolver;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
+        private readonly LocalizerService _localizer;
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -91,10 +90,13 @@ namespace BTCPayServer.Controllers
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs,
             LinkGenerator linkGenerator,
+            UriResolver uriResolver,
             EmailSenderFactory emailSenderFactory,
             IHostApplicationLifetime applicationLifetime,
             IHtmlHelper html,
-            TransactionLinkProviders transactionLinkProviders
+            TransactionLinkProviders transactionLinkProviders,
+            LocalizerService localizer,
+            BTCPayServerEnvironment environment
         )
         {
             _policiesSettings = policiesSettings;
@@ -116,27 +118,53 @@ namespace BTCPayServer.Controllers
             _externalServiceOptions = externalServiceOptions;
             Logs = logs;
             _linkGenerator = linkGenerator;
+            _uriResolver = uriResolver;
             _emailSenderFactory = emailSenderFactory;
             ApplicationLifetime = applicationLifetime;
             Html = html;
             _transactionLinkProviders = transactionLinkProviders;
+            _localizer = localizer;
+            Environment = environment;
         }
 
-        [Route("server/maintenance")]
-        public IActionResult Maintenance()
+        [HttpGet("server/stores")]
+        public async Task<IActionResult> ListStores()
         {
-            MaintenanceViewModel vm = new MaintenanceViewModel();
-            vm.CanUseSSH = _sshState.CanUseSSH;
-            if (!vm.CanUseSSH)
-                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
-            vm.DNSDomain = this.Request.Host.Host;
-            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
-                vm.DNSDomain = null;
+            var stores = await _StoreRepository.GetStores();
+            var vm = new ListStoresViewModel
+            {
+                Stores = stores
+                    .Select(s => new ListStoresViewModel.StoreViewModel
+                    {
+                        StoreId = s.Id,
+                        StoreName = s.StoreName,
+                        Archived = s.Archived,
+                        Users = s.UserStores
+                    })
+                    .OrderBy(s => !s.Archived)
+                    .ToList()
+            };
             return View(vm);
         }
 
-        [Route("server/maintenance")]
-        [HttpPost]
+        [HttpGet("server/maintenance")]
+        public IActionResult Maintenance()
+        {
+            var vm = new MaintenanceViewModel
+            {
+                CanUseSSH = _sshState.CanUseSSH,
+                DNSDomain = Request.Host.Host
+            };
+
+            if (!vm.CanUseSSH)
+                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
+            if (IPAddress.TryParse(vm.DNSDomain, out var unused))
+                vm.DNSDomain = null;
+
+            return View(vm);
+        }
+
+        [HttpPost("server/maintenance")]
         public async Task<IActionResult> Maintenance(MaintenanceViewModel vm, string command)
         {
             vm.CanUseSSH = _sshState.CanUseSSH;
@@ -147,6 +175,7 @@ namespace BTCPayServer.Controllers
             }
             if (!ModelState.IsValid)
                 return View(vm);
+            
             if (command == "changedomain")
             {
                 if (string.IsNullOrWhiteSpace(vm.DNSDomain))
@@ -168,36 +197,30 @@ namespace BTCPayServer.Controllers
                     return View(vm);
                 }
                 var builder = new UriBuilder();
-                using (var client = new HttpClient(new HttpClientHandler()
+                try
                 {
-                    ServerCertificateCustomValidationCallback = HttpClientHandler.DangerousAcceptAnyServerCertificateValidator
-                }))
-                {
-                    try
-                    {
-                        builder.Scheme = this.Request.Scheme;
-                        builder.Host = vm.DNSDomain;
-                        var addresses1 = GetAddressAsync(this.Request.Host.Host);
-                        var addresses2 = GetAddressAsync(vm.DNSDomain);
-                        await Task.WhenAll(addresses1, addresses2);
+                    builder.Scheme = this.Request.Scheme;
+                    builder.Host = vm.DNSDomain;
+                    var addresses1 = GetAddressAsync(this.Request.Host.Host);
+                    var addresses2 = GetAddressAsync(vm.DNSDomain);
+                    await Task.WhenAll(addresses1, addresses2);
 
-                        var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
-                        var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
-                        if (!hasCommonAddress)
-                        {
-                            ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
-                            return View(vm);
-                        }
-                    }
-                    catch (Exception ex)
+                    var addressesSet = addresses1.GetAwaiter().GetResult().Select(c => c.ToString()).ToHashSet();
+                    var hasCommonAddress = addresses2.GetAwaiter().GetResult().Select(c => c.ToString()).Any(s => addressesSet.Contains(s));
+                    if (!hasCommonAddress)
                     {
-                        var messages = new List<object>();
-                        messages.Add(ex.Message);
-                        if (ex.InnerException != null)
-                            messages.Add(ex.InnerException.Message);
-                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
+                        ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid host ({vm.DNSDomain} is not pointing to this BTCPay instance)");
                         return View(vm);
                     }
+                }
+                catch (Exception ex)
+                {
+                    var messages = new List<object>();
+                    messages.Add(ex.Message);
+                    if (ex.InnerException != null)
+                        messages.Add(ex.InnerException.Message);
+                    ModelState.AddModelError(nameof(vm.DNSDomain), $"Invalid domain ({string.Join(", ", messages.ToArray())})");
+                    return View(vm);
                 }
 
                 var error = await RunSSH(vm, $"changedomain.sh {vm.DNSDomain}");
@@ -304,20 +327,26 @@ namespace BTCPayServer.Controllers
         public IHttpClientFactory HttpClientFactory { get; }
         public IHostApplicationLifetime ApplicationLifetime { get; }
         public IHtmlHelper Html { get; }
+        public BTCPayServerEnvironment Environment { get; }
 
         [Route("server/policies")]
         public async Task<IActionResult> Policies()
         {
-            ViewBag.AppsList = await GetAppSelectList();
-            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
+            await UpdateViewBag();
             return View(_policiesSettings);
+        }
+
+        private async Task UpdateViewBag()
+        {
+            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
+            ViewBag.AppsList = await GetAppSelectList();
+            ViewBag.LangDictionaries = await GetLangDictionariesSelectList();
         }
 
         [HttpPost("server/policies")]
         public async Task<IActionResult> Policies([FromServices] BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings settings, string command = "")
         {
-            ViewBag.UpdateUrlPresent = _Options.UpdateUrl != null;
-            ViewBag.AppsList = await GetAppSelectList();
+            await UpdateViewBag();
 
             if (command == "add-domain")
             {
@@ -333,7 +362,7 @@ namespace BTCPayServer.Controllers
                 return View(settings);
             }
             settings.BlockExplorerLinks = settings.BlockExplorerLinks
-                                            .Where(tuple => _transactionLinkProviders.GetDefaultBlockExplorerLink(PaymentMethodId.Parse(tuple.CryptoCode)) != tuple.Link)
+                                            .Where(tuple => _transactionLinkProviders.GetDefaultBlockExplorerLink(tuple.CryptoCode) != tuple.Link)
                                             .Where(tuple => tuple.Link is not null)
                                             .ToList();
 
@@ -366,9 +395,12 @@ namespace BTCPayServer.Controllers
                     domainToAppMappingItem.AppType = apps[domainToAppMappingItem.AppId];
                 }
             }
+            
 
             await _SettingsRepository.UpdateSetting(settings);
             _ = _transactionLinkProviders.RefreshTransactionLinkTemplates();
+            if (_policiesSettings.LangDictionary != settings.LangDictionary)
+                await _localizer.Load();
             TempData[WellKnownTempData.SuccessMessage] = "Policies updated successfully";
             return RedirectToAction(nameof(Policies));
         }
@@ -435,6 +467,12 @@ namespace BTCPayServer.Controllers
                     new SelectListItem($"{types[a.AppType]} - {a.AppName} - {a.StoreName}", a.Id)).ToList();
             apps.Insert(0, new SelectListItem("(None)", null));
             return apps;
+        }
+
+        private async Task<List<SelectListItem>> GetLangDictionariesSelectList()
+        {
+            var dictionaries = await this._localizer.GetDictionaries();
+            return dictionaries.Select(d => new SelectListItem(d.DictionaryName, d.DictionaryName)).OrderBy(d => d.Value).ToList();
         }
 
         private static bool TryParseAsExternalService(TorService torService, [MaybeNullWhen(false)] out ExternalService externalService)
@@ -685,7 +723,7 @@ namespace BTCPayServer.Controllers
         [HttpPost]
         public async Task<IActionResult> ServicePost(string serviceName, string cryptoCode)
         {
-            if (!_dashBoard.IsFullySynched(cryptoCode, out var unusud))
+            if (!_dashBoard.IsFullySynched(cryptoCode, out _))
             {
                 TempData[WellKnownTempData.ErrorMessage] = $"{cryptoCode} is not fully synched";
                 return RedirectToAction(nameof(Services));
@@ -998,155 +1036,176 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(Services));
         }
 
-        [HttpGet("server/theme")]
-        public async Task<IActionResult> Theme()
+        [HttpGet("server/branding")]
+        public async Task<IActionResult> Branding()
         {
-            var data = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-            return View(data);
+            var server = await _SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+            var theme = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+            
+            var vm = new BrandingViewModel
+            {
+                ServerName = server.ServerName,
+                ContactUrl = server.ContactUrl,
+                CustomTheme = theme.CustomTheme,
+                CustomThemeExtension = theme.CustomThemeExtension,
+                CustomThemeCssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), theme.CustomThemeCssUrl),
+                LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), theme.LogoUrl)
+            };
+            return View(vm);
         }
 
-        [HttpPost("server/theme")]
-        public async Task<IActionResult> Theme(
-            ThemeSettings model,
+        [HttpPost("server/branding")]
+        public async Task<IActionResult> Branding(
+            BrandingViewModel vm,
             [FromForm] bool RemoveLogoFile,
             [FromForm] bool RemoveCustomThemeFile)
         {
             var settingsChanged = false;
-            var settings = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
+            var server = await _SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+            var theme = await _SettingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
 
             var userId = GetUserId();
             if (userId is null)
                 return NotFound();
 
-            if (model.CustomThemeFile != null)
+            vm.LogoUrl = await _uriResolver.Resolve(this.Request.GetAbsoluteRootUri(), theme.LogoUrl);
+            vm.CustomThemeCssUrl = await _uriResolver.Resolve(this.Request.GetAbsoluteRootUri(), theme.CustomThemeCssUrl);
+            
+            if (server.ServerName != vm.ServerName)
             {
-                if (model.CustomThemeFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
-                {
-                    // delete existing file
-                    if (!string.IsNullOrEmpty(settings.CustomThemeFileId))
-                    {
-                        await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
-                    }
+                server.ServerName = vm.ServerName;
+                settingsChanged = true;
+            }
+            
+            if (server.ContactUrl != vm.ContactUrl)
+            {
+                server.ContactUrl = !string.IsNullOrWhiteSpace(vm.ContactUrl)
+                    ? vm.ContactUrl.IsValidEmail() ? $"mailto:{vm.ContactUrl}" : vm.ContactUrl
+                    : null;
+                settingsChanged = true;
+            }
+            
+            if (settingsChanged)
+            {
+                await _SettingsRepository.UpdateSetting(server);
+            }
 
+            if (vm.CustomThemeFile != null)
+            {
+                if (vm.CustomThemeFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
+                {
                     // add new file
                     try
                     {
-                        var storedFile = await _fileService.AddFile(model.CustomThemeFile, userId);
-                        settings.CustomThemeFileId = storedFile.Id;
+                        var storedFile = await _fileService.AddFile(vm.CustomThemeFile, userId);
+                        theme.CustomThemeCssUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
+                        vm.CustomThemeCssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), theme.CustomThemeCssUrl);
                         settingsChanged = true;
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(settings.CustomThemeFile), $"Could not save theme file: {e.Message}");
+                        ModelState.AddModelError(nameof(vm.CustomThemeFile), $"Could not save theme file: {e.Message}");
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
+                    ModelState.AddModelError(nameof(vm.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
                 }
             }
-            else if (RemoveCustomThemeFile && !string.IsNullOrEmpty(settings.CustomThemeFileId))
+            else if (RemoveCustomThemeFile && theme.CustomThemeCssUrl is not null)
             {
-                await _fileService.RemoveFile(settings.CustomThemeFileId, userId);
-                settings.CustomThemeFileId = null;
+                vm.CustomThemeCssUrl = null;
+                theme.CustomThemeCssUrl = null;
+                theme.CustomTheme = false;
+                theme.CustomThemeExtension = ThemeExtension.Custom;
                 settingsChanged = true;
             }
 
-            if (model.LogoFile != null)
+            if (vm.LogoFile != null)
             {
-                if (model.LogoFile.Length > 1_000_000)
+                if (vm.LogoFile.Length > 1_000_000)
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file should be less than 1MB");
+                    ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file should be less than 1MB");
                 }
-                else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                else if (!vm.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                    ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file needs to be an image");
                 }
                 else
                 {
-                    var formFile = await model.LogoFile.Bufferize();
+                    var formFile = await vm.LogoFile.Bufferize();
                     if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                     {
-                        ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                        ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file needs to be an image");
                     }
                     else
                     {
-                        model.LogoFile = formFile;
-                        // delete existing file
-                        if (!string.IsNullOrEmpty(settings.LogoFileId))
-                        {
-                            await _fileService.RemoveFile(settings.LogoFileId, userId);
-                        }
+                        vm.LogoFile = formFile;
                         // add new file
                         try
                         {
-                            var storedFile = await _fileService.AddFile(model.LogoFile, userId);
-                            settings.LogoFileId = storedFile.Id;
+                            var storedFile = await _fileService.AddFile(vm.LogoFile, userId);
+                            theme.LogoUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
+                            vm.LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), theme.LogoUrl);
                             settingsChanged = true;
                         }
                         catch (Exception e)
                         {
-                            ModelState.AddModelError(nameof(settings.LogoFile), $"Could not save logo: {e.Message}");
+                            ModelState.AddModelError(nameof(vm.LogoFile), $"Could not save logo: {e.Message}");
                         }
                     }
                 }
             }
-            else if (RemoveLogoFile && !string.IsNullOrEmpty(settings.LogoFileId))
+            else if (RemoveLogoFile && theme.LogoUrl is not null)
             {
-                await _fileService.RemoveFile(settings.LogoFileId, userId);
-                settings.LogoFileId = null;
+                vm.LogoUrl = null;
+                theme.LogoUrl = null;
                 settingsChanged = true;
             }
 
-            if (model.CustomTheme && !string.IsNullOrEmpty(model.CustomThemeCssUri) && !Uri.IsWellFormedUriString(model.CustomThemeCssUri, UriKind.RelativeOrAbsolute))
-            {
-                ModelState.AddModelError(nameof(settings.CustomThemeCssUri), "Please provide a non-empty theme URI");
-            }
-            else if (settings.CustomThemeCssUri != model.CustomThemeCssUri)
-            {
-                settings.CustomThemeCssUri = model.CustomThemeCssUri;
-                settingsChanged = true;
-            }
-
-            if (settings.CustomThemeExtension != model.CustomThemeExtension)
+            if (vm.CustomTheme && theme.CustomThemeExtension != vm.CustomThemeExtension)
             {
                 // Require a custom theme to be defined in that case
-                if (string.IsNullOrEmpty(model.CustomThemeCssUri) && string.IsNullOrEmpty(settings.CustomThemeFileId))
+                if (string.IsNullOrEmpty(vm.CustomThemeCssUrl) && theme.CustomThemeCssUrl is null)
                 {
-                    ModelState.AddModelError(nameof(settings.CustomThemeFile), "Please provide a custom theme");
+                    ModelState.AddModelError(nameof(vm.CustomThemeCssUrl), "Please provide a custom theme");
                 }
                 else
                 {
-                    settings.CustomThemeExtension = model.CustomThemeExtension;
+                    theme.CustomThemeExtension = vm.CustomThemeExtension;
                     settingsChanged = true;
                 }
             }
 
-            if (settings.CustomTheme != model.CustomTheme)
+            if (theme.CustomTheme != vm.CustomTheme && !RemoveCustomThemeFile)
             {
-                settings.CustomTheme = model.CustomTheme;
+                theme.CustomTheme = vm.CustomTheme;
                 settingsChanged = true;
             }
 
             if (settingsChanged)
             {
-                await _SettingsRepository.UpdateSetting(settings);
-                TempData[WellKnownTempData.SuccessMessage] = "Theme settings updated successfully";
+                await _SettingsRepository.UpdateSetting(theme);
+                TempData[WellKnownTempData.SuccessMessage] = "Settings updated successfully";
+                return RedirectToAction(nameof(Branding));
             }
 
-            return View(settings);
+            return View(vm);
         }
 
-        [Route("server/emails")]
+        [HttpGet("server/emails")]
         public async Task<IActionResult> Emails()
         {
-            var data = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
-            return View(new EmailsViewModel(data));
+            var email = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            var vm = new ServerEmailsViewModel(email)
+            {
+                EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings
+            };
+            return View(vm);
         }
 
-        [Route("server/emails")]
-        [HttpPost]
-        public async Task<IActionResult> Emails(EmailsViewModel model, string command)
+        [HttpPost("server/emails")]
+        public async Task<IActionResult> Emails(ServerEmailsViewModel model, string command)
         {
             if (command == "Test")
             {
@@ -1162,8 +1221,10 @@ namespace BTCPayServer.Controllers
                         ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
                     if (!ModelState.IsValid)
                         return View(model);
+                    var serverSettings = await _SettingsRepository.GetSettingAsync<ServerSettings>();
+                    var serverName = string.IsNullOrEmpty(serverSettings?.ServerName) ? "BTCPay Server" : serverSettings.ServerName;
                     using (var client = await model.Settings.CreateSmtpClient())
-                    using (var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), "BTCPay test", "BTCPay test", false))
+                    using (var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{serverName}: Email test", "You received it, the BTCPay Server SMTP settings work.", false))
                     {
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
@@ -1176,6 +1237,13 @@ namespace BTCPayServer.Controllers
                 }
                 return View(model);
             }
+
+            if (_policiesSettings.DisableStoresToUseServerEmailSettings == model.EnableStoresToUseServerEmailSettings)
+            {
+                _policiesSettings.DisableStoresToUseServerEmailSettings = !model.EnableStoresToUseServerEmailSettings;
+                await _SettingsRepository.UpdateSetting(_policiesSettings);
+            }
+
             if (command == "ResetPassword")
             {
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
@@ -1184,22 +1252,22 @@ namespace BTCPayServer.Controllers
                 TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
                 return RedirectToAction(nameof(Emails));
             }
-            else // if (command == "Save")
+            
+            // save
+            if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
-                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
-                {
-                    ModelState.AddModelError("Settings.From", "Invalid email");
-                    return View(model);
-                }
-                var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                if (new EmailsViewModel(oldSettings).PasswordSet)
-                {
-                    model.Settings.Password = oldSettings.Password;
-                }
-                await _SettingsRepository.UpdateSetting(model.Settings);
-                TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
-                return RedirectToAction(nameof(Emails));
+                ModelState.AddModelError("Settings.From", "Invalid email");
+                return View(model);
             }
+            var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            if (new ServerEmailsViewModel(oldSettings).PasswordSet)
+            {
+                model.Settings.Password = oldSettings.Password;
+            }
+            
+            await _SettingsRepository.UpdateSetting(model.Settings);
+            TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
+            return RedirectToAction(nameof(Emails));
         }
 
         [Route("server/logs/{file?}")]

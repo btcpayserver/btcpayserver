@@ -22,26 +22,37 @@
 }
 
 <form method="post" action="@Url.Action("EditPaymentRequest", "UIPaymentRequest", new { storeId = Model.StoreId, payReqId = Model.Id }, Context.Request.Scheme)">
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId">Requests</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2 text-translate="true">@ViewData["Title"]</h2>
+        </nav>
+        <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
-                <button type="submit" class="btn btn-primary" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Create</button>
+                <button id="page-primary" type="submit" class="btn btn-primary" permission="@Policies.CanModifyPaymentRequests">Create</button>
             }
             else
             {
-                <button type="submit" class="btn btn-primary order-sm-1" id="SaveButton"  permission="@Policies.CanModifyPaymentRequests">Save</button>
+				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" permission="@Policies.CanModifyPaymentRequests">Save</button>
                 <a class="btn btn-secondary" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest" target="_blank">View</a>
             }
         </div>
     </div>
-
+    
     <partial name="_StatusMessage" />
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <div asp-validation-summary="ModelOnly"></div>
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
             <div class="form-group">
                 <label asp-for="Title" class="form-label" data-required></label>
                 <input asp-for="Title" class="form-control" required />
@@ -66,8 +77,8 @@
                     <span asp-validation-for="Currency" class="text-danger"></span>
                 </div>
             </div>
-            <div class="form-group form-check">
-                <input asp-for="AllowCustomPaymentAmounts" type="checkbox" class="form-check-input" />
+            <div class="form-group d-flex">
+                <input asp-for="AllowCustomPaymentAmounts" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="AllowCustomPaymentAmounts" class="form-check-label"></label>
                 <span asp-validation-for="AllowCustomPaymentAmounts" class="text-danger"></span>
             </div>
@@ -78,7 +89,7 @@
                            value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
                            class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />
                     <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="Clear">
-                        <span class="fa fa-times"></span>
+                        <vc:icon symbol="close" />
                     </button>
                 </div>
                 <span asp-validation-for="ExpiryDate" class="text-danger"></span>
@@ -120,41 +131,6 @@
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" class="form-control richtext"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
-            </div>
-        </div>
-    </div>
-
-    <div class="row">
-        <div class="col-xl-8 col-xxl-constrain">
-            <h4 class="mt-5 mb-2">Additional Options</h4>
-            <div class="form-group">
-                <div class="accordion" id="additional">
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="additional-custom-css-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
-                                Custom CSS
-                                <vc:icon symbol="caret-down" />
-                            </button>
-                        </h2>
-                        <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
-                            <div class="accordion-body">
-                                <div class="form-group">
-                                    <label asp-for="CustomCSSLink" class="form-label"></label>
-                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener" title="More information...">
-                                        <vc:icon symbol="info" />
-                                    </a>
-                                    <input asp-for="CustomCSSLink" class="form-control" />
-                                    <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="EmbeddedCSS" class="form-label"></label>
-                                    <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                                    <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

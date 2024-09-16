@@ -1,14 +1,34 @@
-﻿@model CreateTokenViewModel
+@model CreateTokenViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", Context.GetStoreData()?.Id);
-    ViewBag.HidePublicKey = ViewBag.HidePublicKey ?? false;
-    ViewBag.ShowStores = ViewBag.ShowStores ?? false;
+    var store = Context.GetStoreData();
+    ViewData.SetActivePage(StoreNavPages.Tokens, "Create New Token", store?.Id);
+    ViewBag.HidePublicKey ??= false;
+    ViewBag.ShowStores ??= false;
 }
-<div class="row">
-    <div class="col-xxl-constrain col-xl-8">
-        <h3 class="mb-4">@ViewData["Title"]</h3>
-        <form method="post">
+
+<form method="post">
+    <div class="sticky-header">
+        @if (store != null)
+        {
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item">
+                        <a asp-action="ListTokens" asp-route-storeId="@store.Id">Access Tokens</a>
+                    </li>
+                    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                </ol>
+                <h2 text-translate="true">@ViewData["Title"]</h2>
+            </nav>
+        }
+        else
+        {
+            <h2 text-translate="true">@ViewData["Title"]</h2>
+        }
+        <input id="page-primary" type="submit" value="Request Pairing" class="btn btn-primary" />
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
             <div class="form-group">
                 <label asp-for="Label" class="form-label"></label>
                 @if (ViewBag.HidePublicKey)
@@ -39,9 +59,6 @@
             {
                 <input type="hidden" asp-for="StoreId" />
             }
-            <div class="form-group">
-                <input id="RequestPairing" type="submit" value="Request Pairing" class="btn btn-primary" />
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+</form>

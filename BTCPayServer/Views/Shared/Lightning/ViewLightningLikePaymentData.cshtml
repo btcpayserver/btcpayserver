@@ -3,23 +3,28 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Components.TruncateCenter
 @using BTCPayServer.Lightning
+@using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
+@inject PaymentMethodHandlerDictionary handlers
+@inject PrettyNameProvider prettyName
 @model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
 
 @{
-    var payments = Model
-        .Where(entity => entity.GetPaymentMethodId()?.PaymentType == LightningPaymentType.Instance || 
-                         entity.GetPaymentMethodId()?.PaymentType == LNURLPayPaymentType.Instance)
-        .Select(payment => payment.GetCryptoPaymentData() is LightningLikePaymentData offChainPaymentData
-            ? new OffChainPaymentViewModel
-            {
-                Crypto = payment.Network.CryptoCode,
-                BOLT11 = offChainPaymentData.BOLT11,
-                Type = payment.GetCryptoPaymentData().GetPaymentType(),
-                PaymentProof = offChainPaymentData.Preimage?.ToString(),
-                Amount = DisplayFormatter.Currency(offChainPaymentData.Amount.ToDecimal(LightMoneyUnit.BTC), payment.Network.CryptoCode)
-            }
-            : null)
+	var payments = Model
+		.Select(payment =>
+			{
+				
+				if (handlers.TryGet(payment.PaymentMethodId) is not ILightningPaymentHandler handler)
+					return null;
+				var offChainPaymentData = handler.ParsePaymentDetails(payment.Details);
+				return new OffChainPaymentViewModel
+				{
+					Type = prettyName.PrettyName(payment.PaymentMethodId),
+					BOLT11 = offChainPaymentData.BOLT11,
+					PaymentProof = offChainPaymentData.Preimage?.ToString(),
+					Amount = DisplayFormatter.Currency(payment.Value, handler.Network.CryptoCode, divisibility: payment.Divisibility)
+				};
+			})
         .Where(model => model != null)
         .ToList();
 }
@@ -32,8 +37,7 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-                        <th class="w-75px">Crypto</th>
-                        <th class="w-100px">Type</th>
+						<th class="w-75px">Type</th>
                         <th class="w-175px">Destination</th>
                         <th class="text-nowrap">Payment Proof</th>
                         <th class="w-150px text-end">Paid</th>
@@ -43,8 +47,7 @@
                     @foreach (var payment in payments)
                     {
                         <tr>
-                            <td>@payment.Crypto</td>
-                            <td>@payment.Type.ToPrettyString()</td>
+							<td>@payment.Type</td>
                             <td>
                                 <vc:truncate-center text="@payment.BOLT11" classes="truncate-center-id" />
                             </td>

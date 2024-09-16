@@ -30,6 +30,7 @@
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bbqr/bbqr.iife.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
 
     <script>
@@ -39,9 +40,12 @@
                 const buffer = new window.URlib.Buffer.from(psbtHex, "hex");
                 const cryptoPSBT = new window.URlib.CryptoPSBT(buffer);
                 const encoder = cryptoPSBT.toUREncoder();
+                const bbqrSplitResult = BBQr.splitQRs(buffer, 'P', { maxVersion: 10});
+                
                 const modes = {
                     ur: { title: "UR", fragments: encoder.encodeWhole() },
-                    static: { title: "Static", fragments: [psbtHex] }
+                    static: { title: "Static", fragments: [psbtHex] },
+                    bbqr: { title: "BBQr", fragments: bbqrSplitResult.parts}
                 };
                 initQRShow({ title: "Scan the PSBT", modes });
             }

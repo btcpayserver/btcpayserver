@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Frozen;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -12,31 +13,53 @@ namespace BTCPayServer.Payments
     /// </summary>
     public class PaymentMethodId
     {
-        public PaymentMethodId? FindNearest(IEnumerable<PaymentMethodId> others)
+        public T? FindNearest<T>(IEnumerable<T> others)
         {
             ArgumentNullException.ThrowIfNull(others);
-            return others.FirstOrDefault(f => f == this) ??
-                   others.FirstOrDefault(f => f.CryptoCode == CryptoCode);
-        }
-        public PaymentMethodId(string cryptoCode, PaymentType paymentType)
-        {
-            ArgumentNullException.ThrowIfNull(cryptoCode);
-            ArgumentNullException.ThrowIfNull(paymentType);
-            PaymentType = paymentType;
-            CryptoCode = cryptoCode.ToUpperInvariant();
+            return 
+                GetSimilarities([this], others)
+                .OrderByDescending(o => o.similarity)
+                .Select(o => o.b)
+                .FirstOrDefault();
         }
 
-        public bool IsBTCOnChain
+        /// <summary>
+        /// Returns the carthesian product of the two enumerables with the similarity between each pair's strings.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <typeparam name="U"></typeparam>
+        /// <param name="aItems"></param>
+        /// <param name="bItems"></param>
+        /// <returns></returns>
+        public static IEnumerable<(T a, U b, int similarity)> GetSimilarities<T, U>(IEnumerable<T> aItems, IEnumerable<U> bItems)
         {
-            get
+            return from a in aItems
+                   from b in bItems
+                   select (a, b, CalculateDistance(a.ToString()!, b.ToString()!));
+        }
+
+        private static int CalculateDistance(string a, string b)
+        {
+            int similarity = 0;
+            for (int i = 0; i < Math.Min(a.Length, b.Length); i++)
             {
-                return CryptoCode == "BTC" && PaymentType == PaymentTypes.BTCLike;
+                if (a[i] == b[i])
+                    similarity++;
+                else
+                    break;
             }
+            if (a.Length == b.Length)
+                similarity++;
+            return similarity;
         }
 
-        public string CryptoCode { get; private set; }
-        public PaymentType PaymentType { get; private set; }
+        public PaymentMethodId(string id)
+        {
+            ArgumentNullException.ThrowIfNull(id);
+			_Id = id;
+        }
 
+		string _Id;
 
         public override bool Equals(object? obj)
         {
@@ -67,29 +90,7 @@ namespace BTCPayServer.Payments
 
         public override string ToString()
         {
-            //BTCLike case is special because it is in legacy mode.
-            return PaymentType == PaymentTypes.BTCLike ? CryptoCode : $"{CryptoCode}_{PaymentType}";
-        }
-        /// <summary>
-        /// A string we can expose to Greenfield API, not subjected to internal legacy
-        /// </summary>
-        /// <returns></returns>
-        public string ToStringNormalized()
-        {
-            if (PaymentType == PaymentTypes.BTCLike)
-                return CryptoCode;
-#if ALTCOINS
-            if (CryptoCode == "XMR" && PaymentType == PaymentTypes.MoneroLike)
-                return CryptoCode;
-            if ((CryptoCode == "YEC" || CryptoCode == "ZEC") && PaymentType == PaymentTypes.ZcashLike)
-                return CryptoCode;
-#endif
-            return $"{CryptoCode}-{PaymentType.ToStringNormalized()}";
-        }
-
-        public string ToPrettyString()
-        {
-            return $"{CryptoCode} ({PaymentType.ToPrettyString()})";
+            return _Id;
         }
         static char[] Separators = new[] { '_', '-' };
         public static PaymentMethodId? TryParse(string? str)
@@ -97,28 +98,79 @@ namespace BTCPayServer.Payments
             TryParse(str, out var r);
             return r;
         }
+
+        static readonly FrozenSet<string> LegacySupportedCryptos = new HashSet<string>()
+        {
+            "XMR",
+            "ZEC",
+            "LCAD",
+            "ETB",
+            "LBTC",
+            "USDt",
+            "MONA",
+            "LTC",
+            "GRS",
+            "DOGE",
+            "DASH",
+            "BTG",
+            "BTC"
+        }.ToFrozenSet(StringComparer.OrdinalIgnoreCase);
+
         public static bool TryParse(string? str, [MaybeNullWhen(false)] out PaymentMethodId paymentMethodId)
         {
             str ??= "";
+            str = str.Trim();
+            if (str.Length == 0)
+            {
+                paymentMethodId = null;
+                return false;
+            }
             paymentMethodId = null;
             var parts = str.Split(Separators, StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0 || parts.Length > 2)
-                return false;
-            PaymentType type = PaymentTypes.BTCLike;
-#if ALTCOINS
-            if (parts[0].ToUpperInvariant() == "XMR")
-                type = PaymentTypes.MoneroLike;
-            if (parts[0].ToUpperInvariant() == "ZEC")
-                type = PaymentTypes.ZcashLike;
-#endif
-            if (parts.Length == 2)
+
             {
-                if (!PaymentTypes.TryParse(parts[1], out type))
-                    return false;
+                if (parts is [var cryptoCode])
+                {
+                    if (LegacySupportedCryptos.Contains(cryptoCode))
+                    {
+                        paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+                        return true;
+                    }
+                }
             }
-            paymentMethodId = new PaymentMethodId(parts[0], type);
+
+            {
+                if (parts is [var cryptoCode, var paymentType])
+                {
+                    if (LegacySupportedCryptos.Contains(cryptoCode))
+                    {
+						var type = GetPaymentType(paymentType);
+						if (type != null)
+						{
+							paymentMethodId = type.GetPaymentMethodId(cryptoCode);
+							return true;
+						}
+                        paymentMethodId = new PaymentMethodId($"{cryptoCode.ToUpperInvariant()}-{paymentType}");
+                        return true;
+                    }
+                }
+            }
+
+            paymentMethodId = new PaymentMethodId(str);
             return true;
         }
+
+        private static PaymentType? GetPaymentType(string paymentType)
+        {
+            return paymentType.ToLowerInvariant() switch
+            {
+                "lightninglike" or "lightningnetwork" or "offchain" or "off-chain" => PaymentTypes.LN,
+                "bitcoinlike" or "onchain" or "btclike" or "on-chain" or "monerolike" or "zcashlike" => PaymentTypes.CHAIN,
+                "lnurlpay" => PaymentTypes.LNURL,
+                _ => null
+            };
+        }
+
         public static PaymentMethodId Parse(string str)
         {
             if (!TryParse(str, out var result))

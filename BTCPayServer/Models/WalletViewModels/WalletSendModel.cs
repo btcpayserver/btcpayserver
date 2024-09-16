@@ -44,7 +44,7 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public List<FeeRateOption> RecommendedSatoshiPerByte { get; set; }
 
-        [Display(Name = "Fee rate (satoshi per byte)")]
+        [Display(Name = "Fee rate (sat/vB)")]
         [Required]
         public decimal? FeeSatoshiPerByte { get; set; }
 
@@ -55,11 +55,8 @@ namespace BTCPayServer.Models.WalletViewModels
         public int CryptoDivisibility { get; set; }
         public string Fiat { get; set; }
         public string RateError { get; set; }
-        public bool SupportRBF { get; set; }
         [Display(Name = "Always include non-witness UTXO if available")]
         public bool AlwaysIncludeNonWitnessUTXO { get; set; }
-        [Display(Name = "Allow fee increase (RBF)")]
-        public ThreeStateBool AllowFeeBump { get; set; }
 
         public bool NBXSeedAvailable { get; set; }
         [Display(Name = "PayJoin BIP21")]

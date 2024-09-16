@@ -1,18 +1,24 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.StoreViewModels.RatesViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
     ViewData.SetActivePage(StoreNavPages.Rates, "Rates", Context.GetStoreData().Id);
 }
 
-<div class="row">
-    <div class="col-xxl-constrain col-xl-8">
-        <h3 class="mb-3">@ViewData["Title"]</h3>
-        @if (!ViewContext.ModelState.IsValid)
-        {
-            <div asp-validation-summary="All"></div>
-        }
-        <form method="post">
+<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+		<button id="page-primary" name="command" type="submit" class="btn btn-primary" value="Save">Save</button>
+    </div>
+    <partial name="_StatusMessage" />
+    <div class="row">
+        <div class="col-xxl-constrain col-xl-8">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="All"></div>
+            }
             <input type="hidden" asp-for="ShowScripting" />
             @if (Model.ShowScripting)
             {
@@ -59,20 +65,26 @@
             }
             @if (Model.TestRateRules != null)
             {
-                <div class="form-group">
-                    <h5>Test Results:</h5>
-                    <table class="table table-hover table-responsive-md">
+                <h5>Test Results:</h5>
+                <div class="table-responsive-md">
+                    <table class="table table-hover">
                         <tbody>
                         @foreach (var result in Model.TestRateRules)
                         {
                             <tr>
                                 @if (result.Error)
                                 {
-                                    <th class="small"><span class="text-danger fa fa-times"></span> @result.CurrencyPair</th>
+                                    <th class="small">
+                                        <vc:icon symbol="cross" css-class="text-danger" />
+                                        @result.CurrencyPair
+                                    </th>
                                 }
                                 else
                                 {
-                                    <th class="small"><span class="text-success fa fa-check"></span> @result.CurrencyPair</th>
+                                    <th class="small">
+                                        <vc:icon symbol="checkmark" css-class="text-success" />
+                                        @result.CurrencyPair
+                                    </th>
                                 }
                                 <td class="small">@result.Rule</td>
                             </tr>
@@ -135,14 +147,14 @@ X_X = kraken(X_X);</code></pre>
                     <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                     <div id="PreferredExchangeHelpBlock" class="form-text">
-                        Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredExchange</a>.
+                        Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredResolvedExchange</a>.
                     </div>
                 </div>
             }
             <div class="form-group">
                 <label class="d-flex align-items-center">
-                    <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
-                    <div class="">
+                    <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal" permission="@Policies.CanModifyStoreSettings">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
+                    <div>
                         <span>Advanced rate rule scripting</span>
                         <div class="form-text">
                             @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
@@ -164,7 +176,7 @@ X_X = kraken(X_X);</code></pre>
                 <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
                 <div class="d-flex">
                     <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
-                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test">Test</button>
+                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test" permission="@Policies.CanModifyStoreSettings">Test</button>
                 </div>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
             </div>
@@ -175,13 +187,10 @@ X_X = kraken(X_X);</code></pre>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
-            <button name="command" type="submit" class="btn btn-primary mt-2" value="Save">Save</button>
-        </form>
+        </div>
     </div>
-</div>
-
-<partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" />
-
+</form>
+<partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageHeadContent {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">

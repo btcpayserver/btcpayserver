@@ -2,7 +2,7 @@
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Import {Model.CryptoCode} Wallet", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Import {Model.CryptoCode} Wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -15,14 +15,19 @@
     <h1>Choose your import method</h1>
     <p class="lead text-secondary mt-3">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
 </header>
-
+<style>
+    .icon.icon-wallet-xpub,
+    .icon.icon-scan-qr {
+        --icon-size: 2.5rem !important;
+    }
+</style>
 @if (BTCPayNetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode).VaultSupported)
 {
     <div class="mt-5">
         <div class="list-group">
             <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="hardware" id="ImportHardwareLink" class="list-group-item list-group-item-action only-for-js">
                 <div class="image">
-                    <vc:icon symbol="hardware-wallet"/>
+                    <vc:icon symbol="wallet-hardware"/>
                 </div>
                 <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
                     <div>
@@ -36,7 +41,7 @@
             <noscript>
                 <div class="list-group-item disabled">
                     <div class="image">
-                        <vc:icon symbol="hardware-wallet"/>
+                        <vc:icon symbol="wallet-hardware"/>
                     </div>
                     <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
                         <div>
@@ -70,7 +75,7 @@
 <div class="list-group mt-4">
     <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="xpub" id="ImportXpubLink" class="list-group-item list-group-item-action">
         <div class="image">
-            <vc:icon symbol="xpub"/>
+            <vc:icon symbol="wallet-xpub"/>
         </div>
         <div class="content">
             <h4>Enter extended public key</h4>
@@ -107,7 +112,7 @@
 <div class="list-group mt-4">
     <a asp-controller="UIStores" asp-action="ImportWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="seed" id="ImportSeedLink" class="list-group-item list-group-item-action">
         <div class="image">
-            <vc:icon symbol="seed"/>
+            <vc:icon symbol="wallet-seed"/>
         </div>
         <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
             <div>

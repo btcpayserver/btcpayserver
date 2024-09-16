@@ -53,6 +53,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string StoreName { get; set; }
         public NumberFormatInfo CurrencyInfo { get; set; }
         public PosViewType ViewType { get; set; }
+        public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }
         public bool ShowDiscount { get; set; }
         public bool ShowSearch { get; set; } = true;
@@ -98,8 +99,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public int[] CustomTipPercentages { get; set; }
         public string Description { get; set; }
         public SelectList AllCategories { get; set; }
-        [Display(Name = "Custom CSS Code")]
-        public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
         public string StoreId { get; set; }
     }
 }

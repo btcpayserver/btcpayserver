@@ -1,4 +1,3 @@
-@using BTCPayServer.Abstractions.Extensions
 @inject BTCPayServer.Services.BTCPayServerEnvironment _env
 
 <footer class="btcpay-footer d-print-none">
@@ -35,7 +34,7 @@
             @if (!string.IsNullOrEmpty(_env.OnionUrl) && !Context.Request.IsOnion())
             {
                 <button type="button" class="d-flex align-items-center btn btn-link" data-clipboard="@_env.OnionUrl" data-clipboard-hover>
-                    <vc:icon symbol="onion"/>
+                    <vc:icon symbol="logo-tor"/>
                     <span>Copy Tor URL</span>
                 </button>
             }

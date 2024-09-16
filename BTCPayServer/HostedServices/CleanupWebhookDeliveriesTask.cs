@@ -24,8 +24,6 @@ namespace BTCPayServer.HostedServices
         public async Task Do(CancellationToken cancellationToken)
         {
             await using var ctx = DbContextFactory.CreateContext();
-            if (!ctx.Database.IsNpgsql())
-                return;
             var conn = ctx.Database.GetDbConnection();
             bool pruned = false;
             int offset = 0;

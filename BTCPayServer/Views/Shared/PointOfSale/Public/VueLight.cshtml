@@ -1,9 +1,24 @@
+@using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using Newtonsoft.Json.Linq
 @using BTCPayServer.Client
+@inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
-
+@functions {
+    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    {
+        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.Price == 0) return "free";
+        var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+    }
+}
 <form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
-    <input type="hidden" name="posdata" v-model="posdata" id="posdata">
-    <input type="hidden" name="amount" v-model="totalNumeric">
+    <input type="hidden" name="amount" :value="totalNumeric">
+    <input type="hidden" name="tip" :value="tipNumeric">
+    <input type="hidden" name="discount" :value="discountPercentNumeric">
+    <input type="hidden" name="posdata" :value="posdata">
     <div ref="display" class="d-flex flex-column align-items-center px-4 mb-auto">
         <div class="fw-semibold text-muted" id="Currency">{{currencyCode}}</div>
         <div class="fw-bold lh-sm" ref="amount" v-bind:style="{ fontSize: `${fontSize}px` }" id="Amount">{{ formatCurrency(total, false) }}</div>
@@ -58,39 +73,84 @@
         </div>
         <template v-else>Charge</template>
     </button>
-    <div class="modal" tabindex="-1" id="RecentTransactions" ref="RecentTransactions" data-bs-backdrop="static" data-url="@Url.Action("RecentTransactions", "UIPointOfSale", new { appId = Model.AppId })">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Recent Transactions</h5>
-                    <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" v-on:click="loadRecentTransactions" :disabled="recentTransactionsLoading" id="RecentTransactionsRefresh">
-                        <vc:icon symbol="refresh"/>
-                        <span v-if="recentTransactionsLoading" class="visually-hidden">Loading...</span>
-                    </button>
-                    <button type="button" class="btn-close py-3" aria-label="Close" v-on:click="closeModal">
-                        <vc:icon symbol="close"/>
-                    </button>
+    <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
+    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
+        <vc:icon symbol="nav-invoice"/>
+    </button>
+    <button type="button" class="btn btn-link p-1" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList" v-if="showItems">
+        <vc:icon symbol="nav-mobile-menu"/>
+    </button>
+    <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1"  id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
+        <div class="offcanvas-header justify-content-between flex-wrap p-3">
+            <h5 class="offcanvas-title" id="offcanvasExampleLabel">Products</h5>
+            <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': cart.length > 0, 'btn-outline-secondary': cart.length === 0}" data-bs-dismiss="offcanvas" v-text="cart.length > 0 ? 'Apply' : 'Close'"></button>
+            @if (Model.ShowSearch)
+            {
+                <div class="w-100 mt-3">
+                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm" v-if="showSearch">
                 </div>
-                <div class="modal-body">
-                    <div v-if="recentTransactions.length" class="list-group list-group-flush">
-                        <a v-for="t in recentTransactions" :key="t.id" :href="t.url" class="list-group-item list-group-item-action d-flex align-items-center gap-3 pe-1 py-3">
-                            <div class="d-flex align-items-baseline justify-content-between flex-wrap flex-grow-1 gap-2">
-                                <span class="flex-grow-1">{{displayDate(t.date)}}</span>
-                                <span class="flex-grow-1 text-end">{{t.price}}</span>
-                                <div class="badge-container">
-                                    <span class="badge" :class="`badge-${t.status.toLowerCase()}`">{{t.status}}</span>
+            }
+            @if (Model.ShowCategories)
+            {
+                <div id="Categories" ref="categories" v-if="showCategories && allCategories" class="w-100 mt-3 btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2" :class="{ 'scrollable': categoriesScrollable }">
+                    <nav class="btcpay-pills d-flex align-items-center gap-3" ref="categoriesNav">
+                        <template v-for="cat in allCategories">
+                            <input :id="`Category-${cat.value}`" type="radio" name="category" autocomplete="off" v-model="displayCategory" :value="cat.value">
+                            <label :for="`Category-${cat.value}`" class="btcpay-pill text-nowrap">{{ cat.text }}</label>
+                        </template>
+                    </nav>
+                </div>
+            }
+        </div>
+        <div class="offcanvas-body">
+            <div ref="posItems" id="PosItems">
+                @for (var index = 0; index < Model.Items.Length; index++)
+                {
+                    var item = Model.Items[index];
+                    var formatted = GetItemPriceFormatted(item);
+                    var inStock = item.Inventory is null or > 0;
+                    var displayed = item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && inStock ? "true" : "false";
+                    var categories = new JArray(item.Categories ?? new object[] { });
+                    <div class="posItem p-3" :class="{ 'posItem--inStock': inStock(@index), 'posItem--displayed': @displayed }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)' v-show="@displayed">
+                        <div class="d-flex align-items-start w-100 gap-3">
+                            @if (!string.IsNullOrWhiteSpace(item.Image))
+                            {
+                                <div class="img d-none d-sm-block">
+                                    <img src="@item.Image" alt="@item.Title" asp-append-version="true" />
+                                </div>
+                            }
+                            <div class="d-flex flex-column gap-2">
+                                <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
+                                <div class="d-flex gap-2 align-items-center">
+                                    @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
+                                    {
+                                        <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="fw-semibold">@Safe.Raw(formatted)</span>
+                                    }
+                                    @if (item.Inventory.HasValue)
+                                    {
+                                        <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
+                                            @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                        </span>
+                                    }
                                 </div>
                             </div>
-                            <vc:icon symbol="caret-right" />
-                        </a>
+                            <div class="d-flex align-items-center gap-2 ms-auto quantities">
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, -1, true)" class="btn btn-minus" :disabled="getQuantity(`@Safe.Raw(item.Id)`) <= 0">
+                                    <span><vc:icon symbol="minus" /></span>
+                                </button>
+                                <div class="quantity text-center fs-5" style="width:2rem">{{ getQuantity(`@Safe.Raw(item.Id)`) }}</div>
+                                <button type="button" v-on:click="updateQuantity(`@Safe.Raw(item.Id)`, +1, true)" class="btn btn-plus" :disabled="!inStock(@index)">
+                                    <span><vc:icon symbol="plus" /></span>
+                                </button>
+                            </div>
+                        </div>
                     </div>
-                    <p v-else-if="recentTransactionsLoading" class="text-muted my-0">Loading...</p>
-                    <p v-else class="text-muted my-0">No transactions, yet.</p>
-                </div>
+                }
             </div>
         </div>
     </div>
-    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
-        <vc:icon symbol="manage-plugins"/>
-    </button>
 </form>

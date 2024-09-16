@@ -14,6 +14,16 @@ namespace BTCPayServer.Client.Models
         /// the email AND username of the user
         /// </summary>
         public string Email { get; set; }
+        
+        /// <summary>
+        /// the name of the user
+        /// </summary>
+        public string Name { get; set; }
+
+        /// <summary>
+        /// the image url of the user
+        /// </summary>
+        public string ImageUrl { get; set; }
 
         /// <summary>
         /// Whether the user has verified their email
@@ -24,6 +34,16 @@ namespace BTCPayServer.Client.Models
         /// whether the user needed to verify their email on account creation
         /// </summary>
         public bool RequiresEmailConfirmation { get; set; }
+
+        /// <summary>
+        /// Whether the user was approved by an admin
+        /// </summary>
+        public bool Approved { get; set; }
+
+        /// <summary>
+        /// whether the user needed approval on account creation
+        /// </summary>
+        public bool RequiresApproval { get; set; }
 
         /// <summary>
         /// the roles of the user

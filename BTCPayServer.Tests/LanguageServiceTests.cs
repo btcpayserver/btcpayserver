@@ -1,8 +1,19 @@
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Data;
+using BTCPayServer.Hosting;
 using BTCPayServer.Services;
-using BTCPayServer.Tests.Logging;
+using Dapper;
+using Microsoft.EntityFrameworkCore;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Support.Extensions;
 using Xunit;
 using Xunit.Abstractions;
+using static BTCPayServer.Services.LocalizerService;
 
 namespace BTCPayServer.Tests
 {
@@ -12,6 +23,153 @@ namespace BTCPayServer.Tests
         public const int TestTimeout = TestUtils.TestTimeout;
         public LanguageServiceTests(ITestOutputHelper helper) : base(helper)
         {
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanTranslateLoginPage()
+        {
+            using var tester = CreateSeleniumTester(newDb: true);
+            tester.Server.ActivateLangs();
+            await tester.StartAsync();
+            await tester.Server.PayTester.RestartStartupTask<LoadTranslationsStartupTask>();
+
+            // Check if the Cypherpunk translation has been loaded from the file
+            tester.RegisterNewUser(true);
+            tester.CreateNewStore();
+            tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            tester.Driver.FindElement(By.Id("Select-Cypherpunk")).Click();
+            tester.Logout();
+            Assert.Contains("Cyphercode", tester.Driver.PageSource);
+            Assert.Contains("Yo at BTCPay Server", tester.Driver.PageSource);
+
+            // Create English (Custom) 
+            tester.LogIn();
+            tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            tester.ClickPagePrimary();
+            tester.Driver.FindElement(By.Name("Name")).SendKeys("English (Custom)");
+            tester.ClickPagePrimary();
+            var translations = tester.Driver.FindElement(By.Name("Translations"));
+            translations.Clear();
+            translations.SendKeys("{ \"Password\": \"Mot de passe\" }");
+            tester.ClickPagePrimary();
+
+            // Check English (Custom) can be selected
+            tester.Driver.FindElement(By.Id("Select-English (Custom)")).Click();
+            tester.Logout();
+            Assert.Contains("Mot de passe", tester.Driver.PageSource);
+
+            // Check if we can remove English (Custom)
+            tester.LogIn();
+            tester.GoToServer(Views.Server.ServerNavPages.Translations);
+            var text = tester.Driver.PageSource;
+            Assert.Contains("Select-Cypherpunk", text);
+            Assert.DoesNotContain("Select-English (Custom)", text);
+            // Cypherpunk is loaded from file, can't edit
+            Assert.DoesNotContain("Delete-Cypherpunk", text);
+            // English (Custom) is selected, can't edit
+            Assert.DoesNotContain("Delete-English (Custom)", text);
+            tester.Driver.FindElement(By.Id("Select-Cypherpunk")).Click();
+            tester.Driver.FindElement(By.Id("Delete-English (Custom)")).Click();
+            tester.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
+            tester.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+
+            text = tester.Driver.PageSource;
+            Assert.DoesNotContain("Select-English (Custom)", text);
+            Assert.Contains("English (Custom) deleted", text);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUpdateTranslationsInDatabase()
+        {
+            using var tester = CreateServerTester(newDb: true);
+            await tester.StartAsync();
+            var localizer = tester.PayTester.GetService<LocalizerService>();
+            var factory = tester.PayTester.GetService<ApplicationDbContextFactory>();
+            var db = factory.CreateContext().Database.GetDbConnection();
+
+            TestLogs.LogInformation("French fallback to english");
+            await db.ExecuteAsync("INSERT INTO lang_dictionaries VALUES ('French', 'English', NULL)");
+
+            async Task SetDictionary(string dictId, (string Sentence, string Translation)[] translations)
+            {
+                var dict = await localizer.GetDictionary(dictId);
+                var t = new Translations(translations.Select(t => KeyValuePair.Create(t.Sentence, t.Translation)));
+                await localizer.Save(dict, t);
+            }
+            async Task AssertTranslations(string dictionary, (string Sentence, string Expected)[] expectations)
+            {
+                var all = await db.QueryAsync<(string sentence, string translation)>($"SELECT sentence, translation from translations WHERE dict_id='{dictionary}'");
+                foreach (var expectation in expectations)
+                {
+                    if (expectation.Expected is not null)
+                        Assert.Equal(expectation.Expected, all.Single(a => a.sentence == expectation.Sentence).translation);
+                    else
+                        Assert.DoesNotContain(all, a => a.sentence == expectation.Sentence);
+                }
+            }
+
+            await SetDictionary("English",
+                [
+                    ("Hello", "Hello"),
+                    ("Goodbye", "Goodbye"),
+                    ("Good afternoon", "Good afternoon")
+                ]);
+            await SetDictionary("French",
+                [
+                    ("Hello", "Salut"),
+                    ("Good afternoon", "Bonne aprem")
+                ]);
+
+            TestLogs.LogInformation("French should override Hello and Good afternoon, but not Goodbye");
+            await AssertTranslations("French",
+                [("Hello", "Salut"),
+                ("Good afternoon", "Bonne aprem"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+            await AssertTranslations("English",
+                [("Hello", "Hello"),
+                ("Good afternoon", "Good afternoon"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+
+            TestLogs.LogInformation("Can use fallback by setting null to a sentence");
+            await SetDictionary("French",
+                [
+                    ("Good afternoon", "Bonne aprem"),
+                    ("Goodbye", "Goodbye"),
+                    ("Hello", null)
+                ]);
+            await AssertTranslations("French",
+                [("Hello", "Hello"),
+                ("Good afternoon", "Bonne aprem"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+
+            TestLogs.LogInformation("Can use fallback by setting same as fallback to a sentence");
+            await SetDictionary("French",
+                [
+                    ("Good afternoon", "Good afternoon")
+                ]);
+            await AssertTranslations("French",
+                [("Hello", "Hello"),
+                ("Good afternoon", "Good afternoon"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+
+            await SetDictionary("English",
+                [
+                    ("Hello", null as string),
+                    ("Good afternoon", "Good afternoon"),
+                    ("Goodbye", "Goodbye")
+                ]);
+            await AssertTranslations("French",
+                [("Hello", null),
+                ("Good afternoon", "Good afternoon"),
+                ("Goodbye", "Goodbye"),
+                ("lol", null)]);
+            await db.ExecuteAsync("DELETE FROM lang_dictionaries WHERE dict_id='English'");
         }
 
         [Fact(Timeout = TestTimeout)]

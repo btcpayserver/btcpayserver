@@ -1,14 +1,17 @@
 @using System.Globalization
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
 @using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.Apps
 @using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.Forms
+@inject FormDataService FormDataService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
 	Csp.UnsafeEval();
+    var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
 @section PageHeadContent {
@@ -22,12 +25,12 @@
     <script src="~/crowdfund/admin.js" asp-append-version="true"></script>
 }
 
-<form method="post">
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>   
-            @if (Model.Archived)
+<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+        <div>
+			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+			@if (Model.Archived)
             {
                 <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>
             }
@@ -42,8 +45,11 @@
 
     <input type="hidden" asp-for="StoreId" />
     <input type="hidden" asp-for="Archived" />
-    <div asp-validation-summary="ModelOnly"></div>
 
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="ModelOnly"></div>
+    }
     <div class="row">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
             <div class="row">
@@ -76,7 +82,7 @@
                 <div class="d-flex align-items-center">
                     <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
                     <div>
-                        <label asp-for="Enabled" class="form-label mb-0"></label>
+                        <label asp-for="Enabled" class="form-check-label"></label>
                         <span asp-validation-for="Enabled" class="text-danger"></span>
                         <div class="text-muted">The crowdfund will be visible to anyone.</div>
                     </div>
@@ -142,7 +148,7 @@
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
                     <div>
-                        <label asp-for="IsRecurring" class="form-label mb-0">Recurring Goal</label>
+                        <label asp-for="IsRecurring" class="form-check-label">Recurring Goal</label>
                         <span asp-validation-for="IsRecurring" class="text-danger"></span>
                         <div class="text-muted">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
                     </div>
@@ -174,32 +180,39 @@
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <h3 class="mt-5 mb-4">Contributions</h3>
-            <div class="form-check mb-3">
-                <input asp-for="SortPerksByPopularity" type="checkbox" class="form-check-input" />
+            <div class="d-flex mb-3">
+                <input asp-for="SortPerksByPopularity" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
                 <span asp-validation-for="SortPerksByPopularity" class="text-danger"></span>
             </div>
-            <div class="form-check mb-3">
-                <input asp-for="DisplayPerksRanking" type="checkbox" class="form-check-input" />
+            <div class="d-flex mb-3">
+                <input asp-for="DisplayPerksRanking" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="DisplayPerksRanking" class="form-check-label"></label>
                 <span asp-validation-for="DisplayPerksRanking" class="text-danger"></span>
             </div>
-            <div class="form-check mb-3">
-                <input asp-for="DisplayPerksValue" type="checkbox" class="form-check-input" />
+            <div class="d-flex mb-3">
+                <input asp-for="DisplayPerksValue" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="DisplayPerksValue" class="form-check-label"></label>
                 <span asp-validation-for="DisplayPerksValue" class="text-danger"></span>
             </div>
-            <div class="form-check mb-3">
-                <input asp-for="EnforceTargetAmount" type="checkbox" class="form-check-input" />
+            <div class="d-flex mb-3">
+                <input asp-for="EnforceTargetAmount" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="EnforceTargetAmount" class="form-check-label"></label>
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
             
             <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
-            <div class="form-check">
-                <input asp-for="UseAllStoreInvoices" type="checkbox" class="form-check-input" />
+            <div class="d-flex">
+                <input asp-for="UseAllStoreInvoices" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
+            </div>
+            
+            <h3 class="mt-5 mb-4">Checkout</h3>
+            <div class="form-group">
+                <label asp-for="FormId" class="form-label"></label>
+                <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
+                <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
 
             <h3 class="mt-5 mb-2">Additional Options</h3>
@@ -217,7 +230,7 @@
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
                                         <input asp-for="SoundsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SoundsEnabledSettings" aria-expanded="@Model.SoundsEnabled" aria-controls="SoundsEnabledSettings"/>
-                                        <label asp-for="SoundsEnabled" class="form-label mb-0"></label>
+                                        <label asp-for="SoundsEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="SoundsEnabled" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -243,7 +256,7 @@
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
                                         <input asp-for="AnimationsEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#AnimationsEnabledSettings" aria-expanded="@Model.AnimationsEnabled" aria-controls="AnimationsEnabledSettings"/>
-                                        <label asp-for="AnimationsEnabled" class="form-label mb-0"></label>
+                                        <label asp-for="AnimationsEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="AnimationsEnabled" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -269,7 +282,7 @@
                                 <div class="form-group mb-0">
                                     <div class="d-flex align-items-center">
                                         <input asp-for="DisqusEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#DisqusEnabledSettings" aria-expanded="@Model.DisqusEnabled" aria-controls="DisqusEnabledSettings"/>
-                                        <label asp-for="DisqusEnabled" class="form-label mb-0"></label>
+                                        <label asp-for="DisqusEnabled" class="form-check-label"></label>
                                         <span asp-validation-for="DisqusEnabled" class="text-danger"></span>
                                     </div>
                                 </div>
@@ -279,31 +292,6 @@
                                         <input asp-for="DisqusShortname" class="form-control" />
                                         <span asp-validation-for="DisqusShortname" class="text-danger"></span>
                                     </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="additional-custom-css-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
-                                Custom CSS
-                                <vc:icon symbol="caret-down" />
-                            </button>
-                        </h2>
-                        <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
-                            <div class="accordion-body">
-                                <div class="form-group">
-                                    <label asp-for="CustomCSSLink" class="form-label"></label>
-                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener" title="More information...">
-                                        <vc:icon symbol="info" />
-                                    </a>
-                                    <input asp-for="CustomCSSLink" class="form-control" />
-                                    <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                                </div>
-                                <div class="form-group mb-4">
-                                    <label asp-for="EmbeddedCSS" class="form-label"></label>
-                                    <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                                    <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
                                 </div>
                             </div>
                         </div>
@@ -333,7 +321,7 @@
 
 <div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
     <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-    <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.AppId">
+    <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.AppId" permission="@Policies.CanModifyStoreSettings">
         <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle">
             @if (Model.Archived)
             {
@@ -345,8 +333,8 @@
             }
         </button>
     </form>
-    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.AppId" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE" permission="@Policies.CanModifyStoreSettings">Delete this app</a>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
 

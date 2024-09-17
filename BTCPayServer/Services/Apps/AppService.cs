@@ -348,12 +348,17 @@ namespace BTCPayServer.Services.Apps
         {
                return JsonConvert.SerializeObject(items, Formatting.Indented, _defaultSerializer);
         }
-        public static ViewPointOfSaleViewModel.Item[] Parse(string template, bool includeDisabled = true)
+        public static ViewPointOfSaleViewModel.Item[] Parse(string template, bool includeDisabled = true, bool throws = false)
         {
-            if (string.IsNullOrWhiteSpace(template))
-                return Array.Empty<ViewPointOfSaleViewModel.Item>();
-
-            return  JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)!.Where(item => includeDisabled || !item.Disabled).ToArray();
+            if (string.IsNullOrWhiteSpace(template)) return [];
+            var allItems = JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)!;
+            // ensure all items have an id, which is also unique
+            var itemsWithoutId = allItems.Where(i => string.IsNullOrEmpty(i.Id)).ToList();
+            if (itemsWithoutId.Any() && throws) throw new ArgumentException($"Missing ID for item \"{itemsWithoutId.First().Title}\".");
+            // find items with duplicate IDs
+            var duplicateIds = allItems.GroupBy(i => i.Id).Where(g => g.Count() > 1).Select(g => g.Key).ToList();
+            if (duplicateIds.Any() && throws) throw new ArgumentException($"Duplicate ID \"{duplicateIds.First()}\".");
+            return allItems.Where(item => (includeDisabled || !item.Disabled) && !itemsWithoutId.Contains(item) && !duplicateIds.Contains(item.Id)).ToArray();
         }
 #nullable restore
 #nullable enable

@@ -647,11 +647,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 ModelState.AddModelError(nameof(vm.Currency), "Invalid currency");
             try
             {
-                vm.Template = AppService.SerializeTemplate(AppService.Parse(vm.Template));
+                vm.Template = AppService.SerializeTemplate(AppService.Parse(vm.Template, true, true));
             }
-            catch
+            catch (Exception ex)
             {
-                ModelState.AddModelError(nameof(vm.Template), "Invalid template");
+                ModelState.AddModelError(nameof(vm.Template), $"Invalid template: {ex.Message}");
             }
             if (!ModelState.IsValid)
             {

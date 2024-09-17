@@ -1253,6 +1253,15 @@ namespace BTCPayServer.Tests
 
             s.ClickPagePrimary();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
+            
+            s.Driver.ScrollTo(By.Id("CodeTabButton"));
+            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
+            template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
+            s.Driver.FindElement(By.Id("TemplateConfig")).Clear();
+            s.Driver.FindElement(By.Id("TemplateConfig")).SendKeys(template.Replace(@"""id"": ""green-tea"",", ""));
+
+            s.ClickPagePrimary();
+            Assert.Contains("Invalid template: Missing ID for item \"Green Tea\".", s.Driver.FindElement(By.CssSelector(".validation-summary-errors")).Text);
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;

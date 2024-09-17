@@ -5,6 +5,16 @@
     ViewData.SetActivePage(ServerNavPages.Plugins, "Manage Plugins");
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
 
+    var availablePluginsList = Model.Available
+        .GroupBy(plugin => plugin.Identifier)
+        .Select(group =>
+        {
+            var ordered = group.OrderByDescending(plugin => plugin.Version).ToArray();
+            return ordered.FirstOrDefault(plugin => PluginManager.DependenciesMet(plugin.Dependencies, installed))
+                   ?? ordered.First();
+        })
+        .ToList();
+
     bool DependentOn(string plugin)
     {
         foreach (var installedPlugin in Model.Installed)
@@ -67,6 +77,12 @@
 
 <partial name="_StatusMessage" />
 
+@if (Model.Disabled.Any())
+{
+    <div class="alert alert-danger mb-2 d-flex align-items-center justify-content-between">
+        Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
+    </div>
+}
 @if (Model.Commands.Any())
 {
     <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
@@ -91,10 +107,10 @@
         var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command;
         var exclusivePendingAction = true;
         var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
-        <div class="card border-0 mb-4">
-            <div class="card-body d-flex flex-md-row flex-column bg-transparent border-0">
+        <div class="card border-0 bg-transparent mb-2">
+            <div class="card-body d-flex flex-md-row flex-column border-0">
                 <div class="me-3 d-flex align-items-center">
-                    <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                    <img src="@(!string.IsNullOrEmpty(downloadInfo?.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
                          alt="@plugin.Name Image"
                          class="rounded-4"
                          style="width: 80px; height: 80px;">
@@ -103,10 +119,31 @@
                     <div class="d-flex justify-content-between align-items-center mb-2">
                         <h4 class="card-title mb-0">@plugin.Name</h4>
                     </div>
-                    <span>@plugin.Version - System Plugin</span> 
+                    <span>@plugin.Version</span> 
                     <p class="card-text">@plugin.Description</p>
                 </div>
                 <div class="d-flex flex-column gap-3 align-items-end">
+                    @{
+                        var pluginModalId = $"modal_{plugin.Identifier}";
+                        var partialModel = new PluginPartialViewModel
+                        {
+                            ModalId = pluginModalId,
+                            DownloadInfo = downloadInfo,
+                            MatchedPlugin = x,
+                            Plugin = availablePluginsList.FirstOrDefault(p => p.Identifier == plugin.Identifier),
+                            UpdateAvailable = updateAvailable,
+                            Commands = Model.Commands,
+                            Available = Model.Available,
+                            Installed = Model.Installed
+                        };
+                    }
+                    @if (!Model.Commands.Any())
+                    {
+                        <button class="btn btn-outline-primary w-100" data-bs-toggle="modal" data-bs-target="#@pluginModalId">View</button>
+                    }
+
+                    <partial name="_ViewPluginModal" model="partialModel" />
+
                     @if (pendingAction is not null && updateAvailable)
                     {
                         var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
@@ -172,60 +209,70 @@ else
 }
 
 
-@if (Model.Commands.Any())
+@if (Model.Commands.Any() || Model.Disabled.Any())
 {
+    var showHeaderTitle = Model.Disabled.Any() || Model.Commands.Any(cmd =>
+    {
+        var lastCommand = cmd.command.ToLower();
+        return lastCommand is not ("delete" or "update");
+    });
     <div class="my-5">
-        <h3>Pending Actions</h3>
+        @if (showHeaderTitle)
+        {
+            <h3>Pending Actions</h3>
+        }
         <div class="row" id="pending-actions">
-            <div class="col col-12 col-lg-6">
-                <ul class="list-group list-group-flush">
-                    @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
+            @if (Model.Commands.Any())
+            {
+                @foreach (var extComm in Model.Commands.GroupBy(tuple => tuple.plugin))
+                {
+                    var lastCommand = extComm.Last().command.ToLower();
+                    if (lastCommand is not ("delete" or "update"))
                     {
-                        var lastCommand = extComm.Last().command.ToLower();
-                        if (lastCommand is not ("delete" or "update"))
-                        {
-                            <li class="list-group-item px-0">
-                                <div class="d-flex flex-wrap align-items-center justify-content-between">
-                                    <span class="my-2 me-3">@extComm.Key</span>
-                                    <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key">
-                                        <button type="submit" class="btn btn-outline-secondary">Cancel pending @lastCommand</button>
+                        <div class="card border-0  bg-transparent mb-2">
+                            <div class="card-body d-flex flex-md-row flex-column border-0">
+                                <div class="flex-grow-1 align-self-start my-2 my-md-0">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h4 class="card-title mb-0 text-wrap">
+                                            @(Model.Available.FirstOrDefault(c => c.Identifier == extComm.Key)?.Name ?? extComm.Key)
+                                        </h4>
+                                    </div>
+                                </div>
+                                <div class="d-flex flex-column gap-3 align-items-end">
+                                    <form asp-action="CancelPluginCommands" asp-route-plugin="@extComm.Key" class="w-100 w-md-auto">
+                                        <button type="submit" class="btn btn-outline-secondary w-100 w-md-auto">Cancel pending @lastCommand</button>
                                     </form>
                                 </div>
-                            </li>
-                        }
+                            </div>
+                        </div>
                     }
-                </ul>
-            </div>
-        </div>
-    </div>
-}
-
-
-@if (Model.Disabled.Any())
-{
-    <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
-        Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
-    </div>
-    <div class="mb-5">
-        <h3 class="mb-4">Disabled Plugins</h3>
-        <ul class="list-group list-group-flush d-inline-block">
-            @foreach (var (plugin, version) in Model.Disabled)
-            {
-                <li class="list-group-item px-0">
-                    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-                        <span>
-                            @plugin
-                            @if (version != null)
-                            {
-                                <span>(@version)</span>
-                            }
-                        </span>
-                        <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
-                        </form>
-                    </div>
-                </li>
+                }
             }
-        </ul>
+
+            @if (Model.Disabled.Any())
+            {
+                @foreach (var (plugin, version) in Model.Disabled)
+                {
+                    <div class="card border-0 bg-transparent mb-2">
+                        <div class="card-body d-flex flex-md-row flex-column border-0">
+                            <div class="flex-grow-1 align-self-start my-2 my-md-0">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h4 class="card-title mb-0 text-wrap">@plugin</h4>
+                                    @if (version != null)
+                                    {
+                                        <span class="ms-3">(@version)</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="d-flex flex-column gap-3 align-items-end">
+                                <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin" class="w-100 w-md-auto">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger w-100 w-md-auto">Uninstall</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                }
+            }
+        </div>
     </div>
 }

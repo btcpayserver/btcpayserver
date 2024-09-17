@@ -21,27 +21,6 @@
     var recentPlugins = availablePluginsList.OrderByDescending(c => c.BuildDate).Take(9).ToList();
     var popularPlugins = availablePluginsList.Where(c => c.DownloadStat != null).OrderByDescending(c => c.DownloadStat).Take(5).ToList();
 
-    bool DependentOn(string plugin)
-    {
-        foreach (var installedPlugin in Model.Installed)
-        {
-            if (installedPlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.InvariantCultureIgnoreCase)))
-            {
-                return true;
-            }
-        }
-
-        var pendingInstalls = Model.Commands.Where(tuple => tuple.command != "uninstall").Select(tuple => tuple.plugin).Distinct();
-        foreach (var pendingInstall in pendingInstalls)
-        {
-            if (Model.Available.Any(availablePlugin => availablePlugin.Identifier.Equals(pendingInstall, StringComparison.InvariantCultureIgnoreCase) &&
-                                                       availablePlugin.Dependencies.Any(dep => dep.Identifier.Equals(plugin, StringComparison.InvariantCultureIgnoreCase))))
-            {
-                return true;
-            }
-        }
-        return false;
-    }
 }
 
 <style>
@@ -172,162 +151,20 @@
                     </div>
                 </a>
 
-                <div class="modal fade" id="@availablePluginModalId" tabindex="-1" aria-labelledby="pluginModalLabel" aria-hidden="true">
-                    <div class="modal-dialog modal-dialog-centered modal-xl">
-                        <div class="modal-content">
-                            <div class="modal-header border-0 pb-0">
-                                <h2 class="modal-title px-3" id="pluginModalLabel">@plugin.Name</h2>
-                                <button type="button" class="btn-close me-3" data-bs-dismiss="modal" aria-label="Close"><vc:icon symbol="close" /></button>
-                            </div>
-                            <div class="modal-body pt-0">
-                                <div class="p-3 w-100">
-                                    <div class="row">
-                                        <div class="col-lg-7">
-                                            <p>@plugin.Description</p>
-                                        </div>
-                                        <div class="col-lg-5">
-                                            <div class="d-flex flex-column align-items-end">
-
-                                                @{
-                                                    var pendingAction = Model.Commands.LastOrDefault(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command;
-                                                    var exclusivePendingAction = true;
-
-                                                    var versionOfPendingInstall = PluginService.GetVersionOfPendingInstall(plugin.Identifier);
-                                                }
-
-                                                <div class="card-footer border-0 pb-3 d-flex gap-2">
-                                                    @if (pendingAction is not null && updateAvailable)
-                                                    {
-                                                        var isUpdateAction = Model.Commands.Last(tuple => tuple.plugin.Equals(plugin.Identifier, StringComparison.InvariantCultureIgnoreCase)).command == "update";
-                                                        if (isUpdateAction)
-                                                        {
-                                                            exclusivePendingAction = versionOfPendingInstall == x.Version;
-                                                        }
-                                                    }
-                                                    @if (pendingAction is not null)
-                                                    {
-                                                        <form asp-action="CancelPluginCommands" asp-route-plugin="@plugin.Identifier">
-                                                            <button type="submit" class="btn btn-outline-secondary">Cancel pending @pendingAction @(versionOfPendingInstall is null ? "" : $"of {versionOfPendingInstall}")</button>
-                                                        </form>
-                                                    }
-                                                    @if (pendingAction is null || !exclusivePendingAction)
-                                                    {
-                                                        @if (updateAvailable && x != null)
-                                                        {
-                                                            if (PluginManager.DependenciesMet(x.Dependencies, installed))
-                                                            {
-                                                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                                                    <button type="submit" class="btn btn-secondary">Update</button>
-                                                                </form>
-                                                            }
-                                                            else
-                                                            {
-                                                                <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                                                    <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
-                                                                </form>
-                                                            }
-                                                        }
-                                                        @if (!installed.ContainsKey(plugin.Identifier))
-                                                        {
-                                                            <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
-                                                                <button type="submit" class="btn btn-primary">Install</button>
-                                                            </form>
-                                                        }
-                                                        else
-                                                        {
-                                                            @if (DependentOn(plugin.Identifier))
-                                                            {
-                                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
-                                                                    Uninstall <vc:icon symbol="warning" />
-                                                                </button>
-                                                            }
-                                                            else
-                                                            {
-                                                                <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
-                                                                    <button type="submit" class="btn btn-outline-danger">Uninstall</button>
-                                                                </form>
-                                                            }
-                                                        }
-                                                    }
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex justify-content-between mt-3 flex-wrap">
-                                        <div class="d-flex flex-column gap-3 col-12 col-lg-7 mb-3 mb-md-0">
-                                            <div class="d-flex flex-column gap-2 h-100">
-                                                <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3); min-height: 100px; flex-basis: 100px;"></div>
-                                                <div class="d-flex gap-2 flex-grow-1">
-                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3); min-height: 100px; flex-basis: 100px;"></div>
-                                                    <div class="flex-grow-1" style="background-color: rgba(128, 128, 128, 0.3); min-height: 100px; flex-basis: 100px;"></div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-12 col-lg-4 mt-3">
-                                            <ul class="list-group list-group-flush">
-                                                <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                    <strong>Version:</strong>
-                                                    <span>@plugin.Version</span>
-                                                </li>
-                                                @if (!string.IsNullOrEmpty(plugin.Author))
-                                                {
-                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                        <strong>Developed By:</strong>
-                                                        <span><a href="@plugin.AuthorLink" rel="noreferrer noopener" target="_blank">@plugin.Author</a></span>
-                                                    </li>
-                                                }
-                                                <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                    <strong>Last Updated:</strong>
-                                                    <span>@plugin.BuildDate.ToTimeAgo()</span>
-                                                </li>
-                                                @if (downloadInfo?.Source is not null)
-                                                {
-                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                        <strong>Source Code:</strong>
-                                                        <span><a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">View</a></span>
-                                                    </li>
-                                                }
-                                                @if (!string.IsNullOrEmpty(downloadInfo?.Documentation))
-                                                {
-                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                        <strong>Documentation:</strong>
-                                                        <span><a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">View</a></span>
-                                                    </li>
-                                                }
-                                                @if (!string.IsNullOrEmpty(downloadInfo?.AuthorTwitter))
-                                                {
-                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                        <strong>Author Twitter:</strong>
-                                                        <span><a href="@downloadInfo.AuthorTwitter" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">View</a></span>
-                                                    </li>
-                                                }
-                                                @if (!string.IsNullOrEmpty(downloadInfo?.AuthorEmail))
-                                                {
-                                                    <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                        <strong>Author Email:</strong>
-                                                        <span><a href="mailto:@downloadInfo.AuthorEmail" rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-success" target="_blank">Send a mail</a></span>
-                                                    </li>
-                                                }
-                                                <li class="list-group-item d-flex justify-content-between bg-transparent px-0">
-                                                    <strong>Dependency:</strong>
-                                                    <div>
-                                                        @foreach (var dependency in plugin.Dependencies)
-                                                        {
-                                                            <span>@dependency</span>
-                                                            <br />
-                                                        }
-                                                    </div>
-                                                </li>
-                                            </ul>
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                @{
+                    var partialModel = new PluginPartialViewModel
+                    {
+                        ModalId = availablePluginModalId,
+                        DownloadInfo = downloadInfo,
+                        MatchedPlugin = x,
+                        Plugin = plugin,
+                        UpdateAvailable = updateAvailable,
+                        Commands = Model.Commands,
+                        Available = Model.Available,
+                        Installed = Model.Installed
+                    };
+                }
+                <partial name="_ViewPluginModal" model="partialModel" />
 
             </div>
         }

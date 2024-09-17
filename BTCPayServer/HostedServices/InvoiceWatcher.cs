@@ -191,9 +191,9 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task Wait(string invoiceId)
+        private async Task Wait(string invoiceId) => await Wait(await _invoiceRepository.GetInvoice(invoiceId));
+        private async Task Wait(InvoiceEntity invoice)
         {
-            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
             try
             {
                 // add 1 second to ensure watch won't trigger moments before invoice expires
@@ -202,7 +202,7 @@ namespace BTCPayServer.HostedServices
                 {
                     await Task.Delay(delay, _Cts.Token);
                 }
-                Watch(invoiceId);
+                Watch(invoice.Id);
 
                 // add 1 second to ensure watch won't trigger moments before monitoring expires
                 delay = invoice.MonitoringExpiration.AddSeconds(1) - DateTimeOffset.UtcNow;
@@ -210,7 +210,7 @@ namespace BTCPayServer.HostedServices
                 {
                     await Task.Delay(delay, _Cts.Token);
                 }
-                Watch(invoiceId);
+                Watch(invoice.Id);
             }
             catch when (_Cts.IsCancellationRequested)
             { }
@@ -255,8 +255,8 @@ namespace BTCPayServer.HostedServices
 
         private async Task WaitPendingInvoices()
         {
-            await Task.WhenAll((await _invoiceRepository.GetPendingInvoiceIds())
-                .Select(id => Wait(id)).ToArray());
+            await Task.WhenAll((await _invoiceRepository.GetPendingInvoices())
+                .Select(i => Wait(i)).ToArray());
         }
 
         async Task StartLoop(CancellationToken cancellation)
@@ -292,24 +292,6 @@ namespace BTCPayServer.HostedServices
                             _eventAggregator.Publish(evt, evt.GetType());
                         }
 
-                        if (invoice.Status == InvoiceStatus.Settled ||
-                           ((invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired) && invoice.MonitoringExpiration < DateTimeOffset.UtcNow))
-                        {
-                            var extendInvoiceMonitoring = await UpdateConfirmationCount(invoice);
-
-                            // we extend monitor time if we haven't reached max confirmation count
-                            // say user used low fee and we only got 3 confirmations right before it's time to remove
-                            if (extendInvoiceMonitoring)
-                            {
-                                await _invoiceRepository.ExtendInvoiceMonitor(invoice.Id);
-                            }
-                            else if (await _invoiceRepository.RemovePendingInvoice(invoice.Id))
-                            {
-                                _eventAggregator.Publish(new InvoiceStopWatchedEvent(invoice.Id));
-                            }
-                            break;
-                        }
-
                         if (updateContext.Events.Count == 0)
                             break;
                     }
@@ -322,48 +304,6 @@ namespace BTCPayServer.HostedServices
                     }
                 }
             }
-        }
-
-        // TODO: Move that in the NBXplorerListener
-        private async Task<bool> UpdateConfirmationCount(InvoiceEntity invoice)
-        {
-            bool extendInvoiceMonitoring = false;
-            var updateConfirmationCountIfNeeded = invoice
-                .GetPayments(true)
-                .Select<PaymentEntity, Task<PaymentEntity>>(async payment =>
-                {
-                    if (!_handlers.TryGetValue(payment.PaymentMethodId, out var h) || h is not Payments.Bitcoin.BitcoinLikePaymentHandler handler)
-                        return null;
-
-                    var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
-                    var network = handler.Network;
-                    // Do update if confirmation count in the paymentData is not up to date
-                    if (onChainPaymentData.ConfirmationCount < network.MaxTrackedConfirmation)
-                    {
-                        var client = _explorerClientProvider.GetExplorerClient(payment.Currency);
-                        var transactionResult = client is null ? null : await client.GetTransactionAsync(onChainPaymentData.Outpoint.Hash);
-                        var confirmationCount = transactionResult?.Confirmations ?? 0;
-                        onChainPaymentData.ConfirmationCount = confirmationCount;
-                        payment.Status = NBXplorerListener.IsSettled(invoice, onChainPaymentData) ? PaymentStatus.Settled : PaymentStatus.Processing;
-                        payment.SetDetails(handler, onChainPaymentData);
-
-                        // we want to extend invoice monitoring until we reach max confirmations on all onchain payment methods
-                        if (confirmationCount < network.MaxTrackedConfirmation)
-                            extendInvoiceMonitoring = true;
-
-                        return payment;
-                    }
-                    return null;
-                })
-                .ToArray();
-            await Task.WhenAll(updateConfirmationCountIfNeeded);
-            var updatedPaymentData = updateConfirmationCountIfNeeded.Where(a => a.Result != null).Select(a => a.Result).ToList();
-            if (updatedPaymentData.Count > 0)
-            {
-                await _paymentService.UpdatePayments(updatedPaymentData);
-            }
-
-            return extendInvoiceMonitoring;
         }
 
         public async Task StopAsync(CancellationToken cancellationToken)

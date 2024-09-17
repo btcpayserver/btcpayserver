@@ -85,6 +85,13 @@ namespace BTCPayServer.Payments.Bitcoin
 
             if (context.Model.Activated)
             {
+                var paymentData = context.InvoiceEntity.GetAllBitcoinPaymentData(handler, true)?.MinBy(o => o.ConfirmationCount);
+                if (paymentData is not null)
+                {
+                    context.Model.RequiredConfirmations = NBXplorerListener.ConfirmationRequired(context.InvoiceEntity, paymentData);
+                    context.Model.ReceivedConfirmations = paymentData.ConfirmationCount;
+                }
+
                 // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
                 //
                 // Correct casing: Addresses in payment URI need to be …

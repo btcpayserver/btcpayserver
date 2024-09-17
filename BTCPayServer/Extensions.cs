@@ -323,8 +323,8 @@ namespace BTCPayServer
         public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice, BitcoinLikePaymentHandler handler, bool accountedOnly)
         {
             return invoice.GetPayments(accountedOnly)
-                .Where(p => p.PaymentMethodId == handler.PaymentMethodId)
-                .Select(p => handler.ParsePaymentDetails(p.Details));
+                .Select(p => p.GetDetails<BitcoinLikePaymentData>(handler))
+                .Where(p => p is not null);
         }
 
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))

@@ -363,28 +363,23 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         }
 
         private bool GetStatus(ZcashLikePaymentData details, SpeedPolicy speedPolicy)
+            => details.ConfirmationCount >= ConfirmationsRequired(speedPolicy);
+        public static int ConfirmationsRequired(SpeedPolicy speedPolicy)
+        => speedPolicy switch
         {
-			switch (speedPolicy)
-			{
-				case SpeedPolicy.HighSpeed:
-					return details.ConfirmationCount >= 0;
-				case SpeedPolicy.MediumSpeed:
-					return details.ConfirmationCount >= 1;
-				case SpeedPolicy.LowMediumSpeed:
-					return details.ConfirmationCount >= 2;
-				case SpeedPolicy.LowSpeed:
-					return details.ConfirmationCount >= 6;
-				default:
-					return false;
-			}
-		}
+            SpeedPolicy.HighSpeed => 0,
+            SpeedPolicy.MediumSpeed => 1,
+            SpeedPolicy.LowMediumSpeed => 2,
+            SpeedPolicy.LowSpeed => 6,
+            _ => 6,
+        };
 
         private async Task UpdateAnyPendingZcashLikePayment(string cryptoCode)
         {
-            var invoices = await _invoiceRepository.GetPendingInvoices();
+            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+            var invoices = await _invoiceRepository.GetInvoicesWithPendingPayments(paymentMethodId);
             if (!invoices.Any())
                 return;
-            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             invoices = invoices.Where(entity => entity.GetPaymentPrompt(paymentMethodId).Activated).ToArray();
             await UpdatePaymentStates(cryptoCode, invoices);
         }

@@ -24,7 +24,6 @@ namespace BTCPayServer.HostedServices
         {
             Subscribe<InvoiceEvent>();
             Subscribe<InvoiceDataChangedEvent>();
-            Subscribe<InvoiceStopWatchedEvent>();
             Subscribe<InvoiceIPNEvent>();
         }
 

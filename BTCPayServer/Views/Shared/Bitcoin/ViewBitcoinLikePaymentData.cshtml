@@ -21,15 +21,10 @@
 			m.Crypto = network.CryptoCode;
             m.DepositAddress = BitcoinAddress.Create(payment.Destination, network.NBitcoinNetwork);
 
-            var confirmationCount = onChainPaymentData.ConfirmationCount;
-            if (confirmationCount >= network.MaxTrackedConfirmation)
-            {
-                m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
-            }
-            else
-            {
-                m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-            }
+            var confReq = NBXplorerListener.ConfirmationRequired(payment.InvoiceEntity, onChainPaymentData);
+            var confCount = onChainPaymentData.ConfirmationCount;
+            confCount = Math.Min(confReq, confCount);
+            m.Confirmations = $"{confCount} / {confReq}";
             if (onChainPaymentData.PayjoinInformation is PayjoinInformation pj)
             {
                 payjoinInformation = pj;

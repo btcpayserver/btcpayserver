@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -15,6 +16,7 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -32,18 +34,20 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencies;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly IFileService _fileService;
 
         public GreenfieldAppsController(
             AppService appService,
             StoreRepository storeRepository,
-            BTCPayNetworkProvider btcPayNetworkProvider,
             CurrencyNameTable currencies,
+            IFileService fileService,
             UserManager<ApplicationUser> userManager
         )
         {
             _appService = appService;
             _storeRepository = storeRepository;
             _currencies = currencies;
+            _fileService = fileService;
             _userManager = userManager;
         }
 
@@ -217,10 +221,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> DeleteApp(string appId)
         {
             var app = await _appService.GetApp(appId, null, includeArchived: true);
-            if (app == null)
-            {
-                return AppNotFound();
-            }
+            if (app == null) return AppNotFound();
 
             await _appService.DeleteApp(app);
 
@@ -249,6 +250,63 @@ namespace BTCPayServer.Controllers.Greenfield
             var max = Math.Min(count, stats.Count - offset); 
             var items = stats.GetRange(offset, max);
             return Ok(items);
+        }
+
+        [HttpPost("~/api/v1/apps/{appId}/image")]
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        public async Task<IActionResult> UploadAppItemImage(string appId, IFormFile? file)
+        {
+            var app = await _appService.GetApp(appId, null, includeArchived: true);
+            var userId = _userManager.GetUserId(User);
+            if (app == null || userId == null) return AppNotFound();
+            
+            if (file is null)
+                ModelState.AddModelError(nameof(file), "Invalid file");
+            else if (file.Length > 500_000)
+                ModelState.AddModelError(nameof(file), "The uploaded image file should be less than 0.5MB");
+            else if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
+                ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+            else if (!file.FileName.IsValidFileName())
+                ModelState.AddModelError(nameof(file.FileName), "Invalid filename");
+            else
+            {
+                var formFile = await file.Bufferize();
+                if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+            }
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+            
+            try
+            {
+                var storedFile = await _fileService.AddFile(file!, userId);
+                var fileData = new FileData
+                {
+                    Id = storedFile.Id,
+                    UserId = storedFile.ApplicationUserId,
+                    Uri = new UnresolvedUri.FileIdUri(storedFile.Id).ToString(),
+                    Url = await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storedFile.Id),
+                    OriginalName = storedFile.FileName,
+                    StorageName = storedFile.StorageFileName,
+                    CreatedAt = storedFile.Timestamp
+                };
+                return Ok(fileData);
+            }
+            catch (Exception e)
+            {
+                return this.CreateAPIError(404, "file-upload-failed", e.Message);
+            }
+        }
+
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpDelete("~/api/v1/apps/{appId}/image/{fileId}")]
+        public async Task<IActionResult> DeleteAppItemImage(string appId, string fileId)
+        {
+            var app = await _appService.GetApp(appId, null, includeArchived: true);
+            var userId = _userManager.GetUserId(User);
+            if (app == null || userId == null) return AppNotFound();
+            if (!string.IsNullOrEmpty(fileId)) await _fileService.RemoveFile(fileId, userId);
+            return Ok();
         }
         
         private IActionResult AppNotFound()

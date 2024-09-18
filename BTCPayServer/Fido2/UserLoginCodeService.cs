@@ -8,6 +8,7 @@ namespace BTCPayServer.Fido2
     public class UserLoginCodeService
     {
         private readonly IMemoryCache _memoryCache;
+        public static readonly TimeSpan ExpirationTime = TimeSpan.FromSeconds(60);
 
         public UserLoginCodeService(IMemoryCache memoryCache)
         {
@@ -29,10 +30,10 @@ namespace BTCPayServer.Fido2
             }
             return _memoryCache.GetOrCreate(GetCacheKey(userId), entry =>
             {
-                entry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+                entry.AbsoluteExpirationRelativeToNow = ExpirationTime;
                 var code = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20));
                 using var newEntry = _memoryCache.CreateEntry(code);
-                newEntry.AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(1);
+                newEntry.AbsoluteExpirationRelativeToNow = ExpirationTime;
                 newEntry.Value = userId;
 
                 return code;

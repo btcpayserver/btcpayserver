@@ -100,8 +100,29 @@
                 <div class="form-text">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</div>
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
+            <div class="form-group">
+                <label asp-for="Lang" class="form-label"></label>
+                <input asp-for="Lang" class="form-control" maxlength="2" required />
+                <div class="form-text">Fix the HTML page language</div>
+                <span asp-validation-for="Lang" class="text-danger"></span>
+            </div>
         </div>
     </div>
+
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="form-group mb-0">
+            <label asp-for="HeadHtmlTags" class="form-label"></label>
+            <textarea asp-for="HeadHtmlTags" rows="5" cols="40" class="form-control"
+                      placeholder='<meta name="description" content="Your description">
+<meta name="keywords" content="keyword1, keyword2, keyword3">
+<meta name="author" content="John Doe">
+Please insert valid HTML here.'>
+            </textarea>
+            <span asp-validation-for="HeadHtmlTags" class="text-danger"></span>
+        </div>
+    </div>
+
+
     <div id="description" class="row mt-4">
         <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group mb-0">

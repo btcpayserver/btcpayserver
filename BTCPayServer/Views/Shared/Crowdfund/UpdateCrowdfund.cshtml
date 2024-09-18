@@ -90,6 +90,30 @@
             </div>
         </div>
     </div>
+
+    <div class="col-sm-6">
+        <div class="form-group">
+            <label asp-for="Lang" class="form-label"></label>
+            <input asp-for="Lang" class="form-control" maxlength="2" required />
+            <div class="form-text">Fix the HTML page language</div>
+            <span asp-validation-for="Lang" class="text-danger"></span>
+        </div>
+    </div>
+
+    <div class="col-xl-10 col-xxl-constrain">
+        <div class="form-group mb-0">
+            <label asp-for="HeadHtmlTags" class="form-label"></label>
+            <textarea asp-for="HeadHtmlTags" rows="5" cols="40" class="form-control"
+                      placeholder='<meta name="description" content="Your description">
+<meta name="keywords" content="keyword1, keyword2, keyword3">
+<meta name="author" content="John Doe">
+Please insert valid HTML here.'>
+            </textarea>
+            <span asp-validation-for="HeadHtmlTags" class="text-danger"></span>
+        </div>
+    </div>
+
+
     <div class="row mt-3">
         <div class="col-xl-10 col-xxl-constrain">
             <div class="form-group">

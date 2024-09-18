@@ -93,8 +93,9 @@ namespace BTCPayServer.Services.Invoices
 
         public async Task<InvoiceEntity[]> GetInvoicesWithPendingPayments(PaymentMethodId paymentMethodId, bool includeAddresses = false)
         {
+            var pmi = paymentMethodId.ToString();
             using var ctx = _applicationDbContextFactory.CreateContext();
-            var invoiceIds = (await ctx.Payments.Where(p => PaymentData.IsPending(p.Status)).Select(p => p.InvoiceDataId).ToArrayAsync()).Distinct().ToArray();
+            var invoiceIds = (await ctx.Payments.Where(p => PaymentData.IsPending(p.Status) && p.Type == pmi).Select(p => p.InvoiceDataId).ToArrayAsync()).Distinct().ToArray();
             if (invoiceIds.Length is 0)
                 return Array.Empty<InvoiceEntity>();
             return await GetInvoices(new InvoiceQuery()

@@ -28,6 +28,9 @@
 @code {
     [Parameter]
     public string UserId { get; set; }
+    
+    [Parameter]
+    public string RedirectUrl { get; set; }
 
     [Parameter]
     public int Size { get; set; } = 256;
@@ -55,7 +58,7 @@
     private void GenerateCodeAndStartTimer()
     {
         var loginCode = UserLoginCodeService.GetOrGenerate(_user.Id);
-        _data = $"{loginCode};{IndexUrl};{_user.Email}";
+        _data = GetData(loginCode);
         _seconds = Seconds;
         _timer?.Dispose();
         _timer = new Timer(1000);
@@ -80,7 +83,14 @@
             : null;
     }
 
-    private HttpRequest Request => HttpContextAccessor.HttpContext?.Request;
-    private string IndexUrl => Request != null ? LinkGenerator.IndexLink(Request.Scheme, Request.Host, Request.PathBase) : null;
+    private string GetData(string loginCode)
+    {
+        var req = HttpContextAccessor.HttpContext?.Request;
+        if (req == null) return loginCode;
+        return !string.IsNullOrEmpty(RedirectUrl)
+            ? LinkGenerator.LoginCodeLink(loginCode, RedirectUrl, req.Scheme, req.Host, req.PathBase)
+            : $"{loginCode};{LinkGenerator.IndexLink(req.Scheme, req.Host, req.PathBase)};{_user.Email}";
+    }
+
     private double Percent => Math.Round(_seconds / Seconds * 100);
 }

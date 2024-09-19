@@ -19,6 +19,7 @@ public interface IBTCPayAppHubClient
     Task<LightningInvoice> CreateInvoice(CreateLightningInvoiceRequest createLightningInvoiceRequest);
     Task<LightningInvoice?> GetLightningInvoice(uint256 paymentHash);
     Task<LightningPayment?> GetLightningPayment(uint256 paymentHash);
+    Task CancelInvoice(uint256 paymentHash);
     Task<List<LightningPayment>> GetLightningPayments(ListPaymentsParams request);
     Task<List<LightningInvoice>> GetLightningInvoices(ListInvoicesParams request);
     Task<PayResponse> PayInvoice(string bolt11, long? amountMilliSatoshi);

@@ -192,7 +192,7 @@ public class BTCPayAppLightningClient : ILightningClient
 
     public async Task CancelInvoice(string invoiceId, CancellationToken cancellation = new CancellationToken())
     {
-        throw new NotImplementedException();
+        await HubClient.CancelInvoice(uint256.Parse(invoiceId));
     }
 
     public async Task<LightningChannel[]> ListChannels(CancellationToken cancellation = new CancellationToken())

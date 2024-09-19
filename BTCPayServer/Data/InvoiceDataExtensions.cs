@@ -73,7 +73,7 @@ namespace BTCPayServer.Data
             entity.Status = state.Status;
             if (invoiceData.AddressInvoices != null)
             {
-                entity.AvailableAddressHashes = invoiceData.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId()).ToHashSet();
+                entity.Addresses = invoiceData.AddressInvoices.Select(a => (PaymentMethodId.Parse(a.PaymentMethodId), a.Address)).ToHashSet();
             }
             if (invoiceData.Refunds != null)
             {

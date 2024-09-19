@@ -67,29 +67,16 @@ namespace BTCPayServer.Services.Invoices
             };
         }
 
-        public async Task<IEnumerable<InvoiceEntity>> GetInvoicesFromAddresses(string[] addresses)
+        public async Task<InvoiceEntity> GetInvoiceFromAddress(PaymentMethodId paymentMethodId, string address)
         {
-            if (addresses.Length is 0)
-                return Array.Empty<InvoiceEntity>();
             using var db = _applicationDbContextFactory.CreateContext();
-            if (addresses.Length == 1)
-            {
-                var address = addresses[0];
-                return (await db.AddressInvoices
-                .Include(a => a.InvoiceData.Payments)
-                    .Where(a => a.Address == address)
-                    .Select(a => a.InvoiceData)
-                .ToListAsync()).Select(ToEntity);
-            }
-            else
-            {
-                return (await db.AddressInvoices
-                    .Include(a => a.InvoiceData.Payments)
-                        .Where(a => addresses.Contains(a.Address))
-                        .Select(a => a.InvoiceData)
-                    .ToListAsync()).Select(ToEntity);
-            }
-        }
+			var row = (await db.AddressInvoices
+			.Include(a => a.InvoiceData.Payments)
+				.Where(a => a.PaymentMethodId == paymentMethodId.ToString() && a.Address == address)
+				.Select(a => a.InvoiceData)
+			.FirstOrDefaultAsync());
+			return row is null ? null : ToEntity(row);
+		}
 
         public async Task<InvoiceEntity[]> GetInvoicesWithPendingPayments(PaymentMethodId paymentMethodId, bool includeAddresses = false)
         {
@@ -190,7 +177,8 @@ retry:
                         await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                         {
                             InvoiceDataId = invoice.Id,
-                            Address = trackedDestination
+                            Address = trackedDestination,
+                            PaymentMethodId = ctx.Key.ToString()
                         });
                     }
                 }
@@ -311,7 +299,8 @@ retry:
                         await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                         {
                             InvoiceDataId = invoiceId,
-                            Address = tracked
+                            Address = tracked,
+                            PaymentMethodId = paymentPromptContext.PaymentMethodId.ToString()
                         });
                     }
                     AddToTextSearch(context, invoice, prompt.Destination);

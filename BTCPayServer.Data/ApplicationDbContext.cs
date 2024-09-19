@@ -84,7 +84,6 @@ namespace BTCPayServer.Data
             PaymentRequestData.OnModelCreating(builder, Database);
             PaymentData.OnModelCreating(builder, Database);
             PayoutData.OnModelCreating(builder, Database);
-            PendingInvoiceData.OnModelCreating(builder);
             //PlannedTransaction.OnModelCreating(builder);
             PullPaymentData.OnModelCreating(builder, Database);
             RefundData.OnModelCreating(builder);

@@ -144,6 +144,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     Logs.PayServer.LogInformation($"{network.CryptoCode}: {paymentCount} payments happened while offline");
 
                     Logs.PayServer.LogInformation($"Connected to WebSocket of NBXplorer ({network.CryptoCode})");
+                    var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
                     while (!_Cts.IsCancellationRequested)
                     {
                         var newEvent = await session.NextEventAsync(_Cts.Token).ConfigureAwait(false);
@@ -163,13 +164,11 @@ namespace BTCPayServer.Payments.Bitcoin
                                     foreach (var output in validOutputs)
                                     {
                                         var key = network.GetTrackedDestination(output.Item1.ScriptPubKey);
-                                        var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new[] { key }))
-                                            .FirstOrDefault();
+                                        var invoice = await _InvoiceRepository.GetInvoiceFromAddress(pmi, key);
                                         if (invoice != null)
                                         {
                                             var address = output.matchedOutput.Address ?? network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy,
                                                 output.Item1.KeyPath, output.Item1.ScriptPubKey);
-                                            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
                                             var handler = _handlers[pmi];
                                             var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath);
 
@@ -198,7 +197,6 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 await UpdatePaymentStates(wallet, invoice.Id);
                                             }
                                         }
-
                                     }
                                 }
 
@@ -406,8 +404,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     coins = await wallet.GetUnspentCoins(strategy);
                     coinsPerDerivationStrategy.Add(strategy, coins);
                 }
-                coins = coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString() + cryptoId))
-                             .ToArray();
+                coins = coins.Where(c => invoice.Addresses.Contains((cryptoId, network.GetTrackedDestination(c.ScriptPubKey)))).ToArray();
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.OutPoint)))
                 {
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);

@@ -244,7 +244,9 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
 
         private async Task UpdatePaymentStates(int height)
         {
-            var invoices = await invoiceRepository.GetPendingInvoices();
+            var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+            var invoices = await invoiceRepository.GetInvoicesWithPendingPayments(pmi);
             await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(i, height)).ToArray());
         }
 

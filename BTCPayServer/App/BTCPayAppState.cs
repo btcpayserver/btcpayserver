@@ -257,6 +257,7 @@ public class BTCPayAppState : IHostedService
 
     private async Task UpdateNodeInfo()
     {
+        var lastError = "";
         while (!_cts.Token.IsCancellationRequested)
         {
             try
@@ -286,7 +287,11 @@ public class BTCPayAppState : IHostedService
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Error during node info update");
+                if (lastError != e.Message)
+                {
+                    lastError = e.Message;
+                    _logger.LogError(e, "Error during node info update");
+                }
             }
 
             await Task.Delay(TimeSpan.FromMinutes(string.IsNullOrEmpty(_nodeInfo) ? 1 : 5), _cts.Token);

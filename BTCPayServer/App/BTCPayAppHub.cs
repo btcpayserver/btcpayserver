@@ -120,9 +120,14 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         _logger = logger;
         _userManager = userManager;
         _connectionFactory = connectionFactory;
-
         _network = btcPayNetworkProvider.BTC;
         _explorerClient =  _explorerClientProvider.GetExplorerClient(btcPayNetworkProvider.BTC);
+        
+        if (!_connectionFactory.Available || !_nbXplorerDashboard.IsFullySynched(_explorerClient.CryptoCode, out _))
+        {
+           Dispose();
+           throw new InvalidOperationException("BTCPayAppHub is not available");
+        }
     }
 
     public override async Task OnConnectedAsync()
@@ -131,14 +136,14 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         {
             Context.Abort();
         }
-        var userId = _userManager.GetUserId(Context.User!)!;
-        await _appState.Connected(Context.ConnectionId, userId);
-        
-        // TODO: this needs to happen BEFORE connection is established
         if (!_nbXplorerDashboard.IsFullySynched(_explorerClient.CryptoCode, out _))
         {
             Context.Abort();
         }
+        var userId = _userManager.GetUserId(Context.User!)!;
+        await _appState.Connected(Context.ConnectionId, userId);
+        
+        
 
         
     }

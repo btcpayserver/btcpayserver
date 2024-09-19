@@ -369,34 +369,27 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         }
 
         private bool GetStatus(MoneroLikePaymentData details, SpeedPolicy speedPolicy)
-        {
-            if (details.ConfirmationCount < details.LockTime)
-            {
-                return false;
-            }
-            if (details.InvoiceSettledConfirmationThreshold is { } v)
-                return details.ConfirmationCount >= v;
-            switch (speedPolicy)
-            {
-                case SpeedPolicy.HighSpeed:
-                    return details.ConfirmationCount >= 0;
-                case SpeedPolicy.MediumSpeed:
-                    return details.ConfirmationCount >= 1;
-                case SpeedPolicy.LowMediumSpeed:
-                    return details.ConfirmationCount >= 2;
-                case SpeedPolicy.LowSpeed:
-                    return details.ConfirmationCount >= 6;
-                default:
-                    return false;
-            }
-        }
+            => ConfirmationsRequired(details, speedPolicy) <= details.ConfirmationCount;
+
+        public static long ConfirmationsRequired(MoneroLikePaymentData details, SpeedPolicy speedPolicy)
+       => (details, speedPolicy) switch
+       {
+           (_, _) when details.ConfirmationCount < details.LockTime => details.LockTime - details.ConfirmationCount,
+           ({ InvoiceSettledConfirmationThreshold: long v }, _) => v,
+           (_, SpeedPolicy.HighSpeed) => 0,
+           (_, SpeedPolicy.MediumSpeed) => 1,
+           (_, SpeedPolicy.LowMediumSpeed) => 2,
+           (_, SpeedPolicy.LowSpeed) => 6,
+           _ => 6,
+       };
+
 
         private async Task UpdateAnyPendingMoneroLikePayment(string cryptoCode)
         {
-            var invoices = await _invoiceRepository.GetPendingInvoices();
+            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+            var invoices = await _invoiceRepository.GetInvoicesWithPendingPayments(paymentMethodId);
             if (!invoices.Any())
                 return;
-            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             invoices = invoices.Where(entity => entity.GetPaymentPrompt(paymentMethodId)?.Activated is true).ToArray();
             await UpdatePaymentStates(cryptoCode, invoices);
         }

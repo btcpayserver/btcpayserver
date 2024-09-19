@@ -67,18 +67,6 @@ namespace BTCPayServer.Services.Invoices
             };
         }
 
-        public async Task<bool> RemovePendingInvoice(string invoiceId)
-        {
-            using var ctx = _applicationDbContextFactory.CreateContext();
-            ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
-            try
-            {
-                await ctx.SaveChangesAsync();
-                return true;
-            }
-            catch (DbUpdateException) { return false; }
-        }
-
         public async Task<IEnumerable<InvoiceEntity>> GetInvoicesFromAddresses(string[] addresses)
         {
             if (addresses.Length is 0)
@@ -103,23 +91,32 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task<InvoiceEntity[]> GetPendingInvoices(bool includeAddressData = false, bool skipNoPaymentInvoices = false, CancellationToken cancellationToken = default)
+        public async Task<InvoiceEntity[]> GetInvoicesWithPendingPayments(PaymentMethodId paymentMethodId, bool includeAddresses = false)
         {
+            var pmi = paymentMethodId.ToString();
             using var ctx = _applicationDbContextFactory.CreateContext();
-            var q = ctx.PendingInvoices.AsQueryable();
-            q = q.Include(o => o.InvoiceData)
-                 .ThenInclude(o => o.Payments);
-            if (includeAddressData)
-                q = q.Include(o => o.InvoiceData)
-                    .ThenInclude(o => o.AddressInvoices);
-            if (skipNoPaymentInvoices)
-                q = q.Where(i => i.InvoiceData.Payments.Any());
-            return (await q.Select(o => o.InvoiceData).ToArrayAsync(cancellationToken)).Select(ToEntity).ToArray();
+            var invoiceIds = (await ctx.Payments.Where(p => PaymentData.IsPending(p.Status) && p.Type == pmi).Select(p => p.InvoiceDataId).ToArrayAsync()).Distinct().ToArray();
+            if (invoiceIds.Length is 0)
+                return Array.Empty<InvoiceEntity>();
+            return await GetInvoices(new InvoiceQuery()
+            {
+                InvoiceId = invoiceIds,
+                IncludeAddresses = true
+            });
         }
-        public async Task<string[]> GetPendingInvoiceIds()
+        public async Task<InvoiceEntity[]> GetPendingInvoices(CancellationToken cancellationToken = default)
         {
             using var ctx = _applicationDbContextFactory.CreateContext();
-            return await ctx.PendingInvoices.AsQueryable().Select(data => data.Id).ToArrayAsync();
+            var rows = await ctx.Invoices.Where(i => InvoiceData.IsPending(i.Status))
+                                .Include(i => i.Payments)
+                                .Select(o => o).ToArrayAsync();
+            return rows.Select(ToEntity).ToArray();
+        }
+        public async Task<InvoiceEntity[]> GetPendingInvoices()
+        {
+            using var ctx = _applicationDbContextFactory.CreateContext();
+            return (await ctx.Invoices.Where(i => InvoiceData.IsPending(i.Status)).Select(i => i).ToArrayAsync())
+                    .Select(i => ToEntity(i)).ToArray();
         }
 
         public async Task<List<Data.WebhookDeliveryData>> GetWebhookDeliveries(string invoiceId)
@@ -170,27 +167,6 @@ retry:
             _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoiceId));
         }
 
-        public async Task ExtendInvoiceMonitor(string invoiceId)
-        {
-retry:
-            using (var ctx = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
-
-                var invoice = invoiceData.GetBlob();
-                invoice.MonitoringExpiration = invoice.MonitoringExpiration.AddHours(1);
-                invoiceData.SetBlob(invoice);
-                try
-                {
-                    await ctx.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    goto retry;
-                }
-            }
-        }
-
         public async Task CreateInvoiceAsync(InvoiceCreationContext creationContext)
         {
             var invoice = creationContext.InvoiceEntity;
@@ -225,7 +201,6 @@ retry:
                     if (prompt.Activated)
                         textSearch.Add(prompt.Calculate().TotalDue.ToString());
                 }
-                await context.PendingInvoices.AddAsync(new PendingInvoiceData() { Id = invoice.Id });
 
                 textSearch.Add(invoice.Id);
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
@@ -354,20 +329,6 @@ retry:
                 {
                     goto retry;
                 }
-            }
-        }
-
-        public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
-        {
-            using var context = _applicationDbContextFactory.CreateContext();
-            if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
-            {
-                context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateException) { } // Already exists
             }
         }
 

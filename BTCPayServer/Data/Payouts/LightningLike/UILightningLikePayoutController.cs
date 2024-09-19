@@ -319,23 +319,34 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 string message = null;
                 if (result.Result == PayResult.Ok)
                 {
-                    message = result.Details?.TotalAmount != null
-                        ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
-                        : null;
-                    payoutData.State = PayoutState.Completed;
-                    try
+                    payoutData.State = result.Details?.Status switch
                     {
-                        var payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(), cancellationToken);
-                        proofBlob.Preimage = payment.Preimage;
-                    }
-                    catch (Exception)
+                        LightningPaymentStatus.Pending => PayoutState.InProgress,
+                        _ => PayoutState.Completed,
+                    };
+                    if (payoutData.State == PayoutState.Completed)
                     {
-                        // ignored
+                        message = result.Details?.TotalAmount != null
+                            ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
+                            : null;
+                        try
+                        {
+                            var payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(),
+                                cancellationToken);
+                            proofBlob.Preimage = payment.Preimage;
+                        }
+                        catch (Exception)
+                        {
+                            // ignored
+                        }
                     }
                 }
                 else if (result.Result == PayResult.Unknown)
                 {
                     payoutData.State = PayoutState.InProgress;
+                }
+                if (payoutData.State == PayoutState.InProgress)
+                {
                     message = "The payment has been initiated but is still in-flight.";
                 }
 

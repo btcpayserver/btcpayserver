@@ -237,7 +237,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         async Task UpdatePaymentStates(BTCPayWallet wallet)
         {
-            var invoices = await _InvoiceRepository.GetPendingInvoices(skipNoPaymentInvoices: true);
+            var invoices = await _InvoiceRepository.GetInvoicesWithPendingPayments(PaymentTypes.CHAIN.GetPaymentMethodId(wallet.Network.CryptoCode));
             await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(wallet, i)).ToArray());
         }
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId, bool fireEvents = true)
@@ -348,10 +348,6 @@ namespace BTCPayServer.Payments.Bitcoin
                     paymentEntitiesByPrevOut.TryAdd(prevout, payment);
                 }
 
-                // if needed add invoice back to pending to track number of confirmations
-                if (paymentData.ConfirmationCount < wallet.Network.MaxTrackedConfirmation)
-                    await _InvoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
-
                 if (updated)
                     updatedPaymentEntities.Add(payment);
             }
@@ -372,32 +368,25 @@ namespace BTCPayServer.Payments.Bitcoin
             return invoice;
         }
 
-        public static bool IsSettled(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+        public static int ConfirmationRequired(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+        => (invoice, paymentData) switch
         {
-            if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
-            {
-                return paymentData.ConfirmationCount >= 1 || !paymentData.RBF;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
-            {
-                return paymentData.ConfirmationCount >= 1;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed)
-            {
-                return paymentData.ConfirmationCount >= 2;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
-            {
-                return paymentData.ConfirmationCount >= 6;
-            }
-            return false;
-        }
+            ({ SpeedPolicy: SpeedPolicy.HighSpeed }, { RBF: true }) => 1,
+            ({ SpeedPolicy: SpeedPolicy.HighSpeed }, _) => 0,
+            ({ SpeedPolicy: SpeedPolicy.MediumSpeed }, _) => 1,
+            ({ SpeedPolicy: SpeedPolicy.LowMediumSpeed }, _) => 2,
+            ({ SpeedPolicy: SpeedPolicy.LowSpeed }, _) => 6,
+            _ => 6,
+        };
+
+        static bool IsSettled(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+            => ConfirmationRequired(invoice, paymentData) <= paymentData.ConfirmationCount;
 
         private async Task<int> FindPaymentViaPolling(BTCPayWallet wallet, BTCPayNetwork network)
         {
             var handler = _handlers.GetBitcoinHandler(wallet.Network);
             int totalPayment = 0;
-            var invoices = await _InvoiceRepository.GetPendingInvoices(true);
+            var invoices = await _InvoiceRepository.GetInvoicesWithPendingPayments(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), true);
             var coinsPerDerivationStrategy =
                 new Dictionary<DerivationStrategyBase, ReceivedCoin[]>();
             foreach (var i in invoices)

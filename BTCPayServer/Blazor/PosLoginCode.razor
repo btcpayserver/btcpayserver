@@ -4,7 +4,7 @@
 
 @if (Users?.Any() is true)
 {
-    <div class="form-group">
+    <div @attributes="Attrs" class="@CssClass">
         <label for="SignedInUser" class="form-label">Signed in user</label>
         <select id="SignedInUser" class="form-select" value="@_userId" @onchange="@(e => _userId = e.Value?.ToString())">
             <option value="">None, just open the URL</option>
@@ -32,7 +32,11 @@ else
     [Parameter]
     public Dictionary<string,string> Users { get; set; }
 
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> Attrs { get; set; }
+
     private string _userId;
     private string PosUrl => Request.GetAbsoluteRoot() + PosPath;
     private HttpRequest Request => HttpContextAccessor.HttpContext?.Request;
+    private string CssClass => $"form-group {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
 }

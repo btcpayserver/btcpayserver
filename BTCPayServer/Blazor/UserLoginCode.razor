@@ -14,7 +14,7 @@
 
 @if (!string.IsNullOrEmpty(_data))
 {
-    <div class="d-inline-flex flex-column" style="width:@(Size)px">
+    <div @attributes="Attrs" class="@CssClass" style="width:@(Size)px">
         <div class="qr-container mb-2">
             <QrCode Data="@_data" Size="Size"/>
         </div>
@@ -34,6 +34,9 @@
 
     [Parameter]
     public int Size { get; set; } = 256;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> Attrs { get; set; }
 
     private static readonly double Seconds = UserLoginCodeService.ExpirationTime.TotalSeconds;
     private double _seconds = Seconds;
@@ -93,4 +96,5 @@
     }
 
     private double Percent => Math.Round(_seconds / Seconds * 100);
+    private string CssClass => $"user-login-code d-inline-flex flex-column {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
 }

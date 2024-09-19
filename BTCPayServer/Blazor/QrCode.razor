@@ -2,7 +2,7 @@
 
 @if (!string.IsNullOrEmpty(Data))
 {
-    <img style="image-rendering:pixelated;image-rendering:-moz-crisp-edges;min-width:@(Size)px;min-height:@(Size)px" src="data:image/png;base64,@(GetBase64(Data))" class="@CssClass" alt="@Data" />
+    <img @attributes="Attrs" style="image-rendering:pixelated;image-rendering:-moz-crisp-edges;min-width:@(Size)px;min-height:@(Size)px" src="data:image/png;base64,@(GetBase64(Data))" class="@CssClass" alt="@Data" />
 }
 
 @code {
@@ -13,7 +13,7 @@
     public int Size { get; set; } = 256;
 
     [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object> InputAttributes { get; set; }
+    public Dictionary<string, object> Attrs { get; set; }
 
     private static readonly QRCodeGenerator QrGenerator = new();
 
@@ -25,5 +25,5 @@
         return Convert.ToBase64String(bytes);
     }
 
-    private string CssClass => $"qr-code {(InputAttributes?.ContainsKey("class") is true ? InputAttributes["class"] : "")}".Trim();
+    private string CssClass => $"qr-code {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
 }

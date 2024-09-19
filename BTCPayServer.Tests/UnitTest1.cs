@@ -2449,9 +2449,10 @@ namespace BTCPayServer.Tests
         private static bool IsMapped(Invoice invoice, ApplicationDbContext ctx)
         {
             var h = BitcoinAddress.Create(invoice.BitcoinAddress, Network.RegTest).ScriptPubKey.Hash.ToString();
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
             return (ctx.AddressInvoices.Where(i => i.InvoiceDataId == invoice.Id).ToArrayAsync().GetAwaiter()
                     .GetResult())
-                .Where(i => i.GetAddress() == h).Any();
+                .Where(i => i.Address == h && i.PaymentMethodId == pmi.ToString()).Any();
         }
 
 

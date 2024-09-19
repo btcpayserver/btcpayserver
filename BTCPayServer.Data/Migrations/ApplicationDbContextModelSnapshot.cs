@@ -60,13 +60,16 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.AddressInvoiceData", b =>
                 {
+                    b.Property<string>("PaymentMethodId")
+                        .HasColumnType("text");
+
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
                     b.Property<string>("InvoiceDataId")
                         .HasColumnType("text");
 
-                    b.HasKey("Address");
+                    b.HasKey("PaymentMethodId", "Address");
 
                     b.HasIndex("InvoiceDataId");
 
@@ -632,16 +635,6 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("StoreId");
 
                     b.ToTable("PayoutProcessors");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.PendingInvoiceData", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PendingInvoices");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.PlannedTransaction", b =>
@@ -1331,17 +1324,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Store");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.PendingInvoiceData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
-                        .WithMany("PendingInvoices")
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InvoiceData");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.PullPaymentData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
@@ -1571,8 +1553,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("InvoiceSearchData");
 
                     b.Navigation("Payments");
-
-                    b.Navigation("PendingInvoices");
 
                     b.Navigation("Refunds");
                 });

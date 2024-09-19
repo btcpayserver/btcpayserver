@@ -1,11 +1,13 @@
 @using System.Text.RegularExpressions
 @using System.Globalization
-@using Newtonsoft.Json
-@using Newtonsoft.Json.Linq
+@using System.Text.Json
+@using System.Text.Json.Nodes
 @inject IJSRuntime JS
 
 <div class="d-flex flex-column gap-4">
     <input type="hidden" name="amount" value="@GetTotal()">
+    <input type="hidden" name="tip" value="@GetTip()">
+    <input type="hidden" name="discount" value="@GetDiscountPercent()">
     <input type="hidden" name="posdata" value="@GetData()">
     <div class="d-flex flex-column align-items-center px-4 mb-auto" @ref="_keypadTop">
         <div class="fw-semibold text-muted" id="Currency">@CurrencyCode</div>
@@ -19,7 +21,7 @@
             {
                 <div class="tab-pane fade px-2 @(Mode == InputMode.Discount ? "show active" : "")" role="tabpanel" aria-labelledby="ModeTablist-Discount">
                     <div class="h4 fw-semibold text-muted text-center" id="Discount">
-                        <span class="h3 text-body me-1">@(Model.DiscountPercent ?? 0)%</span> discount
+                        <span class="h3 text-body me-1">@GetDiscountPercent()%</span> discount
                     </div>
                 </div>
             }
@@ -147,10 +149,10 @@
 
 @code {
 #nullable enable
-	[Parameter, EditorRequired]
-	public string CurrencyCode { get; set; }
+    [Parameter, EditorRequired]
+    public string CurrencyCode { get; set; } = null!;
     [Parameter]
-    public string RecentTransactionsUrl { get; set; }
+    public string? RecentTransactionsUrl { get; set; }
     [Parameter]
     public NumberFormatInfo? CurrencyInfo { get; set; }
     [Parameter]
@@ -166,7 +168,7 @@
     private List<RecentTransaction>? RecentTransactions { get; set; }
 
     const int DefaultFontSize = 64;
-    static char[] Keys = { '1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+' };
+    static readonly char[] Keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+'];
     private int FontSize { get; set; } = DefaultFontSize;
 
     public enum InputMode
@@ -186,7 +188,9 @@
 
     public class KeypadModel
     {
-        public List<decimal> Amounts { get; set; } = new () { 0 };
+        public List<CartLineItem> Cart { get; set; } = [];
+        public List<decimal> Amounts { get; set; } = [0];
+        public int? DiscountAmount { get; set; }
         public int? DiscountPercent { get; set; }
         public int? TipPercent { get; set; }
         public decimal? Tip { get; set; }
@@ -271,6 +275,7 @@
 
     private void Clear()
     {
+        Model.Cart.Clear();
         Model.Amounts.Clear();
         Model.Amounts.Add(0);
         Model.DiscountPercent = null;
@@ -281,16 +286,24 @@
 
     private string GetData()
     {
-        var data = new JObject
+        var data = new JsonObject
         {
             ["subTotal"] = GetAmount(),
             ["total"] = GetTotal(),
+            ["cart"] = JsonValue.Create(Model.Cart)
         };
+
+        // clear empty or zero values
+        var amounts = Model.Amounts.Where(a => a > 0).ToList();
+        if (amounts.Count > 0)
+        {
+            data["amounts"] = JsonValue.Create(amounts);
+        }
 
         var discount = GetDiscount();
         if (discount > 0)
         {
-            data["discount"] = discount;
+            data["discountAmount"] = discount;
         }
         if (Model.DiscountPercent is > 0)
         {
@@ -306,7 +319,7 @@
         {
             data["tipPercentage"] = Model.TipPercent;
         }
-        return JsonConvert.SerializeObject(data);
+        return JsonSerializer.Serialize(data);
     }
 
     private List<InputMode> GetModes()
@@ -329,6 +342,11 @@
             ? Math.Round(amount * (Model.DiscountPercent.Value / 100.0m), _currencyDivisibility)
             : 0;
     }
+    
+    private int GetDiscountPercent()
+    {
+        return Model.DiscountPercent ?? 0;
+    }
 
     private decimal GetTip()
     {
@@ -346,8 +364,13 @@
 
     private string? Calculation(KeypadModel model)
     {
-        if (model.Amounts.Count < 2 && model.DiscountPercent is not > 0 && !model.Tip.HasValue) return null;
-        var calc = string.Join(" + ", model.Amounts.Select(amt => FormatCurrency(amt, true)));
+        if (!model.Tip.HasValue && !(model.DiscountAmount is > 0 || model.DiscountPercent is > 0) && model.Amounts.Count < 2 && model.Cart.Count == 0) return null;
+        var hasAmounts = model.Amounts.Sum() > 0;
+        var hasCart = model.Cart.Count > 0;
+        var calc = "";
+        if (hasCart) calc += string.Join(" + ", model.Cart.Select(item => $"{item.Count} x ${item.Title} ({FormatCurrency(item.Price, true)}) = {FormatCurrency(item.Price * item.Count, true)}"));
+        if (hasCart && hasAmounts) calc += " + ";
+        if (hasAmounts) calc += string.Join(" + ", model.Amounts.Select(amt => FormatCurrency(amt, true)));
         var discount = GetDiscount();
         if (discount > 0) calc += $" - {FormatCurrency(discount, true)} ({model.DiscountPercent}%)";
         var tip = GetTip();
@@ -380,8 +403,8 @@
 
     private async Task UpdateFontSize()
     {
-        var top = await JS.InvokeAsync<decimal>("Interop.getWidth", new object[] { _keypadTop });
-        var amt = await JS.InvokeAsync<decimal>("Interop.getWidth", new object[] { _keypadAmount });
+        var top = await JS.InvokeAsync<decimal>("Interop.getWidth", [_keypadTop]);
+        var amt = await JS.InvokeAsync<decimal>("Interop.getWidth", [_keypadAmount]);
         var gamma = top / amt;
 
         FontSize = (int)(top < amt
@@ -407,5 +430,12 @@
         public string Url { get; set; }
         public string Price { get; set; }
         public string Status { get; set; }
+    }
+
+    public class CartLineItem
+    {
+        public string Title { get; set; }
+        public decimal Price { get; set; }
+        public int Count { get; set; }
     }
 }

@@ -20,14 +20,6 @@ document.addEventListener("DOMContentLoaded",function () {
             amountNumeric () {
                 return parseFloat(this.cart.reduce((res, item) => res + (item.price||0) * item.count, 0)
                     .toFixed(this.divisibility))
-            },
-            posdata () {
-                const data = { cart: this.cart, subTotal: this.amountNumeric }
-                if (this.discountNumeric > 0) data.discountAmount = this.discountNumeric
-                if (this.discountPercentNumeric > 0) data.discountPercentage = this.discountPercentNumeric
-                if (this.tipNumeric > 0) data.tip = this.tipNumeric
-                data.total = this.totalNumeric
-                return JSON.stringify(data)
             }
         },
         watch: {

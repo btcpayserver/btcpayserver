@@ -384,7 +384,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         private async Task UpdateAnyPendingMoneroLikePayment(string cryptoCode)
         {
             var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
-            var invoices = await _invoiceRepository.GetInvoicesWithPendingPayments(paymentMethodId);
+            var invoices = await _invoiceRepository.GetMonitoredInvoices(paymentMethodId);
             if (!invoices.Any())
                 return;
             invoices = invoices.Where(entity => entity.GetPaymentPrompt(paymentMethodId)?.Activated is true).ToArray();

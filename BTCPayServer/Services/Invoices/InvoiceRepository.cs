@@ -34,7 +34,7 @@ namespace BTCPayServer.Services.Invoices
 
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly EventAggregator _eventAggregator;
-
+        public ApplicationDbContextFactory DbContextFactory => _applicationDbContextFactory;
         public InvoiceRepository(ApplicationDbContextFactory contextFactory,
             EventAggregator eventAggregator)
         {
@@ -78,32 +78,59 @@ namespace BTCPayServer.Services.Invoices
 			return row is null ? null : ToEntity(row);
 		}
 
-        public async Task<InvoiceEntity[]> GetInvoicesWithPendingPayments(PaymentMethodId paymentMethodId, bool includeAddresses = false)
+        /// <summary>
+        /// Returns all invoices which either:
+        /// * Have the <paramref name="paymentMethodId"/> activated and are pending
+        /// * Aren't pending but have a payment from the <paramref name="paymentMethodId"/> that is pending
+        /// <see cref="InvoiceData.AddressInvoices"/> is filled with the monitored addresses of the <paramref name="paymentMethodId"/> for this invoice.
+        /// <see cref="InvoiceData.Payments"/> include the <paramref name="paymentMethodId"/> payments for this invoice.
+        /// </summary>
+        /// <param name="paymentMethodId">The payment method id</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns></returns>
+        public async Task<InvoiceEntity[]> GetMonitoredInvoices(PaymentMethodId paymentMethodId, CancellationToken cancellationToken = default)
         {
             var pmi = paymentMethodId.ToString();
             using var ctx = _applicationDbContextFactory.CreateContext();
-            var invoiceIds = (await ctx.Payments.Where(p => PaymentData.IsPending(p.Status) && p.Type == pmi).Select(p => p.InvoiceDataId).ToArrayAsync()).Distinct().ToArray();
-            if (invoiceIds.Length is 0)
+            var conn = ctx.Database.GetDbConnection();
+            var rows = await conn.QueryAsync<(string Id, uint xmin, string[] addresses, string[] payments, string invoice)>(new("""
+                SELECT
+                    i."Id",
+                    i.xmin,
+                    array_agg(ai."Address") addresses,
+                    COALESCE(array_agg(to_jsonb(p)) FILTER (WHERE p."Id" IS NOT NULL), '{}') as payments,
+                    (array_agg(to_jsonb(i)))[1] as invoice
+                FROM get_monitored_invoices(@pmi) m
+                LEFT JOIN "Payments" p ON p."Id" = m.payment_id
+                LEFT JOIN "Invoices" i ON i."Id" = m.invoice_id
+                LEFT JOIN "AddressInvoices" ai ON i."Id" = ai."InvoiceDataId"
+                WHERE ai."PaymentMethodId" = @pmi
+                GROUP BY i."Id";
+                """
+                , new { pmi = paymentMethodId.ToString() }));
+            if (Enumerable.TryGetNonEnumeratedCount(rows, out var c) && c == 0)
                 return Array.Empty<InvoiceEntity>();
-            return await GetInvoices(new InvoiceQuery()
+            List<InvoiceEntity> invoices = new List<InvoiceEntity>();
+            foreach (var row in rows)
             {
-                InvoiceId = invoiceIds,
-                IncludeAddresses = true
-            });
-        }
-        public async Task<InvoiceEntity[]> GetPendingInvoices(CancellationToken cancellationToken = default)
-        {
-            using var ctx = _applicationDbContextFactory.CreateContext();
-            var rows = await ctx.Invoices.Where(i => InvoiceData.IsPending(i.Status))
-                                .Include(i => i.Payments)
-                                .Select(o => o).ToArrayAsync();
-            return rows.Select(ToEntity).ToArray();
-        }
-        public async Task<InvoiceEntity[]> GetPendingInvoices()
-        {
-            using var ctx = _applicationDbContextFactory.CreateContext();
-            return (await ctx.Invoices.Where(i => InvoiceData.IsPending(i.Status)).Select(i => i).ToArrayAsync())
-                    .Select(i => ToEntity(i)).ToArray();
+                var jobj = JObject.Parse(row.invoice);
+                jobj.Remove("Blob");
+                jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
+                var invoiceData = jobj.ToObject<InvoiceData>();
+                invoiceData.XMin = row.xmin;
+                invoiceData.AddressInvoices = row.addresses.Select((a) => new AddressInvoiceData() { InvoiceDataId = invoiceData.Id, Address = a, PaymentMethodId = paymentMethodId.ToString() }).ToList();
+                invoiceData.Payments = new List<PaymentData>();
+                foreach (var payment in row.payments)
+                {
+                    jobj = JObject.Parse(payment);
+                    jobj.Remove("Blob");
+                    jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
+                    var paymentData = jobj.ToObject<PaymentData>();
+                    invoiceData.Payments.Add(paymentData);
+                }
+                invoices.Add(ToEntity(invoiceData));
+            }
+            return invoices.ToArray();
         }
 
         public async Task<List<Data.WebhookDeliveryData>> GetWebhookDeliveries(string invoiceId)

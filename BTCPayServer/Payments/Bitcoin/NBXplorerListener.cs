@@ -235,7 +235,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         async Task UpdatePaymentStates(BTCPayWallet wallet)
         {
-            var invoices = await _InvoiceRepository.GetInvoicesWithPendingPayments(PaymentTypes.CHAIN.GetPaymentMethodId(wallet.Network.CryptoCode));
+            var invoices = await _InvoiceRepository.GetMonitoredInvoices(PaymentTypes.CHAIN.GetPaymentMethodId(wallet.Network.CryptoCode));
             await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(wallet, i)).ToArray());
         }
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId, bool fireEvents = true)
@@ -384,7 +384,7 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             var handler = _handlers.GetBitcoinHandler(wallet.Network);
             int totalPayment = 0;
-            var invoices = await _InvoiceRepository.GetInvoicesWithPendingPayments(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), true);
+            var invoices = await _InvoiceRepository.GetMonitoredInvoices(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode));
             var coinsPerDerivationStrategy =
                 new Dictionary<DerivationStrategyBase, ReceivedCoin[]>();
             foreach (var i in invoices)

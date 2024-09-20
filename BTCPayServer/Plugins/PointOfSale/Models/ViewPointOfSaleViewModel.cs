@@ -80,7 +80,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             AllCategories = null;
             if (Items is null)
                 return;
-            var groups = Items.SelectMany(g => g.Categories ?? Array.Empty<string>())
+            var groups = Items.SelectMany(g => g.Categories ?? [])
                               .ToHashSet()
                               .Select(o => new KeyValuePair<string, string>(o, o))
                               .ToList();

@@ -2,7 +2,12 @@
 @using System.Globalization
 @using System.Text.Json
 @using System.Text.Json.Nodes
+@using BTCPayServer.Client
+@using BTCPayServer.Plugins.PointOfSale.Models
+@using Microsoft.AspNetCore.Mvc.Rendering
 @inject IJSRuntime JS
+@inject IAuthorizationService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
 
 <div class="d-flex flex-column gap-4">
     <input type="hidden" name="amount" value="@GetTotal()">
@@ -92,22 +97,26 @@
             <span>Charge</span>
         }
     </button>
-    @if (!string.IsNullOrEmpty(RecentTransactionsUrl))
+    
+    @if (CanAccessRecentTransactions)
     {
+        <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle">
+            <Icon Symbol="nav-transactions" />
+        </button>
         <div class="modal" tabindex="-1" id="RecentTransactions" ref="RecentTransactions" data-bs-backdrop="static" data-url="@RecentTransactionsUrl">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Recent Transactions</h5>
                         <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" @onclick="@LoadRecentTransactions" disabled="@_recentTransactionsLoading" id="RecentTransactionsRefresh">
-                            <vc:icon symbol="refresh" />
+                            <Icon Symbol="refresh" />
                             @if (_recentTransactionsLoading)
                             {
                                 <span class="visually-hidden">Loading...</span>
                             }
                         </button>
                         <button type="button" class="btn-close py-3" aria-label="Close" v-on:click="closeModal">
-                            <vc:icon symbol="close" />
+                            <Icon Symbol="close" />
                         </button>
                     </div>
                     <div class="modal-body">
@@ -124,7 +133,7 @@
                                                 <span class="badge badge-@t.Status.ToLowerInvariant()">@t.Status</span>
                                             </div>
                                         </div>
-                                        <vc:icon symbol="caret-right" />
+                                        <Icon Symbol="caret-right" />
                                     </a>
                                 }
                             </div>
@@ -141,30 +150,118 @@
                 </div>
             </div>
         </div>
-        <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle">
-            <vc:icon symbol="manage-plugins" />
+    }
+    
+    @if (IsItemlistEnabled && Items?.Any() is true)
+    {
+        <button type="button" class="btn btn-link p-1" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList" v-if="showItems">
+            <Icon Symbol="nav-products"/>
         </button>
+        <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1"  id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
+            <div class="offcanvas-header justify-content-between flex-wrap p-3">
+                <h5 class="offcanvas-title" id="offcanvasExampleLabel">Products</h5>
+                <button type="button" class="btn btn-sm rounded-pill @(Model.Cart.Count > 0 ? "btn-primary" : "btn-outline-secondary")" data-bs-dismiss="offcanvas">@(Model.Cart.Count > 0 ? "Apply" : "Close")</button>
+                @if (IsSearchEnabled)
+                {
+                    <div class="w-100 mt-3">
+                        <InputText id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" @bind-Value="Model.SearchTerm" />
+                    </div>
+                }
+                @if (IsCategoriesEnabled && Categories?.Any() is true)
+                {
+                    <div id="Categories" ref="categories" v-if="showCategories && allCategories" class="w-100 mt-3 btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2" :class="{ 'scrollable': categoriesScrollable }">
+                        <nav class="btcpay-pills d-flex align-items-center gap-3">
+                            @foreach (var cat in Categories)
+                            {
+                                <input id="Category-@cat.Value" type="radio" name="category" autocomplete="off" value="@cat.Value">
+                                <label for="Category-@cat.Value" class="btcpay-pill text-nowrap">@cat.Text</label>
+                            }
+                        </nav>
+                    </div>
+                }
+            </div>
+            <div class="offcanvas-body">
+                <div id="PosItems">
+                    @for (var index = 0; index < Items.Length; index++)
+                    {
+                        var item = Items[index];
+                        var formatted = GetItemPriceFormatted(item);
+                        <div class="posItem p-3 @(InStock(item) ? "posItem--inStock" : null) @(DisplayItem(item) ? "posItem--displayed" : null)">
+                            <div class="d-flex align-items-start w-100 gap-3">
+                                @if (!string.IsNullOrWhiteSpace(item.Image))
+                                {
+                                    <div class="img d-none d-sm-block">
+                                        <img src="@item.Image" alt="@item.Title" asp-append-version="true" />
+                                    </div>
+                                }
+                                <div class="d-flex flex-column gap-2">
+                                    <h5 class="card-title m-0">@item.Title</h5>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
+                                        {
+                                            <span class="fw-semibold badge text-bg-info">@char.ToUpper(formatted[0]) + formatted[1..])</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-semibold">@formatted</span>
+                                        }
+                                        @if (item.Inventory.HasValue)
+                                        {
+                                            <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
+                                                @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                            </span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 ms-auto quantities">
+                                    <button type="button" @onclick="() => UpdateQuantity(item, -1)" class="btn btn-minus" disabled="@(GetQuantity(item) <= 0)">
+                                        <span><Icon Symbol="minus" /></span>
+                                    </button>
+                                    <div class="quantity text-center fs-5" style="width:2rem">@GetQuantity(item)</div>
+                                    <button type="button" @onclick="() => UpdateQuantity(item, +1)" class="btn btn-plus" disabled="@(!InStock(item))">
+                                        <span><Icon Symbol="plus" /></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
     }
 </div>
 
 @code {
 #nullable enable
     [Parameter, EditorRequired]
+    public string StoreId { get; set; } = null!;
+    [Parameter, EditorRequired]
+    public string AppId { get; set; } = null!;
+    [Parameter, EditorRequired]
     public string CurrencyCode { get; set; } = null!;
     [Parameter]
-    public string? RecentTransactionsUrl { get; set; }
-    [Parameter]
     public NumberFormatInfo? CurrencyInfo { get; set; }
+    [Parameter]
+    public bool IsItemlistEnabled { get; set; }
     [Parameter]
     public bool IsDiscountEnabled { get; set; }
     [Parameter]
     public bool IsTipEnabled { get; set; }
     [Parameter]
+    public bool IsSearchEnabled { get; set; }
+    [Parameter]
+    public bool IsCategoriesEnabled { get; set; }
+    [Parameter]
     public int[]? CustomTipPercentages { get; set; }
+    [Parameter]
+    public SelectList? Categories { get; set; }
+    [Parameter]
+    public ViewPointOfSaleViewModel.Item[]? Items { get; set; }
     [Parameter]
     public EventCallback<MouseEventArgs> OnClickCallback { get; set; }
 
     private bool IsSubmitting { get; set; }
+    private bool CanAccessRecentTransactions { get; set; }
     private List<RecentTransaction>? RecentTransactions { get; set; }
 
     const int DefaultFontSize = 64;
@@ -185,23 +282,49 @@
     private bool _recentTransactionsLoading;
     private InputMode Mode { get; set; } = InputMode.Amount;
     private KeypadModel Model { get; set; } = new ();
+    private string? RecentTransactionsUrl => null;
 
     public class KeypadModel
     {
-        public List<CartLineItem> Cart { get; set; } = [];
+        public List<CartItem> Cart { get; set; } = [];
         public List<decimal> Amounts { get; set; } = [0];
         public int? DiscountAmount { get; set; }
         public int? DiscountPercent { get; set; }
         public int? TipPercent { get; set; }
         public decimal? Tip { get; set; }
+        public string? SearchTerm { get; set; }
+        public string[]? SelectedCategories { get; set; }
+    }
+
+    public class RecentTransaction
+    {
+        public string Id { get; set; }
+        public DateTimeOffset Date { get; set; }
+        public string Url { get; set; }
+        public string Price { get; set; }
+        public string Status { get; set; }
+    }
+
+    public class CartItem
+    {
+        public string Id { get; set; }
+        public string Title { get; set; }
+        public decimal Price { get; set; }
+        public int Count { get; set; }
     }
     
-    protected override void OnInitialized()
+    protected override async Task OnInitializedAsync()
     {
-        base.OnInitialized();
+        await base.OnInitializedAsync();
         
         _currencySymbol = CurrencyInfo?.CurrencySymbol ?? CurrencyCode;
         _currencyDivisibility = CurrencyInfo?.CurrencyDecimalDigits ?? 0;
+
+        // check authorization
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated is not true) return;
+        
+        CanAccessRecentTransactions = (await AuthService.AuthorizeAsync(authState.User, StoreId, Policies.CanViewInvoices)).Succeeded;
     }
 
     private async Task KeyPress(char key)
@@ -413,6 +536,88 @@
 
         StateHasChanged();
     }
+    
+    private bool DisplayItem(ViewPointOfSaleViewModel.Item item)
+    {
+        if (string.IsNullOrWhiteSpace(Model.SearchTerm)) return InStock(item);
+        var search = Model.SearchTerm.ToLowerInvariant();
+        return item.Title.ToLowerInvariant().Contains(search) || item.Description?.ToLowerInvariant().Contains(search) is true;
+    }
+    
+    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    {
+        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.Price == 0) return "free";
+        var formatted = FormatCurrency(item.Price ?? 0, true);
+        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+    }
+    
+    private CartItem? ItemInCart(ViewPointOfSaleViewModel.Item item, decimal? amount = null)
+    {
+        return Model.Cart.FirstOrDefault(lineItem => lineItem.Id == item.Id && amount == null || lineItem.Price == amount);
+    }
+    
+    private bool InStock(ViewPointOfSaleViewModel.Item item, int count = 1)
+    {
+        return item.Inventory == null || item.Inventory >= GetQuantity(item) + count;
+    }
+    
+    private string InventoryText(ViewPointOfSaleViewModel.Item item)
+    {
+        var inCart = GetQuantity(item);
+        var left = item.Inventory - inCart;
+        return left > 0 ? $"{item.Inventory} left" : "Sold out";
+    }
+    
+    private CartItem? AddToCart(ViewPointOfSaleViewModel.Item item, int count, decimal? amount = null) {
+        if (!InStock(item)) return null;
+        // Check if price is needed
+        var isFixedPrice = item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed;
+        if (!isFixedPrice && amount == null) {
+            // TODO: Report validation error
+        }
+
+        var price = (item.Price ?? amount)!.Value;
+        var cartItem = ItemInCart(item, amount);
+        if (cartItem == null)
+        {
+            cartItem = new CartItem
+            {
+                Id = item.Id,
+                Title = item.Title,
+                Price = price,
+                Count = count
+            };
+            Model.Cart.Add(cartItem);
+        } else {
+            cartItem.Count += count;
+        }
+        return cartItem;
+    }
+
+    private void RemoveFromCart(ViewPointOfSaleViewModel.Item item) {
+        var cartItem = ItemInCart(item);
+        if (cartItem != null) RemoveFromCart(cartItem);
+    }
+
+    private void RemoveFromCart(CartItem cartItem) {
+        Model.Cart.Remove(cartItem);
+    }
+    
+    private int GetQuantity(ViewPointOfSaleViewModel.Item item) {
+        return ItemInCart(item)?.Count ?? 0;
+    }
+    
+    private void UpdateQuantity(ViewPointOfSaleViewModel.Item item, int count) {
+        var cartItem = ItemInCart(item);
+        if (cartItem == null)
+        {
+            if (count > 0) AddToCart(item, count);
+            return;
+        }
+        if (count < 0 || count > 0 && InStock(item, count)) cartItem.Count += count;
+        if (cartItem.Count <= 0) RemoveFromCart(cartItem);
+    }
 
     private async Task LoadRecentTransactions()
     {
@@ -421,21 +626,5 @@
         RecentTransactions = null;
         _recentTransactionsLoading = false;
         StateHasChanged();
-    }
-
-    private class RecentTransaction
-    {
-        public string Id { get; set; }
-        public DateTimeOffset Date { get; set; }
-        public string Url { get; set; }
-        public string Price { get; set; }
-        public string Status { get; set; }
-    }
-
-    public class CartLineItem
-    {
-        public string Title { get; set; }
-        public decimal Price { get; set; }
-        public int Count { get; set; }
     }
 }

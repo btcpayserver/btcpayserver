@@ -24,11 +24,17 @@
         </noscript>
         <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" class="only-for-js my-auto">
             <component type="typeof(BTCPayServer.Blazor.Keypad)" render-mode="ServerPrerendered"
-                       param-RecentTransactionsUrl="@Url.Action("RecentTransactions", "UIPointOfSale", new { appId = Model.AppId })"
+                       param-StoreId="Model.StoreId"
+                       param-AppId="Model.AppId"
                        param-CurrencyCode="Model.CurrencyCode"
                        param-CurrencyInfo="Model.CurrencyInfo"
+                       param-IsItemlistEnabled="Model.ShowItems"
                        param-IsDiscountEnabled="Model.ShowDiscount"
                        param-IsTipEnabled="Model.EnableTips"
+                       param-IsSearchEnabled="Model.ShowSearch"
+                       param-IsCategoriesEnabled="Model.ShowCategories"
+                       param-Categories="Model.AllCategories"
+                       param-Items="Model.Items"
                        param-CustomTipPercentages="Model.CustomTipPercentages" />
         </form>
     }

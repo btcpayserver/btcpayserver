@@ -57,16 +57,49 @@
     min-height: 1.5rem;
 }
 
-#RecentTransactionsToggle {
+
+
+button[data-bs-toggle] {
     position: absolute;
-    top: var(--btcpay-space-l);
-    left: var(--btcpay-space-m);
+    top: 1.75rem;
     z-index: 1;
+    color: var(--btcpay-header-link);
+}
+button[data-bs-toggle]:hover {
+    color: var(--btcpay-header-link-accent);
+}
+button[data-bs-toggle] .icon {
+    --icon-size: 1.75em;
+}
+#ItemsListToggle {
+    right: var(--btcpay-space-m);
+}
+#RecentTransactionsToggle {
+    left: var(--btcpay-space-m);
 }
 
-#RecentTransactionsToggle .icon {
-    --btn-icon-size: 2.25em;
+@media (max-width: 359px) {
+    #RecentTransactions .list-group .badge-container {
+        flex-grow: 1;
+    }
 }
+
+#PosItems {
+    --image-size: 3rem;
+}
+
+#PosItems .img img {
+    width: var(--image-size);
+    height: var(--image-size);
+}
+
+#PosItems .img img {
+    max-width: var(--image-size);
+    max-height: var(--image-size);
+    object-fit: scale-down;
+    border-radius: var(--btcpay-border-radius);
+}
+
 #RecentTransactionsRefresh[disabled] .icon {
     animation: 1.25s linear infinite spinner-border;
 }

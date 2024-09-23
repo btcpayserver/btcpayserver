@@ -704,7 +704,7 @@ retry:
                 {
                     var localPayment = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
                     // Old data could have Type to null.
-                    localPayment += "BTC-CHAIN";
+                    localPayment += "UNKNOWN";
                     await writer.WriteLineAsync(localPayment);
                 }
                 await writer.FlushAsync();

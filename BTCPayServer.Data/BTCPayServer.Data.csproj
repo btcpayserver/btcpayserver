@@ -23,5 +23,6 @@
     <None Remove="DBScripts\003.RefactorPendingInvoicesPayments.sql" />
     <None Remove="DBScripts\004.MonitoredInvoices.sql" />
     <None Remove="DBScripts\005.PaymentsRenaming.sql" />
+    <None Remove="DBScripts\006.PaymentsRenaming.sql" />
   </ItemGroup>
 </Project>

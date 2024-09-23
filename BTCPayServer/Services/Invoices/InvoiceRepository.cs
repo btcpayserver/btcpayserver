@@ -88,11 +88,30 @@ namespace BTCPayServer.Services.Invoices
         /// <param name="paymentMethodId">The payment method id</param>
         /// <param name="cancellationToken">Cancellation token</param>
         /// <returns></returns>
-        public async Task<InvoiceEntity[]> GetMonitoredInvoices(PaymentMethodId paymentMethodId, CancellationToken cancellationToken = default)
+        public Task<InvoiceEntity[]> GetMonitoredInvoices(PaymentMethodId paymentMethodId, CancellationToken cancellationToken = default)
+        => GetMonitoredInvoices(paymentMethodId, false, cancellationToken: cancellationToken);
+
+        /// <summary>
+        /// Returns all invoices which either:
+        /// * Have the <paramref name="paymentMethodId"/> activated and are pending
+        /// * Aren't pending but have a payment from the <paramref name="paymentMethodId"/> that is pending
+        /// <see cref="InvoiceData.AddressInvoices"/> is filled with the monitored addresses of the <paramref name="paymentMethodId"/> for this invoice.
+        /// <see cref="InvoiceData.Payments"/> include the <paramref name="paymentMethodId"/> payments for this invoice.
+        /// </summary>
+        /// <param name="paymentMethodId">The payment method id</param>
+        /// <param name="includeNonActivated">If true, include pending invoice with non activated payment methods</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns></returns>
+        public async Task<InvoiceEntity[]> GetMonitoredInvoices(PaymentMethodId paymentMethodId, bool includeNonActivated, CancellationToken cancellationToken = default)
         {
             var pmi = paymentMethodId.ToString();
             using var ctx = _applicationDbContextFactory.CreateContext();
             var conn = ctx.Database.GetDbConnection();
+
+            string includeNonActivateQuery = String.Empty;
+            if (includeNonActivated)
+                includeNonActivateQuery = " AND (get_prompt(i.\"Blob2\", @pmi)->'activated')::BOOLEAN IS NOT FALSE)";
+
             var rows = await conn.QueryAsync<(string Id, uint xmin, string[] addresses, string[] payments, string invoice)>(new("""
                 SELECT
                     i."Id",
@@ -100,14 +119,14 @@ namespace BTCPayServer.Services.Invoices
                     array_agg(ai."Address") addresses,
                     COALESCE(array_agg(to_jsonb(p)) FILTER (WHERE p."Id" IS NOT NULL), '{}') as payments,
                     (array_agg(to_jsonb(i)))[1] as invoice
-                FROM get_monitored_invoices(@pmi) m
+                FROM get_monitored_invoices(@pmi, @includeNonActivated) m
                 LEFT JOIN "Payments" p ON p."Id" = m.payment_id AND p."PaymentMethodId" = m.payment_method_id
                 LEFT JOIN "Invoices" i ON i."Id" = m.invoice_id
                 LEFT JOIN "AddressInvoices" ai ON i."Id" = ai."InvoiceDataId"
                 WHERE ai."PaymentMethodId" = @pmi
                 GROUP BY i."Id";
                 """
-                , new { pmi = paymentMethodId.ToString() }));
+                , new { pmi = paymentMethodId.ToString(), includeNonActivated }));
             if (Enumerable.TryGetNonEnumeratedCount(rows, out var c) && c == 0)
                 return Array.Empty<InvoiceEntity>();
             List<InvoiceEntity> invoices = new List<InvoiceEntity>();

@@ -14,6 +14,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.NTag424;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
@@ -2711,6 +2712,14 @@ namespace BTCPayServer.Tests
             invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
             Assert.DoesNotContain(invoiceObject.Links.Select(l => l.Type), t => t == "address");
 
+            // Check if we can get the monitored invoice
+            var invoiceRepo = tester.PayTester.GetService<InvoiceRepository>();
+            var includeNonActivated = true;
+            Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), includeNonActivated), i => i.Id == invoice.Id);
+            includeNonActivated = false;
+            Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), includeNonActivated), i => i.Id == invoice.Id);
+            Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN")), i => i.Id == invoice.Id);
+            //
 
             paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
             Assert.Single(paymentMethods);

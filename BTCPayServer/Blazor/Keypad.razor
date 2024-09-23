@@ -32,7 +32,6 @@
             }
             @if (IsTipEnabled)
             {
-                var tip = GetTip();
                 <div class="tab-pane fade px-2 @(Mode == InputMode.Tip ? "show active" : "")" role="tabpanel" aria-labelledby="ModeTablist-Tip">
                     <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2">
                         @if (CustomTipPercentages != null)
@@ -42,7 +41,7 @@
                                 type="button"
                                 class="btcpay-pill @(Model.TipPercent == null ? "active" : "")"
                                 @onclick="() => Model.TipPercent = null">
-                                @(Model.Tip is > 0 ? FormatCurrency(Model.Tip.Value, true) : "Custom")
+                                @(Model.Tip is > 0 ? FormatCurrency(Model.Tip.Value) : "Custom")
                             </button>
                             @foreach(var percentage in CustomTipPercentages)
                             {
@@ -57,8 +56,9 @@
                         }
                         else
                         {
+                            var tip = GetTip();
                             <div class="h5 fw-semibold text-muted text-center">
-                                Amount@(tip > 0 ? $": {FormatCurrency(tip, true)}" : "")
+                                Amount@(tip > 0 ? $": {FormatCurrency(tip)}" : "")
                             </div>
                         }
                     </div>
@@ -82,10 +82,10 @@
     <div class="keypad">
         @foreach (var key in Keys)
         {
-            <button disabled="@(key == '+' && Mode != InputMode.Amount)" @onclick="@(e => KeyPress(key))" @onclick:preventDefault @ondblclick="@(e => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">@key</button>
+            <button disabled="@(key == '+' && Mode != InputMode.Amount)" @onclick="@(_ => KeyPress(key))" @onclick:preventDefault @ondblclick="@(_ => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">@key</button>
         }
     </div>
-    <button class="btn btn-lg btn-primary mx-3" type="submit" disabled="@IsSubmitting" id="pay-button" @onclick="@(e => { IsSubmitting = true; })">
+    <button class="btn btn-lg btn-primary mx-3" type="submit" disabled="@IsSubmitting" id="pay-button" @onclick="@(_ => { IsSubmitting = true; })">
         @if (IsSubmitting)
         {
             <div class="spinner-border spinner-border-sm" role="status">
@@ -100,35 +100,39 @@
     
     @if (CanAccessRecentTransactions)
     {
-        <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle">
+        <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" @onclick="HandleLoadRecentTransactions">
             <Icon Symbol="nav-transactions" />
         </button>
-        <div class="modal" tabindex="-1" id="RecentTransactions" ref="RecentTransactions" data-bs-backdrop="static" data-url="@RecentTransactionsUrl">
+        <div class="modal" tabindex="-1" id="RecentTransactions" ref="RecentTransactions" data-bs-backdrop="static">
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Recent Transactions</h5>
-                        <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" @onclick="@LoadRecentTransactions" disabled="@_recentTransactionsLoading" id="RecentTransactionsRefresh">
-                            <Icon Symbol="refresh" />
+                        <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" @onclick="HandleLoadRecentTransactions" disabled="@_recentTransactionsLoading" id="RecentTransactionsRefresh">
+                            <Icon Symbol="actions-refresh" />
                             @if (_recentTransactionsLoading)
                             {
                                 <span class="visually-hidden">Loading...</span>
                             }
                         </button>
-                        <button type="button" class="btn-close py-3" aria-label="Close" v-on:click="closeModal">
+                        <button type="button" class="btn-close py-3" data-bs-dismiss="modal" aria-label="Close">
                             <Icon Symbol="close" />
                         </button>
                     </div>
-                    <div class="modal-body">
-                        @if (RecentTransactions?.Count > 0)
+                    <div class="modal-body pt-0">
+                        @if (RecentTransactions?.Count() > 0)
                         {
                             <div class="list-group list-group-flush">
                                 @foreach (var t in RecentTransactions)
                                 {
                                     <a href="@t.Url" class="list-group-item list-group-item-action d-flex align-items-center gap-3 pe-1 py-3">
                                         <div class="d-flex align-items-baseline justify-content-between flex-wrap flex-grow-1 gap-2">
-                                            <span class="flex-grow-1">@t.Date.ToBrowserDate()</span>
-                                            <span class="flex-grow-1 text-end">@t.Price</span>
+                                            <span class="flex-grow-1">
+                                                <DateDisplay DateTimeOffset="@t.Date"/>
+                                            </span>
+                                            <span class="flex-grow-1 text-end">
+                                                @FormatCurrency(t.Price)
+                                            </span>
                                             <div class="badge-container">
                                                 <span class="badge badge-@t.Status.ToLowerInvariant()">@t.Status</span>
                                             </div>
@@ -154,22 +158,22 @@
     
     @if (IsItemlistEnabled && Items?.Any() is true)
     {
-        <button type="button" class="btn btn-link p-1" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList" v-if="showItems">
+        <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList">
             <Icon Symbol="nav-products"/>
         </button>
-        <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1"  id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
+        <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1" id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle">
             <div class="offcanvas-header justify-content-between flex-wrap p-3">
                 <h5 class="offcanvas-title" id="offcanvasExampleLabel">Products</h5>
                 <button type="button" class="btn btn-sm rounded-pill @(Model.Cart.Count > 0 ? "btn-primary" : "btn-outline-secondary")" data-bs-dismiss="offcanvas">@(Model.Cart.Count > 0 ? "Apply" : "Close")</button>
                 @if (IsSearchEnabled)
                 {
                     <div class="w-100 mt-3">
-                        <InputText id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" @bind-Value="Model.SearchTerm" />
+                        <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" @bind-value="Model.SearchTerm" />
                     </div>
                 }
                 @if (IsCategoriesEnabled && Categories?.Any() is true)
                 {
-                    <div id="Categories" ref="categories" v-if="showCategories && allCategories" class="w-100 mt-3 btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2" :class="{ 'scrollable': categoriesScrollable }">
+                    <div id="Categories" class="w-100 mt-3 btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2" :class="{ 'scrollable': categoriesScrollable }">
                         <nav class="btcpay-pills d-flex align-items-center gap-3">
                             @foreach (var cat in Categories)
                             {
@@ -182,9 +186,8 @@
             </div>
             <div class="offcanvas-body">
                 <div id="PosItems">
-                    @for (var index = 0; index < Items.Length; index++)
+                    @foreach (var item in Items)
                     {
-                        var item = Items[index];
                         var formatted = GetItemPriceFormatted(item);
                         <div class="posItem p-3 @(InStock(item) ? "posItem--inStock" : null) @(DisplayItem(item) ? "posItem--displayed" : null)">
                             <div class="d-flex align-items-start w-100 gap-3">
@@ -195,7 +198,7 @@
                                     </div>
                                 }
                                 <div class="d-flex flex-column gap-2">
-                                    <h5 class="card-title m-0">@item.Title</h5>
+                                    <h5 class="card-title m-0">@((MarkupString)item.Title)</h5>
                                     <div class="d-flex gap-2 align-items-center">
                                         @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
                                         {
@@ -207,9 +210,7 @@
                                         }
                                         @if (item.Inventory.HasValue)
                                         {
-                                            <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
-                                                @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
-                                            </span>
+                                            <span class="badge text-bg-warning inventory">@InventoryText(item)</span>
                                         }
                                     </div>
                                 </div>
@@ -256,13 +257,14 @@
     [Parameter]
     public SelectList? Categories { get; set; }
     [Parameter]
-    public ViewPointOfSaleViewModel.Item[]? Items { get; set; }
+    public EventCallback LoadRecentTransactions { get; set; }
     [Parameter]
-    public EventCallback<MouseEventArgs> OnClickCallback { get; set; }
+    public IEnumerable<RecentTransaction>? RecentTransactions { get; set; }
+    [Parameter]
+    public IEnumerable<ViewPointOfSaleViewModel.Item>? Items { get; set; }
 
     private bool IsSubmitting { get; set; }
     private bool CanAccessRecentTransactions { get; set; }
-    private List<RecentTransaction>? RecentTransactions { get; set; }
 
     const int DefaultFontSize = 64;
     static readonly char[] Keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+'];
@@ -282,12 +284,11 @@
     private bool _recentTransactionsLoading;
     private InputMode Mode { get; set; } = InputMode.Amount;
     private KeypadModel Model { get; set; } = new ();
-    private string? RecentTransactionsUrl => null;
 
     public class KeypadModel
     {
-        public List<CartItem> Cart { get; set; } = [];
-        public List<decimal> Amounts { get; set; } = [0];
+        public List<CartItem> Cart { get; } = [];
+        public List<decimal> Amounts { get; } = [0];
         public int? DiscountAmount { get; set; }
         public int? DiscountPercent { get; set; }
         public int? TipPercent { get; set; }
@@ -298,18 +299,18 @@
 
     public class RecentTransaction
     {
-        public string Id { get; set; }
-        public DateTimeOffset Date { get; set; }
-        public string Url { get; set; }
-        public string Price { get; set; }
-        public string Status { get; set; }
+        public string Id { get; set; } = null!;
+        public string Status { get; init; } = null!;
+        public decimal Price { get; init; }
+        public string? Url { get; init; }
+        public DateTimeOffset Date { get; init; }
     }
 
     public class CartItem
     {
-        public string Id { get; set; }
-        public string Title { get; set; }
-        public decimal Price { get; set; }
+        public string Id { get; init; } = null!;
+        public string Title { get; init; } = null!;
+        public decimal Price { get; init; }
         public int Count { get; set; }
     }
     
@@ -324,7 +325,8 @@
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated is not true) return;
         
-        CanAccessRecentTransactions = (await AuthService.AuthorizeAsync(authState.User, StoreId, Policies.CanViewInvoices)).Succeeded;
+        CanAccessRecentTransactions = LoadRecentTransactions.HasDelegate &&
+            (await AuthService.AuthorizeAsync(authState.User, StoreId, Policies.CanViewInvoices)).Succeeded;
     }
 
     private async Task KeyPress(char key)
@@ -385,7 +387,6 @@
             str = str.PadLeft(divisibility + 1, '0');
             str = Regex.Replace(str, $"(\\d*)(\\d{{{divisibility}}})", "$1.$2");
         }
-
         return decimal.Parse(str, CultureInfo.InvariantCulture);
     }
 
@@ -442,7 +443,10 @@
         {
             data["tipPercentage"] = Model.TipPercent;
         }
-        return JsonSerializer.Serialize(data);
+        return JsonSerializer.Serialize(data, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
     }
 
     private List<InputMode> GetModes()
@@ -455,7 +459,9 @@
 
     private decimal GetAmount()
     {
-        return Model.Amounts.Count > 0 ? Model.Amounts.Sum() : Model.Amounts.FirstOrDefault();
+        var amt = Model.Amounts.Count > 0 ? Model.Amounts.Sum() : Model.Amounts.FirstOrDefault();
+        if (Model.Cart.Count > 0) amt += Model.Cart.Sum(item => item.Price * item.Count);
+        return amt;
     }
 
     private decimal GetDiscount()
@@ -491,18 +497,18 @@
         var hasAmounts = model.Amounts.Sum() > 0;
         var hasCart = model.Cart.Count > 0;
         var calc = "";
-        if (hasCart) calc += string.Join(" + ", model.Cart.Select(item => $"{item.Count} x ${item.Title} ({FormatCurrency(item.Price, true)}) = {FormatCurrency(item.Price * item.Count, true)}"));
+        if (hasCart) calc += string.Join(" + ", model.Cart.Select(item => $"{item.Count} x {item.Title} ({FormatCurrency(item.Price)}) = {FormatCurrency(item.Price * item.Count)}"));
         if (hasCart && hasAmounts) calc += " + ";
-        if (hasAmounts) calc += string.Join(" + ", model.Amounts.Select(amt => FormatCurrency(amt, true)));
+        if (hasAmounts) calc += string.Join(" + ", model.Amounts.Select(amt => FormatCurrency(amt)));
         var discount = GetDiscount();
-        if (discount > 0) calc += $" - {FormatCurrency(discount, true)} ({model.DiscountPercent}%)";
+        if (discount > 0) calc += $" - {FormatCurrency(discount)} ({model.DiscountPercent}%)";
         var tip = GetTip();
-        if (tip > 0) calc += $" + {FormatCurrency(tip, true)}";
+        if (tip > 0) calc += $" + {FormatCurrency(tip)}";
         if (model.TipPercent > 0) calc += $" ({model.TipPercent}%)";
         return calc;
     }
 
-    private string FormatCurrency(decimal value, bool withSymbol)
+    private string FormatCurrency(decimal value, bool withSymbol = true)
     {
         if (CurrencyCode is "BTC" or "SATS") return FormatCrypto(value, withSymbol);
         try {
@@ -539,7 +545,7 @@
     
     private bool DisplayItem(ViewPointOfSaleViewModel.Item item)
     {
-        if (string.IsNullOrWhiteSpace(Model.SearchTerm)) return InStock(item);
+        if (string.IsNullOrWhiteSpace(Model.SearchTerm)) return true;
         var search = Model.SearchTerm.ToLowerInvariant();
         return item.Title.ToLowerInvariant().Contains(search) || item.Description?.ToLowerInvariant().Contains(search) is true;
     }
@@ -548,7 +554,7 @@
     {
         if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
         if (item.Price == 0) return "free";
-        var formatted = FormatCurrency(item.Price ?? 0, true);
+        var formatted = FormatCurrency(item.Price ?? 0);
         return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
     }
     
@@ -595,11 +601,6 @@
         return cartItem;
     }
 
-    private void RemoveFromCart(ViewPointOfSaleViewModel.Item item) {
-        var cartItem = ItemInCart(item);
-        if (cartItem != null) RemoveFromCart(cartItem);
-    }
-
     private void RemoveFromCart(CartItem cartItem) {
         Model.Cart.Remove(cartItem);
     }
@@ -619,11 +620,12 @@
         if (cartItem.Count <= 0) RemoveFromCart(cartItem);
     }
 
-    private async Task LoadRecentTransactions()
+    private async Task HandleLoadRecentTransactions()
     {
         _recentTransactionsLoading = true;
         StateHasChanged();
-        RecentTransactions = null;
+        if (LoadRecentTransactions.HasDelegate)
+            await LoadRecentTransactions.InvokeAsync();
         _recentTransactionsLoading = false;
         StateHasChanged();
     }

@@ -1,0 +1,66 @@
+@using System.Globalization
+@using BTCPayServer.Controllers
+@using BTCPayServer.Plugins.PointOfSale
+@using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Services.Apps
+@using BTCPayServer.Services.Invoices
+@using Microsoft.AspNetCore.Mvc.Rendering
+@using Microsoft.AspNetCore.Routing
+@inject AppService AppService
+@inject LinkGenerator LinkGenerator
+@inject InvoiceRepository InvoiceRepository
+
+<Keypad StoreId="@StoreId" AppId="@AppId" CurrencyCode="@CurrencyCode" CurrencyInfo="@CurrencyInfo"
+        IsItemlistEnabled="@IsItemlistEnabled" IsDiscountEnabled="@IsDiscountEnabled" IsTipEnabled="@IsTipEnabled"
+        IsSearchEnabled="@IsSearchEnabled" IsCategoriesEnabled="@IsCategoriesEnabled" Categories="@Categories"
+        Items="@Items" CustomTipPercentages="@CustomTipPercentages"
+        RecentTransactions="@RecentTransactions" LoadRecentTransactions="@LoadRecentTransactions"/>
+
+@code {
+#nullable enable
+    [Parameter, EditorRequired]
+    public string StoreId { get; set; } = null!;
+    [Parameter, EditorRequired]
+    public string AppId { get; set; } = null!;
+    [Parameter, EditorRequired]
+    public string CurrencyCode { get; set; } = null!;
+    [Parameter]
+    public NumberFormatInfo? CurrencyInfo { get; set; }
+    [Parameter]
+    public bool IsItemlistEnabled { get; set; }
+    [Parameter]
+    public bool IsDiscountEnabled { get; set; }
+    [Parameter]
+    public bool IsTipEnabled { get; set; }
+    [Parameter]
+    public bool IsSearchEnabled { get; set; }
+    [Parameter]
+    public bool IsCategoriesEnabled { get; set; }
+    [Parameter]
+    public int[]? CustomTipPercentages { get; set; }
+    [Parameter]
+    public SelectList? Categories { get; set; }
+    [Parameter]
+    public IEnumerable<ViewPointOfSaleViewModel.Item>? Items { get; set; }
+    
+    private IEnumerable<Keypad.RecentTransaction>? RecentTransactions { get; set; }
+
+    private async Task LoadRecentTransactions()
+    {
+        var app = await AppService.GetApp(AppId, PointOfSaleAppType.AppType);
+        if (app == null) return;
+
+        var from = DateTimeOffset.UtcNow - TimeSpan.FromDays(3);
+        var invoices = await AppService.GetInvoicesForApp(InvoiceRepository, app, from);
+        RecentTransactions = invoices
+            .Take(10)
+            .Select(i => new Keypad.RecentTransaction
+            {
+                Id = i.Id,
+                Date = i.InvoiceTime,
+                Price = i.Price,
+                Status = i.GetInvoiceState().Status.ToString(),
+                Url = LinkGenerator.GetPathByAction(nameof(UIInvoiceController.Invoice), "UIInvoice", new { invoiceId = i.Id })
+            });
+    }
+}

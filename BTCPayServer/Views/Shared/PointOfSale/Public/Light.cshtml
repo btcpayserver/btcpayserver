@@ -23,7 +23,7 @@
             <partial name="PointOfSale/Public/MinimalLight" model="Model" />
         </noscript>
         <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" class="only-for-js my-auto">
-            <component type="typeof(BTCPayServer.Blazor.Keypad)" render-mode="ServerPrerendered"
+            <component type="typeof(BTCPayServer.Blazor.KeypadWrapper)" render-mode="ServerPrerendered"
                        param-StoreId="Model.StoreId"
                        param-AppId="Model.AppId"
                        param-CurrencyCode="Model.CurrencyCode"

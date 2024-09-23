@@ -482,6 +482,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("PaymentMethodId")
+                        .HasColumnType("text");
+
                     b.Property<bool?>("Accounted")
                         .HasColumnType("boolean");
 
@@ -506,10 +509,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("text");
 
-                    b.Property<string>("Type")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
+                    b.HasKey("Id", "PaymentMethodId");
 
                     b.HasIndex("InvoiceDataId");
 

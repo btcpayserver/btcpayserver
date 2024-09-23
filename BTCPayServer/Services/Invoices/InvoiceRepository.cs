@@ -101,7 +101,7 @@ namespace BTCPayServer.Services.Invoices
                     COALESCE(array_agg(to_jsonb(p)) FILTER (WHERE p."Id" IS NOT NULL), '{}') as payments,
                     (array_agg(to_jsonb(i)))[1] as invoice
                 FROM get_monitored_invoices(@pmi) m
-                LEFT JOIN "Payments" p ON p."Id" = m.payment_id
+                LEFT JOIN "Payments" p ON p."Id" = m.payment_id AND p."PaymentMethodId" = m.payment_id
                 LEFT JOIN "Invoices" i ON i."Id" = m.invoice_id
                 LEFT JOIN "AddressInvoices" ai ON i."Id" = ai."InvoiceDataId"
                 WHERE ai."PaymentMethodId" = @pmi

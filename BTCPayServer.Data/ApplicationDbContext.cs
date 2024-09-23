@@ -82,7 +82,7 @@ namespace BTCPayServer.Data
             PairingCodeData.OnModelCreating(builder);
             //PayjoinLock.OnModelCreating(builder);
             PaymentRequestData.OnModelCreating(builder, Database);
-            PaymentData.OnModelCreating(builder, Database);
+            PaymentData.OnModelCreating(builder);
             PayoutData.OnModelCreating(builder, Database);
             //PlannedTransaction.OnModelCreating(builder);
             PullPaymentData.OnModelCreating(builder, Database);

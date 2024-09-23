@@ -44,9 +44,9 @@ namespace BTCPayServer.Data
             }
 
             var cryptoCode = blob["cryptoCode"].Value<string>();
-            Type = cryptoCode + "_" + blob["cryptoPaymentDataType"].Value<string>();
-            Type = MigrationExtensions.MigratePaymentMethodId(Type);
-            var divisibility = MigrationExtensions.GetDivisibility(Type);
+            PaymentMethodId = cryptoCode + "_" + blob["cryptoPaymentDataType"].Value<string>();
+            PaymentMethodId = MigrationExtensions.MigratePaymentMethodId(PaymentMethodId);
+            var divisibility = MigrationExtensions.GetDivisibility(PaymentMethodId);
             Currency = blob["cryptoCode"].Value<string>();
             blob.Remove("cryptoCode");
             blob.Remove("cryptoPaymentDataType");

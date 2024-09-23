@@ -674,7 +674,7 @@ namespace BTCPayServer.Controllers
         private async Task<HashSet<string>> GetAddresses(PaymentMethodId paymentMethodId, string[] selectedItems)
         {
             using var ctx = _dbContextFactory.CreateContext();
-            return new HashSet<string>(await ctx.AddressInvoices.Where(i => i.PaymentMethodId == paymentMethodId.ToString() && selectedItems.Contains(i.InvoiceDataId)).Select(i => i.Address).ToArrayAsync());
+            return new HashSet<string>(await ctx.AddressInvoices.Where(i => selectedItems.Contains(i.InvoiceDataId) && i.PaymentMethodId == paymentMethodId.ToString()).Select(i => i.Address).ToArrayAsync());
         }
 
         [HttpGet("i/{invoiceId}")]

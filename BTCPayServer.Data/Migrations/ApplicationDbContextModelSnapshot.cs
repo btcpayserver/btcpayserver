@@ -60,16 +60,16 @@ namespace BTCPayServer.Migrations
 
             modelBuilder.Entity("BTCPayServer.Data.AddressInvoiceData", b =>
                 {
-                    b.Property<string>("PaymentMethodId")
+                    b.Property<string>("Address")
                         .HasColumnType("text");
 
-                    b.Property<string>("Address")
+                    b.Property<string>("PaymentMethodId")
                         .HasColumnType("text");
 
                     b.Property<string>("InvoiceDataId")
                         .HasColumnType("text");
 
-                    b.HasKey("PaymentMethodId", "Address");
+                    b.HasKey("Address", "PaymentMethodId");
 
                     b.HasIndex("InvoiceDataId");
 

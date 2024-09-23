@@ -33,13 +33,13 @@ namespace BTCPayServer.Migrations
                                          WHEN STRPOS((string_to_array("Address", '#'))[2], '_MoneroLike') > 0 THEN replace((string_to_array("Address", '#'))[2],'_MoneroLike','-CHAIN')
                                          WHEN STRPOS((string_to_array("Address", '#'))[2], '_ZcashLike') > 0 THEN replace((string_to_array("Address", '#'))[2],'_ZcashLike','-CHAIN')
                                          ELSE '' END;
-
+                ALTER TABLE "AddressInvoices" DROP COLUMN IF EXISTS "CreatedTime";
                 DELETE FROM "AddressInvoices" WHERE "PaymentMethodId" = '';
                 """);
             migrationBuilder.AddPrimaryKey(
                 name: "PK_AddressInvoices",
                 table: "AddressInvoices",
-                columns: new[] { "PaymentMethodId", "Address" });
+                columns: new[] { "Address", "PaymentMethodId" });
             migrationBuilder.Sql("VACUUM (ANALYZE) \"AddressInvoices\";", true);
         }
 

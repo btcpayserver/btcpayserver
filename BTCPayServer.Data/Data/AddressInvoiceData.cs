@@ -19,7 +19,7 @@ namespace BTCPayServer.Data
                    .WithMany(i => i.AddressInvoices).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<AddressInvoiceData>()
 #pragma warning disable CS0618
-                .HasKey(o => new { o.PaymentMethodId, o.Address });
+                .HasKey(o => new { o.Address, o.PaymentMethodId });
 #pragma warning restore CS0618
         }
     }

@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Migrations;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -636,6 +637,23 @@ retry:
         private static bool IsDeadlock(DbUpdateException ex)
         {
             return ex.InnerException is Npgsql.PostgresException postgres && postgres.SqlState == "40P01";
+        }
+
+        public async Task<bool> InternalNodePayoutAuthorized(string storeId)
+        {
+            using var ctx = _ContextFactory.CreateContext();
+            return (await ctx.Database.GetDbConnection().ExecuteScalarAsync<bool?>("""
+                SELECT TRUE
+                FROM "UserStore" us
+                JOIN "StoreRoles" sr ON sr."Id" = us."Role"
+                JOIN "AspNetUserRoles" ur ON us."ApplicationUserId" = ur."UserId"
+                JOIN "AspNetRoles" r ON ur."RoleId" = r."Id"
+                WHERE
+                      us."StoreDataId"=@storeId AND
+                      r."NormalizedName"='SERVERADMIN' AND
+                      'btcpay.store.canmodifystoresettings' = ANY(sr."Permissions")
+                LIMIT 1;
+                """, new { storeId })) is true;
         }
     }
 

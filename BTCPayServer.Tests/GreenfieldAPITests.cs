@@ -4122,7 +4122,12 @@ namespace BTCPayServer.Tests
             var resp = await tester.CustomerLightningD.Pay(inv.BOLT11);
             Assert.Equal(PayResult.Ok, resp.Result);
 
-
+            var store = tester.PayTester.GetService<StoreRepository>();
+            Assert.True(await store.InternalNodePayoutAuthorized(admin.StoreId));
+            Assert.False(await store.InternalNodePayoutAuthorized("blah"));
+            await admin.MakeAdmin(false);
+            Assert.False(await store.InternalNodePayoutAuthorized(admin.StoreId));
+            await admin.MakeAdmin(true);
 
             var customerInvoice = await tester.CustomerLightningD.CreateInvoice(LightMoney.FromUnit(10, LightMoneyUnit.Satoshi),
                 Guid.NewGuid().ToString(), TimeSpan.FromDays(40));

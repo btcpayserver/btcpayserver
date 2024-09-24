@@ -211,29 +211,12 @@ namespace BTCPayServer.Hosting
                     settings.MigrateToStoreConfig = true;
                     await _Settings.UpdateSetting(settings);
                 }
-                if (!settings.MigratePayoutProcessors)
-                {
-                    await MigratePayoutProcessors();
-                    settings.MigratePayoutProcessors = true;
-                    await _Settings.UpdateSetting(settings);
-                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
-        }
-
-        private async Task MigratePayoutProcessors()
-        {
-            await using var ctx = _DBContextFactory.CreateContext();
-            var processors = await ctx.PayoutProcessors.ToArrayAsync();
-            foreach (var processor in processors)
-            {
-                processor.PayoutMethodId = processor.GetPayoutMethodId().ToString();
-            }
-            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateToStoreConfig()

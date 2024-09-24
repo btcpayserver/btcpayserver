@@ -30,10 +30,10 @@ namespace BTCPayServer.Migrations
             migrationBuilder.Sql("""
                 UPDATE "PayoutProcessors"
                 SET
-                "PaymentMethodId" = CASE WHEN STRPOS("PaymentMethodId", '_') = 0 THEN "PaymentMethodId" || '-CHAIN'
-                                    CASE WHEN STRPOS("PaymentMethodId", '_LightningLike') = 0 THEN "PaymentMethodId" || '-LN'
-                                    CASE WHEN STRPOS("PaymentMethodId", '_LNURLPAY') = 0 THEN "PaymentMethodId" || '-LN'
-                                    ELSE "PaymentMethodId" END;
+                "PayoutMethodId" = CASE WHEN STRPOS("PayoutMethodId", '_') = 0 THEN "PayoutMethodId" || '-CHAIN'
+                                        WHEN STRPOS("PayoutMethodId", '_LightningLike') = 0 THEN "PayoutMethodId" || '-LN'
+                                        WHEN STRPOS("PayoutMethodId", '_LNURLPAY') = 0 THEN "PayoutMethodId" || '-LN'
+                                        ELSE "PayoutMethodId" END;
                 """);
         }
 

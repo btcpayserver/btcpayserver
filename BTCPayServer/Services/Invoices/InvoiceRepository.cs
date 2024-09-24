@@ -104,13 +104,8 @@ namespace BTCPayServer.Services.Invoices
         /// <returns></returns>
         public async Task<InvoiceEntity[]> GetMonitoredInvoices(PaymentMethodId paymentMethodId, bool includeNonActivated, CancellationToken cancellationToken = default)
         {
-            var pmi = paymentMethodId.ToString();
             using var ctx = _applicationDbContextFactory.CreateContext();
             var conn = ctx.Database.GetDbConnection();
-
-            string includeNonActivateQuery = String.Empty;
-            if (includeNonActivated)
-                includeNonActivateQuery = " AND (get_prompt(i.\"Blob2\", @pmi)->'activated')::BOOLEAN IS NOT FALSE)";
 
             var rows = await conn.QueryAsync<(string Id, uint xmin, string[] addresses, string[] payments, string invoice)>(new("""
                 SELECT
@@ -123,7 +118,6 @@ namespace BTCPayServer.Services.Invoices
                 LEFT JOIN "Payments" p ON p."Id" = m.payment_id AND p."PaymentMethodId" = m.payment_method_id
                 LEFT JOIN "Invoices" i ON i."Id" = m.invoice_id
                 LEFT JOIN "AddressInvoices" ai ON i."Id" = ai."InvoiceDataId"
-                WHERE ai."PaymentMethodId" = @pmi
                 GROUP BY i."Id";
                 """
                 , new { pmi = paymentMethodId.ToString(), includeNonActivated }));

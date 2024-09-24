@@ -108,17 +108,27 @@ namespace BTCPayServer.Services.Invoices
             var conn = ctx.Database.GetDbConnection();
 
             var rows = await conn.QueryAsync<(string Id, uint xmin, string[] addresses, string[] payments, string invoice)>(new("""
+                WITH invoices_payments AS (
                 SELECT
-                    i."Id",
-                    i.xmin,
-                    array_agg(ai."Address") addresses,
-                    COALESCE(array_agg(to_jsonb(p)) FILTER (WHERE p."Id" IS NOT NULL), '{}') as payments,
-                    (array_agg(to_jsonb(i)))[1] as invoice
+                    m.invoice_id,
+                    array_agg(to_jsonb(p)) FILTER (WHERE p."Id" IS NOT NULL) as payments
                 FROM get_monitored_invoices(@pmi, @includeNonActivated) m
                 LEFT JOIN "Payments" p ON p."Id" = m.payment_id AND p."PaymentMethodId" = m.payment_method_id
-                LEFT JOIN "Invoices" i ON i."Id" = m.invoice_id
-                LEFT JOIN "AddressInvoices" ai ON i."Id" = ai."InvoiceDataId"
-                GROUP BY i."Id";
+                GROUP BY 1
+                ),
+                invoices_addresses AS (
+                SELECT m.invoice_id,
+                       array_agg(ai."Address") addresses
+                FROM get_monitored_invoices(@pmi, @includeNonActivated) m
+                JOIN "AddressInvoices" ai ON ai."InvoiceDataId" = m.invoice_id
+                WHERE ai."PaymentMethodId" = @pmi
+                GROUP BY 1
+                )
+                SELECT
+                    ip.invoice_id, i.xmin, COALESCE(ia.addresses, '{}'), COALESCE(ip.payments, '{}'), to_jsonb(i)
+                FROM invoices_payments ip
+                JOIN "Invoices" i ON i."Id" = ip.invoice_id
+                LEFT JOIN invoices_addresses ia ON ia.invoice_id = ip.invoice_id;
                 """
                 , new { pmi = paymentMethodId.ToString(), includeNonActivated }));
             if (Enumerable.TryGetNonEnumeratedCount(rows, out var c) && c == 0)

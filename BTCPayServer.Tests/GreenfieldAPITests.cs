@@ -2717,8 +2717,8 @@ namespace BTCPayServer.Tests
             var includeNonActivated = true;
             Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), includeNonActivated), i => i.Id == invoice.Id);
             includeNonActivated = false;
-            Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), includeNonActivated), i => i.Id == invoice.Id);
-            Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN")), i => i.Id == invoice.Id);
+            Assert.DoesNotContain(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), includeNonActivated), i => i.Id == invoice.Id);
+            Assert.DoesNotContain(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN")), i => i.Id == invoice.Id);
             //
 
             paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);

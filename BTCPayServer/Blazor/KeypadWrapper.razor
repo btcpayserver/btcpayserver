@@ -4,7 +4,6 @@
 @using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Services.Invoices
-@using Microsoft.AspNetCore.Mvc.Rendering
 @using Microsoft.AspNetCore.Routing
 @inject AppService AppService
 @inject LinkGenerator LinkGenerator
@@ -39,7 +38,7 @@
     [Parameter]
     public int[]? CustomTipPercentages { get; set; }
     [Parameter]
-    public SelectList? Categories { get; set; }
+    public IEnumerable<string>? Categories { get; set; }
     [Parameter]
     public IEnumerable<ViewPointOfSaleViewModel.Item>? Items { get; set; }
     

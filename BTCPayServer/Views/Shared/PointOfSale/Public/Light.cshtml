@@ -33,7 +33,7 @@
                        param-IsTipEnabled="@Model.EnableTips"
                        param-IsSearchEnabled="@Model.ShowSearch"
                        param-IsCategoriesEnabled="@Model.ShowCategories"
-                       param-Categories="@Model.AllCategories.Select(c => c.Text).ToList()"
+                       param-Categories="@Model.AllCategories?.Select(c => c.Text).ToList()"
                        param-Items="@Model.Items"
                        param-CustomTipPercentages="@Model.CustomTipPercentages" />
         </form>

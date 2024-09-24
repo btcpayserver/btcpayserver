@@ -29,7 +29,7 @@ public abstract class BlobMigratorHostedService<TEntity> : IHostedService
         public bool Complete { get; set; }
     }
     Task? _Migrating;
-    TaskCompletionSource _Cts = new TaskCompletionSource();
+    CancellationTokenSource? _Cts;
     public BlobMigratorHostedService(
         ILogger logs,
         ISettingsRepository settingsRepository,
@@ -46,7 +46,8 @@ public abstract class BlobMigratorHostedService<TEntity> : IHostedService
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _Migrating = Migrate(cancellationToken);
+        _Cts = new CancellationTokenSource();
+        _Migrating = Migrate(_Cts.Token);
         return Task.CompletedTask;
     }
     public int BatchSize { get; set; } = 1000;
@@ -61,47 +62,57 @@ public abstract class BlobMigratorHostedService<TEntity> : IHostedService
         else
             Logs.LogInformation("Migrating from the beginning");
 
+
         int batchSize = BatchSize;
+retry:
         while (!cancellationToken.IsCancellationRequested)
         {
-retry:
-            List<TEntity> entities;
-            DateTimeOffset progress;
-            await using (var ctx = ApplicationDbContextFactory.CreateContext(o => o.CommandTimeout((int)TimeSpan.FromDays(1.0).TotalSeconds)))
+            try
             {
-                var query = GetQuery(ctx, settings?.Progress).Take(batchSize);
-                entities = await query.ToListAsync(cancellationToken);
-                if (entities.Count == 0)
+                List<TEntity> entities;
+                DateTimeOffset progress;
+                await using (var ctx = ApplicationDbContextFactory.CreateContext(o => o.CommandTimeout((int)TimeSpan.FromDays(1.0).TotalSeconds)))
                 {
-                    var count = await GetQuery(ctx, null).CountAsync(cancellationToken);
-                    if (count != 0)
+                    var query = GetQuery(ctx, settings?.Progress).Take(batchSize);
+                    entities = await query.ToListAsync(cancellationToken);
+                    if (entities.Count == 0)
                     {
-                        settings = new Settings() { Progress = null };
-                        Logs.LogWarning("Corruption detected, reindexing the table...");
-                        await Reindex(ctx, cancellationToken);
+                        var count = await GetQuery(ctx, null).CountAsync(cancellationToken);
+                        if (count != 0)
+                        {
+                            settings = new Settings() { Progress = null };
+                            Logs.LogWarning("Corruption detected, reindexing the table...");
+                            await Reindex(ctx, cancellationToken);
+                            goto retry;
+                        }
+                        await SettingsRepository.UpdateSetting<Settings>(new Settings() { Complete = true }, SettingsKey);
+                        Logs.LogInformation("Migration completed");
+                        await PostMigrationCleanup(ctx, cancellationToken);
+                        return;
+                    }
+
+                    try
+                    {
+                        progress = ProcessEntities(ctx, entities);
+                        await ctx.SaveChangesAsync();
+                        batchSize = BatchSize;
+                    }
+                    catch (Exception ex) when (ex is DbUpdateConcurrencyException or TimeoutException or OperationCanceledException)
+                    {
+                        batchSize /= 2;
+                        batchSize = Math.Max(1, batchSize);
                         goto retry;
                     }
-                    await SettingsRepository.UpdateSetting<Settings>(new Settings() { Complete = true }, SettingsKey);
-                    Logs.LogInformation("Migration completed");
-                    await PostMigrationCleanup(ctx, cancellationToken);
-                    return;
                 }
 
-                try
-                {
-                    progress = ProcessEntities(ctx, entities);
-                    await ctx.SaveChangesAsync();
-                    batchSize = BatchSize;
-                }
-                catch (Exception ex) when (ex is DbUpdateConcurrencyException or TimeoutException or OperationCanceledException)
-                {
-                    batchSize /= 2;
-                    batchSize = Math.Max(1, batchSize);
-                    goto retry;
-                }
+                settings = new Settings() { Progress = progress };
+                await SettingsRepository.UpdateSetting<Settings>(settings, SettingsKey);
             }
-            settings = new Settings() { Progress = progress };
-            await SettingsRepository.UpdateSetting<Settings>(settings, SettingsKey);
+            catch (Exception ex)
+            {
+                Logs.LogError(ex, "Error while migrating");
+                goto retry;
+            }
         }
     }
 
@@ -121,11 +132,7 @@ retry:
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
-        _Cts.TrySetCanceled();
-        return (_Migrating ?? Task.CompletedTask).ContinueWith(t =>
-        {
-            if (t.IsFaulted)
-                Logs.LogError(t.Exception, "Error while migrating");
-        });
+        _Cts?.Cancel();
+        return _Migrating ?? Task.CompletedTask;
     }
 }

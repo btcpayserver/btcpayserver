@@ -265,8 +265,8 @@ namespace BTCPayServer.Payments.PayJoin
                 if (walletReceiveMatch is null)
                 {
 
-                    var key = output.ScriptPubKey.Hash + "#" + network.CryptoCode.ToUpperInvariant();
-                    invoice = (await _invoiceRepository.GetInvoicesFromAddresses(new[] { key })).FirstOrDefault();
+                    var key = network.GetTrackedDestination(output.ScriptPubKey);
+                    invoice = await _invoiceRepository.GetInvoiceFromAddress(paymentMethodId, key);
                     if (invoice is null)
                         continue;
                     accountDerivation = _handlers.GetDerivationStrategy(invoice, network);

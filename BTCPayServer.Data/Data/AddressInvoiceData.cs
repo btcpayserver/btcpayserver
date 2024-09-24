@@ -9,6 +9,7 @@ namespace BTCPayServer.Data
         public string Address { get; set; }
         public InvoiceData InvoiceData { get; set; }
         public string InvoiceDataId { get; set; }
+        public string PaymentMethodId { get; set; }
 
 
         internal static void OnModelCreating(ModelBuilder builder)
@@ -18,7 +19,7 @@ namespace BTCPayServer.Data
                    .WithMany(i => i.AddressInvoices).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<AddressInvoiceData>()
 #pragma warning disable CS0618
-                .HasKey(o => o.Address);
+                .HasKey(o => new { o.Address, o.PaymentMethodId });
 #pragma warning restore CS0618
         }
     }

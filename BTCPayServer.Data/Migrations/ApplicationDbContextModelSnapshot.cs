@@ -63,10 +63,13 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
+                    b.Property<string>("PaymentMethodId")
+                        .HasColumnType("text");
+
                     b.Property<string>("InvoiceDataId")
                         .HasColumnType("text");
 
-                    b.HasKey("Address");
+                    b.HasKey("Address", "PaymentMethodId");
 
                     b.HasIndex("InvoiceDataId");
 
@@ -479,6 +482,9 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("PaymentMethodId")
+                        .HasColumnType("text");
+
                     b.Property<bool?>("Accounted")
                         .HasColumnType("boolean");
 
@@ -503,10 +509,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("text");
 
-                    b.Property<string>("Type")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
+                    b.HasKey("Id", "PaymentMethodId");
 
                     b.HasIndex("InvoiceDataId");
 
@@ -632,16 +635,6 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("StoreId");
 
                     b.ToTable("PayoutProcessors");
-                });
-
-            modelBuilder.Entity("BTCPayServer.Data.PendingInvoiceData", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("PendingInvoices");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.PlannedTransaction", b =>
@@ -1331,17 +1324,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Store");
                 });
 
-            modelBuilder.Entity("BTCPayServer.Data.PendingInvoiceData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
-                        .WithMany("PendingInvoices")
-                        .HasForeignKey("Id")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("InvoiceData");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.PullPaymentData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
@@ -1571,8 +1553,6 @@ namespace BTCPayServer.Migrations
                     b.Navigation("InvoiceSearchData");
 
                     b.Navigation("Payments");
-
-                    b.Navigation("PendingInvoices");
 
                     b.Navigation("Refunds");
                 });

@@ -14,6 +14,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -255,8 +256,17 @@ namespace BTCPayServer.HostedServices
 
         private async Task WaitPendingInvoices()
         {
-            await Task.WhenAll((await _invoiceRepository.GetPendingInvoices())
+            await Task.WhenAll((await GetPendingInvoices(_Cts.Token))
                 .Select(i => Wait(i)).ToArray());
+        }
+
+        private async Task<InvoiceEntity[]> GetPendingInvoices(CancellationToken cancellationToken)
+        {
+            using var ctx = _invoiceRepository.DbContextFactory.CreateContext();
+            var rows = await ctx.Invoices.Where(i => Data.InvoiceData.IsPending(i.Status))
+                                                .Select(o => o).ToArrayAsync(cancellationToken);
+            var invoices = rows.Select(_invoiceRepository.ToEntity).ToArray();
+            return invoices;
         }
 
         async Task StartLoop(CancellationToken cancellation)

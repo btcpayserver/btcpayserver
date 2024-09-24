@@ -26,7 +26,6 @@ namespace BTCPayServer.Data
         public string ExceptionStatus { get; set; }
         public List<AddressInvoiceData> AddressInvoices { get; set; }
         public bool Archived { get; set; }
-        public List<PendingInvoiceData> PendingInvoices { get; set; }
         public List<InvoiceSearchData> InvoiceSearchData { get; set; }
         public List<RefundData> Refunds { get; set; }
 

@@ -649,9 +649,7 @@ namespace BTCPayServer.Controllers
                     if (derivationScheme is null)
                         return NotSupported("This feature is only available to BTC wallets");
                     var btc = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
-                    var bumpableAddresses = (await GetAddresses(selectedItems))
-                                            .Where(p => p.GetPaymentMethodId() == btc)
-                                            .Select(p => p.GetAddress()).ToHashSet();
+                    var bumpableAddresses = await GetAddresses(btc, selectedItems);
                     var utxos = await explorer.GetUTXOsAsync(derivationScheme);
                     var bumpableUTXOs = utxos.GetUnspentUTXOs().Where(u => u.Confirmations == 0 && bumpableAddresses.Contains(u.ScriptPubKey.Hash.ToString())).ToArray();
                     var parameters = new MultiValueDictionary<string, string>();
@@ -673,10 +671,10 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListInvoices), new { storeId });
         }
 
-        private async Task<AddressInvoiceData[]> GetAddresses(string[] selectedItems)
+        private async Task<HashSet<string>> GetAddresses(PaymentMethodId paymentMethodId, string[] selectedItems)
         {
             using var ctx = _dbContextFactory.CreateContext();
-            return await ctx.AddressInvoices.Where(i => selectedItems.Contains(i.InvoiceDataId)).ToArrayAsync();
+            return new HashSet<string>(await ctx.AddressInvoices.Where(i => selectedItems.Contains(i.InvoiceDataId) && i.PaymentMethodId == paymentMethodId.ToString()).Select(i => i.Address).ToArrayAsync());
         }
 
         [HttpGet("i/{invoiceId}")]

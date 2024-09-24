@@ -19,6 +19,26 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public async Task CanMigrateInvoiceAddresses()
+        {
+            var tester = CreateDBTester();
+            await tester.MigrateUntil("20240919085726_refactorinvoiceaddress");
+            using var ctx = tester.CreateContext();
+            var conn = ctx.Database.GetDbConnection();
+            await conn.ExecuteAsync("INSERT INTO \"Invoices\" (\"Id\", \"Created\") VALUES ('i', NOW())");
+            await conn.ExecuteAsync(
+                "INSERT INTO \"AddressInvoices\" VALUES ('aaa#BTC', 'i'),('bbb','i'),('ccc#BTC_LNU', 'i'),('ddd#XMR_MoneroLike', 'i'),('eee#ZEC_ZcashLike', 'i')");
+            await tester.ContinueMigration();
+            foreach (var v in new[] { ("aaa", "BTC-CHAIN"), ("bbb", "BTC-CHAIN"), ("ddd", "XMR-CHAIN") , ("eee", "ZEC-CHAIN") })
+            {
+                var ok = await conn.ExecuteScalarAsync<bool>("SELECT 't'::BOOLEAN FROM \"AddressInvoices\" WHERE \"Address\"=@a AND \"PaymentMethodId\"=@b", new { a = v.Item1, b = v.Item2 });
+                Assert.True(ok);
+            }
+            var notok = await conn.ExecuteScalarAsync<bool>("SELECT 't'::BOOLEAN FROM \"AddressInvoices\" WHERE \"Address\"='ccc'");
+            Assert.False(notok);
+        }
+
+        [Fact]
         public async Task CanMigratePayoutsAndPullPayments()
         {
             var tester = CreateDBTester();

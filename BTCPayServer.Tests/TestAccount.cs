@@ -698,11 +698,13 @@ retry:
                 await writer.FlushAsync();
             }
             isHeader = true;
-            using (var writer = db.BeginTextImport("COPY \"Payments\" (\"Id\",\"Blob\",\"InvoiceDataId\",\"Accounted\",\"Blob2\",\"Type\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            using (var writer = db.BeginTextImport("COPY \"Payments\" (\"Id\",\"Blob\",\"InvoiceDataId\",\"Accounted\",\"Blob2\",\"PaymentMethodId\") FROM STDIN DELIMITER ',' CSV HEADER"))
             {
                 foreach (var invoice in oldPayments)
                 {
                     var localPayment = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
+                    // Old data could have Type to null.
+                    localPayment += "UNKNOWN";
                     await writer.WriteLineAsync(localPayment);
                 }
                 await writer.FlushAsync();

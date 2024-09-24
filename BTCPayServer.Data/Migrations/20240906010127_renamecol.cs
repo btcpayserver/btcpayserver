@@ -26,6 +26,15 @@ namespace BTCPayServer.Migrations
              name: "PaymentMethod",
              table: "PayoutProcessors",
              newName: "PayoutMethodId");
+
+            migrationBuilder.Sql("""
+                UPDATE "PayoutProcessors"
+                SET
+                "PayoutMethodId" = CASE WHEN STRPOS("PayoutMethodId", '_') = 0 THEN "PayoutMethodId" || '-CHAIN'
+                                        WHEN STRPOS("PayoutMethodId", '_LightningLike') = 0 THEN "PayoutMethodId" || '-LN'
+                                        WHEN STRPOS("PayoutMethodId", '_LNURLPAY') = 0 THEN "PayoutMethodId" || '-LN'
+                                        ELSE "PayoutMethodId" END;
+                """);
         }
 
         /// <inheritdoc />

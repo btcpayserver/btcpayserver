@@ -1973,6 +1973,7 @@ namespace BTCPayServer.Tests
             var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             SetTransactionOutput(s, 0, jack, 0.01m);
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
+            s.Driver.WaitForElement(By.CssSelector("button[value=broadcast]"));
             Assert.Contains(jack.ToString(), s.Driver.PageSource);
             Assert.Contains("0.01000000", s.Driver.PageSource);
             Assert.EndsWith("psbt/ready", s.Driver.Url);

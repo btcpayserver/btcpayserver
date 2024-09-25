@@ -1,6 +1,4 @@
-using System;
 using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
@@ -9,17 +7,20 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240405052858_cleanup_address_invoices")]
-    public partial class cleanup_address_invoices : Migration
+    [Migration("20240923071444_temprefactor2")]
+    public partial class temprefactor2 : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.Sql(@"
-DELETE FROM ""AddressInvoices"" WHERE ""Address"" LIKE '%_LightningLike';
-ALTER TABLE ""AddressInvoices"" DROP COLUMN IF EXISTS ""CreatedTime"";
-");
-            migrationBuilder.Sql(@"VACUUM (FULL, ANALYZE) ""AddressInvoices"";", true);
+            migrationBuilder.DropPrimaryKey(
+                name: "PK_AddressInvoices",
+                table: "AddressInvoices");
+
+            migrationBuilder.AddPrimaryKey(
+                name: "PK_AddressInvoices",
+                table: "AddressInvoices",
+                columns: new[] { "Address", "PaymentMethodId" });
         }
 
         /// <inheritdoc />

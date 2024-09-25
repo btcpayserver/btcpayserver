@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Migrations;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using NBitcoin;
 using NBitcoin.Altcoins;
 using NBitcoin.DataEncoders;
@@ -44,9 +46,10 @@ namespace BTCPayServer.Data
             }
 
             var cryptoCode = blob["cryptoCode"].Value<string>();
-            Type = cryptoCode + "_" + blob["cryptoPaymentDataType"].Value<string>();
-            Type = MigrationExtensions.MigratePaymentMethodId(Type);
-            var divisibility = MigrationExtensions.GetDivisibility(Type);
+            MigratedPaymentMethodId = PaymentMethodId;
+            PaymentMethodId = cryptoCode + "_" + blob["cryptoPaymentDataType"].Value<string>();
+            PaymentMethodId = MigrationExtensions.MigratePaymentMethodId(PaymentMethodId);
+            var divisibility = MigrationExtensions.GetDivisibility(PaymentMethodId);
             Currency = blob["cryptoCode"].Value<string>();
             blob.Remove("cryptoCode");
             blob.Remove("cryptoPaymentDataType");
@@ -163,6 +166,9 @@ namespace BTCPayServer.Data
         }
         [NotMapped]
         public bool Migrated { get; set; }
+        [NotMapped]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public string MigratedPaymentMethodId { get; set; }
 
         static readonly DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
         public static long DateTimeToMilliUnixTime(in DateTime time)

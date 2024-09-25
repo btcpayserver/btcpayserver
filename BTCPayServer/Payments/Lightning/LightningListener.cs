@@ -18,6 +18,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -71,65 +72,68 @@ namespace BTCPayServer.Payments.Lightning
         bool needCheckOfflinePayments = true;
         async Task CheckingInvoice(CancellationToken cancellation)
         {
-retry:
-            try
+            var pmis = _handlers.Where(h => h is LightningLikePaymentHandler).Select(handler => handler.PaymentMethodId).ToArray();
+            foreach (var pmi in pmis)
             {
-                Logs.PayServer.LogInformation("Checking if any payment arrived on lightning while the server was offline...");
-                foreach (var invoice in await _InvoiceRepository.GetPendingInvoices(cancellationToken: cancellation))
+retry:
+                try
                 {
-                    if (GetListenedInvoices(invoice).Count > 0)
+                    Logs.PayServer.LogInformation("Checking if any payment arrived on lightning while the server was offline...");
+                    foreach (var invoice in await _InvoiceRepository.GetMonitoredInvoices(pmi, cancellation))
                     {
-                        _CheckInvoices.Writer.TryWrite(invoice.Id);
-                        _memoryCache.Set(GetCacheKey(invoice.Id), invoice, GetExpiration(invoice));
-                    }
-                }
-                needCheckOfflinePayments = false;
-                Logs.PayServer.LogInformation("Processing lightning payments...");
-
-
-
-                while (await _CheckInvoices.Reader.WaitToReadAsync(cancellation) &&
-                            _CheckInvoices.Reader.TryRead(out var invoiceId))
-                {
-                    var invoice = await GetInvoice(invoiceId);
-
-                    foreach (var listenedInvoice in GetListenedInvoices(invoice))
-                    {
-                        var store = await GetStore(invoice.StoreId);
-                        var lnConfig = _handlers.GetLightningConfig(store, listenedInvoice.Network);
-                        if (lnConfig is null)
-                            continue;
-                        var connStr = GetLightningUrl(listenedInvoice.Network.CryptoCode, lnConfig);
-                        if (connStr is null)
-                            continue;
-                        var instanceListenerKey = (listenedInvoice.Network.CryptoCode, connStr.ToString());
-                        lock (_InstanceListeners)
+                        if (GetListenedInvoices(invoice).Count > 0)
                         {
-                            if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener))
-                            {
-                                instanceListener ??= new LightningInstanceListener(_InvoiceRepository, _Aggregator, lightningClientFactory, listenedInvoice.Network, _handlers, connStr, _paymentService, Logs);
-                                _InstanceListeners.TryAdd(instanceListenerKey, instanceListener);
-                            }
-                            instanceListener.AddListenedInvoice(listenedInvoice);
-                            _ = instanceListener.PollPayment(listenedInvoice, cancellation);
+                            _CheckInvoices.Writer.TryWrite(invoice.Id);
+                            _memoryCache.Set(GetCacheKey(invoice.Id), invoice, GetExpiration(invoice));
                         }
                     }
+                    needCheckOfflinePayments = false;
+                    Logs.PayServer.LogInformation("Processing lightning payments...");
 
-                    if (_CheckInvoices.Reader.Count is 0)
-                        this.CheckConnections();
+
+
+                    while (await _CheckInvoices.Reader.WaitToReadAsync(cancellation) &&
+                                _CheckInvoices.Reader.TryRead(out var invoiceId))
+                    {
+                        var invoice = await GetInvoice(invoiceId);
+
+                        foreach (var listenedInvoice in GetListenedInvoices(invoice))
+                        {
+                            var store = await GetStore(invoice.StoreId);
+                            var lnConfig = _handlers.GetLightningConfig(store, listenedInvoice.Network);
+                            if (lnConfig is null)
+                                continue;
+                            var connStr = GetLightningUrl(listenedInvoice.Network.CryptoCode, lnConfig);
+                            if (connStr is null)
+                                continue;
+                            var instanceListenerKey = (listenedInvoice.Network.CryptoCode, connStr.ToString());
+                            lock (_InstanceListeners)
+                            {
+                                if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener))
+                                {
+                                    instanceListener ??= new LightningInstanceListener(_InvoiceRepository, _Aggregator, lightningClientFactory, listenedInvoice.Network, _handlers, connStr, _paymentService, Logs);
+                                    _InstanceListeners.TryAdd(instanceListenerKey, instanceListener);
+                                }
+                                instanceListener.AddListenedInvoice(listenedInvoice);
+                                _ = instanceListener.PollPayment(listenedInvoice, cancellation);
+                            }
+                        }
+
+                        if (_CheckInvoices.Reader.Count is 0)
+                            this.CheckConnections();
+                    }
+                }
+                catch when (cancellation.IsCancellationRequested)
+                {
+                }
+                catch (Exception ex)
+                {
+                    await Task.Delay(1000, cancellation);
+                    Logs.PayServer.LogWarning(ex, "Unhandled error in the LightningListener");
+                    goto retry;
                 }
             }
-            catch when (cancellation.IsCancellationRequested)
-            {
-            }
-            catch (Exception ex)
-            {
-                await Task.Delay(1000, cancellation);
-                Logs.PayServer.LogWarning(ex, "Unhandled error in the LightningListener");
-                goto retry;
-            }
         }
-
 
         private string GetCacheKey(string invoiceId)
         {

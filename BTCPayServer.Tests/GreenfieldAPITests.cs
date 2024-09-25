@@ -14,6 +14,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.NTag424;
+using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
@@ -2711,6 +2712,14 @@ namespace BTCPayServer.Tests
             invoiceObject = await client.GetOnChainWalletObject(user.StoreId, "BTC", new OnChainWalletObjectId("invoice", invoice.Id), false);
             Assert.DoesNotContain(invoiceObject.Links.Select(l => l.Type), t => t == "address");
 
+            // Check if we can get the monitored invoice
+            var invoiceRepo = tester.PayTester.GetService<InvoiceRepository>();
+            var includeNonActivated = true;
+            Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), includeNonActivated), i => i.Id == invoice.Id);
+            includeNonActivated = false;
+            Assert.DoesNotContain(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), includeNonActivated), i => i.Id == invoice.Id);
+            Assert.DoesNotContain(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN")), i => i.Id == invoice.Id);
+            //
 
             paymentMethods = await client.GetInvoicePaymentMethods(store.Id, invoice.Id);
             Assert.Single(paymentMethods);
@@ -4113,7 +4122,12 @@ namespace BTCPayServer.Tests
             var resp = await tester.CustomerLightningD.Pay(inv.BOLT11);
             Assert.Equal(PayResult.Ok, resp.Result);
 
-
+            var store = tester.PayTester.GetService<StoreRepository>();
+            Assert.True(await store.InternalNodePayoutAuthorized(admin.StoreId));
+            Assert.False(await store.InternalNodePayoutAuthorized("blah"));
+            await admin.MakeAdmin(false);
+            Assert.False(await store.InternalNodePayoutAuthorized(admin.StoreId));
+            await admin.MakeAdmin(true);
 
             var customerInvoice = await tester.CustomerLightningD.CreateInvoice(LightMoney.FromUnit(10, LightMoneyUnit.Satoshi),
                 Guid.NewGuid().ToString(), TimeSpan.FromDays(40));

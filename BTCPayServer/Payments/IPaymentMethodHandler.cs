@@ -280,7 +280,7 @@ namespace BTCPayServer.Payments
         /// <summary>
         /// This string can be used to query AddressInvoice to find the invoiceId
         /// </summary>
-        public List<string> TrackedDestinations { get; } = new List<string>();
+        public List<string> TrackedDestinations { get; } = new();
 
         internal async Task BeforeFetchingRates()
         {

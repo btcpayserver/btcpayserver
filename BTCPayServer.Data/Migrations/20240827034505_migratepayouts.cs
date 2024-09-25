@@ -31,9 +31,9 @@ namespace BTCPayServer.Migrations
                 UPDATE "PayoutProcessors"
                 SET
                 "PayoutMethodId" = CASE WHEN STRPOS("PayoutMethodId", '_') = 0 THEN "PayoutMethodId" || '-CHAIN'
-                                        WHEN STRPOS("PayoutMethodId", '_LightningLike') = 0 THEN "PayoutMethodId" || '-LN'
-                                        WHEN STRPOS("PayoutMethodId", '_LNURLPAY') = 0 THEN "PayoutMethodId" || '-LN'
-                                        ELSE "PayoutMethodId" END;
+                                        WHEN STRPOS("PayoutMethodId", '_LightningLike') > 0 THEN split_part("PayoutMethodId", '_LightningLike', 1) || '-LN'
+                                        WHEN STRPOS("PayoutMethodId", '_LNURLPAY') > 0 THEN split_part("PayoutMethodId",'_LNURLPAY', 1) || '-LN'
+                                        ELSE "PayoutMethodId" END
                 """);
         }
     }

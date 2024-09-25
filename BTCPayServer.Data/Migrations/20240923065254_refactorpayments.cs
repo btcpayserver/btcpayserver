@@ -9,7 +9,6 @@ namespace BTCPayServer.Migrations
 
     [DbContext(typeof(ApplicationDbContext))]
     [Migration("20240923065254_refactorpayments")]
-    [DBScript("005.PaymentsRenaming.sql")]
     public partial class refactorpayments : DBScriptsMigration
     {
         /// <inheritdoc />

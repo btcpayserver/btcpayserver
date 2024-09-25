@@ -95,8 +95,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
                 }
             }, nameof(SelectListItem.Value), nameof(SelectListItem.Text), RedirectAutomatically);
 
-        [Display(Name = "Language")]
-        public string Lang { get; set; }
+        public string Language { get; set; }
 
         [Display(Name = "HTML Head Tags")]
         public string HeadHtmlTags { get; set; }

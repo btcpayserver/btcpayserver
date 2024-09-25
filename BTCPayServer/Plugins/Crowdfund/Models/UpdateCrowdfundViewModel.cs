@@ -27,8 +27,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string Tagline { get; set; }
 
 
-        [Display(Name = "Language")]
-        public string Lang { get; set; }
+        public string Language { get; set; }
 
         [Display(Name = "HTML Head Tags")]
         public string HeadHtmlTags { get; set; }

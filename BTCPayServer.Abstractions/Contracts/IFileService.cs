@@ -14,4 +14,5 @@ public interface IFileService
     Task<string?> GetTemporaryFileUrl(Uri baseUri, string fileId, DateTimeOffset expiry,
         bool isDownload);
     Task RemoveFile(string fileId, string userId);
+    Task<(bool success, string response, IStoredFile file)> UploadImage(IFormFile file, string userId);
 }

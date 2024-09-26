@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Client;
@@ -44,6 +45,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             EventAggregator eventAggregator,
             UriResolver uriResolver,
             StoreRepository storeRepository,
+            IFileService fileService,
             UIInvoiceController invoiceController,
             UserManager<ApplicationUser> userManager,
             FormDataService formDataService,
@@ -53,6 +55,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             _appService = appService;
             _userManager = userManager;
             _app = app;
+            _fileService = fileService;
             _storeRepository = storeRepository;
             _eventAggregator = eventAggregator;
             _uriResolver = uriResolver;
@@ -61,6 +64,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         }
 
         private readonly EventAggregator _eventAggregator;
+        private readonly IFileService _fileService;
         private readonly UriResolver _uriResolver;
         private readonly CurrencyNameTable _currencies;
         private readonly StoreRepository _storeRepository;
@@ -434,8 +438,14 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("{appId}/settings/crowdfund")]
-        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm, string command)
+        public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm,
+             [FromForm] bool RemoveLogoFile,
+            [FromForm] string command)
         {
+            var userId = GetUserId();
+            if (userId is null)
+                return NotFound();
+
             var app = GetCurrentApp();
             if (app == null)
                 return NotFound();
@@ -520,7 +530,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,
-                MainImageUrl = vm.MainImageUrl,
+                MainImageUrl = app.GetSettings<CrowdfundSettings>()?.MainImageUrl,
                 NotificationUrl = vm.NotificationUrl,
                 Tagline = vm.Tagline,
                 PerksTemplate = vm.PerksTemplate,
@@ -537,6 +547,22 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 AnimationColors = parsedAnimationColors,
                 FormId = vm.FormId
             };
+
+            if (vm.MainImageFile != null)
+            {
+                var imageUpload = await _fileService.UploadImage(vm.MainImageFile, userId);
+                if (!imageUpload.success)
+                {
+                    ModelState.AddModelError(nameof(vm.MainImageFile), imageUpload.response);
+                }
+                newSettings.MainImageUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), new UnresolvedUri.FileIdUri(imageUpload.file.Id));
+            }
+            else if (RemoveLogoFile)
+            {
+                newSettings.MainImageUrl = null;
+                vm.MainImageUrl = null;
+                vm.MainImageFile = null;
+            }
 
             app.TagAllInvoices = vm.UseAllStoreInvoices;
             app.SetSettings(newSettings);

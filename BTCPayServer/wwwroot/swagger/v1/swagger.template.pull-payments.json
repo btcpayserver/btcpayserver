@@ -1091,11 +1091,29 @@
                         "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
                         "description": "The destination of the payout (can be an address or a BIP21 url)"
                     },
-                    "amount": {
+                    "originalCurrency": {
+                        "type": "string",
+                        "example": "USD",
+                        "description": "The currency before being converted into the payout's currency"
+                    },
+                    "originalAmount": {
                         "type": "string",
                         "format": "decimal",
+                        "nullable": false,
                         "example": "10399.18",
-                        "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
+                        "description": "The amount in originalCurrency before being converted into the payout's currency"
+                    },
+                    "payoutCurrency": {
+                        "type": "string",
+                        "example": "BTC",
+                        "description": "The currency of the payout after conversion."
+                    },
+                    "payoutAmount": {
+                        "type": "string",
+                        "format": "decimal",
+                        "nullable": true,
+                        "example": "0.1",
+                        "description": "The amount in payoutCurrency after conversion. (This property is set after the payout has been Approved)"
                     },
                     "payoutMethodId": {
                         "$ref": "#/components/schemas/PayoutMethodId"

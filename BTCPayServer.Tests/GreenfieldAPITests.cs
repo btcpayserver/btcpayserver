@@ -1182,13 +1182,13 @@ namespace BTCPayServer.Tests
 
             payouts = await unauthenticated.GetPayouts(pps[0].Id);
             var payout2 = Assert.Single(payouts);
-            Assert.Equal(payout.Amount, payout2.Amount);
+            Assert.Equal(payout.OriginalAmount, payout2.OriginalAmount);
             Assert.Equal(payout.Id, payout2.Id);
             Assert.Equal(destination, payout2.Destination);
             Assert.Equal(PayoutState.AwaitingApproval, payout.State);
             Assert.Equal("BTC-CHAIN", payout2.PayoutMethodId);
-            Assert.Equal("BTC", payout2.CryptoCode);
-            Assert.Null(payout.PaymentMethodAmount);
+            Assert.Equal("BTC", payout2.PayoutCurrency);
+            Assert.Null(payout.PayoutAmount);
 
             TestLogs.LogInformation("Can't overdraft");
 
@@ -1297,8 +1297,8 @@ namespace BTCPayServer.Tests
                 Revision = payout.Revision
             });
             Assert.Equal(PayoutState.AwaitingPayment, payout.State);
-            Assert.NotNull(payout.PaymentMethodAmount);
-            Assert.Equal(1.0m, payout.PaymentMethodAmount); // 1 BTC == 5000 USD in tests
+            Assert.NotNull(payout.PayoutAmount);
+            Assert.Equal(1.0m, payout.PayoutAmount); // 1 BTC == 5000 USD in tests
             await this.AssertAPIError("invalid-state", async () => await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest()
             {
                 Revision = payout.Revision
@@ -1320,8 +1320,8 @@ namespace BTCPayServer.Tests
             });
             payout = await client.ApprovePayout(storeId, payout.Id, new ApprovePayoutRequest());
             // The payout should round the value of the payment down to the network of the payment method
-            Assert.Equal(12.30322814m, payout.PaymentMethodAmount);
-            Assert.Equal(12.303228134m, payout.Amount);
+            Assert.Equal(12.30322814m, payout.PayoutAmount);
+            Assert.Equal(12.303228134m, payout.OriginalAmount);
 
             await client.MarkPayoutPaid(storeId, payout.Id);
             payout = (await client.GetPayouts(payout.PullPaymentId)).First(data => data.Id == payout.Id);
@@ -4188,7 +4188,7 @@ namespace BTCPayServer.Tests
                     PayoutMethodId = "BTC_LightningNetwork",
                     Destination = customerInvoice.BOLT11
                 });
-            Assert.Equal(payout2.Amount, new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC));
+            Assert.Equal(payout2.OriginalAmount, new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC));
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]
@@ -4258,7 +4258,7 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(3, payouts.Length);
             Assert.Empty(payouts.Where(data => data.State == PayoutState.AwaitingApproval));
-            Assert.Empty(payouts.Where(data => data.PaymentMethodAmount is null));
+            Assert.Empty(payouts.Where(data => data.PayoutAmount is null));
 
             Assert.Empty(await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC"));
 

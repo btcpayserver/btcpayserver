@@ -364,16 +364,17 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = p.Id,
                 PullPaymentId = p.PullPaymentDataId,
                 Date = p.Date,
-                Amount = p.OriginalAmount,
-                PaymentMethodAmount = p.Amount,
+                OriginalCurrency = p.OriginalCurrency,
+                OriginalAmount = p.OriginalAmount,
+                PayoutCurrency = p.Currency,
+                PayoutAmount = p.Amount,
                 Revision = blob.Revision,
                 State = p.State,
+                PayoutMethodId = p.PayoutMethodId,
+                PaymentProof = p.GetProofBlobJson(),
+                Destination = blob.Destination,
                 Metadata = blob.Metadata?? new JObject(),
             };
-            model.Destination = blob.Destination;
-            model.PayoutMethodId = p.PayoutMethodId;
-            model.CryptoCode = p.Currency;
-            model.PaymentProof = p.GetProofBlobJson();
             return model;
         }
 

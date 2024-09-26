@@ -368,6 +368,27 @@ namespace BTCPayServer.Tests
                     }
                 )
             );
+            var template = @"[
+              {
+                ""description"": ""Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years."",
+                ""id"": ""green-tea"",
+                ""image"": ""~/img/pos-sample/green-tea.jpg"",
+                ""priceType"": ""Fixed"",
+                ""price"": ""1"",
+                ""title"": ""Green Tea"",
+                ""disabled"": false
+              }
+            ]";
+            await AssertValidationError(new[] { "Template" },
+                async () => await client.CreatePointOfSaleApp(
+                    user.StoreId,
+                    new PointOfSaleAppRequest
+                    {
+                        AppName = "good name",
+                        Template = template.Replace(@"""id"": ""green-tea"",", "")
+                    }
+                )
+            );
 
             // Test creating a POS app successfully
             var app = await client.CreatePointOfSaleApp(
@@ -376,7 +397,8 @@ namespace BTCPayServer.Tests
                 {
                     AppName = "test app from API",
                     Currency = "JPY",
-                    Title = "test app title"
+                    Title = "test app title",
+                    Template = template
                 }
             );
             Assert.Equal("test app from API", app.AppName);
@@ -559,6 +581,27 @@ namespace BTCPayServer.Tests
                     }
                 )
             );
+            var template = @"[
+              {
+                ""description"": ""Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years."",
+                ""id"": ""green-tea"",
+                ""image"": ""~/img/pos-sample/green-tea.jpg"",
+                ""priceType"": ""Fixed"",
+                ""price"": ""1"",
+                ""title"": ""Green Tea"",
+                ""disabled"": false
+              }
+            ]";
+            await AssertValidationError(new[] { "PerksTemplate" },
+                async () => await client.CreateCrowdfundApp(
+                    user.StoreId,
+                    new CrowdfundAppRequest
+                    {
+                        AppName = "good name",
+                        PerksTemplate = template.Replace(@"""id"": ""green-tea"",", "")
+                    }
+                )
+            );
 
             // Test creating a crowdfund app
             var app = await client.CreateCrowdfundApp(
@@ -566,7 +609,8 @@ namespace BTCPayServer.Tests
                 new CrowdfundAppRequest
                 {
                     AppName = "test app from API",
-                    Title = "test app title"
+                    Title = "test app title",
+                    PerksTemplate = template
                 }
             );
             Assert.Equal("test app from API", app.AppName);

@@ -447,11 +447,11 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             try
             {
-                vm.PerksTemplate = AppService.SerializeTemplate(AppService.Parse(vm.PerksTemplate));
+                vm.PerksTemplate = AppService.SerializeTemplate(AppService.Parse(vm.PerksTemplate, true, true));
             }
-            catch
+            catch (Exception ex)
             {
-                ModelState.AddModelError(nameof(vm.PerksTemplate), "Invalid template");
+                ModelState.AddModelError(nameof(vm.PerksTemplate), $"Invalid template: {ex.Message}");
             }
             if (vm.TargetAmount is decimal v && v == 0.0m)
             {

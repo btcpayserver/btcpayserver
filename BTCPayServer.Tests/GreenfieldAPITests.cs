@@ -4271,12 +4271,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(3600, Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
 
             var tpGen = Assert.Single(await adminClient.GetPayoutProcessors(admin.StoreId));
-            Assert.Equal("BTC-CHAIN", Assert.Single(tpGen.PaymentMethods));
+            Assert.Equal("BTC-CHAIN", Assert.Single(tpGen.PayoutMethodIds));
             //still too poor to process any payouts
             Assert.Empty(await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC"));
 
 
-            await adminClient.RemovePayoutProcessor(admin.StoreId, tpGen.Name, tpGen.PaymentMethods.First());
+            await adminClient.RemovePayoutProcessor(admin.StoreId, tpGen.Name, tpGen.PayoutMethodIds.First());
 
             Assert.Empty(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
             Assert.Empty(await adminClient.GetPayoutProcessors(admin.StoreId));

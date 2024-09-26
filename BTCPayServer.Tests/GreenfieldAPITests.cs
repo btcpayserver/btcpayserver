@@ -1104,7 +1104,7 @@ namespace BTCPayServer.Tests
                 Description = "Test description",
                 Amount = 12.3m,
                 Currency = "BTC",
-                PayoutMethodIds = new[] { "BTC" }
+                PayoutMethods = new[] { "BTC" }
             });
 
             void VerifyResult()
@@ -1135,7 +1135,7 @@ namespace BTCPayServer.Tests
                 Name = "Test 2",
                 Amount = 12.3m,
                 Currency = "BTC",
-                PayoutMethodIds = new[] { "BTC" },
+                PayoutMethods = new[] { "BTC" },
                 BOLT11Expiration = TimeSpan.FromDays(31.0)
             });
             Assert.Equal(TimeSpan.FromDays(31.0), test2.BOLT11Expiration);
@@ -1230,7 +1230,7 @@ namespace BTCPayServer.Tests
                 Amount = 12.3m,
                 StartsAt = start,
                 Currency = "BTC",
-                PayoutMethodIds = new[] { "BTC" }
+                PayoutMethods = new[] { "BTC" }
             });
             Assert.Equal(start, inFuture.StartsAt);
             Assert.Null(inFuture.ExpiresAt);
@@ -1248,7 +1248,7 @@ namespace BTCPayServer.Tests
                 Amount = 12.3m,
                 ExpiresAt = expires,
                 Currency = "BTC",
-                PayoutMethodIds = new[] { "BTC" }
+                PayoutMethods = new[] { "BTC" }
             });
             await this.AssertAPIError("expired", async () => await unauthenticated.CreatePayout(inPast.Id, new CreatePayoutRequest()
             {
@@ -1272,7 +1272,7 @@ namespace BTCPayServer.Tests
                 Name = "Test USD",
                 Amount = 5000m,
                 Currency = "USD",
-                PayoutMethodIds = new[] { "BTC" }
+                PayoutMethods = new[] { "BTC" }
             });
 
             await this.AssertAPIError("lnurl-not-supported", async () => await unauthenticated.GetPullPaymentLNURL(pp.Id));
@@ -1310,7 +1310,7 @@ namespace BTCPayServer.Tests
                 Name = "Test 2",
                 Amount = 12.303228134m,
                 Currency = "BTC",
-                PayoutMethodIds = new[] { "BTC" }
+                PayoutMethods = new[] { "BTC" }
             });
             destination = (await tester.ExplorerNode.GetNewAddressAsync()).ToString();
             payout = await unauthenticated.CreatePayout(test3.Id, new CreatePayoutRequest()
@@ -1334,7 +1334,7 @@ namespace BTCPayServer.Tests
                 Name = "Test 3",
                 Amount = 12.303228134m,
                 Currency = "BTC",
-                PayoutMethodIds = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
+                PayoutMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
             });
             var lnrURLs = await unauthenticated.GetPullPaymentLNURL(test4.Id);
             Assert.IsType<string>(lnrURLs.LNURLBech32);
@@ -1409,7 +1409,7 @@ namespace BTCPayServer.Tests
                 Name = "Test SATS",
                 Amount = 21000,
                 Currency = "SATS",
-                PayoutMethodIds = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
+                PayoutMethods = new[] { "BTC", "BTC-LightningNetwork", "BTC_LightningLike" }
             });
             lnrURLs = await unauthenticated.GetPullPaymentLNURL(testSats.Id);
             Assert.IsType<string>(lnrURLs.LNURLBech32);
@@ -1427,7 +1427,7 @@ namespace BTCPayServer.Tests
                     Amount = 100,
                     Currency = "USD",
                     Name = "pull payment",
-                    PayoutMethodIds = new[] { "BTC" },
+                    PayoutMethods = new[] { "BTC" },
                     AutoApproveClaims = true
                 });
             });
@@ -1447,7 +1447,7 @@ namespace BTCPayServer.Tests
                 Amount = 100,
                 Currency = "USD",
                 Name = "pull payment",
-                PayoutMethodIds = new[] { "BTC" },
+                PayoutMethods = new[] { "BTC" },
                 AutoApproveClaims = true
             });
 
@@ -4232,7 +4232,7 @@ namespace BTCPayServer.Tests
                 Amount = 100,
                 Currency = "USD",
                 Name = "pull payment",
-                PayoutMethodIds = new[] { "BTC" }
+                PayoutMethods = new[] { "BTC" }
             });
 
             var notapprovedPayoutWithPullPayment = await adminClient.CreatePayout(admin.StoreId, new CreatePayoutThroughStoreRequest()
@@ -4271,12 +4271,12 @@ namespace BTCPayServer.Tests
             Assert.Equal(3600, Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
 
             var tpGen = Assert.Single(await adminClient.GetPayoutProcessors(admin.StoreId));
-            Assert.Equal("BTC-CHAIN", Assert.Single(tpGen.PayoutMethodIds));
+            Assert.Equal("BTC-CHAIN", Assert.Single(tpGen.PayoutMethods));
             //still too poor to process any payouts
             Assert.Empty(await adminClient.ShowOnChainWalletTransactions(admin.StoreId, "BTC"));
 
 
-            await adminClient.RemovePayoutProcessor(admin.StoreId, tpGen.Name, tpGen.PayoutMethodIds.First());
+            await adminClient.RemovePayoutProcessor(admin.StoreId, tpGen.Name, tpGen.PayoutMethods.First());
 
             Assert.Empty(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
             Assert.Empty(await adminClient.GetPayoutProcessors(admin.StoreId));

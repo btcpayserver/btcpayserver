@@ -413,7 +413,7 @@ namespace BTCPayServer.Controllers
                     createPullPayment = new CreatePullPayment
                     {
                         Name = $"Refund {invoice.Id}",
-                        PayoutMethodIds = new[] { pmi },
+                        PayoutMethods = new[] { pmi },
                         StoreId = invoice.StoreId,
                         BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration
                     };

@@ -146,10 +146,19 @@ namespace BTCPayServer.Tests
         public async Task ModifyPayment(Action<GeneralSettingsViewModel> modify)
         {
             var storeController = GetController<UIStoresController>();
-            var response = await storeController.GeneralSettings();
-            GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model;
+            var response = await storeController.GeneralSettings(StoreId);
+            GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model!;
             modify(settings);
             await storeController.GeneralSettings(settings);
+        }
+
+        public async Task ModifyGeneralSettings(Action<GeneralSettingsViewModel> modify)
+        {
+            var storeController = GetController<UIStoresController>();
+            var response = await storeController.GeneralSettings(StoreId);
+            GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model!;
+            modify(settings);
+            storeController.GeneralSettings(settings).GetAwaiter().GetResult();
         }
 
         public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
@@ -158,7 +167,6 @@ namespace BTCPayServer.Tests
             var response = await storeController.WalletSettings(StoreId, "BTC");
             WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
             modify(walletSettings);
-            storeController.UpdatePaymentSettings(walletSettings).GetAwaiter().GetResult();
             storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
 

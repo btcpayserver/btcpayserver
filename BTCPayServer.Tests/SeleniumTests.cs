@@ -3426,11 +3426,14 @@ namespace BTCPayServer.Tests
             var user = s.RegisterNewUser();
             s.GoToHome();
             s.GoToProfile(ManageNavPages.LoginCodes);
-            var code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
-            s.ClickPagePrimary();
-            Assert.NotEqual(code, s.Driver.FindElement(By.Id("logincode")).GetAttribute("value"));
 
-            code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
+            string code = null;
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
+            string prevCode = code;
+            await s.Driver.Navigate().RefreshAsync();
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
+            Assert.NotEqual(prevCode, code);
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
             s.Logout();
             s.GoToLogin();
             s.Driver.SetAttribute("LoginCode", "value", "bad code");

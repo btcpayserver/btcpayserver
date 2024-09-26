@@ -40,7 +40,6 @@ namespace BTCPayServer.Controllers
         private readonly IAuthorizationService _authorizationService;
         private readonly Fido2Service _fido2Service;
         private readonly LinkGenerator _linkGenerator;
-        private readonly UserLoginCodeService _userLoginCodeService;
         private readonly IHtmlHelper Html;
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
@@ -62,7 +61,6 @@ namespace BTCPayServer.Controllers
           UserService userService,
           UriResolver uriResolver,
           IFileService fileService,
-          UserLoginCodeService userLoginCodeService,
           IHtmlHelper htmlHelper
           )
         {
@@ -76,7 +74,6 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             _fido2Service = fido2Service;
             _linkGenerator = linkGenerator;
-            _userLoginCodeService = userLoginCodeService;
             Html = htmlHelper;
             _userService = userService;
             _uriResolver = uriResolver;

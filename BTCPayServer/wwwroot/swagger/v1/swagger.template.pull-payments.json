@@ -1112,23 +1112,11 @@
                         "type": "string",
                         "format": "decimal",
                         "nullable": true,
-                        "example": "0.1",
+                        "example": "1.12300000",
                         "description": "The amount in payoutCurrency after conversion. (This property is set after the payout has been Approved)"
                     },
                     "payoutMethodId": {
                         "$ref": "#/components/schemas/PayoutMethodId"
-                    },
-                    "cryptoCode": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "Crypto code of the payment method of the payout (e.g., \"BTC\" or \"LTC\")"
-                    },
-                    "paymentMethodAmount": {
-                        "type": "string",
-                        "format": "decimal",
-                        "nullable": true,
-                        "example": "1.12300000",
-                        "description": "The amount of the payout in the currency of the payment method (eg. BTC). This is only available from the `AwaitingPayment` state."
                     },
                     "state": {
                         "$ref": "#/components/schemas/PayoutState"

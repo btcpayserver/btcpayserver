@@ -70,18 +70,21 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 
     private async Task HandlePayout(PayoutData payoutData, ILightningClient lightningClient)
     {
+        Logs.PayServer.LogWarning("payoutData.State != PayoutState.AwaitingPayment");
         if (payoutData.State != PayoutState.AwaitingPayment)
             return;
         var res = await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
         {
             State = PayoutState.InProgress, PayoutId = payoutData.Id, Proof = null
         });
+        Logs.PayServer.LogWarning("res != MarkPayoutRequest.PayoutPaidResult.Ok");
         if (res != MarkPayoutRequest.PayoutPaidResult.Ok)
         {
             return;
         }
 
         var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
+        Logs.PayServer.LogWarning("ParseClaimDestination");
         var claim = await _payoutHandler.ParseClaimDestination(blob.Destination, CancellationToken);
         try
         {
@@ -93,11 +96,13 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                         lnurlPayClaimDestinaton, Network.NBitcoinNetwork, CancellationToken);
                     if (lnurlResult.Item2 is null)
                     {
+                        Logs.PayServer.LogWarning("TrypayBolt LNURL");
                         await TrypayBolt(lightningClient, blob, payoutData,
                             lnurlResult.Item1);
                     }
                     break;
                 case BoltInvoiceClaimDestination item1:
+                    Logs.PayServer.LogWarning("TrypayBolt BOLT");
                     await TrypayBolt(lightningClient, blob, payoutData, item1.PaymentRequest);
                     break;
             }
@@ -107,12 +112,15 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
             Logs.PayServer.LogError(e, $"Could not process payout {payoutData.Id}");
         }
 
+        Logs.PayServer.LogWarning("payoutData.State != PayoutState.InProgress || payoutData.Proof is not null");
         if (payoutData.State != PayoutState.InProgress || payoutData.Proof is not null)
         {
+            Logs.PayServer.LogWarning("await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()");
             await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
             {
                 State = payoutData.State, PayoutId = payoutData.Id, Proof = payoutData.GetProofBlobJson()
             });
+            Logs.PayServer.LogWarning("DONE");
         }
     }
 

@@ -223,9 +223,9 @@
                                         "nullable": true,
                                         "description": "When this pull payment expires. Never expires if null or unspecified."
                                     },
-                                    "paymentMethods": {
+                                    "payoutMethodIds": {
                                         "type": "array",
-                                        "description": "The list of supported payment methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
+                                        "description": "The list of supported payout methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
                                         "items": {
                                             "type": "string",
                                             "example": "BTC"

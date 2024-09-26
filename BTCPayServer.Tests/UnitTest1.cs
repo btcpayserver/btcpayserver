@@ -1463,7 +1463,7 @@ namespace BTCPayServer.Tests
             {
                 Currency = "BTC",
                 Amount = 1.0m,
-                PaymentMethods = [ "BTC-CHAIN" ]
+                PayoutMethodIds = [ "BTC-CHAIN" ]
             });
             var controller = user.GetController<UIInvoiceController>();
             var invoice = await controller.CreateInvoiceCoreRaw(new()

@@ -119,7 +119,7 @@ namespace BTCPayServer.HostedServices
                 Amount = request.Amount,
                 Currency = request.Currency,
                 StoreId = storeId,
-                PayoutMethodIds = request.PaymentMethods.Select(p => PayoutMethodId.Parse(p)).ToArray(),
+                PayoutMethodIds = request.PayoutMethodIds.Select(p => PayoutMethodId.Parse(p)).ToArray(),
                 AutoApproveClaims = request.AutoApproveClaims
             });
         }

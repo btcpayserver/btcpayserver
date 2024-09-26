@@ -446,7 +446,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Name = request.Name ?? $"Refund {invoice.Id}",
                 Description = request.Description,
                 StoreId = storeId,
-                PayoutMethodIds = new[] { payoutMethodId },
+                PayoutMethods = new[] { payoutMethodId },
             };
 
             if (request.RefundVariant != RefundVariant.Custom)

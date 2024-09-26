@@ -4,6 +4,6 @@ namespace BTCPayServer.Client.Models
     {
         public string Name { get; set; }
         public string FriendlyName { get; set; }
-        public string[] PaymentMethods { get; set; }
+        public string[] PayoutMethods { get; set; }
     }
 }

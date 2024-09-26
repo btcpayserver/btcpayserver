@@ -1463,7 +1463,7 @@ namespace BTCPayServer.Tests
             {
                 Currency = "BTC",
                 Amount = 1.0m,
-                PaymentMethods = [ "BTC-CHAIN" ]
+                PayoutMethods = [ "BTC-CHAIN" ]
             });
             var controller = user.GetController<UIInvoiceController>();
             var invoice = await controller.CreateInvoiceCoreRaw(new()
@@ -1479,7 +1479,7 @@ namespace BTCPayServer.Tests
                 var payout = Assert.Single(payouts);
                 Assert.Equal("TOPUP", payout.PayoutMethodId);
                 Assert.Equal(invoice.Id, payout.Destination);
-                Assert.Equal(-0.5m, payout.Amount);
+                Assert.Equal(-0.5m, payout.OriginalAmount);
             });
         }
 

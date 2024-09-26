@@ -97,6 +97,9 @@ namespace BTCPayServer.Tests
             Assert.NotNull(e.APIError.Message);
             GreenfieldPermissionAPIError permissionError = Assert.IsType<GreenfieldPermissionAPIError>(e.APIError);
             Assert.Equal(Policies.CanModifyStoreSettings, permissionError.MissingPermission);
+
+            var client = await user.CreateClient(Policies.CanViewStoreSettings);
+            await AssertAPIError("unsupported-in-v2", () => client.SendHttpRequest<object>($"api/v1/stores/{user.StoreId}/payment-methods/LightningNetwork"));
         }
 
         [Fact(Timeout = TestTimeout)]

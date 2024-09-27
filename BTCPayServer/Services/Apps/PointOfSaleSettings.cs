@@ -1,3 +1,5 @@
+using System.Globalization;
+using System.Linq;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
@@ -8,7 +10,7 @@ namespace BTCPayServer.Services.Apps
         public PointOfSaleSettings()
         {
             Title = "Tea shop";
-            Lang = "en";
+            Language = CultureInfo.GetCultures(CultureTypes.AllCultures).SingleOrDefault(ci => ci.NativeName == "English").TwoLetterISOLanguageName;
             Template = AppService.SerializeTemplate(new ViewPointOfSaleViewModel.Item[]
             {
                 new()
@@ -101,7 +103,7 @@ namespace BTCPayServer.Services.Apps
         public string CustomTipText { get; set; } = CUSTOM_TIP_TEXT_DEF;
         public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = { 15, 18, 20 };
         public int[] CustomTipPercentages { get; set; } = CUSTOM_TIP_PERCENTAGES_DEF;
-        public string Lang { get; set; }
+        public string Language { get; set; }
         public string HeadHtmlTags { get; set; }
         public string Description { get; set; }
         public string NotificationUrl { get; set; }

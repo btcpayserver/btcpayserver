@@ -22,7 +22,7 @@ public partial class UIStoresController
         string sortOrder = null
     )
     {
-        var roles = await storeRepository.GetStoreRoles(storeId, true);
+        var roles = await storeRepository.GetStoreRoles(storeId);
         var defaultRole = (await storeRepository.GetDefaultRole()).Role;
         model ??= new RolesViewModel();
         model.DefaultRole = defaultRole;

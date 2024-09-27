@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Controllers;
@@ -89,6 +90,54 @@ fruit tea:
         Assert.Equal( ViewPointOfSaleViewModel.ItemPriceType.Minimum ,parsedDefault[4].PriceType);
         Assert.Null( parsedDefault[4].AdditionalData);
         Assert.Null( parsedDefault[4].PaymentMethods);
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CanParseAppTemplate()
+        {
+            var template = @"[
+              {
+                ""description"": ""Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years."",
+                ""id"": ""green-tea"",
+                ""image"": ""~/img/pos-sample/green-tea.jpg"",
+                ""priceType"": ""Fixed"",
+                ""price"": ""1"",
+                ""title"": ""Green Tea"",
+                ""disabled"": false
+              },
+              {
+                ""description"": ""Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available."",
+                ""id"": ""black-tea"",
+                ""image"": ""~/img/pos-sample/black-tea.jpg"",
+                ""priceType"": ""Fixed"",
+                ""price"": ""1"",
+                ""title"": ""Black Tea"",
+                ""disabled"": false
+              }
+            ]";
+
+            var items = AppService.Parse(template);
+            Assert.Equal(2, items.Length);
+            Assert.Equal("green-tea", items[0].Id);
+            Assert.Equal("black-tea", items[1].Id);
+
+            // Fails gracefully for missing ID
+            var missingId = template.Replace(@"""id"": ""green-tea"",", "");
+            items = AppService.Parse(missingId);
+            Assert.Single(items);
+            Assert.Equal("black-tea", items[0].Id);
+            
+            // Throws for missing ID
+            Assert.Throws<ArgumentException>(() => AppService.Parse(missingId, true, true));
+
+            // Fails gracefully for duplicate IDs
+            var duplicateId = template.Replace(@"""id"": ""green-tea"",", @"""id"": ""black-tea"",");
+            items = AppService.Parse(duplicateId);
+            Assert.Empty(items);
+            
+            // Throws for duplicate IDs
+            Assert.Throws<ArgumentException>(() => AppService.Parse(duplicateId, true, true));
         }
         
         [Fact(Timeout = LongRunningTestTimeout)]

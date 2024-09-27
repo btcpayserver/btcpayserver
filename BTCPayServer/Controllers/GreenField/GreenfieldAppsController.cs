@@ -461,11 +461,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 try
                 {
                     // Just checking if we can serialize
-                    AppService.SerializeTemplate(AppService.Parse(request.Template));
+                    AppService.SerializeTemplate(AppService.Parse(request.Template, true, true));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(nameof(request.Template), "Invalid template");
+                    ModelState.AddModelError(nameof(request.Template), ex.Message);
                 }
             }
         }
@@ -545,11 +545,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 try
                 {
                     // Just checking if we can serialize
-                    AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate));
+                    AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate, true, true));
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(nameof(request.PerksTemplate), "Invalid template");
+                    ModelState.AddModelError(nameof(request.PerksTemplate), $"Invalid template: {ex.Message}");
                 }
             }
 

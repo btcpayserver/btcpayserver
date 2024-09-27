@@ -39,6 +39,8 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             var user2 = tester.NewAccount();
             await user2.GrantAccessAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            await user2.RegisterDerivationSchemeAsync("BTC");
             var apps = user.GetController<UIAppsController>();
             var apps2 = user2.GetController<UIAppsController>();
             var crowdfund = user.GetController<UICrowdfundController>();

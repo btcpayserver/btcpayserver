@@ -118,13 +118,12 @@
 </template>
 
 <div id="TemplateEditor" class="editor" v-cloak>
-    <h3 class="mt-5 mb-4" v-pre>@Model.title</h3>
+    <h3 class="mt-5 mb-3" v-pre>@Model.title</h3>
     @if (ViewContext.ViewData.ModelState.TryGetValue(Model.templateId, out var errors))
     {
         foreach (var error in errors.Errors)
         {
-            <br />
-            <span class="text-danger" v-pre>@error.ErrorMessage</span>
+            <p class="text-danger" v-pre>@error.ErrorMessage</p>
         }
     }
     <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">

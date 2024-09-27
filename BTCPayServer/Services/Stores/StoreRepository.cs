@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
+using static BTCPayServer.Services.Stores.StoreRepository;
 
 namespace BTCPayServer.Services.Stores
 {
@@ -83,14 +84,20 @@ namespace BTCPayServer.Services.Stores
             public bool? IsUsed { get; set; }
         }
 #nullable enable
-        public async Task<StoreRole[]> GetStoreRoles(string? storeId, bool includeUsers = false, bool storeOnly = false)
+        public async Task<StoreRole[]> GetStoreRoles(string? storeId, bool storeOnly = false)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var query = ctx.StoreRoles.Where(u => (storeOnly && u.StoreDataId == storeId) || (!storeOnly && (u.StoreDataId == null || u.StoreDataId == storeId)));
-            if (includeUsers)
-            {
-                query = query.Include(u => u.Users);
-            }
+            var query = ctx.StoreRoles
+                .Where(u => (storeOnly && u.StoreDataId == storeId) || (!storeOnly && (u.StoreDataId == null || u.StoreDataId == storeId)))
+                // Not calling ToStoreRole here because we don't want to load users in the DB query
+                .Select(u => new StoreRole()
+                {
+                        Id = u.Id,
+                        Role = u.Role,
+                        Permissions = u.Permissions,
+                        IsServerRole = u.StoreDataId == null,
+                        IsUsed = u.Users.Any()
+                });
             
             var roles = await query.ToArrayAsync();
             // return ordered: default role comes first, then server-wide roles in specified order, followed by store roles
@@ -101,7 +108,7 @@ namespace BTCPayServer.Services.Stores
                 if (role.Role == defaultRole.Role) return -1;
                 int index = Array.IndexOf(defaultOrder, role.Role);
                 return index == -1 ? int.MaxValue : index;
-            }).Select(ToStoreRole).ToArray();
+            }).ToArray();
         }
 
         public async Task<StoreRoleId> GetDefaultRole()

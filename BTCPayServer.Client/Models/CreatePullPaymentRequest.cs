@@ -19,7 +19,7 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset? ExpiresAt { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? StartsAt { get; set; }
-        public string[] PaymentMethods { get; set; }
+        public string[] PayoutMethods { get; set; }
         public bool AutoApproveClaims { get; set; }
     }
 }

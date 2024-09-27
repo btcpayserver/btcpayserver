@@ -48,7 +48,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
-                        PayoutMethodIds = paymentMethodId is null ? null : new[] { paymentMethodId }
+                        PayoutMethods = paymentMethodId is null ? null : new[] { paymentMethodId }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -95,7 +95,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
-                        PayoutMethodIds = new[] { payoutMethodId }
+                        PayoutMethods = new[] { payoutMethodId }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();

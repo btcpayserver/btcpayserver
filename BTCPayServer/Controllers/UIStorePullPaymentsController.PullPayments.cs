@@ -151,7 +151,7 @@ namespace BTCPayServer.Controllers
                 Amount = model.Amount,
                 Currency = model.Currency,
                 StoreId = storeId,
-                PayoutMethodIds = selectedPaymentMethodIds,
+                PayoutMethods = selectedPaymentMethodIds,
                 BOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration),
                 AutoApproveClaims = model.AutoApproveClaims
             });
@@ -587,7 +587,7 @@ namespace BTCPayServer.Controllers
         private async Task<bool> HasPayoutProcessor(string storeId, PayoutMethodId payoutMethodId)
         {
             var processors = await _payoutProcessorService.GetProcessors(
-                new PayoutProcessorService.PayoutProcessorQuery { Stores = [storeId], PayoutMethodIds = [payoutMethodId] });
+                new PayoutProcessorService.PayoutProcessorQuery { Stores = [storeId], PayoutMethods = [payoutMethodId] });
             return _payoutProcessorFactories.Any(factory => factory.GetSupportedPayoutMethods().Contains(payoutMethodId)) && processors.Any();
         }
         private async Task<bool> HasPayoutProcessor(string storeId, string payoutMethodId)

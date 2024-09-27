@@ -192,13 +192,20 @@ namespace BTCPayServer.HostedServices
             }
         }
 
-        private async Task Wait(string invoiceId) => await Wait(await _invoiceRepository.GetInvoice(invoiceId));
-        private async Task Wait(InvoiceEntity invoice)
+        private async Task Wait(string invoiceId, bool startup) => await Wait(await _invoiceRepository.GetInvoice(invoiceId), startup);
+        private async Task Wait(InvoiceEntity invoice, bool startup)
         {
+            var startupOffset = TimeSpan.Zero;
+
+            // This give some times for the pollers in the listeners to catch payments which happened
+            // while the server was down.
+            if (startup)
+                startupOffset += TimeSpan.FromMinutes(2.0);
+
             try
             {
                 // add 1 second to ensure watch won't trigger moments before invoice expires
-                var delay = invoice.ExpirationTime.AddSeconds(1) - DateTimeOffset.UtcNow;
+                var delay = (invoice.ExpirationTime.AddSeconds(1) + startupOffset) - DateTimeOffset.UtcNow;
                 if (delay > TimeSpan.Zero)
                 {
                     await Task.Delay(delay, _Cts.Token);
@@ -243,7 +250,7 @@ namespace BTCPayServer.HostedServices
                 if (b.Name == InvoiceEvent.Created)
                 {
                     Watch(b.Invoice.Id);
-                    _ = Wait(b.Invoice.Id);
+                    _ = Wait(b.Invoice.Id, false);
                 }
 
                 if (b.Name == InvoiceEvent.ReceivedPayment)
@@ -257,7 +264,7 @@ namespace BTCPayServer.HostedServices
         private async Task WaitPendingInvoices()
         {
             await Task.WhenAll((await GetPendingInvoices(_Cts.Token))
-                .Select(i => Wait(i)).ToArray());
+                .Select(i => Wait(i, true)).ToArray());
         }
 
         private async Task<InvoiceEntity[]> GetPendingInvoices(CancellationToken cancellationToken)

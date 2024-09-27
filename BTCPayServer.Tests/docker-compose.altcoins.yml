@@ -12,7 +12,6 @@ services:
       args:
         CONFIGURATION_NAME: Release
     environment:
-      TESTS_EXPERIMENTALV2_CONFIRM: "true"
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_LTCRPCCONNECTION: server=http://litecoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/

@@ -40,7 +40,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     Name = datas.Key,
                     FriendlyName = _factories.FirstOrDefault(factory => factory.Processor == datas.Key)?.FriendlyName,
-                    PaymentMethods = datas.Select(data => data.PayoutMethodId).ToArray()
+                    PayoutMethods = datas.Select(data => data.PayoutMethodId).ToArray()
                 });
             return Ok(configured);
 
@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { processor },
-                        PayoutMethodIds = new[] { PayoutMethodId.Parse(paymentMethod) }
+                        PayoutMethods = new[] { PayoutMethodId.Parse(paymentMethod) }
                     })).FirstOrDefault();
             if (matched is null)
             {

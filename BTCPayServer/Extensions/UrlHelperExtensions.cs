@@ -3,7 +3,6 @@ using System;
 using BTCPayServer;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
-using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 
@@ -52,6 +51,12 @@ namespace Microsoft.AspNetCore.Mvc
         {
             return urlHelper.GetUriByAction(nameof(UIAccountController.Login), "UIAccount", null , scheme, host, pathbase);
         }
+
+        public static string LoginCodeLink(this LinkGenerator urlHelper, string loginCode, string returnUrl, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(nameof(UIAccountController.LoginUsingCode), "UIAccount", new { loginCode, returnUrl }, scheme, host, pathbase);
+        }
+
         public static string ResetPasswordLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(

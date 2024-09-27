@@ -55,7 +55,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 {
                     Stores = new[] { storeId },
                     Processors = new[] { _lightningAutomatedPayoutSenderFactory.Processor },
-                    PayoutMethodIds = new[]
+                    PayoutMethods = new[]
                     {
                         PayoutTypes.LN.GetPayoutMethodId(cryptoCode)
                     }
@@ -89,7 +89,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 {
                     Stores = new[] { storeId },
                     Processors = new[] { _lightningAutomatedPayoutSenderFactory.Processor },
-                    PayoutMethodIds = new[]
+                    PayoutMethods = new[]
                     {
                         PayoutTypes.LN.GetPayoutMethodId(cryptoCode)
                     }

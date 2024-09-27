@@ -1,0 +1,42 @@
+@using Microsoft.AspNetCore.Http
+
+@inject IHttpContextAccessor HttpContextAccessor;
+
+@if (Users?.Any() is true)
+{
+    <div @attributes="Attrs" class="@CssClass">
+        <label for="SignedInUser" class="form-label">Signed in user</label>
+        <select id="SignedInUser" class="form-select" value="@_userId" @onchange="@(e => _userId = e.Value?.ToString())">
+            <option value="">None, just open the URL</option>
+            @foreach (var u in Users)
+            {
+                <option value="@u.Key">@u.Value</option>
+            }
+        </select>
+    </div>
+}
+
+@if (string.IsNullOrEmpty(_userId))
+{
+    <QrCode Data="@PosUrl" />
+}
+else
+{
+    <UserLoginCode UserId="@_userId" RedirectUrl="@PosPath" />
+}
+
+@code {
+    [Parameter, EditorRequired]
+    public string PosPath { get; set; }
+
+    [Parameter]
+    public Dictionary<string,string> Users { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> Attrs { get; set; }
+
+    private string _userId;
+    private string PosUrl => Request.GetAbsoluteRoot() + PosPath;
+    private HttpRequest Request => HttpContextAccessor.HttpContext?.Request;
+    private string CssClass => $"form-group {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
+}

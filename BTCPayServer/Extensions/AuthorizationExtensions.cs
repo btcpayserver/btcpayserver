@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
+using BTCPayServer.Security;
 using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
@@ -13,6 +14,11 @@ namespace BTCPayServer
 {
     public static class AuthorizationExtensions
     {
+        public static async Task<bool> CanModifyStore(this IAuthorizationService authorizationService, ClaimsPrincipal user)
+        {
+            return (await authorizationService.AuthorizeAsync(user, null,
+                                new PolicyRequirement(Policies.CanModifyStoreSettings))).Succeeded;
+        }
         public static async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet(
             this IAuthorizationService authorizationService,
             PoliciesSettings policiesSettings,

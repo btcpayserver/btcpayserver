@@ -32,7 +32,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var store = HttpContext.GetStoreData();
             return store == null
                 ? StoreNotFound()
-                : Ok(FromModel(await _storeRepository.GetStoreRoles(storeId, false, false)));
+                : Ok(FromModel(await _storeRepository.GetStoreRoles(storeId, false)));
         }
 
         private List<RoleData> FromModel(StoreRepository.StoreRole[] data)

@@ -223,9 +223,9 @@
                                         "nullable": true,
                                         "description": "When this pull payment expires. Never expires if null or unspecified."
                                     },
-                                    "paymentMethods": {
+                                    "payoutMethods": {
                                         "type": "array",
-                                        "description": "The list of supported payment methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
+                                        "description": "The list of supported payout methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
                                         "items": {
                                             "type": "string",
                                             "example": "BTC"
@@ -1091,26 +1091,32 @@
                         "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
                         "description": "The destination of the payout (can be an address or a BIP21 url)"
                     },
-                    "amount": {
+                    "originalCurrency": {
+                        "type": "string",
+                        "example": "USD",
+                        "description": "The currency before being converted into the payout's currency"
+                    },
+                    "originalAmount": {
                         "type": "string",
                         "format": "decimal",
+                        "nullable": false,
                         "example": "10399.18",
-                        "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
+                        "description": "The amount in originalCurrency before being converted into the payout's currency"
                     },
-                    "payoutMethodId": {
-                        "$ref": "#/components/schemas/PayoutMethodId"
-                    },
-                    "cryptoCode": {
+                    "payoutCurrency": {
                         "type": "string",
                         "example": "BTC",
-                        "description": "Crypto code of the payment method of the payout (e.g., \"BTC\" or \"LTC\")"
+                        "description": "The currency of the payout after conversion."
                     },
-                    "paymentMethodAmount": {
+                    "payoutAmount": {
                         "type": "string",
                         "format": "decimal",
                         "nullable": true,
                         "example": "1.12300000",
-                        "description": "The amount of the payout in the currency of the payment method (eg. BTC). This is only available from the `AwaitingPayment` state."
+                        "description": "The amount in payoutCurrency after conversion. (This property is set after the payout has been Approved)"
+                    },
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     },
                     "state": {
                         "$ref": "#/components/schemas/PayoutState"

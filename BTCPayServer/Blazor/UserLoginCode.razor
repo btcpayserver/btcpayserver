@@ -1,0 +1,100 @@
+@using System.Timers
+@using BTCPayServer.Data
+@using BTCPayServer.Fido2
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.Identity
+@using Microsoft.AspNetCore.Mvc
+@using Microsoft.AspNetCore.Routing
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject UserManager<ApplicationUser> UserManager;
+@inject UserLoginCodeService UserLoginCodeService;
+@inject LinkGenerator LinkGenerator;
+@inject IHttpContextAccessor HttpContextAccessor;
+@implements IDisposable
+
+@if (!string.IsNullOrEmpty(_data))
+{
+    <div @attributes="Attrs" class="@CssClass" style="width:@(Size)px">
+        <div class="qr-container mb-2">
+            <QrCode Data="@_data" Size="Size"/>
+        </div>
+        <p class="text-center text-muted mb-1" id="progress">Valid for @_seconds seconds</p>
+        <div class="progress only-for-js" data-bs-toggle="tooltip" data-bs-placement="top">
+            <div class="progress-bar progress-bar-striped progress-bar-animated @(Percent < 15 ? "bg-warning" : null)" role="progressbar" style="width:@Percent%" id="progressbar"></div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public string UserId { get; set; }
+    
+    [Parameter]
+    public string RedirectUrl { get; set; }
+
+    [Parameter]
+    public int Size { get; set; } = 256;
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object> Attrs { get; set; }
+
+    private static readonly double Seconds = UserLoginCodeService.ExpirationTime.TotalSeconds;
+    private double _seconds = Seconds;
+    private string _data;
+    private ApplicationUser _user;
+    private Timer _timer;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        UserId ??= await GetUserId();
+        if (!string.IsNullOrEmpty(UserId)) _user = await UserManager.FindByIdAsync(UserId);
+        if (_user == null) return;
+
+        GenerateCodeAndStartTimer();
+    }
+
+    public void Dispose()
+    {
+        _timer?.Dispose();
+    }
+
+    private void GenerateCodeAndStartTimer()
+    {
+        var loginCode = UserLoginCodeService.GetOrGenerate(_user.Id);
+        _data = GetData(loginCode);
+        _seconds = Seconds;
+        _timer?.Dispose();
+        _timer = new Timer(1000);
+        _timer.Elapsed += CountDownTimer;
+        _timer.Enabled = true;
+    }
+
+    private void CountDownTimer(object source, ElapsedEventArgs e)
+    {
+        if (_seconds > 0)
+            _seconds -= 1;
+        else
+            GenerateCodeAndStartTimer();
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task<string> GetUserId()
+    {
+        var state = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        return state.User.Identity?.IsAuthenticated is true
+            ? UserManager.GetUserId(state.User)
+            : null;
+    }
+
+    private string GetData(string loginCode)
+    {
+        var req = HttpContextAccessor.HttpContext?.Request;
+        if (req == null) return loginCode;
+        return !string.IsNullOrEmpty(RedirectUrl)
+            ? LinkGenerator.LoginCodeLink(loginCode, RedirectUrl, req.Scheme, req.Host, req.PathBase)
+            : $"{loginCode};{LinkGenerator.IndexLink(req.Scheme, req.Host, req.PathBase)};{_user.Email}";
+    }
+
+    private double Percent => Math.Round(_seconds / Seconds * 100);
+    private string CssClass => $"user-login-code d-inline-flex flex-column {(Attrs?.ContainsKey("class") is true ? Attrs["class"] : "")}".Trim();
+}

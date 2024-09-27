@@ -6,10 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Services;
 using BTCPayServer.Storage.Models;
@@ -47,27 +49,42 @@ namespace BTCPayServer.Storage.Services
             return settings is not null;
         }
 
-        public async Task<(bool success, string response, IStoredFile file)> UploadImage(IFormFile file, string userId)
+        public async Task<UploadImageResultModel> UploadImage(IFormFile file, string userId, long maxFileSizeInBytes = 1_000_000)
         {
-            if (file.Length > 1_000_000)
-                return (false, "The uploaded logo file should be less than 1MB", null);
+            var result = new UploadImageResultModel();
 
+            if (file.Length > maxFileSizeInBytes)
+            {
+                result.Success = false;
+                result.Response = $"The uploaded image file should be less than {maxFileSizeInBytes / 1_000_000}MB";
+                return result;
+            }
             if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
-                return (false, "The uploaded logo file needs to be an image (based on content type)", null);
-
+            {
+                result.Success = false;
+                result.Response = "The uploaded file needs to be an image (based on content type)";
+                return result;
+            }
             var formFile = await file.Bufferize();
             if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
-                return (false, "The uploaded logo file needs to be an image (based on file content)", null);
-
+            {
+                result.Success = false;
+                result.Response = "The uploaded file needs to be an image (based on file content)";
+                return result;
+            }
             try
             {
-                var storedFile = await AddFile(formFile, userId);
-                return (true, "File uploaded successfully", storedFile);
+                result.StoredFile = await AddFile(formFile, userId);
+                result.Success = true;
+                result.Response = "Image uploaded successfully";
             }
             catch (Exception e)
             {
-                return (false, $"Could not save logo: {e.Message}", null);
+                result.Success = false;
+                result.Response = $"Could not save image: {e.Message}";
             }
+
+            return result;
         }
 
         public async Task<IStoredFile> AddFile(IFormFile file, string userId)

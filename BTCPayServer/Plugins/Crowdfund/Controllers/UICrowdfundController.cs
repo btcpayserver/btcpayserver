@@ -397,6 +397,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             var settings = app.GetSettings<CrowdfundSettings>();
             var resetEvery = Enum.GetName(typeof(CrowdfundResetEvery), settings.ResetEvery);
+
             var vm = new UpdateCrowdfundViewModel
             {
                 Title = settings.Title,
@@ -410,7 +411,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 StartDate = settings.StartDate,
                 TargetCurrency = settings.TargetCurrency,
                 Description = settings.Description,
-                MainImageUrl = settings.MainImageUrl,
+                MainImageUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), new UnresolvedUri.FileIdUri(settings.MainImageUrl)),
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
                 NotificationUrl = settings.NotificationUrl,
@@ -439,8 +440,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm,
-             [FromForm] bool RemoveLogoFile,
-            [FromForm] string command)
+            [FromForm] string command,
+            [FromForm] bool RemoveLogoFile = false)
         {
             var userId = GetUserId();
             if (userId is null)
@@ -551,11 +552,14 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             if (vm.MainImageFile != null)
             {
                 var imageUpload = await _fileService.UploadImage(vm.MainImageFile, userId);
-                if (!imageUpload.success)
+                if (!imageUpload.Success)
                 {
-                    ModelState.AddModelError(nameof(vm.MainImageFile), imageUpload.response);
+                    ModelState.AddModelError(nameof(vm.MainImageFile), imageUpload.Response);
                 }
-                newSettings.MainImageUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), new UnresolvedUri.FileIdUri(imageUpload.file.Id));
+                else
+                {
+                    newSettings.MainImageUrl = imageUpload.StoredFile.Id;
+                }
             }
             else if (RemoveLogoFile)
             {

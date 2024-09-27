@@ -46,9 +46,15 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<InvoiceData>($"api/v1/stores/{storeId}/invoices/{invoiceId}", null, HttpMethod.Get, token);
     }
     public virtual async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId, string invoiceId,
+        bool onlyAccountedPayments = true, bool includeSensitive = false,
         CancellationToken token = default)
     {
-        return await SendHttpRequest<InvoicePaymentMethodDataModel[]>($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods", null, HttpMethod.Get, token);
+        var queryPayload = new Dictionary<string, object>
+        {
+            { nameof(onlyAccountedPayments), onlyAccountedPayments },
+            { nameof(includeSensitive), includeSensitive }
+        };
+        return await SendHttpRequest<InvoicePaymentMethodDataModel[]>($"api/v1/stores/{storeId}/invoices/{invoiceId}/payment-methods", queryPayload, HttpMethod.Get, token);
     }
 
     public virtual async Task ArchiveInvoice(string storeId, string invoiceId,

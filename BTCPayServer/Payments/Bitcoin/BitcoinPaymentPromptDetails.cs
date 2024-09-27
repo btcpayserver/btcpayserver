@@ -14,6 +14,9 @@ namespace BTCPayServer.Payments.Bitcoin
         [JsonConverter(typeof(StringEnumConverter))]
         public NetworkFeeMode FeeMode { get; set; }
 
+        /// <summary>
+        /// The fee rate charged to the user as `PaymentMethodFee`.
+        /// </summary>
         [JsonConverter(typeof(NBitcoin.JsonConverters.FeeRateJsonConverter))]
         public FeeRate PaymentMethodFeeRate
         {
@@ -21,6 +24,10 @@ namespace BTCPayServer.Payments.Bitcoin
             set;
         }
         public bool PayjoinEnabled { get; set; }
+
+        /// <summary>
+        /// The recommended fee rate for this payment method.
+        /// </summary>
         [JsonConverter(typeof(NBitcoin.JsonConverters.FeeRateJsonConverter))]
         public FeeRate RecommendedFeeRate { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]

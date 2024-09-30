@@ -122,13 +122,6 @@
                 <input asp-for="DefaultCurrency" class="form-control w-auto" currency-selection />
                 <span asp-validation-for="DefaultCurrency" class="text-danger"></span>
             </div>
-            <div class="form-group d-flex align-items-center">
-                <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-3"/>
-                <label asp-for="AnyoneCanCreateInvoice" class="form-check-label me-1"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
-                    <vc:icon symbol="info"/>
-                </a>
-            </div>
             <div class="form-group mt-4">
                 <label asp-for="NetworkFeeMode" class="form-label"></label>
                 <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener" title="More information...">
@@ -172,6 +165,56 @@
                     <span class="input-group-text">days</span>
                 </div>
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="MonitoringExpiration" class="form-label"></label>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
+                </a>
+                <div class="input-group">
+                    <input inputmode="numeric" asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;"/>
+                    <span class="input-group-text">minutes</span>
+                </div>
+                <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="SpeedPolicy" class="form-label"></label>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
+                </a>
+                <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0'">
+                    <option value="0">Is unconfirmed</option>
+                    <option value="1">Has at least 1 confirmation</option>
+                    <option value="3">Has at least 2 confirmations</option>
+                    <option value="2">Has at least 6 confirmations</option>
+                </select>
+                <p class="info-note my-3 text-warning" id="unconfirmed-warning" role="alert" hidden="@(Model.SpeedPolicy != 0)">
+                    <vc:icon symbol="warning"/>
+                    Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.
+                </p>
+                <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
+            </div>
+            <div class="form-group d-flex align-items-center">
+                <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-3"/>
+                <label asp-for="AnyoneCanCreateInvoice" class="form-check-label me-1"></label>
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <vc:icon symbol="info"/>
+                </a>
+            </div>
+            <div class="d-flex align-items-center my-3">
+                <input asp-for="ShowRecommendedFee" type="checkbox" class="btcpay-toggle me-3" />
+                <div>
+                    <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
+                    <div class="form-text">Fee will be shown for BTC and LTC onchain payments only.</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
+                <div class="input-group">
+                    <input inputmode="numeric" asp-for="RecommendedFeeBlockTarget" class="form-control" min="1" style="max-width:10ch" />
+                    <span class="input-group-text">blocks</span>
+                </div>
+                <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
             </div>
         </div>
     </div>

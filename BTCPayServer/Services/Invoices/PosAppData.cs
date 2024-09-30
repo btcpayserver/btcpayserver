@@ -1,6 +1,5 @@
 using System;
 using System.Globalization;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 

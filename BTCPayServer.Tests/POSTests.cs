@@ -1,6 +1,7 @@
 using System;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Hosting;
@@ -14,6 +15,7 @@ using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
+using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
 namespace BTCPayServer.Tests
 {
@@ -76,7 +78,7 @@ fruit tea:
         Assert.Null( parsedDefault[0].BuyButtonText);
         Assert.Equal( "~/img/pos-sample/green-tea.jpg" ,parsedDefault[0].Image);
         Assert.Equal( 1 ,parsedDefault[0].Price);
-        Assert.Equal( ViewPointOfSaleViewModel.ItemPriceType.Fixed ,parsedDefault[0].PriceType);
+        Assert.Equal( AppItemPriceType.Fixed ,parsedDefault[0].PriceType);
         Assert.Null( parsedDefault[0].AdditionalData);
         Assert.Null( parsedDefault[0].PaymentMethods);
         
@@ -87,7 +89,7 @@ fruit tea:
         Assert.Null( parsedDefault[4].BuyButtonText);
         Assert.Equal( "~/img/pos-sample/herbal-tea.jpg" ,parsedDefault[4].Image);
         Assert.Equal( 1.8m ,parsedDefault[4].Price);
-        Assert.Equal( ViewPointOfSaleViewModel.ItemPriceType.Minimum ,parsedDefault[4].PriceType);
+        Assert.Equal( AppItemPriceType.Minimum ,parsedDefault[4].PriceType);
         Assert.Null( parsedDefault[4].AdditionalData);
         Assert.Null( parsedDefault[4].PaymentMethods);
         }

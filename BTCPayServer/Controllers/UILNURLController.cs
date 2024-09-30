@@ -25,7 +25,6 @@ using BTCPayServer.Payouts;
 using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -279,7 +278,7 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            ViewPointOfSaleViewModel.Item[] items;
+            AppItem[] items;
             string currencyCode;
             PointOfSaleSettings posS = null;
             switch (app.AppType)
@@ -299,7 +298,7 @@ namespace BTCPayServer
                     return NotFound();
             }
 
-            ViewPointOfSaleViewModel.Item item = null;
+            AppItem item = null;
             if (!string.IsNullOrEmpty(itemCode))
             {
                 var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out _);
@@ -325,7 +324,7 @@ namespace BTCPayServer
 
             var createInvoice = new CreateInvoiceRequest
             {
-                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? null : item?.Price,
+                Amount =  item?.PriceType == AppItemPriceType.Topup ? null : item?.Price,
                 Currency = currencyCode,
                 Checkout = new InvoiceDataBase.CheckoutOptions
                 {
@@ -339,7 +338,7 @@ namespace BTCPayServer
                 AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
             };
 
-            var allowOverpay = item?.PriceType is not ViewPointOfSaleViewModel.ItemPriceType.Fixed;
+            var allowOverpay = item?.PriceType is not AppItemPriceType.Fixed;
             var invoiceMetadata = new InvoiceMetadata { OrderId = AppService.GetRandomOrderId() };
             if (item != null)
             {

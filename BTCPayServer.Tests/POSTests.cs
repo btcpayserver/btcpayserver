@@ -80,7 +80,6 @@ fruit tea:
         Assert.Equal( 1 ,parsedDefault[0].Price);
         Assert.Equal( AppItemPriceType.Fixed ,parsedDefault[0].PriceType);
         Assert.Null( parsedDefault[0].AdditionalData);
-        Assert.Null( parsedDefault[0].PaymentMethods);
         
         
         Assert.Equal( "Herbal Tea" ,parsedDefault[4].Title);
@@ -91,7 +90,6 @@ fruit tea:
         Assert.Equal( 1.8m ,parsedDefault[4].Price);
         Assert.Equal( AppItemPriceType.Minimum ,parsedDefault[4].PriceType);
         Assert.Null( parsedDefault[4].AdditionalData);
-        Assert.Null( parsedDefault[4].PaymentMethods);
         }
 
         [Fact]

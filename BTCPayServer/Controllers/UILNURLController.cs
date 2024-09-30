@@ -320,13 +320,8 @@ namespace BTCPayServer
                     item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
                     item1.Id.Equals(escapedItemId, StringComparison.InvariantCultureIgnoreCase));
 
-                if (item is null ||
-                    item.Inventory <= 0 ||
-                    (item.PaymentMethods?.Any() is true &&
-                     item.PaymentMethods?.Any(s => PaymentMethodId.Parse(s) == pmi) is false))
-                {
+                if (item is null || item.Inventory <= 0)
                     return NotFound();
-                }
             }
             else if (app.AppType == PointOfSaleAppType.AppType && posS?.ShowCustomAmount is not true)
             {

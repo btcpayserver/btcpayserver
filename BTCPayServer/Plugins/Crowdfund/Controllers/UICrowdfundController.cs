@@ -171,11 +171,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 {
                     return NotFound("Option was out of stock");
                 }
-                if (choice?.PaymentMethods?.Any() is true)
-                {
-                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
-                }
             }
             else
             {

@@ -758,39 +758,6 @@ noninventoryitem:
                         AppService.Parse(vmpos.Template).Single(item => item.Id == "inventoryitem").Inventory);
                 }, 10000);
 
-                //test payment methods option
-                vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-                vmpos.Title = "hello";
-                vmpos.Currency = "BTC";
-                vmpos.Template = @"
-btconly:
-  price: 1.0
-  title: good apple
-  payment_methods:
-    - BTC
-normal:
-  price: 1.0";
-                vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
-                Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result);
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "normal").Result);
-                invoices = user.BitPay.GetInvoices();
-                var normalInvoice = invoices.Single(invoice => invoice.ItemCode == "normal");
-                var btcOnlyInvoice = invoices.Single(invoice => invoice.ItemCode == "btconly");
-                Assert.Single(btcOnlyInvoice.CryptoInfo);
-                Assert.Equal("BTC",
-                    btcOnlyInvoice.CryptoInfo.First().CryptoCode);
-                Assert.Equal("BTC-CHAIN",
-                    btcOnlyInvoice.CryptoInfo.First().PaymentType);
-
-                Assert.Equal(2, normalInvoice.CryptoInfo.Length);
-                Assert.Contains(
-                    normalInvoice.CryptoInfo,
-                    s => "BTC-CHAIN" == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
-                             s.CryptoCode));
-
                 //test topup option
                 vmpos.Template = @"
 a:

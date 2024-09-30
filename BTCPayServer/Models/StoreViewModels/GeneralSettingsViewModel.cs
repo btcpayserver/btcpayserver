@@ -59,5 +59,19 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Minimum acceptable expiration time for BOLT11 for refunds")]
         [Range(0, 365 * 10)]
         public long BOLT11Expiration { get; set; }
+
+        [Display(Name = "Show recommended fee")]
+        public bool ShowRecommendedFee { get; set; }
+
+        [Display(Name = "Recommended fee confirmation target blocks")]
+        [Range(1, double.PositiveInfinity)]
+        public int RecommendedFeeBlockTarget { get; set; }
+
+        [Display(Name = "Payment invalid if transactions fails to confirm … after invoice expiration")]
+        [Range(10, 60 * 24 * 24)]
+        public int MonitoringExpiration { get; set; }
+
+        [Display(Name = "Consider the invoice settled when the payment transaction …")]
+        public SpeedPolicy SpeedPolicy { get; set; }
     }
 }

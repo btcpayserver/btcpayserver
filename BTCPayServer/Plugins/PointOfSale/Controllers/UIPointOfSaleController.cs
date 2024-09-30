@@ -201,12 +201,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 {
                     return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                 }
-
-                if (choice?.PaymentMethods?.Any() is true)
-                {
-                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
-                }
             }
             else
             {

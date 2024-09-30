@@ -446,12 +446,6 @@ namespace BTCPayServer.Hosting
                         case "image":
                             currentItem.Image = scalarValue?.Value;
                             break;
-                        case "payment_methods" when spec.Value is YamlSequenceNode pmSequenceNode:
-
-                            currentItem.PaymentMethods = pmSequenceNode.Children
-                                .Select(node => (node as YamlScalarNode)?.Value?.Trim())
-                                .Where(node => !string.IsNullOrEmpty(node)).ToArray();
-                            break;
                         case "price_type":
                         case "custom":
                             if (bool.TryParse(scalarValue?.Value, out var customBoolValue))

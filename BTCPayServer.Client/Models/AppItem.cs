@@ -41,9 +41,6 @@ public class AppItem
     [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
     public int? Inventory { get; set; }
 
-    [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
-    public string[] PaymentMethods { get; set; }
-
     [JsonExtensionData]
     public Dictionary<string, object> AdditionalData { get; set; }
 }

@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -513,6 +514,16 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 parsedAnimationColors = new CrowdfundSettings().AnimationColors;
             }
 
+            UploadImageResultModel imageUpload = null;
+            if (vm.MainImageFile != null)
+            {
+                imageUpload = await _fileService.UploadImage(vm.MainImageFile, userId);
+                if (!imageUpload.Success)
+                {
+                    ModelState.AddModelError(nameof(vm.MainImageFile), imageUpload.Response);
+                }
+            }
+
             if (!ModelState.IsValid)
             {
                 return View("Crowdfund/UpdateCrowdfund", vm);
@@ -548,17 +559,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 FormId = vm.FormId
             };
 
-            if (vm.MainImageFile != null)
+            if (imageUpload?.Success is true)
             {
-                var imageUpload = await _fileService.UploadImage(vm.MainImageFile, userId);
-                if (!imageUpload.Success)
-                {
-                    ModelState.AddModelError(nameof(vm.MainImageFile), imageUpload.Response);
-                }
-                else
-                {
-                    newSettings.MainImageUrl = imageUpload.StoredFile.Id;
-                }
+                newSettings.MainImageUrl = imageUpload.StoredFile.Id;
             }
             else if (RemoveLogoFile)
             {

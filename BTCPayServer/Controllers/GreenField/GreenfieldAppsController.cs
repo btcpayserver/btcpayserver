@@ -80,8 +80,8 @@ namespace BTCPayServer.Controllers.Greenfield
             appData.SetSettings(settings);
 
             await _appService.UpdateOrCreateApp(appData);
-
-            return Ok(await ToCrowdfundModel(appData));
+            var model = await ToCrowdfundModel(appData);
+            return Ok(model);
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/apps/pos")]
@@ -212,7 +212,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return AppNotFound();
             }
 
-            return Ok(await ToCrowdfundModel(app));
+            var model = await ToCrowdfundModel(app);
+            return Ok(model);
         }
 
         [HttpDelete("~/api/v1/apps/{appId}")]

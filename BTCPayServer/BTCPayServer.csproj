@@ -74,6 +74,7 @@
 
 	<ItemGroup>
 	  <None Include="Views\UIReports\StoreReports.cshtml" />
+	  <None Include="Views\UIServer\_PluginModal.cshtml" />
 	  <None Include="wwwroot\vendor\jquery\jquery.js" />
 	  <None Include="wwwroot\vendor\jquery\jquery.min.js" />
 	</ItemGroup>
@@ -99,12 +100,8 @@
 
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
-    <Watch Remove="Views\Shared\LocalhostBrowserSupport.cshtml" />
-    <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
-    <Watch Remove="Views\UIReports\StoreReports.cshtml" />
-    <Watch Remove="Views\UIServer\CreateDictionary.cshtml" />
-    <Watch Remove="Views\UIServer\EditDictionary.cshtml" />
-    <Watch Remove="Views\UIServer\ListDictionaries.cshtml" />
+    <Content Remove="Views\UIServer\_PluginModal.cshtml" />
+    <Watch Remove="Views\UIServer\_PluginModal.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>

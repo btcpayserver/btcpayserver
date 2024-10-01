@@ -139,6 +139,8 @@ Enable tips
 End date
 Error
 Expiration Date
+Explore
+Explore Plugins
 Export
 Extends the BTCPay Server Dark theme
 Extends the BTCPay Server Light theme
@@ -176,6 +178,7 @@ Logout
 Logs
 Maintenance
 Make Crowdfund Public
+Manage
 Manage Account
 Manage Plugins
 Master fingerprint

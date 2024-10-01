@@ -1,0 +1,223 @@
+@using BTCPayServer.Plugins
+@model BTCPayServer.Models.ServerViewModels.ListPluginsViewModel
+@inject PluginService PluginService
+@{
+    ViewData.SetActivePage(ServerNavPages.Explore, "Explore Plugins");
+
+    var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
+
+    var availablePluginsList = Model.Available
+        .GroupBy(plugin => plugin.Identifier)
+        .Select(group =>
+        {
+            var ordered = group.OrderByDescending(plugin => plugin.Version).ToArray();
+            return ordered.FirstOrDefault(plugin => PluginManager.DependenciesMet(plugin.Dependencies, installed))
+                   ?? ordered.First();
+        })
+        .ToList();
+
+    var availablePlugins = Model.Available.GroupBy(plugin => plugin.Identifier).ToList();
+
+    var recentPlugins = availablePluginsList.OrderByDescending(c => c.BuildDate).Take(9).ToList();
+    var popularPlugins = availablePluginsList.Where(c => c.DownloadStat != null).OrderByDescending(c => c.DownloadStat).Take(5).ToList();
+
+}
+
+<style>
+    .modal-content > .modal-body > .p-3:last-child > .row > [class*='col-']:last-child {
+        border-bottom: none;
+    }
+
+    .modal-content > .modal-body > .p-3:last-child > .row > .col-lg-5 {
+        border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+<div class="sticky-header">
+    <h2>
+        @ViewData["Title"]
+        <a href="#descriptor" data-bs-toggle="collapse">
+            <vc:icon symbol="info" />
+        </a>
+    </h2>
+    <a id="page-primary" href="https://plugin-builder.btcpayserver.org/" target="_blank" rel="noreferrer noopener" class="btn btn-primary mt-3 mt-sm-0" role="button">
+        Submit a Plugin
+    </a>
+</div>
+
+<div id="descriptor" class="collapse">
+
+    <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
+        <div class="flex-fill">
+            <h5 class="alert-heading">Important notice about plugins</h5>
+            <p class="mb-0">
+                Plugins are developed by third parties. They need to be updated and maintained regularly in addition to BTCPay Server. Use plugins at your own risk.
+                <a href="#warning-details" data-bs-toggle="collapse" class="alert-link">Read more</a>
+            </p>
+            <div class="collapse" id="warning-details">
+                <p class="my-3"><strong>Use at Your Own Risk:</strong> Plugins in this store are developed by independent third parties. These plugins have not undergone review by the BTCPay Server team.</p>
+                <p class="mb-3"><strong>Disclaimer of Responsibility:</strong> BTCPay Server contributors or Foundation are not liable for any harm, loss, or damage resulting from the installation or use of the plugins. Users assume full responsibility for their installation, use, familiarity with licensing and terms of service and maintenance.</p>
+                <p class="mb-3"><strong>No Official Endorsement:</strong> Inclusion in the list of BTCPay Server plugins does not constitute an endorsement or guarantee of quality, safety, or compatibility.</p>
+                <p class="mb-3"><strong>Due Diligence Advised:</strong> We recommend users exercise caution and conduct their own research or consult the community before installing any plugin.</p>
+                <p class="mb-0"><strong>Feedback and Reporting:</strong> Should you experience issues with a plugin, please provide feedback or report concerns directly to the respective plugin developers.</p>
+            </div>
+        </div>
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+            <vc:icon symbol="close" />
+        </button>
+    </div>
+</div>
+
+<partial name="_StatusMessage" />
+
+<form id="searchForm" class="d-flex flex-wrap flex-sm-nowrap align-items-center gap-3 mb-4 col-xxl-8" asp-action="ExplorePlugins" method="get">
+    <input id="searchInput" asp-for="SearchText" class="form-control" placeholder="Search…" />
+</form>
+
+
+@if (string.IsNullOrEmpty(Model.SearchText))
+{
+    @if (recentPlugins.Any())
+    {
+        <h4 class="mb-4">Recent</h4>
+        <div class="row mb-4">
+            @foreach (var plugin in recentPlugins)
+            {
+                Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
+                var recentPluginModalId = $"modal_{plugin.Identifier}";
+                <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#@recentPluginModalId">
+                        <div class="card h-100 border-0 bg-transparent" id="@plugin.Identifier">
+                            <div class="card-body d-flex">
+                                <div class="me-3 d-flex justify-content-center align-items-center">
+                                    <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                                         alt="@plugin.Name Image"
+                                         class="rounded-4"
+                                         style="width: 80px; height: 80px;">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h4 class="card-title mb-0">@plugin.Name</h4>
+                                    </div>
+                                    <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">
+                                        @plugin.Description
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+}
+
+
+@if (availablePluginsList.Any())
+{
+    @if (string.IsNullOrEmpty(Model.SearchText))
+    {
+        <h4 class="mb-4">All</h4>
+    }
+    <div class="row mb-4">
+        @foreach (var plugin in availablePluginsList)
+        {
+            Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
+
+            var matchedAvailable = Model.Available.Where(availablePlugin => availablePlugin.Identifier == plugin.Identifier && availablePlugin.Version > plugin.Version).OrderByDescending(availablePlugin => availablePlugin.Version).ToArray();
+            var x = matchedAvailable.FirstOrDefault(availablePlugin => PluginManager.DependenciesMet(availablePlugin.Dependencies, installed)) ?? matchedAvailable.FirstOrDefault();
+            var updateAvailable = matchedAvailable.Any();
+
+            var availablePluginModalId = $"modal_{plugin.Identifier}";
+            <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+                <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#@availablePluginModalId">
+                    <div class="card h-100 border-0 bg-transparent" id="@plugin.Identifier">
+                        <div class="card-body d-flex">
+                            <div class="me-3 d-flex justify-content-center align-items-center">
+                                <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                                     alt="@plugin.Name"
+                                     class="rounded-4"
+                                     style="width: 80px; height: 80px;">
+                            </div>
+                            <div class="flex-grow-1">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h4 class="card-title mb-0">@plugin.Name</h4>
+                                </div>
+                                <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">
+                                    @plugin.Description
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </a>
+
+                @{
+                    var partialModel = new PluginPartialViewModel
+                    {
+                        ModalId = availablePluginModalId,
+                        DownloadInfo = downloadInfo,
+                        MatchedPlugin = x,
+                        Plugin = plugin,
+                        UpdateAvailable = updateAvailable,
+                        Commands = Model.Commands,
+                        Available = Model.Available,
+                        Installed = Model.Installed
+                    };
+                }
+                <partial name="_ViewPluginModal" model="partialModel" />
+
+            </div>
+        }
+    </div>
+}
+else
+{
+    <p class="text-secondary">No plugin found for the matching criteria.</p>
+}
+
+@if (string.IsNullOrEmpty(Model.SearchText))
+{
+    @if (popularPlugins.Any())
+    {
+        <h4 class="mb-4">Popular</h4>
+        <div class="row mb-4">
+            @foreach (var plugin in popularPlugins)
+            {
+                Model.DownloadedPluginsByIdentifier.TryGetValue(plugin.Identifier, out var downloadInfo);
+                var recentPluginModalId = $"modal_{plugin.Identifier}";
+                <div class="col col-12 col-md-6 col-lg-12 col-xl-6 col-xxl-4 mb-4">
+                    <a href="#" class="text-decoration-none" data-bs-toggle="modal" data-bs-target="#@recentPluginModalId">
+                        <div class="card h-100 border-0 bg-transparent" id="@plugin.Identifier">
+                            <div class="card-body d-flex">
+                                <div class="me-3 d-flex justify-content-center align-items-center">
+                                    <img src="@(!string.IsNullOrEmpty(downloadInfo.PluginLogo) ? downloadInfo.PluginLogo : Url.Content("~/img/icons/icon-512x512.png"))"
+                                         alt="@plugin.Name Image"
+                                         class="rounded-4"
+                                         style="width: 80px; height: 80px;">
+                                </div>
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h4 class="card-title mb-0">@plugin.Name</h4>
+                                    </div>
+                                    <p class="card-text" style="overflow: hidden; text-overflow: ellipsis; word-wrap: break-word; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">
+                                        @plugin.Description
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+}
+
+@section PageFootContent {
+    <script>
+        document.getElementById('searchInput').addEventListener('input', function () {
+            if (!this.value) {
+                document.getElementById('searchForm').submit();
+            }
+        });
+    </script>
+}

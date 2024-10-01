@@ -55,7 +55,7 @@ namespace BTCPayServer.Abstractions.Extensions
             viewData[ACTIVE_CATEGORY_KEY] = activeCategory;
         }
 
-        public static bool IsActiveCategory(this ViewDataDictionary viewData, string category, object id = null)
+        public static bool IsCategoryActive(this ViewDataDictionary viewData, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_CATEGORY_KEY)) return false;
             var activeId = viewData[ACTIVE_ID_KEY];
@@ -65,12 +65,12 @@ namespace BTCPayServer.Abstractions.Extensions
             return categoryMatch && idMatch;
         }
 
-        public static bool IsActiveCategory<T>(this ViewDataDictionary viewData, T category, object id = null)
+        public static bool IsCategoryActive<T>(this ViewDataDictionary viewData, T category, object id = null)
         {
-            return IsActiveCategory(viewData, category.ToString(), id);
+            return IsCategoryActive(viewData, category.ToString(), id);
         }
 
-        public static bool IsActivePage(this ViewDataDictionary viewData, string page, string category, object id = null)
+        public static bool IsPageActive(this ViewDataDictionary viewData, string page, string category, object id = null)
         {
             if (!viewData.ContainsKey(ACTIVE_PAGE_KEY)) return false;
             var activeId = viewData[ACTIVE_ID_KEY];
@@ -82,7 +82,7 @@ namespace BTCPayServer.Abstractions.Extensions
             return categoryAndPageMatch && idMatch;
         }
         
-        public static bool IsActivePage<T>(this ViewDataDictionary viewData, IEnumerable<T> pages, object id = null)
+        public static bool IsPageActive<T>(this ViewDataDictionary viewData, IEnumerable<T> pages, object id = null)
             where T : IConvertible
         {
             return pages.Any(page => ActivePageClass(viewData, page.ToString(), page.GetType().ToString(), id) == ACTIVE_CLASS);
@@ -95,7 +95,7 @@ namespace BTCPayServer.Abstractions.Extensions
 
         public static string ActiveCategoryClass(this ViewDataDictionary viewData, string category, object id = null)
         {
-            return IsActiveCategory(viewData, category, id) ? ACTIVE_CLASS : null;
+            return IsCategoryActive(viewData, category, id) ? ACTIVE_CLASS : null;
         }
 
         public static string ActivePageClass<T>(this ViewDataDictionary viewData, T page, object id = null)
@@ -106,12 +106,42 @@ namespace BTCPayServer.Abstractions.Extensions
 
         public static string ActivePageClass(this ViewDataDictionary viewData, string page, string category, object id = null)
         {
-            return IsActivePage(viewData, page, category, id) ? ACTIVE_CLASS : null;
+            return IsPageActive(viewData, page, category, id) ? ACTIVE_CLASS : null;
         }
-        
+
         public static string ActivePageClass<T>(this ViewDataDictionary viewData, IEnumerable<T> pages, object id = null) where T : IConvertible
         {
-            return IsActivePage(viewData, pages, id) ? ACTIVE_CLASS : null;
+            return IsPageActive(viewData, pages, id) ? ACTIVE_CLASS : null;
+        }
+
+        [Obsolete("Use ActiveCategoryClass instead")]
+        public static string IsActiveCategory<T>(this ViewDataDictionary viewData, T category, object id = null)
+        {
+            return ActiveCategoryClass(viewData, category, id);
+        }
+
+        [Obsolete("Use ActiveCategoryClass instead")]
+        public static string IsActiveCategory(this ViewDataDictionary viewData, string category, object id = null)
+        {
+            return ActiveCategoryClass(viewData, category, id);
+        }
+
+        [Obsolete("Use ActivePageClass instead")]
+        public static string IsActivePage<T>(this ViewDataDictionary viewData, T page, object id = null) where T : IConvertible
+        {
+            return ActivePageClass(viewData, page, id);
+        }
+
+        [Obsolete("Use ActivePageClass instead")]
+        public static string IsActivePage<T>(this ViewDataDictionary viewData, IEnumerable<T> pages, object id = null) where T : IConvertible
+        {
+            return ActivePageClass(viewData, pages, id);
+        }
+
+        [Obsolete("Use ActivePageClass instead")]
+        public static string IsActivePage(this ViewDataDictionary viewData, string page, string category, object id = null)
+        {
+            return ActivePageClass(viewData, page, category, id);
         }
 
         public static HtmlString ToBrowserDate(this DateTimeOffset date, string netFormat, string jsDateFormat = "short", string jsTimeFormat = "short")

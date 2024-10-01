@@ -142,12 +142,14 @@ First, install .NET SDK v8.0 as specified by the [Microsoft website](https://dot
 On Powershell:
 
 ```powershell
+[devcontainer.json](https://github.com/user-attachments/files/17201027/devcontainer.json)
 .\build.ps1
 ```
 
 On linux:
 
 ```sh
+[export-Sarsilmaz02-1727746179.json.gz](https://github.com/user-attachments/files/17201032/export-Sarsilmaz02-1727746179.json.gz)
 ./build.sh
 ```
 

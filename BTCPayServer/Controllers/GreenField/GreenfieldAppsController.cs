@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -28,12 +29,14 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldAppsController : ControllerBase
     {
         private readonly AppService _appService;
+        private readonly UriResolver _uriResolver;
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencies;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public GreenfieldAppsController(
             AppService appService,
+            UriResolver uriResolver,
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             CurrencyNameTable currencies,
@@ -41,6 +44,7 @@ namespace BTCPayServer.Controllers.Greenfield
         )
         {
             _appService = appService;
+            _uriResolver = uriResolver;
             _storeRepository = storeRepository;
             _currencies = currencies;
             _userManager = userManager;
@@ -77,7 +81,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             await _appService.UpdateOrCreateApp(appData);
 
-            return Ok(ToCrowdfundModel(appData));
+            return Ok(await ToCrowdfundModel(appData));
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/apps/pos")]
@@ -208,7 +212,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 return AppNotFound();
             }
 
-            return Ok(ToCrowdfundModel(app));
+            return Ok(await ToCrowdfundModel(app));
         }
 
         [HttpDelete("~/api/v1/apps/{appId}")]
@@ -411,7 +415,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        private CrowdfundAppData ToCrowdfundModel(AppData appData)
+        private async Task<CrowdfundAppData> ToCrowdfundModel(AppData appData)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             Enum.TryParse<CrowdfundResetEvery>(settings.ResetEvery.ToString(), true, out var resetEvery);
@@ -432,7 +436,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = settings.Description,
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
-                MainImageUrl = settings.MainImageUrl,
+                MainImageUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), new UnresolvedUri.Raw(settings.MainImageUrl)),
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
                 DisqusEnabled = settings.DisqusEnabled,

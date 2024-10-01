@@ -440,7 +440,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         [HttpPost("{appId}/settings/crowdfund")]
         public async Task<IActionResult> UpdateCrowdfund(string appId, UpdateCrowdfundViewModel vm,
-            [FromForm] string command,
             [FromForm] bool RemoveLogoFile = false)
         {
             var userId = GetUserId();

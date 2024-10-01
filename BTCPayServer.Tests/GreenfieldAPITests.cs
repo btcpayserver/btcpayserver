@@ -795,8 +795,8 @@ namespace BTCPayServer.Tests
             posSales = await client.GetAppSales(posApp.Id);
             Assert.Equal(7, posSales.SalesCount);
             Assert.Equal(7, posSales.Series.Count());
-            Assert.Equal(0, posSales.Series.First().SalesCount);
-            Assert.Equal(7, posSales.Series.Last().SalesCount);
+            Assert.Equal(7, posSales.Series.First().SalesCount);
+            Assert.Equal(0, posSales.Series.Last().SalesCount);
 
             posTopItems = await client.GetAppTopItems(posApp.Id);
             Assert.Equal(3, posTopItems.Count);

@@ -411,8 +411,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
                 TargetCurrency = settings.TargetCurrency,
+                MainImageUrl = settings.MainImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), settings.MainImageUrl),
                 Description = settings.Description,
-                MainImageUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), new UnresolvedUri.FileIdUri(settings.MainImageUrl)),
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
                 NotificationUrl = settings.NotificationUrl,
@@ -561,7 +561,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             if (imageUpload?.Success is true)
             {
-                newSettings.MainImageUrl = imageUpload.StoredFile.Id;
+                newSettings.MainImageUrl = new UnresolvedUri.FileIdUri(imageUpload.StoredFile.Id);
             }
             else if (RemoveLogoFile)
             {

@@ -76,7 +76,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Archived = request.Archived ?? false
             };
 
-            var settings = ToCrowdfundSettings(request, new CrowdfundSettings { Title = request.Title ?? request.AppName });
+            var settings = ToCrowdfundSettings(request);
             appData.SetSettings(settings);
 
             await _appService.UpdateOrCreateApp(appData);
@@ -260,7 +260,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(404, "app-not-found", "The app with specified ID was not found");
         }
 
-        private CrowdfundSettings ToCrowdfundSettings(CrowdfundAppRequest request, CrowdfundSettings settings)
+        private CrowdfundSettings ToCrowdfundSettings(CrowdfundAppRequest request)
         {
             var parsedSounds = ValidateStringArray(request.Sounds);
             var parsedColors = ValidateStringArray(request.AnimationColors);
@@ -276,7 +276,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = request.Description?.Trim(),
                 EndDate = request.EndDate?.UtcDateTime,
                 TargetAmount = request.TargetAmount,
-                MainImageUrl = request.MainImageUrl?.Trim(),
+                MainImageUrl = request.MainImageUrl == null ? null : UnresolvedUri.Create(request.MainImageUrl),
                 NotificationUrl = request.NotificationUrl?.Trim(),
                 Tagline = request.Tagline?.Trim(),
                 PerksTemplate = request.PerksTemplate is not null ? AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim())) : null,
@@ -437,7 +437,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = settings.Description,
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
-                MainImageUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), new UnresolvedUri.Raw(settings.MainImageUrl)),
+                MainImageUrl = settings.MainImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), settings.MainImageUrl),
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
                 DisqusEnabled = settings.DisqusEnabled,

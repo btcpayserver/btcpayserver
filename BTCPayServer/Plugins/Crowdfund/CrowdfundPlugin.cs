@@ -237,9 +237,9 @@ namespace BTCPayServer.Plugins.Crowdfund
                 }
             };
             var httpContext = _httpContextAccessor.HttpContext;
-            if (httpContext != null)
+            if (httpContext != null && settings.MainImageUrl != null)
             {
-                vm.MainImageUrl = await _uriResolver.Resolve(httpContext.Request.GetAbsoluteRootUri(), new UnresolvedUri.FileIdUri(settings.MainImageUrl));
+                vm.MainImageUrl = await _uriResolver.Resolve(httpContext.Request.GetAbsoluteRootUri(), settings.MainImageUrl);
             }
             return vm;
         }

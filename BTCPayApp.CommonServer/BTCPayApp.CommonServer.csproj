@@ -11,6 +11,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.6" />
+      <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8" />
     </ItemGroup>
 </Project>

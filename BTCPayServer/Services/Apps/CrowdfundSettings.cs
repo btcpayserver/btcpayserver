@@ -1,11 +1,20 @@
 using System;
+using System.Globalization;
+using System.Linq;
 
 namespace BTCPayServer.Services.Apps
 {
     public class CrowdfundSettings
     {
+        public CrowdfundSettings()
+        {
+            Language = CultureInfo.GetCultures(CultureTypes.AllCultures).SingleOrDefault(ci => ci.NativeName == "English").TwoLetterISOLanguageName;
+        }
+
         public string Title { get; set; }
         public string Description { get; set; }
+        public string Language { get; set; }
+        public string HeadHtmlTags { get; set; }
         public bool Enabled { get; set; } = true;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

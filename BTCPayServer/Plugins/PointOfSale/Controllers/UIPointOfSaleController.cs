@@ -26,6 +26,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -122,6 +123,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = settings.CustomTipPercentages,
                 AppId = appId,
                 StoreId = store.Id,
+                Lang = settings.Language,
+                HeadHtmlTags = settings.HeadHtmlTags,
                 Description = settings.Description,
             });
         }
@@ -585,6 +588,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
+                Language = settings.Language,
+                HeadHtmlTags = settings.HeadHtmlTags,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
@@ -679,6 +684,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
+                Language = vm.Language,
+                HeadHtmlTags = SanitizeHtml(vm.HeadHtmlTags),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
@@ -713,6 +720,24 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 currency = (await _storeRepository.FindStore(storeId)).GetStoreBlob().DefaultCurrency;
             }
             return currency.Trim().ToUpperInvariant();
+        }
+
+        private string SanitizeHtml(string inputHtml)
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            sanitizer.AllowedTags.Clear(); 
+            sanitizer.AllowedTags.Add("meta");
+
+            sanitizer.AllowedAttributes.Clear();
+            sanitizer.AllowedAttributes.Add("name");  
+            sanitizer.AllowedAttributes.Add("http-equiv"); 
+            sanitizer.AllowedAttributes.Add("content");   
+            sanitizer.AllowedAttributes.Add("value");   
+            sanitizer.AllowedAttributes.Add("property");
+
+            sanitizer.AllowDataAttributes = false; 
+            return sanitizer.Sanitize(inputHtml);
         }
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();

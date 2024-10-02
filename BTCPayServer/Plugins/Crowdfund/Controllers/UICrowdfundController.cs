@@ -21,6 +21,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -404,6 +405,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
+                HeadHtmlTags = settings.HeadHtmlTags,
+                Language = settings.Language,
                 TargetCurrency = settings.TargetCurrency,
                 Description = settings.Description,
                 MainImageUrl = settings.MainImageUrl,
@@ -517,6 +520,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
+                HeadHtmlTags = SanitizeHtml(vm.HeadHtmlTags),
+                Language = vm.Language,
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,
@@ -567,6 +572,26 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
             return currency.Trim().ToUpperInvariant();
         }
+
+        private string SanitizeHtml(string inputHtml)
+        {
+            var sanitizer = new HtmlSanitizer();
+
+            sanitizer.AllowedTags.Clear();
+            sanitizer.AllowedTags.Add("meta");
+
+            sanitizer.AllowedAttributes.Clear();
+            sanitizer.AllowedAttributes.Add("name");
+            sanitizer.AllowedAttributes.Add("http-equiv");
+            sanitizer.AllowedAttributes.Add("content");
+            sanitizer.AllowedAttributes.Add("value");
+            sanitizer.AllowedAttributes.Add("property");
+
+            sanitizer.AllowDataAttributes = false;
+
+            return sanitizer.Sanitize(inputHtml);
+        }
+
 
         private AppData GetCurrentApp() => HttpContext.GetAppData();
 

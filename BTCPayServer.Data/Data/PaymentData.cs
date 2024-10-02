@@ -27,13 +27,15 @@ namespace BTCPayServer.Data
         [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }
         public string Blob2 { get; set; }
-        public string Type { get; set; }
+        public string PaymentMethodId { get; set; }
         [Obsolete("Use Status instead")]
         public bool? Accounted { get; set; }
         public PaymentStatus? Status { get; set; }
         public static bool IsPending(PaymentStatus? status) => throw new NotSupportedException();
-        internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
+        internal static void OnModelCreating(ModelBuilder builder)
         {
+            builder.Entity<PaymentData>()
+                .HasKey(o => new { o.Id, o.PaymentMethodId });
             builder.Entity<PaymentData>()
                    .HasOne(o => o.InvoiceData)
                    .WithMany(i => i.Payments).OnDelete(DeleteBehavior.Cascade);

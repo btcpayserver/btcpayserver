@@ -71,6 +71,12 @@ public class InvoiceBlobMigratorHostedService : BlobMigratorHostedService<Invoic
                     paymentEntity.Details = JToken.FromObject(handler.ParsePaymentDetails(paymentEntity.Details), handler.Serializer);
                 }
                 pay.SetBlob(paymentEntity);
+
+                if (pay.PaymentMethodId != pay.MigratedPaymentMethodId)
+                {
+                    ctx.Entry(pay).State = EntityState.Added;
+                    ctx.Payments.Remove(new PaymentData() { Id = pay.Id, PaymentMethodId = pay.MigratedPaymentMethodId });
+                }
             }
         }
         return invoices[^1].Created;

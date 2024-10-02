@@ -73,6 +73,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
                 AddressIndex = address.AddressIndex,
                 DepositAddress = address.Address
             }, Serializer);
+            context.TrackedDestinations.Add(address.Address);
         }
 
         object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)

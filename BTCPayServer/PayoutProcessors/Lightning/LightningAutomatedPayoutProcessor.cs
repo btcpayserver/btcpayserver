@@ -121,12 +121,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 		var processorBlob = GetBlob(PayoutProcessorSettings);
         var lightningSupportedPaymentMethod = (LightningPaymentMethodConfig)paymentMethodConfig;
         if (lightningSupportedPaymentMethod.IsInternalNode &&
-            !(await Task.WhenAll((await _storeRepository.GetStoreUsers(PayoutProcessorSettings.StoreId))
-                .Where(user =>
-                    user.StoreRole.ToPermissionSet(PayoutProcessorSettings.StoreId)
-                        .Contains(Policies.CanModifyStoreSettings, PayoutProcessorSettings.StoreId))
-                .Select(user => user.Id)
-                .Select(s => _userService.IsAdminUser(s)))).Any(b => b))
+            !await _storeRepository.InternalNodePayoutAuthorized(PayoutProcessorSettings.StoreId))
         {
             return false;
         }

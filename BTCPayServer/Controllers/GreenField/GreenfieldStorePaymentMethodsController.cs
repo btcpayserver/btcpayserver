@@ -145,9 +145,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (includeConfig is true)
             {
-                var canModifyStore = (await _authorizationService.AuthorizeAsync(User, null,
-                    new PolicyRequirement(Policies.CanModifyStoreSettings))).Succeeded;
-                if (!canModifyStore)
+                if (!await _authorizationService.CanModifyStore(User))
                     return this.CreateAPIPermissionError(Policies.CanModifyStoreSettings);
             }
 

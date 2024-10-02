@@ -160,13 +160,6 @@ namespace BTCPayServer.Services
             return res.Succeeded;
         }
 
-        public async Task<bool> IsAdminUser(string userId)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            return Roles.HasServerAdmin(await userManager.GetRolesAsync(new ApplicationUser() { Id = userId }));
-        }
-
         public async Task<bool> IsAdminUser(ApplicationUser user)
         {
             using var scope = _serviceProvider.CreateScope();

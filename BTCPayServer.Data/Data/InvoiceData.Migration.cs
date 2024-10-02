@@ -210,7 +210,7 @@ namespace BTCPayServer.Data
             }
 
             blob.ConvertNumberToString("price");
-            Currency = blob["currency"].Value<string>();
+            Currency = blob["currency"].Value<string>().ToUpperInvariant();
             var isTopup = blob["type"]?.Value<string>() is "TopUp";
             var amount = decimal.Parse(blob["price"].Value<string>(), CultureInfo.InvariantCulture);
             Amount = isTopup && amount == 0 ? null : decimal.Parse(blob["price"].Value<string>(), CultureInfo.InvariantCulture);

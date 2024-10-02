@@ -495,7 +495,7 @@ namespace BTCPayServer.Services.Invoices
         public DateTimeOffset MonitoringExpiration { get; set; }
 
         [JsonIgnore]
-        public HashSet<string> AvailableAddressHashes { get; set; }
+        public HashSet<(PaymentMethodId PaymentMethodId, string Address)> Addresses { get; set; }
         [JsonProperty]
         public bool ExtendedNotifications { get; set; }
 

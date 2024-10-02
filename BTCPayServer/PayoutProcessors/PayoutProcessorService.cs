@@ -53,11 +53,11 @@ public class PayoutProcessorService : EventHostedServiceBase
         public PayoutProcessorQuery(string storeId, PayoutMethodId payoutMethodId)
         {
             Stores = new[] { storeId };
-            PayoutMethodIds = new[] { payoutMethodId };
+            PayoutMethods = new[] { payoutMethodId };
         }
         public string[] Stores { get; set; }
         public string[] Processors { get; set; }
-        public PayoutMethodId[] PayoutMethodIds { get; set; }
+        public PayoutMethodId[] PayoutMethods { get; set; }
     }
 
     public async Task<List<PayoutProcessorData>> GetProcessors(PayoutProcessorQuery query)
@@ -73,9 +73,9 @@ public class PayoutProcessorService : EventHostedServiceBase
         {
             queryable = queryable.Where(data => query.Stores.Contains(data.StoreId));
         }
-        if (query.PayoutMethodIds is not null)
+        if (query.PayoutMethods is not null)
         {
-            var paymentMethods = query.PayoutMethodIds.Select(d => d.ToString()).Distinct().ToArray();
+            var paymentMethods = query.PayoutMethods.Select(d => d.ToString()).Distinct().ToArray();
             queryable = queryable.Where(data => paymentMethods.Contains(data.PayoutMethodId));
         }
 

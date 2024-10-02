@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Tests.Logging;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
@@ -42,6 +43,13 @@ namespace BTCPayServer.Tests
             }), _loggerFactory);
         }
 
+        public InvoiceRepository GetInvoiceRepository()
+        {
+            var logs = new BTCPayServer.Logging.Logs();
+            logs.Configure(_loggerFactory);
+            return new InvoiceRepository(CreateContextFactory(), new EventAggregator(logs));
+        }
+
         public ApplicationDbContext CreateContext() => CreateContextFactory().CreateContext();
 
         public async Task MigrateAsync()
@@ -59,18 +67,21 @@ namespace BTCPayServer.Tests
             await conn.ExecuteAsync($"CREATE DATABASE \"{dbname}\";");
         }
 
-        public async Task MigrateUntil(string migration)
+        public async Task MigrateUntil(string migration = null)
         {
             using var ctx = CreateContext();
             var db = ctx.Database.GetDbConnection();
             await EnsureCreatedAsync();
             var migrations = ctx.Database.GetMigrations().ToArray();
-            var untilMigrationIdx = Array.IndexOf(migrations, migration);
-            if (untilMigrationIdx == -1)
-                throw new InvalidOperationException($"Migration {migration} not found");
-            notAppliedMigrations = migrations[untilMigrationIdx..];
-            await db.ExecuteAsync("CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (\"MigrationId\" TEXT, \"ProductVersion\" TEXT)");
-            await db.ExecuteAsync("INSERT INTO \"__EFMigrationsHistory\" VALUES (@migration, '8.0.0')", notAppliedMigrations.Select(m => new { migration = m }).ToArray());
+            if (migration is not null)
+            {
+                var untilMigrationIdx = Array.IndexOf(migrations, migration);
+                if (untilMigrationIdx == -1)
+                    throw new InvalidOperationException($"Migration {migration} not found");
+                notAppliedMigrations = migrations[untilMigrationIdx..];
+                await db.ExecuteAsync("CREATE TABLE IF NOT EXISTS \"__EFMigrationsHistory\" (\"MigrationId\" TEXT, \"ProductVersion\" TEXT)");
+                await db.ExecuteAsync("INSERT INTO \"__EFMigrationsHistory\" VALUES (@migration, '8.0.0')", notAppliedMigrations.Select(m => new { migration = m }).ToArray());
+            }
             await ctx.Database.MigrateAsync();
         }
 

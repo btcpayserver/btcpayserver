@@ -39,7 +39,7 @@ namespace BTCPayServer.HostedServices
         public string Description { get; set; }
         public decimal Amount { get; set; }
         public string Currency { get; set; }
-        public PayoutMethodId[] PayoutMethodIds { get; set; }
+        public PayoutMethodId[] PayoutMethods { get; set; }
         public bool AutoApproveClaims { get; set; }
         public TimeSpan? BOLT11Expiration { get; set; }
     }
@@ -119,7 +119,7 @@ namespace BTCPayServer.HostedServices
                 Amount = request.Amount,
                 Currency = request.Currency,
                 StoreId = storeId,
-                PayoutMethodIds = request.PaymentMethods.Select(p => PayoutMethodId.Parse(p)).ToArray(),
+                PayoutMethods = request.PayoutMethods.Select(p => PayoutMethodId.Parse(p)).ToArray(),
                 AutoApproveClaims = request.AutoApproveClaims
             });
         }
@@ -143,7 +143,7 @@ namespace BTCPayServer.HostedServices
             {
                 Name = create.Name ?? string.Empty,
                 Description = create.Description ?? string.Empty,
-                SupportedPayoutMethods = create.PayoutMethodIds,
+                SupportedPayoutMethods = create.PayoutMethods,
                 AutoApproveClaims = create.AutoApproveClaims,
                 View = new PullPaymentBlob.PullPaymentView
                 {

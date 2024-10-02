@@ -19,7 +19,7 @@ namespace BTCPayServer.Controllers
             string sortOrder = null
         )
         {
-            var roles = await _StoreRepository.GetStoreRoles(null, true);
+            var roles = await _StoreRepository.GetStoreRoles(null);
             var defaultRole = (await _StoreRepository.GetDefaultRole()).Role;
             model ??= new RolesViewModel();
             model.DefaultRole = defaultRole;

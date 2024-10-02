@@ -37,8 +37,6 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public List<PullPaymentModel> PullPayments { get; set; } = new List<PullPaymentModel>();
         public override int CurrentPageCount => PullPayments.Count;
-        public string PaymentMethodId { get; set; }
-        public IEnumerable<PaymentMethodId> PaymentMethods { get; set; }
         public PullPaymentState ActiveState { get; set; } = PullPaymentState.Active;
     }
 

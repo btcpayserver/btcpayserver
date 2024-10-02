@@ -31,6 +31,5 @@ namespace BTCPayServer.Services
         public bool FixMappedDomainAppType { get; set; }
         public bool MigrateAppYmlToJson { get; set; }
         public bool MigrateToStoreConfig { get; set; }
-        public bool MigratePayoutProcessors { get; internal set; }
     }
 }

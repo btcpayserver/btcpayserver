@@ -578,6 +578,9 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());
 
+            services.AddSingleton<PaymentRequestsMigratorHostedService>();
+            services.AddSingleton<IHostedService, PaymentRequestsMigratorHostedService>(o => o.GetRequiredService<PaymentRequestsMigratorHostedService>());
+
             // Broken
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));
 

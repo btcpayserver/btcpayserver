@@ -80,6 +80,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             context.Prompt.Destination = address.Address;
             context.Prompt.PaymentMethodFee = MoneroMoney.Convert(feeRatePerByte * 100);
             context.Prompt.Details = JObject.FromObject(details, Serializer);
+            context.TrackedDestinations.Add(address.Address);
         }
         private MoneroPaymentPromptDetails ParsePaymentMethodConfig(JToken config)
         {

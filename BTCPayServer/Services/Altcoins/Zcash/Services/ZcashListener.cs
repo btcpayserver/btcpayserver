@@ -282,12 +282,9 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
             foreach (var destination in transfer.Transfers.GroupBy(destination => destination.Address))
             {
                 //find the invoice corresponding to this address, else skip
-                var address = destination.Key + "#" + paymentMethodId;
-                var invoice = (await _invoiceRepository.GetInvoicesFromAddresses(new[] { address })).FirstOrDefault();
+                var invoice = await _invoiceRepository.GetInvoiceFromAddress(paymentMethodId, destination.Key);
                 if (invoice == null)
-                {
                     continue;
-                }
 
                 var index = destination.First().SubaddrIndex;
 
@@ -377,7 +374,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         private async Task UpdateAnyPendingZcashLikePayment(string cryptoCode)
         {
             var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
-            var invoices = await _invoiceRepository.GetInvoicesWithPendingPayments(paymentMethodId);
+            var invoices = await _invoiceRepository.GetMonitoredInvoices(paymentMethodId);
             if (!invoices.Any())
                 return;
             invoices = invoices.Where(entity => entity.GetPaymentPrompt(paymentMethodId).Activated).ToArray();

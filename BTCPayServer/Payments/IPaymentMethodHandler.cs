@@ -68,6 +68,12 @@ namespace BTCPayServer.Payments
         /// <returns></returns>
         object ParsePaymentPromptDetails(JToken details);
         /// <summary>
+        /// Remove properties from the details which shouldn't appear to non-store owner.
+        /// </summary>
+        /// <param name="details">Prompt details</param>
+        void StripDetailsForNonOwner(object details) { }
+
+        /// <summary>
         /// Parse the configuration of the payment method in the store
         /// </summary>
         /// <param name="config"></param>
@@ -280,7 +286,7 @@ namespace BTCPayServer.Payments
         /// <summary>
         /// This string can be used to query AddressInvoice to find the invoiceId
         /// </summary>
-        public List<string> TrackedDestinations { get; } = new List<string>();
+        public List<string> TrackedDestinations { get; } = new();
 
         internal async Task BeforeFetchingRates()
         {

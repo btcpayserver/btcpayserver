@@ -107,15 +107,15 @@ namespace BTCPayServer.Services.Apps
                     Date = entities.Key,
                     Label = entities.Key.ToString("MMM dd", CultureInfo.InvariantCulture),
                     SalesCount = entities.Count()
-                });
+                }).ToList();
 
             // fill up the gaps
             foreach (var i in Enumerable.Range(0, numberOfDays))
             {
                 var date = (DateTimeOffset.UtcNow - TimeSpan.FromDays(i)).Date;
-                if (!series.Any(e => e.Date == date))
+                if (series.All(e => e.Date != date))
                 {
-                    series = series.Append(new AppSalesStatsItem
+                    series.Add(new AppSalesStatsItem
                     {
                         Date = date,
                         Label = date.ToString("MMM dd", CultureInfo.InvariantCulture)
@@ -126,7 +126,7 @@ namespace BTCPayServer.Services.Apps
             return Task.FromResult(new AppSalesStats
             {
                 SalesCount = series.Sum(i => i.SalesCount),
-                Series = series.OrderBy(i => i.Label)
+                Series = series.OrderBy(i => i.Date)
             });
         }
 

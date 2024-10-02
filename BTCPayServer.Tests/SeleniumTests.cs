@@ -1238,6 +1238,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
+            s.GenerateWallet();
             (_, string appId) = s.CreateApp("PointOfSale");
             s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Tea shop");
@@ -1249,7 +1250,8 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
 			var template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
             Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
-            Assert.Matches("\"categories\": \\[\n\\s+\"Drinks\"\n\\s+\\]", template);
+            Assert.Matches("\"categories\": \\[\r?\n\\s*\"Drinks\"\\s*\\]", template);
+
 
             s.ClickPagePrimary();
             Assert.Contains("App updated", s.FindAlertMessage().Text);

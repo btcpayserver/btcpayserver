@@ -413,6 +413,16 @@
                             "type": "boolean",
                             "default": true
                         }
+                    },
+                    {
+                        "name": "includeSensitive",
+                        "in": "query",
+                        "required": false,
+                        "description": "If `true`, `additionalData` might include sensitive data (such as xpub). Requires the permission `btcpay.store.canmodifystoresettings`.",
+                        "schema": {
+                            "type": "boolean",
+                            "default": false
+                        }
                     }
                 ],
                 "description": "View information about the specified invoice's payment methods",
@@ -644,10 +654,10 @@
                 ]
             }
         },
-    "/api/v1/stores/{storeId}/invoices/{invoiceId}/refund": {
+        "/api/v1/stores/{storeId}/invoices/{invoiceId}/refund": {
             "post": {
                 "tags": [
-          "Invoices"
+                    "Invoices"
                 ],
                 "summary": "Refund invoice",
                 "parameters": [
@@ -668,69 +678,69 @@
                         "schema": {
                             "type": "string"
                         }
-          }
-        ],
-        "description": "Refund invoice",
-        "operationId": "Invoices_Refund",
-        "requestBody": {
-                        "required": true,
-          "content": {
-            "application/json": {
-                        "schema": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                  "name": {
-                    "type": "string",
-                    "description": "Name of the pull payment (Default: 'Refund' followed by the invoice id)",
-                    "nullable": true
-                  },
-                  "description": {
-                    "type": "string",
-                    "description": "Description of the pull payment"
-                  },
-                  "payoutMethodId": {
-                     "$ref": "#/components/schemas/PayoutMethodId"
-                  },
-                  "refundVariant": {
-                    "type": "string",
-                    "description": "* `RateThen`: Refund the crypto currency price, at the rate the invoice got paid.\r\n* `CurrentRate`: Refund the crypto currency price, at the current rate.\r\n*`Fiat`: Refund the invoice currency, at the rate when the refund will be sent.\r\n*`OverpaidAmount`: Refund the crypto currency amount that was overpaid.\r\n*`Custom`: Specify the amount, currency, and rate of the refund. (see `customAmount` and `customCurrency`)",
-                    "x-enumNames": [
-                      "RateThen",
-                      "CurrentRate",
-                      "Fiat",
-                      "Custom"
-                    ],
-                    "enum": [
-                      "RateThen",
-                      "CurrentRate",
-                      "OverpaidAmount",
-                      "Fiat",
-                      "Custom"
-                    ]
-                  },
-                  "subtractPercentage": {
-                    "type": "string",
-                    "format": "decimal",
-                    "description": "Optional percentage by which to reduce the refund, e.g. as processing charge or to compensate for the mining fee.",
-                    "example": "2.1"
-                  },
-                  "customAmount": {
-                    "type": "string",
-                    "format": "decimal",
-                    "description": "The amount to refund if the `refundVariant` is `Custom`.",
-                    "example": "5.00"
-                  },
-                  "customCurrency": {
-                    "type": "string",
-                    "description": "The currency to refund if the `refundVariant` is `Custom`",
-                    "example": "USD"
-                  }
-                }
-              }
+                    }
+                ],
+                "description": "Refund invoice",
+                "operationId": "Invoices_Refund",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "description": "Name of the pull payment (Default: 'Refund' followed by the invoice id)",
+                                        "nullable": true
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "description": "Description of the pull payment"
+                                    },
+                                    "payoutMethodId": {
+                                        "$ref": "#/components/schemas/PayoutMethodId"
+                                    },
+                                    "refundVariant": {
+                                        "type": "string",
+                                        "description": "* `RateThen`: Refund the crypto currency price, at the rate the invoice got paid.\r\n* `CurrentRate`: Refund the crypto currency price, at the current rate.\r\n*`Fiat`: Refund the invoice currency, at the rate when the refund will be sent.\r\n*`OverpaidAmount`: Refund the crypto currency amount that was overpaid.\r\n*`Custom`: Specify the amount, currency, and rate of the refund. (see `customAmount` and `customCurrency`)",
+                                        "x-enumNames": [
+                                            "RateThen",
+                                            "CurrentRate",
+                                            "Fiat",
+                                            "Custom"
+                                        ],
+                                        "enum": [
+                                            "RateThen",
+                                            "CurrentRate",
+                                            "OverpaidAmount",
+                                            "Fiat",
+                                            "Custom"
+                                        ]
+                                    },
+                                    "subtractPercentage": {
+                                        "type": "string",
+                                        "format": "decimal",
+                                        "description": "Optional percentage by which to reduce the refund, e.g. as processing charge or to compensate for the mining fee.",
+                                        "example": "2.1"
+                                    },
+                                    "customAmount": {
+                                        "type": "string",
+                                        "format": "decimal",
+                                        "description": "The amount to refund if the `refundVariant` is `Custom`.",
+                                        "example": "5.00"
+                                    },
+                                    "customCurrency": {
+                                        "type": "string",
+                                        "description": "The currency to refund if the `refundVariant` is `Custom`",
+                                        "example": "USD"
+                                    }
+                                }
+                            }
                         }
                     }
-        },
+                },
                 "responses": {
                     "200": {
                         "description": "Pull payment for refunding the invoice",
@@ -1329,6 +1339,7 @@
                         "anyOf": [
                             {
                                 "type": "object",
+                                "title": "*-LNURL",
                                 "description": "LNURL Pay information",
                                 "properties": {
                                     "providedComment": {
@@ -1342,6 +1353,39 @@
                                         "nullable": true,
                                         "description": "The consumed lightning address of a LN Address payment",
                                         "example": "customer@example.com"
+                                    }
+                                }
+                            },
+                            {
+                                "type": "object",
+                                "title": "*-CHAIN",
+                                "description": "Bitcoin On-Chain payment information",
+                                "properties": {
+                                    "keyPath": {
+                                        "type": "string",
+                                        "description": "The key path relative to the account derviation key.",
+                                        "example": "0/1"
+                                    },
+                                    "payjoinEnabled": {
+                                        "type": "boolean",
+                                        "description": "If the payjoin feature is enabled for this payment method."
+                                    },
+                                    "accountDerivation": {
+                                        "type": "string",
+                                        "description": "The derivation scheme used to derive addresses (null if `includeSensitive` is `false`)",
+                                        "example": "xpub6DVMcQAQCtGbNDTEjQGtR1GRoTKw7AzP6bVivX4gFnewcnRk1r1tbczpfsaYjKKVrmtyiwYqAEnALYzZ8yoTArVsKfZekmwLFqQp4MRgPhy"
+                                    },
+                                    "recommendedFeeRate": {
+                                        "type": "string",
+                                        "format": "decimal",
+                                        "description": "The recommended fee rate for this payment method.",
+                                        "example": "4.107"
+                                    },
+                                    "paymentMethodFeeRate": {
+                                        "type": "string",
+                                        "format": "decimal",
+                                        "description": "The fee rate charged to the user as `PaymentMethodFee`.",
+                                        "example": "3.975"
                                     }
                                 }
                             },

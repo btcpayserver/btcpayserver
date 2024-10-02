@@ -89,7 +89,10 @@ namespace BTCPayServer.Payments.Bitcoin
         {
             return ParsePaymentMethodConfig(config);
         }
-
+        public void StripDetailsForNonOwner(object details)
+        {
+            ((BitcoinPaymentPromptDetails)details).AccountDerivation = null;
+        }
         public async Task AfterSavingInvoice(PaymentMethodContext paymentMethodContext)
         {
             var paymentPrompt = paymentMethodContext.Prompt;

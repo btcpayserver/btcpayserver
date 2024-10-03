@@ -132,11 +132,11 @@ retry:
         /// Because for some reason, the selenium container can't resolve the tests container domain name
         /// </summary>
         public Uri ServerUri;
-        internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
+        public IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
             return FindAlertMessage(new[] { severity });
         }
-        internal IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
+        public IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
         {
             var className = string.Join(", ", severity.Select(statusSeverity => $".alert-{StatusMessageModel.ToString(statusSeverity)}"));
             IWebElement el;
@@ -182,9 +182,12 @@ retry:
             Driver.FindElement(By.Id("RegisterButton")).Click();
             Driver.AssertNoError();
             CreatedUser = usr;
+            Password = "123456";
             return usr;
         }
         string CreatedUser;
+
+        public string Password { get; private set; }
 
         public TestAccount AsTestAccount()
         {

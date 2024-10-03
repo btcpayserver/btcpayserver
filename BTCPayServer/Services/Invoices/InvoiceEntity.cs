@@ -871,14 +871,18 @@ namespace BTCPayServer.Services.Invoices
         [JsonIgnore]
         public decimal Rate => Currency is null ? throw new InvalidOperationException("Currency of the payment prompt isn't set") : ParentEntity.GetInvoiceRate(Currency);
         public int Divisibility { get; set; }
+        /// <summary>
+        /// Total additional fee imposed by this specific payment method.
+        /// It includes the <see cref="TweakFee"/>.
+        /// </summary>
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal PaymentMethodFee { get; set; }
         /// <summary>
-        /// A fee, hidden from UI, meant to be used when a payment method has a service provider which
+        /// An additional fee, hidden from UI, meant to be used when a payment method has a service provider which
         /// have a different way of converting the invoice's amount into the currency of the payment method.
         /// This fee can avoid under/over payments when this case happens.
         /// 
-        /// Please use <see cref="AddTweakFee(decimal)"/> so that the tweak fee is also added to the <see cref="PaymentMethodFee"/>.
+        /// You need to increment it with <see cref="AddTweakFee(decimal)"/> so that the tweak fee is also added to the <see cref="PaymentMethodFee"/>.
         /// </summary>
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal TweakFee { get; set; }

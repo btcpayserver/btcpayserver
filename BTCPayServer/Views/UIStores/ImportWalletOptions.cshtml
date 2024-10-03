@@ -1,8 +1,12 @@
 @model WalletSetupViewModel
+
+@inject Microsoft.Extensions.Localization.IStringLocalizer StringLocalizer
+
 @inject BTCPayNetworkProvider BTCPayNetworkProvider
 @{
-    Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Import {Model.CryptoCode} Wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+	Layout = "_LayoutWalletSetup";
+	var title = StringLocalizer["Import {0} Wallet", Model.CryptoCode];
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, title, $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -12,8 +16,8 @@
 }
 
 <header class="text-center">
-    <h1>Choose your import method</h1>
-    <p class="lead text-secondary mt-3">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
+    <h1 text-translate="true">Choose your import method</h1>
+	<p class="lead text-secondary mt-3" text-translate="true">The following methods assume that you already have an existing&nbsp;wallet created and backed up.</p>
 </header>
 <style>
     .icon.icon-wallet-xpub,
@@ -31,10 +35,10 @@
                 </div>
                 <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
                     <div>
-                        <h4>Connect hardware&nbsp;wallet</h4>
-                        <p class="mb-0 text-secondary">Import your public keys using our Vault application</p>
+						<h4 text-translate="true">Connect hardware&nbsp;wallet</h4>
+						<p class="mb-0 text-secondary" text-translate="true">Import your public keys using our Vault application</p>
                     </div>
-                    <small class="d-block text-primary mt-2 mt-lg-0">Recommended</small>
+					<small class="d-block text-primary mt-2 mt-lg-0" text-translate="true">Recommended</small>
                 </div>
                 <vc:icon symbol="caret-right" />
             </a>
@@ -45,10 +49,10 @@
                     </div>
                     <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
                         <div>
-                            <h4>Connect hardware&nbsp;wallet</h4>
-                            <p class="mb-0">Please enable JavaScript for this option to be available</p>
+							<h4 text-translate="true">Connect hardware&nbsp;wallet</h4>
+							<p class="mb-0" text-translate="true">Please enable JavaScript for this option to be available</p>
                         </div>
-                        <small class="d-block text-primary mt-2 mt-lg-0">Recommended</small>
+						<small class="d-block text-primary mt-2 mt-lg-0" text-translate="true">Recommended</small>
                     </div>
                 </div>
             </noscript>
@@ -63,10 +67,10 @@
         </div>
         <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
             <div>
-                <h4>Import wallet file</h4>
-                <p class="mb-0 text-secondary">Upload a file exported from your wallet</p>
+				<h4 text-translate="true">Import wallet file</h4>
+				<p class="mb-0 text-secondary" text-translate="true">Upload a file exported from your wallet</p>
             </div>
-            <small class="d-block text-primary mt-2 mt-lg-0">Recommended</small>
+			<small class="d-block text-primary mt-2 mt-lg-0" text-translate="true">Recommended</small>
         </div>
         <vc:icon symbol="caret-right" />
     </a>
@@ -78,8 +82,8 @@
             <vc:icon symbol="wallet-xpub"/>
         </div>
         <div class="content">
-            <h4>Enter extended public key</h4>
-            <p class="mb-0 text-secondary">Input the key string manually</p>
+			<h4 text-translate="true">Enter extended public key</h4>
+			<p class="mb-0 text-secondary" text-translate="true">Input the key string manually</p>
         </div>
         <vc:icon symbol="caret-right" />
     </a>
@@ -91,8 +95,8 @@
             <vc:icon symbol="scan-qr"/>
         </div>
         <div class="content">
-            <h4>Scan wallet QR code</h4>
-            <p class="mb-0 text-secondary">Supported by BlueWallet, Cobo Vault, Passport and Specter DIY</p>
+			<h4 text-translate="true">Scan wallet QR code</h4>
+			<p class="mb-0 text-secondary" text-translate="true">Supported by BlueWallet, Cobo Vault, Passport and Specter DIY</p>
         </div>
         <vc:icon symbol="caret-right" />
     </a>
@@ -102,8 +106,8 @@
                 <vc:icon symbol="scan-qr"/>
             </div>
             <div class="content">
-                <h4>Scan wallet QR code</h4>
-                <p class="mb-0">Please enable JavaScript for this option to be available</p>
+                <h4 text-translate="true">Scan wallet QR code</h4>
+				<p class="mb-0" text-translate="true">Please enable JavaScript for this option to be available</p>
             </div>
         </div>
     </noscript>
@@ -116,10 +120,13 @@
         </div>
         <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
             <div>
-                <h4>Enter wallet seed</h4>
-                <p class="mb-0 text-secondary">Provide the 12 or 24 word recovery seed</p>
+				<h4 text-translate="true">Enter wallet seed</h4>
+				<p class="mb-0 text-secondary" text-translate="true">Provide the 12 or 24 word recovery seed</p>
             </div>
-            <small class="d-block text-danger mt-2 mt-lg-0" data-bs-toggle="tooltip" data-bs-placement="top" title="You really should not type your seed into a device that is connected to the internet.">Not recommended <vc:icon symbol="info"/></small>
+			@{
+				var shouldNotTypeSeed = StringLocalizer["You really should not type your seed into a device that is connected to the internet."];
+			}
+			<small class="d-block text-danger mt-2 mt-lg-0" data-bs-toggle="tooltip" data-bs-placement="top" title="@shouldNotTypeSeed"><span text-translate="true">Not recommended</span> <vc:icon symbol="info" /></small>
         </div>
         <vc:icon symbol="caret-right" />
     </a>

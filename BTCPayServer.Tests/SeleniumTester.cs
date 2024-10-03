@@ -45,7 +45,7 @@ namespace BTCPayServer.Tests
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
-            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
+            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : TestUtils.TestDirectory);
 
             var options = new ChromeOptions();
             if (!runInBrowser)

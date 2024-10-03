@@ -352,7 +352,7 @@ retry:
             }
 
             // Go through all cshtml file, search for text-translate or ViewLocalizer usage
-            using (var tester = CreateServerTester())
+            using (var tester = CreateServerTester(newDb: true))
             {
                 await tester.StartAsync();
                 var engine = tester.PayTester.GetService<RazorProjectEngine>();
@@ -360,12 +360,15 @@ retry:
                 {
                     var filePath = file.FullName;
                     var txt = File.ReadAllText(file.FullName);
-                    if (txt.Contains("ViewLocalizer"))
+                    foreach (string localizer in new[] { "ViewLocalizer", "StringLocalizer" })
                     {
-                        var matches = Regex.Matches(txt, "ViewLocalizer\\[\"(.*?)\"[\\],]");
-                        foreach (Match match in matches)
+                        if (txt.Contains(localizer))
                         {
-                            defaultTranslatedKeys.Add(match.Groups[1].Value);
+                            var matches = Regex.Matches(txt, localizer + "\\[\"(.*?)\"[\\],]");
+                            foreach (Match match in matches)
+                            {
+                                defaultTranslatedKeys.Add(match.Groups[1].Value);
+                            }
                         }
                     }
 
@@ -379,12 +382,18 @@ retry:
 
             }
             defaultTranslatedKeys = defaultTranslatedKeys.Select(d => d.Trim()).Distinct().OrderBy(o => o).ToList();
+            JObject obj = new JObject();
+            foreach (var v in defaultTranslatedKeys)
+            {
+                obj.Add(v, "");
+            }
+
             var path = Path.Combine(soldir.FullName, "BTCPayServer/Services/Translations.Default.cs");
             var defaultTranslation = File.ReadAllText(path);
             var startIdx = defaultTranslation.IndexOf("\"\"\"");
             var endIdx = defaultTranslation.LastIndexOf("\"\"\"");
             var content = defaultTranslation.Substring(0, startIdx + 3);
-            content += "\n" + String.Join('\n', defaultTranslatedKeys) + "\n";
+            content += "\n" + obj.ToString(Formatting.Indented) + "\n";
             content += defaultTranslation.Substring(endIdx);
             File.WriteAllText(path, content);
         }

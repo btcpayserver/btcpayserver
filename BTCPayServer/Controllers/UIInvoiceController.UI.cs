@@ -1177,7 +1177,7 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
 
-            if (!store.AnyPaymentMethodAvailable())
+            if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 return NoPaymentMethodResult(store.Id);
             }
@@ -1200,7 +1200,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateInvoice(CreateInvoiceModel model, CancellationToken cancellationToken)
         {
             var store = HttpContext.GetStoreData();
-            if (!store.AnyPaymentMethodAvailable())
+            if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 return NoPaymentMethodResult(store.Id);
             }
@@ -1370,9 +1370,7 @@ namespace BTCPayServer.Controllers
 
         private SelectList GetPaymentMethodsSelectList(StoreData store)
         {
-            var excludeFilter = store.GetStoreBlob().GetExcludedPaymentMethods();
-            return new SelectList(store.GetPaymentMethodConfigs()
-                    .Where(s => !excludeFilter.Match(s.Key))
+            return new SelectList(store.GetPaymentMethodConfigs(_handlers, true)
                     .Select(method => new SelectListItem(method.Key.ToString(), method.Key.ToString())),
                 nameof(SelectListItem.Value),
                 nameof(SelectListItem.Text));

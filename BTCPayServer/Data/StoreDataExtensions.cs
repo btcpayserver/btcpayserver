@@ -59,9 +59,9 @@ namespace BTCPayServer.Data
             return result;
         }
 
-        public static bool AnyPaymentMethodAvailable(this StoreData storeData)
+        public static bool AnyPaymentMethodAvailable(this StoreData storeData, PaymentMethodHandlerDictionary handlers)
         {
-            return storeData.GetPaymentMethodConfigs(true).Any();
+            return storeData.GetPaymentMethodConfigs(handlers, true).Any();
         }
 
         public static bool SetStoreBlob(this StoreData storeData, StoreBlob storeBlob)

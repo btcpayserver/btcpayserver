@@ -1,4 +1,5 @@
 @using System.Globalization
+@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.TagHelpers
@@ -6,11 +7,13 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Forms
 @inject FormDataService FormDataService
+@inject IFileService FileService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
     ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
 	Csp.UnsafeEval();
+    var canUpload = await FileService.IsAvailable();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
@@ -25,7 +28,7 @@
     <script src="~/crowdfund/admin.js" asp-append-version="true"></script>
 }
 
-<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+<form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
         <h2 text-translate="true">@ViewData["Title"]</h2>
         <div>
@@ -74,9 +77,31 @@
                 <span asp-validation-for="Tagline" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="MainImageUrl" class="form-label"></label>
-                <input asp-for="MainImageUrl" class="form-control" />
-                <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <label asp-for="MainImageFile" class="form-label"></label>
+                    @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+                    {
+                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
+                            <vc:icon symbol="cross" /> Remove
+                        </button>
+                    }
+                </div>
+                @if (canUpload)
+                {
+                    <div class="d-flex align-items-center gap-3">
+                        <input asp-for="MainImageFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+                        {
+                            <img src="@Model.MainImageUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;" />
+                        }
+                    </div>
+                    <span asp-validation-for="MainImageFile" class="text-danger"></span>
+                }
+                else
+                {
+                    <input asp-for="MainImageFile" type="file" class="form-control" disabled>
+                    <div class="form-text">In order to upload an image, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                }
             </div>
             <div class="form-group">
                 <div class="d-flex align-items-center">

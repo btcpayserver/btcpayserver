@@ -121,9 +121,11 @@ namespace BTCPayServer.Payments
             }
             foreach (var paymentMethodConfig in store.GetPaymentMethodConfigs())
             {
-                var ctx = new PaymentMethodContext(store, storeBlob, paymentMethodConfig.Value, handlers[paymentMethodConfig.Key], invoiceEntity, invoiceLogs);
+                if (!handlers.TryGetValue(paymentMethodConfig.Key, out var handler))
+                    continue;
+                var ctx = new PaymentMethodContext(store, storeBlob, paymentMethodConfig.Value, handler, invoiceEntity, invoiceLogs);
                 PaymentMethodContexts.Add(paymentMethodConfig.Key, ctx);
-                if (excludeFilter.Match(paymentMethodConfig.Key) || !handlers.Support(paymentMethodConfig.Key))
+                if (excludeFilter.Match(paymentMethodConfig.Key))
                     ctx.Status = PaymentMethodContext.ContextStatus.Excluded;
             }
         }

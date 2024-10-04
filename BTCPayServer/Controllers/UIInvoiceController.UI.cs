@@ -875,13 +875,7 @@ namespace BTCPayServer.Controllers
                 return extension?.Image ?? "";
             }
 
-            var cd = this._CurrencyNameTable.GetCurrencyData(prompt.Currency, false);
-            // Show the "Common divisibility" rather than the payment method disibility.
-            // For example, BTC has commonly 8 digits, but on lightning it has 11. In this case, pick 8.
-            if (cd?.Divisibility is not int divisibility)
-				divisibility = prompt.Divisibility;
-
-			string ShowMoney(decimal value) => MoneyExtensions.ShowMoney(value, divisibility);
+			string ShowMoney(decimal value) => MoneyExtensions.ShowMoney(value, prompt.RateDivisibility ?? prompt.Divisibility);
             var model = new PaymentModel
             {
                 Activated = prompt.Activated,

@@ -266,7 +266,7 @@ namespace BTCPayServer.Controllers
                 {
                     var vm = new ListTransactionsViewModel.TransactionViewModel();
                     vm.Id = tx.TransactionId.ToString();
-                    vm.Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, vm.Id);
+                    vm.Link = _transactionLinkProviders.GetTransactionLink(pmi, vm.Id);
                     vm.Timestamp = tx.SeenAt;
                     vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
                     vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
@@ -600,7 +600,7 @@ namespace BTCPayServer.Controllers
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
                         Labels = _labelService.CreateTransactionTagModels(info, Request),
-                        Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, coin.OutPoint.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Confirmations = coin.Confirmations
                     };
                 }).ToArray();

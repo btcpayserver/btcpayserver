@@ -33,7 +33,7 @@ public partial class AltcoinsPlugin
             SupportLightning = false
         }.SetDefaultElectrumMapping(ChainName);
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
         services.AddCurrencyData(new CurrencyData()
         {
             Code = "USDt",
@@ -70,7 +70,7 @@ public partial class AltcoinsPlugin
         }.SetDefaultElectrumMapping(ChainName);
 
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
         selectedChains.Add("LBTC");
     }
 
@@ -99,7 +99,7 @@ public partial class AltcoinsPlugin
             SupportLightning = false
         }.SetDefaultElectrumMapping(ChainName);
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
         selectedChains.Add("LBTC");
     }
 

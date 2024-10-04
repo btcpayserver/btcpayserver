@@ -677,10 +677,13 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             }
             return services;
         }
-        public static void AddTransactionLinkProvider(this IServiceCollection services, string cryptoCode, TransactionLinkProvider provider)
+        public static void AddTransactionLinkProvider(this IServiceCollection services, PaymentMethodId paymentMethodId, TransactionLinkProvider provider)
         {
-            services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(cryptoCode, provider));
+            services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(paymentMethodId, provider));
         }
+        [Obsolete("Use AddTransactionLinkProvider(services, PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), provider) instead")]
+        public static void AddTransactionLinkProvider(this IServiceCollection services, string cryptoCode, TransactionLinkProvider provider) =>
+            AddTransactionLinkProvider(services, PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), provider);
         public static void AddRateProviderExchangeSharp<T>(this IServiceCollection services, RateSourceInfo rateInfo) where T : ExchangeSharp.ExchangeAPI
         {
             services.AddSingleton<IRateProvider, ExchangeSharpRateProvider<T>>(o =>

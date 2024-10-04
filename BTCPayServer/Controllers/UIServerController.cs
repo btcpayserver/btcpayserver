@@ -362,7 +362,7 @@ namespace BTCPayServer.Controllers
                 return View(settings);
             }
             settings.BlockExplorerLinks = settings.BlockExplorerLinks
-                                            .Where(tuple => _transactionLinkProviders.GetDefaultBlockExplorerLink(tuple.CryptoCode) != tuple.Link)
+                                            .Where(tuple => _transactionLinkProviders.GetDefaultBlockExplorerLink(tuple.PaymentMethodId) != tuple.Link)
                                             .Where(tuple => tuple.Link is not null)
                                             .ToList();
 

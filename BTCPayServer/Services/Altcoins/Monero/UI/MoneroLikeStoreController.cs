@@ -29,7 +29,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace BTCPayServer.Services.Altcoins.Monero.UI
 {
     [Route("stores/{storeId}/monerolike")]
-    [OnlyIfSupportAttribute("XMR")]
+    [OnlyIfSupportAttribute("XMR-CHAIN")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

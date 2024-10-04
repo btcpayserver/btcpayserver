@@ -1979,7 +1979,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("BTC-CHAIN", serverInfoData.SupportedPaymentMethods);
             Assert.Contains("BTC-LN", serverInfoData.SupportedPaymentMethods);
             Assert.NotNull(serverInfoData.SyncStatus);
-            Assert.Single(serverInfoData.SyncStatus.Select(s => s.CryptoCode == "BTC"));
+            Assert.Single(serverInfoData.SyncStatus.Select(s => s.PaymentMethodId == "BTC-CHAIN"));
         }
 
         [Fact(Timeout = TestTimeout)]

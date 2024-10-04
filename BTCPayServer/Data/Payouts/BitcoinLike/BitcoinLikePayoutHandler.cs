@@ -126,7 +126,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
         var payoutMethodId = payout.GetPayoutMethodId();
         if (payoutMethodId is null)
             return null;
-        var cryptoCode = Network.CryptoCode;
         ParseProofType(payout.Proof, out var raw, out var proofType);
         if (proofType == PayoutTransactionOnChainBlob.Type)
         {
@@ -135,7 +134,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                 JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(payoutMethodId)));
             if (res == null)
                 return null;
-            res.LinkTemplate = _transactionLinkProviders.GetBlockExplorerLink(cryptoCode);
+            res.LinkTemplate = _transactionLinkProviders.GetBlockExplorerLink(PaymentTypes.CHAIN.GetPaymentMethodId(Network.CryptoCode));
             return res;
         }
         return raw.ToObject<ManualPayoutProof>();

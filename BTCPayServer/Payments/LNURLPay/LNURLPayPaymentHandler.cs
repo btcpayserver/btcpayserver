@@ -53,6 +53,7 @@ namespace BTCPayServer.Payments.Lightning
             context.Prompt.Inactive = false;
             context.Prompt.Currency = _network.CryptoCode;
             context.Prompt.Divisibility = 11;
+            context.Prompt.RateDivisibility = 8;
             context.Prompt.PaymentMethodFee = 0.0m;
             return Task.CompletedTask;
         }

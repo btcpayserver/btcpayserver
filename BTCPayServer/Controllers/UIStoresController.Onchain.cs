@@ -437,15 +437,10 @@ public partial class UIStoresController
                 }).ToList(),
             Config = ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
-            MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
-            SpeedPolicy = store.SpeedPolicy,
-            ShowRecommendedFee = storeBlob.ShowRecommendedFee,
-            RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
+            CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = canUseHotWallet,
             CanUseRPCImport = rpcImport,
-            CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
-            StoreName = store.StoreName,
-
+            StoreName = store.StoreName
         };
 
         ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
@@ -473,15 +468,14 @@ public partial class UIStoresController
         var storeBlob = store.GetStoreBlob();
         var excludeFilters = storeBlob.GetExcludedPaymentMethods();
         var currentlyEnabled = !excludeFilters.Match(handler.PaymentMethodId);
-        bool enabledChanged = currentlyEnabled != vm.Enabled;
-        bool needUpdate = enabledChanged;
+        var enabledChanged = currentlyEnabled != vm.Enabled;
+        var payjoinChanged = storeBlob.PayJoinEnabled != vm.PayJoinEnabled;
+        var needUpdate = enabledChanged || payjoinChanged;
         string errorMessage = null;
 
-        if (enabledChanged)
-        {
-            storeBlob.SetExcluded(handler.PaymentMethodId, !vm.Enabled);
-            store.SetStoreBlob(storeBlob);
-        }
+        if (enabledChanged) storeBlob.SetExcluded(handler.PaymentMethodId, !vm.Enabled);
+        if (payjoinChanged && network.SupportPayJoin) storeBlob.PayJoinEnabled = vm.PayJoinEnabled;
+        if (needUpdate) store.SetStoreBlob(storeBlob);
 
         if (derivation.Label != vm.Label)
         {
@@ -552,71 +546,21 @@ public partial class UIStoresController
                     _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                     successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                 }
+                
+                if (payjoinChanged && storeBlob.PayJoinEnabled && network.SupportPayJoin)
+                {
+                    var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
+                    if (config?.IsHotWallet is not true)
+                    {
+                        successMessage += " However, PayJoin will not work, as this isn't a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>.";
+                    }
+                }
 
                 TempData[WellKnownTempData.SuccessMessage] = successMessage;
             }
             else
             {
                 TempData[WellKnownTempData.ErrorMessage] = errorMessage;
-            }
-        }
-
-        return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
-    }
-
-    [HttpPost("{storeId}/onchain/{cryptoCode}/settings/payment")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> UpdatePaymentSettings(WalletSettingsViewModel vm)
-    {
-        var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
-        if (checkResult != null)
-        {
-            return checkResult;
-        }
-
-        var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
-        if (derivation == null)
-        {
-            return NotFound();
-        }
-
-        bool needUpdate = false;
-        var blob = store.GetStoreBlob();
-        var payjoinChanged = blob.PayJoinEnabled != vm.PayJoinEnabled;
-        blob.MonitoringExpiration = TimeSpan.FromMinutes(vm.MonitoringExpiration);
-        blob.ShowRecommendedFee = vm.ShowRecommendedFee;
-        blob.RecommendedFeeBlockTarget = vm.RecommendedFeeBlockTarget;
-        blob.PayJoinEnabled = vm.PayJoinEnabled;
-
-        if (store.SetStoreBlob(blob))
-        {
-            needUpdate = true;
-        }
-
-        if (store.SpeedPolicy != vm.SpeedPolicy)
-        {
-            store.SpeedPolicy = vm.SpeedPolicy;
-            needUpdate = true;
-        }
-
-        if (needUpdate)
-        {
-            await _storeRepo.UpdateStore(store);
-
-            TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
-
-            if (payjoinChanged && blob.PayJoinEnabled && network.SupportPayJoin)
-            {
-                var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
-                if (config?.IsHotWallet is not true)
-                {
-                    TempData.Remove(WellKnownTempData.SuccessMessage);
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Warning,
-                        Html = "The payment settings were updated successfully. However, PayJoin will not work, as this isn't a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
-                    });
-                }
             }
         }
 

@@ -334,7 +334,7 @@ namespace BTCPayServer.Controllers.Greenfield
 #pragma warning disable CS0612 // Type or member is obsolete
                         Labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>(),
 #pragma warning restore CS0612 // Type or member is obsolete
-                        Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, coin.OutPoint.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,

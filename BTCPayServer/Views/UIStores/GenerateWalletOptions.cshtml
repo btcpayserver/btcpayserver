@@ -1,7 +1,10 @@
 @model WalletSetupViewModel
+
+@inject Microsoft.Extensions.Localization.IStringLocalizer StringLocalizer
 @{
-    Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Generate {Model.CryptoCode} Wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+	Layout = "_LayoutWalletSetup";
+	var title = StringLocalizer["Generate {0} Wallet", Model.CryptoCode];
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, title, $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -10,7 +13,7 @@
     </a>
 }
 
-<h1 class="text-center">Choose your wallet option</h1>
+<h1 class="text-center" text-translate="true">Choose your wallet option</h1>
 
 <div class="list-group mt-5">
     @if (Model.CanUseHotWallet)
@@ -20,11 +23,9 @@
                 <vc:icon symbol="wallet-hot"/>
             </div>
             <div class="content">
-                <h4>Hot wallet</h4>
-                <p class="mb-0 text-secondary">
-                    Wallet's private key is stored on the server.
-                    Spending the funds you received is convenient.
-                    To minimize the risk of theft, regularly withdraw funds to a different wallet.
+				<h4 text-translate="true">Hot wallet</h4>
+				<p class="mb-0 text-secondary" text-translate="true">
+                    Wallet's private key is stored on the server. Spending the funds you received is convenient. To minimize the risk of theft, regularly withdraw funds to a different wallet.
                 </p>
             </div>
             <vc:icon symbol="caret-right"/>
@@ -37,8 +38,8 @@
                 <vc:icon symbol="wallet-hot"/>
             </div>
             <div class="content">
-                <h4>Hot wallet</h4>
-                <p class="mb-0">Please note that creating a hot wallet is not supported by this instance for non administrators.</p>
+				<h4 text-translate="true">Hot wallet</h4>
+				<p class="mb-0" text-translate="true">Please note that creating a hot wallet is not supported by this instance for non administrators.</p>
             </div>
         </div>
     }
@@ -50,10 +51,9 @@
             <vc:icon symbol="wallet-watchonly"/>
         </div>
         <div class="content">
-            <h4>Watch-only wallet</h4>
-            <p class="mb-0 text-secondary">
-                Wallet's private key is erased from the server. Higher security.
-                To spend, you have to manually input the private key or import it into an external wallet.
+			<h4 text-translate="true">Watch-only wallet</h4>
+			<p class="mb-0 text-secondary" text-translate="true">
+                Wallet's private key is erased from the server. Higher security. To spend, you have to manually input the private key or import it into an external wallet.
             </p>
         </div>
         <vc:icon symbol="caret-right" />

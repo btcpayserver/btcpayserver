@@ -1238,6 +1238,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
+            s.GenerateWallet();
             (_, string appId) = s.CreateApp("PointOfSale");
             s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Tea shop");
@@ -1249,10 +1250,20 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
 			var template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
             Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
-            Assert.Matches("\"categories\": \\[\n\\s+\"Drinks\"\n\\s+\\]", template);
+            Assert.Matches("\"categories\": \\[\r?\n\\s*\"Drinks\"\\s*\\]", template);
+
 
             s.ClickPagePrimary();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
+            
+            s.Driver.ScrollTo(By.Id("CodeTabButton"));
+            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
+            template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
+            s.Driver.FindElement(By.Id("TemplateConfig")).Clear();
+            s.Driver.FindElement(By.Id("TemplateConfig")).SendKeys(template.Replace(@"""id"": ""green-tea"",", ""));
+
+            s.ClickPagePrimary();
+            Assert.Contains("Invalid template: Missing ID for item \"Green Tea\".", s.Driver.FindElement(By.CssSelector(".validation-summary-errors")).Text);
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
@@ -1973,6 +1984,7 @@ namespace BTCPayServer.Tests
             var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             SetTransactionOutput(s, 0, jack, 0.01m);
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
+            s.Driver.WaitForElement(By.CssSelector("button[value=broadcast]"));
             Assert.Contains(jack.ToString(), s.Driver.PageSource);
             Assert.Contains("0.01000000", s.Driver.PageSource);
             Assert.EndsWith("psbt/ready", s.Driver.Url);
@@ -3416,11 +3428,14 @@ namespace BTCPayServer.Tests
             var user = s.RegisterNewUser();
             s.GoToHome();
             s.GoToProfile(ManageNavPages.LoginCodes);
-            var code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
-            s.ClickPagePrimary();
-            Assert.NotEqual(code, s.Driver.FindElement(By.Id("logincode")).GetAttribute("value"));
 
-            code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
+            string code = null;
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
+            string prevCode = code;
+            await s.Driver.Navigate().RefreshAsync();
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
+            Assert.NotEqual(prevCode, code);
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
             s.Logout();
             s.GoToLogin();
             s.Driver.SetAttribute("LoginCode", "value", "bad code");

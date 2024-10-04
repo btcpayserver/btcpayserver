@@ -132,7 +132,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
             }
             PayoutMethodId?[]? payoutMethods = null;
-            if (request.PaymentMethods is { } payoutMethodsStr)
+            if (request.PayoutMethods is { } payoutMethodsStr)
             {
                 payoutMethods = payoutMethodsStr.Select(s =>
                 {
@@ -144,13 +144,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     if (!supported.Contains(payoutMethods[i]))
                     {
-                        request.AddModelError(paymentRequest => paymentRequest.PaymentMethods[i], "Invalid or unsupported payment method", this);
+                        request.AddModelError(paymentRequest => paymentRequest.PayoutMethods[i], "Invalid or unsupported payment method", this);
                     }
                 }
             }
             else
             {
-                ModelState.AddModelError(nameof(request.PaymentMethods), "This field is required");
+                ModelState.AddModelError(nameof(request.PayoutMethods), "This field is required");
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
@@ -364,16 +364,17 @@ namespace BTCPayServer.Controllers.Greenfield
                 Id = p.Id,
                 PullPaymentId = p.PullPaymentDataId,
                 Date = p.Date,
-                Amount = p.OriginalAmount,
-                PaymentMethodAmount = p.Amount,
+                OriginalCurrency = p.OriginalCurrency,
+                OriginalAmount = p.OriginalAmount,
+                PayoutCurrency = p.Currency,
+                PayoutAmount = p.Amount,
                 Revision = blob.Revision,
                 State = p.State,
+                PayoutMethodId = p.PayoutMethodId,
+                PaymentProof = p.GetProofBlobJson(),
+                Destination = blob.Destination,
                 Metadata = blob.Metadata?? new JObject(),
             };
-            model.Destination = blob.Destination;
-            model.PayoutMethodId = p.PayoutMethodId;
-            model.CryptoCode = p.Currency;
-            model.PaymentProof = p.GetProofBlobJson();
             return model;
         }
 

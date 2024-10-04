@@ -12,6 +12,7 @@
     ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
 	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
+    var posPath = Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id });
 }
 
 @section PageHeadContent {
@@ -23,14 +24,7 @@
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
-    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/pos/admin.js" asp-append-version="true"></script>
-    <script>
-        const qrApp = initQRShow({ title: "Scan to view the Point of Sale" });
-        const posViewUrl = @Safe.Json($"{Context.Request.GetAbsoluteRoot()}{Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id })}");
-        delegate('click', '#displayQRCode', () => { qrApp.showData(posViewUrl); });
-    </script>
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">
@@ -46,7 +40,7 @@
             {
                 <div class="btn-group" role="group" aria-label="View Point of Sale">
                     <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank">View</a>
-                    <button type="button" class="btn btn-secondary px-3 d-inline-flex align-items-center" id="displayQRCode">
+                    <button type="button" class="btn btn-secondary px-3 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#OpenPosModal">
                         <vc:icon symbol="qr-code" />
                     </button>
                 </div>
@@ -61,7 +55,7 @@
 
     @if (!ViewContext.ModelState.IsValid)
     {
-        <div asp-validation-summary="ModelOnly"></div>
+        <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
     }
     <div class="row">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
@@ -316,6 +310,19 @@
 </div>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
-<partial name="ShowQR" />
 
-
+<div class="modal fade" id="OpenPosModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Scan the QR code to open the Point of Sale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body pt-0">
+                <component type="typeof(BTCPayServer.Blazor.PosLoginCode)" render-mode="ServerPrerendered" param-Users="@Model.StoreUsers" param-PosPath="@posPath" />
+            </div>
+        </div>
+    </div>
+</div>

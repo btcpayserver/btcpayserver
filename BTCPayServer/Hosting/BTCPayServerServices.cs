@@ -89,6 +89,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<IHtmlLocalizerFactory, LocalizerFactory>();
             services.TryAddSingleton<LocalizerService>();
             services.TryAddSingleton<ViewLocalizer>();
+            services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("",""));
 
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);
@@ -578,6 +579,9 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());
 
+            services.AddSingleton<PaymentRequestsMigratorHostedService>();
+            services.AddSingleton<IHostedService, PaymentRequestsMigratorHostedService>(o => o.GetRequiredService<PaymentRequestsMigratorHostedService>());
+
             // Broken
             // Providers.Add("argoneum", new ArgoneumRateProvider(_httpClientFactory?.CreateClient("EXCHANGE_ARGONEUM")));
 
@@ -658,10 +662,13 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             }
             return services;
         }
-        public static void AddTransactionLinkProvider(this IServiceCollection services, string cryptoCode, TransactionLinkProvider provider)
+        public static void AddTransactionLinkProvider(this IServiceCollection services, PaymentMethodId paymentMethodId, TransactionLinkProvider provider)
         {
-            services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(cryptoCode, provider));
+            services.AddSingleton<TransactionLinkProviders.Entry>(new TransactionLinkProviders.Entry(paymentMethodId, provider));
         }
+        [Obsolete("Use AddTransactionLinkProvider(services, PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), provider) instead")]
+        public static void AddTransactionLinkProvider(this IServiceCollection services, string cryptoCode, TransactionLinkProvider provider) =>
+            AddTransactionLinkProvider(services, PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode), provider);
         public static void AddRateProviderExchangeSharp<T>(this IServiceCollection services, RateSourceInfo rateInfo) where T : ExchangeSharp.ExchangeAPI
         {
             services.AddSingleton<IRateProvider, ExchangeSharpRateProvider<T>>(o =>

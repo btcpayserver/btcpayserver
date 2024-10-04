@@ -7,7 +7,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20240919034505_monitoredinvoices")]
+    [Migration("20240924065254_monitoredinvoices")]
     [DBScript("004.MonitoredInvoices.sql")]
     public partial class monitoredinvoices : DBScriptsMigration
     {

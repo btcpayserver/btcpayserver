@@ -3,6 +3,7 @@ using System.Linq;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Payments;
 using NBXplorer.Models;
 
 namespace BTCPayServer.Services
@@ -28,7 +29,7 @@ namespace BTCPayServer.Services
                 .Where(summary => summary.Network.ShowSyncSummary)
                 .Select(summary => new ServerInfoSyncStatusData2
                 {
-                    CryptoCode = summary.Network.CryptoCode,
+                    PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(summary.Network.CryptoCode).ToString(),
                     NodeInformation = summary.Status.BitcoinStatus is BitcoinStatus s ? new ServerInfoNodeData()
                     {
                         Headers = s.Headers,

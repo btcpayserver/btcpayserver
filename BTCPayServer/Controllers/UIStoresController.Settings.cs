@@ -20,11 +20,11 @@ namespace BTCPayServer.Controllers;
 public partial class UIStoresController
 {
     [HttpGet("{storeId}/settings")]
-    public async Task<IActionResult> GeneralSettings()
+    public async Task<IActionResult> GeneralSettings(string storeId)
     {
         var store = HttpContext.GetStoreData();
-        if (store == null)
-            return NotFound();
+        if (store == null) return NotFound();
+
         var storeBlob = store.GetStoreBlob();
         var vm = new GeneralSettingsViewModel
         {
@@ -41,7 +41,11 @@ public partial class UIStoresController
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
-            Archived = store.Archived
+            Archived = store.Archived,
+            MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
+            SpeedPolicy = store.SpeedPolicy,
+            ShowRecommendedFee = storeBlob.ShowRecommendedFee,
+            RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget
         };
 
         return View(vm);
@@ -67,13 +71,22 @@ public partial class UIStoresController
             CurrentStore.StoreWebsite = model.StoreWebsite;
         }
 
+        if (CurrentStore.SpeedPolicy != model.SpeedPolicy)
+        {
+            CurrentStore.SpeedPolicy = model.SpeedPolicy;
+            needUpdate = true;
+        }
+
         var blob = CurrentStore.GetStoreBlob();
         blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
         blob.NetworkFeeMode = model.NetworkFeeMode;
         blob.PaymentTolerance = model.PaymentTolerance;
         blob.DefaultCurrency = model.DefaultCurrency;
+        blob.ShowRecommendedFee = model.ShowRecommendedFee;
+        blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
         blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
         blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
+        blob.MonitoringExpiration = TimeSpan.FromMinutes(model.MonitoringExpiration);
         if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
         {
             ModelState.AddModelError(nameof(model.BrandColor), "The brand color needs to be a valid hex color code");

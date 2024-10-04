@@ -41,7 +41,7 @@ public partial class AltcoinsPlugin
                     : "https://testnet.xmrchain.net/tx/{0}";
         var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("XMR");
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(network.CryptoCode, new SimpleTransactionLinkProvider(blockExplorerLink));
+                .AddTransactionLinkProvider(pmi, new SimpleTransactionLinkProvider(blockExplorerLink));
         services.AddSingleton<IPaymentMethodViewExtension>(provider =>
 (IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodViewExtension), new object[] { pmi }));
 

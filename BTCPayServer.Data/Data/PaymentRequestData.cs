@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
-    public class PaymentRequestData : IHasBlobUntyped
+    public partial class PaymentRequestData : IHasBlobUntyped
     {
         public string Id { get; set; }
         public DateTimeOffset Created { get; set; }

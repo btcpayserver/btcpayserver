@@ -1,3 +1,5 @@
-Password => Cyphercode
-Email address => Cypher ID
-Welcome to {0} => Yo at {0}
+{
+    "Password" : "Cyphercode",
+    "Email address" : "Cypher ID",
+    "Welcome to {0}" : "Yo at {0}"
+}

@@ -123,15 +123,30 @@ namespace BTCPayServer.Controllers
             return View(nameof(Login), new LoginViewModel { Email = email });
         }
 
+        // GET is for signin via the POS backend
+        [HttpGet("/login/code")]
+        [AllowAnonymous]
+        [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
+        public async Task<IActionResult> LoginUsingCode(string loginCode, string returnUrl = null)
+        {
+            return await LoginCodeResult(loginCode, returnUrl);
+        }
+
         [HttpPost("/login/code")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
         [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> LoginWithCode(string loginCode, string returnUrl = null)
         {
+            return await LoginCodeResult(loginCode, returnUrl);
+        }
+
+        private async Task<IActionResult> LoginCodeResult(string loginCode, string returnUrl)
+        {
             if (!string.IsNullOrEmpty(loginCode))
             {
-                var userId = _userLoginCodeService.Verify(loginCode);
+                var code = loginCode.Split(';').First();
+                var userId = _userLoginCodeService.Verify(code);
                 if (userId is null)
                 {
                     TempData[WellKnownTempData.ErrorMessage] = "Login code was invalid";
@@ -691,6 +706,7 @@ namespace BTCPayServer.Controllers
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         Message = "Your email has been confirmed."
                     });
+                    await FinalizeInvitationIfApplicable(user);
                     return RedirectToAction(nameof(Login), new { email = user.Email });
                 }
 
@@ -797,6 +813,7 @@ namespace BTCPayServer.Controllers
                     Severity = StatusMessageModel.StatusSeverity.Success,
                     Message = hasPassword ? "Password successfully set." : "Account successfully created."
                 });
+                if (!hasPassword) await FinalizeInvitationIfApplicable(user);
                 return RedirectToAction(nameof(Login));
             }
 
@@ -822,16 +839,6 @@ namespace BTCPayServer.Controllers
             
             var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
             var requiresSetPassword = !await _userManager.HasPasswordAsync(user);
-            
-            _eventAggregator.Publish(new UserInviteAcceptedEvent
-            {
-                User = user,
-                RequestUri = Request.GetAbsoluteRootUri()
-            });
-            
-            // unset used token
-            await _userManager.UnsetInvitationTokenAsync<ApplicationUser>(user.Id);
-            
             if (requiresEmailConfirmation)
             {
                 return await RedirectToConfirmEmail(user);
@@ -853,9 +860,22 @@ namespace BTCPayServer.Controllers
                 Message = "Your password has been set by the user who invited you."
             });
 
+            await FinalizeInvitationIfApplicable(user);
             return RedirectToAction(nameof(Login), new { email = user.Email });
         }
-        
+
+        private async Task FinalizeInvitationIfApplicable(ApplicationUser user)
+        {
+            if (!_userManager.HasInvitationToken<ApplicationUser>(user)) return;
+            _eventAggregator.Publish(new UserInviteAcceptedEvent
+            {
+                User = user,
+                RequestUri = Request.GetAbsoluteRootUri()
+            });
+            // unset used token
+            await _userManager.UnsetInvitationTokenAsync<ApplicationUser>(user.Id);
+        }
+
         private async Task<IActionResult> RedirectToConfirmEmail(ApplicationUser user)
         {
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);

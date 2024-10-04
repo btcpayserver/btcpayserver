@@ -53,25 +53,6 @@ namespace BTCPayServer.Services
             return new Translations(translations
                                     .Select(t => KeyValuePair.Create(t.key, t.value)));
         }
-        public static Translations CreateFromText(string text)
-        {
-            text = (text ?? "").Replace("\r\n", "\n");
-            var translations = new List<(string key, string? value)>();
-            foreach (var line in text.Split("\n", StringSplitOptions.RemoveEmptyEntries))
-            {
-                var splitted = line.Split("=>", StringSplitOptions.RemoveEmptyEntries);
-                if (splitted is [var key, var value])
-                {
-                    translations.Add((key, value));
-                }
-                else if (splitted is [var key2])
-                {
-                    translations.Add((key2, key2));
-                }
-            }
-            return new Translations(translations
-                                    .Select(t => KeyValuePair.Create(t.key, t.value)));
-        }
 
         public Translations(IEnumerable<KeyValuePair<string, string?>> records) : this (records, null)
         {

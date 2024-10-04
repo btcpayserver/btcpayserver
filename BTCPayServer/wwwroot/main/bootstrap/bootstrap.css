@@ -12267,8 +12267,18 @@ ul:not([class]) li {
 
 .accordion-button .icon {
   --icon-size: 1.5rem;
+  margin-top: -.0575em;
+  margin-bottom: -.0575em;
   margin-left: auto;
   transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
+}
+
+.accordion-button span {
+    color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1));
+}
+
+.accordion-button:hover span {
+    --btcpay-body-link-rgb: var(--btcpay-body-link-accent-rgb);
 }
 
 .accordion-button:not(.collapsed) .icon {

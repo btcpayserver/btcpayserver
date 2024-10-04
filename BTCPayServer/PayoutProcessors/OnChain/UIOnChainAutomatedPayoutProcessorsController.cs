@@ -65,7 +65,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                 {
                     Stores = new[] { storeId },
                     Processors = new[] { _onChainAutomatedPayoutSenderFactory.Processor },
-                    PayoutMethodIds = new[]
+                    PayoutMethods = new[]
                     {
                         PayoutTypes.CHAIN.GetPayoutMethodId(cryptoCode)
                     }
@@ -98,7 +98,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
                 {
                     Stores = new[] { storeId },
                     Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
-                    PayoutMethodIds = new[]
+                    PayoutMethods = new[]
                     {
                         PayoutTypes.CHAIN.GetPayoutMethodId(cryptoCode)
                     }

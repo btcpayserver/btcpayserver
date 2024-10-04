@@ -303,7 +303,7 @@ namespace BTCPayServer.Tests
 
             // Set tolerance to 50%
             var stores = user.GetController<UIStoresController>();
-            var response = await stores.GeneralSettings();
+            var response = await stores.GeneralSettings(user.StoreId);
             var vm = Assert.IsType<GeneralSettingsViewModel>(Assert.IsType<ViewResult>(response).Model);
             Assert.Equal(0.0, vm.PaymentTolerance);
             vm.PaymentTolerance = 50.0;
@@ -385,7 +385,7 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
             await user.RegisterLightningNodeAsync("BTC", LightningConnectionType.CLightning);
             await user.SetNetworkFeeMode(NetworkFeeMode.Never);
-            await user.ModifyOnchainPaymentSettings(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
+            await user.ModifyGeneralSettings(p => p.SpeedPolicy = SpeedPolicy.HighSpeed);
             var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.0001m, "BTC"));
             await tester.WaitForEvent<InvoiceNewPaymentDetailsEvent>(async () =>
             {
@@ -445,7 +445,7 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
             var storeController = user.GetController<UIStoresController>();
-            var storeResponse = await storeController.GeneralSettings();
+            var storeResponse = await storeController.GeneralSettings(user.StoreId);
             Assert.IsType<ViewResult>(storeResponse);
             Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
 
@@ -568,10 +568,10 @@ namespace BTCPayServer.Tests
             using var tester = CreateServerTester();
             await tester.StartAsync();
             var acc = tester.NewAccount();
-            acc.GrantAccess();
+            await acc.GrantAccessAsync();
             acc.RegisterDerivationScheme("BTC");
-            await acc.ModifyOnchainPaymentSettings(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
-            var invoice = acc.BitPay.CreateInvoice(new Invoice
+            await acc.ModifyGeneralSettings(p => p.SpeedPolicy = SpeedPolicy.LowSpeed);
+            var invoice = await acc.BitPay.CreateInvoiceAsync(new Invoice
             {
                 Price = 5.0m,
                 Currency = "USD",
@@ -1463,7 +1463,7 @@ namespace BTCPayServer.Tests
             {
                 Currency = "BTC",
                 Amount = 1.0m,
-                PaymentMethods = [ "BTC-CHAIN" ]
+                PayoutMethods = [ "BTC-CHAIN" ]
             });
             var controller = user.GetController<UIInvoiceController>();
             var invoice = await controller.CreateInvoiceCoreRaw(new()
@@ -1479,7 +1479,7 @@ namespace BTCPayServer.Tests
                 var payout = Assert.Single(payouts);
                 Assert.Equal("TOPUP", payout.PayoutMethodId);
                 Assert.Equal(invoice.Id, payout.Destination);
-                Assert.Equal(-0.5m, payout.Amount);
+                Assert.Equal(-0.5m, payout.OriginalAmount);
             });
         }
 
@@ -1844,6 +1844,8 @@ namespace BTCPayServer.Tests
             await user.GrantAccessAsync();
             var user2 = tester.NewAccount();
             await user2.GrantAccessAsync();
+            await user.RegisterDerivationSchemeAsync("BTC");
+            await user2.RegisterDerivationSchemeAsync("BTC");
             var stores = user.GetController<UIStoresController>();
             var apps = user.GetController<UIAppsController>();
             var apps2 = user2.GetController<UIAppsController>();
@@ -2617,7 +2619,7 @@ namespace BTCPayServer.Tests
             }
 
             var controller = tester.PayTester.GetController<UIStoresController>(user.UserId, user.StoreId);
-            var vm = await controller.GeneralSettings().AssertViewModelAsync<GeneralSettingsViewModel>();
+            var vm = await controller.GeneralSettings(user.StoreId).AssertViewModelAsync<GeneralSettingsViewModel>();
             Assert.Equal(tester.PayTester.ServerUriWithIP + "LocalStorage/8f890691-87f9-4c65-80e5-3b7ffaa3551f-store.png", vm.LogoUrl);
             Assert.Equal(tester.PayTester.ServerUriWithIP + "LocalStorage/2a51c49a-9d54-4013-80a2-3f6e69d08523-store.css", vm.CssUrl);
 

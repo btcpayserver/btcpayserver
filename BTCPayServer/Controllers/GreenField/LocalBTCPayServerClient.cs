@@ -831,10 +831,12 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId,
-            string invoiceId, CancellationToken token = default)
+            string invoiceId,
+            bool onlyAccountedPayments = true, bool includeSensitive = false,
+            CancellationToken token = default)
         {
             return GetFromActionResult<InvoicePaymentMethodDataModel[]>(
-                await GetController<GreenfieldInvoiceController>().GetInvoicePaymentMethods(storeId, invoiceId));
+                await GetController<GreenfieldInvoiceController>().GetInvoicePaymentMethods(storeId, invoiceId, onlyAccountedPayments, includeSensitive));
         }
 
         public override async Task ArchiveInvoice(string storeId, string invoiceId, CancellationToken token = default)

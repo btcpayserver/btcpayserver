@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -24,12 +25,16 @@ namespace BTCPayServer.Controllers
     {
         public UIAppsController(
             UserManager<ApplicationUser> userManager,
+            PaymentMethodHandlerDictionary handlers,
+            BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
             IFileService fileService,
             AppService appService,
             IHtmlHelper html)
         {
             _userManager = userManager;
+            _handlers = handlers;
+            _networkProvider = networkProvider;
             _storeRepository = storeRepository;
             _fileService = fileService;
             _appService = appService;
@@ -37,6 +42,8 @@ namespace BTCPayServer.Controllers
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private readonly StoreRepository _storeRepository;
         private readonly IFileService _fileService;
         private readonly AppService _appService;
@@ -133,6 +140,20 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> CreateApp(string storeId, CreateAppViewModel vm)
         {
             var store = GetCurrentStore();
+            if (store == null)
+            {
+                return NotFound();
+            }
+            if (!store.AnyPaymentMethodAvailable(_handlers))
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Error,
+                    Html = $"To create a {vm.AppType} app, you need to <a href='{Url.Action(nameof(UIStoresController.SetupWallet), "UIStores", new { cryptoCode = _networkProvider.DefaultNetwork.CryptoCode, storeId })}' class='alert-link'>set up a wallet</a> first",
+                    AllowDismiss = false
+                });
+                return View(vm);
+            }
             vm.StoreId = store.Id;
             var type = _appService.GetAppType(vm.AppType ?? vm.SelectedAppType);
             if (type is null)

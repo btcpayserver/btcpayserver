@@ -1,4 +1,5 @@
 @using BTCPayServer.Abstractions.Models
+@inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model UsersViewModel
 @{
     ViewData.SetActivePage(ServerNavPages.Users);
@@ -9,10 +10,24 @@
         "desc" => "asc",
         _ => null
     };
-
+    Csp.UnsafeEval();
     const string sortByDesc = "Sort by email descending...";
     const string sortByAsc = "Sort by email ascending...";
 }
+
+@section PageFootContent {
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script>
+        const qrApp = initQRShow({ title: "Invitation" });
+        delegate('click', '.view-invite', e => {
+            e.preventDefault();
+            const { invitationUrl, user } = e.target.dataset;
+            if (invitationUrl) qrApp.showData(invitationUrl, `Invitation for ${user}`);
+        });
+    </script>
+}
+
 <div class="sticky-header">
     <h2 text-translate="true">@ViewData["Title"]</h2>
 	<a id="page-primary" asp-action="CreateUser" class="btn btn-primary" role="button">
@@ -44,7 +59,7 @@
             <th>Created</th>
             <th>Status</th>
             <th class="actions-col"></th>
-            <th></th>
+            <th class="w-75px"></th>
         </tr>
         </thead>
         <tbody id="UsersList">
@@ -58,7 +73,8 @@
                 { InvitationUrl: not null } => ("Pending Invitation", "warning"),
                 _ => ("Active", "success")
             };
-            var detailsId = $"user_details_{user.Id}";
+            var pendingInvite = !string.IsNullOrEmpty(user.InvitationUrl);
+            var detailsId = user.Stores.Any() ? $"user_details_{user.Id}" : null;
             <tr id="user_@user.Id" class="user-overview-row mass-action-row">
                 <td>
                     <div class="d-flex align-items-center gap-2">
@@ -72,73 +88,68 @@
                 <td class="@(user.Stores.Any() ? null : "text-muted")">@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
-                   <span class="user-status badge bg-@status.Item2">@status.Item1</span>
+                    <span class="user-status badge bg-@status.Item2">@status.Item1</span>
                 </td>
                 <td class="actions-col">
                     <div class="d-inline-flex align-items-center gap-3">
                         @if (user is { EmailConfirmed: false, Disabled: false }) {
-                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Send verification email" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>." data-confirm="Send">Resend email</a>
+                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Send verification email" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>." data-confirm="Send" class="text-nowrap">Resend email</a>
                         }
                         @if (user is { Approved: false, Disabled: false })
                         {
                             <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Approve user" data-description="This will approve the user <strong>@Html.Encode(user.Email)</strong>." data-confirm="Approve">Approve</a>
                         }
-                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
-                        @if (status.Item2 != "warning")
+                        @if (pendingInvite)
                         {
-                                <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" 
-                                class="@(user.Disabled ? "enable-user" : "disable-user")">@(user.Disabled ? "Enable" : "Disable")</a>
+                            <a asp-action="User" asp-route-userId="@user.Id" class="view-invite text-nowrap" data-invitation-url="@user.InvitationUrl" data-user="@user.Email">View Invite</a>
                         }
-                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password">Password Reset</a>
+                        else if(status.Item2 != "warning")
+                        {
+                            <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" 
+                               class="@(user.Disabled ? "enable-user" : "disable-user")">@(user.Disabled ? "Enable" : "Disable")</a>
+                        }
+                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
+                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password text-nowrap">Password Reset</a>
                         <a asp-action="DeleteUser" asp-route-userId="@user.Id" class="delete-user">Remove</a>
                     </div>
                 </td>
                 <td class="text-end">
-                    <div class="d-inline-flex align-items-center gap-2">
-                        <button class="accordion-button collapsed only-for-js ms-0 d-inline-block" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
-                            <vc:icon symbol="caret-down" />
+                    @if (detailsId != null)
+                    {
+                        <button class="accordion-button w-auto collapsed only-for-js ms-0 d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
+                            <span>Details</span>
+                            <vc:icon symbol="caret-down" css-class="ms-0" />
                         </button>
-                    </div>
-                </td>
-            </tr>
-            <tr id="@detailsId" class="user-details-row collapse">
-                <td colspan="6" class="border-top-0">
-                    @if (!string.IsNullOrEmpty(user.InvitationUrl))
-                    {
-                        <div class="payment-box m-0">
-                            <div class="qr-container">
-                                <vc:qr-code data="@user.InvitationUrl" />
-                            </div>
-                            <div class="input-group mt-3">
-                                <div class="form-floating">
-                                    <vc:truncate-center text="@user.InvitationUrl" padding="15" elastic="true" classes="form-control-plaintext"/>
-                                    <label>Invitation URL</label>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                    else if (user.Stores.Any())
-                    {
-                        <ul class="mb-0 p-0">
-                            @foreach (var store in user.Stores)
-                            {
-                                <li class="py-1 d-flex gap-2">
-                                    <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@store.StoreData.Id">@store.StoreData.StoreName</a>
-                                    <span class="badge bg-light">@store.StoreRoleId</span>
-                                    @if (store.StoreData.Archived)
-                                    {
-                                        <span class="badge bg-info">archived</span>
-                                    }
-                                </li>
-                            }
-                        </ul>
-                    }
-                    else
-                    {
-                        <span class="text-secondary">No stores</span>
                     }
                 </td>
             </tr>
+            @if (detailsId != null)
+            {
+                <tr id="@detailsId" class="user-details-row collapse">
+                    <td colspan="6" class="border-top-0">
+                        @if (user.Stores.Any())
+                        {
+                            <ul class="mb-0 p-0">
+                                @foreach (var store in user.Stores)
+                                {
+                                    <li class="py-1 d-flex gap-2">
+                                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@store.StoreData.Id">@store.StoreData.StoreName</a>
+                                        <span class="badge bg-light">@store.StoreRoleId</span>
+                                        @if (store.StoreData.Archived)
+                                        {
+                                            <span class="badge bg-info">archived</span>
+                                        }
+                                    </li>
+                                }
+                            </ul>
+                        }
+                        else
+                        {
+                            <span class="text-secondary">No stores</span>
+                        }
+                    </td>
+                </tr>
+            }
         }
         </tbody>
     </table>
@@ -147,3 +158,4 @@
 <vc:pager view-model="Model"></vc:pager>
 
 <partial name="_Confirm" model="@(new ConfirmModel("Send verification email", $"This will send a verification email to the user.", "Send"))" />
+<partial name="ShowQR" />

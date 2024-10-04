@@ -18,7 +18,7 @@
 			return null;
         var m = new ZcashPaymentViewModel();
         var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
-		m.Crypto = handler.Network.CryptoCode;
+		m.PaymentMethodId = handler.PaymentMethodId;
         m.DepositAddress = payment.Destination;
         m.Amount = payment.Value.ToString(CultureInfo.InvariantCulture);
 
@@ -29,7 +29,8 @@
 
         m.TransactionId = onChainPaymentData.TransactionId;
         m.ReceivedTime = payment.ReceivedTime;
-		m.TransactionLink = TransactionLinkProviders.GetTransactionLink(m.Crypto, onChainPaymentData.TransactionId);
+		m.TransactionLink = TransactionLinkProviders.GetTransactionLink(m.PaymentMethodId, onChainPaymentData.TransactionId);
+		m.Currency = payment.Currency;
         return m;
     }).Where(c => c != null).ToList();
 }
@@ -41,7 +42,7 @@
         <table class="table table-hover">
             <thead>
             <tr>
-                <th class="w-75px">Crypto</th>
+                <th class="w-75px">Payment Method</th>
                 <th class="w-175px">Destination</th>
                 <th class="text-nowrap">Payment Proof</th>
                 <th class="text-end">Confirmations</th>
@@ -52,12 +53,12 @@
             @foreach (var payment in payments)
             {
                 <tr >
-                    <td>@payment.Crypto</td>
+                    <td>@payment.PaymentMethodId</td>
                     <td><vc:truncate-center text="@payment.DepositAddress" classes="truncate-center-id" /></td>
                     <td><vc:truncate-center text="@payment.TransactionId" link="@payment.TransactionLink" classes="truncate-center-id" /></td>
                     <td class="text-end">@payment.Confirmations</td>
                     <td class="payment-value text-end text-nowrap">
-                        <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Amount, payment.Crypto)</span>
+                        <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Amount, payment.Currency)</span>
                     </td>
                 </tr>
             }

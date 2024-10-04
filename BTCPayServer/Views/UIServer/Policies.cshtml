@@ -242,12 +242,12 @@
 
                 @for (var lpi = 0; lpi < linkProviders.Length; lpi++)
                 {
-                    var cryptoCode = linkProviders[lpi].Key;
+                    var pmi = linkProviders[lpi].Key;
                     var defaultLink = linkProviders[lpi].Value.BlockExplorerLinkDefault;
-				    var existingOverride = Model.BlockExplorerLinks?.FirstOrDefault(tuple => tuple.CryptoCode == cryptoCode);
+					var existingOverride = Model.BlockExplorerLinks?.FirstOrDefault(tuple => tuple.PaymentMethodId == pmi);
                     if (existingOverride is null)
                     {
-					    existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = cryptoCode, Link = null };
+						existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { PaymentMethodId = pmi, Link = null };
                         Model.BlockExplorerLinks ??= new ();
                         Model.BlockExplorerLinks.Add(existingOverride);
                     }
@@ -255,12 +255,12 @@
                     var linkValue = existingOverride.Link ?? defaultLink;
                     <div class="form-group" data-default="@defaultLink">
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-						    <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@cryptoCode</label>
+							<label asp-for="BlockExplorerLinks[i].Link" class="form-label">@pmi</label>
                             <button type="button" class="btn btn-link p-0 only-for-js revert-default" title="Revert to default">
                                 Set to default
                             </button>
                         </div>
-					    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@cryptoCode" />
+						<input type="hidden" asp-for="BlockExplorerLinks[i].PaymentMethodId" value="@pmi" />
                         <input type="text" class="form-control block-explorer-link" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
                     </div>
                 }

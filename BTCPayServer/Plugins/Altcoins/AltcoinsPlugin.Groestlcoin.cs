@@ -34,7 +34,7 @@ public partial class AltcoinsPlugin
                 ? "https://chainz.cryptoid.info/grs/tx.dws?{0}.htm"
                 : "https://chainz.cryptoid.info/grs-test/tx.dws?{0}.htm";
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(blockExplorerLink));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(blockExplorerLink));
     }
 }
 

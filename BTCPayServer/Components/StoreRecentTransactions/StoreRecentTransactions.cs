@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using NBXplorer;
 using NBXplorer.Client;
 using static BTCPayServer.Components.StoreRecentTransactions.StoreRecentTransactionsViewModel;
 
@@ -80,7 +81,7 @@ public class StoreRecentTransactions : ViewComponent
                         Balance = tx.BalanceChange.ShowMoney(network),
                         Currency = vm.CryptoCode,
                         IsConfirmed = tx.Confirmations != 0,
-                        Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, tx.TransactionId.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, tx.TransactionId.ToString()),
                         Timestamp = tx.SeenAt,
                         Labels = labels
                     };

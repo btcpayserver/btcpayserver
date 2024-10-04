@@ -73,6 +73,7 @@ using BTCPayServer.Payouts;
 using ExchangeSharp;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
+using System.Reflection;
 
 namespace BTCPayServer.Hosting
 {
@@ -161,6 +162,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<IUIExtension>(new UIExtension("Lightning/ViewLightningLikePaymentData", "store-invoices-payments"));
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
+            services.AddStartupTask<LoadCurrencyNameTableStartupTask>();
             services.AddStartupTask<LoadTranslationsStartupTask>();
             services.TryAddSingleton<InvoiceRepository>();
             services.AddSingleton<PaymentService>();
@@ -352,7 +354,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<BTCPayWalletProvider>();
             services.TryAddSingleton<WalletReceiveService>();
             services.AddSingleton<IHostedService>(provider => provider.GetService<WalletReceiveService>());
-            services.TryAddSingleton<CurrencyNameTable>(CurrencyNameTable.Instance);
+
+            RegisterCurrencyData(services);
             services.AddScheduledTask<FeeProviderFactory>(TimeSpan.FromMinutes(3.0));
             services.AddSingleton<IFeeProviderFactory, FeeProviderFactory>(f => f.GetRequiredService<FeeProviderFactory>());
 
@@ -548,6 +551,12 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<IWalletFileParser, WasabiWalletFileParser>();
         }
 
+        internal static void RegisterCurrencyData(IServiceCollection services)
+        {
+            services.TryAddSingleton<CurrencyNameTable>();
+            services.AddSingleton<CurrencyDataProvider, AssemblyCurrencyDataProvider>(c => new AssemblyCurrencyDataProvider(typeof(BTCPayServer.Rating.BidAsk).Assembly, "BTCPayServer.Rating.Currencies.json"));
+        }
+
         internal static void RegisterRateSources(IServiceCollection services)
         {
             // We need to be careful to only add exchanges which OnGetTickers implementation make only 1 request
@@ -599,6 +608,12 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
         {
             services.AddSingleton(new DefaultRules(network.DefaultRateRules));
             services.AddSingleton<BTCPayNetworkBase>(network);
+            return services;
+        }
+
+        public static IServiceCollection AddCurrencyData(this IServiceCollection services, params CurrencyData[] currencyData)
+        {
+            services.AddSingleton<CurrencyDataProvider, InMemoryCurrencyDataProvider>(c => new InMemoryCurrencyDataProvider(currencyData));
             return services;
         }
         public static IServiceCollection AddBTCPayNetwork(this IServiceCollection services, BTCPayNetwork network)

@@ -368,7 +368,12 @@ public partial class UIStoresController
             var existingCriteria = blob.PaymentMethodCriteria.FirstOrDefault(c => c.PaymentMethod == paymentMethodId);
             if (existingCriteria != null)
                 blob.PaymentMethodCriteria.Remove(existingCriteria);
-            CurrencyValue.TryParse(newCriteria.Value, out var cv);
+            if (CurrencyValue.TryParse(newCriteria.Value, out var cv))
+            {
+                var currencyData = _currencyNameTable.GetCurrencyData(cv.Currency, false);
+                if (currencyData is not null)
+                    cv = cv.Round(currencyData.Divisibility);
+            }
             blob.PaymentMethodCriteria.Add(new PaymentMethodCriteria()
             {
                 Above = newCriteria.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan,

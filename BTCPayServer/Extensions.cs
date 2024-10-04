@@ -410,20 +410,17 @@ namespace BTCPayServer
         }
 
         public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
-        {
-            return handlers.TryGetBitcoinHandler(network.CryptoCode);
-        }
+        => handlers.TryGetBitcoinHandler(network.CryptoCode);
         public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
+         => handlers.TryGetBitcoinHandler(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode));
+        public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, PaymentMethodId paymentMethodId)
         {
-            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
-            if (handlers.TryGetValue(pmi, out var h) && h is BitcoinLikePaymentHandler b)
+            if (handlers.TryGetValue(paymentMethodId, out var h) && h is BitcoinLikePaymentHandler b)
                 return b;
             return null;
         }
         public static BitcoinLikePaymentHandler GetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
-        {
-            return handlers.GetBitcoinHandler(network.CryptoCode);
-        }
+        => handlers.GetBitcoinHandler(network.CryptoCode);
         public static BitcoinLikePaymentHandler GetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
         {
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);

@@ -1,13 +1,10 @@
 using System;
-using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
-using BTCPayServer.Models;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
@@ -15,6 +12,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -23,6 +21,8 @@ namespace BTCPayServer.Components.StoreLightningBalance;
 
 public class StoreLightningBalance : ViewComponent
 {
+    private const WalletHistogramType DefaultType = WalletHistogramType.Week;
+
     private readonly StoreRepository _storeRepo;
     private readonly CurrencyNameTable _currencies;
     private readonly BTCPayServerOptions _btcpayServerOptions;
@@ -32,6 +32,7 @@ public class StoreLightningBalance : ViewComponent
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
     private readonly IAuthorizationService _authorizationService;
     private readonly PaymentMethodHandlerDictionary _handlers;
+    private readonly LightningHistogramService _lnHistogramService;
 
     public StoreLightningBalance(
         StoreRepository storeRepo,
@@ -42,7 +43,8 @@ public class StoreLightningBalance : ViewComponent
         IOptions<LightningNetworkOptions> lightningNetworkOptions,
         IOptions<ExternalServicesOptions> externalServiceOptions,
         IAuthorizationService authorizationService,
-        PaymentMethodHandlerDictionary handlers)
+        PaymentMethodHandlerDictionary handlers,
+        LightningHistogramService lnHistogramService)
     {
         _storeRepo = storeRepo;
         _currencies = currencies;
@@ -53,6 +55,7 @@ public class StoreLightningBalance : ViewComponent
         _handlers = handlers;
         _lightningClientFactory = lightningClientFactory;
         _lightningNetworkOptions = lightningNetworkOptions;
+        _lnHistogramService = lnHistogramService;
     }
 
     public async Task<IViewComponentResult> InvokeAsync(StoreLightningBalanceViewModel vm)
@@ -64,20 +67,19 @@ public class StoreLightningBalance : ViewComponent
 
         vm.DefaultCurrency = vm.Store.GetStoreBlob().DefaultCurrency;
         vm.CurrencyData = _currencies.GetCurrencyData(vm.DefaultCurrency, true);
+        vm.DataUrl = Url.Action("LightningBalanceDashboard", "UIStores",
+            new { storeId = vm.Store.Id, cryptoCode = vm.CryptoCode });
+        vm.StoreId = vm.Store.Id;
+        if (vm.InitialRendering)
+            return View(vm);
         
         try
         {
             var lightningClient = await GetLightningClient(vm.Store, vm.CryptoCode);
-            if (lightningClient == null)
-            {
-                vm.InitialRendering = false;
-                return View(vm);
-            }
             
-            if (vm.InitialRendering)
-                return View(vm);
-           
-            var balance = await lightningClient.GetBalance();
+            // balance
+            using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var balance = await lightningClient.GetBalance(cts.Token);
             vm.Balance = balance;
             vm.TotalOnchain = balance.OnchainBalance != null
                 ? (balance.OnchainBalance.Confirmed ?? 0L) + (balance.OnchainBalance.Reserved ?? 0L) +
@@ -87,8 +89,16 @@ public class StoreLightningBalance : ViewComponent
                 ? (balance.OffchainBalance.Opening ?? 0) + (balance.OffchainBalance.Local ?? 0) +
                   (balance.OffchainBalance.Closing ?? 0)
                 : null;
+            
+            // histogram
+            var data = await _lnHistogramService.GetHistogram(lightningClient, DefaultType, cts.Token);
+            if (data != null)
+            {
+                vm.Type = data.Type;
+                vm.Series = data.Series;
+                vm.Labels = data.Labels;
+            }
         }
-       
         catch (Exception ex) when (ex is NotImplementedException or NotSupportedException)
         {
             // not all implementations support balance fetching
@@ -99,6 +109,8 @@ public class StoreLightningBalance : ViewComponent
             // general error
             vm.ProblemDescription = "Could not fetch Lightning balance.";
         }
+        // unset store to prevent circular reference in JSON 
+        vm.Store = null;
         return View(vm);
     }
 

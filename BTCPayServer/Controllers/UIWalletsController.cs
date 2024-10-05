@@ -42,6 +42,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using StoreData = BTCPayServer.Data.StoreData;
+using WalletHistogramType = BTCPayServer.Services.Wallets.WalletHistogramType;
 
 namespace BTCPayServer.Controllers
 {
@@ -311,10 +312,9 @@ namespace BTCPayServer.Controllers
         {
             var store = GetCurrentStore();
             var data = await _walletHistogramService.GetHistogram(store, walletId, type);
+            if (data == null) return NotFound();
 
-            return data == null
-                ? NotFound()
-                : Json(data);
+            return Json(data);
         }
 
         [HttpGet("{walletId}/receive")]

@@ -1,23 +1,13 @@
 #nullable enable
 using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.Globalization;
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using Dapper;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
-using NBXplorer;
-using NBXplorer.Client;
 
 namespace BTCPayServer.Components.StoreWalletBalance;
 

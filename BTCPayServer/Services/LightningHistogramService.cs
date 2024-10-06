@@ -14,9 +14,12 @@ public class LightningHistogramService
     {
         var (days, pointCount) = type switch
         {
+            WalletHistogramType.Day => (1, 30),
             WalletHistogramType.Week => (7, 30),
             WalletHistogramType.Month => (30, 30),
+            WalletHistogramType.YTD => (DateTimeOffset.Now.DayOfYear - 1, 30),
             WalletHistogramType.Year => (365, 30),
+            WalletHistogramType.TwoYears => (730, 30),
             _ => throw new ArgumentException($"WalletHistogramType {type} does not exist.")
         };
         var to = DateTimeOffset.UtcNow;
@@ -28,14 +31,6 @@ public class LightningHistogramService
         {
             // general balance
             var lnBalance = await lightningClient.GetBalance(cancellationToken);
-            /*var totalOnchain = lnBalance.OnchainBalance != null
-                ? (lnBalance.OnchainBalance.Confirmed ?? 0L) + (lnBalance.OnchainBalance.Reserved ?? 0L) +
-                  (lnBalance.OnchainBalance.Unconfirmed ?? 0L)
-                : new Money(0L);
-            var totalOffchain = lnBalance.OffchainBalance != null
-                ? (lnBalance.OffchainBalance.Opening ?? 0) + (lnBalance.OffchainBalance.Local ?? 0) +
-                  (lnBalance.OffchainBalance.Closing ?? 0)
-                : null;*/
             var total = lnBalance.OffchainBalance.Local;//(totalOnchain + new Money(totalOffchain?.ToDecimal(LightMoneyUnit.Satoshi) ?? 0, MoneyUnit.Satoshi)).ToDecimal(MoneyUnit.Satoshi);
             var totalBtc = total.ToDecimal(LightMoneyUnit.BTC);
             // prepare transaction data

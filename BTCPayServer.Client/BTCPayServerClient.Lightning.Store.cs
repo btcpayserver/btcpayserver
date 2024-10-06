@@ -24,7 +24,7 @@ public partial class BTCPayServerClient
     public virtual async Task<HistogramData> GetLightningNodeHistogram(string storeId, string cryptoCode, HistogramType? type = null,
         CancellationToken token = default)
     {
-        var queryPayload = type == null ? null : new Dictionary<string, string> { ["type"] = type.ToString() };
+        var queryPayload = type == null ? null : new Dictionary<string, object> { { "type", type.ToString() } };
         return await SendHttpRequest<HistogramData>($"api/v1/stores/{storeId}/lightning/{cryptoCode}/histogram", queryPayload, HttpMethod.Get, token);
     }
 

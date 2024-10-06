@@ -14,9 +14,12 @@ public class LightningHistogramService
     {
         var (days, pointCount) = type switch
         {
+            WalletHistogramType.Day => (1, 30),
             WalletHistogramType.Week => (7, 30),
             WalletHistogramType.Month => (30, 30),
+            WalletHistogramType.YTD => (DateTimeOffset.Now.DayOfYear - 1, 30),
             WalletHistogramType.Year => (365, 30),
+            WalletHistogramType.TwoYears => (730, 30),
             _ => throw new ArgumentException($"WalletHistogramType {type} does not exist.")
         };
         var to = DateTimeOffset.UtcNow;

@@ -11,7 +11,10 @@ public enum HistogramType
 {
     Week,
     Month,
-    Year
+    YTD,
+    Year,
+    TwoYears,
+    Day
 }
 
 public class HistogramData

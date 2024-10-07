@@ -47,7 +47,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public PaymentMethodId PaymentMethodId { get; }
         public void ModifyPaymentModel(PaymentModelContext context)
         {
-            if (context is not { IsSelected: true, Handler: BitcoinLikePaymentHandler handler})
+            if (context is not { Handler: BitcoinLikePaymentHandler handler})
                 return;
             var prompt = context.Prompt;
             var details = handler.ParsePaymentPromptDetails(prompt.Details);

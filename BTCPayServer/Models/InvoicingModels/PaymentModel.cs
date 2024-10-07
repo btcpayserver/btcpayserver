@@ -14,15 +14,8 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
             public PaymentMethodId PaymentMethodId { get; set; }
-            public string CryptoImage { get; set; }
-            public string Link { get; set; }
-            public string PaymentMethodName { get; set; }
-            public bool IsLightning { get; set; }
-            public string CryptoCode { get; set; }
             public bool Displayed { get; set; }
-            [JsonIgnore]
-            public IPaymentMethodHandler Handler { get; internal set; }
-
+            public string Order { get; set; }
             [JsonExtensionData]
             public Dictionary<string, JToken> AdditionalData { get; set; } = new();
         }

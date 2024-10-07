@@ -726,7 +726,7 @@ namespace BTCPayServer.Controllers
             bool isDefaultPaymentId = false;
             var storeBlob = store.GetStoreBlob();
 
-            var displayedPaymentMethods = invoice.GetPaymentPrompts().Select(p => p.PaymentMethodId).ToList();
+            var displayedPaymentMethods = invoice.GetPaymentPrompts().Select(p => p.PaymentMethodId).ToHashSet();
 
             
             var btcId = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
@@ -916,33 +916,21 @@ namespace BTCPayServer.Controllers
                                               var handler = _handlers[kv.PaymentMethodId];
                                               return new PaymentModel.AvailableCrypto
                                               {
-												  Handler = handler,
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
                                                   PaymentMethodId = kv.PaymentMethodId,
-                                                  CryptoCode = kv.Currency,
-                                                  PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId),
-                                                  IsLightning = handler is ILightningPaymentHandler,
-                                                  CryptoImage = Request.GetRelativePathOrAbsolute(GetPaymentMethodImage(kv.PaymentMethodId)),
-                                                  Link = Url.Action(nameof(Checkout),
-                                                      new
-                                                      {
-                                                          invoiceId,
-                                                          paymentMethodId = kv.PaymentMethodId.ToString()
-                                                      })
+                                                  Order = kv.PaymentMethodId switch
+                                                  {
+                                                      _ when PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode) == kv.PaymentMethodId => 0,
+                                                      _ when PaymentTypes.LN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode) == kv.PaymentMethodId => 1,
+                                                      _ when handler is ILightningPaymentHandler => 2,
+                                                      _ => 3
+                                                  }
                                               };
-                                          }).Where(c => c.CryptoImage != "/")
-                                          .OrderByDescending(a => a.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode).ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
+                                          })
+                                          .OrderBy(a => a.Order)
                                           .ToList()
             };
 
-			foreach (var kv in invoice.GetPaymentPrompts())
-			{
-				if (_paymentModelExtensions.TryGetValue(kv.PaymentMethodId, out var extension) &&
-					_handlers.TryGetValue(kv.PaymentMethodId, out var h))
-				{
-					extension.ModifyPaymentModel(new PaymentModelContext(model, store, storeBlob, invoice, Url, kv, h, paymentMethodId == kv.PaymentMethodId));
-				}
-			}
             model.PaymentMethodId = paymentMethodId.ToString();
             model.OrderAmountFiat = OrderAmountFromInvoice(model.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol);
 
@@ -957,6 +945,12 @@ namespace BTCPayServer.Controllers
 
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
+
+            if (_paymentModelExtensions.TryGetValue(paymentMethodId, out var extension) &&
+                    _handlers.TryGetValue(paymentMethodId, out var h))
+            {
+                extension.ModifyPaymentModel(new PaymentModelContext(model, store, storeBlob, invoice, Url, prompt, h));
+            }
             return model;
         }
 

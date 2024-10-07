@@ -34,7 +34,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public void ModifyPaymentModel(PaymentModelContext context)
         {
-            if (context is not { IsSelected: true, Handler: MoneroLikePaymentMethodHandler handler })
+            if (context is not { Handler: MoneroLikePaymentMethodHandler handler })
                 return;
             context.Model.CheckoutBodyComponentName = BitcoinPaymentModelExtension.CheckoutBodyComponentName;
             if (context.Model.Activated)

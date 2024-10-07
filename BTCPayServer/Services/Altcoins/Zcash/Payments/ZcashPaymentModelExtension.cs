@@ -34,7 +34,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
 
         public void ModifyPaymentModel(PaymentModelContext context)
         {
-            if (context is not { IsSelected: true, Handler: ZcashLikePaymentMethodHandler handler })
+            if (context is not { Handler: ZcashLikePaymentMethodHandler handler })
                 return;
 			context.Model.CheckoutBodyComponentName = BitcoinPaymentModelExtension.CheckoutBodyComponentName;
 			if (context.Model.Activated)

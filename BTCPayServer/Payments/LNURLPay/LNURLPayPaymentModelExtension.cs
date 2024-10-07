@@ -39,7 +39,7 @@ namespace BTCPayServer.Payments.LNURLPay
         private const string UriScheme = "lightning:";
         public void ModifyPaymentModel(PaymentModelContext context)
         {
-            if (context is not { IsSelected: true, Handler: LNURLPayPaymentHandler handler })
+            if (context is not { Handler: LNURLPayPaymentHandler handler })
                 return;
             var lnurl = paymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
             if (lnurl is not null)

@@ -128,6 +128,7 @@ namespace BTCPayServer.Controllers
                 StoreLink = Url.Action(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId = store.Id }),
                 PaymentRequestLink = Url.Action(nameof(UIPaymentRequestController.ViewPaymentRequest), "UIPaymentRequest", new { payReqId = invoice.Metadata.PaymentRequestId }),
                 Id = invoice.Id,
+                Entity = invoice,
                 State = invoiceState,
                 TransactionSpeed = invoice.SpeedPolicy == SpeedPolicy.HighSpeed ? "high" :
                                    invoice.SpeedPolicy == SpeedPolicy.MediumSpeed ? "medium" :
@@ -554,6 +555,7 @@ namespace BTCPayServer.Controllers
             {
                 Archived = invoice.Archived,
                 Payments = invoice.GetPayments(false),
+                Entity = invoice,
                 CryptoPayments = invoice.GetPaymentPrompts().Select(
                     data =>
                     {

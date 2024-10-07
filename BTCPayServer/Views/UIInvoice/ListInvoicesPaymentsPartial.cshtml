@@ -1,5 +1,4 @@
 @using BTCPayServer.Payments
-@inject PaymentMethodViewProvider paymentMethodViewProvider
 @model (InvoiceDetailsModel Invoice, bool ShowAddress)
 @{
     var invoice = Model.Invoice;
@@ -87,14 +86,10 @@
                         }
                     </td>
                 </tr>
-				var vvm = paymentMethodViewProvider.TryGetViewViewModel(payment.PaymentMethodRaw, "AdditionalPaymentMethodDetails");;
-				if (vvm != null)
-                {
-                    <partial name="@((string)vvm.View)" model="@vvm.ViewModel" />
-                }
+				<vc:ui-extension-point location="invoice-payments-list" />
             }
         </tbody>
     </table>
 </div>
 
-<vc:ui-extension-point location="store-invoices-payments" model="@invoice.Payments" />
+<vc:ui-extension-point location="store-invoices-payments" model="@invoice" />

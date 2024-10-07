@@ -292,10 +292,9 @@ namespace BTCPayServer
         }
 
 
-        public static IServiceCollection AddUIExtension(this IServiceCollection services, string key, string partialView)
+        public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
         {
-            services.AddSingleton<IUIExtension>(new UIExtension(partialView,
-                key));
+            services.AddSingleton<IUIExtension>(new UIExtension(partialViewName, location));
             return services;
         }
         public static IServiceCollection AddReportProvider<T>(this IServiceCollection services)

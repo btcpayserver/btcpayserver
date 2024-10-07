@@ -158,8 +158,7 @@ namespace BTCPayServer.Hosting
             //
 
             AddOnchainWalletParsers(services);
-            services.AddSingleton<IUIExtension>(new UIExtension("Bitcoin/ViewBitcoinLikePaymentData", "store-invoices-payments"));
-            services.AddSingleton<IUIExtension>(new UIExtension("Lightning/ViewLightningLikePaymentData", "store-invoices-payments"));
+            
 
             services.AddStartupTask<BlockExplorerLinkStartupTask>();
             services.AddStartupTask<LoadCurrencyNameTableStartupTask>();
@@ -367,6 +366,8 @@ namespace BTCPayServer.Hosting
 
             services.AddUIExtension("checkout-end", "Bitcoin/BitcoinLikeMethodCheckout");
             services.AddUIExtension("checkout-end", "Lightning/LightningLikeMethodCheckout");
+            services.AddUIExtension("store-invoices-payments", "Bitcoin/ViewBitcoinLikePaymentData");
+            services.AddUIExtension("store-invoices-payments", "Lightning/ViewLightningLikePaymentData");
 
             services.AddSingleton<Services.NBXplorerConnectionFactory>();
             services.AddSingleton<IHostedService, Services.NBXplorerConnectionFactory>(o => o.GetRequiredService<Services.NBXplorerConnectionFactory>());
@@ -407,7 +408,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
-            services.AddSingleton<PaymentMethodViewProvider>();
 
             services.AddSingleton<PayoutMethodHandlerDictionary>();
 
@@ -668,8 +668,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
                     (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPayPaymentLinkExtension), new object[] { network, pmi }));
                     services.AddSingleton<IPaymentModelExtension>(provider =>
 (IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPayPaymentModelExtension), new object[] { network, pmi }));
-                    services.AddSingleton<IPaymentMethodViewExtension>(provider =>
-(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPaymentMethodViewExtension), new object[] { pmi }));
                     services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
 (IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(LNURLPayPaymentMethodBitpayAPIExtension), new object[] { pmi }));
                 }

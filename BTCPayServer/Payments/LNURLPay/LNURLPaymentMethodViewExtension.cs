@@ -19,7 +19,6 @@ namespace BTCPayServer.Payments.LNURLPay
                 ExtensionPartial = "Lightning/LightningLikeMethodCheckout",
                 CheckoutBodyVueComponentName = "LightningLikeMethodCheckout",
                 CheckoutHeaderVueComponentName = "LightningLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Lightning/LightningLikeMethodCheckoutNoScript"
             });
         }
     }

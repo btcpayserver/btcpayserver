@@ -17,14 +17,7 @@
     <h1>Pay with @Model.StoreName</h1>
     @if (Model.Status == "new")
     {
-        if (!string.IsNullOrEmpty(Model.UISettings?.NoScriptPartialName))
-        {
-            <partial model="@Model" name="@Model.UISettings.NoScriptPartialName"/>
-        }
-        else
-        {
-            <h1 class="text-danger">This payment method requires javascript.</h1>
-        }
+		<h1 class="text-danger">This payment method requires javascript.</h1>
         @if (displayedPaymentMethods.Count > 1)
         {
             <div>

@@ -106,9 +106,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         {
             return new CheckoutUIPaymentMethodSettings
             {
-                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader"
+                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout"
             };
         }
 

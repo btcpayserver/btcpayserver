@@ -13,9 +13,7 @@ namespace BTCPayServer.Payments.Bitcoin
             context.RegisterCheckoutUI(new CheckoutUIPaymentMethodSettings
             {
                 ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
+                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout"
             });
         }
     }

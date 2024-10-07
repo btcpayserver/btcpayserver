@@ -113,9 +113,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             return new CheckoutUIPaymentMethodSettings
             {
                 ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
+                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout"
             };
         }
 

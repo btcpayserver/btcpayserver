@@ -17,7 +17,7 @@
 @functions {
     private string ToJsValue(object value)
     {
-        return Safe.Json(value).ToString()?.Replace("\"", "'");
+        return Safe.Json(value?.ToString()).ToString()?.Replace("\"", "'");
     }
 }
 <!DOCTYPE html>
@@ -108,7 +108,7 @@
                         </div>
                     </div>
                 }
-                <component v-if="paymentMethodComponent" :is="paymentMethodComponent"
+				<component v-if="paymentMethodComponent" :is="paymentMethodComponent"
                            :model="srvModel"
                            :nfc-scanning="nfc.scanning"
                            :nfc-supported="nfc.supported"

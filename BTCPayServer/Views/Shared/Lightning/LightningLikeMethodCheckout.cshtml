@@ -1,6 +1,6 @@
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 
-<template id="lightning-method-checkout-template">
+<template id="checkout-template">
     <div class="payment-box">
         @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-pre-content", model = Model})
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Lightning_@Model.PaymentMethodId [data-clipboard]">
@@ -23,9 +23,9 @@
 </template>
 
 <script>
-    Vue.component('LightningLikeMethodCheckout', {
+	Vue.component('checkout-template', {
         props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
-        template: "#lightning-method-checkout-template",
+		template: "#checkout-template",
         components: {
             qrcode: VueQrcode
         },

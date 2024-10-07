@@ -711,21 +711,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        [HttpGet("invoice-noscript")]
-        public async Task<IActionResult> CheckoutNoScript(string? invoiceId, string? id = null, string? paymentMethodId = null, [FromQuery] string? lang = null)
-        {
-            //Keep compatibility with Bitpay
-            invoiceId = invoiceId ?? id;
-            //
-            if (invoiceId is null)
-                return NotFound();
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId is null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
-            if (model == null)
-                return NotFound();
-
-            return View(model);
-        }
-
         private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);

@@ -3,7 +3,7 @@
 @using BTCPayServer.Abstractions.TagHelpers
 @model BTCPayServer.Models.InvoicingModels.PaymentModel
 
-<template id="bitcoin-method-checkout-template">
+<template id="checkout-template">
     @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-bitcoin-pre-content", model = Model})
     <div class="payment-box">
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Address_@Model.PaymentMethodId [data-clipboard]">
@@ -31,9 +31,9 @@
 </template>
 
 <script>
-    Vue.component('BitcoinLikeMethodCheckout', {
+	Vue.component('checkout-template', {
         props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
-        template: "#bitcoin-method-checkout-template",
+		template: "#checkout-template",
         components: {
             qrcode: VueQrcode
         },

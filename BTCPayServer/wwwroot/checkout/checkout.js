@@ -152,7 +152,7 @@ function initApp() {
             btcPaid () {
                 return this.asNumber(this.srvModel.btcPaid);
             },
-            pmId () {
+            pmId() {
                 return this.paymentMethodId || this.srvModel.paymentMethodId;
             },
             minutesLeft () {
@@ -174,10 +174,10 @@ function initApp() {
             paymentMethodIds () {
                 return this.srvModel.availableCryptos.map(function (c) { return c.paymentMethodId });
             },
-            paymentMethodComponent () {
+            paymentMethodComponent() {
                 return this.isPluginPaymentMethod
                     ? `${this.pmId}Checkout`
-                    : this.srvModel.activated && this.srvModel.uiSettings.checkoutBodyVueComponentName;
+                    : this.srvModel.activated && 'checkout-template';
             },
             isPluginPaymentMethod () {
                 return !this.paymentMethodIds.includes(this.pmId);

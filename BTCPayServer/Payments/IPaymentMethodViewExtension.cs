@@ -63,6 +63,5 @@ namespace BTCPayServer.Payments
     public class CheckoutUIPaymentMethodSettings
     {
         public string? ExtensionPartial { get; set; }
-        public string? CheckoutBodyVueComponentName { get; set; }
     }
 }

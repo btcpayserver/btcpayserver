@@ -16,8 +16,7 @@ namespace BTCPayServer.Payments.LNURLPay
             context.RegisterPaymentMethodDetails("LNURL/AdditionalPaymentMethodDetails");
             context.RegisterCheckoutUI(new CheckoutUIPaymentMethodSettings()
             {
-                ExtensionPartial = "Lightning/LightningLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "LightningLikeMethodCheckout"
+                ExtensionPartial = "Lightning/LightningLikeMethodCheckout"
             });
         }
     }

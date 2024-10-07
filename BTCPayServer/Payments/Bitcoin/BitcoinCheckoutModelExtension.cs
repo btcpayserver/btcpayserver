@@ -12,7 +12,7 @@ using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinPaymentModelExtension : IPaymentModelExtension
+    public class BitcoinCheckoutModelExtension : ICheckoutModelExtension
     {
         public const string CheckoutBodyComponentName = "BitcoinCheckoutBody";
         private readonly PaymentMethodHandlerDictionary _handlers;
@@ -23,7 +23,7 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly IPaymentLinkExtension? lnurlPaymentLinkExtension;
         private readonly string? _bech32Prefix;
 
-        public BitcoinPaymentModelExtension(
+        public BitcoinCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             BTCPayNetwork network,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
@@ -45,7 +45,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public string Image => _Network.CryptoImagePath;
         public string Badge => "";
         public PaymentMethodId PaymentMethodId { get; }
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public void ModifyCheckoutModel(CheckoutModelContext context)
         {
             if (context is not { Handler: BitcoinLikePaymentHandler handler})
                 return;
@@ -138,7 +138,7 @@ namespace BTCPayServer.Payments.Bitcoin
             }
         }
 
-        public static void PreparePaymentModelForAmountInSats(PaymentModel model, decimal rate, DisplayFormatter displayFormatter)
+        public static void PreparePaymentModelForAmountInSats(CheckoutModel model, decimal rate, DisplayFormatter displayFormatter)
         {
             var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name)
             {

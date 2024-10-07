@@ -8,9 +8,9 @@ using NBitcoin;
 
 namespace BTCPayServer.Payments.LNURLPay
 {
-    public class LNURLPayPaymentModelExtension : IPaymentModelExtension
+    public class LNURLCheckoutModelExtension : ICheckoutModelExtension
     {
-        public LNURLPayPaymentModelExtension(
+        public LNURLCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             BTCPayNetwork network,
             DisplayFormatter displayFormatter,
@@ -37,7 +37,7 @@ namespace BTCPayServer.Payments.LNURLPay
         public string Badge => "⚡";
 
         private const string UriScheme = "lightning:";
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public void ModifyCheckoutModel(CheckoutModelContext context)
         {
             if (context is not { Handler: LNURLPayPaymentHandler handler })
                 return;
@@ -48,11 +48,11 @@ namespace BTCPayServer.Payments.LNURLPay
                 context.Model.InvoiceBitcoinUrl = lnurl;
                 context.Model.InvoiceBitcoinUrlQR = lnurl.ToUpperInvariant().Replace(UriScheme.ToUpperInvariant(), UriScheme);
             }
-            context.Model.CheckoutBodyComponentName = LightningPaymentModelExtension.CheckoutBodyComponentName;
+            context.Model.CheckoutBodyComponentName = LNCheckoutModelExtension.CheckoutBodyComponentName;
             context.Model.PeerInfo = handler.ParsePaymentPromptDetails(context.Prompt.Details).NodeInfo;
             if (context.StoreBlob.LightningAmountInSatoshi && context.Model.PaymentMethodCurrency == "BTC")
             {
-                BitcoinPaymentModelExtension.PreparePaymentModelForAmountInSats(context.Model, context.Prompt.Rate, _displayFormatter);
+                BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, context.Prompt.Rate, _displayFormatter);
             }
         }
     }

@@ -1,7 +1,7 @@
 @using BTCPayServer.Payments.Lightning
-@model BTCPayServer.Models.InvoicingModels.PaymentModel
+@model BTCPayServer.Models.InvoicingModels.CheckoutModel
 
-<template id="@LightningPaymentModelExtension.CheckoutBodyComponentName">
+<template id="@LNCheckoutModelExtension.CheckoutBodyComponentName">
     <div class="payment-box">
         @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-pre-content", model = Model})
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Lightning_@Model.PaymentMethodId [data-clipboard]">
@@ -24,9 +24,9 @@
 </template>
 
 <script>
-	Vue.component(@Safe.Json(LightningPaymentModelExtension.CheckoutBodyComponentName), {
+	Vue.component(@Safe.Json(LNCheckoutModelExtension.CheckoutBodyComponentName), {
         props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
-		template: @Safe.Json("#" + LightningPaymentModelExtension.CheckoutBodyComponentName),
+		template: @Safe.Json("#" + LNCheckoutModelExtension.CheckoutBodyComponentName),
         components: {
             qrcode: VueQrcode
         },

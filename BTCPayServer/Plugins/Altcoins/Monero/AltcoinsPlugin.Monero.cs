@@ -67,8 +67,8 @@ public partial class AltcoinsPlugin
                 (IPaymentMethodHandler)ActivatorUtilities.CreateInstance(provider, typeof(MoneroLikePaymentMethodHandler), new object[] { network }));
         services.AddSingleton<IPaymentLinkExtension>(provider =>
 (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(MoneroPaymentLinkExtension), new object[] { network, pmi }));
-        services.AddSingleton<IPaymentModelExtension>(provider =>
-(IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(MoneroPaymentModelExtension), new object[] { network, pmi }));
+        services.AddSingleton<ICheckoutModelExtension>(provider =>
+(ICheckoutModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(MoneroCheckoutModelExtension), new object[] { network, pmi }));
 
         services.AddSingleton<IUIExtension>(new UIExtension("Monero/StoreNavMoneroExtension", "store-nav"));
         services.AddSingleton<IUIExtension>(new UIExtension("Monero/StoreWalletsNavMoneroExtension", "store-wallets-nav"));

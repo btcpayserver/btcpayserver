@@ -8,13 +8,13 @@ using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Altcoins.Zcash.Payments
 {
-    public class ZcashPaymentModelExtension : IPaymentModelExtension
+    public class ZcashCheckoutModelExtension : ICheckoutModelExtension
     {
         private readonly BTCPayNetworkBase _network;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly IPaymentLinkExtension paymentLinkExtension;
 
-        public ZcashPaymentModelExtension(
+        public ZcashCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
             BTCPayNetworkBase network,
@@ -32,11 +32,11 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         public string Image => _network.CryptoImagePath;
         public string Badge => "";
 
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public void ModifyCheckoutModel(CheckoutModelContext context)
         {
             if (context is not { Handler: ZcashLikePaymentMethodHandler handler })
                 return;
-			context.Model.CheckoutBodyComponentName = BitcoinPaymentModelExtension.CheckoutBodyComponentName;
+			context.Model.CheckoutBodyComponentName = BitcoinCheckoutModelExtension.CheckoutBodyComponentName;
 			if (context.Model.Activated)
             {
                 var details = context.InvoiceEntity.GetPayments(true)

@@ -1587,14 +1587,14 @@ namespace BTCPayServer.Tests
                    ItemDesc = "Some description",
                    FullNotifications = true
                }, Facade.Merchant);
-            var checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+            var checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<CheckoutModel>();
             Assert.Equal(lnMethod, checkout.PaymentMethodId);
 
             // If we change store's default, it should change the checkout's default
             vm.DefaultPaymentMethod = btcMethod;
             Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
                 .Result);
-            checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+            checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<CheckoutModel>();
             Assert.Equal(btcMethod, checkout.PaymentMethodId);
         }
 
@@ -1625,7 +1625,7 @@ namespace BTCPayServer.Tests
 
             // validate that invoice data model doesn't have lightning string initially
             var res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
-            var paymentMethodFirst = Assert.IsType<PaymentModel>(
+            var paymentMethodFirst = Assert.IsType<CheckoutModel>(
                 Assert.IsType<ViewResult>(res).Model
             );
             Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
@@ -1641,7 +1641,7 @@ namespace BTCPayServer.Tests
 
             // validate that QR code now has both onchain and offchain payment urls
             res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
-            var paymentMethodUnified = Assert.IsType<PaymentModel>(
+            var paymentMethodUnified = Assert.IsType<CheckoutModel>(
                 Assert.IsType<ViewResult>(res).Model
             );
             Assert.StartsWith("bitcoin:bcrt", paymentMethodUnified.InvoiceBitcoinUrl);

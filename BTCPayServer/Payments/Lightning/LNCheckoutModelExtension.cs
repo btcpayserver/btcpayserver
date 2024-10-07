@@ -9,12 +9,12 @@ using System.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public class LightningPaymentModelExtension : IPaymentModelExtension
+    public class LNCheckoutModelExtension : ICheckoutModelExtension
     {
         public const string CheckoutBodyComponentName = "LightningCheckoutBody";
         private readonly DisplayFormatter _displayFormatter;
         IPaymentLinkExtension _PaymentLinkExtension;
-        public LightningPaymentModelExtension(
+        public LNCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             BTCPayNetwork network,
             DisplayFormatter displayFormatter,
@@ -38,7 +38,7 @@ namespace BTCPayServer.Payments.Lightning
 
         public string Image => Network.LightningImagePath;
         public string Badge => "⚡";
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public void ModifyCheckoutModel(CheckoutModelContext context)
         {
             if (context is not { Handler: LightningLikePaymentHandler handler })
                 return;
@@ -52,7 +52,7 @@ namespace BTCPayServer.Payments.Lightning
             context.Model.PeerInfo = handler.ParsePaymentPromptDetails(paymentPrompt.Details).NodeInfo;
             if (context.StoreBlob.LightningAmountInSatoshi && context.Model.PaymentMethodCurrency == "BTC")
             {
-                BitcoinPaymentModelExtension.PreparePaymentModelForAmountInSats(context.Model, paymentPrompt.Rate, _displayFormatter);
+                BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, paymentPrompt.Rate, _displayFormatter);
             }
         }
     }

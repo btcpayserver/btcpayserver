@@ -694,7 +694,7 @@ namespace BTCPayServer.Controllers
             if (invoiceId is null)
                 return NotFound();
 
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
+            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
             {
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
@@ -713,7 +713,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<PaymentModel?> GetInvoiceModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang)
+        private async Task<CheckoutModel?> GetCheckoutModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang)
         {
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
@@ -822,7 +822,7 @@ namespace BTCPayServer.Controllers
             if (prompt is null)
                 return null;
             if (activated)
-                return await GetInvoiceModel(invoiceId, paymentMethodId, lang);
+                return await GetCheckoutModel(invoiceId, paymentMethodId, lang);
 
             var accounting = prompt.Calculate();
 
@@ -863,7 +863,7 @@ namespace BTCPayServer.Controllers
             }
 
 			string ShowMoney(decimal value) => MoneyExtensions.ShowMoney(value, prompt.RateDivisibility ?? prompt.Divisibility);
-            var model = new PaymentModel
+            var model = new CheckoutModel
             {
                 Activated = prompt.Activated,
                 PaymentMethodName = _prettyName.PrettyName(paymentMethodId),
@@ -914,7 +914,7 @@ namespace BTCPayServer.Controllers
                                           .Select(kv =>
                                           {
                                               var handler = _handlers[kv.PaymentMethodId];
-                                              return new PaymentModel.AvailableCrypto
+                                              return new CheckoutModel.AvailableCrypto
                                               {
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
                                                   PaymentMethodId = kv.PaymentMethodId,
@@ -950,7 +950,7 @@ namespace BTCPayServer.Controllers
             if (_paymentModelExtensions.TryGetValue(paymentMethodId, out var extension) &&
                     _handlers.TryGetValue(paymentMethodId, out var h))
             {
-                extension.ModifyPaymentModel(new PaymentModelContext(model, store, storeBlob, invoice, Url, prompt, h));
+                extension.ModifyCheckoutModel(new CheckoutModelContext(model, store, storeBlob, invoice, Url, prompt, h));
             }
             return model;
         }
@@ -987,7 +987,7 @@ namespace BTCPayServer.Controllers
         {
             if (string.IsNullOrEmpty(paymentMethodId))
                 paymentMethodId = implicitPaymentMethodId;
-            var model = await GetInvoiceModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
+            var model = await GetCheckoutModel(invoiceId, paymentMethodId == null ? null : PaymentMethodId.Parse(paymentMethodId), lang);
             if (model == null)
                 return NotFound();
             return Json(model);

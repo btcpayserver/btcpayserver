@@ -7,7 +7,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
-    public class PaymentModel
+    public class CheckoutModel
     {
         public string CheckoutBodyComponentName { get; set; }
         public class AvailableCrypto

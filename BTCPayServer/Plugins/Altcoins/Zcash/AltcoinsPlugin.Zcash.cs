@@ -56,8 +56,8 @@ public partial class AltcoinsPlugin
         (IPaymentMethodHandler)ActivatorUtilities.CreateInstance(provider, typeof(ZcashLikePaymentMethodHandler), new object[] { network }));
         services.AddSingleton<IPaymentLinkExtension>(provider =>
 (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(ZcashPaymentLinkExtension), new object[] { network, pmi }));
-        services.AddSingleton<IPaymentModelExtension>(provider =>
-(IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(ZcashPaymentModelExtension), new object[] { network, pmi }));
+        services.AddSingleton<ICheckoutModelExtension>(provider =>
+(ICheckoutModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(ZcashCheckoutModelExtension), new object[] { network, pmi }));
 
         services.AddSingleton<ZcashLikePaymentMethodHandler>();
         services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetRequiredService<ZcashLikePaymentMethodHandler>());

@@ -320,7 +320,7 @@ namespace BTCPayServer.Tests
 
                 var controller = tester.PayTester.GetController<UIInvoiceController>(null);
                 var checkout =
-                    (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id)
+                    (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id)
                         .GetAwaiter().GetResult()).Value;
                 Assert.Single(checkout.AvailableCryptos);
                 Assert.Equal("LTC", checkout.PaymentMethodCurrency);
@@ -337,7 +337,7 @@ namespace BTCPayServer.Tests
                 {
                     invoice = user.BitPay.GetInvoice(invoice.Id);
                     Assert.Equal("paid", invoice.Status);
-                    checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id)
+                    checkout = (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id)
                         .GetAwaiter().GetResult()).Value;
                     Assert.Equal("Processing", checkout.Status);
                 });
@@ -475,7 +475,7 @@ namespace BTCPayServer.Tests
 
                 var controller = tester.PayTester.GetController<UIInvoiceController>(null);
                 var checkout =
-                    (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null)
+                    (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id, null)
                         .GetAwaiter().GetResult()).Value;
                 Assert.Single(checkout.AvailableCryptos);
                 Assert.Equal("BTC", checkout.PaymentMethodCurrency);
@@ -536,7 +536,7 @@ namespace BTCPayServer.Tests
                 });
 
                 controller = tester.PayTester.GetController<UIInvoiceController>(null);
-                checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC")
+                checkout = (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC")
                     .GetAwaiter().GetResult()).Value;
                 Assert.Equal(2, checkout.AvailableCryptos.Count);
                 Assert.Equal("LTC", checkout.PaymentMethodCurrency);

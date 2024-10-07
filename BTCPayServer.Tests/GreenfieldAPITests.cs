@@ -2733,7 +2733,7 @@ namespace BTCPayServer.Tests
 
             Assert.EndsWith($"/i/{newInvoice.Id}", newInvoice.CheckoutLink);
             var controller = tester.PayTester.GetController<UIInvoiceController>(user.UserId, user.StoreId);
-            var model = (PaymentModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
+            var model = (CheckoutModel)((ViewResult)await controller.Checkout(newInvoice.Id)).Model;
             Assert.Equal("it-IT", model.DefaultLang);
             Assert.Equal("http://toto.com/lol", model.MerchantRefLink);
 

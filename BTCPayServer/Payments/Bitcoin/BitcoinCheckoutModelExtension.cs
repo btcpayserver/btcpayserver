@@ -12,8 +12,9 @@ using NBitcoin.DataEncoders;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
-    public class BitcoinPaymentModelExtension : IPaymentModelExtension
+    public class BitcoinCheckoutModelExtension : ICheckoutModelExtension
     {
+        public const string CheckoutBodyComponentName = "BitcoinCheckoutBody";
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly BTCPayNetwork _Network;
         private readonly DisplayFormatter _displayFormatter;
@@ -22,7 +23,7 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly IPaymentLinkExtension? lnurlPaymentLinkExtension;
         private readonly string? _bech32Prefix;
 
-        public BitcoinPaymentModelExtension(
+        public BitcoinCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             BTCPayNetwork network,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
@@ -44,18 +45,19 @@ namespace BTCPayServer.Payments.Bitcoin
         public string Image => _Network.CryptoImagePath;
         public string Badge => "";
         public PaymentMethodId PaymentMethodId { get; }
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public void ModifyCheckoutModel(CheckoutModelContext context)
         {
-            var prompt = context.Prompt;
-            if (!_handlers.TryGetValue(PaymentMethodId, out var o) || o is not BitcoinLikePaymentHandler handler)
+            if (context is not { Handler: BitcoinLikePaymentHandler handler})
                 return;
+            var prompt = context.Prompt;
             var details = handler.ParsePaymentPromptDetails(prompt.Details);
+            context.Model.CheckoutBodyComponentName = CheckoutBodyComponentName;
             context.Model.ShowRecommendedFee = context.StoreBlob.ShowRecommendedFee;
             context.Model.FeeRate = details.RecommendedFeeRate.SatoshiPerByte;
 
             
             var bip21Case = _Network.SupportLightning && context.StoreBlob.OnChainWithLnInvoiceFallback;
-            var amountInSats = bip21Case && context.StoreBlob.LightningAmountInSatoshi && context.Model.CryptoCode == "BTC";
+            var amountInSats = bip21Case && context.StoreBlob.LightningAmountInSatoshi && context.Model.PaymentMethodCurrency == "BTC";
             string? lightningFallback = null;
             if (context.Model.Activated && bip21Case)
             {
@@ -117,10 +119,10 @@ namespace BTCPayServer.Payments.Bitcoin
                     // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
                 }
 
-                if (_Network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix is not null && context.Model.BtcAddress.StartsWith(_bech32Prefix, StringComparison.OrdinalIgnoreCase))
+                if (_Network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix is not null && context.Model.Address.StartsWith(_bech32Prefix, StringComparison.OrdinalIgnoreCase))
                 {
                     context.Model.InvoiceBitcoinUrlQR = context.Model.InvoiceBitcoinUrlQR.Replace(
-                        $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.BtcAddress}", $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.BtcAddress.ToUpperInvariant()}",
+                        $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.Address}", $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.Address.ToUpperInvariant()}",
                         StringComparison.OrdinalIgnoreCase);
                     // model.InvoiceBitcoinUrlQR: bitcoin:BCRT1QXP2QA5DHN...?amount=0.00044007&lightning=LNBCRT4400...
                 }
@@ -136,15 +138,15 @@ namespace BTCPayServer.Payments.Bitcoin
             }
         }
 
-        public static void PreparePaymentModelForAmountInSats(PaymentModel model, decimal rate, DisplayFormatter displayFormatter)
+        public static void PreparePaymentModelForAmountInSats(CheckoutModel model, decimal rate, DisplayFormatter displayFormatter)
         {
             var satoshiCulture = new CultureInfo(CultureInfo.InvariantCulture.Name)
             {
                 NumberFormat = { NumberGroupSeparator = " " }
             };
-            model.CryptoCode = "sats";
-            model.BtcDue = Money.Parse(model.BtcDue).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
-            model.BtcPaid = Money.Parse(model.BtcPaid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+            model.PaymentMethodCurrency = "sats";
+            model.Due = Money.Parse(model.Due).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
+            model.Paid = Money.Parse(model.Paid).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
             model.OrderAmount = Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.Satoshi).ToString("N0", satoshiCulture);
             model.NetworkFee = new Money(model.NetworkFee, MoneyUnit.BTC).ToUnit(MoneyUnit.Satoshi);
             model.Rate = model.InvoiceCurrency is "BTC" or "SATS"

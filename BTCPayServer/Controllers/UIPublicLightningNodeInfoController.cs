@@ -21,13 +21,13 @@ namespace BTCPayServer.Controllers
     public class UIPublicLightningNodeInfoController : Controller
     {
         private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
-        private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
+        private readonly Dictionary<PaymentMethodId, ICheckoutModelExtension> _paymentModelExtensions;
         private readonly UriResolver _uriResolver;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly StoreRepository _StoreRepository;
 
         public UIPublicLightningNodeInfoController(BTCPayNetworkProvider btcPayNetworkProvider,
-            Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
+            Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
             UriResolver uriResolver,
             PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository)

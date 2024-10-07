@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers
         private readonly LabelService _labelService;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly DefaultRulesCollection _defaultRules;
-        private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
+        private readonly Dictionary<PaymentMethodId, ICheckoutModelExtension> _paymentModelExtensions;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
                                  LabelService labelService,
                                  DefaultRulesCollection defaultRules,
                                  PaymentMethodHandlerDictionary handlers,
-                                 Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
+                                 Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
                                  TransactionLinkProviders transactionLinkProviders)
         {
             _currencyTable = currencyTable;

@@ -2,18 +2,19 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Altcoins.Monero.Services;
 using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Payments
 {
-    public class MoneroPaymentModelExtension : IPaymentModelExtension
+    public class MoneroCheckoutModelExtension : ICheckoutModelExtension
     {
         private readonly BTCPayNetworkBase _network;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly IPaymentLinkExtension paymentLinkExtension;
 
-        public MoneroPaymentModelExtension(
+        public MoneroCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
             BTCPayNetworkBase network,
@@ -31,22 +32,23 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public string Image => _network.CryptoImagePath;
         public string Badge => "";
 
-        public void ModifyPaymentModel(PaymentModelContext context)
+        public void ModifyCheckoutModel(CheckoutModelContext context)
         {
+            if (context is not { Handler: MoneroLikePaymentMethodHandler handler })
+                return;
+            context.Model.CheckoutBodyComponentName = BitcoinCheckoutModelExtension.CheckoutBodyComponentName;
             if (context.Model.Activated)
             {
-                if (_handlers.TryGetValue(PaymentMethodId, out var handler))
+                var details = context.InvoiceEntity.GetPayments(true)
+                    .Select(p => p.GetDetails<MoneroLikePaymentData>(handler))
+                    .Where(p => p is not null)
+                    .FirstOrDefault();
+                if (details is not null)
                 {
-                    var details = context.InvoiceEntity.GetPayments(true)
-                        .Select(p => p.GetDetails<MoneroLikePaymentData>(handler))
-                        .Where(p => p is not null)
-                        .FirstOrDefault();
-                    if (details is not null)
-                    {
-                        context.Model.ReceivedConfirmations = details.ConfirmationCount;
-                        context.Model.RequiredConfirmations = (int)MoneroListener.ConfirmationsRequired(details, context.InvoiceEntity.SpeedPolicy);
-                    }
+                    context.Model.ReceivedConfirmations = details.ConfirmationCount;
+                    context.Model.RequiredConfirmations = (int)MoneroListener.ConfirmationsRequired(details, context.InvoiceEntity.SpeedPolicy);
                 }
+
                 context.Model.InvoiceBitcoinUrl = paymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
                 context.Model.InvoiceBitcoinUrlQR = context.Model.InvoiceBitcoinUrl;
             }

@@ -136,5 +136,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool HasRefund { get; set; }
         public bool StillDue { get; set; }
         public bool HasRates { get; set; }
+        public InvoiceEntity Entity { get; internal set; }
     }
 }

@@ -62,8 +62,7 @@ namespace BTCPayServer.Controllers
         private readonly LinkGenerator _linkGenerator;
         private readonly IAuthorizationService _authorizationService;
         private readonly TransactionLinkProviders _transactionLinkProviders;
-        private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
-        private readonly PaymentMethodViewProvider _viewProvider;
+        private readonly Dictionary<PaymentMethodId, ICheckoutModelExtension> _paymentModelExtensions;
         private readonly PrettyNameProvider _prettyName;
         private readonly AppService _appService;
         private readonly IFileService _fileService;
@@ -98,8 +97,7 @@ namespace BTCPayServer.Controllers
             DefaultRulesCollection defaultRules,
             IAuthorizationService authorizationService,
             TransactionLinkProviders transactionLinkProviders,
-            Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
-            PaymentMethodViewProvider viewProvider,
+            Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
             PrettyNameProvider prettyName)
         {
             _displayFormatter = displayFormatter;
@@ -124,7 +122,6 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             _transactionLinkProviders = transactionLinkProviders;
             _paymentModelExtensions = paymentModelExtensions;
-            _viewProvider = viewProvider;
             _prettyName = prettyName;
             _fileService = fileService;
             _uriResolver = uriResolver;

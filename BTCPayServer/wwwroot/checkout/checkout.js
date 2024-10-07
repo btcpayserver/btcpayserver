@@ -73,8 +73,8 @@ const PaymentDetails = {
         isActive: Boolean,
         showRecommendedFee: Boolean,
         orderAmount: Number,
-        btcPaid: Number,
-        btcDue: Number
+        paid: Number,
+        due: Number
     },
     methods: {
         asNumber
@@ -129,7 +129,7 @@ function initApp() {
                 return STATUS_PAYABLE.includes(this.srvModel.status);
             },
             isPaidPartial () {
-                return this.btcPaid > 0 && this.btcDue > 0;
+                return this.paid > 0 && this.due > 0;
             },
             showInfo () {
                 return this.showTimer || this.showPaymentDueInfo;
@@ -146,13 +146,13 @@ function initApp() {
             orderAmount () {
                 return this.asNumber(this.srvModel.orderAmount);
             },
-            btcDue () {
-                return this.asNumber(this.srvModel.btcDue);
+            due () {
+                return this.asNumber(this.srvModel.due);
             },
-            btcPaid () {
-                return this.asNumber(this.srvModel.btcPaid);
+            paid () {
+                return this.asNumber(this.srvModel.paid);
             },
-            pmId () {
+            pmId() {
                 return this.paymentMethodId || this.srvModel.paymentMethodId;
             },
             minutesLeft () {
@@ -172,18 +172,18 @@ function initApp() {
                     : null;
             },
             paymentMethodIds () {
-                return this.srvModel.availableCryptos.map(function (c) { return c.paymentMethodId });
+                return this.srvModel.availablePaymentMethods.map(function (c) { return c.paymentMethodId });
             },
-            paymentMethodComponent () {
+            paymentMethodComponent() {
                 return this.isPluginPaymentMethod
                     ? `${this.pmId}Checkout`
-                    : this.srvModel.activated && this.srvModel.uiSettings.checkoutBodyVueComponentName;
+                    : this.srvModel.activated && this.srvModel.checkoutBodyComponentName;
             },
             isPluginPaymentMethod () {
                 return !this.paymentMethodIds.includes(this.pmId);
             },
-            realCryptoCode () {
-                return this.srvModel.cryptoCode.toLowerCase() === 'sats' ? 'BTC' : this.srvModel.cryptoCode;
+            realPaymentMethodCurrency () {
+                return this.srvModel.paymentMethodCurrency.toLowerCase() === 'sats' ? 'BTC' : this.srvModel.paymentMethodCurrency;
             }
         },
         watch: {

@@ -5,19 +5,19 @@
 @inject IEnumerable<IUIExtension> UiExtensions 
 @inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
-@model PaymentModel
+@model CheckoutModel
 @{
 	Layout = null;
 	ViewData["Title"] = Model.HtmlTitle;
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
-	var displayedPaymentMethods = Model.AvailableCryptos.Where(c => c.Displayed).ToList();
+	var displayedPaymentMethods = Model.AvailablePaymentMethods.Where(c => c.Displayed).ToList();
 }
 @functions {
     private string ToJsValue(object value)
     {
-        return Safe.Json(value).ToString()?.Replace("\"", "'");
+        return Safe.Json(value?.ToString()).ToString()?.Replace("\"", "'");
     }
 }
 <!DOCTYPE html>
@@ -60,7 +60,7 @@
                     }
                     else
                     {
-                        <h2 id="AmountDue" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`" :data-clipboard="asNumber(srvModel.btcDue)" data-clipboard-hover :data-amount-due="srvModel.btcDue">@Model.BtcDue @Model.CryptoCode</h2>
+                        <h2 id="AmountDue" v-text="`${srvModel.due} ${srvModel.paymentMethodCurrency}`" :data-clipboard="asNumber(srvModel.due)" data-clipboard-hover :data-amount-due="srvModel.due">@Model.Due @Model.PaymentMethodCurrency</h2>
                     }
                 </div>
                 <div id="PaymentInfo" class="info mt-3 mb-2" v-collapsible="showInfo">
@@ -73,7 +73,7 @@
                             <vc:icon symbol="info" />
                             <span v-t="'partial_payment_info'"></span>
                         </div>
-                        <div v-if="showPaymentDueInfo" v-html="replaceNewlines($t('still_due', { amount: `${srvModel.btcDue} ${srvModel.cryptoCode}` }))"></div>
+                        <div v-if="showPaymentDueInfo" v-html="replaceNewlines($t('still_due', { amount: `${srvModel.due} ${srvModel.paymentMethodCurrency}` }))"></div>
                     </div>
                 </div>
                 <button id="DetailsToggle" class="d-flex align-items-center gap-1 btn btn-link payment-details-button mb-2" type="button" :aria-expanded="displayPaymentDetails ? 'true' : 'false'" v-on:click="displayPaymentDetails = !displayPaymentDetails">
@@ -85,8 +85,8 @@
                         :srv-model="srvModel"
                         :is-active="isActive"
                         :order-amount="orderAmount"
-                        :btc-paid="btcPaid"
-                        :btc-due="btcDue"
+                        :paid="paid"
+                        :due="due"
                         :show-recommended-fee="showRecommendedFee"
                         class="pb-4" />
                 </div>
@@ -108,7 +108,7 @@
                         </div>
                     </div>
                 }
-                <component v-if="paymentMethodComponent" :is="paymentMethodComponent"
+				<component v-if="paymentMethodComponent" :is="paymentMethodComponent"
                            :model="srvModel"
                            :nfc-scanning="nfc.scanning"
                            :nfc-supported="nfc.supported"
@@ -127,7 +127,7 @@
                         </span>
                         <h4 v-t="'payment_received'" class="mb-4"></h4>
                         <p class="text-center" v-t="'payment_received_body'"></p>
-                        <p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_received_confirmations', args: { cryptoCode: realCryptoCode, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
+						<p class="text-center" v-if="srvModel.receivedConfirmations !== null && srvModel.requiredConfirmations" v-t="{ path: 'payment_received_confirmations', args: { cryptoCode: realPaymentMethodCurrency, receivedConfirmations: srvModel.receivedConfirmations, requiredConfirmations: srvModel.requiredConfirmations } }"></p>
                         <div id="PaymentDetails" class="payment-details">
                             <dl class="mb-0">
                                 <div>
@@ -143,8 +143,8 @@
                                 :srv-model="srvModel"
                                 :is-active="isActive"
                                 :order-amount="orderAmount"
-                                :btc-paid="btcPaid"
-                                :btc-due="btcDue"
+                                :paid="paid"
+                                :due="due"
                                 :show-recommended-fee="showRecommendedFee"
                                 v-collapsible="displayPaymentDetails" />
                         </div>
@@ -180,8 +180,8 @@
                                 :srv-model="srvModel"
                                 :is-active="isActive"
                                 :order-amount="orderAmount"
-                                :btc-paid="btcPaid"
-                                :btc-due="btcDue"
+                                :paid="paid"
+                                :due="due"
                                 :show-recommended-fee="showRecommendedFee"
                                 class="mb-5" />
                         </div>
@@ -213,8 +213,8 @@
                                 :srv-model="srvModel"
                                 :is-active="isActive"
                                 :order-amount="orderAmount"
-                                :btc-paid="btcPaid"
-                                :btc-due="btcDue"
+                                :paid="paid"
+                                :due="due"
                                 :show-recommended-fee="showRecommendedFee"
                                 v-collapsible="displayPaymentDetails" />
                         </div>
@@ -234,7 +234,7 @@
         </main>
         @if (Env.CheatMode)
         {
-            <checkout-cheating invoice-id="@Model.InvoiceId" :btc-due="btcDue" :is-settled="isSettled" :is-processing="isProcessing" :payment-method-id="pmId" :crypto-code="srvModel.cryptoCode"></checkout-cheating>
+            <checkout-cheating invoice-id="@Model.InvoiceId" :due="due" :is-settled="isSettled" :is-processing="isProcessing" :payment-method-id="pmId" :crypto-code="srvModel.paymentMethodCurrency"></checkout-cheating>
         }
         <footer class="store-footer">
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
@@ -257,33 +257,33 @@
         <dl>
             <div v-if="orderAmount > 0" id="PaymentDetails-TotalPrice" key="TotalPrice">
                 <dt v-t="'total_price'"></dt>
-                <dd :data-clipboard="asNumber(srvModel.orderAmount)" data-clipboard-hover="start">{{srvModel.orderAmount}} {{ srvModel.cryptoCode }}</dd>
+                <dd :data-clipboard="asNumber(srvModel.orderAmount)" data-clipboard-hover="start">{{srvModel.orderAmount}} {{ srvModel.paymentMethodCurrency }}</dd>
             </div>
             <div v-if="orderAmount > 0 && srvModel.orderAmountFiat" id="PaymentDetails-TotalFiat" key="TotalFiat">
                 <dt v-t="'total_fiat'"></dt>
                 <dd :data-clipboard="asNumber(srvModel.orderAmountFiat)" data-clipboard-hover="start">{{srvModel.orderAmountFiat}}</dd>
             </div>
-            <div v-if="srvModel.rate && srvModel.cryptoCode" id="PaymentDetails-ExchangeRate" key="ExchangeRate">
+            <div v-if="srvModel.rate && srvModel.paymentMethodCurrency" id="PaymentDetails-ExchangeRate" key="ExchangeRate">
                 <dt v-t="'exchange_rate'"></dt>
                 <dd :data-clipboard="asNumber(srvModel.rate)" data-clipboard-hover="start">
-                    <template v-if="srvModel.cryptoCode === 'sats'">1 sat = {{ srvModel.rate }}</template>
-                    <template v-else>1 {{ srvModel.cryptoCode }} = {{ srvModel.rate }}</template>
+                    <template v-if="srvModel.paymentMethodCurrency === 'sats'">1 sat = {{ srvModel.rate }}</template>
+                    <template v-else>1 {{ srvModel.paymentMethodCurrency }} = {{ srvModel.rate }}</template>
                 </dd>
             </div>
             <div v-if="srvModel.networkFee" id="PaymentDetails-NetworkCost" key="NetworkCost">
                 <dt v-t="'network_cost'"></dt>
                 <dd :data-clipboard="asNumber(srvModel.networkFee)" data-clipboard-hover="start">
                     <div v-if="srvModel.txCountForFee > 0" v-t="{ path: 'tx_count', args: { count: srvModel.txCount } }"></div>
-                    <div v-text="`${srvModel.networkFee} ${srvModel.cryptoCode}`"></div>
+                    <div v-text="`${srvModel.networkFee} ${srvModel.paymentMethodCurrency}`"></div>
                 </dd>
             </div>
-            <div v-if="btcPaid > 0" id="PaymentDetails-AmountPaid" key="AmountPaid">
+            <div v-if="paid > 0" id="PaymentDetails-AmountPaid" key="AmountPaid">
                 <dt v-t="'amount_paid'"></dt>
-                <dd :data-clipboard="asNumber(srvModel.btcPaid)" data-clipboard-hover="start" v-text="`${srvModel.btcPaid} ${srvModel.cryptoCode}`"></dd>
+                <dd :data-clipboard="asNumber(srvModel.paid)" data-clipboard-hover="start" v-text="`${srvModel.paid} ${srvModel.paymentMethodCurrency}`"></dd>
             </div>
-            <div v-if="btcDue > 0" id="PaymentDetails-AmountDue" key="AmountDue">
+            <div v-if="due > 0" id="PaymentDetails-AmountDue" key="AmountDue">
                 <dt v-t="'amount_due'"></dt>
-                <dd :data-clipboard="asNumber(srvModel.btcDue)" data-clipboard-hover="start" v-text="`${srvModel.btcDue} ${srvModel.cryptoCode}`"></dd>
+                <dd :data-clipboard="asNumber(srvModel.due)" data-clipboard-hover="start" v-text="`${srvModel.due} ${srvModel.paymentMethodCurrency}`"></dd>
             </div>
             <div v-if="showRecommendedFee" id="PaymentDetails-RecommendedFee" key="RecommendedFee">
                 <dt v-t="'recommended_fee'"></dt>
@@ -316,10 +316,6 @@
     @if (Env.CheatMode)
     {
         <partial name="Checkout-Cheating" model="@Model" />
-    }
-	@foreach (var extensionPartial in Model.ExtensionPartials)
-    {
-		<partial name="@extensionPartial" model="@Model" />
     }
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })

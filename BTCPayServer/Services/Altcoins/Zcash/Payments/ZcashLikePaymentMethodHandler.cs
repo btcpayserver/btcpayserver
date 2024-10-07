@@ -102,17 +102,6 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             public long AccountIndex { get; internal set; }
         }
 
-        public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
-        {
-            return new CheckoutUIPaymentMethodSettings
-            {
-                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
-            };
-        }
-
         public ZcashLikePaymentData ParsePaymentDetails(JToken details)
         {
             return details.ToObject<ZcashLikePaymentData>(Serializer) ?? throw new FormatException($"Invalid {nameof(ZcashLikePaymentData)}");

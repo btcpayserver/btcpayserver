@@ -1,9 +1,10 @@
 @using BTCPayServer.BIP78.Sender
 @using BTCPayServer.Components.TruncateCenter
 @using BTCPayServer.Abstractions.TagHelpers
-@model BTCPayServer.Models.InvoicingModels.PaymentModel
+@using BTCPayServer.Payments.Bitcoin
+@model BTCPayServer.Models.InvoicingModels.CheckoutModel
 
-<template id="bitcoin-method-checkout-template">
+<template id="@BitcoinCheckoutModelExtension.CheckoutBodyComponentName">
     @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-bitcoin-pre-content", model = Model})
     <div class="payment-box">
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Address_@Model.PaymentMethodId [data-clipboard]">
@@ -12,9 +13,9 @@
             </div>
             <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
         </div>
-        <div v-if="model.btcAddress" class="input-group mt-3">
+        <div v-if="model.address" class="input-group mt-3">
             <div class="form-floating" id="Address_@Model.PaymentMethodId">
-                <vc:truncate-center text="model.btcAddress" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <vc:truncate-center text="model.address" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
                 <label v-t="{ path: 'address', args: { paymentMethod: model.paymentMethodName }}"></label>
             </div>
         </div>
@@ -31,9 +32,9 @@
 </template>
 
 <script>
-    Vue.component('BitcoinLikeMethodCheckout', {
+	Vue.component(@Safe.Json(BitcoinCheckoutModelExtension.CheckoutBodyComponentName), {
         props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
-        template: "#bitcoin-method-checkout-template",
+		template: @Safe.Json("#" + BitcoinCheckoutModelExtension.CheckoutBodyComponentName),
         components: {
             qrcode: VueQrcode
         },

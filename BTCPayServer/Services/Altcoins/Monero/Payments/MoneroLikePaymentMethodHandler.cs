@@ -108,17 +108,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             return details.ToObject<MoneroLikeOnChainPaymentMethodDetails>(Serializer);
         }
 
-        public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
-        {
-            return new CheckoutUIPaymentMethodSettings
-            {
-                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
-            };
-        }
-
         public MoneroLikePaymentData ParsePaymentDetails(JToken details)
         {
             return details.ToObject<MoneroLikePaymentData>(Serializer) ?? throw new FormatException($"Invalid {nameof(MoneroLikePaymentMethodHandler)}");

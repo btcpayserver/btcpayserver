@@ -21,9 +21,9 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public interface ILightningPaymentHandler : IHasNetwork
+    public interface ILightningPaymentHandler : IHasNetwork, IPaymentMethodHandler
     {
-        LightningPaymentData ParsePaymentDetails(JToken details);
+        new LightningPaymentData ParsePaymentDetails(JToken details);
     }
     public class LightningLikePaymentHandler : IPaymentMethodHandler, ILightningPaymentHandler
     {

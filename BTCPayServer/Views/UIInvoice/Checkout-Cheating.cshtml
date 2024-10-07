@@ -1,4 +1,4 @@
-@model PaymentModel
+@model CheckoutModel
 
 <style>
     #checkout-cheating form + form { margin-top: var(--btcpay-space-l); }
@@ -52,14 +52,14 @@
                 paying: false,
                 mining: false,
                 expiring: false,
-                amountRemaining: this.btcDue
+                amountRemaining: this.due
             }
         },
         props: {
             invoiceId: String,
             paymentMethodId: String,
             cryptoCode: String,
-            btcDue: Number,
+            due: Number,
             isProcessing: Boolean,
             isSettled: Boolean
         },

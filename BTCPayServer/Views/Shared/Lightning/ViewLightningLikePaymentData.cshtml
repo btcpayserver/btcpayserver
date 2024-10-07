@@ -7,16 +7,31 @@
 @inject DisplayFormatter DisplayFormatter
 @inject PaymentMethodHandlerDictionary handlers
 @inject PrettyNameProvider prettyName
-@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+@model InvoiceDetailsModel
 
 @{
+	string providedComment = null;
+	string consumedLightningAddress = null;
 	var payments = Model
+		.Payments
 		.Select(payment =>
 			{
-				
+
 				if (handlers.TryGet(payment.PaymentMethodId) is not ILightningPaymentHandler handler)
 					return null;
 				var offChainPaymentData = handler.ParsePaymentDetails(payment.Details);
+
+				if (handler.ParsePaymentPromptDetails(Model.Entity.GetPaymentPrompt(payment.PaymentMethodId)?.Details) is LNURLPayPaymentMethodDetails lnurlPrompt)
+				{
+					if (lnurlPrompt.ConsumedLightningAddress is string consumed)
+					{
+						consumedLightningAddress = consumed;
+					}
+					if (lnurlPrompt.ProvidedComment is string comment)
+					{
+						providedComment = comment;
+					}
+				}
 				return new OffChainPaymentViewModel
 				{
 					Type = prettyName.PrettyName(payment.PaymentMethodId),
@@ -25,8 +40,8 @@
 					Amount = DisplayFormatter.Currency(payment.Value, handler.Network.CryptoCode, divisibility: payment.Divisibility)
 				};
 			})
-        .Where(model => model != null)
-        .ToList();
+		.Where(model => model != null)
+		.ToList();
 }
 
 @if (payments.Any())
@@ -37,7 +52,7 @@
             <table class="table table-hover mb-0">
                 <thead>
                     <tr>
-						<th class="w-75px">Type</th>
+						<th class="w-175px">Type</th>
                         <th class="w-175px">Destination</th>
                         <th class="text-nowrap">Payment Proof</th>
                         <th class="w-150px text-end">Paid</th>
@@ -61,6 +76,19 @@
                     }
                 </tbody>
             </table>
+			@if (!string.IsNullOrEmpty(providedComment))
+			{
+				<div>
+					<b>LNURL Comment</b>: @providedComment
+				</div>
+			}
+			@if (!string.IsNullOrEmpty(consumedLightningAddress))
+			{
+				<div>
+					<b>Lightning address used</b>: @consumedLightningAddress
+				</div>
+			}
+
         </div>
     </section>
 }

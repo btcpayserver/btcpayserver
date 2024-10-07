@@ -1,6 +1,7 @@
-@model BTCPayServer.Models.InvoicingModels.PaymentModel
+@using BTCPayServer.Payments.Lightning
+@model BTCPayServer.Models.InvoicingModels.CheckoutModel
 
-<template id="lightning-method-checkout-template">
+<template id="@LNCheckoutModelExtension.CheckoutBodyComponentName">
     <div class="payment-box">
         @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-pre-content", model = Model})
         <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Lightning_@Model.PaymentMethodId [data-clipboard]">
@@ -9,23 +10,23 @@
             </div>
             <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
         </div>
-        <div v-if="model.btcAddress" class="input-group mt-3">
+        <div v-if="model.address" class="input-group mt-3">
             <div class="form-floating" id="Lightning_@Model.PaymentMethodId">
-                <vc:truncate-center text="model.btcAddress" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <vc:truncate-center text="model.address" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
                 <label v-t="'lightning'"></label>
             </div>
         </div>
         <a v-if="model.invoiceBitcoinUrl && model.showPayInWalletButton" class="btn btn-primary rounded-pill w-100 mt-4" id="PayInWallet" target="_blank" 
            :href="model.invoiceBitcoinUrl" v-t="'pay_in_wallet'"></a>
-        <div v-if="!model.invoiceBitcoinUrl && !model.btcAddress" class="alert alert-danger">This payment method is not available when using an insecure connection. Please use HTTPS or Tor.</div>
+        <div v-if="!model.invoiceBitcoinUrl && !model.address" class="alert alert-danger">This payment method is not available when using an insecure connection. Please use HTTPS or Tor.</div>
         @await Component.InvokeAsync("UiExtensionPoint", new {location = "checkout-lightning-post-content", model = Model})
     </div>          
 </template>
 
 <script>
-    Vue.component('LightningLikeMethodCheckout', {
+	Vue.component(@Safe.Json(LNCheckoutModelExtension.CheckoutBodyComponentName), {
         props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
-        template: "#lightning-method-checkout-template",
+		template: @Safe.Json("#" + LNCheckoutModelExtension.CheckoutBodyComponentName),
         components: {
             qrcode: VueQrcode
         },

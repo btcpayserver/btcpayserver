@@ -3264,6 +3264,7 @@ namespace BTCPayServer.Tests
         public async Task CanUseLNAddress()
         {
             using var s = CreateSeleniumTester();
+            s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -3416,7 +3417,13 @@ namespace BTCPayServer.Tests
                 var succ = JsonConvert.DeserializeObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>(str);
                 Assert.NotNull(succ.Pr);
                 Assert.Equal(new LightMoney(2001), BOLT11PaymentRequest.Parse(succ.Pr, Network.RegTest).MinimumAmount);
+                await s.Server.CustomerLightningD.Pay(succ.Pr);
             }
+
+            // Can we find our comment and address in the payment list?
+            s.GoToInvoices();
+            var source = s.Driver.PageSource;
+            Assert.Contains(lnUsername, source);
         }
 
         [Fact]

@@ -17,21 +17,23 @@ public class BTCPayAppLightningClient : ILightningClient
     private readonly IHubContext<BTCPayAppHub, IBTCPayAppHubClient> _hubContext;
     private readonly BTCPayAppState _appState;
     private readonly string _key;
+    private readonly string _user;
 
     public BTCPayAppLightningClient(IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext, BTCPayAppState appState,
-        string key)
+        string key, string user)
     {
         _hubContext = hubContext;
         _appState = appState;
         _key = key;
+        _user = user;
     }
 
     public override string ToString()
     {
-        return $"type=app;user={_key}".ToLower();
+        return $"type=app;key={_key};user={_user}".ToLower();
     }
 
-    public IBTCPayAppHubClient HubClient => _appState.Connections.FirstOrDefault(pair => pair.Value.Master && pair.Value.UserId == _key) is
+    public IBTCPayAppHubClient HubClient => _appState.Connections.FirstOrDefault(pair => pair.Value.Master && pair.Value.UserId == _user) is
     {
         Key: not null
     } connection
@@ -46,12 +48,12 @@ public class BTCPayAppLightningClient : ILightningClient
     }
 
     public async Task<LightningInvoice> GetInvoice(uint256 paymentHash,
-        CancellationToken cancellation = new CancellationToken())
+        CancellationToken cancellation = new())
     {
-        return await HubClient.GetLightningInvoice(paymentHash);
+        return await HubClient.GetLightningInvoice(_key, paymentHash);
     }
 
-    public async Task<LightningInvoice[]> ListInvoices(CancellationToken cancellation = new CancellationToken())
+    public async Task<LightningInvoice[]> ListInvoices(CancellationToken cancellation = new())
     {
         return await ListInvoices(new ListInvoicesParams(), cancellation);
     }
@@ -59,13 +61,13 @@ public class BTCPayAppLightningClient : ILightningClient
     public async Task<LightningInvoice[]> ListInvoices(ListInvoicesParams request,
         CancellationToken cancellation = new CancellationToken())
     {
-        return (await HubClient.GetLightningInvoices(request)).ToArray();
+        return (await HubClient.GetLightningInvoices(_key, request)).ToArray();
     }
 
     public async Task<Lightning.LightningPayment> GetPayment(string paymentHash,
         CancellationToken cancellation = new CancellationToken())
     {
-        return await HubClient.GetLightningPayment(uint256.Parse(paymentHash));
+        return await HubClient.GetLightningPayment(_key, uint256.Parse(paymentHash));
     }
 
     public async Task<Lightning.LightningPayment[]> ListPayments(
@@ -77,7 +79,7 @@ public class BTCPayAppLightningClient : ILightningClient
     public async Task<LightningPayment[]> ListPayments(ListPaymentsParams request,
         CancellationToken cancellation = new CancellationToken())
     {
-        return (await HubClient.GetLightningPayments(request)).ToArray();
+        return (await HubClient.GetLightningPayments(_key, request)).ToArray();
     }
 
     public async Task<LightningInvoice> CreateInvoice(LightMoney amount, string description, TimeSpan expiry,
@@ -89,7 +91,7 @@ public class BTCPayAppLightningClient : ILightningClient
     public async Task<LightningInvoice> CreateInvoice(CreateInvoiceParams createInvoiceRequest,
         CancellationToken cancellation = new CancellationToken())
     {
-        return await HubClient.CreateInvoice(
+        return await HubClient.CreateInvoice(_key, 
             new CreateLightningInvoiceRequest(createInvoiceRequest.Amount, createInvoiceRequest.Description,
                 createInvoiceRequest.Expiry)
             {
@@ -100,6 +102,7 @@ public class BTCPayAppLightningClient : ILightningClient
 
     public async Task<ILightningInvoiceListener> Listen(CancellationToken cancellation = new CancellationToken())
     {
+        await HubClient.StartListen(_key);
         return new Listener(_appState, _key);
     }
 
@@ -148,12 +151,12 @@ public class BTCPayAppLightningClient : ILightningClient
 
     public async Task<LightningNodeInformation> GetInfo(CancellationToken cancellation = new CancellationToken())
     {
-        return await  HubClient.GetLightningNodeInfo();
+        return await  HubClient.GetLightningNodeInfo(_key);
     }
 
     public async Task<LightningNodeBalance> GetBalance(CancellationToken cancellation = new CancellationToken())
     {
-       return await HubClient.GetLightningBalance();
+       return await HubClient.GetLightningBalance(_key);
     }
 
     public async Task<PayResponse> Pay(PayInvoiceParams payParams,
@@ -165,7 +168,7 @@ public class BTCPayAppLightningClient : ILightningClient
     public async Task<PayResponse> Pay(string bolt11, PayInvoiceParams payParams,
         CancellationToken cancellation = new CancellationToken())
     {
-        return await HubClient.PayInvoice(bolt11, payParams.Amount?.MilliSatoshi);
+        return await HubClient.PayInvoice(_key, bolt11, payParams.Amount?.MilliSatoshi);
     }
 
     public async Task<PayResponse> Pay(string bolt11, CancellationToken cancellation = new CancellationToken())
@@ -192,7 +195,7 @@ public class BTCPayAppLightningClient : ILightningClient
 
     public async Task CancelInvoice(string invoiceId, CancellationToken cancellation = new CancellationToken())
     {
-        await HubClient.CancelInvoice(uint256.Parse(invoiceId));
+        await HubClient.CancelInvoice(_key, uint256.Parse(invoiceId));
     }
 
     public async Task<LightningChannel[]> ListChannels(CancellationToken cancellation = new CancellationToken())

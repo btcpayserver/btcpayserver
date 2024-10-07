@@ -30,17 +30,24 @@ public class BTCPayAppLightningConnectionStringHandler:ILightningConnectionStrin
         }
         
         
+        if (!kv.TryGetValue("key", out var key))
+        {
+            error = $"The key 'key' is mandatory for app connection strings";
+            
+            return null;
+        }
         if (!kv.TryGetValue("user", out var user))
         {
             error = $"The key 'user' is mandatory for app connection strings";
             
             return null;
         }
+            
 
         try
         {
 
-            var client =  new BTCPayAppLightningClient(_hubContext, _appState, user );
+            var client =  new BTCPayAppLightningClient(_hubContext, _appState, key, user );
             error = null;
             return client;
         }

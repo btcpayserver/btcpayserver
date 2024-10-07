@@ -336,7 +336,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     public async Task SendInvoiceUpdate( LightningInvoice lightningInvoice)
     {
         
-        await _appState.InvoiceUpdate(Context.ConnectionId, lightningInvoice);
+        await _appState. InvoiceUpdate(Context.ConnectionId, lightningInvoice);
     }
 
     public async Task<long?> GetCurrentMaster()

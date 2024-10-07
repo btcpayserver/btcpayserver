@@ -171,7 +171,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/invoices")]
         public async Task<IActionResult> CreateInvoice(string storeId, CreateInvoiceRequest request)
         {
-            var store = HttpContext.GetStoreData()!;
+             var store = HttpContext.GetStoreData()!;
             if (request.Amount < 0.0m)
             {
                 ModelState.AddModelError(nameof(request.Amount), "The amount should be 0 or more.");

@@ -10,7 +10,7 @@ namespace BTCPayServer.Models.InvoicingModels
     public class CheckoutModel
     {
         public string CheckoutBodyComponentName { get; set; }
-        public class AvailableCrypto
+        public class AvailablePaymentMethod
         {
             [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
             public PaymentMethodId PaymentMethodId { get; set; }
@@ -29,7 +29,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string DefaultLang { get; set; }
         public bool ShowPayInWalletButton { get; set; }
         public bool ShowStoreHeader { get; set; }
-        public List<AvailableCrypto> AvailableCryptos { get; set; } = new();
+        public List<AvailablePaymentMethod> AvailablePaymentMethods { get; set; } = new();
         public bool IsModal { get; set; }
         public bool IsUnsetTopUp { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }

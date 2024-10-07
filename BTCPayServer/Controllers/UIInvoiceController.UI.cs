@@ -910,11 +910,11 @@ namespace BTCPayServer.Controllers
                 // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
                 NetworkFee = prompt.PaymentMethodFee - prompt.TweakFee,
                 StoreId = store.Id,
-                AvailableCryptos = invoice.GetPaymentPrompts()
+                AvailablePaymentMethods = invoice.GetPaymentPrompts()
                                           .Select(kv =>
                                           {
                                               var handler = _handlers[kv.PaymentMethodId];
-                                              return new CheckoutModel.AvailableCrypto
+                                              return new CheckoutModel.AvailablePaymentMethod
                                               {
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
                                                   PaymentMethodId = kv.PaymentMethodId,

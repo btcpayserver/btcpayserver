@@ -172,7 +172,7 @@ function initApp() {
                     : null;
             },
             paymentMethodIds () {
-                return this.srvModel.availableCryptos.map(function (c) { return c.paymentMethodId });
+                return this.srvModel.availablePaymentMethod.map(function (c) { return c.paymentMethodId });
             },
             paymentMethodComponent() {
                 return this.isPluginPaymentMethod

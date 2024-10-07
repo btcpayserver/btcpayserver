@@ -12,7 +12,7 @@
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
-	var displayedPaymentMethods = Model.AvailableCryptos.Where(c => c.Displayed).ToList();
+	var displayedPaymentMethods = Model.AvailablePaymentMethods.Where(c => c.Displayed).ToList();
 }
 @functions {
     private string ToJsValue(object value)

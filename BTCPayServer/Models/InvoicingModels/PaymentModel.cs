@@ -15,7 +15,8 @@ namespace BTCPayServer.Models.InvoicingModels
             [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
             public PaymentMethodId PaymentMethodId { get; set; }
             public bool Displayed { get; set; }
-            public string Order { get; set; }
+			public string PaymentMethodName { get; set; }
+			public int Order { get; set; }
             [JsonExtensionData]
             public Dictionary<string, JToken> AdditionalData { get; set; } = new();
         }
@@ -33,10 +34,10 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool IsUnsetTopUp { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
         public bool CelebratePayment { get; set; }
-        public string CryptoCode { get; set; }
+        public string PaymentMethodCurrency { get; set; }
         public string InvoiceId { get; set; }
-        public string BtcAddress { get; set; }
-        public string BtcDue { get; set; }
+        public string Address { get; set; }
+        public string Due { get; set; }
         public string CustomerEmail { get; set; }
         public bool ShowRecommendedFee { get; set; }
         public decimal FeeRate { get; set; }
@@ -55,7 +56,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string InvoiceBitcoinUrlQR { get; set; }
         public int TxCount { get; set; }
         public int TxCountForFee { get; set; }
-        public string BtcPaid { get; set; }
+        public string Paid { get; set; }
         public string StoreSupportUrl { get; set; }
 
         public string OrderId { get; set; }

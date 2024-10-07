@@ -867,7 +867,7 @@ namespace BTCPayServer.Controllers
             {
                 Activated = prompt.Activated,
                 PaymentMethodName = _prettyName.PrettyName(paymentMethodId),
-                CryptoCode = prompt.Currency,
+                PaymentMethodCurrency = prompt.Currency,
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = orderId,
                 InvoiceId = invoiceId,
@@ -879,9 +879,9 @@ namespace BTCPayServer.Controllers
                 CelebratePayment = storeBlob.CelebratePayment,
                 OnChainWithLnInvoiceFallback = storeBlob.OnChainWithLnInvoiceFallback,
                 CryptoImage = Request.GetRelativePathOrAbsolute(GetPaymentMethodImage(paymentMethodId)),
-                BtcAddress = prompt.Destination,
-                BtcDue = ShowMoney(accounting.Due),
-                BtcPaid = ShowMoney(accounting.Paid),
+                Address = prompt.Destination,
+                Due = ShowMoney(accounting.Due),
+                Paid = ShowMoney(accounting.Paid),
                 InvoiceCurrency = invoice.Currency,
                 // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
                 OrderAmount = ShowMoney(accounting.TotalDue - (prompt.PaymentMethodFee - prompt.TweakFee)),
@@ -918,6 +918,7 @@ namespace BTCPayServer.Controllers
                                               {
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
                                                   PaymentMethodId = kv.PaymentMethodId,
+                                                  PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId),
                                                   Order = kv.PaymentMethodId switch
                                                   {
                                                       _ when PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode) == kv.PaymentMethodId => 0,
@@ -932,7 +933,7 @@ namespace BTCPayServer.Controllers
             };
 
             model.PaymentMethodId = paymentMethodId.ToString();
-            model.OrderAmountFiat = OrderAmountFromInvoice(model.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol);
+            model.OrderAmountFiat = OrderAmountFromInvoice(model.PaymentMethodCurrency, invoice, DisplayFormatter.CurrencyFormat.Symbol);
 
             if (storeBlob.PlaySoundOnPayment)
             {

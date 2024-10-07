@@ -323,7 +323,7 @@ namespace BTCPayServer.Tests
                     (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id)
                         .GetAwaiter().GetResult()).Value;
                 Assert.Single(checkout.AvailableCryptos);
-                Assert.Equal("LTC", checkout.CryptoCode);
+                Assert.Equal("LTC", checkout.PaymentMethodCurrency);
 
                 //////////////////////
 
@@ -478,7 +478,7 @@ namespace BTCPayServer.Tests
                     (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, null)
                         .GetAwaiter().GetResult()).Value;
                 Assert.Single(checkout.AvailableCryptos);
-                Assert.Equal("BTC", checkout.CryptoCode);
+                Assert.Equal("BTC", checkout.PaymentMethodCurrency);
 
                 Assert.Single(invoice.PaymentCodes);
                 Assert.Single(invoice.SupportedTransactionCurrencies);
@@ -539,7 +539,7 @@ namespace BTCPayServer.Tests
                 checkout = (Models.InvoicingModels.PaymentModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC")
                     .GetAwaiter().GetResult()).Value;
                 Assert.Equal(2, checkout.AvailableCryptos.Count);
-                Assert.Equal("LTC", checkout.CryptoCode);
+                Assert.Equal("LTC", checkout.PaymentMethodCurrency);
 
                 Assert.Equal(2, invoice.PaymentCodes.Count());
                 Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());

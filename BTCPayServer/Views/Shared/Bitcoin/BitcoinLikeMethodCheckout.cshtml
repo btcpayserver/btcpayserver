@@ -13,9 +13,9 @@
             </div>
             <img class="qr-icon" :src="model.cryptoImage" :alt="model.paymentMethodName"/>
         </div>
-        <div v-if="model.btcAddress" class="input-group mt-3">
+        <div v-if="model.address" class="input-group mt-3">
             <div class="form-floating" id="Address_@Model.PaymentMethodId">
-                <vc:truncate-center text="model.btcAddress" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                <vc:truncate-center text="model.address" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
                 <label v-t="{ path: 'address', args: { paymentMethod: model.paymentMethodName }}"></label>
             </div>
         </div>

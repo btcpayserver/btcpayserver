@@ -50,7 +50,7 @@ namespace BTCPayServer.Payments.Lightning
             if (context.Model.InvoiceBitcoinUrl is not null)
                 context.Model.InvoiceBitcoinUrlQR = $"lightning:{context.Model.InvoiceBitcoinUrl.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
             context.Model.PeerInfo = handler.ParsePaymentPromptDetails(paymentPrompt.Details).NodeInfo;
-            if (context.StoreBlob.LightningAmountInSatoshi && context.Model.CryptoCode == "BTC")
+            if (context.StoreBlob.LightningAmountInSatoshi && context.Model.PaymentMethodCurrency == "BTC")
             {
                 BitcoinPaymentModelExtension.PreparePaymentModelForAmountInSats(context.Model, paymentPrompt.Rate, _displayFormatter);
             }

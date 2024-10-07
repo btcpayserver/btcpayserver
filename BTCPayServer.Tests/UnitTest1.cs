@@ -1655,8 +1655,8 @@ namespace BTCPayServer.Tests
 
             // Standard for all uppercase characters in QR codes is still not implemented in all wallets
             // But we're proceeding with BECH32 being uppercase
-            Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
-            Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR.Split('?')[0]);
+            Assert.Equal($"bitcoin:{paymentMethodUnified.Address}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
+            Assert.Equal($"bitcoin:{paymentMethodUnified.Address.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR.Split('?')[0]);
 
             // Fallback lightning invoice should be uppercase inside the QR code, lowercase in payment URI
             var lightningFallback = paymentMethodUnified.InvoiceBitcoinUrl.Split(new[] { "&lightning=" }, StringSplitOptions.None)[1];

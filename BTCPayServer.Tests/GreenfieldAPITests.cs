@@ -3776,7 +3776,7 @@ namespace BTCPayServer.Tests
             {
 
                 await tester.ExplorerNode.GenerateAsync(1);
-            }, bevent => bevent.CryptoCode.Equals("BTC", StringComparison.Ordinal));
+            }, bevent => bevent.PaymentMethodId == PaymentTypes.CHAIN.GetPaymentMethodId("BTC"));
 
             Assert.Contains(
                 await client.ShowOnChainWalletTransactions(walletId.StoreId, walletId.CryptoCode,

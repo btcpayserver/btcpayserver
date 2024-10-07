@@ -152,7 +152,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
                                 await UpdatePaymentStates(wallet);
-                                _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
+                                _Aggregator.Publish(new Events.NewBlockEvent() { PaymentMethodId = pmi });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
                                 if (evt.DerivationStrategy != null)
@@ -202,7 +202,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
                                 _Aggregator.Publish(new NewOnChainTransactionEvent()
                                 {
-                                    CryptoCode = wallet.Network.CryptoCode,
+                                    PaymentMethodId = pmi,
                                     NewTransactionEvent = evt
                                 });
 

@@ -294,7 +294,9 @@ namespace BTCPayServer
 
         public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
             services.AddSingleton<IUIExtension>(new UIExtension(partialViewName, location));
+#pragma warning restore CS0618 // Type or member is obsolete
             return services;
         }
         public static IServiceCollection AddReportProvider<T>(this IServiceCollection services)

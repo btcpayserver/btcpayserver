@@ -36,7 +36,7 @@ namespace BTCPayServer.Plugins.Crowdfund
 
         public override void Execute(IServiceCollection services)
         {
-            services.AddSingleton<IUIExtension>(new UIExtension("Crowdfund/NavExtension", "header-nav"));
+            services.AddUIExtension("header-nav", "Crowdfund/NavExtension");
             services.AddSingleton<CrowdfundAppType>();
             services.AddSingleton<AppBaseType, CrowdfundAppType>();
 

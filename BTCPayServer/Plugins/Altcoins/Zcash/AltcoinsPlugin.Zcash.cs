@@ -61,8 +61,8 @@ public partial class AltcoinsPlugin
 
         services.AddSingleton<ZcashLikePaymentMethodHandler>();
         services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetRequiredService<ZcashLikePaymentMethodHandler>());
-        services.AddSingleton<IUIExtension>(new UIExtension("Zcash/StoreNavZcashExtension", "store-nav"));
-        services.AddSingleton<IUIExtension>(new UIExtension("Zcash/ViewZcashLikePaymentData", "store-invoices-payments"));
+        services.AddUIExtension("store-nav", "Zcash/StoreNavZcashExtension");
+        services.AddUIExtension("store-invoices-payments", "Zcash/ViewZcashLikePaymentData");
         services.AddSingleton<ISyncSummaryProvider, ZcashSyncSummaryProvider>();
 
     }

@@ -46,9 +46,9 @@ namespace BTCPayServer.Payments.Bitcoin
         public PaymentMethodId PaymentMethodId { get; }
         public void ModifyPaymentModel(PaymentModelContext context)
         {
-            var prompt = context.Prompt;
-            if (!_handlers.TryGetValue(PaymentMethodId, out var o) || o is not BitcoinLikePaymentHandler handler)
+            if (context is not { IsSelected: true, Handler: BitcoinLikePaymentHandler handler})
                 return;
+            var prompt = context.Prompt;
             var details = handler.ParsePaymentPromptDetails(prompt.Details);
             context.Model.ShowRecommendedFee = context.StoreBlob.ShowRecommendedFee;
             context.Model.FeeRate = details.RecommendedFeeRate.SatoshiPerByte;

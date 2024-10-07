@@ -39,7 +39,7 @@ namespace BTCPayServer.Payments.Lightning
         public string Badge => "⚡";
         public void ModifyPaymentModel(PaymentModelContext context)
         {
-            if (!Handlers.TryGetValue(PaymentMethodId, out var o) || o is not LightningLikePaymentHandler handler)
+            if (context is not { IsSelected: true, Handler: LightningLikePaymentHandler handler })
                 return;
             var paymentPrompt = context.InvoiceEntity.GetPaymentPrompt(PaymentMethodId);
             if (paymentPrompt is null)

@@ -922,7 +922,6 @@ namespace BTCPayServer.Controllers
                 Status = invoice.Status.ToString(),
                 // The Tweak is part of the PaymentMethodFee, but let's not show it in the UI as it's negligible.
                 NetworkFee = prompt.PaymentMethodFee - prompt.TweakFee,
-                IsMultiCurrency = invoice.GetPayments(false).Select(p => p.PaymentMethodId).Concat(new[] { prompt.PaymentMethodId }).Distinct().Count() > 1,
                 StoreId = store.Id,
                 AvailableCryptos = invoice.GetPaymentPrompts()
                                           .Select(kv =>
@@ -930,8 +929,9 @@ namespace BTCPayServer.Controllers
                                               var handler = _handlers[kv.PaymentMethodId];
                                               return new PaymentModel.AvailableCrypto
                                               {
+												  Handler = handler,
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
-                                                  PaymentMethodId = kv.PaymentMethodId.ToString(),
+                                                  PaymentMethodId = kv.PaymentMethodId,
                                                   CryptoCode = kv.Currency,
                                                   PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId),
                                                   IsLightning = handler is ILightningPaymentHandler,
@@ -947,8 +947,15 @@ namespace BTCPayServer.Controllers
                                           .OrderByDescending(a => a.CryptoCode == _NetworkProvider.DefaultNetwork.CryptoCode).ThenBy(a => a.PaymentMethodName).ThenBy(a => a.IsLightning ? 1 : 0)
                                           .ToList()
             };
-            if (_paymentModelExtensions.TryGetValue(paymentMethodId, out var extension))
-                extension.ModifyPaymentModel(new PaymentModelContext(model, store, storeBlob, invoice, Url, prompt, handler));
+
+			foreach (var kv in invoice.GetPaymentPrompts())
+			{
+				if (_paymentModelExtensions.TryGetValue(kv.PaymentMethodId, out var extension) &&
+					_handlers.TryGetValue(kv.PaymentMethodId, out var h))
+				{
+					extension.ModifyPaymentModel(new PaymentModelContext(model, store, storeBlob, invoice, Url, kv, h, paymentMethodId == kv.PaymentMethodId));
+				}
+			}
             model.UISettings = _viewProvider.TryGetViewViewModel(prompt, "CheckoutUI")?.View as CheckoutUIPaymentMethodSettings;
             model.PaymentMethodId = paymentMethodId.ToString();
             model.OrderAmountFiat = OrderAmountFromInvoice(model.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol);

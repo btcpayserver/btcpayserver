@@ -1,6 +1,9 @@
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
+using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Models.InvoicingModels
 {
@@ -9,13 +12,19 @@ namespace BTCPayServer.Models.InvoicingModels
         public CheckoutUIPaymentMethodSettings UISettings;
         public class AvailableCrypto
         {
-            public string PaymentMethodId { get; set; }
+            [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
+            public PaymentMethodId PaymentMethodId { get; set; }
             public string CryptoImage { get; set; }
             public string Link { get; set; }
             public string PaymentMethodName { get; set; }
             public bool IsLightning { get; set; }
             public string CryptoCode { get; set; }
             public bool Displayed { get; set; }
+            [JsonIgnore]
+            public IPaymentMethodHandler Handler { get; internal set; }
+
+            [JsonExtensionData]
+            public Dictionary<string, JToken> AdditionalData { get; set; } = new();
         }
         public StoreBrandingViewModel StoreBranding { get; set; }
         public string PaymentSoundUrl { get; set; }
@@ -58,7 +67,6 @@ namespace BTCPayServer.Models.InvoicingModels
 
         public string OrderId { get; set; }
         public decimal NetworkFee { get; set; }
-        public bool IsMultiCurrency { get; set; }
         public int MaxTimeMinutes { get; set; }
         public string PaymentMethodId { get; set; }
         public string PaymentMethodName { get; set; }
@@ -73,6 +81,9 @@ namespace BTCPayServer.Models.InvoicingModels
         public int? RequiredConfirmations { get; set; }
         public long? ReceivedConfirmations { get; set; }
 
+        [JsonIgnore]
         public HashSet<string> ExtensionPartials { get; } = new HashSet<string>();
+        [JsonExtensionData]
+        public Dictionary<string, JToken> AdditionalData { get; set; } = new();
     }
 }

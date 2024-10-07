@@ -11,7 +11,8 @@ namespace BTCPayServer.Payments
         InvoiceEntity InvoiceEntity,
         IUrlHelper UrlHelper,
         PaymentPrompt Prompt,
-        IPaymentMethodHandler Handler);
+        IPaymentMethodHandler Handler,
+        bool IsSelected);
     public interface IPaymentModelExtension
     {
         public PaymentMethodId PaymentMethodId { get; }

@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
+using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
@@ -22,6 +23,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 
@@ -278,7 +280,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         }
 
         public static async Task<ResultVM> TrypayBolt(
-            ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, CancellationToken cancellationToken)
+            ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, CancellationToken cancellationToken, Logs logs = null)
         {
             var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
             if (boltAmount > payoutData.Amount)
@@ -308,15 +310,18 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             var proofBlob = new PayoutLightningBlob { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
             try
             {
+                logs?.PayServer.LogWarning("await lightningClient.Pay(bolt11PaymentRequest.ToString()");
                 var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
                     new PayInvoiceParams()
                     {
                         // CLN does not support explicit amount param if it is the same as the invoice amount
                         Amount = payoutData.Amount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC)
                     }, cancellationToken);
+                logs?.PayServer.LogWarning("result == null");
                 if (result == null) throw new NoPaymentResultException();
                 
                 string message = null;
+                logs?.PayServer.LogWarning("result.Result == PayResult.Ok");
                 if (result.Result == PayResult.Ok)
                 {
                     payoutData.State = result.Details?.Status switch
@@ -331,6 +336,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                             : null;
                         try
                         {
+                            logs?.PayServer.LogWarning("lightningClient.GetPayment");
                             var payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(),
                                 cancellationToken);
                             proofBlob.Preimage = payment.Preimage;

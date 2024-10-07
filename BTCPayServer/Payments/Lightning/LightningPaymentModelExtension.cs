@@ -11,6 +11,7 @@ namespace BTCPayServer.Payments.Lightning
 {
     public class LightningPaymentModelExtension : IPaymentModelExtension
     {
+        public const string CheckoutBodyComponentName = "LightningCheckoutBody";
         private readonly DisplayFormatter _displayFormatter;
         IPaymentLinkExtension _PaymentLinkExtension;
         public LightningPaymentModelExtension(
@@ -44,6 +45,7 @@ namespace BTCPayServer.Payments.Lightning
             var paymentPrompt = context.InvoiceEntity.GetPaymentPrompt(PaymentMethodId);
             if (paymentPrompt is null)
                 return;
+            context.Model.CheckoutBodyComponentName = CheckoutBodyComponentName;
             context.Model.InvoiceBitcoinUrl = _PaymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
             if (context.Model.InvoiceBitcoinUrl is not null)
                 context.Model.InvoiceBitcoinUrlQR = $"lightning:{context.Model.InvoiceBitcoinUrl.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";

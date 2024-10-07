@@ -9,7 +9,7 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class PaymentModel
     {
-        public CheckoutUIPaymentMethodSettings UISettings;
+        public string CheckoutBodyComponentName { get; set; }
         public class AvailableCrypto
         {
             [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
@@ -80,9 +80,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public string ReceiptLink { get; set; }
         public int? RequiredConfirmations { get; set; }
         public long? ReceivedConfirmations { get; set; }
-
-        [JsonIgnore]
-        public HashSet<string> ExtensionPartials { get; } = new HashSet<string>();
         [JsonExtensionData]
         public Dictionary<string, JToken> AdditionalData { get; set; } = new();
     }

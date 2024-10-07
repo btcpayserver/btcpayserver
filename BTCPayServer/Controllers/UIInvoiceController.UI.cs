@@ -941,18 +941,8 @@ namespace BTCPayServer.Controllers
 					extension.ModifyPaymentModel(new PaymentModelContext(model, store, storeBlob, invoice, Url, kv, h, paymentMethodId == kv.PaymentMethodId));
 				}
 			}
-            model.UISettings = _viewProvider.TryGetViewViewModel(prompt, "CheckoutUI")?.View as CheckoutUIPaymentMethodSettings;
             model.PaymentMethodId = paymentMethodId.ToString();
             model.OrderAmountFiat = OrderAmountFromInvoice(model.CryptoCode, invoice, DisplayFormatter.CurrencyFormat.Symbol);
-
-            foreach (var paymentPrompt in invoice.GetPaymentPrompts())
-            {
-                var vvm = _viewProvider.TryGetViewViewModel(paymentPrompt, "CheckoutUI");
-                if (vvm?.View is CheckoutUIPaymentMethodSettings { ExtensionPartial: { } partial })
-                {
-                    model.ExtensionPartials.Add(partial);
-                }
-            }
 
             if (storeBlob.PlaySoundOnPayment)
             {

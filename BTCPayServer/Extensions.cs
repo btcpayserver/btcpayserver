@@ -14,6 +14,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -289,6 +291,13 @@ namespace BTCPayServer
             }
         }
 
+
+        public static IServiceCollection AddUIExtension(this IServiceCollection services, string key, string partialView)
+        {
+            services.AddSingleton<IUIExtension>(new UIExtension(partialView,
+                key));
+            return services;
+        }
         public static IServiceCollection AddReportProvider<T>(this IServiceCollection services)
     where T : ReportProvider
         {

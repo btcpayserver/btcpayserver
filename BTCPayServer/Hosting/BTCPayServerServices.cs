@@ -365,6 +365,9 @@ namespace BTCPayServer.Hosting
                 o.ModelMetadataDetailsProviders.Add(new SuppressChildValidationMetadataProvider(typeof(DerivationStrategyBase)));
             });
 
+            services.AddUIExtension("checkout-end", "Bitcoin/BitcoinLikeMethodCheckout");
+            services.AddUIExtension("checkout-end", "Lightning/LightningLikeMethodCheckout");
+
             services.AddSingleton<Services.NBXplorerConnectionFactory>();
             services.AddSingleton<IHostedService, Services.NBXplorerConnectionFactory>(o => o.GetRequiredService<Services.NBXplorerConnectionFactory>());
             services.AddSingleton<HostedServices.CheckConfigurationHostedService>();
@@ -631,8 +634,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
     (BitcoinPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentModelExtension), new object[] { network, pmi }));
                 services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
 (IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodBitpayAPIExtension), new object[] { pmi }));
-                services.AddSingleton<IPaymentMethodViewExtension>(provider =>
-(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodViewExtension), new object[] { pmi }));
 
                 if (!network.ReadonlyWallet && network.WalletSupported)
                 {
@@ -652,8 +653,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentLinkExtension), new object[] { network, pmi }));
                     services.AddSingleton<IPaymentModelExtension>(provider =>
                     (IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentModelExtension), new object[] { network, pmi }));
-                    services.AddSingleton<IPaymentMethodViewExtension>(provider =>
-(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentMethodViewExtension), new object[] { pmi }));
                     services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
 (IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(LightningPaymentMethodBitpayAPIExtension), new object[] { pmi }));
                     var payoutMethodId = PayoutTypes.LN.GetPayoutMethodId(network.CryptoCode);

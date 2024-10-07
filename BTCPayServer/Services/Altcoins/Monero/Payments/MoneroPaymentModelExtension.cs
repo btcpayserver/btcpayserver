@@ -36,6 +36,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         {
             if (context is not { IsSelected: true, Handler: MoneroLikePaymentMethodHandler handler })
                 return;
+            context.Model.CheckoutBodyComponentName = BitcoinPaymentModelExtension.CheckoutBodyComponentName;
             if (context.Model.Activated)
             {
                 var details = context.InvoiceEntity.GetPayments(true)

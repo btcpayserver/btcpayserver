@@ -14,6 +14,7 @@ namespace BTCPayServer.Payments.Bitcoin
 {
     public class BitcoinPaymentModelExtension : IPaymentModelExtension
     {
+        public const string CheckoutBodyComponentName = "BitcoinCheckoutBody";
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly BTCPayNetwork _Network;
         private readonly DisplayFormatter _displayFormatter;
@@ -50,6 +51,7 @@ namespace BTCPayServer.Payments.Bitcoin
                 return;
             var prompt = context.Prompt;
             var details = handler.ParsePaymentPromptDetails(prompt.Details);
+            context.Model.CheckoutBodyComponentName = CheckoutBodyComponentName;
             context.Model.ShowRecommendedFee = context.StoreBlob.ShowRecommendedFee;
             context.Model.FeeRate = details.RecommendedFeeRate.SatoshiPerByte;
 

@@ -51,17 +51,9 @@ namespace BTCPayServer.Payments
         {
             _Views.Add("AdditionalPaymentMethodDetails", partialName);
         }
-        public void RegisterCheckoutUI(CheckoutUIPaymentMethodSettings settings)
-        {
-            _Views.Add("CheckoutUI", settings);
-        }
         public void Register(string key, object value)
         {
             _Views.Add(key, value);
         }
-    }
-    public class CheckoutUIPaymentMethodSettings
-    {
-        public string? ExtensionPartial { get; set; }
     }
 }

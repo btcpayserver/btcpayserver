@@ -177,7 +177,7 @@ function initApp() {
             paymentMethodComponent() {
                 return this.isPluginPaymentMethod
                     ? `${this.pmId}Checkout`
-                    : this.srvModel.activated && 'checkout-template';
+                    : this.srvModel.activated && this.srvModel.checkoutBodyComponentName;
             },
             isPluginPaymentMethod () {
                 return !this.paymentMethodIds.includes(this.pmId);

@@ -317,10 +317,6 @@
     {
         <partial name="Checkout-Cheating" model="@Model" />
     }
-	@foreach (var extensionPartial in Model.ExtensionPartials)
-    {
-		<partial name="@extensionPartial" model="@Model" />
-    }
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment", model = Model })
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-end", model = Model })
 </body>

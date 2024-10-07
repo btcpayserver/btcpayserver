@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Altcoins.Zcash.Services;
 using BTCPayServer.Services.Invoices;
@@ -35,7 +36,8 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
         {
             if (context is not { IsSelected: true, Handler: ZcashLikePaymentMethodHandler handler })
                 return;
-            if (context.Model.Activated)
+			context.Model.CheckoutBodyComponentName = BitcoinPaymentModelExtension.CheckoutBodyComponentName;
+			if (context.Model.Activated)
             {
                 var details = context.InvoiceEntity.GetPayments(true)
                     .Select(p => p.GetDetails<ZcashLikePaymentData>(handler))

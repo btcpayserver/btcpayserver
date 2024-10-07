@@ -48,6 +48,7 @@ namespace BTCPayServer.Payments.LNURLPay
                 context.Model.InvoiceBitcoinUrl = lnurl;
                 context.Model.InvoiceBitcoinUrlQR = lnurl.ToUpperInvariant().Replace(UriScheme.ToUpperInvariant(), UriScheme);
             }
+            context.Model.CheckoutBodyComponentName = LightningPaymentModelExtension.CheckoutBodyComponentName;
             context.Model.PeerInfo = handler.ParsePaymentPromptDetails(context.Prompt.Details).NodeInfo;
             if (context.StoreBlob.LightningAmountInSatoshi && context.Model.CryptoCode == "BTC")
             {

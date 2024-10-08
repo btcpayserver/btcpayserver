@@ -147,6 +147,23 @@ namespace BTCPayServer.Data
                 return $"{splitted[0]}-CHAIN";
             throw new NotSupportedException("Unknown payment id " + paymentMethodId);
         }
+        public static string TryMigratePaymentMethodId(string paymentMethodId)
+        {
+            var splitted = paymentMethodId.Split(new[] { '_', '-' });
+            if (splitted is [var cryptoCode, var paymentType])
+            {
+                return paymentType switch
+                {
+                    "BTCLike" => $"{cryptoCode}-CHAIN",
+                    "LightningLike" or "LightningNetwork" => $"{cryptoCode}-LN",
+                    "LNURLPAY" => $"{cryptoCode}-LNURL",
+                    _ => paymentMethodId
+                };
+            }
+            if (splitted.Length == 1)
+                return $"{splitted[0]}-CHAIN";
+            return paymentMethodId;
+        }
 
         // Make postgres happy
         public static string SanitizeJSON(string json) => json.Replace("\\u0000", string.Empty, StringComparison.OrdinalIgnoreCase);

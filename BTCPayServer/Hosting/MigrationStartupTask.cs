@@ -233,6 +233,12 @@ namespace BTCPayServer.Hosting
 
         private async Task MigrateStoreExcludedPaymentMethods()
         {
+            HashSet<string> oldPaymentIds = new()
+            {
+                "LightningLike",
+                "BTCLike",
+                "LNURLPAY"
+            };
             await using var ctx = _DBContextFactory.CreateContext();
             var stores = await ctx.Stores.ToArrayAsync();
             foreach (var store in stores)
@@ -243,8 +249,7 @@ namespace BTCPayServer.Hosting
                 var array = blob["excludedPaymentMethods"] as JArray;
                 if (array is null || array.Count == 0)
                     continue;
-                var newArray = new JArray(array.Select(a => MigrationExtensions.MigratePaymentMethodId(a.Value<string>()))
-                    .ToArray());
+                var newArray = new JArray(array.Select(a => MigrationExtensions.TryMigratePaymentMethodId(a.Value<string>())).ToArray());
                 if (array.ToString() == newArray.ToString())
                     continue;
                 blob["excludedPaymentMethods"] = newArray;

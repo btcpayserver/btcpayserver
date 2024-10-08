@@ -698,6 +698,7 @@ namespace BTCPayServer.Controllers
             if (model == null)
             {
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
+                // TODO: Can happen if the invoice has lazy activation which failed for all payment methods. We should display error instead...
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
                 var store = invoice != null ? await _StoreRepository.GetStoreByInvoiceId(invoice.Id) : null;
                 var receipt = invoice != null && store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
@@ -713,8 +714,9 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        private async Task<CheckoutModel?> GetCheckoutModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang)
+        private async Task<CheckoutModel?> GetCheckoutModel(string invoiceId, PaymentMethodId? paymentMethodId, string? lang, HashSet<PaymentMethodId>? excludedPaymentMethodIds = null)
         {
+            var originalPaymentMethodId = paymentMethodId;
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null)
                 return null;
@@ -722,11 +724,13 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
-
+            excludedPaymentMethodIds ??= new HashSet<PaymentMethodId>();
             bool isDefaultPaymentId = false;
             var storeBlob = store.GetStoreBlob();
 
-            var displayedPaymentMethods = invoice.GetPaymentPrompts().Select(p => p.PaymentMethodId).ToHashSet();
+            var displayedPaymentMethods = invoice.GetPaymentPrompts()
+                .Where(p => !excludedPaymentMethodIds.Contains(p.PaymentMethodId))
+                .Select(p => p.PaymentMethodId).ToHashSet();
 
             
             var btcId = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
@@ -822,7 +826,14 @@ namespace BTCPayServer.Controllers
             if (prompt is null)
                 return null;
             if (activated)
-                return await GetCheckoutModel(invoiceId, paymentMethodId, lang);
+                return await GetCheckoutModel(invoiceId, paymentMethodId, lang, excludedPaymentMethodIds);
+
+            if (!prompt.Activated)
+            {
+                // It failed to activate. Let's try to exclude it and retry
+                excludedPaymentMethodIds.Add(prompt.PaymentMethodId);
+                return await GetCheckoutModel(invoiceId, originalPaymentMethodId, lang, excludedPaymentMethodIds);
+            }
 
             var accounting = prompt.Calculate();
 

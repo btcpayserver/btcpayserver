@@ -237,6 +237,8 @@ namespace BTCPayServer.Hosting
             var stores = await ctx.Stores.ToArrayAsync();
             foreach (var store in stores)
             {
+                if (store.StoreBlob is null)
+                    continue;
                 var blob = JObject.Parse(store.StoreBlob);
                 var array = blob["excludedPaymentMethods"] as JArray;
                 if (array is null || array.Count == 0)

@@ -47,19 +47,20 @@ namespace BTCPayServer.Payments.Bitcoin
         public PaymentMethodId PaymentMethodId { get; }
         public void ModifyCheckoutModel(CheckoutModelContext context)
         {
-            if (context is not { Handler: BitcoinLikePaymentHandler handler})
+            if (context is not { Handler: BitcoinLikePaymentHandler handler })
                 return;
+
             var prompt = context.Prompt;
             var details = handler.ParsePaymentPromptDetails(prompt.Details);
             context.Model.CheckoutBodyComponentName = CheckoutBodyComponentName;
             context.Model.ShowRecommendedFee = context.StoreBlob.ShowRecommendedFee;
             context.Model.FeeRate = details.RecommendedFeeRate.SatoshiPerByte;
 
-            
+
             var bip21Case = _Network.SupportLightning && context.StoreBlob.OnChainWithLnInvoiceFallback;
             var amountInSats = bip21Case && context.StoreBlob.LightningAmountInSatoshi && context.Model.PaymentMethodCurrency == "BTC";
             string? lightningFallback = null;
-            if (context.Model.Activated && bip21Case)
+            if (bip21Case)
             {
                 var lnPmi = PaymentTypes.LN.GetPaymentMethodId(handler.Network.CryptoCode);
                 var lnPrompt = context.InvoiceEntity.GetPaymentPrompt(lnPmi);
@@ -85,54 +86,49 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
             }
 
-            if (context.Model.Activated)
+            
+            var paymentData = context.InvoiceEntity.GetAllBitcoinPaymentData(handler, true)?.MinBy(o => o.ConfirmationCount);
+            if (paymentData is not null)
             {
-                var paymentData = context.InvoiceEntity.GetAllBitcoinPaymentData(handler, true)?.MinBy(o => o.ConfirmationCount);
-                if (paymentData is not null)
-                {
-                    context.Model.RequiredConfirmations = NBXplorerListener.ConfirmationRequired(context.InvoiceEntity, paymentData);
-                    context.Model.ReceivedConfirmations = paymentData.ConfirmationCount;
-                }
-
-                // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
-                //
-                // Correct casing: Addresses in payment URI need to be …
-                // - lowercase in link version
-                // - uppercase in QR version
-                //
-                // The keys (e.g. "bitcoin:" or "lightning=" should be lowercase!
-
-                // cryptoInfo.PaymentUrls?.BIP21: bitcoin:bcrt1qxp2qa5?amount=0.00044007
-                var bip21 = paymentLinkExtension.GetPaymentLink(prompt, context.UrlHelper);
-                context.Model.InvoiceBitcoinUrl = context.Model.InvoiceBitcoinUrlQR = bip21 ?? "";
-                // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5?amount=0.00044007
-                // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5?amount=0.00044007
-
-                if (!string.IsNullOrEmpty(lightningFallback))
-                {
-                    var delimiterUrl = context.Model.InvoiceBitcoinUrl.Contains("?") ? "&" : "?";
-                    context.Model.InvoiceBitcoinUrl += $"{delimiterUrl}{lightningFallback}";
-                    // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
-
-                    var delimiterUrlQR = context.Model.InvoiceBitcoinUrlQR.Contains("?") ? "&" : "?";
-                    context.Model.InvoiceBitcoinUrlQR += $"{delimiterUrlQR}{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
-                    // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
-                }
-
-                if (_Network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix is not null && context.Model.Address.StartsWith(_bech32Prefix, StringComparison.OrdinalIgnoreCase))
-                {
-                    context.Model.InvoiceBitcoinUrlQR = context.Model.InvoiceBitcoinUrlQR.Replace(
-                        $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.Address}", $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.Address.ToUpperInvariant()}",
-                        StringComparison.OrdinalIgnoreCase);
-                    // model.InvoiceBitcoinUrlQR: bitcoin:BCRT1QXP2QA5DHN...?amount=0.00044007&lightning=LNBCRT4400...
-                }
-            }
-            else
-            {
-                context.Model.InvoiceBitcoinUrl = context.Model.InvoiceBitcoinUrlQR = string.Empty;
+                context.Model.RequiredConfirmations = NBXplorerListener.ConfirmationRequired(context.InvoiceEntity, paymentData);
+                context.Model.ReceivedConfirmations = paymentData.ConfirmationCount;
             }
 
-            if (context.Model.Activated && amountInSats)
+            // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code
+            //
+            // Correct casing: Addresses in payment URI need to be …
+            // - lowercase in link version
+            // - uppercase in QR version
+            //
+            // The keys (e.g. "bitcoin:" or "lightning=" should be lowercase!
+
+            // cryptoInfo.PaymentUrls?.BIP21: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+            var bip21 = paymentLinkExtension.GetPaymentLink(prompt, context.UrlHelper);
+            context.Model.InvoiceBitcoinUrl = context.Model.InvoiceBitcoinUrlQR = bip21 ?? "";
+            // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+            // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5?amount=0.00044007
+
+            if (!string.IsNullOrEmpty(lightningFallback))
+            {
+                var delimiterUrl = context.Model.InvoiceBitcoinUrl.Contains("?") ? "&" : "?";
+                context.Model.InvoiceBitcoinUrl += $"{delimiterUrl}{lightningFallback}";
+                // model.InvoiceBitcoinUrl: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=lnbcrt440070n1...
+
+                var delimiterUrlQR = context.Model.InvoiceBitcoinUrlQR.Contains("?") ? "&" : "?";
+                context.Model.InvoiceBitcoinUrlQR += $"{delimiterUrlQR}{lightningFallback.ToUpperInvariant().Replace("LIGHTNING=", "lightning=", StringComparison.OrdinalIgnoreCase)}";
+                // model.InvoiceBitcoinUrlQR: bitcoin:bcrt1qxp2qa5dhn7?amount=0.00044007&lightning=LNBCRT4400...
+            }
+
+            if (_Network.CryptoCode.Equals("BTC", StringComparison.InvariantCultureIgnoreCase) && _bech32Prefix is not null && context.Model.Address.StartsWith(_bech32Prefix, StringComparison.OrdinalIgnoreCase))
+            {
+                context.Model.InvoiceBitcoinUrlQR = context.Model.InvoiceBitcoinUrlQR.Replace(
+                    $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.Address}", $"{_Network.NBitcoinNetwork.UriScheme}:{context.Model.Address.ToUpperInvariant()}",
+                    StringComparison.OrdinalIgnoreCase);
+                // model.InvoiceBitcoinUrlQR: bitcoin:BCRT1QXP2QA5DHN...?amount=0.00044007&lightning=LNBCRT4400...
+            }
+           
+
+            if (amountInSats)
             {
                 PreparePaymentModelForAmountInSats(context.Model, context.Prompt.Rate, _displayFormatter);
             }

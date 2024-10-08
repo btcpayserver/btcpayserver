@@ -37,25 +37,17 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             if (context is not { Handler: ZcashLikePaymentMethodHandler handler })
                 return;
 			context.Model.CheckoutBodyComponentName = BitcoinCheckoutModelExtension.CheckoutBodyComponentName;
-			if (context.Model.Activated)
-            {
-                var details = context.InvoiceEntity.GetPayments(true)
+            var details = context.InvoiceEntity.GetPayments(true)
                     .Select(p => p.GetDetails<ZcashLikePaymentData>(handler))
                     .Where(p => p is not null)
                     .FirstOrDefault();
-                if (details is not null)
-                {
-                    context.Model.ReceivedConfirmations = details.ConfirmationCount;
-                    context.Model.RequiredConfirmations = (int)ZcashListener.ConfirmationsRequired(context.InvoiceEntity.SpeedPolicy);
-                }
-                context.Model.InvoiceBitcoinUrl = paymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
-                context.Model.InvoiceBitcoinUrlQR = context.Model.InvoiceBitcoinUrl;
-            }
-            else
+            if (details is not null)
             {
-                context.Model.InvoiceBitcoinUrl = "";
-                context.Model.InvoiceBitcoinUrlQR = "";
+                context.Model.ReceivedConfirmations = details.ConfirmationCount;
+                context.Model.RequiredConfirmations = (int)ZcashListener.ConfirmationsRequired(context.InvoiceEntity.SpeedPolicy);
             }
+            context.Model.InvoiceBitcoinUrl = paymentLinkExtension.GetPaymentLink(context.Prompt, context.UrlHelper);
+            context.Model.InvoiceBitcoinUrlQR = context.Model.InvoiceBitcoinUrl;
         }
     }
 }

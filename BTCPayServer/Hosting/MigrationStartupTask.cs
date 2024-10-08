@@ -233,12 +233,6 @@ namespace BTCPayServer.Hosting
 
         private async Task MigrateStoreExcludedPaymentMethods()
         {
-            HashSet<string> oldPaymentIds = new()
-            {
-                "LightningLike",
-                "BTCLike",
-                "LNURLPAY"
-            };
             await using var ctx = _DBContextFactory.CreateContext();
             var stores = await ctx.Stores.ToArrayAsync();
             foreach (var store in stores)

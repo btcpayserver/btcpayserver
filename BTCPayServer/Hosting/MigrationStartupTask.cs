@@ -246,7 +246,9 @@ namespace BTCPayServer.Hosting
                 if (array.ToString() == newArray.ToString())
                     continue;
                 blob["excludedPaymentMethods"] = newArray;
+                store.StoreBlob = blob.ToString();
             }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateBlockExplorerLinks()

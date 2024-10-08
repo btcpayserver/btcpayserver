@@ -32,5 +32,6 @@ namespace BTCPayServer.Services
         public bool MigrateAppYmlToJson { get; set; }
         public bool MigrateToStoreConfig { get; set; }
         public bool MigrateBlockExplorerLinks { get; set; }
+        public bool MigrateStoreExcludedPaymentMethods { get; internal set; }
     }
 }

@@ -217,11 +217,35 @@ namespace BTCPayServer.Hosting
                     settings.MigrateBlockExplorerLinks = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateStoreExcludedPaymentMethods)
+                {
+                    await MigrateStoreExcludedPaymentMethods();
+                    settings.MigrateStoreExcludedPaymentMethods = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
+            }
+        }
+
+        private async Task MigrateStoreExcludedPaymentMethods()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var stores = await ctx.Stores.ToArrayAsync();
+            foreach (var store in stores)
+            {
+                var blob = JObject.Parse(store.StoreBlob);
+                var array = blob["excludedPaymentMethods"] as JArray;
+                if (array is null || array.Count == 0)
+                    continue;
+                var newArray = new JArray(array.Select(a => MigrationExtensions.MigratePaymentMethodId(a.Value<string>()))
+                    .ToArray());
+                if (array.ToString() == newArray.ToString())
+                    continue;
+                blob["excludedPaymentMethods"] = newArray;
             }
         }
 

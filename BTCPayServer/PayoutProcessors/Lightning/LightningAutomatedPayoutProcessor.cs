@@ -82,10 +82,10 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         }
 
         var blob = payoutData.GetBlob(_btcPayNetworkJsonSerializerSettings);
-        var claim = await _payoutHandler.ParseClaimDestination(blob.Destination, CancellationToken);
         try
         {
-            switch (claim.destination)
+			var claim = await _payoutHandler.ParseClaimDestination(blob.Destination, CancellationToken);
+			switch (claim.destination)
             {
                 case LNURLPayClaimDestinaton lnurlPayClaimDestinaton:
                     var lnurlResult = await UILightningLikePayoutController.GetInvoiceFromLNURL(payoutData,

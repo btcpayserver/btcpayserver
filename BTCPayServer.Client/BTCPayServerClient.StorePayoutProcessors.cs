@@ -19,14 +19,14 @@ public partial class BTCPayServerClient
         await SendHttpRequest($"api/v1/stores/{storeId}/payout-processors/{processor}/{paymentMethod}", null, HttpMethod.Delete, token);
     }
 
-    public virtual async Task<IEnumerable<LightningAutomatedPayoutSettings>> GetStoreLightningAutomatedPayoutProcessors(string storeId, string? paymentMethod = null, CancellationToken token = default)
+    public virtual async Task<IEnumerable<LightningAutomatedPayoutSettings>> GetStoreLightningAutomatedPayoutProcessors(string storeId, string? payoutMethodId = null, CancellationToken token = default)
     {
-        return await SendHttpRequest<IEnumerable<LightningAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory{(paymentMethod is null ? string.Empty : $"/{paymentMethod}")}", null, HttpMethod.Get, token);
+        return await SendHttpRequest<IEnumerable<LightningAutomatedPayoutSettings>>($"api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory{(payoutMethodId is null ? string.Empty : $"/{payoutMethodId}")}", null, HttpMethod.Get, token);
     }
 
-    public virtual async Task<LightningAutomatedPayoutSettings> UpdateStoreLightningAutomatedPayoutProcessors(string storeId, string paymentMethod, LightningAutomatedPayoutSettings request, CancellationToken token = default)
+    public virtual async Task<LightningAutomatedPayoutSettings> UpdateStoreLightningAutomatedPayoutProcessors(string storeId, string payoutMethodId, LightningAutomatedPayoutSettings request, CancellationToken token = default)
     {
-        return await SendHttpRequest<LightningAutomatedPayoutSettings>($"api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}", request, HttpMethod.Put, token);
+        return await SendHttpRequest<LightningAutomatedPayoutSettings>($"api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}", request, HttpMethod.Put, token);
     }
 
     public virtual async Task<OnChainAutomatedPayoutSettings> UpdateStoreOnChainAutomatedPayoutProcessors(string storeId, string paymentMethod, OnChainAutomatedPayoutSettings request, CancellationToken token = default)

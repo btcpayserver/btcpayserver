@@ -127,7 +127,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
             IntervalMinutes = blob.Interval.TotalMinutes;
             ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly;
         }
-
+        [Display(Name = "Process approved payouts instantly")]
         public bool ProcessNewPayoutsInstantly { get; set; }
 
         [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]

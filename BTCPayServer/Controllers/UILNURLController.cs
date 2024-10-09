@@ -19,6 +19,8 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.PayoutProcessors;
+using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Payouts;
 using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Crowdfund;
@@ -60,11 +62,13 @@ namespace BTCPayServer
         private readonly IPluginHookService _pluginHookService;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly PayoutProcessorService _payoutProcessorService;
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
             PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers,
+            PayoutProcessorService payoutProcessorService,
             StoreRepository storeRepository,
             AppService appService,
             UIInvoiceController invoiceController,
@@ -79,6 +83,7 @@ namespace BTCPayServer
             _eventAggregator = eventAggregator;
             _payoutHandlers = payoutHandlers;
             _handlers = handlers;
+            _payoutProcessorService = payoutProcessorService;
             _storeRepository = storeRepository;
             _appService = appService;
             _invoiceController = invoiceController;
@@ -151,6 +156,7 @@ namespace BTCPayServer
 
             if (result.MinimumAmount < request.MinWithdrawable || result.MinimumAmount > request.MaxWithdrawable)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = $"Payment request was not within bounds ({request.MinWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} - {request.MaxWithdrawable.ToUnit(LightMoneyUnit.Satoshi)} sats)" });
+
             var store = await _storeRepository.FindStore(pp.StoreId);
             var pm = store!.GetPaymentMethodConfig<LightningPaymentMethodConfig>(paymentMethodId, _handlers);
             if (pm is null)
@@ -158,74 +164,83 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
+            var processors = await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
+            {
+                Stores = [pp.StoreId],
+                PayoutMethods = [pmi],
+                Processors = [LightningAutomatedPayoutSenderFactory.ProcessorName]
+            });
+            var processorBlob = processors.FirstOrDefault()?.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob();
+			var instantProcessing = processorBlob?.ProcessNewPayoutsInstantly is true;
+			var interval = processorBlob?.Interval.TotalMinutes;
+			var autoApprove = pp.GetBlob().AutoApproveClaims;
+			var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),
                 PayoutMethodId = pmi,
                 PullPaymentId = pullPaymentId,
                 StoreId = pp.StoreId,
-                Value = result.MinimumAmount.ToDecimal(unit)
+                Value = result.MinimumAmount.ToDecimal(unit),
             });
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid" });
-
-            var lightningHandler = _handlers.GetLightningHandler(network);
-            switch (claimResponse.PayoutData.State)
+            var payout = claimResponse.PayoutData;
+			DateTimeOffset since = DateTimeOffset.UtcNow;
+            while (true)
             {
-                case PayoutState.AwaitingPayment:
-                    {
-                        var client =
-                            lightningHandler.CreateLightningClient(pm);
-                        var payResult = await UILightningLikePayoutController.TrypayBolt(client,
-                            claimResponse.PayoutData.GetBlob(_btcPayNetworkJsonSerializerSettings),
-                            claimResponse.PayoutData, result, cancellationToken);
-
-                        switch (payResult.Result)
-                        {
-                            case PayResult.Ok:
-                            case PayResult.Unknown:
-                                await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest
-                                {
-                                    PayoutId = claimResponse.PayoutData.Id,
-                                    State = claimResponse.PayoutData.State,
-                                    Proof = claimResponse.PayoutData.GetProofBlobJson()
-                                });
-
-                                return Ok(new LNUrlStatusResponse
-                                {
-                                    Status = "OK",
-                                    Reason = payResult.Message
-                                });
-                            case PayResult.CouldNotFindRoute:
-                            case PayResult.Error:
-                            default:
-                                await _pullPaymentHostedService.Cancel(
-                                    new PullPaymentHostedService.CancelRequest(new[]
-                                        { claimResponse.PayoutData.Id }, null));
-
-                                return BadRequest(new LNUrlStatusResponse
-                                {
-                                    Status = "ERROR",
-                                    Reason = payResult.Message ?? payResult.Result.ToString()
-                                });
-                        }
-                    }
-                case PayoutState.AwaitingApproval:
-                    return Ok(new LNUrlStatusResponse
-                    {
-                        Status = "OK",
-                        Reason =
-                            "The payment request has been recorded, but still needs to be approved before execution."
-                    });
-                case PayoutState.InProgress:
-                case PayoutState.Completed:
-                    return Ok(new LNUrlStatusResponse { Status = "OK" });
-                case PayoutState.Cancelled:
-                    return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid" });
+                switch (payout.State)
+                {
+                    case PayoutState.Completed:
+                        return Ok(new LNUrlStatusResponse { Status = "OK" });
+                    case PayoutState.Cancelled:
+                        return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid" });
+					case PayoutState.AwaitingApproval when !autoApprove:
+						return Ok(new LNUrlStatusResponse
+						{
+							Status = "OK",
+							Reason =
+								"The request has been recorded, but still need to be approved before execution."
+						});
+				}
+				if (instantProcessing)
+				{
+					if (DateTimeOffset.UtcNow - since > TimeSpan.FromSeconds(10.0))
+						return Ok(new LNUrlStatusResponse
+						{
+							Status = "OK",
+							Reason = $"The payment is in pending state and should be completed shortly. ({payout.State})"
+						});
+					await WaitPayoutChanged(claimResponse.PayoutData.Id, cancellationToken);
+					payout = (await _pullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+					{
+						PayoutIds = [claimResponse.PayoutData.Id]
+					})).Single();
+				}
+				else
+				{
+					var message = interval switch
+					{
+						double intervalMinutes => $"The payment will be sent after {intervalMinutes} minutes.",
+						null => "The sender needs to send the payment manually. (Or activate the lightning automated payment processor)"
+					};
+					return Ok(new LNUrlStatusResponse
+					{
+						Status = "OK",
+						Reason = $"The request has been approved. {message}"
+					});
+				}
             }
+        }
 
-            return Ok(request);
+        private async Task WaitPayoutChanged(string payoutId, CancellationToken cancellationToken)
+        {
+            using CancellationTokenSource cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            // We also wait delay, in case we missed the event
+            var delay = Task.Delay(1000, cts.Token);
+            var payoutEvent = _eventAggregator.WaitNext<PayoutEvent>(o => o.Payout.Id == payoutId, cts.Token);
+            await Task.WhenAny(delay, payoutEvent);
+            cts.Cancel();
         }
 
         private BTCPayNetwork GetNetwork(string cryptoCode)

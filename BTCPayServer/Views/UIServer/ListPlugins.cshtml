@@ -296,7 +296,45 @@
     </div>
 }
 
-@if (availableAndNotInstalled.Any())
+<form method="get" asp-action="ListPlugins" class="row mb-4" id="searchForm">
+    <div class="col-12 col-lg-6">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Search for plugins..."
+                   value="@ViewContext.HttpContext.Request.Query["search"]" />
+            <button type="submit" class="btn btn-primary">
+                <vc:icon symbol="actions-search" />
+            </button>
+        </div>
+    </div>
+</form>
+<script>
+    // if we search using form, scroll to it
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchForm = document.getElementById('searchForm');
+
+        // Set session storage flag on form submit
+        searchForm.addEventListener('submit', function() {
+            sessionStorage.setItem('formSubmitted', 'true');
+        });
+
+        // Check session storage to see if form was submitted, and scroll + clear it
+        if (sessionStorage.getItem('formSubmitted') === 'true') {
+            sessionStorage.removeItem('formSubmitted');
+            if (searchForm) {
+                searchForm.scrollIntoView();
+            }
+        }
+    });
+
+</script>
+
+@if (!availableAndNotInstalled.Any())
+{
+    <div class="row mb-4">
+        <div class="col mb-4" style="margin-left:10px;">No plugins found</div>
+    </div>
+}
+else 
 {
     <h3 class="mb-4">Available Plugins</h3>
     <div class="row mb-4">

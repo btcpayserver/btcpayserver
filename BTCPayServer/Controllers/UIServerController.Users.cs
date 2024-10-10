@@ -134,39 +134,24 @@ namespace BTCPayServer.Controllers
                 blob.Name = viewModel.Name;
                 propertiesChanged = true;
             }
-            
+
             if (viewModel.ImageFile != null)
             {
-                if (viewModel.ImageFile.Length > 1_000_000)
-                {
-                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded image file should be less than 1MB");
-                }
-                else if (!viewModel.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
-                {
-                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
-                }
+                var imageUpload = await _fileService.UploadImage(viewModel.ImageFile, user.Id);
+                if (!imageUpload.Success)
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), imageUpload.Response);
                 else
                 {
-                    var formFile = await viewModel.ImageFile.Bufferize();
-                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    try
                     {
-                        ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                        var storedFile = imageUpload.StoredFile!;
+                        var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                        blob.ImageUrl = fileIdUri.ToString();
+                        propertiesChanged = true;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        viewModel.ImageFile = formFile;
-                        // add new image
-                        try
-                        {
-                            var storedFile = await _fileService.AddFile(viewModel.ImageFile, userId);
-                            var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
-                            blob.ImageUrl = fileIdUri.ToString();
-                            propertiesChanged = true;
-                        }
-                        catch (Exception e)
-                        {
-                            ModelState.AddModelError(nameof(viewModel.ImageFile), $"Could not save image: {e.Message}");
-                        }
+                        ModelState.AddModelError(nameof(viewModel.ImageFile), $"Could not save image: {e.Message}");
                     }
                 }
             }

@@ -184,7 +184,7 @@ namespace BTCPayServer
             });
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
-                return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid" });
+                return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = $"Payment request could not be paid (Claim result: {claimResponse.Result})" });
             var payout = claimResponse.PayoutData;
 			DateTimeOffset since = DateTimeOffset.UtcNow;
             while (true)
@@ -194,7 +194,7 @@ namespace BTCPayServer
                     case PayoutState.Completed:
                         return Ok(new LNUrlStatusResponse { Status = "OK" });
                     case PayoutState.Cancelled:
-                        return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid" });
+                        return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment request could not be paid (Payout state: Cancelled)" });
 					case PayoutState.AwaitingApproval when !autoApprove:
 						return Ok(new LNUrlStatusResponse
 						{

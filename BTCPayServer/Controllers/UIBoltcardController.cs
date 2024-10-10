@@ -65,6 +65,6 @@ public class UIBoltcardController : Controller
         if (!cardKey.CheckSunMac(c, piccData))
             return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Replayed or expired query" });
         LNURLController.ControllerContext.HttpContext = HttpContext;
-        return await LNURLController.GetLNURLForPullPayment("BTC", registration.PullPaymentId, pr, $"{p}-{c}", cancellationToken);
+        return await LNURLController.GetLNURLForPullPayment("BTC", registration.PullPaymentId, pr, $"{p}-{c}", true, cancellationToken);
     }
 }

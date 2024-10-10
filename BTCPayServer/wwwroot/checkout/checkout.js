@@ -110,6 +110,7 @@ function initApp() {
                     scanning: false,
                     submitting: false,
                     errorMessage: null,
+                    warningMessage: null,
                     permissionGranted: false,
                     readerAbortController: null
                 }
@@ -436,9 +437,13 @@ function initApp() {
                 this.playSound('nfcRead');
                 this.$set(this.nfc, 'submitting', true);
                 this.$set(this.nfc, 'errorMessage', null);
+                this.$set(this.nfc, 'warningMessage', null);
             },
-            handleNFCResult() { // child component reports result for handling the data
+            handleNFCResult(message) { // child component reports result for handling the data
                 this.$set(this.nfc, 'submitting', false);
+                if (message) {
+                    this.$set(this.nfc, 'warningMessage', message);
+                }
             },
             handleNFCError(message) {
                 // internal or via child component reporting failure of handling the data

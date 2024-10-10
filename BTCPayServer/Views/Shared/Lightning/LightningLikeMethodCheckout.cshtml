@@ -25,7 +25,7 @@
 
 <script>
 	Vue.component(@Safe.Json(LNCheckoutModelExtension.CheckoutBodyComponentName), {
-        props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
+		props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage', 'nfcWarningMessage'],
 		template: @Safe.Json("#" + LNCheckoutModelExtension.CheckoutBodyComponentName),
         components: {
             qrcode: VueQrcode

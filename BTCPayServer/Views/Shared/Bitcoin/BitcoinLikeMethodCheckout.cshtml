@@ -33,7 +33,7 @@
 
 <script>
 	Vue.component(@Safe.Json(BitcoinCheckoutModelExtension.CheckoutBodyComponentName), {
-        props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage'],
+		props: ['model', 'nfcSupported', 'nfcScanning', 'nfcErrorMessage', 'nfcWarningMessage'],
 		template: @Safe.Json("#" + BitcoinCheckoutModelExtension.CheckoutBodyComponentName),
         components: {
             qrcode: VueQrcode

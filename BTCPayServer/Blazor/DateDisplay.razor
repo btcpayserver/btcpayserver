@@ -1,0 +1,57 @@
+@using System.Globalization
+
+<time datetime="@DateTimeOffset.ToString("o", CultureInfo.InvariantCulture)"
+      data-relative="@ToTimeAgo(DateTimeOffset)"
+      data-initial="@Format"
+      @attributes="InputAttributes">
+    @GetDisplayDate()
+</time>
+
+@code {
+    public enum DateDisplayFormat
+    {
+        Relative,
+        Localized
+    }
+
+    [Parameter, EditorRequired]
+    public DateTimeOffset DateTimeOffset { get; set; }
+
+    [Parameter]
+    public DateDisplayFormat Format { get; set; }
+
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? InputAttributes { get; set; }
+
+    private static string ToTimeAgo(DateTimeOffset date) => ToTimeAgo(DateTimeOffset.UtcNow - date);
+
+    private static string ToTimeAgo(DateTime date) => ToTimeAgo(DateTimeOffset.UtcNow - date);
+
+    private static string ToTimeAgo(TimeSpan diff) =>
+        diff.TotalSeconds > 0 ? $"{TimeString(diff)} ago" : $"in {TimeString(diff.Negate())}";
+
+    private static string TimeString(TimeSpan timeSpan)
+    {
+        if (timeSpan.TotalMinutes < 1)
+        {
+            return $"{(int)timeSpan.TotalSeconds} second{Plural((int)timeSpan.TotalSeconds)}";
+        }
+        if (timeSpan.TotalHours < 1)
+        {
+            return $"{(int)timeSpan.TotalMinutes} minute{Plural((int)timeSpan.TotalMinutes)}";
+        }
+        return timeSpan.Days < 1
+            ? $"{(int)timeSpan.TotalHours} hour{Plural((int)timeSpan.TotalHours)}"
+            : $"{(int)timeSpan.TotalDays} day{Plural((int)timeSpan.TotalDays)}";
+    }
+
+    private static string Plural(int value)
+    {
+        return value == 1 ? string.Empty : "s";
+    }
+
+    private string GetDisplayDate() =>
+        Format == DateDisplayFormat.Relative
+            ? ToTimeAgo(DateTimeOffset)
+            : DateTimeOffset.ToString("g", CultureInfo.InvariantCulture);
+}

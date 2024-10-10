@@ -137,9 +137,10 @@ namespace BTCPayServer.Data
             {
                 return paymentType switch
                 {
-                    "BTCLike" => $"{cryptoCode}-CHAIN",
+                    "BTCLike" or "MoneroLike" or "ZcashLike" => $"{cryptoCode}-CHAIN",
                     "LightningLike" or "LightningNetwork" => $"{cryptoCode}-LN",
                     "LNURLPAY" => $"{cryptoCode}-LNURL",
+
                     _ => throw new NotSupportedException("Unknown payment type " + paymentType)
                 };
             }
@@ -154,7 +155,7 @@ namespace BTCPayServer.Data
             {
                 return paymentType switch
                 {
-                    "BTCLike" => $"{cryptoCode}-CHAIN",
+                    "BTCLike" or "MoneroLike" or "ZcashLike" => $"{cryptoCode}-CHAIN",
                     "LightningLike" or "LightningNetwork" => $"{cryptoCode}-LN",
                     "LNURLPAY" => $"{cryptoCode}-LNURL",
                     _ => paymentMethodId

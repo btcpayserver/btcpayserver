@@ -68,10 +68,25 @@
     </div>
 </div>
 
+@if (Model.Commands.Any())
+{
+	<div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+		You need to restart BTCPay Server in order to update your active plugins.
+		@if (Model.CanShowRestart)
+		{
+			<form method="post" asp-action="Maintenance" class="mt-2">
+				<button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
+			</form>
+		}
+	</div>
+}
 @if (Model.Disabled.Any())
 {
     <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
         Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
+		<form asp-action="UnInstallAllDisabledPlugin" class="mt-2">
+			<button type="submit" name="command" value="soft-restart" class="btn btn-danger">Uninstall all disabled plugins</button>
+		</form>
     </div>
     <div class="mb-5">
         <h3 class="mb-4">Disabled Plugins</h3>
@@ -87,26 +102,23 @@
                                 <span>(@version)</span>
                             }
                         </span>
-                        <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
-                        </form>
+						@{
+							var uninstalled = Model.Commands.Any(c => c.plugin == plugin && c.command == "delete");
+						}
+						<form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
+							@if (uninstalled)
+							{
+								<button type="submit" class="btn btn-sm btn-outline-danger" disabled>Marked for deletion</button>
+							}
+							else
+							{
+								<button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
+							}
+						</form>
                     </div>
                 </li>
             }
         </ul>
-    </div>
-}
-
-@if (Model.Commands.Any())
-{
-    <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
-        You need to restart BTCPay Server in order to update your active plugins.
-        @if (Model.CanShowRestart)
-        {
-            <form method="post" asp-action="Maintenance" class="mt-2">
-                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
-            </form>
-        }
     </div>
 }
 

@@ -18,12 +18,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/plugins")]
         public async Task<IActionResult> ListPlugins(
             [FromServices] PluginService pluginService,
-            [FromServices] BTCPayServerOptions btcPayServerOptions)
+            [FromServices] BTCPayServerOptions btcPayServerOptions,
+            string search = null)
         {
             IEnumerable<PluginService.AvailablePlugin> availablePlugins;
             try
             {
-                availablePlugins = await pluginService.GetRemotePlugins();
+                availablePlugins = await pluginService.GetRemotePlugins(search);
             }
             catch (Exception)
             {

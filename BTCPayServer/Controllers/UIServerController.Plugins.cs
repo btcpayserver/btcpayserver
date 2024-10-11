@@ -59,6 +59,16 @@ namespace BTCPayServer.Controllers
             public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
         }
 
+        [HttpPost("server/plugins/uninstall-all")]
+        public IActionResult UnInstallAllDisabledPlugin(
+            [FromServices] PluginService pluginService, string plugin)
+        {
+            var disabled = pluginService.GetDisabledPlugins();
+            foreach (var d in disabled)
+                pluginService.UninstallPlugin(d.Key);
+            return RedirectToAction(nameof(ListPlugins));
+        }
+
         [HttpPost("server/plugins/uninstall")]
         public IActionResult UnInstallPlugin(
             [FromServices] PluginService pluginService, string plugin)

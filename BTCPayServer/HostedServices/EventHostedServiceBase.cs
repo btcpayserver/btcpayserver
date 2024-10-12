@@ -69,7 +69,7 @@ namespace BTCPayServer.HostedServices
 
         protected void Subscribe<T>()
         {
-            _Subscriptions.Add(_EventAggregator.Subscribe<T>(e => _Events.Writer.TryWrite(e)));
+            _Subscriptions.Add(_EventAggregator.Subscribe<T>(e => _Events.Writer.TryWrite(e!)));
         }
 
         protected void PushEvent(object obj)

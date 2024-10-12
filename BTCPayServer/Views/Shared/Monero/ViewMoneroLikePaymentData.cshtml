@@ -6,12 +6,12 @@
 @using BTCPayServer.Services.Altcoins.Monero.UI
 @using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
-@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+@model InvoiceDetailsModel
 @inject TransactionLinkProviders TransactionLinkProviders
 @inject PaymentMethodHandlerDictionary handlers
 
 @{
-	var payments = Model.Select(payment =>
+	var payments = Model.Payments.Select(payment =>
 	{
 		if (!handlers.TryGetValue(payment.PaymentMethodId, out var h) || h is not MoneroLikePaymentMethodHandler handler)
 			return null;

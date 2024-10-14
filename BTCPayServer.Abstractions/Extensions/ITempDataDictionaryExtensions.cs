@@ -8,6 +8,14 @@ namespace BTCPayServer.Abstractions.Extensions;
 
 public static class SetStatusMessageModelExtensions
 {
+    public static void SetStatusSuccess(this ITempDataDictionary tempData, string statusMessage)
+    {
+        tempData.SetStatusMessageModel(new StatusMessageModel()
+        {
+            Severity = StatusMessageModel.StatusSeverity.Success,
+            Message = statusMessage
+        });
+    }
     public static void SetStatusMessageModel(this ITempDataDictionary tempData, StatusMessageModel statusMessage)
     {
         if (statusMessage == null)

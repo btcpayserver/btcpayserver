@@ -18,7 +18,7 @@
     <div class="form-group">
         <label asp-for="PreferredExchange" class="form-label" data-required></label>
         <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select w-300px"></select>
-        <div class="form-text mt-2 only-for-js">The recommended price source gets chosen based on the default currency.</div>
+        <div class="form-text mt-2 only-for-js" text-translate="true">The recommended price source gets chosen based on the default currency.</div>
         <span asp-validation-for="PreferredExchange" class="text-danger"></span>
     </div>
     <div class="form-group mt-4">

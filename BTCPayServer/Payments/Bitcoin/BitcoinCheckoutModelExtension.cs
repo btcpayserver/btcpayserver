@@ -7,6 +7,7 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -17,6 +18,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public const string CheckoutBodyComponentName = "BitcoinCheckoutBody";
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly BTCPayNetwork _Network;
+        private readonly IStringLocalizer StringLocalizer;
         private readonly DisplayFormatter _displayFormatter;
         private readonly IPaymentLinkExtension paymentLinkExtension;
         private readonly IPaymentLinkExtension? lnPaymentLinkExtension;
@@ -26,6 +28,7 @@ namespace BTCPayServer.Payments.Bitcoin
         public BitcoinCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             BTCPayNetwork network,
+            IStringLocalizer stringLocalizer,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
             DisplayFormatter displayFormatter,
             PaymentMethodHandlerDictionary handlers)
@@ -33,6 +36,7 @@ namespace BTCPayServer.Payments.Bitcoin
             PaymentMethodId = paymentMethodId;
             _handlers = handlers;
             _Network = network;
+            StringLocalizer = stringLocalizer;
             _displayFormatter = displayFormatter;
             paymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
             var lnPmi = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
@@ -41,7 +45,7 @@ namespace BTCPayServer.Payments.Bitcoin
             lnurlPaymentLinkExtension = paymentLinkExtensions.SingleOrDefault(p => p.PaymentMethodId == lnurlPmi);
             _bech32Prefix = network.NBitcoinNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, false) is { } enc ? Encoders.ASCII.EncodeData(enc.HumanReadablePart) : null;
         }
-        public string DisplayName => _Network.DisplayName;
+        public string DisplayName => StringLocalizer[_Network.DisplayName];
         public string Image => _Network.CryptoImagePath;
         public string Badge => "";
         public PaymentMethodId PaymentMethodId { get; }

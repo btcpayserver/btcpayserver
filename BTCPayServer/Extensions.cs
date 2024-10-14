@@ -29,6 +29,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.Wallets;
@@ -291,7 +292,17 @@ namespace BTCPayServer
             }
         }
 
-
+#nullable enable
+        public static IServiceCollection AddDefaultTransactions(this IServiceCollection services, params string[] keyValues)
+        {
+            return services.AddDefaultTransactions(keyValues.Select(k => KeyValuePair.Create<string, string?>(k, string.Empty)).ToArray());
+        }
+        public static IServiceCollection AddDefaultTransactions(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
+        {
+            services.AddSingleton<IDefaultTransactionProvider>(new InMemoryDefaultTransactionProvider(keyValues));
+            return services;
+        }
+#nullable restore
         public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
         {
 #pragma warning disable CS0618 // Type or member is obsolete

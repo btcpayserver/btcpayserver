@@ -631,6 +631,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentLinkExtension), new object[] { network, pmi }));
                 services.AddSingleton<ICheckoutModelExtension>(provider =>
     (BitcoinCheckoutModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinCheckoutModelExtension), new object[] { network, pmi }));
+                services.AddDefaultTransactions(network.DisplayName);
                 services.AddSingleton<IPaymentMethodBitpayAPIExtension>(provider =>
 (IPaymentMethodBitpayAPIExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodBitpayAPIExtension), new object[] { pmi }));
 

@@ -9,8 +9,8 @@
 @using BTCPayServer.Client
 @model StoreDashboardViewModel
 @{
-	BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
-	ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
+    BTCPayServer.Plugins.PluginExceptionHandler.SetDisablePluginIfCrash(Context);
+    ViewData.SetActivePage(StoreNavPages.Dashboard, Model.StoreName, Model.StoreId);
     var store = ViewContext.HttpContext.GetStoreData();
 }
 
@@ -50,61 +50,61 @@
         };
     </script>
     <div id="Dashboard" class="mt-4">
-        <vc:ui-extension-point location="dashboard" model="@Model"/>
+        <vc:ui-extension-point location="dashboard" model="@Model" />
         @if (Model.WalletEnabled)
         {
-            <vc:store-wallet-balance store="@store"/>
+            <vc:store-wallet-balance store="@store" />
         }
         else
         {
             <div class="widget setup-guide">
                 <header>
-                    <h5 class="mb-4 text-muted">This store is ready to accept transactions, good job!</h5>
+                    <h5 class="mb-4 text-muted" text-translate="true">This store is ready to accept transactions, good job!</h5>
                 </header>
                 <div class="list-group" id="SetupGuide">
                     <div class="list-group-item d-flex align-items-center" id="SetupGuide-LightningDone">
-                        <vc:icon symbol="done"/>
+                        <vc:icon symbol="done" />
                         <div class="content">
-                            <h5 class="mb-0 text-success">Set up a Lightning node</h5>
+                            <h5 class="mb-0 text-success" text-translate="true">Set up a Lightning node</h5>
                         </div>
                     </div>
                     <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center">
-                        <vc:icon symbol="wallet-new"/>
+                        <vc:icon symbol="wallet-new" />
                         <div class="content">
-                            <h5 class="mb-0">Set up a wallet</h5>
+                            <h5 class="mb-0" text-translate="true">Set up a wallet</h5>
                         </div>
-                        <vc:icon symbol="caret-right"/>
+                        <vc:icon symbol="caret-right" />
                     </a>
                 </div>
             </div>
         }
-        <vc:store-numbers vm="@(new StoreNumbersViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
+        <vc:store-numbers vm="@(new StoreNumbersViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
         @if (Model.LightningEnabled)
         {
-            <vc:store-lightning-balance vm="@(new StoreLightningBalanceViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
-            <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel { Store = store, CryptoCode = Model.CryptoCode })" permission="@Policies.CanModifyServerSettings"/>
+            <vc:store-lightning-balance vm="@(new StoreLightningBalanceViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
+            <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel { Store = store, CryptoCode = Model.CryptoCode })" permission="@Policies.CanModifyServerSettings" />
         }
         @if (Model.WalletEnabled)
         {
-            <vc:store-recent-transactions vm="@(new StoreRecentTransactionsViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
+            <vc:store-recent-transactions vm="@(new StoreRecentTransactionsViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
         }
-        <vc:store-recent-invoices vm="@(new StoreRecentInvoicesViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })"/>
+        <vc:store-recent-invoices vm="@(new StoreRecentInvoicesViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
         @foreach (var app in Model.Apps)
         {
-		  <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
-		  <vc:app-top-items app-id="@app.Id" app-type="@app.AppType" />
+            <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />
+            <vc:app-top-items app-id="@app.Id" app-type="@app.AppType" />
         }
     </div>
 }
 else
 {
-    <p class="lead text-secondary mt-2">To start accepting payments, set up a wallet or a Lightning node.</p>
-    
+    <p class="lead text-secondary mt-2" text-translate="true">To start accepting payments, set up a wallet or a Lightning node.</p>
+
     <div class="list-group" id="SetupGuide">
         <div class="list-group-item d-flex align-items-center" id="SetupGuide-StoreDone">
-            <vc:icon symbol="done"/>
+            <vc:icon symbol="done" />
             <div class="content">
-                <h5 class="mb-0 text-success">Create your store</h5>
+                <h5 class="mb-0 text-success" text-translate="true">Create your store</h5>
             </div>
         </div>
         @if (Model.Network is BTCPayNetwork)
@@ -113,40 +113,41 @@ else
             @if (!Model.WalletEnabled)
             {
                 <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
-                    <vc:icon symbol="wallet-new"/>
+                    <vc:icon symbol="wallet-new" />
                     <div class="content">
-                        <h5 class="mb-0">Set up a wallet</h5>
+                        <h5 class="mb-0" text-translate="true">Set up a wallet</h5>
                     </div>
-                    <vc:icon symbol="caret-right"/>
+                    <vc:icon symbol="caret-right" />
                 </a>
             }
             else
             {
                 <div class="list-group-item d-flex align-items-center" id="SetupGuide-WalletDone">
-                    <vc:icon symbol="done"/>
+                    <vc:icon symbol="done" />
                     <div class="content">
-                        <h5 class="mb-0 text-success">Set up a wallet</h5>
+                        <h5 class="mb-0 text-success" text-translate="true">Set up a wallet</h5>
                     </div>
                 </div>
             }
         }
-        @if (Model.LightningSupported) {
+        @if (Model.LightningSupported)
+        {
             if (!Model.LightningEnabled)
             {
                 <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Lightning" class="list-group-item list-group-item-action d-flex align-items-center order-1">
-                    <vc:icon symbol="wallet-new"/>
+                    <vc:icon symbol="wallet-new" />
                     <div class="content">
-                        <h5 class="mb-0">Set up a Lightning node</h5>
+                        <h5 class="mb-0" text-translate="true">Set up a Lightning node</h5>
                     </div>
-                    <vc:icon symbol="caret-right"/>
+                    <vc:icon symbol="caret-right" />
                 </a>
             }
             else
             {
                 <div class="list-group-item d-flex align-items-center" id="SetupGuide-LightningDone">
-                    <vc:icon symbol="done"/>
+                    <vc:icon symbol="done" />
                     <div class="content">
-                        <h5 class="mb-0 text-success">Set up a Lightning node</h5>
+                        <h5 class="mb-0 text-success" text-translate="true">Set up a Lightning node</h5>
                     </div>
                 </div>
             }

@@ -58,6 +58,7 @@ public partial class UIStoresController : Controller
         DefaultRulesCollection defaultRules,
         EmailSenderFactory emailSenderFactory,
         WalletFileParsers onChainWalletParsers,
+        UIUserStoresController userStoresController,
         UriResolver uriResolver,
         SettingsRepository settingsRepository,
         CurrencyNameTable currencyNameTable,
@@ -82,6 +83,7 @@ public partial class UIStoresController : Controller
         _externalServiceOptions = externalServiceOptions;
         _emailSenderFactory = emailSenderFactory;
         _onChainWalletParsers = onChainWalletParsers;
+        _userStoresController = userStoresController;
         _uriResolver = uriResolver;
         _settingsRepository = settingsRepository;
         _currencyNameTable = currencyNameTable;
@@ -115,6 +117,7 @@ public partial class UIStoresController : Controller
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly WalletFileParsers _onChainWalletParsers;
+    private readonly UIUserStoresController _userStoresController;
     private readonly UriResolver _uriResolver;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;

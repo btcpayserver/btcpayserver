@@ -4,17 +4,17 @@
 
 <div class="widget store-recent-transactions" id="StoreRecentTransactions-@Model.Store.Id">
     <header>
-        <h3>Recent Transactions</h3>
+        <h3 text-translate="true">Recent Transactions</h3>
         @if (Model.Transactions.Any())
         {
-            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId">View All</a>
+            <a asp-controller="UIWallets" asp-action="WalletTransactions" asp-route-walletId="@Model.WalletId" text-translate="true">View All</a>
         }
     </header>
     @if (Model.InitialRendering)
     {
         <div class="loading d-flex justify-content-center p-3">
             <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <span class="visually-hidden" text-translate="true">Loading...</span>
             </div>
         </div>
         <script>
@@ -34,10 +34,10 @@
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
-                    <th class="w-125px">Date</th>
-                    <th>Transaction</th>
-                    <th>Labels</th>
-                    <th class="text-end">Amount</th>
+                    <th class="w-125px" text-translate="true">Date</th>
+                    <th text-translate="true">Transaction</th>
+                    <th text-translate="true">Labels</th>
+                    <th class="text-end" text-translate="true">Amount</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -90,7 +90,7 @@
     }
     else
     {
-        <p class="text-secondary mt-3 mb-0">
+        <p class="text-secondary mt-3 mb-0" text-translate="true">
             There are no recent transactions.
         </p>
     }

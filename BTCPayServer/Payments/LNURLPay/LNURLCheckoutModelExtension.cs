@@ -23,7 +23,6 @@ namespace BTCPayServer.Payments.LNURLPay
             paymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
             handler = (LNURLPayPaymentHandler)handlers[PaymentMethodId];
             var isBTC = PaymentTypes.LNURL.GetPaymentMethodId("BTC") == paymentMethodId;
-            DisplayName = isBTC ? "Lightning (via LNURL)" : $"Lightning ({network.DisplayName} via LNURL)";
         }
         public PaymentMethodId PaymentMethodId { get; }
 
@@ -32,7 +31,6 @@ namespace BTCPayServer.Payments.LNURLPay
         private readonly IPaymentLinkExtension paymentLinkExtension;
         private readonly LNURLPayPaymentHandler handler;
 
-        public string DisplayName { get; }
         public string Image => _network.LightningImagePath;
         public string Badge => "⚡";
 

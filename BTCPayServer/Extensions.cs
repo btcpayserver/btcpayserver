@@ -297,6 +297,10 @@ namespace BTCPayServer
         {
             return services.AddDefaultTransactions(keyValues.Select(k => KeyValuePair.Create<string, string?>(k, string.Empty)).ToArray());
         }
+        public static IServiceCollection AddDefaultPrettyName(this IServiceCollection services, PaymentMethodId paymentMethodId, string defaultPrettyName)
+        {
+            return services.AddDefaultTransactions(KeyValuePair.Create<string, string?>(PrettyNameProvider.GetTranslationKey(paymentMethodId), defaultPrettyName));
+        }
         public static IServiceCollection AddDefaultTransactions(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
         {
             services.AddSingleton<IDefaultTransactionProvider>(new InMemoryDefaultTransactionProvider(keyValues));

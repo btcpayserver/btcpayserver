@@ -19,16 +19,35 @@ using static BTCPayServer.Services.LocalizerService;
 
 namespace BTCPayServer.Services
 {
+    public interface IDefaultTransactionProvider
+    {
+        Task<KeyValuePair<string, string?>[]> GetDefaultTransaction();
+    }
+    public class InMemoryDefaultTransactionProvider : IDefaultTransactionProvider
+    {
+        private readonly KeyValuePair<string, string?>[] _values;
+
+        public InMemoryDefaultTransactionProvider(KeyValuePair<string, string?>[] values)
+        {
+            _values = values;
+        }
+        public Task<KeyValuePair<string, string?>[]> GetDefaultTransaction()
+        {
+            return Task.FromResult(_values);
+        }
+    }
     public class LocalizerService
     {
         public LocalizerService(
             ILogger<LocalizerService> logger,
             ApplicationDbContextFactory contextFactory,
-            ISettingsAccessor<PoliciesSettings> settingsAccessor)
+            ISettingsAccessor<PoliciesSettings> settingsAccessor,
+            IEnumerable<IDefaultTransactionProvider> defaultTransactionProviders)
         {
             _logger = logger;
             _ContextFactory = contextFactory;
             _settingsAccessor = settingsAccessor;
+            _defaultTransactionProviders = defaultTransactionProviders;
             _LoadedTranslations = new LoadedTranslations(Translations.Default, Translations.Default, Translations.DefaultLanguage);
         }
 
@@ -39,6 +58,7 @@ namespace BTCPayServer.Services
         private readonly ILogger<LocalizerService> _logger;
         private readonly ApplicationDbContextFactory _ContextFactory;
         private readonly ISettingsAccessor<PoliciesSettings> _settingsAccessor;
+        private readonly IEnumerable<IDefaultTransactionProvider> _defaultTransactionProviders;
 
         /// <summary>
         /// Load the translation of the server into memory
@@ -69,7 +89,18 @@ namespace BTCPayServer.Services
             {
                 dict_id = dictionaryName,
             });
-            var fallback = new Translations(all.Where(a => a.fallback).Select(o => KeyValuePair.Create(o.sentence, o.translation)), Translations.Default);
+            var defaultDict = Translations.Default;
+            var loading = _defaultTransactionProviders.Select(d => d.GetDefaultTransaction()).ToArray();
+            Dictionary<string, string?> additionalDefault = new();
+            foreach (var defaultProvider in loading)
+            {
+                foreach (var kv in await defaultProvider)
+                {
+                    additionalDefault.TryAdd(kv.Key, string.IsNullOrEmpty(kv.Value) ? kv.Key : kv.Value);
+                }
+            }
+            defaultDict = new Translations(additionalDefault, defaultDict);
+            var fallback = new Translations(all.Where(a => a.fallback).Select(o => KeyValuePair.Create(o.sentence, o.translation)), defaultDict);
             var translations = new Translations(all.Where(a => !a.fallback).Select(o => KeyValuePair.Create(o.sentence, o.translation)), fallback);
             return new LoadedTranslations(translations, fallback, dictionaryName);
         }

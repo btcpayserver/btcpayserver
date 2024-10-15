@@ -58,8 +58,10 @@ public partial class UIStoresController : Controller
         DefaultRulesCollection defaultRules,
         EmailSenderFactory emailSenderFactory,
         WalletFileParsers onChainWalletParsers,
+        UIUserStoresController userStoresController,
         UriResolver uriResolver,
         SettingsRepository settingsRepository,
+        CurrencyNameTable currencyNameTable,
         EventAggregator eventAggregator)
     {
         _rateFactory = rateFactory;
@@ -81,8 +83,10 @@ public partial class UIStoresController : Controller
         _externalServiceOptions = externalServiceOptions;
         _emailSenderFactory = emailSenderFactory;
         _onChainWalletParsers = onChainWalletParsers;
+        _userStoresController = userStoresController;
         _uriResolver = uriResolver;
         _settingsRepository = settingsRepository;
+        _currencyNameTable = currencyNameTable;
         _eventAggregator = eventAggregator;
         _html = html;
         _defaultRules = defaultRules;
@@ -101,6 +105,7 @@ public partial class UIStoresController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RateFetcher _rateFactory;
     private readonly SettingsRepository _settingsRepository;
+    private readonly CurrencyNameTable _currencyNameTable;
     private readonly ExplorerClientProvider _explorerProvider;
     private readonly LanguageService _langService;
     private readonly PaymentMethodHandlerDictionary _handlers;
@@ -112,6 +117,7 @@ public partial class UIStoresController : Controller
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly WalletFileParsers _onChainWalletParsers;
+    private readonly UIUserStoresController _userStoresController;
     private readonly UriResolver _uriResolver;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;

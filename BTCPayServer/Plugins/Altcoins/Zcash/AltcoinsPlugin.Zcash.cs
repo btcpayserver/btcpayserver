@@ -43,8 +43,6 @@ public partial class AltcoinsPlugin
         var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("ZEC");
         services.AddBTCPayNetwork(network)
                 .AddTransactionLinkProvider(pmi, new SimpleTransactionLinkProvider(blockExplorerLink));
-        services.AddSingleton<IPaymentMethodViewExtension>(provider =>
-(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodViewExtension), new object[] { pmi }));
 
 
         services.AddSingleton(provider =>
@@ -58,13 +56,13 @@ public partial class AltcoinsPlugin
         (IPaymentMethodHandler)ActivatorUtilities.CreateInstance(provider, typeof(ZcashLikePaymentMethodHandler), new object[] { network }));
         services.AddSingleton<IPaymentLinkExtension>(provider =>
 (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(ZcashPaymentLinkExtension), new object[] { network, pmi }));
-        services.AddSingleton<IPaymentModelExtension>(provider =>
-(IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(ZcashPaymentModelExtension), new object[] { network, pmi }));
+        services.AddSingleton<ICheckoutModelExtension>(provider =>
+(ICheckoutModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(ZcashCheckoutModelExtension), new object[] { network, pmi }));
 
         services.AddSingleton<ZcashLikePaymentMethodHandler>();
         services.AddSingleton<IPaymentMethodHandler>(provider => provider.GetRequiredService<ZcashLikePaymentMethodHandler>());
-        services.AddSingleton<IUIExtension>(new UIExtension("Zcash/StoreNavZcashExtension", "store-nav"));
-        services.AddSingleton<IUIExtension>(new UIExtension("Zcash/ViewZcashLikePaymentData", "store-invoices-payments"));
+        services.AddUIExtension("store-nav", "Zcash/StoreNavZcashExtension");
+        services.AddUIExtension("store-invoices-payments", "Zcash/ViewZcashLikePaymentData");
         services.AddSingleton<ISyncSummaryProvider, ZcashSyncSummaryProvider>();
 
     }

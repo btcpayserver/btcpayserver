@@ -2487,7 +2487,16 @@ namespace BTCPayServer.Tests
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
             var response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
-            await TestUtils.EventuallyAsync(async () =>
+            // Oops!
+            Assert.Equal("The request has been approved. The sender needs to send the payment manually. (Or activate the lightning automated payment processor)", response.Reason);
+			var account = await s.AsTestAccount().CreateClient();
+			await account.UpdateStoreLightningAutomatedPayoutProcessors(s.StoreId, "BTC-LN", new()
+			{
+				ProcessNewPayoutsInstantly = true,
+				IntervalSeconds = TimeSpan.FromSeconds(60)
+			});
+			// Now it should process to complete
+			await TestUtils.EventuallyAsync(async () =>
             {
                 s.Driver.Navigate().Refresh();
                 Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
@@ -2577,7 +2586,9 @@ namespace BTCPayServer.Tests
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
             response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
-            TestUtils.Eventually(() =>
+			// Nope, you need to approve the claim automatically
+			Assert.Equal("The request has been recorded, but still need to be approved before execution.", response.Reason);
+			TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
                 Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
@@ -3264,6 +3275,7 @@ namespace BTCPayServer.Tests
         public async Task CanUseLNAddress()
         {
             using var s = CreateSeleniumTester();
+            s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -3416,7 +3428,13 @@ namespace BTCPayServer.Tests
                 var succ = JsonConvert.DeserializeObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>(str);
                 Assert.NotNull(succ.Pr);
                 Assert.Equal(new LightMoney(2001), BOLT11PaymentRequest.Parse(succ.Pr, Network.RegTest).MinimumAmount);
+                await s.Server.CustomerLightningD.Pay(succ.Pr);
             }
+
+            // Can we find our comment and address in the payment list?
+            s.GoToInvoices();
+            var source = s.Driver.PageSource;
+            Assert.Contains(lnUsername, source);
         }
 
         [Fact]

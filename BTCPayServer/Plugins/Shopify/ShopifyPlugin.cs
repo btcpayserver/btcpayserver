@@ -16,7 +16,7 @@ namespace BTCPayServer.Plugins.Shopify
         {
             applicationBuilder.AddSingleton<ShopifyService>();
             applicationBuilder.AddSingleton<IHostedService, ShopifyService>(provider => provider.GetRequiredService<ShopifyService>());
-            applicationBuilder.AddSingleton<IUIExtension>(new UIExtension("Shopify/NavExtension", "header-nav"));
+            applicationBuilder.AddUIExtension("header-nav", "Shopify/NavExtension");
             base.Execute(applicationBuilder);
         }
     }

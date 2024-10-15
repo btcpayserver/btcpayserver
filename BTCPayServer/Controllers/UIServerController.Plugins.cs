@@ -18,12 +18,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/plugins")]
         public async Task<IActionResult> ListPlugins(
             [FromServices] PluginService pluginService,
-            [FromServices] BTCPayServerOptions btcPayServerOptions)
+            [FromServices] BTCPayServerOptions btcPayServerOptions,
+            string search = null)
         {
             IEnumerable<PluginService.AvailablePlugin> availablePlugins;
             try
             {
-                availablePlugins = await pluginService.GetRemotePlugins();
+                availablePlugins = await pluginService.GetRemotePlugins(search);
             }
             catch (Exception)
             {
@@ -57,6 +58,16 @@ namespace BTCPayServer.Controllers
             public bool CanShowRestart { get; set; }
             public Dictionary<string, Version> Disabled { get; set; }
             public Dictionary<string, AvailablePlugin> DownloadedPluginsByIdentifier { get; set; } = new Dictionary<string, AvailablePlugin>();
+        }
+
+        [HttpPost("server/plugins/uninstall-all")]
+        public IActionResult UnInstallAllDisabledPlugin(
+            [FromServices] PluginService pluginService, string plugin)
+        {
+            var disabled = pluginService.GetDisabledPlugins();
+            foreach (var d in disabled)
+                pluginService.UninstallPlugin(d.Key);
+            return RedirectToAction(nameof(ListPlugins));
         }
 
         [HttpPost("server/plugins/uninstall")]

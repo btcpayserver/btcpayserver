@@ -183,15 +183,17 @@ retry:
             Driver.AssertNoError();
             CreatedUser = usr;
             Password = "123456";
+            IsAdmin = isAdmin;
             return usr;
         }
         string CreatedUser;
 
         public string Password { get; private set; }
+        public bool IsAdmin { get; private set; }
 
         public TestAccount AsTestAccount()
         {
-            return new TestAccount(Server) { RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser } };
+            return new TestAccount(Server) { StoreId = StoreId, Email = CreatedUser, Password = Password, RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser }, IsAdmin = IsAdmin };
         }
 
         public (string storeName, string storeId) CreateNewStore(bool keepId = true)

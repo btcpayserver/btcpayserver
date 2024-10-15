@@ -68,10 +68,25 @@
     </div>
 </div>
 
+@if (Model.Commands.Any())
+{
+	<div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+		You need to restart BTCPay Server in order to update your active plugins.
+		@if (Model.CanShowRestart)
+		{
+			<form method="post" asp-action="Maintenance" class="mt-2">
+				<button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
+			</form>
+		}
+	</div>
+}
 @if (Model.Disabled.Any())
 {
     <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
         Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
+		<form asp-action="UnInstallAllDisabledPlugin" class="mt-2">
+			<button type="submit" name="command" value="soft-restart" class="btn btn-danger">Uninstall all disabled plugins</button>
+		</form>
     </div>
     <div class="mb-5">
         <h3 class="mb-4">Disabled Plugins</h3>
@@ -87,26 +102,23 @@
                                 <span>(@version)</span>
                             }
                         </span>
-                        <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
-                        </form>
+						@{
+							var uninstalled = Model.Commands.Any(c => c.plugin == plugin && c.command == "delete");
+						}
+						<form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
+							@if (uninstalled)
+							{
+								<button type="submit" class="btn btn-sm btn-outline-danger" disabled>Marked for deletion</button>
+							}
+							else
+							{
+								<button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
+							}
+						</form>
                     </div>
                 </li>
             }
         </ul>
-    </div>
-}
-
-@if (Model.Commands.Any())
-{
-    <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
-        You need to restart BTCPay Server in order to update your active plugins.
-        @if (Model.CanShowRestart)
-        {
-            <form method="post" asp-action="Maintenance" class="mt-2">
-                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
-            </form>
-        }
     </div>
 }
 
@@ -296,7 +308,45 @@
     </div>
 }
 
-@if (availableAndNotInstalled.Any())
+<form method="get" asp-action="ListPlugins" class="row mb-4" id="searchForm">
+    <div class="col-12 col-lg-6">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="Search for plugins..."
+                   value="@ViewContext.HttpContext.Request.Query["search"]" />
+            <button type="submit" class="btn btn-primary">
+                <vc:icon symbol="actions-search" />
+            </button>
+        </div>
+    </div>
+</form>
+<script>
+    // if we search using form, scroll to it
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchForm = document.getElementById('searchForm');
+
+        // Set session storage flag on form submit
+        searchForm.addEventListener('submit', function() {
+            sessionStorage.setItem('formSubmitted', 'true');
+        });
+
+        // Check session storage to see if form was submitted, and scroll + clear it
+        if (sessionStorage.getItem('formSubmitted') === 'true') {
+            sessionStorage.removeItem('formSubmitted');
+            if (searchForm) {
+                searchForm.scrollIntoView();
+            }
+        }
+    });
+
+</script>
+
+@if (!availableAndNotInstalled.Any())
+{
+    <div class="row mb-4">
+        <div class="col mb-4" style="margin-left:10px;">No plugins found</div>
+    </div>
+}
+else 
 {
     <h3 class="mb-4">Available Plugins</h3>
     <div class="row mb-4">

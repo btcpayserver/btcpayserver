@@ -24,7 +24,7 @@
     {
         <div class="store-number">
             <header>
-                <h6>Paid invoices in the last @Model.TimeframeDays days</h6>
+                <h6 text-translate="true">@ViewLocalizer["Paid invoices in the last {0} days", @Model.TimeframeDays]</h6>
                 @if (Model.PaidInvoices > 0)
                 {
                     <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id"  permission="@Policies.CanViewInvoices">View All</a>
@@ -34,14 +34,14 @@
         </div>
         <div class="store-number">
             <header>
-                <h6>Payouts Pending</h6>
-                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" permission="@Policies.CanManagePullPayments">Manage</a>
+                <h6 text-translate="true">Payouts Pending</h6>
+                <a asp-controller="UIStorePullPayments" asp-action="Payouts" asp-route-storeId="@Model.Store.Id" permission="@Policies.CanManagePullPayments" text-translate="true">Manage</a>
             </header>
             <div class="h3">@Model.PayoutsPending</div>
         </div>
         <div class="store-number">
             <header>
-                <h6>Refunds Issued</h6>
+                <h6 text-translate="true">Refunds Issued</h6>
             </header>
             <div class="h3">@Model.RefundsIssued</div>
         </div>

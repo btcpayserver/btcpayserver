@@ -1,6 +1,6 @@
 @using BTCPayServer.Payments
 @model BTCPayServer.Components.InvoiceStatus.InvoiceStatusViewModel
-@inject Dictionary<PaymentMethodId, IPaymentModelExtension> Extensions
+@inject Dictionary<PaymentMethodId, ICheckoutModelExtension> Extensions
 
 @{
     var state = Model.State.ToString();

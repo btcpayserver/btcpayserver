@@ -1,6 +1,6 @@
 @model BTCPayServer.Models.NotificationViewModels.NotificationIndexViewModel
 @{
-    ViewData["Title"] = "Notifications";
+    ViewData["Title"] = ViewLocalizer["Notifications"];
     string status = ViewBag.Status;
     var statusFilterCount = CountArrayFilter("type");
     var storesFilterCount = CountArrayFilter("storeid");

@@ -1,7 +1,6 @@
-@model PaymentModel
+@model CheckoutModel
 @{
     Layout = null;
-    var displayedPaymentMethods = Model.AvailableCryptos.Where(a => a.Displayed).ToList();
 }
 <!DOCTYPE html>
 <html>
@@ -17,36 +16,7 @@
     <h1>Pay with @Model.StoreName</h1>
     @if (Model.Status == "new")
     {
-        if (!string.IsNullOrEmpty(Model.UISettings?.NoScriptPartialName))
-        {
-            <partial model="@Model" name="@Model.UISettings.NoScriptPartialName"/>
-        }
-        else
-        {
-            <h1 class="text-danger">This payment method requires javascript.</h1>
-        }
-        @if (displayedPaymentMethods.Count > 1)
-        {
-            <div>
-                <hr />
-                <h2>Pay with:</h2>
-                <ul style="list-style-type: none;padding-left: 5px;">
-                    @foreach (var crypto in displayedPaymentMethods)
-                    {
-                        <li style="height: 32px; line-height: 32px;">
-                            <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId">
-                                <img alt="@crypto.PaymentMethodName" src="@crypto.CryptoImage" style="vertical-align:middle; height:24px; text-decoration:none; margin-top: -3px;" asp-append-version="true" />
-                            </a>
-                            <a asp-action="CheckoutNoScript" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId" style="padding-top: 2px;">
-                                @crypto.PaymentMethodName
-                                @(crypto.IsLightning ? Html.Raw("&#9889;") : null)
-                                (@crypto.CryptoCode)
-                            </a>
-                        </li>
-                    }
-                </ul>
-            </div>
-        }
+		<h1 class="text-danger">This payment method requires javascript.</h1>
     }
     else if (Model.Status == "paid" || Model.Status == "complete" || Model.Status == "confirmed")
     {

@@ -176,7 +176,7 @@ public partial class UIStoresController
         vm.AvailableExchanges = sources;
         var exchange = storeBlob.GetPreferredExchange(_defaultRules);
         var chosenSource = sources.First(r => r.Id == exchange);
-        vm.Exchanges = UIUserStoresController.GetExchangesSelectList(_rateFactory, _defaultRules, storeBlob);
+        vm.Exchanges = _userStoresController.GetExchangesSelectList(storeBlob);
         vm.PreferredExchange = vm.Exchanges.SelectedValue as string;
         vm.PreferredResolvedExchange = chosenSource.Id;
         vm.RateSource = chosenSource.Url;

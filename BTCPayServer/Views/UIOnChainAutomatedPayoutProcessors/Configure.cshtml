@@ -24,14 +24,14 @@
     <partial name="_StatusMessage" />
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <p>Set a schedule for automated On-Chain Bitcoin Payouts. </p>
+            <p>Set a schedule for automated On-Chain Bitcoin Payouts.</p>
             @if (!ViewContext.ModelState.IsValid)
             {
                 <div asp-validation-summary="All"></div>
             }
             <div class="d-flex my-3">
                 <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="btcpay-toggle me-3" />
-                <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label">Process approved payouts instantly</label>
+                <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label"></label>
                 <span asp-validation-for="ProcessNewPayoutsInstantly" class="text-danger"></span>
             </div>
             <div class="form-group">

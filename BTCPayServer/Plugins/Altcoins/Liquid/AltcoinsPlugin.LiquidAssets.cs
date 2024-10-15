@@ -2,6 +2,7 @@ using System.Threading;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
@@ -32,7 +33,15 @@ public partial class AltcoinsPlugin
             SupportLightning = false
         }.SetDefaultElectrumMapping(ChainName);
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+        services.AddCurrencyData(new CurrencyData()
+        {
+            Code = "USDt",
+            Name = "USDt",
+            Divisibility = 8,
+            Symbol = null,
+            Crypto = true
+        });
         selectedChains.Add("LBTC");
     }
 
@@ -61,7 +70,7 @@ public partial class AltcoinsPlugin
         }.SetDefaultElectrumMapping(ChainName);
 
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
         selectedChains.Add("LBTC");
     }
 
@@ -90,7 +99,7 @@ public partial class AltcoinsPlugin
             SupportLightning = false
         }.SetDefaultElectrumMapping(ChainName);
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
         selectedChains.Add("LBTC");
     }
 

@@ -211,12 +211,67 @@ namespace BTCPayServer.Hosting
                     settings.MigrateToStoreConfig = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateBlockExplorerLinks)
+                {
+                    await MigrateBlockExplorerLinks();
+                    settings.MigrateBlockExplorerLinks = true;
+                    await _Settings.UpdateSetting(settings);
+                }
+                if (!settings.MigrateStoreExcludedPaymentMethods)
+                {
+                    await MigrateStoreExcludedPaymentMethods();
+                    settings.MigrateStoreExcludedPaymentMethods = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateStoreExcludedPaymentMethods()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var stores = await ctx.Stores.ToArrayAsync();
+            foreach (var store in stores)
+            {
+                if (store.StoreBlob is null)
+                    continue;
+                var blob = JObject.Parse(store.StoreBlob);
+                var array = blob["excludedPaymentMethods"] as JArray;
+                if (array is null || array.Count == 0)
+                    continue;
+                var newArray = new JArray(array.Select(a => MigrationExtensions.TryMigratePaymentMethodId(a.Value<string>())).ToArray());
+                if (array.ToString() == newArray.ToString())
+                    continue;
+                blob["excludedPaymentMethods"] = newArray;
+                store.StoreBlob = blob.ToString();
+            }
+            await ctx.SaveChangesAsync();
+        }
+
+        private async Task MigrateBlockExplorerLinks()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var settings = await ctx.Settings.Where(s => s.Id == "BTCPayServer.Services.PoliciesSettings").FirstOrDefaultAsync();
+            if (settings is null)
+                return;
+            var obj = JObject.Parse(settings.Value);
+            var arr = obj["BlockExplorerLinks"] as JArray;
+            if (arr is null or { Count: 0 })
+                return;
+            foreach (var item in arr.OfType<JObject>())
+            {
+                var cryptoCode = item["CryptoCode"]?.Value<string>();
+                if (cryptoCode is null)
+                    continue;
+                item.Remove("CryptoCode");
+                item["PaymentMethodId"] = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode).ToString();
+            }
+            settings.Value = obj.ToString();
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateToStoreConfig()
@@ -315,33 +370,33 @@ namespace BTCPayServer.Hosting
         private async Task MigrateAppYmlToJson()
         {
             await using var ctx = _DBContextFactory.CreateContext();
-            var apps = await ctx.Apps.Where(data => CrowdfundAppType.AppType == data.AppType || PointOfSaleAppType.AppType  == data.AppType)
+            var apps = await ctx.Apps.Where(data => CrowdfundAppType.AppType == data.AppType || PointOfSaleAppType.AppType == data.AppType)
                 .ToListAsync();
-            foreach (var app  in apps)
+            foreach (var app in apps)
             {
                 switch (app.AppType)
                 {
-                   case CrowdfundAppType.AppType :
-                       var cfSettings = app.GetSettings<CrowdfundSettings>();
-                       if (!string.IsNullOrEmpty(cfSettings?.PerksTemplate))
-                       {
-                           cfSettings.PerksTemplate = AppService.SerializeTemplate(ParsePOSYML(cfSettings?.PerksTemplate));
-                           app.SetSettings(cfSettings);
-                       }
-                       break;
-                   case PointOfSaleAppType.AppType:
-                       var pSettings = app.GetSettings<PointOfSaleSettings>();
-                       if (!string.IsNullOrEmpty(pSettings?.Template))
-                       {
-                           pSettings.Template = AppService.SerializeTemplate(ParsePOSYML(pSettings?.Template));
-                           app.SetSettings(pSettings);
-                       }
-                       break;
+                    case CrowdfundAppType.AppType:
+                        var cfSettings = app.GetSettings<CrowdfundSettings>();
+                        if (!string.IsNullOrEmpty(cfSettings?.PerksTemplate))
+                        {
+                            cfSettings.PerksTemplate = AppService.SerializeTemplate(ParsePOSYML(cfSettings?.PerksTemplate));
+                            app.SetSettings(cfSettings);
+                        }
+                        break;
+                    case PointOfSaleAppType.AppType:
+                        var pSettings = app.GetSettings<PointOfSaleSettings>();
+                        if (!string.IsNullOrEmpty(pSettings?.Template))
+                        {
+                            pSettings.Template = AppService.SerializeTemplate(ParsePOSYML(pSettings?.Template));
+                            app.SetSettings(pSettings);
+                        }
+                        break;
                 }
             }
 
             await ctx.SaveChangesAsync();
-            
+
         }
         public static ViewPointOfSaleViewModel.Item[] ParsePOSYML(string yaml)
         {
@@ -349,10 +404,10 @@ namespace BTCPayServer.Hosting
             var stream = new YamlStream();
             if (string.IsNullOrEmpty(yaml))
                 return items.ToArray();
-            
+
             stream.Load(new StringReader(yaml));
 
-            if(stream.Documents.FirstOrDefault()?.RootNode is not YamlMappingNode root)
+            if (stream.Documents.FirstOrDefault()?.RootNode is not YamlMappingNode root)
                 return items.ToArray();
             foreach (var posItem in root.Children)
             {
@@ -364,12 +419,14 @@ namespace BTCPayServer.Hosting
 
                 var currentItem = new ViewPointOfSaleViewModel.Item
                 {
-                    Id = trimmedKey, Title = trimmedKey, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed
+                    Id = trimmedKey,
+                    Title = trimmedKey,
+                    PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed
                 };
                 var itemSpecs = (YamlMappingNode)posItem.Value;
                 foreach (var spec in itemSpecs)
                 {
-                    if (spec.Key is not YamlScalarNode {Value: string keyString} || string.IsNullOrEmpty(keyString))
+                    if (spec.Key is not YamlScalarNode { Value: string keyString } || string.IsNullOrEmpty(keyString))
                         continue;
                     var scalarValue = spec.Value as YamlScalarNode;
                     switch (keyString)

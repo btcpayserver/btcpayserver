@@ -41,9 +41,7 @@ public partial class AltcoinsPlugin
                     : "https://testnet.xmrchain.net/tx/{0}";
         var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("XMR");
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(network.CryptoCode, new SimpleTransactionLinkProvider(blockExplorerLink));
-        services.AddSingleton<IPaymentMethodViewExtension>(provider =>
-(IPaymentMethodViewExtension)ActivatorUtilities.CreateInstance(provider, typeof(BitcoinPaymentMethodViewExtension), new object[] { pmi }));
+                .AddTransactionLinkProvider(pmi, new SimpleTransactionLinkProvider(blockExplorerLink));
 
 
         services.AddSingleton(provider =>
@@ -69,12 +67,12 @@ public partial class AltcoinsPlugin
                 (IPaymentMethodHandler)ActivatorUtilities.CreateInstance(provider, typeof(MoneroLikePaymentMethodHandler), new object[] { network }));
         services.AddSingleton<IPaymentLinkExtension>(provider =>
 (IPaymentLinkExtension)ActivatorUtilities.CreateInstance(provider, typeof(MoneroPaymentLinkExtension), new object[] { network, pmi }));
-        services.AddSingleton<IPaymentModelExtension>(provider =>
-(IPaymentModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(MoneroPaymentModelExtension), new object[] { network, pmi }));
+        services.AddSingleton<ICheckoutModelExtension>(provider =>
+(ICheckoutModelExtension)ActivatorUtilities.CreateInstance(provider, typeof(MoneroCheckoutModelExtension), new object[] { network, pmi }));
 
-        services.AddSingleton<IUIExtension>(new UIExtension("Monero/StoreNavMoneroExtension", "store-nav"));
-        services.AddSingleton<IUIExtension>(new UIExtension("Monero/StoreWalletsNavMoneroExtension", "store-wallets-nav"));
-        services.AddSingleton<IUIExtension>(new UIExtension("Monero/ViewMoneroLikePaymentData", "store-invoices-payments"));
+        services.AddUIExtension("store-nav", "Monero/StoreNavMoneroExtension");
+        services.AddUIExtension("store-wallets-nav", "Monero/StoreWalletsNavMoneroExtension");
+        services.AddUIExtension("store-invoices-payments", "Monero/ViewMoneroLikePaymentData");
         services.AddSingleton<ISyncSummaryProvider, MoneroSyncSummaryProvider>();
     }
     private static MoneroLikeConfiguration ConfigureMoneroLikeConfiguration(IServiceProvider serviceProvider)

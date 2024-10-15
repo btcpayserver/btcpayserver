@@ -1,16 +1,16 @@
-@model PaymentModel
+@model CheckoutModel
 
 <div id="testing">
     <hr class="my-3" />
     <p class="alert alert-danger" style="display: none; word-break: break-all;"></p>
     <p class="alert alert-success" style="display: none; word-break: break-all;"></p>
     <form id="test-payment" action="/i/@Model.InvoiceId/test-payment" method="post" class="cheat-mode form-inline my-2">
-        <input name="CryptoCode" type="hidden" value="@Model.CryptoCode">
+        <input name="CryptoCode" type="hidden" value="@Model.PaymentMethodCurrency">
         <div class="form-group mb-1">
-            <label for="test-payment-amount" class="control-label">{{$t("Fake a @Model.CryptoCode payment for testing")}}</label>
+            <label for="test-payment-amount" class="control-label">{{$t("Fake a @Model.PaymentMethodCurrency payment for testing")}}</label>
             <div class="input-group">
-                <input id="test-payment-amount" name="Amount" type="number" step="0.00000001" min="0" class="form-control" placeholder="Amount" value="@Model.BtcDue" />
-                <div id="test-payment-crypto-code" class="input-group-addon">@Model.CryptoCode</div>
+                <input id="test-payment-amount" name="Amount" type="number" step="0.00000001" min="0" class="form-control" placeholder="Amount" value="@Model.Due" />
+                <div id="test-payment-crypto-code" class="input-group-addon">@Model.PaymentMethodCurrency</div>
             </div>
         </div>
         <button id="FakePayment" class="btn btn-primary" type="submit">{{$t("Fake Payment")}}</button>

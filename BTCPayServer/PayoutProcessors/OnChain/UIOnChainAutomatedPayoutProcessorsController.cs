@@ -140,6 +140,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
             Threshold = blob.Threshold;
         }
 
+        [Display(Name = "Process approved payouts instantly")]
         public bool ProcessNewPayoutsInstantly { get; set; }
 
         [Range(1, 1000)]

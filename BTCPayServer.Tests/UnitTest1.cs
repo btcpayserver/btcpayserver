@@ -1543,7 +1543,7 @@ namespace BTCPayServer.Tests
             var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
             Assert.Equal(2, vm.PaymentMethodCriteria.Count);
             var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
-            Assert.Equal(PaymentTypes.CHAIN.GetPaymentMethodId("BTC").ToString(), criteria.PaymentMethod);
+            Assert.Equal(btcMethod.ToString(), criteria.PaymentMethod);
             criteria.Value = "5 USD";
             criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
             Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
@@ -1587,14 +1587,14 @@ namespace BTCPayServer.Tests
                    ItemDesc = "Some description",
                    FullNotifications = true
                }, Facade.Merchant);
-            var checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+            var checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<CheckoutModel>();
             Assert.Equal(lnMethod, checkout.PaymentMethodId);
 
             // If we change store's default, it should change the checkout's default
             vm.DefaultPaymentMethod = btcMethod;
             Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>().CheckoutAppearance(vm)
                 .Result);
-            checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<PaymentModel>();
+            checkout = (await user.GetController<UIInvoiceController>().Checkout(invoice.Id)).AssertViewModel<CheckoutModel>();
             Assert.Equal(btcMethod, checkout.PaymentMethodId);
         }
 
@@ -1625,7 +1625,7 @@ namespace BTCPayServer.Tests
 
             // validate that invoice data model doesn't have lightning string initially
             var res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
-            var paymentMethodFirst = Assert.IsType<PaymentModel>(
+            var paymentMethodFirst = Assert.IsType<CheckoutModel>(
                 Assert.IsType<ViewResult>(res).Model
             );
             Assert.DoesNotContain("&lightning=", paymentMethodFirst.InvoiceBitcoinUrlQR);
@@ -1641,7 +1641,7 @@ namespace BTCPayServer.Tests
 
             // validate that QR code now has both onchain and offchain payment urls
             res = await user.GetController<UIInvoiceController>().Checkout(invoice.Id);
-            var paymentMethodUnified = Assert.IsType<PaymentModel>(
+            var paymentMethodUnified = Assert.IsType<CheckoutModel>(
                 Assert.IsType<ViewResult>(res).Model
             );
             Assert.StartsWith("bitcoin:bcrt", paymentMethodUnified.InvoiceBitcoinUrl);
@@ -1655,8 +1655,8 @@ namespace BTCPayServer.Tests
 
             // Standard for all uppercase characters in QR codes is still not implemented in all wallets
             // But we're proceeding with BECH32 being uppercase
-            Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
-            Assert.Equal($"bitcoin:{paymentMethodUnified.BtcAddress.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR.Split('?')[0]);
+            Assert.Equal($"bitcoin:{paymentMethodUnified.Address}", paymentMethodUnified.InvoiceBitcoinUrl.Split('?')[0]);
+            Assert.Equal($"bitcoin:{paymentMethodUnified.Address.ToUpperInvariant()}", paymentMethodUnified.InvoiceBitcoinUrlQR.Split('?')[0]);
 
             // Fallback lightning invoice should be uppercase inside the QR code, lowercase in payment URI
             var lightningFallback = paymentMethodUnified.InvoiceBitcoinUrl.Split(new[] { "&lightning=" }, StringSplitOptions.None)[1];

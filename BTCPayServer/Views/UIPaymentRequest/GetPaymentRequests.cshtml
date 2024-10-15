@@ -6,7 +6,7 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Payment Requests";
+    ViewData["Title"] = ViewLocalizer["Payment Requests"];
     var storeId = Context.GetStoreData().Id;
     var statusFilterCount = CountArrayFilter("status") + (HasBooleanFilter("includearchived") ? 1 : 0);
 }

@@ -23,7 +23,7 @@ public static class SettingsRepositoryExtensions
         }
         return new IssuerKey(issuerKey);
     }
-    internal static AESKey FixedKey()
+    public static AESKey FixedKey()
     {
         byte[] v = new byte[16];
         v[0] = 1;

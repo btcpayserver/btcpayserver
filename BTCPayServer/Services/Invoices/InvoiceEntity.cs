@@ -870,15 +870,27 @@ namespace BTCPayServer.Services.Invoices
         public string Currency { get; set; }
         [JsonIgnore]
         public decimal Rate => Currency is null ? throw new InvalidOperationException("Currency of the payment prompt isn't set") : ParentEntity.GetInvoiceRate(Currency);
+        /// <summary>
+        /// The maximum divisibility supported by the underlying payment method
+        /// </summary>
         public int Divisibility { get; set; }
+        /// <summary>
+        /// The divisibility to use when calculating the amount to pay.
+        /// If null, it will use the <see cref="Divisibility"/>.
+        /// </summary>
+        public int? RateDivisibility { get; set; }
+        /// <summary>
+        /// Total additional fee imposed by this specific payment method.
+        /// It includes the <see cref="TweakFee"/>.
+        /// </summary>
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal PaymentMethodFee { get; set; }
         /// <summary>
-        /// A fee, hidden from UI, meant to be used when a payment method has a service provider which
+        /// An additional fee, hidden from UI, meant to be used when a payment method has a service provider which
         /// have a different way of converting the invoice's amount into the currency of the payment method.
         /// This fee can avoid under/over payments when this case happens.
         /// 
-        /// Please use <see cref="AddTweakFee(decimal)"/> so that the tweak fee is also added to the <see cref="PaymentMethodFee"/>.
+        /// You need to increment it with <see cref="AddTweakFee(decimal)"/> so that the tweak fee is also added to the <see cref="PaymentMethodFee"/>.
         /// </summary>
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal TweakFee { get; set; }
@@ -905,24 +917,25 @@ namespace BTCPayServer.Services.Invoices
             accounting.TxRequired = accounting.TxCount;
             var grossDue = i.Price + i.PaidFee;
             var rate = Rate;
+            var divisibility = RateDivisibility ?? Divisibility;
             if (i.MinimumNetDue > 0.0m)
             {
                 accounting.TxRequired++;
                 grossDue += rate * PaymentMethodFee;
             }
-            accounting.TotalDue = Coins(grossDue / rate, Divisibility);
-            accounting.Paid = Coins(i.PaidAmount.Gross / rate, Divisibility);
-            accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), Divisibility);
+            accounting.TotalDue = Coins(grossDue / rate, divisibility);
+            accounting.Paid = Coins(i.PaidAmount.Gross / rate, divisibility);
+            accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), divisibility);
 
             // This one deal with the fact where it might looks like a slight over payment due to the dust of another payment method.
             // So if we detect the NetDue is zero, just cap dueUncapped to 0
             var dueUncapped = i.NetDue == 0.0m ? 0.0m : grossDue - i.PaidAmount.Gross;
-            accounting.DueUncapped = Coins(dueUncapped / rate, Divisibility);
+            accounting.DueUncapped = Coins(dueUncapped / rate, divisibility);
             accounting.Due = Max(accounting.DueUncapped, 0.0m);
 
-            accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, Divisibility);
+            accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, divisibility);
 
-            accounting.MinimumTotalDue = Max(Smallest(Divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, Divisibility));
+            accounting.MinimumTotalDue = Max(Smallest(divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, divisibility));
             return accounting;
         }
 

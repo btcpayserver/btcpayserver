@@ -33,6 +33,7 @@ namespace BTCPayServer.Controllers
     public class UIPaymentRequestController : Controller
     {
         private readonly UIInvoiceController _InvoiceController;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly UserManager<ApplicationUser> _UserManager;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
         private readonly PaymentRequestService _PaymentRequestService;
@@ -49,6 +50,7 @@ namespace BTCPayServer.Controllers
 
         public UIPaymentRequestController(
             UIInvoiceController invoiceController,
+            PaymentMethodHandlerDictionary handlers,
             UserManager<ApplicationUser> userManager,
             PaymentRequestRepository paymentRequestRepository,
             PaymentRequestService paymentRequestService,
@@ -63,6 +65,7 @@ namespace BTCPayServer.Controllers
             BTCPayNetworkProvider networkProvider)
         {
             _InvoiceController = invoiceController;
+            _handlers = handlers;
             _UserManager = userManager;
             _PaymentRequestRepository = paymentRequestRepository;
             _PaymentRequestService = paymentRequestService;
@@ -124,7 +127,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!store.AnyPaymentMethodAvailable())
+            if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 return NoPaymentMethodResult(storeId);
             }
@@ -159,7 +162,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!store.AnyPaymentMethodAvailable())
+            if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 return NoPaymentMethodResult(store.Id);
             }

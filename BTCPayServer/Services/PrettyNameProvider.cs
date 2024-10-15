@@ -6,9 +6,9 @@ namespace BTCPayServer.Services
 {
     public class PrettyNameProvider
     {
-        private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _extensions;
+        private readonly Dictionary<PaymentMethodId, ICheckoutModelExtension> _extensions;
 
-        public PrettyNameProvider(Dictionary<PaymentMethodId, IPaymentModelExtension> extensions)
+        public PrettyNameProvider(Dictionary<PaymentMethodId, ICheckoutModelExtension> extensions)
         {
             _extensions = extensions;
         }

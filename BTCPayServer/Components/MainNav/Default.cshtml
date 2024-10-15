@@ -107,13 +107,13 @@
                                     @if (ViewData.IsCategoryActive(typeof(WalletsNavPages), scheme.WalletId.ToString()) || ViewData.IsPageActive([WalletsNavPages.Settings], scheme.WalletId.ToString()) || ViewData.IsPageActive([StoreNavPages.OnchainSettings], categoryId))
                                     {
                                         <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId">Send</a>
+                                            <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId" text-translate="true">Send</a>
                                         </li>
                                         <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId">Receive</a>
+                                            <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId" text-translate="true">Receive</a>
                                         </li>
                                         <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-Settings" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Settings, scheme.WalletId.ToString()) @ViewData.ActivePageClass(StoreNavPages.OnchainSettings, categoryId)" asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId">Settings</a>
+                                            <a id="WalletNav-Settings" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Settings, scheme.WalletId.ToString()) @ViewData.ActivePageClass(StoreNavPages.OnchainSettings, categoryId)" asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId" text-translate="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="wallet-nav" model="@Model" />
                                     }
@@ -143,7 +143,7 @@
                                     @if (ViewData.IsPageActive([StoreNavPages.Lightning, StoreNavPages.LightningSettings], $"{Model.Store.Id}-{scheme.CryptoCode}"))
                                     {
                                         <li class="nav-item nav-item-sub">
-                                            <a id="StoreNav-@(nameof(StoreNavPages.LightningSettings))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.LightningSettings)" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode">Settings</a>
+                                            <a id="StoreNav-@(nameof(StoreNavPages.LightningSettings))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.LightningSettings)" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode" text-translate="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="lightning-nav" model="@Model"/>
                                     }

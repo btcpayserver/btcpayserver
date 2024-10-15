@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Services.Apps;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
@@ -24,6 +25,7 @@ namespace BTCPayServer.Controllers
     {
         public UIAppsController(
             UserManager<ApplicationUser> userManager,
+            PaymentMethodHandlerDictionary handlers,
             BTCPayNetworkProvider networkProvider,
             StoreRepository storeRepository,
             IFileService fileService,
@@ -31,6 +33,7 @@ namespace BTCPayServer.Controllers
             IHtmlHelper html)
         {
             _userManager = userManager;
+            _handlers = handlers;
             _networkProvider = networkProvider;
             _storeRepository = storeRepository;
             _fileService = fileService;
@@ -39,6 +42,7 @@ namespace BTCPayServer.Controllers
         }
 
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly StoreRepository _storeRepository;
         private readonly IFileService _fileService;
@@ -140,7 +144,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            if (!store.AnyPaymentMethodAvailable())
+            if (!store.AnyPaymentMethodAvailable(_handlers))
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {

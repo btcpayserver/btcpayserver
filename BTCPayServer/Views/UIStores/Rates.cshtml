@@ -23,15 +23,15 @@
             @if (Model.ShowScripting)
             {
                 <div class="form-group">
-                    <h5>Scripting</h5>
-                    <p>Rate script allows you to express precisely how you want to calculate rates for currency pairs.</p>
+					<h5 text-translate="true">Scripting</h5>
+					<p html-translate="true">Rate script allows you to express precisely how you want to calculate rates for currency pairs.</p>
                     <p>We are retrieving the rate of each exchange either directly, or via <a href="https://www.coingecko.com/" target="_blank" rel="noreferrer noopener">CoinGecko (free)</a>.</p>
                     
                     <div class="accordion" id="accordion-info">
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="direct-header">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#direct-content" aria-expanded="false" aria-controls="direct-content">
-                                    Direct integration
+									<span text-translate="true">Direct integration</span>
                                     <vc:icon symbol="caret-down"/>
                                 </button>
                             </h2>
@@ -47,7 +47,7 @@
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="coingecko-header">
                                 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#coingecko-content" aria-expanded="false" aria-controls="coingecko-content">
-                                    Coingecko integration
+									<span text-translate="true">Coingecko integration</span>
                                     <vc:icon symbol="caret-down"/>
                                 </button>
                             </h2>
@@ -65,7 +65,7 @@
             }
             @if (Model.TestRateRules != null)
             {
-                <h5>Test Results:</h5>
+				<h5 text-translate="true">Test Results:</h5>
                 <div class="table-responsive-md">
                     <table class="table table-hover">
                         <tbody>
@@ -96,26 +96,26 @@
             @if (Model.ShowScripting)
             {
                 <div id="help" class="collapse text-start">
-                    <p>
+					<p html-translate="true">
                         The script language is composed of several rules composed of a currency pair and a mathematic expression.
                         The example below will use <code>kraken</code> for both <code>LTC_USD</code> and <code>BTC_USD</code> pairs.
                     </p>
                     <pre><code class="text hljs">LTC_USD = kraken(LTC_USD);
 BTC_USD = kraken(BTC_USD);</code></pre>
-                    <p>However, explicitely setting specific pairs like this can be a bit difficult. Instead, you can define a rule <code>X_X</code> which will match any currency pair. The following example will use <code>kraken</code> for getting the rate of any currency pair.</p>
+					<p html-translate="true">However, explicitely setting specific pairs like this can be a bit difficult. Instead, you can define a rule <code>X_X</code> which will match any currency pair. The following example will use <code>kraken</code> for getting the rate of any currency pair.</p>
                     <pre><code class="text hljs">X_X = kraken(X_X);</code></pre>
-                    <p>However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>ndax</code>, a Canadian exchange.</p>
+					<p html-translate="true">However, <code>kraken</code> does not support the <code>BTC_CAD</code> pair. For this reason you can add a rule mapping all <code>X_CAD</code> to <code>ndax</code>, a Canadian exchange.</p>
                     <pre><code class="text hljs">X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
-                    <p>A given currency pair match the most specific rule. If two rules are matching and are as specific, the first rule will be chosen.</p>
-                    <p>
+					<p html-translate="true">A given currency pair match the most specific rule. If two rules are matching and are as specific, the first rule will be chosen.</p>
+					<p html-translate="true">
                         But now, what if you want to support <code>DOGE</code>? The problem with <code>DOGE</code> is that most exchange do not have any pair for it. But <code>bitpay</code> has a <code>DOGE_BTC</code> pair. <br />
                         Luckily, the rule engine allow you to reference rules:
                     </p>
                     <pre><code class="text hljs">DOGE_X = bitpay(DOGE_BTC) * BTC_X;
 X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
-                    <p>
+					<p html-translate="true">
                         With <code>DOGE_USD</code> will be expanded to <code>bitpay(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bitpay(DOGE_BTC) * ndax(BTC_CAD)</code>. <br />
                         However, we advise you to write it that way to increase coverage so that <code>DOGE_BTC</code> is also supported:
                     </p>
@@ -123,7 +123,7 @@ X_X = kraken(X_X);</code></pre>
 DOGE_BTC = bitpay(DOGE_BTC);
 X_CAD = ndax(X_CAD);
 X_X = kraken(X_X);</code></pre>
-                    <p>
+					<p html-translate="true">
                         It is worth noting that the inverses of those pairs are automatically supported as well.<br />
                         It means that the rule <code>USD_DOGE = 1 / DOGE_USD</code> implicitely exists.
                     </p>
@@ -136,7 +136,7 @@ X_X = kraken(X_X);</code></pre>
                     <textarea asp-for="Script" rows="20" cols="80" class="form-control"></textarea>
                     <span asp-validation-for="Script" class="text-danger"></span>
                     <p>
-                        <button type="button" class="btn btn-link text-secondary px-0" id="ResetDefaults">Set to default settings</button>
+						<button type="button" class="btn btn-link text-secondary px-0" id="ResetDefaults" text-translate="true">Set to default settings</button>
                     </p>
                 </div>
             }
@@ -155,7 +155,7 @@ X_X = kraken(X_X);</code></pre>
                 <label class="d-flex align-items-center">
                     <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal" permission="@Policies.CanModifyStoreSettings">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
                     <div>
-                        <span>Advanced rate rule scripting</span>
+						<span text-translate="true">Advanced rate rule scripting</span>
                         <div class="form-text">
                             @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
                         </div>
@@ -170,7 +170,7 @@ X_X = kraken(X_X);</code></pre>
                 </div>
                 <span asp-validation-for="Spread" class="text-danger"></span>
             </div>
-            <h3 class="mt-5 mb-3">Testing</h3>
+			<h3 class="mt-5 mb-3" text-translate="true">Testing</h3>
 
             <div class="form-group">
                 <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
@@ -181,7 +181,7 @@ X_X = kraken(X_X);</code></pre>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
             </div>
 
-            <h3 class="mt-5 mb-3">Default Currency Pairs</h3>
+			<h3 class="mt-5 mb-3" text-translate="true">Default Currency Pairs</h3>
             <div class="form-group">
                 <label asp-for="DefaultCurrencyPairs" class="form-label">Query pairs via REST by querying <a asp-controller="BitpayRate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />

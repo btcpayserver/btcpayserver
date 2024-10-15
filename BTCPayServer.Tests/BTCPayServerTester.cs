@@ -162,6 +162,8 @@ namespace BTCPayServer.Tests
             HttpClient.BaseAddress = ServerUri;
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             var confBuilder = new DefaultConfiguration() { Logger = LoggerProvider.CreateLogger("Console") }.CreateConfigurationBuilder(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", DisableRegistration ? "true" : "false" });
+            // This make sure that tests work outside of this assembly (ie, test project it a plugin)
+            confBuilder.SetBasePath(TestUtils.TestDirectory);
 #if DEBUG
             confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif
@@ -265,7 +267,7 @@ namespace BTCPayServer.Tests
 
         private string FindBTCPayServerDirectory()
         {
-            var solutionDirectory = TestUtils.TryGetSolutionDirectoryInfo(Directory.GetCurrentDirectory());
+            var solutionDirectory = TestUtils.TryGetSolutionDirectoryInfo();
             return Path.Combine(solutionDirectory.FullName, "BTCPayServer");
         }
 

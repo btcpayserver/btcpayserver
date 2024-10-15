@@ -30,7 +30,7 @@
             }
             <div class="d-flex my-3">
                 <input asp-for="ProcessNewPayoutsInstantly" type="checkbox" class="btcpay-toggle me-3" />
-                <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label">Process approved payouts instantly</label>
+                <label asp-for="ProcessNewPayoutsInstantly" class="form-check-label"></label>
                 <span asp-validation-for="ProcessNewPayoutsInstantly" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -40,15 +40,6 @@
                     <span class="input-group-text">minutes</span>
                     <span asp-validation-for="IntervalMinutes" class="text-danger"></span>
                 </div>
-            </div>
-            <div class="form-group">
-                <label asp-for="CancelPayoutAfterFailures" class="form-label">Max Payout Failure Attempts</label>
-                <div class="input-group">
-                    <input asp-for="CancelPayoutAfterFailures" min="1" class="form-control" inputmode="numeric" style="max-width:12ch;">
-                    <span class="input-group-text">attempts</span>
-                    <span asp-validation-for="IntervalMinutes" class="text-danger"></span>
-                </div>
-                <div class="form-text">If a payout fails this many times, it will be cancelled.</div>
             </div>
         </div>
     </div>

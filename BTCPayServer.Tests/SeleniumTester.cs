@@ -45,7 +45,7 @@ namespace BTCPayServer.Tests
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
-            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
+            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : TestUtils.TestDirectory);
 
             var options = new ChromeOptions();
             if (!runInBrowser)
@@ -132,11 +132,11 @@ retry:
         /// Because for some reason, the selenium container can't resolve the tests container domain name
         /// </summary>
         public Uri ServerUri;
-        internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
+        public IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
             return FindAlertMessage(new[] { severity });
         }
-        internal IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
+        public IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
         {
             var className = string.Join(", ", severity.Select(statusSeverity => $".alert-{StatusMessageModel.ToString(statusSeverity)}"));
             IWebElement el;
@@ -182,13 +182,18 @@ retry:
             Driver.FindElement(By.Id("RegisterButton")).Click();
             Driver.AssertNoError();
             CreatedUser = usr;
+            Password = "123456";
+            IsAdmin = isAdmin;
             return usr;
         }
         string CreatedUser;
 
+        public string Password { get; private set; }
+        public bool IsAdmin { get; private set; }
+
         public TestAccount AsTestAccount()
         {
-            return new TestAccount(Server) { RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser } };
+            return new TestAccount(Server) { StoreId = StoreId, Email = CreatedUser, Password = Password, RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser }, IsAdmin = IsAdmin };
         }
 
         public (string storeName, string storeId) CreateNewStore(bool keepId = true)

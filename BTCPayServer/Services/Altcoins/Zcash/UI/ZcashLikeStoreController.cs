@@ -30,7 +30,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 namespace BTCPayServer.Services.Altcoins.Zcash.UI
 {
     [Route("stores/{storeId}/Zcashlike")]
-    [OnlyIfSupportAttribute("ZEC")]
+    [OnlyIfSupportAttribute("ZEC-CHAIN")]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

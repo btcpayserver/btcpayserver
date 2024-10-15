@@ -130,9 +130,9 @@
                 @* For whatever reason wrapping the select with this div fixes this Safari bug: https://github.com/btcpayserver/btcpayserver/issues/3699 *@
                 <div class="overflow-hidden">
                     <select asp-for="NetworkFeeMode" class="form-select w-auto">
-                        <option value="MultiplePaymentsOnly">... only if the customer makes more than one payment for the invoice</option>
-                        <option value="Always">... on every payment</option>
-                        <option value="Never">Never add network fee</option>
+                        <option value="MultiplePaymentsOnly" text-translate="true">... only if the customer makes more than one payment for the invoice</option>
+                        <option value="Always" text-translate="true">... on every payment</option>
+						<option value="Never" text-translate="true">Never add network fee</option>
                     </select>
                 </div>
             </div>
@@ -162,7 +162,7 @@
                 <label asp-for="BOLT11Expiration" class="form-label"></label>
                 <div class="input-group">
                     <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:12ch;"/>
-                    <span class="input-group-text">days</span>
+					<span class="input-group-text" text-translate="true">days</span>
                 </div>
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
             </div>
@@ -183,10 +183,10 @@
                     <vc:icon symbol="info"/>
                 </a>
                 <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0'">
-                    <option value="0">Is unconfirmed</option>
-                    <option value="1">Has at least 1 confirmation</option>
-                    <option value="3">Has at least 2 confirmations</option>
-                    <option value="2">Has at least 6 confirmations</option>
+					<option value="0" text-translate="true">Is unconfirmed</option>
+                    <option value="1" text-translate="true">Has at least 1 confirmation</option>
+                    <option value="3" text-translate="true">Has at least 2 confirmations</option>
+					<option value="2" text-translate="true">Has at least 6 confirmations</option>
                 </select>
                 <p class="info-note my-3 text-warning" id="unconfirmed-warning" role="alert" hidden="@(Model.SpeedPolicy != 0)">
                     <vc:icon symbol="warning"/>
@@ -205,14 +205,14 @@
                 <input asp-for="ShowRecommendedFee" type="checkbox" class="btcpay-toggle me-3" />
                 <div>
                     <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
-                    <div class="form-text">Fee will be shown for BTC and LTC onchain payments only.</div>
+					<div class="form-text" text-translate="true">Fee will be shown for BTC and LTC onchain payments only.</div>
                 </div>
             </div>
             <div class="form-group">
                 <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
                 <div class="input-group">
                     <input inputmode="numeric" asp-for="RecommendedFeeBlockTarget" class="form-control" min="1" style="max-width:10ch" />
-                    <span class="input-group-text">blocks</span>
+					<span class="input-group-text" text-translate="true">blocks</span>
                 </div>
                 <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
             </div>

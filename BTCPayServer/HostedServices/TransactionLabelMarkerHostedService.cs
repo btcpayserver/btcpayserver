@@ -43,7 +43,7 @@ namespace BTCPayServer.HostedServices
                 // If we find, then we create a link between them and the tx object.
                 case NewOnChainTransactionEvent transactionEvent:
                     {
-                        var handler = _handlers.TryGetBitcoinHandler(transactionEvent.CryptoCode);
+                        var handler = _handlers.TryGetBitcoinHandler(transactionEvent.PaymentMethodId);
                         var derivation = transactionEvent.NewTransactionEvent.DerivationStrategy;
                         if (handler is null || derivation is null)
                             break;

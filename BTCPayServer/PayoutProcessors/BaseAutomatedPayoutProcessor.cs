@@ -22,6 +22,7 @@ namespace BTCPayServer.PayoutProcessors;
 public class AutomatedPayoutConstants
 {
     public const double MinIntervalMinutes = 1.0;
+    public const double DefaultIntervalMinutes = 60.0;
     public const double MaxIntervalMinutes = 24 * 60; //1 day
     public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
     {

@@ -14,14 +14,6 @@ namespace BTCPayServer.Abstractions.Models
 
         public string SeverityCSS => ToString(Severity);
 
-        private void ParseNonJsonStatus(string s)
-        {
-            Message = s;
-            Severity = s.StartsWith("Error", StringComparison.InvariantCultureIgnoreCase)
-                ? StatusSeverity.Error
-                : StatusSeverity.Success;
-        }
-
         public static string ToString(StatusSeverity severity)
         {
             switch (severity)

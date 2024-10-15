@@ -1,7 +1,7 @@
 @model RegisterViewModel
 @inject BTCPayServer.Services.BTCPayServerEnvironment env
 @{
-    ViewData["Title"] = "Create account";
+    ViewData["Title"] = ViewLocalizer["Create account"];
     ViewBag.ShowLeadText = true;
     Layout = "_LayoutSignedOut";
 }
@@ -36,7 +36,7 @@
             </div>
         }
         <div class="form-group mt-4">
-            <button type="submit" class="btn btn-primary btn-lg w-100" id="RegisterButton">Create account</button>
+            <button type="submit" class="btn btn-primary btn-lg w-100" id="RegisterButton" text-translate="true">Create account</button>
         </div>
     </fieldset>
 </form>

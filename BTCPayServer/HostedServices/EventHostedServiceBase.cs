@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Collections.Generic;
 using System.Threading;
@@ -17,8 +18,8 @@ namespace BTCPayServer.HostedServices
 
         public EventAggregator EventAggregator => _EventAggregator;
 
-        private List<IEventAggregatorSubscription> _Subscriptions;
-        private CancellationTokenSource _Cts;
+        private List<IEventAggregatorSubscription> _Subscriptions = new List<IEventAggregatorSubscription>();
+        private CancellationTokenSource _Cts = new CancellationTokenSource();
         public CancellationToken CancellationToken => _Cts.Token;
         public EventHostedServiceBase(EventAggregator eventAggregator, Logs logs)
         {
@@ -68,7 +69,7 @@ namespace BTCPayServer.HostedServices
 
         protected void Subscribe<T>()
         {
-            _Subscriptions.Add(_EventAggregator.Subscribe<T>(e => _Events.Writer.TryWrite(e)));
+            _Subscriptions.Add(_EventAggregator.Subscribe<T>(e => _Events.Writer.TryWrite(e!)));
         }
 
         protected void PushEvent(object obj)
@@ -78,9 +79,7 @@ namespace BTCPayServer.HostedServices
 
         public virtual Task StartAsync(CancellationToken cancellationToken)
         {
-            _Subscriptions = new List<IEventAggregatorSubscription>();
             SubscribeToEvents();
-            _Cts = new CancellationTokenSource();
             _ProcessingEvents = ProcessEvents(_Cts.Token);
             return Task.CompletedTask;
         }
@@ -88,8 +87,8 @@ namespace BTCPayServer.HostedServices
 
         public virtual async Task StopAsync(CancellationToken cancellationToken)
         {
-            _Subscriptions?.ForEach(subscription => subscription.Dispose());
-            _Cts?.Cancel();
+            _Subscriptions.ForEach(subscription => subscription.Dispose());
+            _Cts.Cancel();
             try
             {
                 await _ProcessingEvents;

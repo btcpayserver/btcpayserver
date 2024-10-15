@@ -9,6 +9,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -28,12 +29,14 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldAppsController : ControllerBase
     {
         private readonly AppService _appService;
+        private readonly UriResolver _uriResolver;
         private readonly StoreRepository _storeRepository;
         private readonly CurrencyNameTable _currencies;
         private readonly UserManager<ApplicationUser> _userManager;
 
         public GreenfieldAppsController(
             AppService appService,
+            UriResolver uriResolver,
             StoreRepository storeRepository,
             BTCPayNetworkProvider btcPayNetworkProvider,
             CurrencyNameTable currencies,
@@ -41,6 +44,7 @@ namespace BTCPayServer.Controllers.Greenfield
         )
         {
             _appService = appService;
+            _uriResolver = uriResolver;
             _storeRepository = storeRepository;
             _currencies = currencies;
             _userManager = userManager;
@@ -72,12 +76,12 @@ namespace BTCPayServer.Controllers.Greenfield
                 Archived = request.Archived ?? false
             };
 
-            var settings = ToCrowdfundSettings(request, new CrowdfundSettings { Title = request.Title ?? request.AppName });
+            var settings = ToCrowdfundSettings(request);
             appData.SetSettings(settings);
 
             await _appService.UpdateOrCreateApp(appData);
-
-            return Ok(ToCrowdfundModel(appData));
+            var model = await ToCrowdfundModel(appData);
+            return Ok(model);
         }
 
         [HttpPost("~/api/v1/stores/{storeId}/apps/pos")]
@@ -208,7 +212,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 return AppNotFound();
             }
 
-            return Ok(ToCrowdfundModel(app));
+            var model = await ToCrowdfundModel(app);
+            return Ok(model);
         }
 
         [HttpDelete("~/api/v1/apps/{appId}")]
@@ -255,7 +260,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return this.CreateAPIError(404, "app-not-found", "The app with specified ID was not found");
         }
 
-        private CrowdfundSettings ToCrowdfundSettings(CrowdfundAppRequest request, CrowdfundSettings settings)
+        private CrowdfundSettings ToCrowdfundSettings(CrowdfundAppRequest request)
         {
             var parsedSounds = ValidateStringArray(request.Sounds);
             var parsedColors = ValidateStringArray(request.AnimationColors);
@@ -271,7 +276,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = request.Description?.Trim(),
                 EndDate = request.EndDate?.UtcDateTime,
                 TargetAmount = request.TargetAmount,
-                MainImageUrl = request.MainImageUrl?.Trim(),
+                MainImageUrl = request.MainImageUrl == null ? null : UnresolvedUri.Create(request.MainImageUrl),
                 NotificationUrl = request.NotificationUrl?.Trim(),
                 Tagline = request.Tagline?.Trim(),
                 PerksTemplate = request.PerksTemplate is not null ? AppService.SerializeTemplate(AppService.Parse(request.PerksTemplate.Trim())) : null,
@@ -411,7 +416,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
         }
 
-        private CrowdfundAppData ToCrowdfundModel(AppData appData)
+        private async Task<CrowdfundAppData> ToCrowdfundModel(AppData appData)
         {
             var settings = appData.GetSettings<CrowdfundSettings>();
             Enum.TryParse<CrowdfundResetEvery>(settings.ResetEvery.ToString(), true, out var resetEvery);
@@ -432,7 +437,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Description = settings.Description,
                 EndDate = settings.EndDate,
                 TargetAmount = settings.TargetAmount,
-                MainImageUrl = settings.MainImageUrl,
+                MainImageUrl = settings.MainImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), settings.MainImageUrl),
                 NotificationUrl = settings.NotificationUrl,
                 Tagline = settings.Tagline,
                 DisqusEnabled = settings.DisqusEnabled,

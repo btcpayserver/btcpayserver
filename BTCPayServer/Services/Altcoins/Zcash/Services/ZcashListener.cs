@@ -265,7 +265,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         private async Task OnNewBlock(string cryptoCode)
         {
             await UpdateAnyPendingZcashLikePayment(cryptoCode);
-            _eventAggregator.Publish(new NewBlockEvent() { CryptoCode = cryptoCode });
+            _eventAggregator.Publish(new NewBlockEvent() { PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode) });
         }
 
         private async Task OnTransactionUpdated(string cryptoCode, string transactionHash)

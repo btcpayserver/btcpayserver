@@ -7,9 +7,9 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Services">Services</a>
+                <a asp-action="Services" text-translate="true">Services</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
@@ -23,7 +23,7 @@
             <div asp-validation-summary="All"></div>
         }
         <div class="form-group">
-            <p>Lightning charge is a simple API for invoicing on lightning network, you can use it with several plugins:</p>
+            <p text-translate="true">Lightning charge is a simple API for invoicing on lightning network, you can use it with several plugins:</p>
             <ul>
                 <li><a href="https://github.com/ElementsProject/woocommerce-gateway-lightning" target="_blank" rel="noreferrer noopener">WooCommerce Lightning Gateway</a>: A comprehensive e-commerce application that integrates with stock-management and order-tracking systems</li>
                 <li><a href="https://github.com/ElementsProject/nanopos" target="_blank" rel="noreferrer noopener">Nanopos</a>: A simple point-of-sale system for fixed-price goods</li>
@@ -39,7 +39,7 @@
 </div>
 <div class="row">
     <div class="col-md-8">
-        <h4>Credentials</h4>
+        <h4 text-translate="true">Credentials</h4>
         @if (Model.Uri != null)
         {
             <div class="form-group">

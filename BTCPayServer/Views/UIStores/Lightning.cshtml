@@ -39,7 +39,8 @@
            asp-route-cryptoCode="@Model.CryptoCode"
            asp-route-storeId="@Model.StoreId"
            target="_blank"
-           id="PublicNodeInfo">
+           id="PublicNodeInfo"
+           text-translate="true">
             Public Node Info
         </a>
     </div>
@@ -47,7 +48,7 @@
     @if (Model.Services != null && Model.Services.Any())
     {
         <div permission="@Policies.CanModifyServerSettings" class="mt-5">
-            <h3 class="mb-3">Services</h3>
+            <h3 class="mb-3" text-translate="true">Services</h3>
             <div id="Services" class="services-list">
                 @foreach (var service in Model.Services)
                 {

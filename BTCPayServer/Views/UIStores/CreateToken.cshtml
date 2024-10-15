@@ -13,9 +13,9 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-action="ListTokens" asp-route-storeId="@store.Id">Access Tokens</a>
+                        <a asp-action="ListTokens" asp-route-storeId="@store.Id" text-translate="true">Access Tokens</a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                    <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
                 </ol>
                 <h2 text-translate="true">@ViewData["Title"]</h2>
             </nav>
@@ -33,7 +33,7 @@
                 <label asp-for="Label" class="form-label"></label>
                 @if (ViewBag.HidePublicKey)
                 {
-                    <small class="text-muted">optional</small>
+                    <small class="text-muted" text-translate="true">optional</small>
                 }
                 <input asp-for="Label" class="form-control" />
                 <span asp-validation-for="Label" class="text-danger"></span>
@@ -44,7 +44,7 @@
                     <label asp-for="PublicKey" class="form-label"></label>
                     <input asp-for="PublicKey" class="form-control" />
                     <span asp-validation-for="PublicKey" class="text-danger"></span>
-                    <div class="form-text">Keep empty for server-initiated pairing.</div>
+                    <div class="form-text" text-translate="true">Keep empty for server-initiated pairing.</div>
                 </div>
             }
             @if (ViewBag.ShowStores)

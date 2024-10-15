@@ -74,7 +74,7 @@
                 <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">configure payout processors</a>
                 to automate payouts.</span>
             </p>
-            <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">Learn More</a>
+            <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
         <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
             <vc:icon symbol="close" />
@@ -89,7 +89,7 @@
     <div class="alert alert-info mb-5" role="alert" permission="@Policies.CanModifyStoreSettings">
         <strong>Pro tip:</strong> There are supported but unconfigured Payout Processors for this payout payment method.<br/>
         Payout Processors help automate payouts so that you do not need to manually handle them.
-        <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">Configure now</a>
+        <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId" text-translate="true">Configure now</a>
     </div>
 }
 
@@ -152,18 +152,18 @@
                         }
                         <th class="date-col">
                             <div class="d-flex align-items-center gap-1">
-                                Date
+                                <span text-translate="true">Date</span>
                                 <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
                                     <vc:icon symbol="time" />
                                 </button>
                             </div>
                         </th>
-                        <th>Source</th>
-                        <th>Destination</th>
-                        <th class="amount-col">Amount</th>
+                        <th text-translate="true">Source</th>
+                        <th text-translate="true">Destination</th>
+                        <th text-translate="true" class="amount-col">Amount</th>
                         @if (Model.PayoutState != PayoutState.AwaitingApproval)
                         {
-                            <th class="text-end">Transaction</th>
+                            <th text-translate="true" class="text-end">Transaction</th>
                         }
                     </tr>
                 </thead>
@@ -178,7 +178,7 @@
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                                 <div>
                                     <strong class="mass-action-selected-count">0</strong>
-                                    selected
+                                    <span text-translate="true">selected</span>
                                 </div>
                                 <div class="d-inline-flex align-items-center gap-3">
                                     @foreach (var action in stateActions)
@@ -227,7 +227,7 @@
                                 <td class="text-end align-middle">
                                     @if (!string.IsNullOrEmpty(pp.ProofLink))
                                     {
-                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
+                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener" text-translate="true">Link</a>
                                     }
                                 </td>
                             }

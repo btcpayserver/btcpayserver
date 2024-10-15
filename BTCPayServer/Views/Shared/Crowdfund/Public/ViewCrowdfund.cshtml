@@ -264,7 +264,7 @@
         <footer class="store-footer">
             <p class="text-muted" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</p>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                Powered by <partial name="_StoreFooterLogo" />
+                <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>
         </footer>
     </div>
@@ -343,7 +343,7 @@
                                 :class="{'btn-disabled': loading}"
                                 type="submit">
                             <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden" text-translate="true">Loading...</span>
                             </div>
                             {{perk.buyButtonText || 'Continue'}}
                         </button>

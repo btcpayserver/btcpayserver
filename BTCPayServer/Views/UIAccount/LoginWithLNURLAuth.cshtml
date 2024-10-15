@@ -12,8 +12,8 @@
         <input type="hidden" asp-for="LNURLEndpoint"/>
         <input type="hidden" asp-for="UserId"/>
     </form>
-    <h2 class="h3 mb-3">LNURL Authentication</h2>
-    <p>Scan the QR code with your Lightning wallet to sign in.</p>
+    <h2 class="h3 mb-3" text-translate="true">LNURL Authentication</h2>
+    <p text-translate="true">Scan the QR code with your Lightning wallet to sign in.</p>
     <div class="align-items-center" style="width:256px">
         <ul class="nav my-3 btcpay-pills align-items-center gap-2">
             @for (var i = 0; i < formats.Count; i++)
@@ -34,7 +34,7 @@
                     <div class="qr-container" style="min-height:256px">
                         <vc:qr-code data="@mode.Value" />
                     </div>
-                    <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener">
+                    <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener" text-translate="true">
                         Open in wallet
                     </a>
                 </div>

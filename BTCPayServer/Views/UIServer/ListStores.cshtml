@@ -13,8 +13,8 @@
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>Store</th>
-                <th>Users</th>
+                <th text-translate="true">Store</th>
+                <th text-translate="true">Users</th>
             </tr>
         </thead>
         <tbody>
@@ -28,7 +28,7 @@
                         </a>
                         @if (store.Archived)
                         {
-                            <span class="badge bg-info ms-2">archived</span>
+                            <span class="badge bg-info ms-2" text-translate="true">archived</span>
                         }
                     </td>
                     <td>@store.Users.Count User@(store.Users.Count == 1 ? "" : "s")</td>
@@ -52,7 +52,7 @@
                                         <span class="badge bg-light">@user.StoreRoleId</span>
                                         @if (store.Archived)
                                         {
-                                            <span class="badge bg-info">archived</span>
+                                            <span class="badge bg-info" text-translate="true">archived</span>
                                         }
                                     </li>
                                 }
@@ -60,7 +60,7 @@
                         }
                         else
                         {
-                            <span class="text-secondary">No users</span> 
+                            <span class="text-secondary" text-translate="true">No users</span> 
                         }
                     </td>
                 </tr>
@@ -70,7 +70,7 @@
 }
 else
 {
-    <p class="text-secondary mt-3">
+    <p class="text-secondary mt-3" text-translate="true">
         There are no stores yet.
     </p>
 }

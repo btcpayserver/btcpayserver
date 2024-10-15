@@ -31,7 +31,7 @@
                   class="mt-4" enctype="multipart/form-data">
 
                 <div class="card my-2">
-                    <h3 class="card-title p-2">Upload Wallet</h3>
+                    <h3 class="card-title p-2" text-translate="true">Upload Wallet</h3>
                     <div class="form-group p-2">
                         <label asp-for="WalletFile" class="form-label"></label>
                         <input class="form-control" asp-for="WalletFile" required>
@@ -48,7 +48,7 @@
                         <span asp-validation-for="WalletPassword" class="text-danger"></span>
                     </div>
                     <div class="card-footer text-right">
-                        <button name="command" value="upload-wallet" class="btn btn-secondary" type="submit">Upload</button>
+                        <button name="command" value="upload-wallet" class="btn btn-secondary" type="submit" text-translate="true">Upload</button>
                     </div>
                 </div>
             </form>
@@ -74,14 +74,14 @@
                     }
                     else
                     {
-                        <span>No accounts available on the current wallet</span>
+                        <span text-translate="true">No accounts available on the current wallet</span>
                         <input type="hidden" asp-for="AccountIndex"/>
                     }
                 </div>
                 <div class="form-group">
                     <div class="input-group my-3">
                         <input type="text" class="form-control" placeholder="New account label" asp-for="NewAccountLabel">
-                        <button name="command" value="add-account" class="input-group-text btn btn-secondary" type="submit">Add account</button>
+                        <button name="command" value="add-account" class="input-group-text btn btn-secondary" type="submit" text-translate="true">Add account</button>
                     </div>
                 </div>
             }
@@ -93,12 +93,13 @@
             </div>
 
             <div class="form-group">
-                <button type="submit" class="btn btn-primary" id="SaveButton">Save</button>
+                <button type="submit" class="btn btn-primary" id="SaveButton" text-translate="true">Save</button>
 
                 <a class="btn btn-secondary" asp-action="GetStoreZcashLikePaymentMethods"
                    asp-route-storeId="@Context.GetRouteValue("storeId")"
                    asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
-                   asp-controller="UIZcashLikeStore">
+                   asp-controller="UIZcashLikeStore"
+                   text-translate="true">
                     Back to list
                 </a>
             </div>

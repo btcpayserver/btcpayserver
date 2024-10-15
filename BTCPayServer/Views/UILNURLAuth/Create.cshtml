@@ -12,11 +12,11 @@
 <h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
 
-<p>Scan the QR code with your Lightning wallet to link it to your user account.</p>
+<p text-translate="true">Scan the QR code with your Lightning wallet to link it to your user account.</p>
 
 <div id="info-message" class="d-inline-block">
     <ul class="nav justify-content-center btcpay-pills align-items-center gap-2 my-2">
-        @for (int i = 0; i < formats.Count; i++)
+        @for (var i = 0; i < formats.Count; i++)
         {
             var mode = formats.ElementAt(i);
             <li class="nav-item">
@@ -29,14 +29,14 @@
         }
     </ul>
     <div class="tab-content">
-        @for (int i = 0; i < formats.Count; i++)
+        @for (var i = 0; i < formats.Count; i++)
         {
             var mode = formats.ElementAt(i);
             <div class="tab-pane text-center @(i == 0 ? "active" : "")" id="@mode.Key" role="tabpanel">
                 <div class="qr-container" style="min-height: 256px;">
                     <vc:qr-code data="@mode.Value" />
                 </div>
-                <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener">
+                <a href="@mode.Value" class="btn btn-primary mt-3" rel="noreferrer noopener" text-translate="true">
                     Open in wallet
                 </a>
             </div>

@@ -7,11 +7,11 @@
 
 @if (Model.StoreId is not null)
 {
-	<h1 text-translate="true">@ViewLocalizer["Store: {0}", @Model.StoreId]</h1>
+	<h1 text-translate="true">@ViewLocalizer["Store: {0}", Model.StoreId]</h1>
 }
 else
 {
-	<h1 text-translate="true">No scope</h1>
+	<h1 text-translate="true" text-translate="true">No scope</h1>
 }
 
 <ul>

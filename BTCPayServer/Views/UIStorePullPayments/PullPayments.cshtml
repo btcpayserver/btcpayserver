@@ -42,8 +42,8 @@
 <div id="descriptor" class="collapse">
     <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
         <div class="flex-fill">
-            <p class="mb-3">Pull Payments allow receivers to claim specified funds from your wallet at their convenience. Once submitted and approved, the funds will be released.</p>
-            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank" rel="noreferrer noopener">Learn More</a>
+            <p class="mb-3" text-translate="true">Pull Payments allow receivers to claim specified funds from your wallet at their convenience. Once submitted and approved, the funds will be released.</p>
+            <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
         <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
             <vc:icon symbol="close" />
@@ -94,7 +94,7 @@
                            asp-route-pullPaymentState="@Model.ActiveState"
                            class="text-nowrap"
                            title="@(nextStartDateSortOrder == "desc" ? sortByAsc : sortByDesc)">
-                            Start
+                            <span text-translate="true">Start</span>
                             <vc:icon symbol="actions-sort-@(startDateSortOrder ?? nextStartDateSortOrder ?? "desc")" />
                         </a>
                         <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
@@ -102,9 +102,9 @@
                         </button>
                     </div>
                 </th>
-                <th scope="col">Name</th>
-                <th scope="col">Automatically Approved</th>
-                <th scope="col">Refunded</th>
+                <th text-translate="true" scope="col">Name</th>
+                <th text-translate="true" scope="col">Automatically Approved</th>
+                <th text-translate="true" scope="col">Refunded</th>
                 <th scope="col" class="actions-col"></th>
             </tr>
             </thead>
@@ -141,14 +141,16 @@
                                permission="@Policies.CanViewPullPayments"
                                asp-controller="UIPullPayment"
                                asp-route-pullPaymentId="@pp.Id"
-                               target="_blank">
+                               target="_blank"
+                               text-translate="true">
                                 View
                             </a>
                             <a class="pp-payout"
                                permission="@Policies.CanViewPayouts"
                                asp-action="Payouts"
                                asp-route-storeId="@storeId"
-                               asp-route-pullPaymentId="@pp.Id">
+                               asp-route-pullPaymentId="@pp.Id"
+                               text-translate="true">
                                 Payouts
                             </a>
                             @if (!pp.Archived)
@@ -159,7 +161,8 @@
                                    asp-route-pullPaymentId="@pp.Id"
                                    data-bs-toggle="modal"
                                    data-bs-target="#ConfirmModal"
-                                   data-description="Do you really want to archive the pull payment <strong>@Html.Encode(pp.Name)</strong>?">
+                                   data-description="Do you really want to archive the pull payment <strong>@Html.Encode(pp.Name)</strong>?"
+                                   text-translate="true">
                                     Archive
                                 </a>
                             }

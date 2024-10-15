@@ -69,9 +69,11 @@
     </div>
     <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading || totalNumeric <= 0" id="pay-button">
         <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden" text-translate="true">Loading...</span>
         </div>
-        <template v-else>Charge</template>
+        <template v-else>
+            <span text-translate="true">Charge</span>
+        </template>
     </button>
     <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
     <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">

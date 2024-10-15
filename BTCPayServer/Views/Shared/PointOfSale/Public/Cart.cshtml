@@ -129,7 +129,7 @@
             </main>
             <footer class="store-footer">
                 <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                    Powered by <partial name="_StoreFooterLogo" />
+                    <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
                 </a>
             </footer>
         </div>
@@ -244,7 +244,7 @@
                             <td colspan="2" class="pt-4">
                                 <button id="CartSubmit" class="btn btn-primary btn-lg w-100" :disabled="payButtonLoading" type="submit">
                                     <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
-                                        <span class="visually-hidden">Loading...</span>
+                                        <span class="visually-hidden" text-translate="true">Loading...</span>
                                     </div>
                                     <template v-else>Pay</template>
                                 </button>

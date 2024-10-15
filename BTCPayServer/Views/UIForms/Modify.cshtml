@@ -16,10 +16,10 @@
 
 @section PageFootContent {
     <datalist id="special-field-names">
-        <option value="invoice_amount">Determine the generated invoice amount</option>
-        <option value="invoice_currency">Determine the generated invoice currency</option>
-        <option value="invoice_amount_adjustment">Adjusts the generated invoice amount — use as a prefix to have multiple adjustment fields</option>
-        <option value="invoice_amount_multiply_adjustment">Adjusts the generated invoice amount by multiplying with this value — use as a prefix to have multiple adjustment fields</option>
+        <option text-translate="true" value="invoice_amount">Determine the generated invoice amount</option>
+        <option text-translate="true" value="invoice_currency">Determine the generated invoice currency</option>
+        <option text-translate="true" value="invoice_amount_adjustment">Adjusts the generated invoice amount — use as a prefix to have multiple adjustment fields</option>
+        <option text-translate="true" value="invoice_amount_multiply_adjustment">Adjusts the generated invoice amount by multiplying with this value — use as a prefix to have multiple adjustment fields</option>
     </datalist>
     <template id="form-template-email">
         @FormDataService.StaticFormEmail
@@ -42,14 +42,14 @@
             <div class="form-group">
                 <label for="field-editor-field-name" class="form-label" data-required>Name</label>
                 <input id="field-editor-field-name" class="form-control" list="special-field-names" required v-model="field.name" />
-                <div class="form-text">The name of the field in the invoice's metadata.</div>
-                <div class="form-text text-info" v-if="field.name === 'invoice_currency'">The configured name means the value of this field will determine the invoice currency for public forms.</div>
-                <div class="form-text text-info" v-if="field.name === 'invoice_amount'">The configured name means the value of this field will determine the invoice amount for public forms.</div>
-                <div class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_adjustment')">The configured name means the value of this field will adjust the invoice amount for public forms and the point of sale app.</div>
-                <div class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_multiply_adjustment')">The configured name means the value of this field will adjust the invoice amount by multiplying it for public forms and the point of sale app.</div>
+                <div text-translate="true" class="form-text">The name of the field in the invoice's metadata.</div>
+                <div text-translate="true" class="form-text text-info" v-if="field.name === 'invoice_currency'">The configured name means the value of this field will determine the invoice currency for public forms.</div>
+                <div text-translate="true" class="form-text text-info" v-if="field.name === 'invoice_amount'">The configured name means the value of this field will determine the invoice amount for public forms.</div>
+                <div text-translate="true" class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_adjustment')">The configured name means the value of this field will adjust the invoice amount for public forms and the point of sale app.</div>
+                <div text-translate="true" class="form-text text-info" v-if="field.name && field.name.startsWith('invoice_amount_multiply_adjustment')">The configured name means the value of this field will adjust the invoice amount by multiplying it for public forms and the point of sale app.</div>
             </div>
             <div class="form-group" v-if="field.type === 'select'">
-                <h5 class="mt-2">Options</h5>
+                <h5 class="mt-2" text-translate="true">Options</h5>
                 <div class="options" v-sortable="{ handle: '.drag', onUpdate: sortOptions }">
                     <div v-for="(option, index) in field.options" :key="option.value" class="d-flex align-items-start gap-2 pt-3">
                         <button type="button" class="btn b-0 control drag">
@@ -70,23 +70,23 @@
                 </div>
                 <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addOption($event)">
                     <vc:icon symbol="actions-add" />
-                    Add Option
+                    <span text-translate="true">Add Option</span>
                 </button>
             </div>
             <div class="form-group" v-if="field.type !== 'fieldset' && field.type !== 'mirror'">
-                <label for="field-editor-field-value" class="form-label">Default Value</label>
+                <label for="field-editor-field-value" class="form-label" text-translate="true">Default Value</label>
                 <input id="field-editor-field-value" class="form-control" v-model="field.value" />
             </div>
             <div class="form-group" v-if="field.type === 'mirror'">
-                <label for="field-editor-field-mirror" class="form-label">Field to mirror</label>
+                <label for="field-editor-field-mirror" class="form-label" text-translate="true">Field to mirror</label>
                 <select id="field-editor-field-mirror" class="form-select" v-model="field.value">
                     <option v-for="option in $root.allFields" v-if="option.name && option.name !== field.name" :key="option.name" :value="option.name" :selected="option.name === field.value" v-text="option.label || option.name"></option>
                 </select>
-                <div class="form-text">The chosen field's selected value will be copied to this field upon submission.</div>
+                <div class="form-text" text-translate="true">The chosen field's selected value will be copied to this field upon submission.</div>
             </div>
             <div class="form-group" v-if="field.type === 'mirror'">
-                <h5 class="mt-2">Value Mapper</h5>
-                <div class="form-text">The values being mirrored from another field will be mapped to another value if configured.</div>
+                <h5 class="mt-2" text-translate="true">Value Mapper</h5>
+                <div class="form-text" text-translate="true">The values being mirrored from another field will be mapped to another value if configured.</div>
                 <div class="options">
                     <div v-if="field.valuemap" v-for="(v, k, index) in field.valuemap" :key="k" class="d-flex align-items-start gap-2 pt-3">
                         <div class="field flex-grow-1">
@@ -107,25 +107,25 @@
                 </div>
                 <button type="button" class="btn btn-link px-1 py-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="addValueMap($event)">
                     <vc:icon symbol="actions-add" />
-                    Add mapped value
+                    <span text-translate="true">Add mapped value</span>
                 </button>
             </div>
             <div class="form-group" v-if="field.type !== 'fieldset' && field.type !== 'mirror'">
-                <label for="field-editor-field-helpText" class="form-label">Helper Text</label>
+                <label for="field-editor-field-helpText" class="form-label" text-translate="true">Helper Text</label>
                 <input id="field-editor-field-helpText" class="form-control" v-model="field.helpText" />
-                <div class="form-text">Additional text to provide an explanation for the field</div>
+                <div class="form-text" text-translate="true">Additional text to provide an explanation for the field</div>
             </div>
             <div class="form-group form-check" v-if="field.type !== 'fieldset' && field.type !== 'mirror'">
                 <input id="field-editor-field-required" type="checkbox" class="form-check-input" v-model="field.required" />
-                <label for="field-editor-field-required" class="form-check-label">Required Field</label>
+                <label for="field-editor-field-required" class="form-check-label" text-translate="true">Required Field</label>
             </div>
             <div class="form-group form-check" v-if="field.type !== 'fieldset' && field.type !== 'select' && field.type !== 'mirror'">
                 <input id="field-editor-field-constant" type="checkbox" class="form-check-input" v-model="field.constant" />
-                <label for="field-editor-field-constant" class="form-check-label">Constant</label>
-                <div class="form-text">The user will not be able to change the field's value</div>
+                <label for="field-editor-field-constant" class="form-check-label" text-translate="true">Constant</label>
+                <div class="form-text" text-translate="true">The user will not be able to change the field's value</div>
             </div>
         </div>
-        <div v-else>Select a field to edit</div>
+        <div v-else text-translate="true">Select a field to edit</div>
     </template>
     <template id="fields-editor">
         <div>
@@ -144,7 +144,7 @@
             </div>
             <button type="button" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-field', $event, path)">
                 <vc:icon symbol="actions-add" />
-                Add Form Field
+                <span text-translate="true">Add Form Field</span>
             </button>
         </div>
     </template>
@@ -174,7 +174,7 @@
     <template id="field-type-mirror">
         <div class="form-group mb-0">
             <label class="form-label" v-text="label" v-if="label"></label>
-            <div class="form-text">Mirror of {{value}}</div>
+            <div class="form-text"><span text-translate="true">Mirror of</span> {{value}}</div>
         </div>
     </template>
     <template id="field-type-fieldset">
@@ -196,9 +196,9 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@storeId">Forms</a>
+                    <a asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@storeId" text-translate="true">Forms</a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
             </ol>
             <h2>
                 @ViewData["Title"]
@@ -211,7 +211,7 @@
 			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
             @if (!isNew)
             {
-                <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm">View</a>
+                <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm" text-translate="true">View</a>
             }
         </div>
     </div>
@@ -230,7 +230,7 @@
                 <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
                 <div>
                     <label asp-for="Public"></label>
-                    <div class="form-text">
+                    <div class="form-text" text-translate="true">
                         Standalone mode, which can be used to generate invoices
                         independent of payment requests or apps.
                     </div>
@@ -243,16 +243,16 @@
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
             <ul class="nav nav-pills gap-4" role="tablist">
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
+                    <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true" text-translate="true">Editor</button>
                 </li>
                 <li class="nav-item" role="presentation">
-                    <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
+                    <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false" text-translate="true">Code</button>
                 </li>
             </ul>
             <div class="d-flex align-items-center gap-2 mb-1">
-                <span class="fw-semibold">Templates</span>
-                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate">Email</button>
-                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate">Address</button>
+                <span class="fw-semibold" text-translate="true">Templates</span>
+                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('email')" id="ApplyEmailTemplate" text-translate="true">Email</button>
+                <button type="button" class="btn btn-link p-0 fw-semibold" v-on:click="applyTemplate('address')" id="ApplyAddressTemplate" text-translate="true">Address</button>
             </div>
         </div>
         <div class="tab-content">
@@ -271,7 +271,7 @@
                     </div>
                     <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
                         <div class="offcanvas-header justify-content-between p-3">
-                            <h5 class="offcanvas-title">Edit Field</h5>
+                            <h5 class="offcanvas-title" text-translate="true">Edit Field</h5>
                             <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
                                 <vc:icon symbol="close" />
                             </button>
@@ -283,7 +283,7 @@
                 </div>
             </div>
             <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
-                <label asp-for="FormConfig" class="form-label" data-required>Form JSON</label>
+                <label asp-for="FormConfig" class="form-label" data-required text-translate="true">Form JSON</label>
                 <textarea asp-for="FormConfig" class="form-control font-monospace" style="font-size:.85rem" rows="21" cols="21" v-model="configJSON" v-on:change="updateFromJSON"></textarea>
                 <span asp-validation-for="FormConfig" class="text-danger"></span>
             </div>

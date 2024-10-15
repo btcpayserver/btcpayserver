@@ -7,5 +7,5 @@
     <h2 text-translate="true">@ViewData["Title"]</h2>
 </div>
 <partial name="_StatusMessage" />
-<p>Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
+<p text-translate="true">Easily log into BTCPay Server on another device using a simple login code from an already authenticated device.</p>
 <component type="typeof(BTCPayServer.Blazor.UserLoginCode)" render-mode="ServerPrerendered" param-UserId="@UserManager.GetUserId(User)" param-id="@("LoginCode")"/>

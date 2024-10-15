@@ -101,11 +101,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public MoneroLikeOnChainPaymentMethodDetails ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
         {
-            return ParsePaymentPromptDetails(details);
+            return details.ToObject<MoneroLikeOnChainPaymentMethodDetails>(Serializer);
         }
         object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
         {
-            return details.ToObject<MoneroLikeOnChainPaymentMethodDetails>(Serializer);
+            return ParsePaymentPromptDetails(details);
         }
 
         public MoneroLikePaymentData ParsePaymentDetails(JToken details)

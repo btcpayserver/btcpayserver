@@ -15,7 +15,6 @@ namespace BTCPayServer.Payments
     public interface ICheckoutModelExtension
     {
         public PaymentMethodId PaymentMethodId { get; }
-        string DisplayName { get; }
         string Image { get; }
         string Badge { get; }
         void ModifyCheckoutModel(CheckoutModelContext context);

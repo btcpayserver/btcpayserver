@@ -76,13 +76,13 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             context.TrackedDestinations.Add(address.Address);
         }
 
-        object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
-        {
-            return ParsePaymentPromptDetails(details);
-        }
         public ZcashPaymentPromptDetails ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
         {
             return details.ToObject<ZcashPaymentPromptDetails>(Serializer);
+        }
+        object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
+        {
+            return ParsePaymentPromptDetails(details);
         }
         object IPaymentMethodHandler.ParsePaymentMethodConfig(JToken config)
         {

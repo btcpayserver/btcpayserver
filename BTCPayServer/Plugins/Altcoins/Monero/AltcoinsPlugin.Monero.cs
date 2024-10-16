@@ -40,6 +40,7 @@ public partial class AltcoinsPlugin
                     ? "https://www.exploremonero.com/transaction/{0}"
                     : "https://testnet.xmrchain.net/tx/{0}";
         var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("XMR");
+        services.AddDefaultPrettyName(pmi, network.DisplayName);
         services.AddBTCPayNetwork(network)
                 .AddTransactionLinkProvider(pmi, new SimpleTransactionLinkProvider(blockExplorerLink));
 

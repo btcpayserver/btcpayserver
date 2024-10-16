@@ -250,17 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, new Set()));
             },
             itemChanged() {
-                return this.selectedItem && this.selectedItemInitial && (
-                    this.selectedItem.id !== this.selectedItemInitial.id ||
-                    this.selectedItem.title !== this.selectedItemInitial.title ||
-                    this.selectedItem.price !== this.selectedItemInitial.price ||
-                    this.selectedItem.image !== this.selectedItemInitial.image ||
-                    this.selectedItem.disabled !== this.selectedItemInitial.disabled ||
-                    this.selectedItem.inventory !== this.selectedItemInitial.inventory ||
-                    this.selectedItem.priceType !== this.selectedItemInitial.priceType ||
-                    this.selectedItem.categories !== this.selectedItemInitial.categories ||
-                    this.selectedItem.description !== this.selectedItemInitial.description
-                )
+                return (!this.selectedItem && this.selectedItemInitial) ||
+                    (!this.selectedItem && this.selectedItemInitial) ||
+                    (JSON.stringify(this.selectedItem) !== JSON.stringify(this.selectedItemInitial))
+                
             }
         },
         methods: {

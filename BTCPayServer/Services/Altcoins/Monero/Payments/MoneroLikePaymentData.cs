@@ -6,7 +6,7 @@ using BTCPayServer.Services.Invoices;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Payments
 {
-    public class MoneroLikePaymentData : CryptoPaymentData
+    public class MoneroLikePaymentData
     {
         public long SubaddressIndex { get; set; }
         public long SubaccountIndex { get; set; }
@@ -16,9 +16,5 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         public long? InvoiceSettledConfirmationThreshold { get; set; }
 
         public long LockTime { get; set; } = 0;
-        public string GetPaymentProof()
-        {
-            return null;
-        }
     }
 }

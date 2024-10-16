@@ -27,8 +27,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
         }
         public PaymentMethodId PaymentMethodId { get; }
 
-        public string DisplayName => _network.DisplayName;
-
         public string Image => _network.CryptoImagePath;
         public string Badge => "";
 

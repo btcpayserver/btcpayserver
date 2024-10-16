@@ -322,8 +322,9 @@
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Files" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Files)" asp-action="Files" text-translate="true">Files</a>
                 </li>
+                
+                <vc:ui-extension-point location="server-nav" model="@Model"/>
             }
-            <vc:ui-extension-point location="server-nav" model="@Model"/>
             <li class="nav-item dropup">
                 <a class="nav-link @ViewData.ActivePageClass(ManageNavPages.Index)" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="nav-account"/>

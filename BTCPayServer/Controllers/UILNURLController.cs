@@ -19,6 +19,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payments.LNURLPay;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Payouts;
@@ -400,7 +401,7 @@ namespace BTCPayServer
                 return NotFound("Unknown username");
             
             LNURLPayRequest lnurlRequest;
-            
+
             // Check core and fall back to lookup Lightning Address via plugins
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);
             if (lightningAddressSettings is null)
@@ -423,12 +424,13 @@ namespace BTCPayServer
                     return NotFound("LNURL not available for store");
 
                 var blob = lightningAddressSettings.GetBlob();
-                lnurlRequest = new LNURLPayRequest
+                lnurlRequest = new StoreLNURLPayRequest
                 {
                     Tag = "payRequest",
                     MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
                     MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
-                    CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0
+                    CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0,
+                    Store = store
                 };
 
                 var lnUrlMetadata = new Dictionary<string, string>
@@ -471,10 +473,11 @@ namespace BTCPayServer
                    Currency = blob?.CurrencyCode,
                    Metadata = blob?.InvoiceMetadata
                },
-               new LNURLPayRequest
+               new StoreLNURLPayRequest
                {
                    MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
                    MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
+                   Store = store,
                },
                new Dictionary<string, string>
                {
@@ -565,7 +568,7 @@ namespace BTCPayServer
             var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out var lnUrlMethod);
             if (pmi is null)
                 return null;
-            lnurlRequest ??= new LNURLPayRequest();
+            lnurlRequest ??= new StoreLNURLPayRequest{Store = store};
             lnUrlMetadata ??= new Dictionary<string, string>();
 
             var pm = i.GetPaymentPrompt(pmi);

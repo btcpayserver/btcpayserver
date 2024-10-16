@@ -104,7 +104,7 @@ namespace BTCPayServer.Services.Apps
         public static readonly int[] CUSTOM_TIP_PERCENTAGES_DEF = { 15, 18, 20 };
         public int[] CustomTipPercentages { get; set; } = CUSTOM_TIP_PERCENTAGES_DEF;
         public string Language { get; set; }
-        public string HeadHtmlTags { get; set; }
+        public string HtmlMetaTags{ get; set; }
         public string Description { get; set; }
         public string NotificationUrl { get; set; }
         public string RedirectUrl { get; set; }

@@ -74,6 +74,9 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly UIInvoiceController _invoiceController;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CrowdfundAppType _app;
+
+        private bool bHtmlModified;
+
         public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
@@ -411,7 +414,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
-                HeadHtmlTags = settings.HeadHtmlTags,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Language = settings.Language,
                 TargetCurrency = settings.TargetCurrency,
                 MainImageUrl = settings.MainImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), settings.MainImageUrl),
@@ -534,6 +537,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             app.Name = vm.AppName;
             app.Archived = vm.Archived;
+
+            bHtmlModified = false;
             var newSettings = new CrowdfundSettings
             {
                 Title = vm.Title,
@@ -541,7 +546,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
-                HeadHtmlTags = SanitizeHtml(vm.HeadHtmlTags),
+                HtmlMetaTags= SanitizeHtml(vm.HtmlMetaTags),
                 Language = vm.Language,
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
@@ -586,7 +591,14 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 StoreId = app.StoreDataId,
                 Settings = newSettings
             });
-            TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            if (bHtmlModified)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly.";
+            }
+            else
+            {
+                TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            }
             return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
         }
 
@@ -620,6 +632,13 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             sanitizer.AllowedAttributes.Add("property");
 
             sanitizer.AllowDataAttributes = false;
+
+            sanitizer.RemovingTag += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingAtRule += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingAttribute += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingComment += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingCssClass += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingStyle += (sender, e) => bHtmlModified = true;
 
             return sanitizer.Sanitize(inputHtml);
         }

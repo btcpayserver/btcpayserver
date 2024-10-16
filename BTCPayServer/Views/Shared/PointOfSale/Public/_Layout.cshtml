@@ -40,7 +40,8 @@
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
     <link rel="manifest" href="@(await GetDynamicManifest(ViewData["Title"]!.ToString()))">
     <link href="~/pos/common.css" asp-append-version="true" rel="stylesheet" />
-    @Html.Raw(Model.HeadHtmlTags)
+    @* Html.Raw OK here since Html has been cleaned before in controller *@
+    @Html.Raw(Model.HtmlMetaTags)
     @await RenderSectionAsync("PageHeadContent", false)
 </head>
 <body class="min-vh-100">

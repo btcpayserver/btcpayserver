@@ -71,6 +71,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
+
+        private bool bHtmlModified;
+
         public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
@@ -124,7 +127,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 AppId = appId,
                 StoreId = store.Id,
                 Lang = settings.Language,
-                HeadHtmlTags = settings.HeadHtmlTags,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
             });
         }
@@ -589,7 +592,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
                 Language = settings.Language,
-                HeadHtmlTags = settings.HeadHtmlTags,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
@@ -666,6 +669,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
+            bHtmlModified = false;
             var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
@@ -685,7 +689,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
                 Language = vm.Language,
-                HeadHtmlTags = SanitizeHtml(vm.HeadHtmlTags),
+                HtmlMetaTags = SanitizeHtml(vm.HtmlMetaTags),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
@@ -695,7 +699,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             app.Archived = vm.Archived;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);
-            TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            if (bHtmlModified)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly.";
+            } else {
+                TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            }
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
 
@@ -736,9 +745,18 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             sanitizer.AllowedAttributes.Add("value");   
             sanitizer.AllowedAttributes.Add("property");
 
-            sanitizer.AllowDataAttributes = false; 
+            sanitizer.AllowDataAttributes = false;
+
+            sanitizer.RemovingTag += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingAtRule += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingAttribute += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingComment += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingCssClass += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingStyle += (sender, e) => bHtmlModified = true;
+
             return sanitizer.Sanitize(inputHtml);
         }
+
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 

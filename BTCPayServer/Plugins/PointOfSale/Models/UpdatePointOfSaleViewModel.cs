@@ -98,8 +98,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
 
         public string Language { get; set; }
 
-        [Display(Name = "HTML Head Tags")]
-        public string HeadHtmlTags { get; set; }
+        [Display(Name = "HTML Meta Tags")]
+        public string HtmlMetaTags{ get; set; }
 
         public string Description { get; set; }
 

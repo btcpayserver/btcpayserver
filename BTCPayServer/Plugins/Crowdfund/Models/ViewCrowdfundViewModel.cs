@@ -15,7 +15,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public string Lang { get; set; }
-        public string HeadHtmlTags { get; set; }
+        public string HtmlMetaTags{ get; set; }
         public string MainImageUrl { get; set; }
         public string StoreName { get; set; }
         public DateTime? StartDate { get; set; }

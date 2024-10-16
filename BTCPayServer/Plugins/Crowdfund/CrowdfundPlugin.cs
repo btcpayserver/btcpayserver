@@ -198,7 +198,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                 Title = settings.Title,
                 Tagline = settings.Tagline,
                 Lang = settings.Language,
-                HeadHtmlTags = settings.HeadHtmlTags,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 StoreName = store.StoreName,
                 StoreId = appData.StoreDataId,

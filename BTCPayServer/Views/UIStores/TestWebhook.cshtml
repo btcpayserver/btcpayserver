@@ -2,7 +2,7 @@
 @model EditWebhookViewModel
 @inject WebhookSender WebhookSender
 @{
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Send a test event to a webhook endpoint", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, StringLocalizer["Send a test event to a webhook endpoint"], Context.GetStoreData().Id);
 }
 <form method="post">
     <div class="sticky-header">

@@ -77,13 +77,13 @@ public partial class UIStoresController
         StoreRoleId roleId;
         if (role == "create")
         {
-            successMessage = "Role created";
+            successMessage = StringLocalizer["Role created"];
             role = viewModel.Role;
             roleId = new StoreRoleId(storeId, role);
         }
         else
         {
-            successMessage = "Role updated";
+            successMessage = StringLocalizer["Role updated"];
             roleId = new StoreRoleId(storeId, role);
             var storeRole = await storeRepository.GetStoreRole(roleId);
             if (storeRole == null)
@@ -98,15 +98,15 @@ public partial class UIStoresController
         var r = await storeRepository.AddOrUpdateStoreRole(roleId, viewModel.Policies);
         if (r is null)
         {
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = "Role could not be updated"
+                Message = StringLocalizer["Role could not be updated"]
             });
             return View(viewModel);
         }
 
-        TempData.SetStatusMessageModel(new StatusMessageModel()
+        TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
             Message = successMessage
@@ -128,11 +128,11 @@ public partial class UIStoresController
 
         return View("Confirm",
             roleData.IsUsed is true
-                ? new ConfirmModel("Delete role",
+                ? new ConfirmModel(StringLocalizer["Delete role"],
                     $"Unable to proceed: The role <strong>{_html.Encode(roleData.Role)}</strong> is currently assigned to one or more users, it cannot be removed.")
-                : new ConfirmModel("Delete role",
+                : new ConfirmModel(StringLocalizer["Delete role"],
                     $"The role <strong>{_html.Encode(roleData.Role)}</strong> will be permanently deleted. Are you sure?",
-                    "Delete"));
+                    StringLocalizer["Delete"]));
     }
 
     [HttpPost("{storeId}/roles/{role}/delete")]

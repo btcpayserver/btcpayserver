@@ -67,12 +67,12 @@ namespace BTCPayServer.Controllers
             string successMessage = null;
             if (role == "create")
             {
-                successMessage = "Role created";
+                successMessage = StringLocalizer["Role created"];
                 role = viewModel.Role;
             }
             else
             {
-                successMessage = "Role updated";
+                successMessage = StringLocalizer["Role updated"];
                 var storeRole = await _StoreRepository.GetStoreRole(new StoreRoleId(role));
                 if (storeRole == null)
                     return NotFound();
@@ -86,15 +86,15 @@ namespace BTCPayServer.Controllers
             var r = await _StoreRepository.AddOrUpdateStoreRole(new StoreRoleId(role), viewModel.Policies);
             if (r is null)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Role could not be updated"
+                    Message = StringLocalizer["Role could not be updated"]
                 });
                 return View(viewModel);
             }
 
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = successMessage
@@ -114,11 +114,11 @@ namespace BTCPayServer.Controllers
 
             return View("Confirm",
                 roleData.IsUsed is true
-                    ? new ConfirmModel("Delete role",
+                    ? new ConfirmModel(StringLocalizer["Delete role"],
                         $"Unable to proceed: The role <strong>{Html.Encode(roleData.Role)}</strong> is currently assigned to one or more users, it cannot be removed.")
-                    : new ConfirmModel("Delete role",
+                    : new ConfirmModel(StringLocalizer["Delete role"],
                         $"The role <strong>{Html.Encode(roleData.Role)}</strong> will be permanently deleted. Are you sure?",
-                        "Delete"));
+                        StringLocalizer["Delete"]));
         }
 
         [HttpPost("server/roles/{role}/delete")]

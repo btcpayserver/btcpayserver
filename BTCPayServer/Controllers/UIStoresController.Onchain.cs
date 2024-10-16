@@ -108,7 +108,7 @@ public partial class UIStoresController
 
             if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, network, out strategy, out _))
             {
-                ModelState.AddModelError(nameof(vm.WalletFile), $"Import failed, make sure you import a compatible wallet format");
+                ModelState.AddModelError(nameof(vm.WalletFile), StringLocalizer["Import failed, make sure you import a compatible wallet format"]);
                 return View(vm.ViewName, vm);
             }
         }
@@ -116,7 +116,7 @@ public partial class UIStoresController
         {
             if (!_onChainWalletParsers.TryParseWalletFile(vm.WalletFileContent, network, out strategy, out var error))
             {
-                ModelState.AddModelError(nameof(vm.WalletFileContent), $"QR import failed: {error}");
+                ModelState.AddModelError(nameof(vm.WalletFileContent), StringLocalizer["QR import failed: {0}", error]);
                 return View(vm.ViewName, vm);
             }
         }
@@ -145,7 +145,7 @@ public partial class UIStoresController
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), $"Invalid wallet format: {ex.Message}");
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Invalid wallet format: {0}", ex.Message]);
                 return View(vm.ViewName, vm);
             }
         }
@@ -157,14 +157,14 @@ public partial class UIStoresController
             }
             catch
             {
-                ModelState.AddModelError(nameof(vm.Config), "Config file was not in the correct format");
+                ModelState.AddModelError(nameof(vm.Config), StringLocalizer["Config file was not in the correct format"]);
                 return View(vm.ViewName, vm);
             }
         }
 
         if (strategy is null)
         {
-            ModelState.AddModelError(nameof(vm.DerivationScheme), "Please provide your extended public key");
+            ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Please provide your extended public key"]);
             return View(vm.ViewName, vm);
         }
 
@@ -184,7 +184,7 @@ public partial class UIStoresController
             }
             catch
             {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid derivation scheme");
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Invalid derivation scheme"]);
                 return View(vm.ViewName, vm);
             }
             await _storeRepo.UpdateStore(store);
@@ -287,7 +287,7 @@ public partial class UIStoresController
 
         if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
         {
-            ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed");
+            ModelState.AddModelError(nameof(request.ExistingMnemonic), StringLocalizer["Please provide your existing seed"]);
             return View(vm.ViewName, vm);
         }
 
@@ -628,9 +628,9 @@ public partial class UIStoresController
 
         return View("Confirm", new ConfirmModel
         {
-            Title = $"Replace {network.CryptoCode} wallet",
+            Title = StringLocalizer["Replace {0} wallet", network.CryptoCode],
             Description = WalletReplaceWarning(derivation.IsHotWallet),
-            Action = "Setup new wallet"
+            Action = StringLocalizer["Setup new wallet"]
         });
     }
 
@@ -667,9 +667,9 @@ public partial class UIStoresController
 
         return View("Confirm", new ConfirmModel
         {
-            Title = $"Remove {network.CryptoCode} wallet",
+            Title = StringLocalizer["Remove {0} wallet", network.CryptoCode],
             Description = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode),
-            Action = "Remove"
+            Action = StringLocalizer["Remove"]
         });
     }
 

@@ -33,6 +33,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -69,6 +70,7 @@ namespace BTCPayServer.Controllers
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly LocalizerService _localizer;
+        public IStringLocalizer StringLocalizer { get; }
 
         public UIServerController(
             UserManager<ApplicationUser> userManager,
@@ -96,6 +98,7 @@ namespace BTCPayServer.Controllers
             IHtmlHelper html,
             TransactionLinkProviders transactionLinkProviders,
             LocalizerService localizer,
+            IStringLocalizer stringLocalizer,
             BTCPayServerEnvironment environment
         )
         {
@@ -125,6 +128,7 @@ namespace BTCPayServer.Controllers
             _transactionLinkProviders = transactionLinkProviders;
             _localizer = localizer;
             Environment = environment;
+            StringLocalizer = stringLocalizer;
         }
 
         [HttpGet("server/stores")]

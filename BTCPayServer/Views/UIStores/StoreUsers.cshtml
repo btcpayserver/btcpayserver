@@ -10,7 +10,7 @@
         await StoreRepository.GetStoreRoles(storeId),
         nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
         Model.Role);
-    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", storeId);
+    ViewData.SetActivePage(StoreNavPages.Users, StringLocalizer["Store Users"], storeId);
 }
 @section PageHeadContent {
     <style>
@@ -47,7 +47,7 @@
                     <th text-translate="true">Email</th>
                     <th text-translate="true">Name</th>
                     <th text-translate="true">Role</th>
-                    <th class="actions-col" permission="@Policies.CanModifyStoreSettings" text-translate="true">Actions</th>
+                    <th class="actions-col" permission="@Policies.CanModifyStoreSettings"></th>
                 </tr>
                 </thead>
                 <tbody id="StoreUsersList">

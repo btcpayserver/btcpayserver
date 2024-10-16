@@ -5,7 +5,7 @@
 @{
     var storeId = Context.GetStoreData().Id;
     var cryptoCode = Context.GetRouteValue("cryptocode")?.ToString();
-    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "On-Chain Payout Processor", storeId);
+    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, StringLocalizer["On-Chain Payout Processor"], storeId);
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">

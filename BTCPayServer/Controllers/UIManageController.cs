@@ -7,25 +7,21 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using MimeKit;
 
 namespace BTCPayServer.Controllers
 {
-
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
     [Route("account/{action:lowercase=Index}")]
     public partial class UIManageController : Controller
@@ -45,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly IFileService _fileService;
         readonly StoreRepository _StoreRepository;
+        public IStringLocalizer StringLocalizer { get; }
 
         public UIManageController(
           UserManager<ApplicationUser> userManager,
@@ -61,6 +58,7 @@ namespace BTCPayServer.Controllers
           UserService userService,
           UriResolver uriResolver,
           IFileService fileService,
+          IStringLocalizer stringLocalizer,
           IHtmlHelper htmlHelper
           )
         {
@@ -79,6 +77,7 @@ namespace BTCPayServer.Controllers
             _uriResolver = uriResolver;
             _fileService = fileService;
             _StoreRepository = storeRepository;
+            StringLocalizer = stringLocalizer;
         }
 
         [HttpGet]

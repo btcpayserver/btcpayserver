@@ -67,7 +67,7 @@ public partial class UIStoresController
         if (webhook is null)
             return NotFound();
 
-        return View("Confirm", new ConfirmModel("Delete webhook", "This webhook will be removed from this store. Are you sure?", "Delete"));
+        return View("Confirm", new ConfirmModel(StringLocalizer["Delete webhook"], StringLocalizer["This webhook will be removed from this store. Are you sure?"], StringLocalizer["Delete"]));
     }
 
     [HttpPost("{storeId}/webhooks/{webhookId}/remove")]
@@ -150,7 +150,7 @@ public partial class UIStoresController
         }
         else
         {
-            TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
+            TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type} event could not be delivered. Error message received: {result.ErrorMessage ?? "unknown"}";
         }
 
         return View(nameof(TestWebhook));

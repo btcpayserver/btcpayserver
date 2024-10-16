@@ -39,7 +39,7 @@ public partial class UIStoresController
         var roles = await _storeRepo.GetStoreRoles(CurrentStore.Id);
         if (roles.All(role => role.Id != vm.Role))
         {
-            ModelState.AddModelError(nameof(vm.Role), "Invalid role");
+            ModelState.AddModelError(nameof(vm.Role), StringLocalizer["Invalid role"]);
             return View(vm);
         }
             

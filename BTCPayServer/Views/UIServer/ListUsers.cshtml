@@ -37,7 +37,7 @@
 <partial name="_StatusMessage" />
 
 <form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px" method="get">
-    <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
+    <input asp-for="SearchTerm" class="form-control" placeholder="@StringLocalizer["Search by email..."]" />
 </form>
 
 <div class="table-responsive">
@@ -67,11 +67,11 @@
         {
             var status = user switch
             {
-                { Disabled: true } => ("Disabled", "danger"),
-                { Approved: false } => ("Pending Approval", "warning"),
-                { EmailConfirmed: false } => ("Pending Email Verification", "warning"),
-                { InvitationUrl: not null } => ("Pending Invitation", "warning"),
-                _ => ("Active", "success")
+                { Disabled: true } => (StringLocalizer["Disabled"], "danger"),
+                { Approved: false } => (StringLocalizer["Pending Approval"], "warning"),
+                { EmailConfirmed: false } => (StringLocalizer["Pending Email Verification"], "warning"),
+                { InvitationUrl: not null } => (StringLocalizer["Pending Invitation"], "warning"),
+                _ => (StringLocalizer["Active"], "success")
             };
             var pendingInvite = !string.IsNullOrEmpty(user.InvitationUrl);
             var detailsId = user.Stores.Any() ? $"user_details_{user.Id}" : null;
@@ -88,7 +88,7 @@
                 <td class="@(user.Stores.Any() ? null : "text-muted")">@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
-                    <span class="user-status badge bg-@status.Item2">@status.Item1</span>
+                    <span class="user-status badge bg-@status.Item2" text-translate="true">@status.Item1</span>
                 </td>
                 <td class="actions-col">
                     <div class="d-inline-flex align-items-center gap-3">
@@ -105,8 +105,16 @@
                         }
                         else if(status.Item2 != "warning")
                         {
-                            <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" 
-                               class="@(user.Disabled ? "enable-user" : "disable-user")">@(user.Disabled ? "Enable" : "Disable")</a>
+                            <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" class="@(user.Disabled ? "enable-user" : "disable-user")">
+                                @if (user.Disabled)
+                                {
+                                    <span text-translate="true">Enable</span>
+                                }
+                                else
+                                {
+                                    <span text-translate="true">Disable</span>
+                                }
+                            </a>
                         }
                         <a asp-action="User" asp-route-userId="@user.Id" class="user-edit" text-translate="true">Edit</a>
                         <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password text-nowrap" text-translate="true">Password Reset</a>

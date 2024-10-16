@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -62,6 +63,7 @@ public partial class UIStoresController : Controller
         UriResolver uriResolver,
         SettingsRepository settingsRepository,
         CurrencyNameTable currencyNameTable,
+        IStringLocalizer stringLocalizer,
         EventAggregator eventAggregator)
     {
         _rateFactory = rateFactory;
@@ -93,6 +95,7 @@ public partial class UIStoresController : Controller
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
         _webhookNotificationManager = webhookNotificationManager;
         _lightningNetworkOptions = lightningNetworkOptions.Value;
+        StringLocalizer = stringLocalizer;
     }
 
     private readonly BTCPayServerOptions _btcpayServerOptions;
@@ -126,6 +129,7 @@ public partial class UIStoresController : Controller
     private readonly IDataProtector _dataProtector;
 
     public string? GeneratedPairingCode { get; set; }
+    public IStringLocalizer StringLocalizer { get; }
 
     [TempData]
     private bool StoreNotConfigured { get; set; }

@@ -6,7 +6,7 @@
 @inject IFileService FileService
 @model CheckoutAppearanceViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, "Checkout Experience", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, StringLocalizer["Checkout Experience"], Context.GetStoreData().Id);
 
     var canUpload = await FileService.IsAvailable();
 }
@@ -56,7 +56,6 @@
     </script>
 }
 
-
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
         <h2 text-translate="true">@ViewData["Title"]</h2>
@@ -102,21 +101,21 @@
             }
 
 			<h3 class="mb-3 d-flex gap-3 align-items-center">
-				<span>Checkout</span>
+				<span text-translate="true">Checkout</span>
 				<div id="Presets" name="Presets" class="dropdown">
-					<button class="btn btn-secondary dropdown-toggle btn-sm px-3" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+					<button class="btn btn-secondary dropdown-toggle btn-sm px-3" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
 						Select a preset
 					</button>
 					<div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
 						<div id="Presets_Online" class="btcpay-list-select-item dropdown-item">
 							<vc:icon symbol="pos-cart" />
 							<span text-translate="true">Online</span>
-							<span class="note" text-translate="true">Enhance the checkout process for online purchases.<br />This assume the payment page will be displayed on the customer's device.</span>
+							<span class="note" text-translate="true">Enhance the checkout process for online purchases.<br />This assumes the payment page will be displayed on the customer's device.</span>
 						</div>
 						<div id="Presets_InStore" class="btcpay-list-select-item dropdown-item">
 							<vc:icon symbol="nav-store" />
 							<span text-translate="true">In-store</span>
-							<span class="note" text-translate="true">Enhance the checkout process for in-store purchases.<br />This assume the payment page will be displayed on the merchant's device.</span>
+							<span class="note" text-translate="true">Enhance the checkout process for in-store purchases.<br />This assumes the payment page will be displayed on the merchant's device.</span>
 						</div>
 					</div>
 				</div>

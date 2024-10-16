@@ -4,7 +4,7 @@
 @model BTCPayServer.PayoutProcessors.Lightning.UILightningAutomatedPayoutProcessorsController.LightningTransferViewModel
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "Lightning Payout Processor", storeId);
+    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, StringLocalizer["Lightning Payout Processor"], storeId);
 }
 
 <form method="post" permissioned="@Policies.CanModifyStoreSettings">

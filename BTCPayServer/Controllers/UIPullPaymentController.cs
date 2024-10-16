@@ -1,11 +1,7 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.S3.Model;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -14,24 +10,17 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
-using BTCPayServer.Lightning;
-using BTCPayServer.ModelBinders;
 using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
-using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using NBitcoin;
-using NBitcoin.DataEncoders;
-using NdefLibrary.Ndef;
-using Newtonsoft.Json.Linq;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers
 {
@@ -48,6 +37,7 @@ namespace BTCPayServer.Controllers
         private readonly StoreRepository _storeRepository;
         private readonly BTCPayServerEnvironment _env;
         private readonly SettingsRepository _settingsRepository;
+        public IStringLocalizer StringLocalizer { get; }
 
         public UIPullPaymentController(ApplicationDbContextFactory dbContextFactory,
             CurrencyNameTable currencyNameTable,
@@ -59,6 +49,7 @@ namespace BTCPayServer.Controllers
             PayoutMethodHandlerDictionary payoutHandlers,
             StoreRepository storeRepository,
             BTCPayServerEnvironment env,
+            IStringLocalizer stringLocalizer,
             SettingsRepository settingsRepository)
         {
             _dbContextFactory = dbContextFactory;
@@ -72,6 +63,7 @@ namespace BTCPayServer.Controllers
             _env = env;
             _settingsRepository = settingsRepository;
             _networkProvider = networkProvider;
+            StringLocalizer = stringLocalizer;
         }
 
         [AllowAnonymous]
@@ -196,7 +188,7 @@ namespace BTCPayServer.Controllers
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = "Pull payment updated successfully",
+                Message = StringLocalizer["Pull payment updated successfully"],
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
@@ -211,12 +203,12 @@ namespace BTCPayServer.Controllers
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null)
             {
-                ModelState.AddModelError(nameof(pullPaymentId), "This pull payment does not exists");
+                ModelState.AddModelError(nameof(pullPaymentId), StringLocalizer["This pull payment does not exists"]);
             }
 
             if (string.IsNullOrEmpty(vm.Destination))
             {
-                ModelState.AddModelError(nameof(vm.Destination), "Please provide a destination");
+                ModelState.AddModelError(nameof(vm.Destination), StringLocalizer["Please provide a destination"]);
                 return await ViewPullPayment(pullPaymentId);
             }
 
@@ -232,7 +224,7 @@ namespace BTCPayServer.Controllers
                 {
                     var handler = _payoutHandlers.TryGet(pmId);
                     (IClaimDestination dst, string err) = handler == null
-                        ? (null, "No payment handler found for this payment method")
+                        ? (null, StringLocalizer["No payment handler found for this payment method"])
                         : await handler.ParseAndValidateClaimDestination(vm.Destination, ppBlob, cancellationToken);
                     error = err;
                     if (dst is not null && err is null)
@@ -256,7 +248,7 @@ namespace BTCPayServer.Controllers
 
             if (destination is null)
             {
-                ModelState.AddModelError(nameof(vm.Destination), error ?? "Invalid destination or payment method");
+                ModelState.AddModelError(nameof(vm.Destination), error ?? StringLocalizer["Invalid destination or payment method"]);
                 return await ViewPullPayment(pullPaymentId);
             }
             var amtError = ClaimRequest.IsPayoutAmountOk(destination, vm.ClaimedAmount == 0 ? null : vm.ClaimedAmount, payoutHandler.Currency, pp.Currency);

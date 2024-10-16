@@ -2,7 +2,7 @@
 @inject DefaultRulesCollection DefaultRules
 @{
     Layout = Model.IsFirstStore ? "_LayoutWizard" : "_Layout";
-    ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? "Create your first store" : "Create a new store");
+    ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? StringLocalizer["Create your first store"] : StringLocalizer["Create a new store"]);
 }
 
 @section PageFootContent {

@@ -648,7 +648,7 @@ namespace BTCPayServer.Tests
             var store2 = acc.GetController<UIStoresController>();
             await store2.Pair(pairingCode.ToString(), store2.CurrentStore.Id);
             Assert.Contains(nameof(PairingResult.ReusedKey),
-                (string)store2.TempData[WellKnownTempData.ErrorMessage], StringComparison.CurrentCultureIgnoreCase);
+                store2.TempData[WellKnownTempData.ErrorMessage].ToString(), StringComparison.CurrentCultureIgnoreCase);
         }
 
         [Fact(Timeout = LongRunningTestTimeout * 2)]

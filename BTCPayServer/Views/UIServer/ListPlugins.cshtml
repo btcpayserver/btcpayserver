@@ -375,7 +375,7 @@ else
                             @plugin.Version
                             @if (disabled is { } && disabled != plugin.Version)
                             {
-                                <div class="badge bg-light">Disabled (@disabled)</div>
+                                <div class="badge bg-light"><span text-translate="true">Disabled</span> (@disabled)</div>
                             }
                             else if (disabled is { } && disabled == plugin.Version)
                             {
@@ -383,7 +383,10 @@ else
                             }
                             else if (recommended)
                             {
-                                <div class="badge bg-light text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <vc:icon symbol="info" /></div>
+                                <div class="badge bg-light text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">
+                                    <span text-translate="true">Recommended</span>
+                                    <vc:icon symbol="info" />
+                                </div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>

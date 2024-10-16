@@ -11,7 +11,7 @@
 	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
 	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.Send, $"Send {Model.CryptoCode}", walletId);
+	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Send {0}", Model.CryptoCode], walletId);
 	csp.Add("worker-src", "blob:");
 	Csp.UnsafeEval();
 }
@@ -111,7 +111,7 @@
                     <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Labels</label>
+                    <label class="form-label" text-translate="true">Labels</label>
                     <select asp-for="Outputs[index].Labels" class="d-none">
                         @foreach (var t in Model.Outputs[index].Labels)
                         {
@@ -155,10 +155,10 @@
     </div>
 
     <div class="d-grid d-sm-flex flex-wrap gap-3 mb-3 buttons">
-        <button type="submit" name="command" value="add-output" class="btn btn-secondary">Add destination</button>
-        <button type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary" id="toggleInputSelection">@(Model.InputSelection ? "Hide" : "Show") coin selection</button>
+        <button type="submit" name="command" value="add-output" class="btn btn-secondary" text-translate="true">Add destination</button>
+        <button type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary" id="toggleInputSelection">@(Model.InputSelection ? StringLocalizer["Hide coin selection"] : StringLocalizer["Show coin selection"])</button>
         <a asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-secondary" id="PSBT" text-translate="true">Use PSBT</a>
-        <button type="button" id="bip21parse" class="btn btn-secondary">Paste BIP21</button>
+        <button type="button" id="bip21parse" class="btn btn-secondary" text-translate="true">Paste BIP21</button>
     </div>
 
     @if (Model.InputSelection)
@@ -170,7 +170,10 @@
 
     <div class="d-flex flex-wrap gap-3 my-4">
         <div>
-            <label asp-for="FeeSatoshiPerByte" class="form-label">Fee rate <span class="text-secondary">(sat/vB)</span></label>
+            <label asp-for="FeeSatoshiPerByte" class="form-label">
+                <span text-translate="true">Fee rate</span>
+                <span class="text-secondary">(sat/vB)</span>
+            </label>
             <input asp-for="FeeSatoshiPerByte" type="number" inputmode="numeric" min="0" step="any" class="form-control" style="max-width:14ch;" />
             <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
             <span id="FeeRate-Error" class="text-danger"></span>

@@ -115,7 +115,7 @@ public partial class UIStoresController
 
         if (vm.CryptoCode == null)
         {
-            ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
+            ModelState.AddModelError(nameof(vm.CryptoCode), StringLocalizer["Invalid network"]);
             return View(vm);
         }
 
@@ -132,7 +132,7 @@ public partial class UIStoresController
         {
             if (string.IsNullOrEmpty(vm.ConnectionString))
             {
-                ModelState.AddModelError(nameof(vm.ConnectionString), "Please provide a connection string");
+                ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["Please provide a connection string"]);
                 return View(vm);
             }
             paymentMethod = new LightningPaymentMethodConfig { ConnectionString = vm.ConnectionString };
@@ -143,7 +143,7 @@ public partial class UIStoresController
             JToken.FromObject(paymentMethod, handler.Serializer), User, oldConf is null ? null : JToken.FromObject(oldConf, handler.Serializer));
         await handler.ValidatePaymentMethodConfig(ctx);
         if (ctx.MissingPermission is not null)
-            ModelState.AddModelError(nameof(vm.ConnectionString), "You do not have the permissions to change this settings");
+            ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["You do not have the permissions to change this settings"]);
         if (!ModelState.IsValid)
             return View(vm);
 
@@ -241,7 +241,7 @@ public partial class UIStoresController
 
         if (vm.CryptoCode == null)
         {
-            ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
+            ModelState.AddModelError(nameof(vm.CryptoCode), StringLocalizer["Invalid network"]);
             return View(vm);
         }
 

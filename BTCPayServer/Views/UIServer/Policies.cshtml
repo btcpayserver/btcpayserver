@@ -34,7 +34,7 @@
         <div class="col-xl-10 col-xxl-constrain">
             <div class="d-flex flex-column">
                 <div class="form-group mb-5">
-                    <h4 class="mb-3">Registration</h4>
+                    <h4 class="mb-3" text-translate="true">Registration</h4>
                     <div class="d-flex gap-3">
                         <input asp-for="EnableRegistration" type="checkbox" class="btcpay-toggle" />
                         <div>
@@ -204,7 +204,7 @@
                     <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select"></select>
                     @if (!Model.DomainToAppMapping.Any())
                     {
-                        <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="btn btn-link px-0">Map specific domains to specific apps</button>
+                        <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="btn btn-link px-0" text-translate="true">Map specific domains to specific apps</button>
                     }
                 </div>
 

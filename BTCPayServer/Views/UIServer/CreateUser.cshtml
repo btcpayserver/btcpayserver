@@ -65,7 +65,10 @@
                     <span asp-validation-for="SendInvitationEmail" class="text-danger"></span>
                     @if (!canSendEmail)
                     {
-                        <div class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></div>
+                        <div class="text-secondary">
+                            <span text-translate="true">Your email server has not been configured.</span>
+                            <a asp-controller="UIServer" asp-action="Emails" text-translate="true">Please configure it first.</a>
+                        </div>
                     }
                 </div>
             </div>

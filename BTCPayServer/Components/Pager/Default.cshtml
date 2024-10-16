@@ -13,7 +13,7 @@
                 @if (Model.Skip > 0)
                 {
                     <li class="page-item">
-                        <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">Prev</a>
+                        <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)" text-translate="true">Prev</a>
                     </li>
                 }
                 <li class="page-item disabled">
@@ -35,7 +35,7 @@
                 @if ((Model.Total is null && Model.CurrentPageCount >= Model.Count) || (Model.Total is not null && Model.Total.Value > Model.Skip + Model.Count))
                 {
                     <li class="page-item">
-                        <a class="page-link" href="@NavigatePages(1, Model.Count)">Next</a>
+                        <a class="page-link" href="@NavigatePages(1, Model.Count)" text-translate="true">Next</a>
                     </li>
                 }
             </ul>
@@ -45,7 +45,7 @@
         {
             <ul class="pagination ms-auto">
                 <li class="page-item disabled">
-                    <span class="page-link">Page Size</span>
+                    <span class="page-link" text-translate="true">Page Size</span>
                 </li>
                 @foreach (var pageSize in pageSizeOptions)
                 {

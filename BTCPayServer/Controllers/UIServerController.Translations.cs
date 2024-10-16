@@ -38,8 +38,8 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/dictionaries/create")]
         public async Task<IActionResult> CreateDictionary(string fallback = null)
         {
-            var dictionaries = await this._localizer.GetDictionaries();
-            return View(new CreateDictionaryViewModel()
+            var dictionaries = await _localizer.GetDictionaries();
+            return View(new CreateDictionaryViewModel
             {
                 Name = fallback is not null ? $"Clone of {fallback}" : "",
                 Fallback = fallback ?? Translations.DefaultLanguage,
@@ -60,7 +60,7 @@ namespace BTCPayServer.Controllers
                 }
             }
             if (!ModelState.IsValid)
-                return View(viewModel.SetDictionaries(await this._localizer.GetDictionaries()));
+                return View(viewModel.SetDictionaries(await _localizer.GetDictionaries()));
             TempData[WellKnownTempData.SuccessMessage] = "Dictionary created";
             return RedirectToAction(nameof(EditDictionary), new { dictionary = viewModel.Name });
         }
@@ -94,7 +94,7 @@ namespace BTCPayServer.Controllers
 
             if (!Translations.TryCreateFromJson(viewModel.Translations, out var translations))
             {
-                ModelState.AddModelError(nameof(viewModel.Translations), "Syntax error");
+                ModelState.AddModelError(nameof(viewModel.Translations), StringLocalizer["Syntax error"]);
                 return View(viewModel);
             }
             await _localizer.Save(d, translations);
@@ -104,7 +104,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/dictionaries/{dictionary}/select")]
         public async Task<IActionResult> SelectDictionary(string dictionary)
         {
-            var settings = await this._SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
+            var settings = await _SettingsRepository.GetSettingAsync<PoliciesSettings>() ?? new();
             settings.LangDictionary = dictionary;
             await _SettingsRepository.UpdateSetting(settings);
             await _localizer.Load();

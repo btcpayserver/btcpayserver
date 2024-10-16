@@ -7,7 +7,7 @@
     var walletId = Context.GetRouteValue("walletId").ToString();
     var returnUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Receive, StringLocalizer["Receive {0}", Model.CryptoCode], walletId);
 }
 
 @section PageHeadContent

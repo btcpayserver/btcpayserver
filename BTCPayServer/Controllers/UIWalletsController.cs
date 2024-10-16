@@ -35,6 +35,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -57,6 +58,7 @@ namespace BTCPayServer.Controllers
         private ExplorerClientProvider ExplorerClientProvider { get; }
         public IServiceProvider ServiceProvider { get; }
         public RateFetcher RateFetcher { get; }
+        public IStringLocalizer StringLocalizer { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NBXplorerDashboard _dashboard;
@@ -99,6 +101,7 @@ namespace BTCPayServer.Controllers
                                  DefaultRulesCollection defaultRules,
                                  PaymentMethodHandlerDictionary handlers,
                                  Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
+                                 IStringLocalizer stringLocalizer,
                                  TransactionLinkProviders transactionLinkProviders)
         {
             _currencyTable = currencyTable;
@@ -124,6 +127,7 @@ namespace BTCPayServer.Controllers
             _pullPaymentHostedService = pullPaymentHostedService;
             ServiceProvider = serviceProvider;
             _walletHistogramService = walletHistogramService;
+            StringLocalizer = stringLocalizer;
         }
 
         [HttpPost]

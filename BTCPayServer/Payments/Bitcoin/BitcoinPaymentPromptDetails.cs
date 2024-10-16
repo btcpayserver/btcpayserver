@@ -23,6 +23,9 @@ namespace BTCPayServer.Payments.Bitcoin
             get;
             set;
         }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint256 AssetId { get; set; }
         public bool PayjoinEnabled { get; set; }
 
         /// <summary>

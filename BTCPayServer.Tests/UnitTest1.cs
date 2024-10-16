@@ -2909,6 +2909,11 @@ namespace BTCPayServer.Tests
                 }
                 Assert.True(await invoiceMigrator.IsComplete());
             });
+            var invoiceRepo = tester.PayTester.GetService<InvoiceRepository>();
+            var invoice = await invoiceRepo.GetInvoice("Q7RqoHLngK9svM4MgRyi9y");
+            var p = invoice.Payments.First(p => p.Id == "26c879f3d27a894a62f8730c84205ac9dec38b7bbc0a11ccc0c196d1259b25aa-1");
+            var details = p.GetDetails<BitcoinLikePaymentData>(handlers.GetBitcoinHandler("BTC"));
+            Assert.Equal("6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d", details.AssetId.ToString());
         }
 
         private static async Task RestartMigration(ServerTester tester)
@@ -3246,7 +3251,7 @@ namespace BTCPayServer.Tests
             report = await GetReport(acc, new() { ViewName = "Payments", TimePeriod = new TimePeriod() { From = date2018, To = date2018 + TimeSpan.FromDays(365) } });
             var invoiceIdIndex = report.GetIndex("InvoiceId");
             var oldPaymentsCount = report.Data.Count(d => d[invoiceIdIndex].Value<string>() == "Q7RqoHLngK9svM4MgRyi9y");
-            Assert.Equal(8, oldPaymentsCount); // 10 payments, but 2 unaccounted
+            Assert.Equal(9, oldPaymentsCount); // 11 payments, but 2 unaccounted
 
             var addr = await tester.ExplorerNode.GetNewAddressAsync();
             // Two invoices get refunded

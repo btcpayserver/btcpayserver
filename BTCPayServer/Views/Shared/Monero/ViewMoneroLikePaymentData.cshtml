@@ -28,7 +28,8 @@
 
         m.TransactionId = onChainPaymentData.TransactionId;
         m.ReceivedTime = payment.ReceivedTime;
-		m.TransactionLink = TransactionLinkProviders.GetTransactionLink(m.PaymentMethodId, onChainPaymentData.TransactionId);
+		if (onChainPaymentData.TransactionId != null)
+			m.TransactionLink = TransactionLinkProviders.GetTransactionLink(m.PaymentMethodId, onChainPaymentData.TransactionId);
 		m.Currency = payment.Currency;
         return m;
 	}).Where(c => c != null).ToList();

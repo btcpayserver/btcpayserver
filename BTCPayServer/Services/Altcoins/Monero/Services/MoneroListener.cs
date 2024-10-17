@@ -3,10 +3,12 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Altcoins.Monero.Configuration;
@@ -24,7 +26,7 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Services
 {
-    public class MoneroListener : IHostedService
+    public class MoneroListener : EventHostedServiceBase
     {
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
@@ -35,9 +37,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly InvoiceActivator _invoiceActivator;
         private readonly PaymentService _paymentService;
-        private readonly CompositeDisposable leases = new CompositeDisposable();
-        private readonly Queue<Func<CancellationToken, Task>> taskQueue = new Queue<Func<CancellationToken, Task>>();
-        private CancellationTokenSource _Cts;
 
         public MoneroListener(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
@@ -47,7 +46,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             ILogger<MoneroListener> logger,
             PaymentMethodHandlerDictionary handlers,
             InvoiceActivator invoiceActivator,
-            PaymentService paymentService)
+            PaymentService paymentService) : base(eventAggregator, logger)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
@@ -60,70 +59,40 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             _paymentService = paymentService;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override void SubscribeToEvents()
         {
-            if (!_MoneroLikeConfiguration.MoneroLikeConfigurationItems.Any())
-            {
-                return Task.CompletedTask;
-            }
-            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            base.SubscribeToEvents();
+            Subscribe<MoneroEvent>();
+            Subscribe<MoneroRPCProvider.MoneroDaemonStateChange>();
+        }
 
-            leases.Add(_eventAggregator.Subscribe<MoneroEvent>(OnMoneroEvent));
-            leases.Add(_eventAggregator.Subscribe<MoneroRPCProvider.MoneroDaemonStateChange>(e =>
+        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
+        {
+            if (evt is MoneroRPCProvider.MoneroDaemonStateChange stateChange)
             {
-                if (_moneroRpcProvider.IsAvailable(e.CryptoCode))
+                if (_moneroRpcProvider.IsAvailable(stateChange.CryptoCode))
                 {
-                    _logger.LogInformation($"{e.CryptoCode} just became available");
-                    _ = UpdateAnyPendingMoneroLikePayment(e.CryptoCode);
+                    _logger.LogInformation($"{stateChange.CryptoCode} just became available");
+                    _ = UpdateAnyPendingMoneroLikePayment(stateChange.CryptoCode);
                 }
                 else
                 {
-                    _logger.LogInformation($"{e.CryptoCode} just became unavailable");
+                    _logger.LogInformation($"{stateChange.CryptoCode} just became unavailable");
                 }
-            }));
-            _ = WorkThroughQueue(_Cts.Token);
-            return Task.CompletedTask;
-        }
-
-        private async Task WorkThroughQueue(CancellationToken token)
-        {
-            while (!token.IsCancellationRequested)
+            }
+            else if (evt is MoneroEvent moneroEvent)
             {
-                if (taskQueue.TryDequeue(out var t))
+                if (!_moneroRpcProvider.IsAvailable(moneroEvent.CryptoCode))
+                    return;
+
+                if (!string.IsNullOrEmpty(moneroEvent.BlockHash))
                 {
-                    try
-                    {
-
-                        await t.Invoke(token);
-                    }
-                    catch (Exception e)
-                    {
-
-                        _logger.LogError($"error with queue item", e);
-                    }
+                    await OnNewBlock(moneroEvent.CryptoCode);
                 }
-                else
+                if (!string.IsNullOrEmpty(moneroEvent.TransactionHash))
                 {
-                    await Task.Delay(TimeSpan.FromSeconds(1), token);
+                    await OnTransactionUpdated(moneroEvent.CryptoCode, moneroEvent.TransactionHash);
                 }
-            }
-        }
-
-        private void OnMoneroEvent(MoneroEvent obj)
-        {
-            if (!_moneroRpcProvider.IsAvailable(obj.CryptoCode))
-            {
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(obj.BlockHash))
-            {
-                taskQueue.Enqueue(token => OnNewBlock(obj.CryptoCode));
-            }
-
-            if (!string.IsNullOrEmpty(obj.TransactionHash))
-            {
-                taskQueue.Enqueue(token => OnTransactionUpdated(obj.CryptoCode, obj.TransactionHash));
             }
         }
 
@@ -204,7 +173,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
             var transferProcessingTasks = new List<Task>();
 
-            var updatedPaymentEntities = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
+            var updatedPaymentEntities = new List<(PaymentEntity Payment, InvoiceEntity invoice)>();
             foreach (var keyValuePair in tasks)
             {
                 var transfers = keyValuePair.Value.Result.In;
@@ -256,14 +225,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             }
         }
 
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            leases.Dispose();
-            _Cts?.Cancel();
-            return Task.CompletedTask;
-        }
-
         private async Task OnNewBlock(string cryptoCode)
         {
             await UpdateAnyPendingMoneroLikePayment(cryptoCode);
@@ -278,7 +239,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                     "get_transfer_by_txid",
                     new GetTransferByTransactionIdRequest() { TransactionId = transactionHash });
 
-            var paymentsToUpdate = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
+            var paymentsToUpdate = new List<(PaymentEntity Payment, InvoiceEntity invoice)>();
 
             //group all destinations of the tx together and loop through the sets
             foreach (var destination in transfer.Transfers.GroupBy(destination => destination.Address))
@@ -317,7 +278,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         private async Task HandlePaymentData(string cryptoCode, string address, long totalAmount, long subaccountIndex,
             long subaddressIndex,
             string txId, long confirmations, long blockHeight, long locktime, InvoiceEntity invoice,
-            BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
+            List<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
         {
             var network = _networkProvider.GetNetwork(cryptoCode);
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
@@ -333,9 +294,10 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                 LockTime = locktime,
                 InvoiceSettledConfirmationThreshold = promptDetails.InvoiceSettledConfirmationThreshold
             };
+            var status = GetStatus(details, invoice.SpeedPolicy) ? PaymentStatus.Settled : PaymentStatus.Processing;
             var paymentData = new Data.PaymentData()
             {
-                Status = GetStatus(details, invoice.SpeedPolicy) ? PaymentStatus.Settled : PaymentStatus.Processing,
+                Status = status,
                 Amount = MoneroMoney.Convert(totalAmount),
                 Created = DateTimeOffset.UtcNow,
                 Id = $"{txId}#{subaccountIndex}#{subaddressIndex}",
@@ -346,11 +308,10 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
 
             //check if this tx exists as a payment to this invoice already
             var alreadyExistingPaymentThatMatches = GetAllMoneroLikePayments(invoice, cryptoCode)
-                .Select(entity => (Payment: entity, PaymentData: handler.ParsePaymentDetails(entity.Details)))
-                .SingleOrDefault(c => c.Payment.PaymentMethodId == pmi);
+                .SingleOrDefault(c => c.Id == paymentData.Id && c.PaymentMethodId == pmi);
 
             //if it doesnt, add it and assign a new monerolike address to the system if a balance is still due
-            if (alreadyExistingPaymentThatMatches.Payment == null)
+            if (alreadyExistingPaymentThatMatches == null)
             {
                 var payment = await _paymentService.AddPayment(paymentData, [txId]);
                 if (payment != null)
@@ -359,9 +320,9 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             else
             {
                 //else update it with the new data
-                alreadyExistingPaymentThatMatches.PaymentData = details;
-                alreadyExistingPaymentThatMatches.Payment.Details = JToken.FromObject(paymentData, handler.Serializer);
-                paymentsToUpdate.Add((alreadyExistingPaymentThatMatches.Payment, invoice));
+                alreadyExistingPaymentThatMatches.Status = status;
+                alreadyExistingPaymentThatMatches.Details = JToken.FromObject(details, handler.Serializer);
+                paymentsToUpdate.Add((alreadyExistingPaymentThatMatches, invoice));
             }
         }
 

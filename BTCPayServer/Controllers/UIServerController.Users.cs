@@ -134,39 +134,24 @@ namespace BTCPayServer.Controllers
                 blob.Name = viewModel.Name;
                 propertiesChanged = true;
             }
-            
+
             if (viewModel.ImageFile != null)
             {
-                if (viewModel.ImageFile.Length > 1_000_000)
-                {
-                    ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["The uploaded image file should be less than {0}", "1MB"]);
-                }
-                else if (!viewModel.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
-                {
-                    ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["The uploaded file needs to be an image"]);
-                }
+                var imageUpload = await _fileService.UploadImage(viewModel.ImageFile, user.Id);
+                if (!imageUpload.Success)
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), imageUpload.Response);
                 else
                 {
-                    var formFile = await viewModel.ImageFile.Bufferize();
-                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    try
                     {
-                        ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["The uploaded file needs to be an image"]);
+                        var storedFile = imageUpload.StoredFile!;
+                        var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                        blob.ImageUrl = fileIdUri.ToString();
+                        propertiesChanged = true;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        viewModel.ImageFile = formFile;
-                        // add new image
-                        try
-                        {
-                            var storedFile = await _fileService.AddFile(viewModel.ImageFile, userId);
-                            var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
-                            blob.ImageUrl = fileIdUri.ToString();
-                            propertiesChanged = true;
-                        }
-                        catch (Exception e)
-                        {
-                            ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["Could not save image: {0}", e.Message]);
-                        }
+                        ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["Could not save image: {0}", e.Message]);
                     }
                 }
             }
@@ -181,7 +166,7 @@ namespace BTCPayServer.Controllers
             var wasAdmin = Roles.HasServerAdmin(roles);
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another Admin is added."].Value;
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another admin is added."].Value;
                 return View(viewModel);
             }
 

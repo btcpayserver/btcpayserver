@@ -318,6 +318,20 @@ namespace BTCPayServer.Tests
             Assert.Empty(await client.GetFiles());
             storeData = await client.GetStore(store.Id);
             Assert.Null(storeData.LogoUrl);
+            
+            // App Item Image
+            var app = await client.CreatePointOfSaleApp(store.Id, new PointOfSaleAppRequest { AppName = "Test App" });
+            await AssertValidationError(["file"],
+                async () => await client.UploadAppItemImage(app.Id, filePath, "text/csv")
+            );
+            
+            var fileData = await client.UploadAppItemImage(app.Id, logoPath, "image/png");
+            Assert.Equal("logo.png", fileData.OriginalName);
+            files = await client.GetFiles();
+            Assert.Single(files);
+            
+            await client.DeleteAppItemImage(app.Id, fileData.Id);
+            Assert.Empty(await client.GetFiles());
         }
 
         [Fact(Timeout = TestTimeout)]

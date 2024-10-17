@@ -345,6 +345,82 @@
                 ]
             }
         },
+        "/api/v1/apps/{appId}/image": {
+            "post": {
+                "tags": [
+                    "Apps"
+                ],
+                "summary": "Uploads an image for a app item",
+                "description": "Uploads an image for a app item",
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "The image",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "Apps_UploadAppItemImage",
+                "responses": {
+                    "200": {
+                        "description": "Uploads an image for a app item",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/FileData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The app could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/apps/{appId}/image/{fileId}": {
+            "delete": {
+                "tags": [
+                    "Apps"
+                ],
+                "summary": "Deletes the app item image",
+                "description": "Deletes the app item image",
+                "operationId": "App_DeleteAppItemImage",
+                "responses": {
+                    "200": {
+                        "description": "App item image deleted successfully"
+                    },
+                    "404": {
+                        "description": "The app could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/apps/{appId}/sales": {
             "get": {
                 "tags": [

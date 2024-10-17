@@ -16,7 +16,7 @@ Please refer to our blog post before upgrading — here are the most noteworthy 
 * Improved onboarding flow (#6188 #6231 #6233)  @dstrukt @dennisreimann @pavlenex
 * Improved branding options (#5947 #5992) @dennisreimann @dstrukt
 * Support pluginable rate providers (#5777) @Kukks
-* User: Add name and profiole picture (#6008) @dennisreimann @NicolasDorier
+* User: Add name and profile picture (#6008) @dennisreimann @NicolasDorier
 * Greenfield: Manage notifications (#6058) @dennisreimann
 * Greenfield: Add file endpoints and upload (#6075) @dennisreimann
 

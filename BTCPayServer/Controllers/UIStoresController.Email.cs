@@ -226,11 +226,11 @@ public partial class UIStoresController
                 var message = settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{store.StoreName}: Email test", StringLocalizer["You received it, the BTCPay Server SMTP settings work."], false);
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
-                TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email sent to {0}. Please verify you received it.", model.TestEmail].Value;
             }
             catch (Exception ex)
             {
-                TempData[WellKnownTempData.ErrorMessage] = $"Error: {ex.Message}";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Error: {0}", ex.Message].Value;
             }
             return View(model);
         }
@@ -240,7 +240,7 @@ public partial class UIStoresController
             storeBlob.EmailSettings.Password = null;
             store.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(store);
-            TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
         }
         if (useCustomSMTP)
         {
@@ -258,7 +258,7 @@ public partial class UIStoresController
             storeBlob.EmailSettings = model.Settings;
             store.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(store);
-            TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings modified"].Value;
         }
         return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
     }

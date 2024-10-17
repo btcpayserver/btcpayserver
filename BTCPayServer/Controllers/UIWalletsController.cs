@@ -1260,7 +1260,7 @@ namespace BTCPayServer.Controllers
                         selectedTransactions ??= Array.Empty<string>();
                         if (selectedTransactions.Length == 0)
                         {
-                            TempData[WellKnownTempData.ErrorMessage] = $"No transaction selected";
+                            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["No transaction selected"].Value;
                             return RedirectToAction(nameof(WalletTransactions), new { walletId });
                         }
 
@@ -1291,12 +1291,12 @@ namespace BTCPayServer.Controllers
                             .PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);
                         if (result.TotalPruned == 0)
                         {
-                            TempData[WellKnownTempData.SuccessMessage] = "The wallet is already pruned";
+                            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The wallet is already pruned"].Value;
                         }
                         else
                         {
                             TempData[WellKnownTempData.SuccessMessage] =
-                                $"The wallet has been successfully pruned ({result.TotalPruned} transactions have been removed from the history)";
+                                StringLocalizer["The wallet has been successfully pruned ({0} transactions have been removed from the history)", result.TotalPruned].Value;
                         }
 
                         return RedirectToAction(nameof(WalletTransactions), new { walletId });
@@ -1459,11 +1459,11 @@ namespace BTCPayServer.Controllers
             ;
             if (await WalletRepository.RemoveWalletLabels(walletId, labels))
             {
-                TempData[WellKnownTempData.SuccessMessage] = "The label has been successfully removed.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully removed."].Value;
             }
             else
             {
-                TempData[WellKnownTempData.ErrorMessage] = "The label could not be removed.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be removed."].Value;
             }
 
             return RedirectToAction(nameof(WalletLabels), new { walletId });

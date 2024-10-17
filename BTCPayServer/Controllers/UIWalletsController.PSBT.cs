@@ -92,7 +92,7 @@ namespace BTCPayServer.Controllers
 
             if (bumpableUTXOs.Length == 0)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "There isn't any UTXO available to bump fee";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["There isn't any UTXO available to bump fee"].Value;
                 return LocalRedirect(returnUrl);
             }
             Money bumpFee = Money.Zero;
@@ -267,10 +267,10 @@ namespace BTCPayServer.Controllers
                     psbt = await ExplorerClientProvider.UpdatePSBT(derivationSchemeSettings, psbt);
                     if (psbt == null)
                     {
-                        TempData[WellKnownTempData.ErrorMessage] = "You need to update your version of NBXplorer";
+                        TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You need to update your version of NBXplorer"].Value;
                         return View(vm);
                     }
-                    TempData[WellKnownTempData.SuccessMessage] = "PSBT updated!";
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["PSBT updated!"].Value;
                     return RedirectToWalletPSBT(new WalletPSBTViewModel
                     {
                         PSBT = psbt.ToBase64(),
@@ -599,7 +599,7 @@ namespace BTCPayServer.Controllers
 
                         if (!TempData.HasStatusMessage())
                         {
-                            TempData[WellKnownTempData.SuccessMessage] = $"Transaction broadcasted successfully ({transaction.GetHash()})";
+                            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Transaction broadcasted successfully ({0})", transaction.GetHash()].Value;
                         }
                         if (!string.IsNullOrEmpty(vm.ReturnUrl))
                         {
@@ -644,7 +644,7 @@ namespace BTCPayServer.Controllers
                 return View(vm);
             }
             sourcePSBT = sourcePSBT.Combine(psbt);
-            TempData[WellKnownTempData.SuccessMessage] = "PSBT Successfully combined!";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["PSBT Successfully combined!"].Value;
             return RedirectToWalletPSBT(new WalletPSBTViewModel
             {
                 PSBT = sourcePSBT.ToBase64(),

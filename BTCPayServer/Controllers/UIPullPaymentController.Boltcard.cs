@@ -19,7 +19,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("pull-payments/{pullPaymentId}/boltcard/{command}")]
         public IActionResult SetupBoltcard(string pullPaymentId, string command)
         {
-            return View(nameof(SetupBoltcard), new SetupBoltcardViewModel()
+            return View(nameof(SetupBoltcard), new SetupBoltcardViewModel
             {
                 ReturnUrl = Url.Action(nameof(ViewPullPayment), "UIPullPayment", new { pullPaymentId }),
                 WebsocketPath = Url.Action(nameof(VaultNFCBridgeConnection), "UIPullPayment", new { pullPaymentId }),
@@ -30,7 +30,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("pull-payments/{pullPaymentId}/boltcard/{command}")]
         public IActionResult SetupBoltcardPost(string pullPaymentId, string command)
         {
-            TempData[WellKnownTempData.SuccessMessage] = "Boltcard is configured";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Boltcard is configured"].Value;
             return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId });
         }
 

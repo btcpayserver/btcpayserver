@@ -152,7 +152,7 @@ public partial class UIStoresController
         }
         await storeRepository.RemoveStoreRole(roleId);
 
-        TempData[WellKnownTempData.SuccessMessage] = "Role deleted";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Role deleted"].Value;
         return RedirectToAction(nameof(ListRoles), new { storeId });
     }
 }

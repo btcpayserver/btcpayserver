@@ -190,7 +190,7 @@ public partial class UIStoresController
             await _storeRepo.UpdateStore(store);
             _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
 
-            TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
 
             // This is success case when derivation scheme is added to the store
             return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
@@ -380,7 +380,7 @@ public partial class UIStoresController
             return checkResult;
         }
 
-        TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
 
         var walletId = new WalletId(storeId, cryptoCode);
         return RedirectToAction(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { walletId });

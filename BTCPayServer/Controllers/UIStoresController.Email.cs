@@ -132,7 +132,7 @@ public partial class UIStoresController
             }
             catch (Exception ex)
             {
-                TempData[WellKnownTempData.ErrorMessage] = message + StringLocalizer["Error sending test email: {0}", ex.Message];
+                TempData[WellKnownTempData.ErrorMessage] = message + StringLocalizer["Error sending test email: {0}", ex.Message].Value;
                 return RedirectToAction("StoreEmails", new { storeId });
             }
         }

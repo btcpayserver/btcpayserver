@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
             var wasAdmin = Roles.HasServerAdmin(roles);
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "This is the only admin, so their role can't be removed until another Admin is added.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another Admin is added."].Value;
                 return View(viewModel);
             }
 
@@ -199,11 +199,11 @@ namespace BTCPayServer.Controllers
             {
                 if (propertiesChanged is not false && adminStatusChanged is not false && approvalStatusChanged is not false)
                 {
-                    TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User successfully updated"].Value;
                 }
                 else
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "Error updating user";
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Error updating user"].Value;
                 }
             }
 
@@ -347,7 +347,7 @@ namespace BTCPayServer.Controllers
 
             await _userService.DeleteUserAndAssociatedData(user);
 
-            TempData[WellKnownTempData.SuccessMessage] = "User deleted";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User deleted"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 
@@ -374,12 +374,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
             {
-                TempData[WellKnownTempData.SuccessMessage] = "User was the last enabled admin and could not be disabled.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User was the last enabled admin and could not be disabled."].Value;
                 return RedirectToAction(nameof(ListUsers));
             }
             await _userService.ToggleUser(userId, enable ? null : DateTimeOffset.MaxValue);
 
-            TempData[WellKnownTempData.SuccessMessage] = $"User {(enable ? "enabled" : "disabled")}";
+            TempData[WellKnownTempData.SuccessMessage] = enable
+                ? StringLocalizer["User enabled"].Value
+                : StringLocalizer["User disabled"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 
@@ -402,7 +404,9 @@ namespace BTCPayServer.Controllers
 
             await _userService.SetUserApproval(userId, approved, Request.GetAbsoluteRootUri());
 
-            TempData[WellKnownTempData.SuccessMessage] = $"User {(approved ? "approved" : "unapproved")}";
+            TempData[WellKnownTempData.SuccessMessage] = approved
+                ? StringLocalizer["User approved"].Value
+                : StringLocalizer["User unapproved"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 
@@ -430,7 +434,7 @@ namespace BTCPayServer.Controllers
 
             (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
 
-            TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Verification email sent"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 

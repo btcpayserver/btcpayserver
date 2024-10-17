@@ -137,7 +137,7 @@ namespace BTCPayServer.Controllers
             if (errorMessage is null)
             {
                 
-                TempData[WellKnownTempData.SuccessMessage] = "Role deleted";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Role deleted"].Value;
             }
             else
             {
@@ -153,12 +153,12 @@ namespace BTCPayServer.Controllers
             var resolved = await _StoreRepository.ResolveStoreRoleId(null, role);
             if (resolved is null)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Role could not be set as default";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Role could not be set as default"].Value;
             }
             else
             {
                 await _StoreRepository.SetDefaultRole(role);
-                TempData[WellKnownTempData.SuccessMessage] = "Role set default";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Role set default"].Value;
             }
             
             return RedirectToAction(nameof(ListRoles));

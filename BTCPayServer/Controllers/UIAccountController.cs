@@ -23,6 +23,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json.Linq;
@@ -47,6 +48,7 @@ namespace BTCPayServer.Controllers
         readonly ILogger _logger;
 
         public PoliciesSettings PoliciesSettings { get; }
+        public IStringLocalizer StringLocalizer { get; }
         public Logs Logs { get; }
 
         public UIAccountController(
@@ -62,6 +64,7 @@ namespace BTCPayServer.Controllers
             UserLoginCodeService userLoginCodeService,
             LnurlAuthService lnurlAuthService,
             LinkGenerator linkGenerator,
+            IStringLocalizer stringLocalizer,
             Logs logs)
         {
             _userManager = userManager;
@@ -78,6 +81,7 @@ namespace BTCPayServer.Controllers
             _eventAggregator = eventAggregator;
             _logger = logs.PayServer;
             Logs = logs;
+            StringLocalizer = stringLocalizer;
         }
 
         [TempData]
@@ -149,7 +153,7 @@ namespace BTCPayServer.Controllers
                 var userId = _userLoginCodeService.Verify(code);
                 if (userId is null)
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "Login code was invalid";
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Login code was invalid"].Value;
                     return await Login(returnUrl);
                 }
 
@@ -629,7 +633,7 @@ namespace BTCPayServer.Controllers
                     });
                     RegisteredUserId = user.Id;
 
-                    TempData[WellKnownTempData.SuccessMessage] = "Account created.";
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account created."].Value;
                     var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
                     var requiresUserApproval = policies.RequiresUserApproval && !user.Approved;
                     if (requiresConfirmedEmail)

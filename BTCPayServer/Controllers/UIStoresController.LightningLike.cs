@@ -159,7 +159,7 @@ public partial class UIStoresController
                 });
 
                 await _storeRepo.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning node updated.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer[$"{0} Lightning node updated.", network.CryptoCode].Value;
                 return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });
 
             case "test":
@@ -172,9 +172,10 @@ public partial class UIStoresController
                         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                         await handler.TestConnection(info.First(), cts.Token);
                     }
-                    TempData[WellKnownTempData.SuccessMessage] = "Connection to the Lightning node successful" + (hasPublicAddress
-                        ? $". Your node address: {info.First()}"
-                        : ", but no public address has been configured");
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Connection to the Lightning node successful."].Value + " " +
+                        (hasPublicAddress
+                            ? StringLocalizer["Your node address: {0}", info.First()].Value
+                            : StringLocalizer["No public address has been configured"].Value);
                 }
                 catch (Exception ex)
                 {
@@ -202,7 +203,7 @@ public partial class UIStoresController
         var lightning = GetConfig<LightningPaymentMethodConfig>(lnId, store);
         if (lightning == null)
         {
-            TempData[WellKnownTempData.ErrorMessage] = "You need to connect to a Lightning node before adjusting its settings.";
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You need to connect to a Lightning node before adjusting its settings."].Value;
 
             return RedirectToAction(nameof(SetupLightningNode), new { storeId, cryptoCode });
         }
@@ -289,7 +290,7 @@ public partial class UIStoresController
         {
             await _storeRepo.UpdateStore(store);
 
-            TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning settings successfully updated.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning settings successfully updated.", network.CryptoCode];
         }
 
         return RedirectToAction(nameof(LightningSettings), new { vm.StoreId, vm.CryptoCode });

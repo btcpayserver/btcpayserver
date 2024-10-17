@@ -146,11 +146,11 @@ public partial class UIStoresController
 
         if (result.Success)
         {
-            TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type} event delivered successfully! Delivery ID is {result.DeliveryId}";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} event delivered successfully! Delivery ID is {1}", viewModel.Type, result.DeliveryId!].Value;
         }
         else
         {
-            TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type} event could not be delivered. Error message received: {result.ErrorMessage ?? "unknown"}";
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["{0} event could not be delivered. Error message received: {1}", viewModel.Type, result.ErrorMessage ?? StringLocalizer["unknown"].Value].Value;
         }
 
         return View(nameof(TestWebhook));

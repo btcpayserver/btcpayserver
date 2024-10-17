@@ -214,7 +214,9 @@ namespace BTCPayServer.Controllers
             data = await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(data);
             _EventAggregator.Publish(new PaymentRequestUpdated { Data = data, PaymentRequestId = data.Id, });
 
-            TempData[WellKnownTempData.SuccessMessage] = $"Payment request \"{viewModel.Title}\" {(isNewPaymentRequest ? "created" : "updated")} successfully";
+            TempData[WellKnownTempData.SuccessMessage] = isNewPaymentRequest
+                ? StringLocalizer["Payment request \"{0}\" created successfully", viewModel.Title].Value
+                : StringLocalizer["Payment request \"{0}\" updated successfully", viewModel.Title].Value;
             return RedirectToAction(nameof(GetPaymentRequests), new { storeId = store.Id, payReqId = data.Id });
         }
 
@@ -413,7 +415,7 @@ namespace BTCPayServer.Controllers
 
             if (redirect)
             {
-                TempData[WellKnownTempData.SuccessMessage] = "Payment cancelled";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Payment cancelled"].Value;
                 return RedirectToAction(nameof(ViewPaymentRequest), new { payReqId });
             }
 
@@ -450,8 +452,8 @@ namespace BTCPayServer.Controllers
             if(result is not null)
             {
                 TempData[WellKnownTempData.SuccessMessage] = result.Value
-                    ? "The payment request has been archived and will no longer appear in the payment request list by default again."
-                    : "The payment request has been unarchived and will appear in the payment request list by default.";
+                    ? StringLocalizer["The payment request has been archived and will no longer appear in the payment request list by default again."].Value
+                    : StringLocalizer["The payment request has been unarchived and will appear in the payment request list by default."].Value;
                 return RedirectToAction("GetPaymentRequests", new { storeId = store.Id });
             }
 

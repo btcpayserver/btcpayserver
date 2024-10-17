@@ -86,7 +86,7 @@ namespace BTCPayServer.Controllers
             var newDeliveryId = await WebhookNotificationManager.Redeliver(deliveryId);
             if (newDeliveryId is null)
                 return NotFound();
-            TempData[WellKnownTempData.SuccessMessage] = "Successfully planned a redelivery";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Successfully planned a redelivery"].Value;
             return RedirectToAction(nameof(Invoice),
                 new
                 {
@@ -634,12 +634,12 @@ namespace BTCPayServer.Controllers
             {
                 case "archive":
                     await _InvoiceRepository.MassArchive(selectedItems);
-                    TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice{(selectedItems.Length == 1 ? "" : "s")} archived.";
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} invoices archived.", selectedItems.Length].Value;
                     break;
 
                 case "unarchive":
                     await _InvoiceRepository.MassArchive(selectedItems, false);
-                    TempData[WellKnownTempData.SuccessMessage] = $"{selectedItems.Length} invoice{(selectedItems.Length == 1 ? "" : "s")} unarchived.";
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} invoices unarchived.", selectedItems.Length].Value;
                     break;
                 case "cpfp" when storeId is not null:
                     var network = _NetworkProvider.DefaultNetwork;
@@ -1156,7 +1156,7 @@ namespace BTCPayServer.Controllers
         {
             if (string.IsNullOrEmpty(model?.StoreId))
             {
-                TempData[WellKnownTempData.ErrorMessage] = "You need to select a store before creating an invoice.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You need to select a store before creating an invoice."].Value;
                 return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
             }
 
@@ -1251,7 +1251,7 @@ namespace BTCPayServer.Controllers
                     },
                     cancellationToken: cancellationToken);
 
-                TempData[WellKnownTempData.SuccessMessage] = $"Invoice {result.Id} just created!";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Invoice {0} just created!", result.Id].Value;
                 CreatedInvoiceId = result.Id;
 
                 return RedirectToAction(nameof(Invoice), new { storeId = result.StoreId, invoiceId = result.Id });

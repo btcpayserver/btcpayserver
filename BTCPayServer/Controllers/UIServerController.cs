@@ -161,7 +161,7 @@ namespace BTCPayServer.Controllers
             };
 
             if (!vm.CanUseSSH)
-                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Maintenance feature requires access to SSH properly configured in BTCPay Server configuration."].Value;
             if (IPAddress.TryParse(vm.DNSDomain, out var unused))
                 vm.DNSDomain = null;
 
@@ -174,7 +174,7 @@ namespace BTCPayServer.Controllers
             vm.CanUseSSH = _sshState.CanUseSSH;
             if (command != "soft-restart" && !vm.CanUseSSH)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Maintenance feature requires access to SSH properly configured in BTCPay Server configuration.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Maintenance feature requires access to SSH properly configured in BTCPay Server configuration."].Value;
                 return View(vm);
             }
             if (!ModelState.IsValid)
@@ -1233,7 +1233,7 @@ namespace BTCPayServer.Controllers
                         await client.SendAsync(message);
                         await client.DisconnectAsync(true);
                     }
-                    TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email sent to {0}. Please verify you received it.", model.TestEmail].Value;
                 }
                 catch (Exception ex)
                 {
@@ -1253,14 +1253,14 @@ namespace BTCPayServer.Controllers
                 var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
                 settings.Password = null;
                 await _SettingsRepository.UpdateSetting(settings);
-                TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
                 return RedirectToAction(nameof(Emails));
             }
             
             // save
             if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
-                ModelState.AddModelError("Settings.From", "Invalid email");
+                ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
                 return View(model);
             }
             var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
@@ -1270,7 +1270,7 @@ namespace BTCPayServer.Controllers
             }
             
             await _SettingsRepository.UpdateSetting(model.Settings);
-            TempData[WellKnownTempData.SuccessMessage] = "Email settings saved";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;
             return RedirectToAction(nameof(Emails));
         }
 
@@ -1286,16 +1286,14 @@ namespace BTCPayServer.Controllers
 
             if (string.IsNullOrEmpty(_Options.LogFile))
             {
-                TempData[WellKnownTempData.ErrorMessage] = "File Logging Option not specified. " +
-                                   "You need to set debuglog and optionally " +
-                                   "debugloglevel in the configuration or through runtime arguments";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["File Logging Option not specified. You need to set debuglog and optionally debugloglevel in the configuration or through runtime arguments"].Value;
             }
             else
             {
                 var di = Directory.GetParent(_Options.LogFile);
                 if (di is null)
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "Could not load log files";
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Could not load log files"].Value;
                     return View("Logs", vm);
                 }
 

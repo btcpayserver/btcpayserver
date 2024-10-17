@@ -45,6 +45,7 @@ namespace BTCPayServer.Controllers
                 Fallback = fallback ?? Translations.DefaultLanguage,
             }.SetDictionaries(dictionaries));
         }
+
         [HttpPost("server/dictionaries/create")]
         public async Task<IActionResult> CreateDictionary(CreateDictionaryViewModel viewModel)
         {
@@ -52,23 +53,23 @@ namespace BTCPayServer.Controllers
             {
                 try
                 {
-                    await this._localizer.CreateDictionary(viewModel.Name, viewModel.Fallback, "Custom");
+                    await _localizer.CreateDictionary(viewModel.Name, viewModel.Fallback, "Custom");
                 }
                 catch (DbException)
                 {
-                    ModelState.AddModelError(nameof(viewModel.Name), $"'{viewModel.Name}' already exists");
+                    ModelState.AddModelError(nameof(viewModel.Name), StringLocalizer["'{0}' already exists", viewModel.Name]);
                 }
             }
             if (!ModelState.IsValid)
                 return View(viewModel.SetDictionaries(await _localizer.GetDictionaries()));
-            TempData[WellKnownTempData.SuccessMessage] = "Dictionary created";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dictionary created"].Value;
             return RedirectToAction(nameof(EditDictionary), new { dictionary = viewModel.Name });
         }
 
         [HttpGet("server/dictionaries/{dictionary}")]
         public async Task<IActionResult> EditDictionary(string dictionary)
         {
-            if ((await this._localizer.GetDictionary(dictionary)) is null)
+            if ((await _localizer.GetDictionary(dictionary)) is null)
                 return NotFound();
             var translations = await _localizer.GetTranslations(dictionary);
             return View(new EditDictionaryViewModel().SetTranslations(translations.Translations));
@@ -77,7 +78,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("server/dictionaries/{dictionary}")]
         public async Task<IActionResult> EditDictionary(string dictionary, EditDictionaryViewModel viewModel)
         {
-            var d = await this._localizer.GetDictionary(dictionary);
+            var d = await _localizer.GetDictionary(dictionary);
             if (d is null)
                 return NotFound();
             if (Environment.CheatMode && viewModel.Command == "Fake")
@@ -90,17 +91,16 @@ namespace BTCPayServer.Controllers
                 }
                 viewModel.Translations = Translations.CreateFromJson(jobj.ToString()).ToJsonFormat();
             }
-
-
             if (!Translations.TryCreateFromJson(viewModel.Translations, out var translations))
             {
                 ModelState.AddModelError(nameof(viewModel.Translations), StringLocalizer["Syntax error"]);
                 return View(viewModel);
             }
             await _localizer.Save(d, translations);
-            TempData[WellKnownTempData.SuccessMessage] = "Dictionary updated";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dictionary updated"].Value;
             return RedirectToAction(nameof(ListDictionaries));
         }
+
         [HttpGet("server/dictionaries/{dictionary}/select")]
         public async Task<IActionResult> SelectDictionary(string dictionary)
         {
@@ -108,14 +108,15 @@ namespace BTCPayServer.Controllers
             settings.LangDictionary = dictionary;
             await _SettingsRepository.UpdateSetting(settings);
             await _localizer.Load();
-            TempData[WellKnownTempData.SuccessMessage] = $"Default dictionary changed to {dictionary}";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Default dictionary changed to {0}", dictionary].Value;
             return RedirectToAction(nameof(ListDictionaries));
         }
+
         [HttpPost("server/dictionaries/{dictionary}/delete")]
         public async Task<IActionResult> DeleteDictionary(string dictionary)
         {
             await _localizer.DeleteDictionary(dictionary);
-            TempData[WellKnownTempData.SuccessMessage] = $"Dictionary {dictionary} deleted";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Dictionary {0} deleted", dictionary].Value;
             return RedirectToAction(nameof(ListDictionaries));
         }
     }

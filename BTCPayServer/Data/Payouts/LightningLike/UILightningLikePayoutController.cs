@@ -306,65 +306,108 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             }
 
             var proofBlob = new PayoutLightningBlob { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
+            PayResponse pay = null;
             try
             {
-                var result = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
-                    new PayInvoiceParams()
-                    {
-                        // CLN does not support explicit amount param if it is the same as the invoice amount
-                        Amount = payoutData.Amount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC)? null: new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC)
-                    }, cancellationToken);
-                if (result == null) throw new NoPaymentResultException();
-                
-                string message = null;
-                if (result.Result == PayResult.Ok)
+                Exception exception = null;
+                try
                 {
-                    payoutData.State = result.Details?.Status switch
-                    {
-                        LightningPaymentStatus.Pending => PayoutState.InProgress,
-                        _ => PayoutState.Completed,
-                    };
-                    if (payoutData.State == PayoutState.Completed)
-                    {
-                        message = result.Details?.TotalAmount != null
-                            ? $"Paid out {result.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC)}"
-                            : null;
-                        try
+                    pay = await lightningClient.Pay(proofBlob.PaymentHash,
+                        new PayInvoiceParams()
                         {
-                            var payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(),
-                                cancellationToken);
-                            proofBlob.Preimage = payment.Preimage;
-                        }
-                        catch (Exception)
+                            // CLN does not support explicit amount param if it is the same as the invoice amount
+                            Amount = payoutData.Amount == bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC) ? null : new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC)
+                        }, cancellationToken);
+
+                    if (pay?.Result is PayResult.CouldNotFindRoute)
+                    {
+                        // Payment failed for sure... we can try again later!
+                        payoutData.State = PayoutState.AwaitingPayment;
+                        return new ResultVM
                         {
-                            // ignored
-                        }
+                            PayoutId = payoutData.Id,
+                            Result = PayResult.CouldNotFindRoute,
+                            Message = $"Unable to find a route for the payment, check your channel liquidity",
+                            Destination = payoutBlob.Destination
+                        };
                     }
                 }
-                else if (result.Result == PayResult.Unknown)
+                catch (Exception ex)
                 {
-                    payoutData.State = PayoutState.InProgress;
-                }
-                if (payoutData.State == PayoutState.InProgress)
-                {
-                    message = "The payment has been initiated but is still in-flight.";
+                    exception = ex;
                 }
 
-                payoutData.SetProofBlob(proofBlob, null);
-                return new ResultVM
+                LightningPayment payment = null;
+                try
                 {
-                    PayoutId = payoutData.Id,
-                    Result = result.Result,
-                    Destination = payoutBlob.Destination,
-                    Message = message
-                };
+                    payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(), cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    exception = ex;
+                }
+                if (payment is null)
+                {
+                    payoutData.State = PayoutState.Cancelled;
+                    var exceptionMessage = "";
+                    if (exception is not null)
+                        exceptionMessage = $" ({exception.Message})";
+                    return new ResultVM
+                    {
+                        PayoutId = payoutData.Id,
+                        Result = PayResult.Error,
+                        Message = $"Unable to confirm the payment of the invoice" + exceptionMessage,
+                        Destination = payoutBlob.Destination
+                    };
+                }
+                if (payment.Preimage is not null)
+                    proofBlob.Preimage = payment.Preimage;
+
+                if (payment.Status == LightningPaymentStatus.Complete)
+                {
+                    payoutData.State = PayoutState.Completed;
+                    payoutData.SetProofBlob(proofBlob, null);
+                    return new ResultVM
+                    {
+                        PayoutId = payoutData.Id,
+                        Result = PayResult.Ok,
+                        Destination = payoutBlob.Destination,
+                        Message = payment.AmountSent != null
+                            ? $"Paid out {payment.AmountSent.ToDecimal(LightMoneyUnit.BTC)} {payoutData.Currency}"
+                            : "Paid out"
+                    };
+                }
+                else if (payment.Status == LightningPaymentStatus.Failed)
+                {
+                    payoutData.State = PayoutState.AwaitingPayment;
+                    string reason = "";
+                    if (pay?.ErrorDetail is string err)
+                        reason = $" ({err})";
+                    return new ResultVM
+                    {
+                        PayoutId = payoutData.Id,
+                        Result = PayResult.Error,
+                        Destination = payoutBlob.Destination,
+                        Message = $"The payment failed{reason}"
+                    };
+                }
+                else
+                {
+                    payoutData.State = PayoutState.InProgress;
+                    return new ResultVM
+                    {
+                        PayoutId = payoutData.Id,
+                        Result = PayResult.Unknown,
+                        Destination = payoutBlob.Destination,
+                        Message = "The payment has been initiated but is still in-flight."
+                    };
+                }
             }
-            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException or NoPaymentResultException)
+            catch (Exception ex) when (ex is TaskCanceledException or OperationCanceledException)
             {
                 // Timeout, potentially caused by hold invoices
                 // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
                 payoutData.State = PayoutState.InProgress;
-
                 payoutData.SetProofBlob(proofBlob, null);
                 return new ResultVM
                 {
@@ -404,9 +447,5 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             public string Destination { get; set; }
             public decimal Amount { get; set; }
         }
-    }
-
-    public class NoPaymentResultException : Exception
-    {
     }
 }

@@ -26,6 +26,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -70,6 +71,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
+
         public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
@@ -122,6 +124,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = settings.CustomTipPercentages,
                 AppId = appId,
                 StoreId = store.Id,
+                Lang = settings.Language,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
             });
         }
@@ -585,6 +589,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
+                Language = settings.Language,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
@@ -661,6 +667,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
+            bool wasHtmlModified;
             var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
@@ -679,6 +686,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
+                Language = vm.Language,
+                HtmlMetaTags = SanitizeHtml(vm.HtmlMetaTags, out wasHtmlModified),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
@@ -688,7 +697,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             app.Archived = vm.Archived;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);
-            TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            if (wasHtmlModified)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly.";
+            } else {
+                TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            }
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
 
@@ -714,6 +728,37 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
             return currency.Trim().ToUpperInvariant();
         }
+
+        private string SanitizeHtml(string inputHtml, out bool bHtmlModified)
+        {
+            var sanitizer = new HtmlSanitizer();
+            bool isHtmlModified = false;
+
+            sanitizer.AllowedTags.Clear(); 
+            sanitizer.AllowedTags.Add("meta");
+
+            sanitizer.AllowedAttributes.Clear();
+            sanitizer.AllowedAttributes.Add("name");  
+            sanitizer.AllowedAttributes.Add("http-equiv"); 
+            sanitizer.AllowedAttributes.Add("content");   
+            sanitizer.AllowedAttributes.Add("value");   
+            sanitizer.AllowedAttributes.Add("property");
+
+            sanitizer.AllowDataAttributes = false;
+
+            sanitizer.RemovingTag += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAtRule += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAttribute += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingComment += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingCssClass += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingStyle += (sender, e) => isHtmlModified = true;
+
+            var sRet = sanitizer.Sanitize(inputHtml);
+            bHtmlModified = isHtmlModified;
+
+            return sRet;
+        }
+
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 

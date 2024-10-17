@@ -23,6 +23,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
@@ -73,6 +74,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly UIInvoiceController _invoiceController;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CrowdfundAppType _app;
+
         public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
@@ -410,6 +412,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 Enabled = settings.Enabled,
                 EnforceTargetAmount = settings.EnforceTargetAmount,
                 StartDate = settings.StartDate,
+                HtmlMetaTags= settings.HtmlMetaTags,
+                Language = settings.Language,
                 TargetCurrency = settings.TargetCurrency,
                 MainImageUrl = settings.MainImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), settings.MainImageUrl),
                 Description = settings.Description,
@@ -531,6 +535,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             app.Name = vm.AppName;
             app.Archived = vm.Archived;
+
+            bool wasHtmlModified;
             var newSettings = new CrowdfundSettings
             {
                 Title = vm.Title,
@@ -538,6 +544,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
+                HtmlMetaTags= SanitizeHtml(vm.HtmlMetaTags, out wasHtmlModified),
+                Language = vm.Language,
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
                 TargetAmount = vm.TargetAmount,
@@ -581,7 +589,14 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 StoreId = app.StoreDataId,
                 Settings = newSettings
             });
-            TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            if (wasHtmlModified)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = "Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly.";
+            }
+            else
+            {
+                TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            }
             return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
         }
 
@@ -599,6 +614,38 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
             return currency.Trim().ToUpperInvariant();
         }
+
+
+        private string SanitizeHtml(string inputHtml, out bool bHtmlModified)
+        {
+            var sanitizer = new HtmlSanitizer();
+            bool isHtmlModified = false;
+
+            sanitizer.AllowedTags.Clear();
+            sanitizer.AllowedTags.Add("meta");
+
+            sanitizer.AllowedAttributes.Clear();
+            sanitizer.AllowedAttributes.Add("name");
+            sanitizer.AllowedAttributes.Add("http-equiv");
+            sanitizer.AllowedAttributes.Add("content");
+            sanitizer.AllowedAttributes.Add("value");
+            sanitizer.AllowedAttributes.Add("property");
+
+            sanitizer.AllowDataAttributes = false;
+
+            sanitizer.RemovingTag += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAtRule += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAttribute += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingComment += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingCssClass += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingStyle += (sender, e) => isHtmlModified = true;
+
+            var sRet = sanitizer.Sanitize(inputHtml);
+            bHtmlModified = isHtmlModified;
+
+            return sRet;
+        }
+
 
         private AppData GetCurrentApp() => HttpContext.GetAppData();
 

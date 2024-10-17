@@ -1,13 +1,22 @@
 using System;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
+using System.Globalization;
+using System.Linq;
 
 namespace BTCPayServer.Services.Apps
 {
     public class CrowdfundSettings
     {
+        public CrowdfundSettings()
+        {
+            Language = "en";
+        }
+
         public string Title { get; set; }
         public string Description { get; set; }
+        public string Language { get; set; }
+        public string HtmlMetaTags{ get; set; }
         public bool Enabled { get; set; } = true;
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }

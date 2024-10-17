@@ -115,6 +115,49 @@
             "type": "string",
             "description": "Payout method IDs. Available payment method IDs for Bitcoin are:  \n- `\"BTC-CHAIN\"`: Onchain   \n-`\"BTC-LN\"`: Lightning",
             "example": "BTC-LN"
+        },
+        "HistogramData": {
+            "type": "object",
+            "description": "Histogram data for wallet balances over time",
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "The timespan of the histogram data",
+                    "x-enumNames": [
+                        "Week",
+                        "Month",
+                        "Year"
+                    ],
+                    "enum": [
+                        "Week",
+                        "Month",
+                        "Year"
+                    ],
+                    "default": "Week"
+                },
+                "balance": {
+                    "type": "string",
+                    "format": "decimal",
+                    "description": "The current wallet balance"
+                },
+                "series": {
+                    "type": "array",
+                    "description": "An array of historic balances of the wallet",
+                    "items": {
+                        "type": "string",
+                        "format": "decimal",
+                        "description": "The balance of the wallet at a specific time"
+                    }
+                },
+                "labels": {
+                    "type": "array",
+                    "description": "An array of timestamps associated with the series data",
+                    "items": {
+                        "type": "integer",
+                        "description": "UNIX timestamp of the balance snapshot"
+                    }
+                }
+            }
         }
     },
     "securitySchemes": {

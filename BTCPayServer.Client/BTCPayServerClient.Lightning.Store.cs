@@ -21,6 +21,13 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<LightningNodeBalanceData>($"api/v1/stores/{storeId}/lightning/{cryptoCode}/balance", null, HttpMethod.Get, token);
     }
 
+    public virtual async Task<HistogramData> GetLightningNodeHistogram(string storeId, string cryptoCode, HistogramType? type = null,
+        CancellationToken token = default)
+    {
+        var queryPayload = type == null ? null : new Dictionary<string, object> { { "type", type.ToString() } };
+        return await SendHttpRequest<HistogramData>($"api/v1/stores/{storeId}/lightning/{cryptoCode}/histogram", queryPayload, HttpMethod.Get, token);
+    }
+
     public virtual async Task ConnectToLightningNode(string storeId, string cryptoCode, ConnectToNodeRequest request,
         CancellationToken token = default)
     {

@@ -35,7 +35,7 @@ else
         <form asp-action="CreateFiles" method="post" enctype="multipart/form-data">
             <div class="d-flex">
                 <input multiple type="file" class="form-control mb-3" name="files" id="files" required>
-                <button class="btn btn-primary mb-3 ms-3" role="button">Upload</button>
+                <button class="btn btn-primary mb-3 ms-3" role="button" text-translate="true">Upload</button>
             </div>
         </form>
     }
@@ -53,7 +53,7 @@ else
                         <div class="input-group">
                             <div class="form-floating">
                                 <input id="@fileId-name" class="form-control-plaintext" readonly="readonly" value="@file.FileName">
-                                <label>File name</label>
+                                <label text-translate="true">File name</label>
                             </div>
                             <button type="button" class="btn btn-link" data-clipboard="@file.FileName">
                                 <vc:icon symbol="actions-copy" />
@@ -64,7 +64,7 @@ else
                         <div class="input-group  ">
                             <div class="form-floating">
                                 <input id="@fileId" class="form-control-plaintext" readonly="readonly" value="@fileId">
-                                <label>File Id</label>
+                                <label text-translate="true">File Id</label>
                             </div>
                             <button type="button" class="btn btn-link" data-clipboard="@fileId">
                                 <vc:icon symbol="actions-copy" />
@@ -75,7 +75,7 @@ else
                         <div class="input-group">
                             <div class="form-floating">
                                 <input id="@fileId-url" class="form-control-plaintext" readonly="readonly" value="@url">
-                                <label>Permanent Url</label>
+                                <label text-translate="true">Permanent Url</label>
                             </div>
                             <button type="button" class="btn btn-link" data-clipboard="@url">
                                 <vc:icon symbol="actions-copy" />
@@ -96,10 +96,10 @@ else
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>Timestamp</th>
-                    <th>Uploaded By</th>
-                    <th class="text-end">Actions</th>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true">Timestamp</th>
+                    <th text-translate="true">Uploaded By</th>
+                    <th text-translate="true" class="text-end">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -112,8 +112,8 @@ else
                         <td>@file.Timestamp.ToBrowserDate()</td>
                         <td>@file.ApplicationUser.UserName</td>
                         <td class="text-end">
-                            <a href="@Url.Action("Files", "UIServer", new {fileIds = new [] { file.Id }})" class="text-nowrap">Get Link</a>
-                            - <a asp-action="DeleteFile" asp-route-fileId="@file.Id">Remove</a>
+                            <a href="@Url.Action("Files", "UIServer", new {fileIds = new [] { file.Id }})" class="text-nowrap" text-translate="true">Get Link</a>
+                            - <a asp-action="DeleteFile" asp-route-fileId="@file.Id" text-translate="true">Remove</a>
                         </td>
                     </tr>
                 }
@@ -123,6 +123,6 @@ else
     }
     else
     {
-        <p class="text-secondary mt-3">There are no files yet.</p>
+        <p class="text-secondary mt-3" text-translate="true">There are no files yet.</p>
     }
 }

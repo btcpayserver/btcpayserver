@@ -8,9 +8,9 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-controller="UINotifications" asp-action="Index">Notifications</a>
+                    <a asp-controller="UINotifications" asp-action="Index" text-translate="true">Notifications</a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
             </ol>
             <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
@@ -21,12 +21,12 @@
         <div class="col-xl-8 col-xxl-constrain">
             @if (Model.All)
             {
-                <p>All notifications are disabled.</p>
+                <p text-translate="true">All notifications are disabled.</p>
                 <button type="submit" class="btn btn-primary" name="command" value="enable-all">Enable notifications</button>
             }
             else
             {
-                <p>To disable notification for a feature, kindly toggle off the specified feature.</p>
+                <p text-translate="true">To disable notification for a feature, kindly toggle off the specified feature.</p>
                 @for (var index = 0; index < Model.DisabledNotifications.Count; index++)
                 {
                     var item = Model.DisabledNotifications[index];
@@ -39,7 +39,7 @@
                     </div>
                 }
                 <div class="mt-4">
-                    <button type="submit" class="btn btn-secondary" name="command" value="disable-all">Disable all notifications</button>
+                    <button type="submit" class="btn btn-secondary" name="command" value="disable-all" text-translate="true">Disable all notifications</button>
                 </div>
             }
         </div>

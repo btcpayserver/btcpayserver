@@ -11,7 +11,7 @@
 	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
 	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.Send, $"Send {Model.CryptoCode}", walletId);
+	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Send {0}", Model.CryptoCode], walletId);
 	csp.Add("worker-src", "blob:");
 	Csp.UnsafeEval();
 }
@@ -97,7 +97,8 @@
                         @if (Model.Outputs.Count > 1)
                         {
                             <button type="submit" name="command" value="@($"remove-output:{index}")" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
-                                <vc:icon symbol="cross" /> Remove Destination
+                                <vc:icon symbol="cross" />
+                                <span text-translate="true">Remove Destination</span>
                             </button>
                         }
                     </div>
@@ -110,7 +111,7 @@
                     <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Labels</label>
+                    <label class="form-label" text-translate="true">Labels</label>
                     <select asp-for="Outputs[index].Labels" class="d-none">
                         @foreach (var t in Model.Outputs[index].Labels)
                         {
@@ -135,7 +136,7 @@
                         </div>
                     </div>
                     <div class="form-text crypto-info">
-                        Your available balance is
+                        <span text-translate="true">Your available balance is</span>
                         <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                         @if (Model.ImmatureBalance > 0)
                         {
@@ -154,10 +155,10 @@
     </div>
 
     <div class="d-grid d-sm-flex flex-wrap gap-3 mb-3 buttons">
-        <button type="submit" name="command" value="add-output" class="btn btn-secondary">Add destination</button>
-        <button type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary" id="toggleInputSelection">@(Model.InputSelection ? "Hide" : "Show") coin selection</button>
-        <a asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-secondary" id="PSBT">Use PSBT</a>
-        <button type="button" id="bip21parse" class="btn btn-secondary">Paste BIP21</button>
+        <button type="submit" name="command" value="add-output" class="btn btn-secondary" text-translate="true">Add destination</button>
+        <button type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary" id="toggleInputSelection">@(Model.InputSelection ? StringLocalizer["Hide coin selection"] : StringLocalizer["Show coin selection"])</button>
+        <a asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-secondary" id="PSBT" text-translate="true">Use PSBT</a>
+        <button type="button" id="bip21parse" class="btn btn-secondary" text-translate="true">Paste BIP21</button>
     </div>
 
     @if (Model.InputSelection)
@@ -169,7 +170,10 @@
 
     <div class="d-flex flex-wrap gap-3 my-4">
         <div>
-            <label asp-for="FeeSatoshiPerByte" class="form-label">Fee rate <span class="text-secondary">(sat/vB)</span></label>
+            <label asp-for="FeeSatoshiPerByte" class="form-label">
+                <span text-translate="true">Fee rate</span>
+                <span class="text-secondary">(sat/vB)</span>
+            </label>
             <input asp-for="FeeSatoshiPerByte" type="number" inputmode="numeric" min="0" step="any" class="form-control" style="max-width:14ch;" />
             <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
             <span id="FeeRate-Error" class="text-danger"></span>
@@ -177,7 +181,7 @@
         @if (Model.RecommendedSatoshiPerByte.Any())
         {
             <div>
-                <div class="form-label text-secondary">
+                <div class="form-label text-secondary" text-translate="true">
                     Confirm in the next …
                 </div>
                 <div class="btn-group btn-group-toggle feerate-options" role="group" data-bs-toggle="buttons">
@@ -198,7 +202,7 @@
     <div class="my-4">
         <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
             <vc:icon symbol="caret-down"/>
-            <span class="ms-1">Advanced settings</span>
+            <span class="ms-1" text-translate="true">Advanced settings</span>
         </button>
         <div id="AdvancedSettings" class="collapse">
             <div class="pt-3">
@@ -225,8 +229,8 @@
         </div>
     </div>
     <div class="d-grid d-sm-flex flex-wrap gap-3 buttons">
-        <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
-        <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary">Schedule transaction</button>
+        <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
+        <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary" text-translate="true">Schedule transaction</button>
     </div>
 
     <vc:ui-extension-point location="onchain-wallet-send" model="@Model"/>

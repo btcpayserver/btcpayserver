@@ -15,10 +15,10 @@
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th>Crypto</th>
-                    <th>Account Index</th>
-                    <th class="text-center">Enabled</th>
-                    <th class="text-right">Actions</th>
+                    <th text-translate="true">Crypto</th>
+                    <th text-translate="true">Account Index</th>
+                    <th text-translate="true" class="text-center">Enabled</th>
+                    <th text-translate="true" class="text-right">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -40,7 +40,8 @@
                         <td class="text-right">
                             <a id="Modify" asp-action="GetStoreZcashLikePaymentMethod"
                                asp-route-storeId="@Context.GetRouteValue("storeId")"
-                               asp-route-cryptoCode="@item.CryptoCode">
+                               asp-route-cryptoCode="@item.CryptoCode"
+                               text-translate="true">
                                 Modify
                             </a>
                         </td>

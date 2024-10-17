@@ -11,9 +11,9 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="ListUsers">Users</a>
+                    <a asp-action="ListUsers" text-translate="true">Users</a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
             </ol>
             <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
@@ -65,7 +65,10 @@
                     <span asp-validation-for="SendInvitationEmail" class="text-danger"></span>
                     @if (!canSendEmail)
                     {
-                        <div class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></div>
+                        <div class="text-secondary">
+                            <span text-translate="true">Your email server has not been configured.</span>
+                            <a asp-controller="UIServer" asp-action="Emails" text-translate="true">Please configure it first.</a>
+                        </div>
                     }
                 </div>
             </div>

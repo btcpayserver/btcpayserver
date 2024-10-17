@@ -22,8 +22,8 @@
 }
 
 <header class="text-center">
-    <h1>Choose your signing method</h1>
-    <p class="lead text-secondary mt-3">You can sign the transaction using one of the following methods.</p>
+    <h1 text-translate="true">Choose your signing method</h1>
+    <p class="lead text-secondary mt-3" text-translate="true">You can sign the transaction using one of the following methods.</p>
 </header>
 
 <form method="post" asp-action="WalletSign" asp-route-walletId="@walletId">
@@ -40,10 +40,10 @@
                 </div>
                 <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
                     <div>
-                        <h4>Hardware wallet</h4>
-                        <p class="mb-0 text-secondary">Sign using our Vault application</p>
+                        <h4 text-translate="true">Hardware wallet</h4>
+                        <p class="mb-0 text-secondary" text-translate="true">Sign using our Vault application</p>
                     </div>
-                    <small class="d-block text-primary mt-2 mt-lg-0">Recommended</small>
+                    <small class="d-block text-primary mt-2 mt-lg-0" text-translate="true">Recommended</small>
                 </div>
                 <vc:icon symbol="caret-right"/>
             </button>
@@ -53,8 +53,8 @@
                         <vc:icon symbol="wallet-hardware"/>
                     </div>
                     <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
-                        <div><h4>Hardware wallet</h4>
-                            <p class="mb-0">Please enable JavaScript for this option to be available</p>
+                        <div><h4 text-translate="true">Hardware wallet</h4>
+                            <p class="mb-0" text-translate="true">Please enable JavaScript for this option to be available</p>
                         </div>
                     </div>
                 </div>
@@ -69,14 +69,14 @@
             </div>
             <div class="content">
                 <h4>
-                    Partially Signed Bitcoin Transaction
+                    <span text-translate="true">Partially Signed Bitcoin Transaction</span>
                     <small>
                         <a href="https://docs.btcpayserver.org/Wallet/#signing-with-a-wallet-supporting-psbt" target="_blank" rel="noreferrer noopener" title="More information...">
                             <vc:icon symbol="info" />
                         </a>
                     </small>
                 </h4>
-                <p class="mb-0 text-secondary">Offline signing, without connecting your wallet to the internet</p>
+                <p class="mb-0 text-secondary" text-translate="true">Offline signing, without connecting your wallet to the internet</p>
             </div>
             <vc:icon symbol="caret-right"/>
         </button>
@@ -89,10 +89,12 @@
             </div>
             <div class="content d-flex flex-column flex-lg-row align-items-lg-center justify-content-lg-between me-2">
                 <div>
-                    <h4>Private key or seed</h4>
-                    <p class="mb-0 text-secondary">Provide the 12 or 24 word recovery seed</p>
+                    <h4 text-translate="true">Private key or seed</h4>
+                    <p class="mb-0 text-secondary" text-translate="true">Provide the 12 or 24 word recovery seed</p>
                 </div>
-                <small class="d-block text-danger mt-2 mt-lg-0" data-bs-toggle="tooltip" data-bs-placement="top" title="You really should not type your seed into a device that is connected to the internet.">Not recommended <vc:icon symbol="info"/></small>
+                <small class="d-block text-danger mt-2 mt-lg-0" data-bs-toggle="tooltip" data-bs-placement="top" title="You really should not type your seed into a device that is connected to the internet.">
+                    <span text-translate="true">Not recommended</span> <vc:icon symbol="info" />
+                </small>
             </div>
             <vc:icon symbol="caret-right"/>
         </button>

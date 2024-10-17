@@ -26,7 +26,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId">Requests</a>
+                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Requests</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -35,12 +35,12 @@
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
-                <button id="page-primary" type="submit" class="btn btn-primary" permission="@Policies.CanModifyPaymentRequests">Create</button>
+                <button id="page-primary" type="submit" class="btn btn-primary" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Create</button>
             }
             else
             {
-				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" permission="@Policies.CanModifyPaymentRequests">Save</button>
-                <a class="btn btn-secondary" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest" target="_blank">View</a>
+				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Save</button>
+                <a class="btn btn-secondary" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest" target="_blank" text-translate="true">View</a>
             }
         </div>
     </div>
@@ -67,7 +67,7 @@
                     {
                         <p class="info-note text-warning mb-0 mt-2">
                             <vc:icon symbol="warning"/>
-                            Amount and currency are not editable once payment request has invoices
+                            <span text-translate="true">Amount and currency are not editable once payment request has invoices</span>
                         </p>
                     }
                 </div>
@@ -105,7 +105,7 @@
                     {
                         <div class="info-note mt-1 text-warning" role="alert">
                             <vc:icon symbol="warning"/>
-                            No payment request related email rules have been configured for this store.
+                            <span text-translate="true">No payment request related email rules have been configured for this store.</span>
                         </div>
                     }
                 </div>
@@ -144,15 +144,15 @@
            asp-action="ListInvoices"
            asp-controller="UIInvoice"
            asp-route-storeId="@Model.StoreId"
-           asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-        <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest"  permission="@Policies.CanModifyPaymentRequests">Clone</a>
+           asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")" text-translate="true">Invoices</a>
+        <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest"  permission="@Policies.CanModifyPaymentRequests" text-translate="true">Clone</a>
         @if (!Model.Archived)
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests">Archive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Archive</a>
         }
         else
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests">Unarchive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Unarchive</a>
         }
     </div>
 }

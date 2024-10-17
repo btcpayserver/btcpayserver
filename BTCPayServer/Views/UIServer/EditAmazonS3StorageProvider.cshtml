@@ -7,12 +7,12 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Files">Files</a>
+                <a asp-action="Files" text-translate="true">Files</a>
             </li>
             <li class="breadcrumb-item">
-                <a asp-action="Storage">Storage Provider</a>
+                <a asp-action="Storage" text-translate="true">Storage Provider</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Provider</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Provider</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
@@ -58,8 +58,8 @@
                 <span asp-validation-for="ChunkedUploadThreshold" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-            <a asp-action="Storage" asp-route-forceChoice="true">Change Storage provider</a>
+            <button type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
+            <a asp-action="Storage" asp-route-forceChoice="true" text-translate="true">Change Storage provider</a>
         </form>
     </div>
 </div>

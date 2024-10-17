@@ -27,6 +27,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
@@ -50,6 +51,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             UIInvoiceController invoiceController,
             UserManager<ApplicationUser> userManager,
             FormDataService formDataService,
+            IStringLocalizer stringLocalizer,
             CrowdfundAppType app)
         {
             _currencies = currencies;
@@ -62,6 +64,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             _uriResolver = uriResolver;
             _invoiceController = invoiceController;
             FormDataService = formDataService;
+            StringLocalizer = stringLocalizer;
         }
 
         private readonly EventAggregator _eventAggregator;
@@ -74,6 +77,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CrowdfundAppType _app;
         public FormDataService FormDataService { get; }
+        public IStringLocalizer StringLocalizer { get; }
 
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/crowdfund")]
@@ -581,7 +585,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 StoreId = app.StoreDataId,
                 Settings = newSettings
             });
-            TempData[WellKnownTempData.SuccessMessage] = "App updated";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["App updated"].Value;
             return RedirectToAction(nameof(UpdateCrowdfund), new { appId });
         }
 

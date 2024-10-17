@@ -52,9 +52,9 @@ namespace BTCPayServer.Controllers
 
                 if (!allFilesExist)
                 {
-                    this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
-                        Message = "Some of the files were not found",
+                        Message = StringLocalizer["Some of the files were not found"].Value,
                         Severity = StatusMessageModel.StatusSeverity.Warning,
                     });
                 }
@@ -75,12 +75,12 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(Files), new
                 {
                     fileIds = Array.Empty<string>(),
-                    statusMessage = "File removed"
+                    statusMessage = StringLocalizer["File removed"].Value
                 });
             }
             catch (Exception e)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Message = e.Message
@@ -108,7 +108,7 @@ namespace BTCPayServer.Controllers
         {
             if (viewModel.TimeAmount <= 0)
             {
-                ModelState.AddModelError(nameof(viewModel.TimeAmount), "Time must be at least 1");
+                ModelState.AddModelError(nameof(viewModel.TimeAmount), StringLocalizer["Time must be at least 1"]);
             }
 
             if (!ModelState.IsValid)
@@ -192,21 +192,21 @@ namespace BTCPayServer.Controllers
 
                 if (invalidFileNameCount == 0)
                 {
-                    statusMessage = "Files Added Successfully";
+                    statusMessage = StringLocalizer["Files added successfully"];
                     statusMessageSeverity = StatusMessageModel.StatusSeverity.Success;
                 }
                 else if (invalidFileNameCount > 0 && invalidFileNameCount < files.Count)
                 {
-                    statusMessage = $"{files.Count - invalidFileNameCount} files were added. {invalidFileNameCount} files had invalid names";
+                    statusMessage = StringLocalizer["{0} files were added. {1} files had invalid names", files.Count - invalidFileNameCount, invalidFileNameCount].Value;
                     statusMessageSeverity = StatusMessageModel.StatusSeverity.Error;
                 }
                 else
                 {
-                    statusMessage = $"Files could not be added due to invalid names";
+                    statusMessage = StringLocalizer["Files could not be added due to invalid names"].Value;
                     statusMessageSeverity = StatusMessageModel.StatusSeverity.Error;
                 }
 
-                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Message = statusMessage,
                     Severity = statusMessageSeverity
@@ -266,10 +266,10 @@ namespace BTCPayServer.Controllers
         {
             if (!Enum.TryParse(typeof(StorageProvider), provider, out var storageProvider))
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = $"{provider} provider is not supported"
+                    Message = StringLocalizer["{0} provider is not supported", provider].Value
                 });
                 return RedirectToAction(nameof(Storage));
             }
@@ -282,10 +282,10 @@ namespace BTCPayServer.Controllers
             switch (storageProviderService)
             {
                 case null:
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = $"{storageProvider} is not supported"
+                        Message = StringLocalizer["{0} provider is not supported", storageProvider].Value
                     });
                     return RedirectToAction(nameof(Storage));
                 case AzureBlobStorageFileProviderService fileProviderService:
@@ -350,10 +350,10 @@ namespace BTCPayServer.Controllers
             data.Provider = storageProvider;
             data.Configuration = JObject.FromObject(viewModel);
             await _SettingsRepository.UpdateSetting(data);
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = "Storage settings updated successfully"
+                Message = StringLocalizer["Storage settings updated successfully"].Value
             });
             return View(viewModel);
         }

@@ -26,14 +26,14 @@
                 {
                     <button asp-action="SendVerificationEmail" class="d-inline-flex align-items-center gap-1 btn btn-link p-0">
                         <vc:icon symbol="actions-email" />
-                        Send verification email
+                        <span text-translate="true">Send verification email</span>
                     </button>
                 }
                 else if (Model.EmailConfirmed)
                 {
                     <span class="d-inline-flex align-items-center gap-1 text-success">
                         <vc:icon symbol="checkmark" />
-                        confirmed
+                        <span text-translate="true">confirmed</span>
                     </span>
                 }
             </div>
@@ -53,7 +53,8 @@
                     @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
                         <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveImageFile" value="true">
-                            <vc:icon symbol="cross" /> Remove
+                            <vc:icon symbol="cross" />
+                            <span text-translate="true">Remove</span>
                         </button>
                     }
                 </div>
@@ -67,9 +68,9 @@
                 <span asp-validation-for="ImageFile" class="text-danger"></span>
             </div>
         }
-        <h3 class="mt-5 mb-4">Delete Account</h3>
+        <h3 class="mt-5 mb-4" text-translate="true">Delete Account</h3>
         <div id="danger-zone">
-            <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user.">Delete Account</a>
+            <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user." text-translate="true">Delete Account</a>
         </div>
     </div>
 </form>

@@ -20,23 +20,23 @@
             </div>
         </form>
         <form id="mine-block" :action="`/i/${invoiceId}/mine-blocks`" method="post" v-on:submit.prevent="handleFormSubmit($event, 'mining')" v-if="displayMine">
-            <label for="BlockCount" class="control-label form-label">Mine to test processing and settlement</label>
+            <label for="BlockCount" class="control-label form-label" text-translate="true">Mine to test processing and settlement</label>
             <div class="d-flex gap-2">
                 <div class="input-group">
                     <input id="BlockCount" name="BlockCount" type="number" step="1" min="1" class="form-control" value="1"/>
-                    <div class="input-group-addon input-group-text">blocks</div>
+                    <div class="input-group-addon input-group-text" text-translate="true">blocks</div>
                 </div>
-				<button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="mining" id="mine-block">Mine</button>
+				<button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="mining" id="mine-block" text-translate="true">Mine</button>
             </div>
         </form>
         <form id="expire-invoice" :action="`/i/${invoiceId}/expire`" method="post" v-on:submit.prevent="handleFormSubmit($event, 'expiring')" v-if="displayExpire">
-            <label for="ExpirySeconds" class="control-label form-label">Expire invoice in …</label>
+            <label for="ExpirySeconds" class="control-label form-label" text-translate="true">Expire invoice in …</label>
             <div class="d-flex gap-2">
                 <div class="input-group">
                     <input id="ExpirySeconds" name="Seconds" type="number" step="1" min="0" class="form-control" value="20" />
-                    <div class="input-group-addon input-group-text">seconds</div>
+                    <div class="input-group-addon input-group-text" text-translate="true">seconds</div>
                 </div>
-                <button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="expiring" id="Expire">Expire</button>
+                <button class="btn btn-secondary flex-shrink-0 px-3 w-100px" type="submit" :disabled="expiring" id="Expire" text-translate="true">Expire</button>
             </div>
         </form>
     </section>

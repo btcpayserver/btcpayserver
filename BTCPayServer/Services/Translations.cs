@@ -1,18 +1,10 @@
 #nullable enable
 using System.Collections;
 using System.Collections.Frozen;
-using Dapper;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
-using static System.Net.Mime.MediaTypeNames;
-using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Services
 {

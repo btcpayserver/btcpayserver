@@ -10,6 +10,7 @@ using Fido2NetLib;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Fido2
@@ -20,17 +21,22 @@ namespace BTCPayServer.Fido2
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly Fido2Service _fido2Service;
+        private IStringLocalizer StringLocalizer { get; }
 
-        public UIFido2Controller(UserManager<ApplicationUser> userManager, Fido2Service fido2Service)
+        public UIFido2Controller(
+            UserManager<ApplicationUser> userManager,
+            Fido2Service fido2Service,
+            IStringLocalizer stringLocalizer)
         {
             _userManager = userManager;
             _fido2Service = fido2Service;
+            StringLocalizer = stringLocalizer;
         }
 
         [HttpGet("{id}/delete")]
         public IActionResult Remove(string id)
         {
-            return View("Confirm", new ConfirmModel("Remove security device", "Your account will no longer have this security device as an option for two-factor authentication.", "Remove"));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Remove security device"], StringLocalizer["Your account will no longer have this security device as an option for two-factor authentication."], StringLocalizer["Remove"]));
         }
 
         [HttpPost("{id}/delete")]
@@ -41,7 +47,7 @@ namespace BTCPayServer.Fido2
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = "The security device was removed successfully."
+                Html = StringLocalizer["The security device was removed successfully."].Value
             });
 
             return RedirectToList();
@@ -56,7 +62,7 @@ namespace BTCPayServer.Fido2
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = "The security device could not be registered."
+                    Html = StringLocalizer["The security device could not be registered."].Value
                 });
 
                 return RedirectToList();
@@ -75,7 +81,7 @@ namespace BTCPayServer.Fido2
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Html = "The security device was registered successfully."
+                    Html = StringLocalizer["The security device was registered successfully."].Value
                 });
             }
             else
@@ -83,7 +89,7 @@ namespace BTCPayServer.Fido2
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = "The security device could not be registered."
+                    Html = StringLocalizer["The security device could not be registered."].Value
                 });
             }
 

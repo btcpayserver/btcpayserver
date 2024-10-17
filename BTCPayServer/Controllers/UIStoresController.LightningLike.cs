@@ -115,7 +115,7 @@ public partial class UIStoresController
 
         if (vm.CryptoCode == null)
         {
-            ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
+            ModelState.AddModelError(nameof(vm.CryptoCode), StringLocalizer["Invalid network"]);
             return View(vm);
         }
 
@@ -132,7 +132,7 @@ public partial class UIStoresController
         {
             if (string.IsNullOrEmpty(vm.ConnectionString))
             {
-                ModelState.AddModelError(nameof(vm.ConnectionString), "Please provide a connection string");
+                ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["Please provide a connection string"]);
                 return View(vm);
             }
             paymentMethod = new LightningPaymentMethodConfig { ConnectionString = vm.ConnectionString };
@@ -143,7 +143,7 @@ public partial class UIStoresController
             JToken.FromObject(paymentMethod, handler.Serializer), User, oldConf is null ? null : JToken.FromObject(oldConf, handler.Serializer));
         await handler.ValidatePaymentMethodConfig(ctx);
         if (ctx.MissingPermission is not null)
-            ModelState.AddModelError(nameof(vm.ConnectionString), "You do not have the permissions to change this settings");
+            ModelState.AddModelError(nameof(vm.ConnectionString), StringLocalizer["You do not have the permissions to change this settings"]);
         if (!ModelState.IsValid)
             return View(vm);
 
@@ -159,7 +159,7 @@ public partial class UIStoresController
                 });
 
                 await _storeRepo.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning node updated.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning node updated.", network.CryptoCode].Value;
                 return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });
 
             case "test":
@@ -172,9 +172,10 @@ public partial class UIStoresController
                         using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(20));
                         await handler.TestConnection(info.First(), cts.Token);
                     }
-                    TempData[WellKnownTempData.SuccessMessage] = "Connection to the Lightning node successful" + (hasPublicAddress
-                        ? $". Your node address: {info.First()}"
-                        : ", but no public address has been configured");
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Connection to the Lightning node successful."].Value + " " +
+                        (hasPublicAddress
+                            ? StringLocalizer["Your node address: {0}", info.First()].Value
+                            : StringLocalizer["No public address has been configured."].Value);
                 }
                 catch (Exception ex)
                 {
@@ -202,7 +203,7 @@ public partial class UIStoresController
         var lightning = GetConfig<LightningPaymentMethodConfig>(lnId, store);
         if (lightning == null)
         {
-            TempData[WellKnownTempData.ErrorMessage] = "You need to connect to a Lightning node before adjusting its settings.";
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["You need to connect to a Lightning node before adjusting its settings."].Value;
 
             return RedirectToAction(nameof(SetupLightningNode), new { storeId, cryptoCode });
         }
@@ -241,7 +242,7 @@ public partial class UIStoresController
 
         if (vm.CryptoCode == null)
         {
-            ModelState.AddModelError(nameof(vm.CryptoCode), "Invalid network");
+            ModelState.AddModelError(nameof(vm.CryptoCode), StringLocalizer["Invalid network"]);
             return View(vm);
         }
 
@@ -289,7 +290,7 @@ public partial class UIStoresController
         {
             await _storeRepo.UpdateStore(store);
 
-            TempData[WellKnownTempData.SuccessMessage] = $"{network.CryptoCode} Lightning settings successfully updated.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning settings successfully updated.", network.CryptoCode].Value;
         }
 
         return RedirectToAction(nameof(LightningSettings), new { vm.StoreId, vm.CryptoCode });

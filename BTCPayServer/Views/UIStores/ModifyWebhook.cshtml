@@ -18,7 +18,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="Webhooks" asp-route-storeId="@storeId">Webhooks</a>
+                    <a asp-action="Webhooks" asp-route-storeId="@storeId" text-translate="true">Webhooks</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -37,7 +37,7 @@
     <div class="row">
         <div class="col-xxl-constrain col-xl-8">
             <div class="form-group">
-                <label asp-for="PayloadUrl" class="form-label">Payload URL</label>
+                <label asp-for="PayloadUrl" class="form-label" text-translate="true">Payload URL</label>
                 <input asp-for="PayloadUrl" class="form-control" />
                 <span asp-validation-for="PayloadUrl" class="text-danger"></span>
             </div>
@@ -49,29 +49,29 @@
                         <vc:icon symbol="actions-show" />
                     </button>
                 </div>
-                <div class="form-text">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</div>
+                <div class="form-text" html-translate="true">The endpoint receiving the payload must validate the payload by checking that the HTTP header <code>BTCPAY-SIG</code> of the callback matches the HMAC256 of the secret on the payload's body bytes.</div>
             </div>
             <div class="form-group">
                 <label class="form-group d-flex align-items-center">
                     <input asp-for="AutomaticRedelivery" type="checkbox" class="btcpay-toggle me-3" />
                     <div>
-                        <span>Automatic redelivery</span>
-                        <div class="form-text">We will try to redeliver any failed delivery after 10 seconds, 1 minute and up to 6 times after 10 minutes</div>
+                        <span text-translate="true">Automatic redelivery</span>
+                        <div class="form-text" text-translate="true">We will try to redeliver any failed delivery after 10 seconds, 1 minute and up to 6 times after 10 minutes</div>
                     </div>
                 </label>
             </div>
             <div class="form-group">
                 <label class="d-flex align-items-center mb-2">
                     <input asp-for="Active" type="checkbox" class="btcpay-toggle me-3" />
-                    <span>Enabled</span>
+                    <span text-translate="true">Enabled</span>
                 </label>
             </div>
 
             <h3 class="mb-3 mt-5">Events</h3>
-            <label asp-for="Everything" class="form-label">Which events would you like to trigger this webhook?</label>
+            <label asp-for="Everything" class="form-label" text-translate="true">Which events would you like to trigger this webhook?</label>
             <select asp-for="Everything" class="form-select w-auto mb-3">
-                <option value="true">Send me everything</option>
-                <option value="false">Send specific events</option>
+                <option value="true" text-translate="true">Send me everything</option>
+                <option value="false" text-translate="true">Send specific events</option>
             </select>
             <div id="event-selector" class="collapse">
                 <div class="pb-3">
@@ -91,7 +91,7 @@
     <div class="col-xxl-constrain col-xl-8">
         @if (!Model.IsNew && Model.Deliveries.Count > 0)
         {
-            <h4 class="mb-3">Recent deliveries</h4>
+            <h4 class="mb-3" text-translate="true">Recent deliveries</h4>
             <ul class="list-group">
                 @foreach (var delivery in Model.Deliveries)
                 {
@@ -132,7 +132,7 @@
 
                                     <button id="#redeliver-@delivery.Id"
                                             type="submit"
-                                            class="btn btn-info py-1 ms-3 redeliver">
+                                            class="btn btn-info py-1 ms-3 redeliver" text-translate="true">
                                         Redeliver
                                     </button>
                                 </span>

@@ -11,7 +11,7 @@
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>Store Name</th>
+                <th text-translate="true">Store Name</th>
             </tr>
         </thead>
         <tbody>
@@ -22,7 +22,7 @@
                         <a asp-action="Index" asp-controller="UIStores" asp-route-storeId="@store.StoreId" id="Store-@store.StoreId">@store.StoreName</a>
                         @if (store.Archived)
                         {
-                            <span class="badge bg-info ms-2">archived</span>
+                            <span class="badge bg-info ms-2" text-translate="true">archived</span>
                         }
                     </td>
                 </tr>
@@ -33,7 +33,7 @@
 else
 {
     <p class="text-secondary mt-3">
-        There are no stores yet. 
-        <span permission="@Policies.CanModifyStoreSettingsUnscoped"><a asp-action="CreateStore">Create a store</a>.</span>
+        <span text-translate="true">There are no stores yet.</span>
+        <span permission="@Policies.CanModifyStoreSettingsUnscoped"><a asp-action="CreateStore" text-translate="true">Create a store</a>.</span>
     </p>
 }

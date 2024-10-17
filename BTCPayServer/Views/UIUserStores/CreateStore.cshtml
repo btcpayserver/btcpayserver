@@ -2,7 +2,7 @@
 @inject DefaultRulesCollection DefaultRules
 @{
     Layout = Model.IsFirstStore ? "_LayoutWizard" : "_Layout";
-    ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? "Create your first store" : "Create a new store");
+    ViewData.SetActivePage(StoreNavPages.Create, Model.IsFirstStore ? StringLocalizer["Create your first store"] : StringLocalizer["Create a new store"]);
 }
 
 @section PageFootContent {
@@ -43,7 +43,7 @@
         </a>
 
         <h1 class="h2 mb-3">@ViewData["Title"]</h1>
-        <p class="lead text-secondary">Create a store to begin accepting payments.</p>
+        <p class="lead text-secondary" text-translate="true">Create a store to begin accepting payments.</p>
 
         <div class="text-start">
             <partial name="_CreateStoreForm" model="Model" />

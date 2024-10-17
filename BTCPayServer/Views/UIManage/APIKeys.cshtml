@@ -27,10 +27,10 @@
             <table class="table table-lg">
                 <thead>
                     <tr>
-                        <th>Label</th>
-                        <th class="w-125px">Key</th>
-                        <th>Permissions</th>
-                        <th class="text-end">Actions</th>
+                        <th text-translate="true">Label</th>
+                        <th text-translate="true" class="w-125px">Key</th>
+                        <th text-translate="true">Permissions</th>
+                        <th class="actions-col"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -43,7 +43,7 @@
                             <td>@keyData.Label</td>
                             <td>
                                 <code class="hide-when-js">@keyData.Id</code>
-                                <button type="button" class="btn btn-link only-for-js p-0" data-reveal-btn>Reveal</button>
+                                <button type="button" class="btn btn-link only-for-js p-0" data-reveal-btn text-translate="true">Reveal</button>
                                 <div hidden class="gap-2 align-items-center">
                                     <code>@keyData.Id</code>
                                     <button type="button" class="btn btn-link d-flex p-0" data-clipboard="@keyData.Id">
@@ -59,7 +59,7 @@
                                 {
                                     <span class="info-note text-warning">
                                         <vc:icon symbol="warning"/>
-                                        No permissions
+                                        <span text-translate="true">No permissions</span>
                                     </span>
                                 }
                                 else
@@ -72,9 +72,9 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center justify-content-end gap-1">
-                                    <a asp-action="DeleteAPIKey" asp-route-id="@keyData.Id" asp-controller="UIManage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@Html.Encode(keyData.Label ?? keyData.Id)</strong> will immediately lose access." data-confirm-input="DELETE">Delete</a>
+                                    <a asp-action="DeleteAPIKey" asp-route-id="@keyData.Id" asp-controller="UIManage" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="Any application using the API key <strong>@Html.Encode(keyData.Label ?? keyData.Id)</strong> will immediately lose access." data-confirm-input="DELETE" text-translate="true">Delete</a>
                                     <span>-</span>
-                                    <button type="button" class="btn btn-link only-for-js p-0" data-qr="@index">Show QR</button>
+                                    <button type="button" class="btn btn-link only-for-js p-0" data-qr="@index" text-translate="true">Show QR</button>
                                 </div>
                             </td>
                         </tr>

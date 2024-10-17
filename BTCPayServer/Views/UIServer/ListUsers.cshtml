@@ -37,7 +37,7 @@
 <partial name="_StatusMessage" />
 
 <form asp-action="ListUsers" asp-route-sortOrder="@(userEmailSortOrder)" style="max-width:640px" method="get">
-    <input asp-for="SearchTerm" class="form-control" placeholder="Search by email..." />
+    <input asp-for="SearchTerm" class="form-control" placeholder="@StringLocalizer["Search by email..."]" />
 </form>
 
 <div class="table-responsive">
@@ -51,13 +51,13 @@
                     class="text-nowrap"
                     title="@(nextUserEmailSortOrder == "desc" ? sortByAsc : sortByDesc)"
                 >
-                    Email
+                    <span text-translate="true">Email</span>
                     <vc:icon symbol="actions-sort-alpha-@(userEmailSortOrder ?? nextUserEmailSortOrder ?? "desc")" />
                 </a>
             </th>
-            <th>Stores</th>
-            <th>Created</th>
-            <th>Status</th>
+            <th text-translate="true">Stores</th>
+            <th text-translate="true">Created</th>
+            <th text-translate="true">Status</th>
             <th class="actions-col"></th>
             <th class="w-75px"></th>
         </tr>
@@ -67,11 +67,11 @@
         {
             var status = user switch
             {
-                { Disabled: true } => ("Disabled", "danger"),
-                { Approved: false } => ("Pending Approval", "warning"),
-                { EmailConfirmed: false } => ("Pending Email Verification", "warning"),
-                { InvitationUrl: not null } => ("Pending Invitation", "warning"),
-                _ => ("Active", "success")
+                { Disabled: true } => (StringLocalizer["Disabled"], "danger"),
+                { Approved: false } => (StringLocalizer["Pending Approval"], "warning"),
+                { EmailConfirmed: false } => (StringLocalizer["Pending Email Verification"], "warning"),
+                { InvitationUrl: not null } => (StringLocalizer["Pending Invitation"], "warning"),
+                _ => (StringLocalizer["Active"], "success")
             };
             var pendingInvite = !string.IsNullOrEmpty(user.InvitationUrl);
             var detailsId = user.Stores.Any() ? $"user_details_{user.Id}" : null;
@@ -88,36 +88,44 @@
                 <td class="@(user.Stores.Any() ? null : "text-muted")">@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
-                    <span class="user-status badge bg-@status.Item2">@status.Item1</span>
+                    <span class="user-status badge bg-@status.Item2" text-translate="true">@status.Item1</span>
                 </td>
                 <td class="actions-col">
                     <div class="d-inline-flex align-items-center gap-3">
                         @if (user is { EmailConfirmed: false, Disabled: false }) {
-                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Send verification email" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>." data-confirm="Send" class="text-nowrap">Resend email</a>
+                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Send verification email" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>." data-confirm="Send" class="text-nowrap" text-translate="true">Resend email</a>
                         }
                         @if (user is { Approved: false, Disabled: false })
                         {
-                            <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Approve user" data-description="This will approve the user <strong>@Html.Encode(user.Email)</strong>." data-confirm="Approve">Approve</a>
+                            <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Approve user" data-description="This will approve the user <strong>@Html.Encode(user.Email)</strong>." data-confirm="Approve" text-translate="true">Approve</a>
                         }
                         @if (pendingInvite)
                         {
-                            <a asp-action="User" asp-route-userId="@user.Id" class="view-invite text-nowrap" data-invitation-url="@user.InvitationUrl" data-user="@user.Email">View Invite</a>
+                            <a asp-action="User" asp-route-userId="@user.Id" class="view-invite text-nowrap" data-invitation-url="@user.InvitationUrl" data-user="@user.Email" text-translate="true">View Invite</a>
                         }
                         else if(status.Item2 != "warning")
                         {
-                            <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" 
-                               class="@(user.Disabled ? "enable-user" : "disable-user")">@(user.Disabled ? "Enable" : "Disable")</a>
+                            <a asp-action="ToggleUser" asp-route-userId="@user.Id" asp-route-enable="@user.Disabled" class="@(user.Disabled ? "enable-user" : "disable-user")">
+                                @if (user.Disabled)
+                                {
+                                    <span text-translate="true">Enable</span>
+                                }
+                                else
+                                {
+                                    <span text-translate="true">Disable</span>
+                                }
+                            </a>
                         }
-                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit">Edit</a>
-                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password text-nowrap">Password Reset</a>
-                        <a asp-action="DeleteUser" asp-route-userId="@user.Id" class="delete-user">Remove</a>
+                        <a asp-action="User" asp-route-userId="@user.Id" class="user-edit" text-translate="true">Edit</a>
+                        <a asp-action="ResetUserPassword" asp-route-userId="@user.Id" class="reset-password text-nowrap" text-translate="true">Password Reset</a>
+                        <a asp-action="DeleteUser" asp-route-userId="@user.Id" class="delete-user" text-translate="true">Remove</a>
                     </div>
                 </td>
                 <td class="text-end">
                     @if (detailsId != null)
                     {
                         <button class="accordion-button w-auto collapsed only-for-js ms-0 d-inline-flex align-items-center gap-1" type="button" data-bs-toggle="collapse" data-bs-target="#@detailsId" aria-expanded="false" aria-controls="@detailsId">
-                            <span>Details</span>
+                            <span text-translate="true">Details</span>
                             <vc:icon symbol="caret-down" css-class="ms-0" />
                         </button>
                     }
@@ -137,7 +145,7 @@
                                         <span class="badge bg-light">@store.StoreRoleId</span>
                                         @if (store.StoreData.Archived)
                                         {
-                                            <span class="badge bg-info">archived</span>
+                                            <span class="badge bg-info" text-translate="true">archived</span>
                                         }
                                     </li>
                                 }
@@ -145,7 +153,7 @@
                         }
                         else
                         {
-                            <span class="text-secondary">No stores</span>
+                            <span class="text-secondary" text-translate="true">No stores</span>
                         }
                     </td>
                 </tr>

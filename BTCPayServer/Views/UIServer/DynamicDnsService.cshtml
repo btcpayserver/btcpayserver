@@ -15,10 +15,10 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="Services">Services</a>
+                    <a asp-action="Services" text-translate="true">Services</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a asp-action="DynamicDnsService">Dynamic DNS Settings</a>
+                    <a asp-action="DynamicDnsService" text-translate="true">Dynamic DNS Settings</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -47,7 +47,7 @@
                     <label asp-for="Settings.ServiceUrl" class="form-label"></label>
                     <input id="ServiceUrl" asp-for="Settings.ServiceUrl" class="form-control" placeholder="Url"/>
                     <div class="form-text">
-                        Well-known Dynamic DNS providers are:
+                        <span text-translate="true">Well-known Dynamic DNS providers are:</span>
                         @for (var i = 0; i < Model.KnownServices.Length; i++)
                         {
                             <a href="#" class="serviceSettings" data-url="@Model.KnownServices[i].Url">@Model.KnownServices[i].Name</a>
@@ -61,7 +61,7 @@
                     {
                         <input asp-for="Settings.Hostname" class="form-control" readonly placeholder="Hostname"/>
                         <div class="form-text">
-                            <span>The DNS record has been refreshed: </span>
+                            <span text-translate="true">The DNS record has been refreshed:</span>
                             @if (Model.LastUpdated != null)
                             {
                                 <span>@Model.LastUpdated</span>

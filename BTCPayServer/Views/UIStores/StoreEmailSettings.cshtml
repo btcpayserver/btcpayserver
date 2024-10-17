@@ -9,7 +9,7 @@
 
 <form method="post" autocomplete="off" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <h2>Email Server</h2>
+        <h2 text-translate="true">Email Server</h2>
 		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
@@ -18,8 +18,8 @@
         <label class="d-flex align-items-center mb-4">
             <input type="checkbox" id="UseCustomSMTP" name="UseCustomSMTP" value="true" checked="@hasCustomSettings" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SmtpSettings" aria-expanded="@hasCustomSettings" aria-controls="SmtpSettings" />
             <div>
-                <span>Use custom SMTP settings for this store</span>
-                <div class="form-text">Otherwise, the server's SMTP settings will be used to send emails.</div>
+                <span text-translate="true">Use custom SMTP settings for this store</span>
+                <div class="form-text" text-translate="true">Otherwise, the server's SMTP settings will be used to send emails.</div>
             </div>
         </label>
 
@@ -37,9 +37,9 @@
 </form>
 
 <div class="mt-5" permission="@Policies.CanModifyStoreSettings">
-    <h3>Email Rules</h3>
-    <p>Email rules allow BTCPay Server to send customized emails from your store based on events.</p>
-    <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@storeId" id="ConfigureEmailRules" permission="@Policies.CanModifyStoreSettings">
+    <h3 text-translate="true">Email Rules</h3>
+    <p text-translate="true">Email rules allow BTCPay Server to send customized emails from your store based on events.</p>
+    <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@storeId" id="ConfigureEmailRules" permission="@Policies.CanModifyStoreSettings" text-translate="true">
         Configure
     </a>
 </div>   

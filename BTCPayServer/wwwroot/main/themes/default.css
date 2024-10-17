@@ -239,7 +239,7 @@
   --btcpay-form-shadow-invalid: var(--btcpay-danger-shadow);
 
   --btcpay-toggle-bg: var(--btcpay-neutral-500);
-  --btcpay-toggle-bg-hover: var(--btcpay-primary-bg-hover);
+  --btcpay-toggle-bg-hover: var(--btcpay-neutral-600);
   --btcpay-toggle-bg-active: var(--btcpay-primary);
   --btcpay-toggle-bg-active-hover: var(--btcpay-primary-bg-active);
 

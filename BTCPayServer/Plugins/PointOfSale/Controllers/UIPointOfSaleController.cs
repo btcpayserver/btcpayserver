@@ -94,7 +94,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var storeBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
-
+            var items = AppService.Parse(settings.Template, false);
             return View($"PointOfSale/Public/{viewType}", new ViewPointOfSaleViewModel
             {
                 Title = settings.Title,
@@ -110,16 +110,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 EnableTips = settings.EnableTips,
                 CurrencyCode = settings.Currency,
                 CurrencySymbol = numberFormatInfo.CurrencySymbol,
-                CurrencyInfo = new ViewPointOfSaleViewModel.CurrencyInfoData
-                {
-                    CurrencySymbol = string.IsNullOrEmpty(numberFormatInfo.CurrencySymbol) ? settings.Currency : numberFormatInfo.CurrencySymbol,
-                    Divisibility = numberFormatInfo.CurrencyDecimalDigits,
-                    DecimalSeparator = numberFormatInfo.CurrencyDecimalSeparator,
-                    ThousandSeparator = numberFormatInfo.NumberGroupSeparator,
-                    Prefixed = new[] { 0, 2 }.Contains(numberFormatInfo.CurrencyPositivePattern),
-                    SymbolSpace = new[] { 2, 3 }.Contains(numberFormatInfo.CurrencyPositivePattern)
-                },
-                Items = AppService.Parse(settings.Template, false),
+                CurrencyInfo = numberFormatInfo,
+                Items = items,
                 ButtonText = settings.ButtonText,
                 CustomButtonText = settings.CustomButtonText,
                 CustomTipText = settings.CustomTipText,

@@ -14,10 +14,10 @@
     {
         Title(line.Network.CryptoCode, "disabled");
         <ul>
-            <li>The node is offline</li>
+            <li text-translate="true">The node is offline</li>
             @if (line.Error != null)
             {
-                <li>Last error: @line.Error</li>
+                <li>@StringLocalizer["Last error:"] @line.Error</li>
             }
         </ul>
     }
@@ -29,19 +29,19 @@
             {
                 Title(line.Network.CryptoCode, "pending");
                 <ul>
-                    <li>NBXplorer headers height: @line.Status.ChainHeight</li>
-                    <li>The node is starting...</li>
+                    <li>@StringLocalizer["NBXplorer headers height: {0}", line.Status.ChainHeight]</li>
+                    <li text-translate="true">The node is starting...</li>
                 </ul>
             }
             else
             {
                 Title(line.Network.CryptoCode, "disabled");
                 <ul>
-                    <li>NBXplorer headers height: @line.Status.ChainHeight</li>
-                    <li>The node is offline</li>
+                    <li>@StringLocalizer["NBXplorer headers height: {0}", line.Status.ChainHeight]</li>
+                    <li text-translate="true">The node is offline</li>
                     @if (line.Error != null)
                     {
-                        <li>Last error: @line.Error</li>
+                        <li>@StringLocalizer["Last error:"] line.Error</li>
                     }
                 </ul>
             }
@@ -50,12 +50,12 @@
         {
             Title(line.Network.CryptoCode, "enabled");
             <ul>
-                <li>The node is synchronized (Height: @line.Status.BitcoinStatus.Headers)</li>
+                <li>@StringLocalizer["The node is synchronized (Height: {0})", line.Status.BitcoinStatus.Headers]</li>
                 @if (line.Status.BitcoinStatus.IsSynched &&
                      line.Status.SyncHeight.HasValue &&
                      line.Status.SyncHeight.Value < line.Status.BitcoinStatus.Headers)
                 {
-                    <li>NBXplorer is synchronizing... (Height: @line.Status.SyncHeight.Value)</li>
+                    <li>@StringLocalizer["NBXplorer is synchronizing... (Height: {0})", line.Status.SyncHeight.Value]</li>
                 }
             </ul>
         }
@@ -63,8 +63,8 @@
         {
             Title(line.Network.CryptoCode, "enabled");
             <ul>
-                <li>Node headers height: @line.Status.BitcoinStatus.Headers</li>
-                <li>Validated blocks: @line.Status.BitcoinStatus.Blocks</li>
+                <li>@StringLocalizer["Node headers height: {0}", line.Status.BitcoinStatus.Headers]</li>
+                <li>@StringLocalizer["Validated blocks: {0}", line.Status.BitcoinStatus.Blocks]</li>
             </ul>
         }
         @if (!line.Status.IsFullySynched && line.Status.BitcoinStatus != null)

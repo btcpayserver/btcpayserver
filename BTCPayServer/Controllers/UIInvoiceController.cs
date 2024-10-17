@@ -35,6 +35,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 using Serilog.Filters;
 using PeterO.Numbers;
 using BTCPayServer.Payouts;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers
 {
@@ -69,6 +70,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
 
         public WebhookSender WebhookNotificationManager { get; }
+        public IStringLocalizer StringLocalizer { get; }
 
         public UIInvoiceController(
             InvoiceRepository invoiceRepository,
@@ -98,6 +100,7 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             TransactionLinkProviders transactionLinkProviders,
             Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
+            IStringLocalizer stringLocalizer,
             PrettyNameProvider prettyName)
         {
             _displayFormatter = displayFormatter;
@@ -127,6 +130,7 @@ namespace BTCPayServer.Controllers
             _uriResolver = uriResolver;
             _defaultRules = defaultRules;
             _appService = appService;
+            StringLocalizer = stringLocalizer;
         }
 
         internal async Task<InvoiceEntity> CreatePaymentRequestInvoice(Data.PaymentRequestData prData, decimal? amount, decimal amountDue, StoreData storeData, HttpRequest request, CancellationToken cancellationToken)

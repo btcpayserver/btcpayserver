@@ -7,25 +7,21 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using MimeKit;
 
 namespace BTCPayServer.Controllers
 {
-
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
     [Route("account/{action:lowercase=Index}")]
     public partial class UIManageController : Controller
@@ -45,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
         private readonly IFileService _fileService;
         readonly StoreRepository _StoreRepository;
+        public IStringLocalizer StringLocalizer { get; }
 
         public UIManageController(
           UserManager<ApplicationUser> userManager,
@@ -61,6 +58,7 @@ namespace BTCPayServer.Controllers
           UserService userService,
           UriResolver uriResolver,
           IFileService fileService,
+          IStringLocalizer stringLocalizer,
           IHtmlHelper htmlHelper
           )
         {
@@ -79,6 +77,7 @@ namespace BTCPayServer.Controllers
             _uriResolver = uriResolver;
             _fileService = fileService;
             _StoreRepository = storeRepository;
+            StringLocalizer = stringLocalizer;
         }
 
         [HttpGet]
@@ -135,7 +134,7 @@ namespace BTCPayServer.Controllers
             {
                 if (!(await _userManager.FindByEmailAsync(model.Email) is null))
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The email address is already in use with an other account.";
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The email address is already in use with an other account."].Value;
                     return RedirectToAction(nameof(Index));
                 }
                 var setUserResult = await _userManager.SetUserNameAsync(user, model.Email);
@@ -207,11 +206,11 @@ namespace BTCPayServer.Controllers
             if (needUpdate is true)
             {
                 needUpdate = await _userManager.UpdateAsync(user) is { Succeeded: true };
-                TempData[WellKnownTempData.SuccessMessage] = "Your profile has been updated";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your profile has been updated"].Value;
             }
             else
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Error updating profile";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Error updating profile"].Value;
             }
             
             return RedirectToAction(nameof(Index));
@@ -235,7 +234,7 @@ namespace BTCPayServer.Controllers
             var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
             var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
             (await _EmailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
-            TempData[WellKnownTempData.SuccessMessage] = "Verification email sent. Please check your email.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Verification email sent. Please check your email."].Value;
             return RedirectToAction(nameof(Index));
         }
 
@@ -281,8 +280,8 @@ namespace BTCPayServer.Controllers
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
-            _logger.LogInformation("User changed their password successfully.");
-            TempData[WellKnownTempData.SuccessMessage] = "Your password has been changed.";
+            _logger.LogInformation("User changed their password successfully");
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your password has been changed."].Value;
 
             return RedirectToAction(nameof(ChangePassword));
         }
@@ -330,7 +329,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
-            TempData[WellKnownTempData.SuccessMessage] = "Your password has been set.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your password has been set."].Value;
 
             return RedirectToAction(nameof(SetPassword));
         }
@@ -345,7 +344,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _userService.DeleteUserAndAssociatedData(user);
-            TempData[WellKnownTempData.SuccessMessage] = "Account successfully deleted.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account successfully deleted."].Value;
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(UIAccountController.Login), "UIAccount");
         }

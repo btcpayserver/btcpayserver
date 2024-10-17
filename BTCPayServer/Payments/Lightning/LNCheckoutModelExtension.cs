@@ -15,7 +15,6 @@ namespace BTCPayServer.Payments.Lightning
         public const string CheckoutBodyComponentName = "LightningCheckoutBody";
         private readonly DisplayFormatter _displayFormatter;
         IPaymentLinkExtension _PaymentLinkExtension;
-        private readonly bool isBTC;
 
         public LNCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
@@ -31,15 +30,12 @@ namespace BTCPayServer.Payments.Lightning
             Handlers = handlers;
             PaymentMethodId = paymentMethodId;
             _PaymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
-            isBTC = PaymentTypes.LN.GetPaymentMethodId("BTC") == paymentMethodId;
         }
 
         public BTCPayNetwork Network { get; }
         public IStringLocalizer StringLocalizer { get; }
         public PaymentMethodHandlerDictionary Handlers { get; }
         public PaymentMethodId PaymentMethodId { get; }
-
-        public string DisplayName => isBTC ? StringLocalizer["Lightning"] : StringLocalizer["Lightning ({0})", Network.DisplayName];
 
         public string Image => Network.LightningImagePath;
         public string Badge => "⚡";
@@ -55,7 +51,7 @@ namespace BTCPayServer.Payments.Lightning
             if (context.Model.InvoiceBitcoinUrl is not null)
                 context.Model.InvoiceBitcoinUrlQR = $"lightning:{context.Model.InvoiceBitcoinUrl.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
             context.Model.PeerInfo = handler.ParsePaymentPromptDetails(paymentPrompt.Details).NodeInfo;
-            if (context.StoreBlob.LightningAmountInSatoshi && isBTC)
+            if (context.StoreBlob.LightningAmountInSatoshi && Network.IsBTC)
             {
                 BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, paymentPrompt.Rate, _displayFormatter);
             }

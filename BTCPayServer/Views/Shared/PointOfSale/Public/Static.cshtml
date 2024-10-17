@@ -55,7 +55,14 @@
                                 @if (item.Inventory.HasValue)
                                 {
                                     <span class="badge text-bg-warning">
-                                        @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                        @if (item.Inventory > 0)
+                                        {
+                                            <span text-translate="true">@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                        }
+                                        else
+                                        {
+                                            <span text-translate="true">Sold out</span>
+                                        }
                                     </span>
                                 }
                             </div>
@@ -88,8 +95,8 @@
                 <div class="col posItem posItem--displayed posItem--last@(Model.Items.Length == 0 ? " posItem--first" : null)">
                     <div class="card h-100 px-0">
                         <div class="card-body p-3 d-flex flex-column gap-2 mb-auto">
-                            <h5 class="card-title">Custom Amount</h5>
-                            <p class="card-text">Create invoice to pay custom amount</p>
+                            <h5 class="card-title" text-translate="true">Custom Amount</h5>
+                            <p class="card-text" text-translate="true">Create invoice to pay custom amount</p>
                         </div>
                         <div class="card-footer bg-transparent border-0 pb-3">
                             <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
@@ -107,7 +114,7 @@
     </main>
     <footer class="store-footer">
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-            Powered by <partial name="_StoreFooterLogo" />
+            <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
         </a>
     </footer>
 </div>

@@ -8,9 +8,9 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Services">Services</a>
+                <a asp-action="Services" text-translate="true">Services</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
@@ -22,7 +22,7 @@
     <div class="row">
         <div class="col-lg-8">
             <div class="form-group">
-                <p>The LND seed backup is useful to recover on-chain funds of your LND wallet in case of a corruption of your server.</p>
+                <p text-translate="true">The LND seed backup is useful to recover on-chain funds of your LND wallet in case of a corruption of your server.</p>
                 <p>The recovering process is documented by LND on <a href="https://github.com/lightningnetwork/lnd/blob/master/docs/recovery.md" rel="noreferrer noopener">this page</a>.</p>
             </div>
             <button class="btn btn-primary @(Model.Removed ? "collapse" : "")" id="details" type="button">See confidential seed information</button>
@@ -47,7 +47,7 @@
                         </div>
                     </div>
                     <div class="form-group">
-                        <label asp-for="WalletPassword" class="form-label">Password</label>
+                        <label asp-for="WalletPassword" class="form-label" text-translate="true">Password</label>
                         <div class="input-group">
                             <input asp-for="WalletPassword" type="password" class="form-control" value="@Model.WalletPassword">
                             <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle password visibility" data-toggle-password="#WalletPassword">
@@ -58,7 +58,7 @@
                 </div>
                 <div class="form-group collapse">
                     <form method="get" asp-action="RemoveLndSeed" asp-route-serviceName="@Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")">
-                        <button id="delete" class="btn btn-primary" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE">Delete LND seed from server</button>
+                        <button id="delete" class="btn btn-primary" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE" text-translate="true">Delete LND seed from server</button>
                     </form>
                 </div>
             }

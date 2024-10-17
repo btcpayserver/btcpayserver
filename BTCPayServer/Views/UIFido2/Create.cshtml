@@ -7,16 +7,16 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-controller="UIManage" asp-action="TwoFactorAuthentication">Two Factor Authentication</a>
+                <a asp-controller="UIManage" asp-action="TwoFactorAuthentication" text-translate="true">Two Factor Authentication</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Register Device</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Register Device</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
 </div>
 <partial name="_StatusMessage" />
 
-<p>Insert your security device and proceed.</p>
+<p text-translate="true">Insert your security device and proceed.</p>
 
 <form asp-action="CreateResponse" id="registerForm">
     <input type="hidden" name="data" id="data"/>
@@ -27,14 +27,14 @@
         <div id="info-message" class="alert alert-info mb-3 d-none">
             <div class="d-flex align-items-center">
                 <div class="spinner-border spinner-border-sm me-2 fido-running" role="status">
-                    <span class="visually-hidden">Loading...</span>
+                    <span class="visually-hidden" text-translate="true">Loading...</span>
                 </div>
-                <span>If your security device has a button, tap on it.</span>
+                <span text-translate="true">If your security device has a button, tap on it.</span>
             </div>
         </div>
-        <button id="btn-start" class="btn btn-primary d-none" type="button">Start</button>
+        <button id="btn-start" class="btn btn-primary d-none" type="button" text-translate="true">Start</button>
         <p id="error-message" class="d-none alert alert-danger"></p>
-        <a id="btn-retry" class="btn btn-secondary d-none">Retry</a>
+        <a id="btn-retry" class="btn btn-secondary d-none" text-translate="true">Retry</a>
     </div>
 </div>
 

@@ -25,7 +25,12 @@
                 <div class="form-group">
 					<h5 text-translate="true">Scripting</h5>
 					<p html-translate="true">Rate script allows you to express precisely how you want to calculate rates for currency pairs.</p>
-                    <p>We are retrieving the rate of each exchange either directly, or via <a href="https://www.coingecko.com/" target="_blank" rel="noreferrer noopener">CoinGecko (free)</a>.</p>
+                    <p>
+                        <span text-translate="true">We are retrieving the rate of each exchange either directly, or via CoinGecko (free).</span>
+                        <a href="https://www.coingecko.com/" target="_blank" rel="noreferrer noopener">
+                            <vc:icon symbol="info"/>
+                        </a>
+                    </p>
                     
                     <div class="accordion" id="accordion-info">
                         <div class="accordion-item">
@@ -147,7 +152,7 @@ X_X = kraken(X_X);</code></pre>
                     <select asp-for="PreferredExchange" asp-items="Model.Exchanges" class="form-select"></select>
                     <span asp-validation-for="PreferredExchange" class="text-danger"></span>
                     <div id="PreferredExchangeHelpBlock" class="form-text">
-                        Current Rates source is <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredResolvedExchange</a>.
+                        <span text-translate="true">Current Rates source is</span> <a href="@Model.RateSource" target="_blank" rel="noreferrer noopener">@Model.PreferredResolvedExchange</a>.
                     </div>
                 </div>
             }
@@ -155,10 +160,15 @@ X_X = kraken(X_X);</code></pre>
                 <label class="d-flex align-items-center">
                     <button type="submit" id="ShowScripting" class="btcpay-toggle me-3 @if (Model.ShowScripting) { @("btcpay-toggle--active") }" value="scripting-@(Model.ShowScripting ? "off" : "on")" name="command" data-bs-toggle="modal" data-bs-target="#ConfirmModal" permission="@Policies.CanModifyStoreSettings">@(Model.ShowScripting ? "Disable" : "Enable") advanced rate rule scripting</button>
                     <div>
-						<span text-translate="true">Advanced rate rule scripting</span>
-                        <div class="form-text">
-                            @(Model.ShowScripting ? "Disabling will delete your rate script." : "Enabling will modify your current rate sources. This is a feature for advanced users.")
-                        </div>
+                        <span text-translate="true">Advanced rate rule scripting</span>
+                        @if (Model.ShowScripting)
+                        {
+                            <div class="form-text" text-translate="true">Disabling will delete your rate script.</div>
+                        }
+                        else
+                        {
+                            <div class="form-text" text-translate="true">Enabling will modify your current rate sources. This is a feature for advanced users.</div>
+                        }
                     </div>
                 </label>
             </div>
@@ -173,10 +183,10 @@ X_X = kraken(X_X);</code></pre>
 			<h3 class="mt-5 mb-3" text-translate="true">Testing</h3>
 
             <div class="form-group">
-                <label asp-for="ScriptTest" class="form-label">Currency pairs to test against your rule (e.g. <code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
+                <label asp-for="ScriptTest" class="form-label"><span text-translate="true">Currency pairs to test against your rule</span> (<code>DOGE_USD,DOGE_CAD,BTC_CAD,BTC_USD</code>)</label>
                 <div class="d-flex">
                     <input asp-for="ScriptTest" class="form-control" placeholder="BTC_USD, BTC_CAD" />
-                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test" permission="@Policies.CanModifyStoreSettings">Test</button>
+                    <button name="command" value="Test" type="submit" class="btn btn-secondary ms-3" title="Test" permission="@Policies.CanModifyStoreSettings" text-translate="true">Test</button>
                 </div>
                 <span asp-validation-for="ScriptTest" class="text-danger"></span>
             </div>

@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 namespace BTCPayServer.Payments.Bitcoin
 {
 
-    public class BitcoinLikePaymentData : CryptoPaymentData
+    public class BitcoinLikePaymentData
     {
         public BitcoinLikePaymentData()
         {
@@ -28,14 +28,12 @@ namespace BTCPayServer.Payments.Bitcoin
         public bool RBF { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.KeyPathJsonConverter))]
         public KeyPath KeyPath { get; set; }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public uint256 AssetId { get; set; }
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public PayjoinInformation PayjoinInformation { get; set; }
-
-        string CryptoPaymentData.GetPaymentProof()
-        {
-            return Outpoint?.ToString();
-        }
     }
 
 

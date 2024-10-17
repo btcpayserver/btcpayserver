@@ -10,7 +10,7 @@
 <div class="d-inline-flex align-items-center gap-2">
     @if (Model.IsArchived)
     {
-        <span class="badge bg-warning">archived</span>
+        <span class="badge bg-warning" text-translate="true">archived</span>
     }
     <div class="badge badge-@badgeClass" data-invoice-state-badge="@Model.InvoiceId">
         @if (canMark)
@@ -21,13 +21,13 @@
             <div class="dropdown-menu">
                 @if (Model.State.CanMarkInvalid())
                 {
-                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="invalid">
+                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="invalid" text-translate="true">
                         Mark as invalid
                     </button>
                 }
                 @if (Model.State.CanMarkComplete())
                 {
-                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="settled">
+                    <button type="button" class="dropdown-item lh-base" data-invoice-id="@Model.InvoiceId" data-new-state="settled" text-translate="true">
                         Mark as settled
                     </button>
                 }
@@ -62,6 +62,6 @@
     }
     @if (Model.HasRefund)
     {
-        <span class="badge bg-warning">Refund</span>
+        <span class="badge bg-warning" text-translate="true">Refund</span>
     }
 </div>

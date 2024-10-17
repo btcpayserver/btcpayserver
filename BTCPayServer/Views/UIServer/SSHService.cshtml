@@ -8,15 +8,15 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Services">Services</a>
+                <a asp-action="Services" text-translate="true">Services</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
 </div>
 <partial name="_StatusMessage" />
-<p>SSH services are used by the maintenance operations.</p>
+<p text-translate="true">SSH services are used by the maintenance operations.</p>
 <div class="row">
     <div class="col-md-8">
         @if (!ViewContext.ModelState.IsValid)
@@ -49,8 +49,8 @@
 
 @if (Model.SSHKeyFileContent != null)
 {
-    <h4>Authorized keys</h4>
-    <p>You can enter here SSH public keys authorized to connect to your server.</p>
+    <h4 text-translate="true">Authorized keys</h4>
+    <p text-translate="true">You can enter here SSH public keys authorized to connect to your server.</p>
     <div class="row">
         <div class="col-md-8">
             <form method="post">
@@ -64,12 +64,12 @@
     </div>
 }
 
-<h4 class="mt-5 mb-3">Other actions</h4>
-<p>Increase the security of your instance by disabling the ability to change the SSH settings in this BTCPay Server instance's user interface.</p>
+<h4 class="mt-5 mb-3" text-translate="true">Other actions</h4>
+<p text-translate="true">Increase the security of your instance by disabling the ability to change the SSH settings in this BTCPay Server instance's user interface.</p>
 <div class="row">
     <div class="col-md-8">
         <form method="post">
-            <button name="command" id="disable" type="submit" class="btn btn-outline-danger mb-5" value="disable" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DISABLE">Disable</button>
+            <button name="command" id="disable" type="submit" class="btn btn-outline-danger mb-5" value="disable" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DISABLE" text-translate="true">Disable</button>
         </form>
     </div>
 </div>

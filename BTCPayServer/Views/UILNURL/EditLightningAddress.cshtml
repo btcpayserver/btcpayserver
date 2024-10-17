@@ -60,7 +60,7 @@
         </div>
         <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0 mb-3" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
             <vc:icon symbol="caret-down"/>
-            <span class="ms-1">Advanced settings</span>
+            <span class="ms-1" text-translate="true">Advanced settings</span>
         </button>
         <div id="AdvancedSettings" class="collapse @(showAdvancedOptions ? "show" : "")">
             <div class="row">
@@ -91,7 +91,7 @@
 						<a href="https://docs.btcpayserver.org/Development/InvoiceMetadata/" target="_blank" rel="noreferrer noopener">
 							<vc:icon symbol="info" />
 						</a>
-                        <textarea asp-for="Add.InvoiceMetadata" class="form-control"  ></textarea>
+                        <textarea asp-for="Add.InvoiceMetadata" class="form-control"></textarea>
                         <span asp-validation-for="Add.InvoiceMetadata" class="text-danger"></span>
                     </div>
                 </div>
@@ -108,9 +108,9 @@
         <table class="table table-hover">
             <thead>
             <tr>
-                <th>Address</th>
-                <th>Settings</th>
-                <th class="text-end">Actions</th>
+                <th text-translate="true">Address</th>
+                <th text-translate="true">Settings</th>
+                <th class="text-end" text-translate="true">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -151,7 +151,7 @@
                         }
                     </td>
                     <td class="text-end">
-                        <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")" class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="REMOVE">
+                        <button type="submit" title="Remove" name="command" value="@($"remove:{Model.Items[index].Username}")" class="btn btn-link px-0 remove" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The Lightning Address <strong>@Html.Encode(address)</strong> will be removed." data-confirm-input="REMOVE" text-translate="true">
                             Remove
                         </button>
                     </td>

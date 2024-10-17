@@ -20,7 +20,7 @@
                 <section class="tile">
                     <h2 class="h4 card-subtitle text-center text-secondary mt-1 mb-3" id="LightningNodeTitle">
                         <span>@Model.CryptoCode</span>
-                        Lightning Node
+                        <span text-translate="true">Lightning Node</span>
                     </h2>
                     <h4 class="d-flex align-items-center justify-content-center gap-2 my-4">
                         <span class="btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")" style="margin-top:.1rem;"></span>
@@ -70,7 +70,7 @@
                         }
                         else
                         {
-                            <p class="text-center mt-4">No public address available.</p>
+                            <p class="text-center mt-4" text-translate="true">No public address available.</p>
                         }
                     }
                 </section>

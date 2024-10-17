@@ -40,8 +40,8 @@
 <body class="min-vh-100 p-2">
     @if (!Model.Enabled)
     {
-        <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert">
-            This crowdfund page is not publically viewable!
+        <div class="alert alert-warning text-center sticky-top mb-0 rounded-0" role="alert" text-translate="true">
+            This crowdfund page is not publicly viewable!
         </div>
     }
     @if (Model.AnimationsEnabled)
@@ -71,19 +71,19 @@
                         <span v-if="srvModel.resetEvery !== 'Never'"
                               class="h5 ms-2"
                               v-b-tooltip
-                              :title="'Goal resets every ' + srvModel.resetEveryAmount + ' ' + srvModel.resetEvery + ((srvModel.resetEveryAmount>1)?'s': '')">
+                              :title="'Goal resets every ' + srvModel.resetEveryAmount + ' ' + srvModel.resetEvery + ((srvModel.resetEveryAmount>1)?'s': '')" text-translate="true">
                             Dynamic
                         </span>
                     }
                     @if (Model.EnforceTargetAmount)
                     {
-                        <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title="No contributions allowed after the goal has been reached">
+                        <span v-if="srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title=@StringLocalizer["No contributions allowed after the goal has been reached"] text-translate="true">
                             Hardcap Goal
                         </span>
                     }
                     else
                     {
-                        <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title="Contributions allowed even after goal is reached">
+                        <span v-if="!srvModel.enforceTargetAmount" class="h5 ms-2" v-b-tooltip title=@StringLocalizer["Contributions allowed even after goal is reached"] text-translate="true">
                             Softcap Goal
                         </span>
                     }
@@ -92,18 +92,18 @@
             @if (!Model.Started && Model.StartDate.HasValue)
             {
                 <h6 class="text-muted fst-italic mt-3" v-if="!started && srvModel.startDate" v-b-tooltip :title="startDate" v-text="`Starts in ${startDiff}`" data-test="time-state">
-                    Starts @TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)
+                    @StringLocalizer["Starts {0}", TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)]
                 </h6>
             }
             else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
             {
                 <h6 class="text-muted fst-italic mt-3" v-if="started && !ended && srvModel.endDate" v-b-tooltip :title="endDate" v-text="`Ends in ${endDiff}`" data-test="time-state">
-                    Ends @TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)
+                    @StringLocalizer["Ends {0}", TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)]
                 </h6>
             }
             else if (Model.Started && !Model.Ended && !Model.EndDate.HasValue)
             {
-                <h6 class="text-muted fst-italic mt-3" v-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" data-test="time-state">
+                <h6 class="text-muted fst-italic mt-3" v-if="started && !ended && !srvModel.endDate" v-b-tooltip title="No set end date" data-test="time-state" text-translate="true">
                     Currently active!
                 </h6>
             }
@@ -160,7 +160,7 @@
 
             <div class="col-sm border-end p-3 text-center" id="crowdfund-body-total-contributors">
                 <h3 v-text="new Intl.NumberFormat().format(srvModel.info.totalContributors)">@Model.Info.TotalContributors</h3>
-                <h5 class="text-muted fst-italic mb-0">Contributors</h5>
+                <h5 class="text-muted fst-italic mb-0" text-translate="true">Contributors</h5>
             </div>
 
             @if (Model.StartDate.HasValue || Model.EndDate.HasValue)
@@ -170,20 +170,20 @@
                     {
                         <div v-if="startDiff">
                             <h3 v-text="startDiff">@TimeZoneInfo.ConvertTimeFromUtc(Model.StartDate.Value, TimeZoneInfo.Local)</h3>
-                            <h5 class="text-muted fst-italic mb-0" v-text="'Left to start'">Start Date</h5>
+                            <h5 class="text-muted fst-italic mb-0" v-text="'Left to start'" text-translate="true">Start Date</h5>
                         </div>
                     }
                     else if (Model.Started && !Model.Ended && Model.EndDate.HasValue)
                     {
                         <div v-if="!startDiff && endDiff">
                             <h3 v-text="endDiff">@TimeZoneInfo.ConvertTimeFromUtc(Model.EndDate.Value, TimeZoneInfo.Local)</h3>
-                            <h5 class="text-muted fst-italic mb-0" v-text="'Left'">End Date</h5>
+                            <h5 class="text-muted fst-italic mb-0" v-text="'Left'" text-translate="true">End Date</h5>
                         </div>
                     }
                     else if (Model.Ended)
                     {
                         <div v-if="ended">
-                            <h3 class="mb-0">Campaign not active</h3>
+                            <h3 class="mb-0" text-translate="true">Campaign not active</h3>
                         </div>
                     }
                     <b-tooltip v-if="startDate || endDate" target="crowdfund-body-campaign-dates" class="only-for-js">
@@ -191,13 +191,13 @@
                             @if (Model.StartDate.HasValue)
                             {
                                 <li v-if="startDate" class="list-unstyled">
-                                    {{started? "Started" : "Starts"}} {{startDate}}
+                                    {{started ? "Started" : "Starts"}} {{startDate}}
                                 </li>
                             }
                             @if (Model.EndDate.HasValue)
                             {
                                 <li v-if="endDate" class="list-unstyled">
-                                    {{ended? "Ended" : "Ends"}} {{endDate}}
+                                    {{ended ? "Ended" : "Ends"}} {{endDate}}
                                 </li>
                             }
                         </ul>
@@ -207,7 +207,7 @@
         </div>
 
         <div class="text-center mb-4" id="crowdfund-body-header">
-            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contribute">Contribute</button>
+            <button v-if="active" id="crowdfund-body-header-cta" class="btn btn-lg btn-primary py-2 px-5 only-for-js" v-on:click="contribute" text-translate="true">Contribute</button>
         </div>
 
         <div class="row mt-4 justify-content-between gap-5">
@@ -245,10 +245,7 @@
                     <div class="overflow-hidden">@Safe.Raw(Model.Description)</div>
                 </div>
                 <div class="col-md-4 col-sm-12">
-                <partial
-                    name="Crowdfund/Public/ContributeForm"
-                             model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })">
-                    </partial>
+                    <partial name="Crowdfund/Public/ContributeForm" model="@(new ContributeToCrowdfund { ViewCrowdfundViewModel = Model, RedirectToCheckout = true })" />
                 </div>
             </div>
         </noscript>
@@ -264,7 +261,7 @@
         <footer class="store-footer">
             <p class="text-muted" v-text="`Updated ${lastUpdated}`">Updated @Model.Info.LastUpdated</p>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                Powered by <partial name="_StoreFooterLogo" />
+                <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>
         </footer>
     </div>
@@ -300,7 +297,7 @@
             </span>
             <div class="perk-zoom" v-if="canExpand">
                 <div class="perk-zoom-bg"></div>
-                <div class="perk-zoom-text w-100 py-2 px-4 text-center text-primary fw-semibold fs-5 lh-sm">
+                <div class="perk-zoom-text w-100 py-2 px-4 text-center text-primary fw-semibold fs-5 lh-sm" text-translate="true">
                     Select this contribution perk
                 </div>
             </div>
@@ -311,17 +308,15 @@
                     <div class="card-title d-flex justify-content-between" :class="{ 'mb-0': !perk.description }">
                         <span class="h5" :class="{ 'mb-0': !perk.description }">{{perk.title ? perk.title : perk.id}}</span>
                         <span class="text-muted">
-
-                            <template v-if="perk.priceType === 'Fixed' && amount ==0">
+                            <template v-if="perk.priceType === 'Fixed' && amount == 0" text-translate="true">
                                 Free
                             </template>
                             <template v-else-if="amount">
                                 {{formatAmount(perk.price.noExponents(), srvModel.currencyData.divisibility)}}
                                 {{targetCurrency}}
-                                <template v-if="perk.price.type === 'Minimum'">or more</template>
+                                <template v-if="perk.price.type === 'Minimum'" text-translate="true">or more</template>
                             </template>
-
-                            <template v-else-if="perk.priceType === 'Topup' || (!amount && perk.priceType === 'Minimum')">
+                            <template v-else-if="perk.priceType === 'Topup' || (!amount && perk.priceType === 'Minimum')" text-translate="true">
                                 Any amount
                             </template>
                         </span>
@@ -343,7 +338,7 @@
                                 :class="{'btn-disabled': loading}"
                                 type="submit">
                             <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
-                                <span class="visually-hidden">Loading...</span>
+                                <span class="visually-hidden" text-translate="true">Loading...</span>
                             </div>
                             {{perk.buyButtonText || 'Continue'}}
                         </button>
@@ -361,7 +356,7 @@
 
     <template id="contribute-template">
         <div>
-            <h3 v-if="!inModal" class="mb-3">Contribute</h3>
+            <h3 v-if="!inModal" class="mb-3" text-translate="true">Contribute</h3>
             <perks :perks="perks"
                    :loading="loading"
                    :in-modal="inModal"

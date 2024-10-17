@@ -1021,12 +1021,4 @@ namespace BTCPayServer.Services.Invoices
             };
         }
     }
-    /// <summary>
-    /// A record of a payment
-    /// </summary>
-    public interface CryptoPaymentData
-    {
-
-        string GetPaymentProof();
-    }
 }

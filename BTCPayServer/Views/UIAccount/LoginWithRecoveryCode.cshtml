@@ -4,7 +4,7 @@
     ViewData["Title"] = "Recovery code verification";
 }
 
-<p>
+<p text-translate="true">
     You have requested to login with a recovery code. This login will not be remembered until you provide
     an authenticator app code at login or disable 2FA and login again.
 </p>
@@ -14,7 +14,7 @@
         <input asp-for="RecoveryCode" class="form-control" autocomplete="off" />
         <span asp-validation-for="RecoveryCode" class="text-danger"></span>
     </div>
-    <button type="submit" class="btn btn-primary">Log in</button>
+    <button type="submit" class="btn btn-primary" text-translate="true">Log in</button>
 </form>
 
 @section PageFootContent {

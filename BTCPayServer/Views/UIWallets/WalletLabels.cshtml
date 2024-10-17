@@ -20,8 +20,8 @@
         <table class="table table-hover">
             <thead>
             <tr>
-                <th>Label</th>
-                <th class="text-end">Actions</th>
+                <th text-translate="true">Label</th>
+                <th text-translate="true" class="text-end">Actions</th>
             </tr>
             </thead>
             <tbody>
@@ -35,7 +35,7 @@
                 </td>
                 <td class="text-end">
                     <form method="post" asp-action="RemoveWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label">
-                        <button class="btn btn-link btn-delete p-0" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The label <strong>@Html.Encode(label.Label)</strong> will be removed from this wallet and its associated transactions." data-confirm-input="DELETE">Remove</button>
+                        <button class="btn btn-link btn-delete p-0" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The label <strong>@Html.Encode(label.Label)</strong> will be removed from this wallet and its associated transactions." data-confirm-input="DELETE" text-translate="true">Remove</button>
                     </form>
                 </td>
             </tr>

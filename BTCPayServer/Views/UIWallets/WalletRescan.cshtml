@@ -10,47 +10,47 @@
 {
     <div class="row">
         <div class="col-lg-8">
-            <p>This feature is disabled</p>
+            <p text-translate="true">This feature is disabled</p>
             @if (Model.IsFullySync)
             {
                 <p>
                     <vc:icon symbol="checkmark" css-class="text-success" />
-                    <span>The full node is synched</span>
+                    <span text-translate="true">The full node is synched</span>
                 </p>
             }
             else
             {
                 <p>
                     <vc:icon symbol="cross" css-class="text-danger" />
-                    <span>The full node is not synched</span>
+                    <span text-translate="true">The full node is not synched</span>
                 </p>
             }
             @if (Model.IsServerAdmin)
             {
                 <p>
                     <vc:icon symbol="checkmark" css-class="text-success" />
-                    <span>You are server administrator</span>
+                    <span text-translate="true">You are server administrator</span>
                 </p>
             }
             else
             {
                 <p>
                     <vc:icon symbol="cross" css-class="text-danger" />
-                    <span>You are not server administrator</span>
+                    <span text-translate="true">You are not server administrator</span>
                 </p>
             }
             @if (Model.IsSupportedByCurrency)
             {
                 <p>
                     <vc:icon symbol="checkmark" css-class="text-success" />
-                    <span>This full node support rescan of the UTXO set</span>
+                    <span text-translate="true">This full node support rescan of the UTXO set</span>
                 </p>
             }
             else
             {
                 <p>
                     <vc:icon symbol="cross" css-class="text-danger" />
-                    <span>This full node does not support rescan of the UTXO set</span>
+                    <span text-translate="true">This full node does not support rescan of the UTXO set</span>
                 </p>
             }
         </div>
@@ -65,7 +65,7 @@ else if (!Model.Progress.HasValue)
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
-                <span>The previous scan stopped with an error: @Model.PreviousError</span>
+                <span text-translate="true">The previous scan stopped with an error: @Model.PreviousError</span>
             </div>
         }
         else if (Model.LastSuccess != null)
@@ -74,16 +74,16 @@ else if (!Model.Progress.HasValue)
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
-                <span>The previous scan completed and found <b>@Model.LastSuccess.Found</b> UTXOs in <b>@Model.TimeOfScan</b> (The total UTXO set size is @Model.LastSuccess.TotalSizeOfUTXOSet.Value)</span>
+                <span text-translate="true">The previous scan completed and found <b>@Model.LastSuccess.Found</b> UTXOs in <b>@Model.TimeOfScan</b> (The total UTXO set size is @Model.LastSuccess.TotalSizeOfUTXOSet.Value)</span>
             </div>
         }
         <div class="col-lg-8">
-            <p>
+            <p html-translate="true">
                 Scanning the UTXO set allow you to restore the balance of your wallet, but not all the transaction history.
                 This operation will scan the HD Path <b>0/*</b>, <b>1/*</b> and <b>*</b> from a starting index, until no UTXO are found in a whole gap limit.
             </p>
-            <p>The batch size make sure the scan do not consume too much RAM at once by rescanning several time with smaller subset of addresses.</p>
-            <p>If you do not understand the above, go with the defaults and start scanning.</p>
+            <p text-translate="true">The batch size make sure the scan do not consume too much RAM at once by rescanning several time with smaller subset of addresses.</p>
+            <p text-translate="true">If you do not understand the above, go with the defaults and start scanning.</p>
         </div>
     </div>
 
@@ -102,7 +102,7 @@ else if (!Model.Progress.HasValue)
                     <label asp-for="BatchSize" class="form-label"></label>
                     <input asp-for="BatchSize" class="form-control" type="number" step="1000" style="max-width:14ch;" />
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">Start scan</button>
+                <button type="submit" class="btn btn-primary mt-2" text-translate="true">Start scan</button>
             </form>
         </div>
     </div>

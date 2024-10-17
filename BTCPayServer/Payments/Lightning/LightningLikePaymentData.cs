@@ -7,7 +7,7 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public class LightningLikePaymentData : CryptoPaymentData
+    public class LightningLikePaymentData
     {
 
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
@@ -15,10 +15,5 @@ namespace BTCPayServer.Payments.Lightning
 
         [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
         public uint256 Preimage { get; set; }
-
-        public string GetPaymentProof()
-        {
-            return Preimage?.ToString();
-        }
     }
 }

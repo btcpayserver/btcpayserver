@@ -226,8 +226,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                         PaymentMethod = paymentMethodId.ToString(),
                         Link = link,
                         Id = txId,
-                        Destination = paymentEntity.Destination,
-                        //PaymentProof = paymentData.GetPaymentProof()
+                        Destination = paymentEntity.Destination
                     };
                 })
                 .Where(payment => payment != null)

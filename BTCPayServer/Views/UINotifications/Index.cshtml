@@ -51,13 +51,15 @@
         <a class="btn @((status == "All") ? "btn-primary" : "btn-outline-secondary")"
            asp-controller="UINotifications"
            asp-action="Index"
-           asp-route-Status="All">
+           asp-route-Status="All"
+           text-translate="true">
             All
         </a>
         <a class="btn @((status == "Unread") ? "btn-primary" : "btn-outline-secondary")"
            asp-controller="UINotifications"
            asp-action="Index"
-           asp-route-Status="Unread">
+           asp-route-Status="Unread"
+           text-translate="true">
             Unread
         </a>
     </div>
@@ -70,7 +72,7 @@
             }
             else
             {
-                <span>All Type</span>
+                <span text-translate="true">All Type</span>
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
@@ -90,7 +92,7 @@
             }
             else
             {
-                <span>All Stores</span>
+                <span text-translate="true">All Stores</span>
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StoresOptionsToggle">
@@ -122,16 +124,16 @@
                             <th class="mass-action-select-col only-for-js">
                                 <input name="selectedItems" type="checkbox" class="form-check-input mass-action-select-all" />
                             </th>
-                            <th>Message</th>
+                            <th text-translate="true">Message</th>
                             <th class="date-col">
                                 <div class="d-flex align-items-center gap-1">
-                                    Date
+                                    <span text-translate="true">Date</span>
                                     <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
                                         <vc:icon symbol="time" />
                                     </button>
                                 </div>
                             </th>
-                            <th class="text-end text-success">Actions</th>
+                            <th class="text-end text-success" text-translate="true">Actions</th>
                         </tr>
                     </thead>
                     <thead class="mass-action-actions">
@@ -146,18 +148,18 @@
                                         {
                                             <button type="submit" name="command" value="mark-seen" class="btn btn-link gap-1">
                                                 <vc:icon symbol="actions-show" />
-                                                Mark as seen
+                                                <span text-translate="true">Mark as seen</span>
                                             </button>
                                         }
                                         <button type="submit" name="command" value="delete" class="btn btn-link gap-1">
                                             <vc:icon symbol="actions-trash" />
-                                            Delete
+                                            <span text-translate="true">Delete</span>
                                         </button>
                                     </div>
                                     <div class="vr"></div>
                                     <div>
                                         <strong class="mass-action-selected-count">0</strong>
-                                        selected
+                                        <span text-translate="true">selected</span>
                                     </div>
                                 </div>
                             </th>

@@ -7,7 +7,7 @@
     var walletId = Context.GetRouteValue("walletId").ToString();
     var returnUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Receive, $"Receive {Model.CryptoCode}", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Receive, StringLocalizer["Receive {0}", Model.CryptoCode], walletId);
 }
 
 @section PageHeadContent
@@ -45,12 +45,12 @@
                 <input type="text" class="form-control" readonly="readonly" asp-for="PaymentLink" id="payment-link"/>
             </div>
             <div class="row mt-4">
-                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
+                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100" text-translate="true">Generate another address</button>
             </div>
         </noscript>
         <div class="nav flex-wrap align-items-center justify-content-center gap-2 mb-4">
-            <a class="btcpay-pill active" data-bs-toggle="tab" href="#address-tab">Address</a>
-            <a class="btcpay-pill " data-bs-toggle="tab" href="#link-tab">Link</a>
+            <a class="btcpay-pill active" data-bs-toggle="tab" href="#address-tab" text-translate="true">Address</a>
+            <a class="btcpay-pill " data-bs-toggle="tab" href="#link-tab" text-translate="true">Link</a>
         </div>
         <div class="only-for-js col-sm-10 col-xxl-8 mx-auto" id="app">
             <div class="tab-content text-center">
@@ -65,7 +65,7 @@
                     <div class="input-group mt-3">
                         <div class="form-floating">
                             <vc:truncate-center text="@Model.PaymentLink" padding="15" elastic="true" classes="form-control-plaintext" id="PaymentLink" />
-                            <label for="PaymentLink">Payment Link</label>
+                            <label for="PaymentLink" text-translate="true">Payment Link</label>
                         </div>
                     </div>
                 </div>
@@ -80,7 +80,7 @@
                     <div class="input-group mt-3">
                         <div class="form-floating">
                             <vc:truncate-center text="@Model.Address" padding="15" elastic="true" classes="form-control-plaintext" id="Address" />
-                            <label for="Address">Address</label>
+                            <label for="Address" text-translate="true">Address</label>
                         </div>
                     </div>
                 </div>
@@ -91,19 +91,19 @@
                 <div class="input-group">
                     <div class="form-floating">
                         <vc:label-manager selected-labels="Model.SelectedLabels" wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Address)" />
-                        <label>Labels</label>
+                        <label text-translate="true">Labels</label>
                     </div>
                 </div>
             </div>
             <div class="mt-4">
-                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100">Generate another address</button>
+                <button type="submit" name="command" value="generate-new-address" class="btn btn-primary w-100" text-translate="true">Generate another address</button>
             </div>
         </div>
     }
     @if (env.CheatMode)
     {
         <div class="payment-box mt-3">
-            <button type="submit" name="command" value="fill-wallet" class="btn btn-outline-info w-100">Cheat Mode: Send funds to this wallet</button>
+            <button type="submit" name="command" value="fill-wallet" class="btn btn-outline-info w-100" text-translate="true">Cheat Mode: Send funds to this wallet</button>
         </div>
     }
 </form>

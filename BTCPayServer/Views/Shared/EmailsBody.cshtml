@@ -12,9 +12,9 @@
         }
         <div class="form-group">
             <div class="d-flex flex-wrap gap-2 align-items-center justify-content-between">
-                <label asp-for="Settings.Server" class="form-label">SMTP Server</label>
+                <label asp-for="Settings.Server" class="form-label" text-translate="true">SMTP Server</label>
                 <div class="dropdown only-for-js mt-n2" id="quick-fill">
-                    <button class="btn btn-link p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle">
+                    <button class="btn btn-link p-0 dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" id="QuickFillDropdownToggle" text-translate="true">
                         Quick Fill
                     </button>
                     <div class="dropdown-menu" aria-labelledby="QuickFillDropdownToggle">
@@ -30,31 +30,30 @@
             <span asp-validation-for="Settings.Server" class="text-danger"></span>
         </div>
         <div class="form-group">
-            <label asp-for="Settings.Port" class="form-label"></label>
+            <label asp-for="Settings.Port" class="form-label" text-translate="true">Port</label>
             <input asp-for="Settings.Port" data-fill="port" class="form-control"/>
             <span asp-validation-for="Settings.Port" class="text-danger"></span>
         </div>
         <div class="form-group">
-            <label asp-for="Settings.From" class="form-label">Sender's Email Address</label>
+            <label asp-for="Settings.From" class="form-label" text-translate="true">Sender's Email Address</label>
             <input asp-for="Settings.From" class="form-control" placeholder="Firstname Lastname <email@example.com>" />
             <span asp-validation-for="Settings.From" class="text-danger"></span>
         </div>
         <div class="form-group">
-            <label asp-for="Settings.Login" class="form-label"></label>
+            <label asp-for="Settings.Login" class="form-label" text-translate="true">Login</label>
             <input asp-for="Settings.Login" class="form-control"/>
-            <div class="form-text">For many email providers (like Gmail) your login is your email address.</div>
+            <div class="form-text" text-translate="true">For many email providers (like Gmail) your login is your email address.</div>
             <span asp-validation-for="Settings.Login" class="text-danger"></span>
         </div>
         <div class="form-group" permission="@(Model is ServerEmailsViewModel ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)">
+            <label asp-for="Settings.Password" class="form-label" text-translate="true">Password</label>
             @if (!Model.PasswordSet)
             {
-                <label asp-for="Settings.Password" class="form-label"></label>
                 <input asp-for="Settings.Password" type="password" class="form-control"/>
                 <span asp-validation-for="Settings.Password" class="text-danger"></span>
             }
             else
             {
-                <label asp-for="Settings.Password" class="form-label"></label>
                 <div class="input-group">
                     <input value="Configured" type="text" readonly class="form-control"/>
                     <button type="submit" class="btn btn-danger" name="command" value="ResetPassword" id="ResetPassword">Reset</button>
@@ -65,13 +64,13 @@
         <div class="my-4">
             <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
                 <vc:icon symbol="caret-down"/>
-                <span class="ms-1">Advanced settings</span>
+                <span class="ms-1" text-translate="true">Advanced settings</span>
             </button>
             <div id="AdvancedSettings" class="collapse">
                 <div class="pt-3 pb-1">
                     <div class="d-flex">
                         <input asp-for="Settings.EnabledCertificateCheck" type="checkbox" class="btcpay-toggle me-3" />
-                        <label asp-for="Settings.EnabledCertificateCheck" class="form-check-label">TLS certificate security checks</label>
+                        <label asp-for="Settings.EnabledCertificateCheck" class="form-check-label" text-translate="true">TLS certificate security checks</label>
                     </div>
                 </div>
             </div>

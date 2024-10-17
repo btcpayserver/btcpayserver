@@ -139,18 +139,18 @@ namespace BTCPayServer.Controllers
             {
                 if (viewModel.ImageFile.Length > 1_000_000)
                 {
-                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded image file should be less than 1MB");
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["The uploaded image file should be less than {0}", "1MB"]);
                 }
                 else if (!viewModel.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
-                    ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                    ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["The uploaded file needs to be an image"]);
                 }
                 else
                 {
                     var formFile = await viewModel.ImageFile.Bufferize();
                     if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                     {
-                        ModelState.AddModelError(nameof(viewModel.ImageFile), "The uploaded file needs to be an image");
+                        ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["The uploaded file needs to be an image"]);
                     }
                     else
                     {
@@ -165,7 +165,7 @@ namespace BTCPayServer.Controllers
                         }
                         catch (Exception e)
                         {
-                            ModelState.AddModelError(nameof(viewModel.ImageFile), $"Could not save image: {e.Message}");
+                            ModelState.AddModelError(nameof(viewModel.ImageFile), StringLocalizer["Could not save image: {0}", e.Message]);
                         }
                     }
                 }
@@ -181,7 +181,7 @@ namespace BTCPayServer.Controllers
             var wasAdmin = Roles.HasServerAdmin(roles);
             if (!viewModel.IsAdmin && admins.Count == 1 && wasAdmin)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "This is the only Admin, so their role can't be removed until another Admin is added.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["This is the only admin, so their role can't be removed until another Admin is added."].Value;
                 return View(viewModel);
             }
 
@@ -199,11 +199,11 @@ namespace BTCPayServer.Controllers
             {
                 if (propertiesChanged is not false && adminStatusChanged is not false && approvalStatusChanged is not false)
                 {
-                    TempData[WellKnownTempData.SuccessMessage] = "User successfully updated";
+                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User successfully updated"].Value;
                 }
                 else
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "Error updating user";
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Error updating user"].Value;
                 }
             }
 
@@ -231,7 +231,7 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = result.Succeeded ? StatusMessageModel.StatusSeverity.Success : StatusMessageModel.StatusSeverity.Error,
-                Message = result.Succeeded ? "Password successfully set" : "An error occurred while resetting user password"
+                Message = result.Succeeded ? StringLocalizer["Password successfully set"].Value : StringLocalizer["An error occurred while resetting user password"].Value
             });
             return RedirectToAction(nameof(ListUsers));
         }
@@ -326,16 +326,16 @@ namespace BTCPayServer.Controllers
             {
                 if (await _userService.IsUserTheOnlyOneAdmin(user))
                 {
-                    return View("Confirm", new ConfirmModel("Delete admin",
+                    return View("Confirm", new ConfirmModel(StringLocalizer["Delete admin"],
                         $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be removed."));
                 }
 
-                return View("Confirm", new ConfirmModel("Delete admin",
+                return View("Confirm", new ConfirmModel(StringLocalizer["Delete admin"],
                     $"The admin <strong>{Html.Encode(user.Email)}</strong> will be permanently deleted. This action will also delete all accounts, users and data associated with the server account. Are you sure?",
                     "Delete"));
             }
 
-            return View("Confirm", new ConfirmModel("Delete user", $"The user <strong>{Html.Encode(user.Email)}</strong> will be permanently deleted. Are you sure?", "Delete"));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Delete user"], $"The user <strong>{Html.Encode(user.Email)}</strong> will be permanently deleted. Are you sure?", "Delete"));
         }
 
         [HttpPost("server/users/{userId}/delete")]
@@ -347,7 +347,7 @@ namespace BTCPayServer.Controllers
 
             await _userService.DeleteUserAndAssociatedData(user);
 
-            TempData[WellKnownTempData.SuccessMessage] = "User deleted";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User deleted"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 
@@ -360,7 +360,7 @@ namespace BTCPayServer.Controllers
 
             if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
             {
-                return View("Confirm", new ConfirmModel("Disable admin",
+                return View("Confirm", new ConfirmModel(StringLocalizer["Disable admin"],
                     $"Unable to proceed: As the user <strong>{Html.Encode(user.Email)}</strong> is the last enabled admin, it cannot be disabled."));
             }
             return View("Confirm", new ConfirmModel($"{(enable ? "Enable" : "Disable")} user", $"The user <strong>{Html.Encode(user.Email)}</strong> will be {(enable ? "enabled" : "disabled")}. Are you sure?", (enable ? "Enable" : "Disable")));
@@ -374,12 +374,14 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             if (!enable && await _userService.IsUserTheOnlyOneAdmin(user))
             {
-                TempData[WellKnownTempData.SuccessMessage] = $"User was the last enabled admin and could not be disabled.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User was the last enabled admin and could not be disabled."].Value;
                 return RedirectToAction(nameof(ListUsers));
             }
             await _userService.ToggleUser(userId, enable ? null : DateTimeOffset.MaxValue);
 
-            TempData[WellKnownTempData.SuccessMessage] = $"User {(enable ? "enabled" : "disabled")}";
+            TempData[WellKnownTempData.SuccessMessage] = enable
+                ? StringLocalizer["User enabled"].Value
+                : StringLocalizer["User disabled"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 
@@ -402,7 +404,9 @@ namespace BTCPayServer.Controllers
 
             await _userService.SetUserApproval(userId, approved, Request.GetAbsoluteRootUri());
 
-            TempData[WellKnownTempData.SuccessMessage] = $"User {(approved ? "approved" : "unapproved")}";
+            TempData[WellKnownTempData.SuccessMessage] = approved
+                ? StringLocalizer["User approved"].Value
+                : StringLocalizer["User unapproved"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 
@@ -413,7 +417,7 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            return View("Confirm", new ConfirmModel("Send verification email", $"This will send a verification email to <strong>{Html.Encode(user.Email)}</strong>.", "Send"));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Send verification email"], $"This will send a verification email to <strong>{Html.Encode(user.Email)}</strong>.", "Send"));
         }
 
         [HttpPost("server/users/{userId}/verification-email")]
@@ -430,7 +434,7 @@ namespace BTCPayServer.Controllers
 
             (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
 
-            TempData[WellKnownTempData.SuccessMessage] = "Verification email sent";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Verification email sent"].Value;
             return RedirectToAction(nameof(ListUsers));
         }
 

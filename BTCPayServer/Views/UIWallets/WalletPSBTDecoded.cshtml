@@ -90,7 +90,7 @@
 }
 
 <header class="text-center mb-3">
-    <h1>@ViewData["Title"]</h1>
+    <h1 text-translate="true">@ViewData["Title"]</h1>
 </header>
 
 <partial name="_PSBTInfo" model="Model" />
@@ -105,7 +105,7 @@
         <input type="hidden" asp-for="ReturnUrl" />
         <input type="hidden" asp-for="BackUrl" />
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
-            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
         </div>
     </form>
 } 
@@ -120,20 +120,20 @@ else if (isReady)
         <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
             @if (!string.IsNullOrEmpty(Model.SigningContext?.PayJoinBIP21))
             {
-                <button type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" name="command" value="payjoin">Broadcast (Payjoin)</button>
+                <button type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" name="command" value="payjoin" text-translate="true">Broadcast (Payjoin)</button>
                 <span class="mx-2">or</span>
-                <button type="submit" class="btn btn-secondary" name="command" value="broadcast">Broadcast (Simple)</button>
+                <button type="submit" class="btn btn-secondary" name="command" value="broadcast" text-translate="true">Broadcast (Simple)</button>
             }
             else
             {
-                <button id="BroadcastTransaction" type="submit" class="btn btn-primary" name="command" value="broadcast">Broadcast transaction</button>
+                <button id="BroadcastTransaction" type="submit" class="btn btn-primary" name="command" value="broadcast" text-translate="true">Broadcast transaction</button>
             }
         </div>
     </form>
 }
 else
 {
-    <p class="lead text-secondary mt-5">
+    <p class="lead text-secondary mt-5" text-translate="true">
         Export the PSBT for your wallet. Sign it with your wallet and 
         import the signed PSBT version here for finalization and broadcasting.
     </p>
@@ -155,9 +155,9 @@ else
                     <input type="hidden" asp-for="ReturnUrl" />
                     <input type="hidden" asp-for="BackUrl" />
                     <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
-                        <button name="command" type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" value="save-psbt">Download PSBT file</button>
-                        <button name="command" type="button" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">Show QR for wallet camera</button>
-                        <a id="ShowRawVersion" href="#ExportOptions" data-bs-toggle="collapse" class="btn btn-link text-secondary">Show raw versions</a>
+                        <button name="command" type="submit" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" value="save-psbt" text-translate="true">Download PSBT file</button>
+                        <button name="command" type="button" class="btn btn-primary mb-3 mb-sm-0 me-sm-2 only-for-js" data-bs-toggle="modal" data-bs-target="#scan-qr-modal" text-translate="true">Show QR for wallet camera</button>
+                        <a id="ShowRawVersion" href="#ExportOptions" data-bs-toggle="collapse" class="btn btn-link text-secondary" text-translate="true">Show raw versions</a>
                     </div>
                 </form>
                 <div id="ExportOptions" class="collapse">
@@ -194,7 +194,7 @@ else
         <div class="accordion-item">
             <h2 class="accordion-header" id="PSBTOptionsImportHeader">
                 <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
-                    <span class="h5">Provide updated PSBT</span>
+                    <span class="h5" text-translate="true">Provide updated PSBT</span>
                     <vc:icon symbol="caret-down"/>
                 </button>
             </h2>
@@ -204,7 +204,7 @@ else
                         <input type="hidden" asp-for="ReturnUrl" />
                         <input type="hidden" asp-for="BackUrl" />
                         <div class="form-group">
-                            <label for="ImportedPSBT" class="form-label">PSBT content</label>
+                            <label for="ImportedPSBT" class="form-label" text-translate="true">PSBT content</label>
                             <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>
                         </div>
                         <div class="form-group">
@@ -212,8 +212,8 @@ else
                             <input asp-for="UploadedPSBTFile" type="file" class="form-control">
                         </div>
                         <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
-                            <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode">Decode PSBT</button>
-                            <button type="button" id="scanqrcode" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+                            <button type="submit" name="command" value="decode" class="btn btn-primary mb-3 mb-sm-0 me-sm-2" id="Decode" text-translate="true">Decode PSBT</button>
+                            <button type="button" id="scanqrcode" class="btn btn-primary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" text-translate="true">Scan wallet QR with camera</button>
                         </div>
                     </form>
                 </div>

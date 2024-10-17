@@ -111,7 +111,7 @@
                 <span asp-validation-for="SettlementConfirmationThresholdChoice" class="text-danger"></span>
                 <p class="info-note my-3 text-warning" id="unconfirmed-warning" role="alert" hidden="@(Model.SettlementConfirmationThresholdChoice is not MoneroLikeSettlementThresholdChoice.ZeroConfirmation)">
                     <vc:icon symbol="warning" />
-                    Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.
+                    <span text-translate="true">Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.</span>
                 </p>
             </div>
 

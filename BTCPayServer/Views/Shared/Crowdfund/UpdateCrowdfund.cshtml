@@ -109,7 +109,7 @@
                     <div>
                         <label asp-for="Enabled" class="form-check-label"></label>
                         <span asp-validation-for="Enabled" class="text-danger"></span>
-                        <div class="text-muted">The crowdfund will be visible to anyone.</div>
+                        <div class="text-muted" text-translate="true">The crowdfund will be visible to anyone.</div>
                     </div>
                 </div>
             </div>
@@ -173,9 +173,9 @@
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
                     <div>
-                        <label asp-for="IsRecurring" class="form-check-label">Recurring Goal</label>
+                        <label asp-for="IsRecurring" class="form-check-label" text-translate="true">Recurring Goal</label>
                         <span asp-validation-for="IsRecurring" class="text-danger"></span>
-                        <div class="text-muted">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
+                        <div class="text-muted" text-translate="true">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
                     </div>
                 </div>
                 
@@ -204,7 +204,7 @@
     </div>
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <h3 class="mt-5 mb-4">Contributions</h3>
+            <h3 class="mt-5 mb-4" text-translate="true">Contributions</h3>
             <div class="d-flex mb-3">
                 <input asp-for="SortPerksByPopularity" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
@@ -226,27 +226,27 @@
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
             
-            <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
+            <h3 class="mt-5 mb-4" text-translate="true">Crowdfund Behavior</h3>
             <div class="d-flex">
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
             
-            <h3 class="mt-5 mb-4">Checkout</h3>
+            <h3 class="mt-5 mb-4" text-translate="true">Checkout</h3>
             <div class="form-group">
                 <label asp-for="FormId" class="form-label"></label>
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
 
-            <h3 class="mt-5 mb-2">Additional Options</h3>
+            <h3 class="mt-5 mb-2" text-translate="true">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-sound-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-sound" aria-expanded="false" aria-controls="additional-sound">
-                                Sound
+                                <span text-translate="true">Sound</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -272,7 +272,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-animation-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-animation" aria-expanded="false" aria-controls="additional-animation">
-                                Animation
+                                <span text-translate="true">Animation</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>

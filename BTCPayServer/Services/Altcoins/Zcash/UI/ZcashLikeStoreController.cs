@@ -12,10 +12,8 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Altcoins.Zcash.Configuration;
 using BTCPayServer.Services.Altcoins.Zcash.Payments;
 using BTCPayServer.Services.Altcoins.Zcash.RPC.Models;
@@ -26,6 +24,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Altcoins.Zcash.UI
 {
@@ -40,15 +39,18 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
         private readonly StoreRepository _StoreRepository;
         private readonly ZcashRPCProvider _ZcashRpcProvider;
         private readonly PaymentMethodHandlerDictionary _handlers;
+        private IStringLocalizer StringLocalizer { get; }
 
         public UIZcashLikeStoreController(ZcashLikeConfiguration ZcashLikeConfiguration,
             StoreRepository storeRepository, ZcashRPCProvider ZcashRpcProvider,
-            PaymentMethodHandlerDictionary handlers)
+            PaymentMethodHandlerDictionary handlers,
+            IStringLocalizer stringLocalizer)
         {
             _ZcashLikeConfiguration = ZcashLikeConfiguration;
             _StoreRepository = storeRepository;
             _ZcashRpcProvider = ZcashRpcProvider;
             _handlers = handlers;
+            StringLocalizer = stringLocalizer;
         }
 
         public StoreData StoreData => HttpContext.GetStoreData();
@@ -151,7 +153,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
                 }
                 catch (Exception)
                 {
-                    ModelState.AddModelError(nameof(viewModel.AccountIndex), "Could not create new account.");
+                    ModelState.AddModelError(nameof(viewModel.AccountIndex), StringLocalizer["Could not create new account."]);
                 }
 
             }
@@ -160,12 +162,12 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
                 var valid = true;
                 if (viewModel.WalletFile == null)
                 {
-                    ModelState.AddModelError(nameof(viewModel.WalletFile), "Please select the wallet file");
+                    ModelState.AddModelError(nameof(viewModel.WalletFile), StringLocalizer["Please select the wallet file"]);
                     valid = false;
                 }
                 if (viewModel.WalletKeysFile == null)
                 {
-                    ModelState.AddModelError(nameof(viewModel.WalletKeysFile), "Please select the wallet.keys file");
+                    ModelState.AddModelError(nameof(viewModel.WalletKeysFile), StringLocalizer["Please select the wallet.keys file"]);
                     valid = false;
                 }
 
@@ -175,10 +177,10 @@ namespace BTCPayServer.Services.Altcoins.Zcash.UI
                     {
                         if (summary.WalletAvailable)
                         {
-                            TempData.SetStatusMessageModel(new StatusMessageModel()
+                            TempData.SetStatusMessageModel(new StatusMessageModel
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Error,
-                                Message = $"There is already an active wallet configured for {cryptoCode}. Replacing it would break any existing invoices"
+                                Message = StringLocalizer["There is already an active wallet configured for {0}. Replacing it would break any existing invoices!", cryptoCode].Value
                             });
                             return RedirectToAction(nameof(GetStoreZcashLikePaymentMethod),
                                 new { cryptoCode });

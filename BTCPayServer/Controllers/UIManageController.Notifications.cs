@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 
@@ -56,7 +55,7 @@ namespace BTCPayServer.Controllers
             await _userManager.UpdateAsync(user);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = "Updated successfully.",
+                Message = StringLocalizer["Updated successfully."].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             return RedirectToAction("NotificationSettings");

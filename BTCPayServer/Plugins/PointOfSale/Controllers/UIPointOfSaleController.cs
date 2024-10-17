@@ -72,8 +72,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
 
-        private bool bHtmlModified;
-
         public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
@@ -669,7 +667,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
-            bHtmlModified = false;
+            bool wasHtmlModified;
             var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
@@ -689,7 +687,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
                 Language = vm.Language,
-                HtmlMetaTags = SanitizeHtml(vm.HtmlMetaTags),
+                HtmlMetaTags = SanitizeHtml(vm.HtmlMetaTags, out wasHtmlModified),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
@@ -699,7 +697,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             app.Archived = vm.Archived;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);
-            if (bHtmlModified)
+            if (wasHtmlModified)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly.";
             } else {
@@ -731,9 +729,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             return currency.Trim().ToUpperInvariant();
         }
 
-        private string SanitizeHtml(string inputHtml)
+        private string SanitizeHtml(string inputHtml, out bool bHtmlModified)
         {
             var sanitizer = new HtmlSanitizer();
+            bool isHtmlModified = false;
 
             sanitizer.AllowedTags.Clear(); 
             sanitizer.AllowedTags.Add("meta");
@@ -747,14 +746,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             sanitizer.AllowDataAttributes = false;
 
-            sanitizer.RemovingTag += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingAtRule += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingAttribute += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingComment += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingCssClass += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingStyle += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingTag += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAtRule += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAttribute += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingComment += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingCssClass += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingStyle += (sender, e) => isHtmlModified = true;
 
-            return sanitizer.Sanitize(inputHtml);
+            var sRet = sanitizer.Sanitize(inputHtml);
+            bHtmlModified = isHtmlModified;
+
+            return sRet;
         }
 
 

@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Apps
         public PointOfSaleSettings()
         {
             Title = "Tea shop";
-            Language = CultureInfo.GetCultures(CultureTypes.AllCultures).SingleOrDefault(ci => ci.NativeName == "English").TwoLetterISOLanguageName;
+            Language = "en";
             Template = AppService.SerializeTemplate(new ViewPointOfSaleViewModel.Item[]
             {
                 new()

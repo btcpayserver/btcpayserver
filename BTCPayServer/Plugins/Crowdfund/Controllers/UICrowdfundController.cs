@@ -75,8 +75,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CrowdfundAppType _app;
 
-        private bool bHtmlModified;
-
         public FormDataService FormDataService { get; }
 
         [HttpGet("/")]
@@ -538,7 +536,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             app.Name = vm.AppName;
             app.Archived = vm.Archived;
 
-            bHtmlModified = false;
+            bool wasHtmlModified;
             var newSettings = new CrowdfundSettings
             {
                 Title = vm.Title,
@@ -546,7 +544,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
-                HtmlMetaTags= SanitizeHtml(vm.HtmlMetaTags),
+                HtmlMetaTags= SanitizeHtml(vm.HtmlMetaTags, out wasHtmlModified),
                 Language = vm.Language,
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
@@ -591,7 +589,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 StoreId = app.StoreDataId,
                 Settings = newSettings
             });
-            if (bHtmlModified)
+            if (wasHtmlModified)
             {
                 TempData[WellKnownTempData.ErrorMessage] = "Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly.";
             }
@@ -617,9 +615,11 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             return currency.Trim().ToUpperInvariant();
         }
 
-        private string SanitizeHtml(string inputHtml)
+
+        private string SanitizeHtml(string inputHtml, out bool bHtmlModified)
         {
             var sanitizer = new HtmlSanitizer();
+            bool isHtmlModified = false;
 
             sanitizer.AllowedTags.Clear();
             sanitizer.AllowedTags.Add("meta");
@@ -633,14 +633,17 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
 
             sanitizer.AllowDataAttributes = false;
 
-            sanitizer.RemovingTag += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingAtRule += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingAttribute += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingComment += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingCssClass += (sender, e) => bHtmlModified = true;
-            sanitizer.RemovingStyle += (sender, e) => bHtmlModified = true;
+            sanitizer.RemovingTag += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAtRule += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingAttribute += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingComment += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingCssClass += (sender, e) => isHtmlModified = true;
+            sanitizer.RemovingStyle += (sender, e) => isHtmlModified = true;
 
-            return sanitizer.Sanitize(inputHtml);
+            var sRet = sanitizer.Sanitize(inputHtml);
+            bHtmlModified = isHtmlModified;
+
+            return sRet;
         }
 
 

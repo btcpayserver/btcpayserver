@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Apps
     {
         public CrowdfundSettings()
         {
-            Language = CultureInfo.GetCultures(CultureTypes.AllCultures).SingleOrDefault(ci => ci.NativeName == "English").TwoLetterISOLanguageName;
+            Language = "en";
         }
 
         public string Title { get; set; }

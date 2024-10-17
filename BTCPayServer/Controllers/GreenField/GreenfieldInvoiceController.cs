@@ -51,6 +51,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly Dictionary<PaymentMethodId, IPaymentLinkExtension> _paymentLinkExtensions;
         private readonly PayoutMethodHandlerDictionary _payoutHandlers;
         private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly BTCPayNetworkProvider _networkProvider;
         private readonly DefaultRulesCollection _defaultRules;
 
         public LanguageService LanguageService { get; }
@@ -65,6 +66,7 @@ namespace BTCPayServer.Controllers.Greenfield
             Dictionary<PaymentMethodId, IPaymentLinkExtension> paymentLinkExtensions,
             PayoutMethodHandlerDictionary payoutHandlers,
             PaymentMethodHandlerDictionary handlers,
+            BTCPayNetworkProvider networkProvider,
             DefaultRulesCollection defaultRules)
         {
             _invoiceController = invoiceController;
@@ -79,6 +81,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _paymentLinkExtensions = paymentLinkExtensions;
             _payoutHandlers = payoutHandlers;
             _handlers = handlers;
+            _networkProvider = networkProvider;
             _defaultRules = defaultRules;
             LanguageService = languageService;
         }
@@ -338,6 +341,9 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             PaymentPrompt? paymentPrompt = null;
             PayoutMethodId? payoutMethodId = null;
+            if (request.PayoutMethodId is null)
+                request.PayoutMethodId = invoice.GetDefaultPaymentMethodId(store, _networkProvider)?.ToString();
+
             if (request.PayoutMethodId is not null && PayoutMethodId.TryParse(request.PayoutMethodId, out payoutMethodId))
             {
                 var supported = _payoutHandlers.GetSupportedPayoutMethods(store);

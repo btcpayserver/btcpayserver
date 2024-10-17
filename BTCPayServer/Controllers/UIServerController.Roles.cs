@@ -89,7 +89,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = StringLocalizer["Role could not be updated"]
+                    Message = StringLocalizer["Role could not be updated"].Value
                 });
                 return View(viewModel);
             }

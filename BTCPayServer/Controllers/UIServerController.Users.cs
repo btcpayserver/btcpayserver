@@ -231,7 +231,7 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = result.Succeeded ? StatusMessageModel.StatusSeverity.Success : StatusMessageModel.StatusSeverity.Error,
-                Message = result.Succeeded ? "Password successfully set" : "An error occurred while resetting user password"
+                Message = result.Succeeded ? StringLocalizer["Password successfully set"].Value : StringLocalizer["An error occurred while resetting user password"].Value
             });
             return RedirectToAction(nameof(ListUsers));
         }

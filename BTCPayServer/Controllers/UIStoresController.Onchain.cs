@@ -305,7 +305,7 @@ public partial class UIStoresController
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Html = $"There was an error generating your wallet: {e.Message}"
+                Message = StringLocalizer["There was an error generating your wallet: {0}", e.Message].Value
             });
             return View(vm.ViewName, vm);
         }
@@ -343,7 +343,7 @@ public partial class UIStoresController
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = "<span class='text-centered'>Your wallet has been generated.</span>"
+                Html = "<span class='text-centered'>" + StringLocalizer["Your wallet has been generated."].Value + "</span>"
             });
             var seedVm = new RecoverySeedBackupViewModel
             {
@@ -363,7 +363,7 @@ public partial class UIStoresController
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Warning,
-            Html = "Please check your addresses and confirm."
+            Message = StringLocalizer["Please check your addresses and confirm."].Value
         });
         return result;
     }
@@ -608,7 +608,7 @@ public partial class UIStoresController
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Error,
-            Message = "The seed was not found"
+            Message = StringLocalizer["The seed was not found"].Value
         });
 
         return RedirectToAction(nameof(WalletSettings));

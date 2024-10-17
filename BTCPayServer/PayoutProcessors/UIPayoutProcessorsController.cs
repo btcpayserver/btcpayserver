@@ -10,27 +10,27 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.PayoutProcessors;
 
 public class UIPayoutProcessorsController : Controller
 {
     private readonly EventAggregator _eventAggregator;
-    private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
     private readonly IEnumerable<IPayoutProcessorFactory> _payoutProcessorFactories;
     private readonly PayoutProcessorService _payoutProcessorService;
+    private IStringLocalizer StringLocalizer { get; }
 
     public UIPayoutProcessorsController(
         EventAggregator eventAggregator,
-        BTCPayNetworkProvider btcPayNetworkProvider,
         IEnumerable<IPayoutProcessorFactory> payoutProcessorFactories,
-        PayoutProcessorService payoutProcessorService)
+        PayoutProcessorService payoutProcessorService,
+        IStringLocalizer stringLocalizer)
     {
         _eventAggregator = eventAggregator;
-        _btcPayNetworkProvider = btcPayNetworkProvider;
         _payoutProcessorFactories = payoutProcessorFactories;
         _payoutProcessorService = payoutProcessorService;
-        ;
+        StringLocalizer = stringLocalizer;
     }
 
     [HttpGet("~/stores/{storeId}/payout-processors")]
@@ -69,10 +69,10 @@ public class UIPayoutProcessorsController : Controller
             Id = id,
             Processed = tcs
         });
-        TempData.SetStatusMessageModel(new StatusMessageModel()
+        TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
-            Message = "Payout Processor removed"
+            Message = StringLocalizer["Payout Processor removed"].Value
         });
         await tcs.Task;
         return RedirectToAction("ConfigureStorePayoutProcessors", new { storeId });

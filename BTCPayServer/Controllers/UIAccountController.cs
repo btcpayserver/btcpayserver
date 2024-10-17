@@ -191,7 +191,7 @@ namespace BTCPayServer.Controllers
             {
                 // Require the user to pass basic checks (approval, confirmed email, not disabled) before they can log on
                 var user = await _userManager.FindByEmailAsync(model.Email);
-                const string errorMessage = "Invalid login attempt.";
+                var errorMessage = StringLocalizer["Invalid login attempt."].Value;
                 if (!UserService.TryCanLogin(user, out var message))
                 {
                     TempData.SetStatusMessageModel(new StatusMessageModel
@@ -315,7 +315,7 @@ namespace BTCPayServer.Controllers
             }
 
             ViewData["ReturnUrl"] = returnUrl;
-            var errorMessage = "Invalid login attempt.";
+            var errorMessage = StringLocalizer["Invalid login attempt."].Value;
             var user = await _userManager.FindByIdAsync(viewModel.UserId);
             if (!UserService.TryCanLogin(user, out var message))
             {
@@ -708,7 +708,7 @@ namespace BTCPayServer.Controllers
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Message = "Your email has been confirmed."
+                        Message = StringLocalizer["Your email has been confirmed."].Value
                     });
                     await FinalizeInvitationIfApplicable(user);
                     return RedirectToAction(nameof(Login), new { email = user.Email });
@@ -717,7 +717,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Info,
-                    Message = "Your email has been confirmed. Please set your password."
+                    Message = StringLocalizer["Your email has been confirmed. Please set your password."].Value
                 });
                 return await RedirectToSetPassword(user);
             }
@@ -815,7 +815,9 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Success,
-                    Message = hasPassword ? "Password successfully set." : "Account successfully created."
+                    Message = hasPassword
+                        ? StringLocalizer["Password successfully set."].Value
+                        : StringLocalizer["Account successfully created."].Value
                 });
                 if (!hasPassword) await FinalizeInvitationIfApplicable(user);
                 return RedirectToAction(nameof(Login));
@@ -852,7 +854,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Info,
-                    Message = "Invitation accepted. Please set your password."
+                    Message = StringLocalizer["Invitation accepted. Please set your password."].Value
                 });
                 return await RedirectToSetPassword(user);
             }
@@ -861,7 +863,7 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Info,
-                Message = "Your password has been set by the user who invited you."
+                Message = StringLocalizer["Your password has been set by the user who invited you."].Value
             });
 
             await FinalizeInvitationIfApplicable(user);
@@ -934,7 +936,7 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = "You cannot login over an insecure connection. Please use HTTPS or Tor."
+                Message = StringLocalizer["You cannot login over an insecure connection. Please use HTTPS or Tor."].Value
             });
 
             ViewData["disabled"] = true;

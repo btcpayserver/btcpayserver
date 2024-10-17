@@ -52,7 +52,7 @@ namespace BTCPayServer
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = "LNURL Auth was removed successfully."
+                Message = StringLocalizer["LNURL Auth was removed successfully."].Value
             });
 
             return RedirectToList();
@@ -68,7 +68,7 @@ namespace BTCPayServer
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Html = "The Lightning node could not be registered."
+                    Html = StringLocalizer["The Lightning node could not be registered."].Value
                 });
 
                 return RedirectToList();

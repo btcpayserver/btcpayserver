@@ -12,9 +12,7 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
-using BTCPayServer.Models;
 using BTCPayServer.Payments;
-using BTCPayServer.Security;
 using BTCPayServer.Services.Altcoins.Monero.Configuration;
 using BTCPayServer.Services.Altcoins.Monero.Payments;
 using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
@@ -25,6 +23,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Altcoins.Monero.UI
 {
@@ -39,18 +38,18 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
         private readonly StoreRepository _StoreRepository;
         private readonly MoneroRPCProvider _MoneroRpcProvider;
         private readonly PaymentMethodHandlerDictionary _handlers;
-        private readonly BTCPayNetworkProvider _BtcPayNetworkProvider;
+        private IStringLocalizer StringLocalizer { get; }
 
         public UIMoneroLikeStoreController(MoneroLikeConfiguration moneroLikeConfiguration,
             StoreRepository storeRepository, MoneroRPCProvider moneroRpcProvider,
             PaymentMethodHandlerDictionary handlers,
-            BTCPayNetworkProvider btcPayNetworkProvider)
+            IStringLocalizer stringLocalizer)
         {
             _MoneroLikeConfiguration = moneroLikeConfiguration;
             _StoreRepository = storeRepository;
             _MoneroRpcProvider = moneroRpcProvider;
             _handlers = handlers;
-            _BtcPayNetworkProvider = btcPayNetworkProvider;
+            StringLocalizer = stringLocalizer;
         }
 
         public StoreData StoreData => HttpContext.GetStoreData();
@@ -178,7 +177,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 }
                 catch (Exception)
                 {
-                    ModelState.AddModelError(nameof(viewModel.AccountIndex), "Could not create a new account.");
+                    ModelState.AddModelError(nameof(viewModel.AccountIndex), StringLocalizer["Could not create a new account."]);
                 }
 
             }
@@ -187,12 +186,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 var valid = true;
                 if (viewModel.WalletFile == null)
                 {
-                    ModelState.AddModelError(nameof(viewModel.WalletFile), "Please select the view-only wallet file");
+                    ModelState.AddModelError(nameof(viewModel.WalletFile), StringLocalizer["Please select the view-only wallet file"]);
                     valid = false;
                 }
                 if (viewModel.WalletKeysFile == null)
                 {
-                    ModelState.AddModelError(nameof(viewModel.WalletKeysFile), "Please select the view-only wallet keys file");
+                    ModelState.AddModelError(nameof(viewModel.WalletKeysFile), StringLocalizer["Please select the view-only wallet keys file"]);
                     valid = false;
                 }
 
@@ -202,10 +201,10 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                     {
                         if (summary.WalletAvailable)
                         {
-                            TempData.SetStatusMessageModel(new StatusMessageModel()
+                            TempData.SetStatusMessageModel(new StatusMessageModel
                             {
                                 Severity = StatusMessageModel.StatusSeverity.Error,
-                                Message = $"There is already an active wallet configured for {cryptoCode}. Replacing it would break any existing invoices!"
+                                Message = StringLocalizer["There is already an active wallet configured for {0}. Replacing it would break any existing invoices!", cryptoCode].Value
                             });
                             return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod),
                                 new { cryptoCode });
@@ -266,14 +265,14 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                     }
                     catch (Exception ex)
                     {
-                        ModelState.AddModelError(nameof(viewModel.AccountIndex), $"Could not open the wallet: {ex.Message}");
+                        ModelState.AddModelError(nameof(viewModel.AccountIndex), StringLocalizer["Could not open the wallet: {0}", ex.Message]);
                         return View(viewModel);
                     }
                     
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Info,
-                        Message = $"View-only wallet files uploaded. The wallet will soon become available."
+                        Message = StringLocalizer["View-only wallet files uploaded. The wallet will soon become available."].Value
                     });
                     return RedirectToAction(nameof(GetStoreMoneroLikePaymentMethod), new { cryptoCode });
                 }

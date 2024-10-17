@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["You must enable at least one payment method before creating a pull payment."],
+                    Message = StringLocalizer["You must enable at least one payment method before creating a pull payment."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
@@ -162,7 +162,7 @@ namespace BTCPayServer.Controllers
             });
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = StringLocalizer["Pull payment request created"],
+                Message = StringLocalizer["Pull payment request created"].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             return RedirectToAction(nameof(PullPayments), new { storeId });
@@ -204,7 +204,7 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["You must enable at least one payment method before creating a pull payment."],
+                    Message = StringLocalizer["You must enable at least one payment method before creating a pull payment."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });
@@ -275,9 +275,9 @@ namespace BTCPayServer.Controllers
             string pullPaymentId)
         {
             await _pullPaymentService.Cancel(new PullPaymentHostedService.CancelRequest(pullPaymentId));
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = "Pull payment archived",
+                Message = StringLocalizer["Pull payment archived"].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             return RedirectToAction(nameof(PullPayments), new { storeId });
@@ -302,9 +302,9 @@ namespace BTCPayServer.Controllers
             var payoutIds = vm.GetSelectedPayouts(commandState);
             if (payoutIds.Length == 0)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["No payout selected"],
+                    Message = StringLocalizer["No payout selected"].Value,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(Payouts),
@@ -345,9 +345,9 @@ namespace BTCPayServer.Controllers
                             var rateResult = await _pullPaymentService.GetRate(payout, null, cancellationToken);
                             if (rateResult.BidAsk == null)
                             {
-                                this.TempData.SetStatusMessageModel(new StatusMessageModel()
+                                TempData.SetStatusMessageModel(new StatusMessageModel()
                                 {
-                                    Message = StringLocalizer["Rate unavailable: {0}", rateResult.EvaluatedRule],
+                                    Message = StringLocalizer["Rate unavailable: {0}", rateResult.EvaluatedRule].Value,
                                     Severity = StatusMessageModel.StatusSeverity.Error
                                 });
                                 failed = true;
@@ -355,7 +355,7 @@ namespace BTCPayServer.Controllers
                             }
 
                             var approveResult = await _pullPaymentService.Approve(
-                                new HostedServices.PullPaymentHostedService.PayoutApproval()
+                                new PullPaymentHostedService.PayoutApproval
                                 {
                                     PayoutId = payout.Id,
                                     Revision = payout.GetBlob(_jsonSerializerSettings).Revision,
@@ -363,7 +363,7 @@ namespace BTCPayServer.Controllers
                                 });
                             if (approveResult.Result != PullPaymentHostedService.PayoutApproval.Result.Ok)
                             {
-                                TempData.SetStatusMessageModel(new StatusMessageModel()
+                                TempData.SetStatusMessageModel(new StatusMessageModel
                                 {
                                     Message = PullPaymentHostedService.PayoutApproval.GetErrorMessage(approveResult.Result),
                                     Severity = StatusMessageModel.StatusSeverity.Error
@@ -383,9 +383,9 @@ namespace BTCPayServer.Controllers
                             goto case "pay";
                         }
 
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        TempData.SetStatusMessageModel(new StatusMessageModel
                         {
-                            Message = StringLocalizer["Payouts approved"],
+                            Message = StringLocalizer["Payouts approved"].Value,
                             Severity = StatusMessageModel.StatusSeverity.Success
                         });
                         break;
@@ -395,9 +395,9 @@ namespace BTCPayServer.Controllers
                     {
                         if (handler is { })
                             return await handler.InitiatePayment(payoutIds);
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        TempData.SetStatusMessageModel(new StatusMessageModel
                         {
-                            Message = StringLocalizer["Paying via this payment method is not supported"],
+                            Message = StringLocalizer["Paying via this payment method is not supported"].Value,
                             Severity = StatusMessageModel.StatusSeverity.Error
                         });
                         break;
@@ -416,10 +416,10 @@ namespace BTCPayServer.Controllers
                                 continue;
 
                             var result =
-                                await _pullPaymentService.MarkPaid(new MarkPayoutRequest() { PayoutId = payout.Id });
+                                await _pullPaymentService.MarkPaid(new MarkPayoutRequest { PayoutId = payout.Id });
                             if (result != MarkPayoutRequest.PayoutPaidResult.Ok)
                             {
-                                TempData.SetStatusMessageModel(new StatusMessageModel()
+                                TempData.SetStatusMessageModel(new StatusMessageModel
                                 {
                                     Message = MarkPayoutRequest.GetErrorMessage(result),
                                     Severity = StatusMessageModel.StatusSeverity.Error
@@ -434,9 +434,9 @@ namespace BTCPayServer.Controllers
                             }
                         }
 
-                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        TempData.SetStatusMessageModel(new StatusMessageModel
                         {
-                            Message = StringLocalizer["Payouts marked as paid"],
+                            Message = StringLocalizer["Payouts marked as paid"].Value,
                             Severity = StatusMessageModel.StatusSeverity.Success
                         });
                         break;
@@ -445,9 +445,9 @@ namespace BTCPayServer.Controllers
                 case "cancel":
                     await _pullPaymentService.Cancel(
                         new PullPaymentHostedService.CancelRequest(payoutIds, new[] { storeId }));
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
-                        Message = StringLocalizer["Payouts archived"],
+                        Message = StringLocalizer["Payouts archived"].Value,
                         Severity = StatusMessageModel.StatusSeverity.Success
                     });
                     break;
@@ -488,7 +488,7 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["You must enable at least one payment method before creating a payout."],
+                    Message = StringLocalizer["You must enable at least one payment method before creating a payout."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new { storeId });

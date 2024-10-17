@@ -237,7 +237,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                     }
                     await context.SaveChangesAsync();
                 }
-                return new StatusMessageModel()
+                return new StatusMessageModel
                 {
                     Message = "Payout payments have been marked confirmed",
                     Severity = StatusMessageModel.StatusSeverity.Success

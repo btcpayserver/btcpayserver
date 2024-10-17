@@ -912,18 +912,17 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     address = BitcoinAddress.Create(bip21, network.NBitcoinNetwork);
-                    vm.Outputs.Add(new WalletSendModel.TransactionOutput()
+                    vm.Outputs.Add(new WalletSendModel.TransactionOutput
                     {
                         DestinationAddress = address.ToString()
-                    }
-                    );
+                    });
                 }
                 catch
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "The provided BIP21 payment URI was malformed"
+                        Message = StringLocalizer["The provided BIP21 payment URI was malformed"].Value
                     });
                 }
             }

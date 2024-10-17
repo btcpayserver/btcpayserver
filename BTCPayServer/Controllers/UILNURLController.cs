@@ -835,7 +835,7 @@ namespace BTCPayServer
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["LNURL is required for lightning addresses but has not yet been enabled."],
+                    Message = StringLocalizer["LNURL is required for lightning addresses but has not yet been enabled."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
@@ -911,7 +911,7 @@ namespace BTCPayServer
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Message = StringLocalizer["Lightning address added successfully."]
+                        Message = StringLocalizer["Lightning address added successfully."].Value
                     });
                 }
                 else
@@ -934,7 +934,7 @@ namespace BTCPayServer
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Message = StringLocalizer["Lightning address {0} removed successfully.", index]
+                        Message = StringLocalizer["Lightning address {0} removed successfully.", index].Value
                     });
                     return RedirectToAction("EditLightningAddress");
                 }

@@ -46,20 +46,20 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         var id = GetPayoutMethod(cryptoCode);
         if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPayoutMethods().Any(i => id == i))
         {
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = $"This processor cannot handle {cryptoCode}."
+                Message = StringLocalizer["This processor cannot handle {0}.", cryptoCode].Value
             });
             return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors");
         }
         var wallet = HttpContext.GetStoreData().GetDerivationSchemeSettings(_handlers, cryptoCode);
         if (wallet?.IsHotWallet is not true)
         {
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = StringLocalizer["Either your {0} wallet is not configured, or it is not a hot wallet. This processor cannot function until a hot wallet is configured in your store.", cryptoCode]
+                Message = StringLocalizer["Either your {0} wallet is not configured, or it is not a hot wallet. This processor cannot function until a hot wallet is configured in your store.", cryptoCode].Value
             });
         }
         var activeProcessor =
@@ -88,10 +88,10 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         var id = GetPayoutMethod(cryptoCode);
         if (!_onChainAutomatedPayoutSenderFactory.GetSupportedPayoutMethods().Any(i => id == i))
         {
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = $"This processor cannot handle {cryptoCode}."
+                Message = StringLocalizer["This processor cannot handle {0}.", cryptoCode].Value
             });
             return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors");
         }
@@ -122,7 +122,7 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
-            Message = "Processor updated."
+            Message = StringLocalizer["Processor updated."].Value
         });
         await tcs.Task;
         return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors", new { storeId });

@@ -28,10 +28,10 @@ namespace BTCPayServer.Controllers
             }
             catch (Exception)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = StringLocalizer["Remote plugins lookup failed. Try again later."]
+                    Message = StringLocalizer["Remote plugins lookup failed. Try again later."].Value
                 });
                 availablePlugins = Array.Empty<PluginService.AvailablePlugin>();
             }
@@ -77,7 +77,7 @@ namespace BTCPayServer.Controllers
             pluginService.UninstallPlugin(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = StringLocalizer["Plugin scheduled to be uninstalled."],
+                Message = StringLocalizer["Plugin scheduled to be uninstalled."].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
             pluginService.CancelCommands(plugin);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = StringLocalizer["Plugin action cancelled."],
+                Message = StringLocalizer["Plugin action cancelled."].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 
@@ -115,7 +115,7 @@ namespace BTCPayServer.Controllers
                 }
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["Plugin scheduled to be installed."],
+                    Message = StringLocalizer["Plugin scheduled to be installed."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Success
                 });
             }
@@ -123,7 +123,7 @@ namespace BTCPayServer.Controllers
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = StringLocalizer["The plugin could not be downloaded. Try again later."],
+                    Message = StringLocalizer["The plugin could not be downloaded. Try again later."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
             }
@@ -144,7 +144,7 @@ namespace BTCPayServer.Controllers
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = StringLocalizer["Files uploaded, restart server to load plugins"],
+                Message = StringLocalizer["Files uploaded, restart server to load plugins"].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             return RedirectToAction("ListPlugins");

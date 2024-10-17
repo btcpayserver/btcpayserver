@@ -188,7 +188,7 @@ namespace BTCPayServer.Controllers
 
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = StringLocalizer["Pull payment updated successfully"],
+                Message = StringLocalizer["Pull payment updated successfully"].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
 

@@ -612,8 +612,8 @@ namespace BTCPayServer.Controllers
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = invoice.Archived
-                    ? "The invoice has been unarchived and will appear in the invoice list by default again."
-                    : "The invoice has been archived and will no longer appear in the invoice list by default."
+                    ? StringLocalizer["The invoice has been unarchived and will appear in the invoice list by default again."].Value
+                    : StringLocalizer["The invoice has been archived and will no longer appear in the invoice list by default."].Value
             });
             return RedirectToAction(nameof(invoice), new { invoiceId });
         }
@@ -1258,7 +1258,7 @@ namespace BTCPayServer.Controllers
             }
             catch (BitpayHttpException ex)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
                     Message = ex.Message

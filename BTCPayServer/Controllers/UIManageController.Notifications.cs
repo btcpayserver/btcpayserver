@@ -55,7 +55,7 @@ namespace BTCPayServer.Controllers
             await _userManager.UpdateAsync(user);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                Message = "Updated successfully.",
+                Message = StringLocalizer["Updated successfully."].Value,
                 Severity = StatusMessageModel.StatusSeverity.Success
             });
             return RedirectToAction("NotificationSettings");

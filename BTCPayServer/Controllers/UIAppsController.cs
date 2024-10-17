@@ -162,7 +162,7 @@ namespace BTCPayServer.Controllers
             var type = _appService.GetAppType(vm.AppType ?? vm.SelectedAppType);
             if (type is null)
             {
-                ModelState.AddModelError(nameof(vm.SelectedAppType), "Invalid App Type");
+                ModelState.AddModelError(nameof(vm.SelectedAppType), StringLocalizer["Invalid App Type"]);
             }
 
             if (!ModelState.IsValid)
@@ -196,7 +196,7 @@ namespace BTCPayServer.Controllers
             if (app == null)
                 return NotFound();
 
-            return View("Confirm", new ConfirmModel("Delete app", $"The app <strong>{Html.Encode(app.Name)}</strong> and its settings will be permanently deleted. Are you sure?", "Delete"));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Delete app"], $"The app <strong>{Html.Encode(app.Name)}</strong> and its settings will be permanently deleted. Are you sure?", StringLocalizer["Delete"]));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]

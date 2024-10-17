@@ -634,12 +634,16 @@ namespace BTCPayServer.Controllers
             {
                 case "archive":
                     await _InvoiceRepository.MassArchive(selectedItems);
-                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} invoices archived.", selectedItems.Length].Value;
+                    TempData[WellKnownTempData.SuccessMessage] = selectedItems.Length == 1
+                        ? StringLocalizer["{0} invoice archived.", selectedItems.Length].Value
+                        : StringLocalizer["{0} invoices archived.", selectedItems.Length].Value;
                     break;
 
                 case "unarchive":
                     await _InvoiceRepository.MassArchive(selectedItems, false);
-                    TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} invoices unarchived.", selectedItems.Length].Value;
+                    TempData[WellKnownTempData.SuccessMessage] = selectedItems.Length == 1
+                        ? StringLocalizer["{0} invoice unarchived.", selectedItems.Length].Value
+                        : StringLocalizer["{0} invoices unarchived.", selectedItems.Length].Value;
                     break;
                 case "cpfp" when storeId is not null:
                     var network = _NetworkProvider.DefaultNetwork;

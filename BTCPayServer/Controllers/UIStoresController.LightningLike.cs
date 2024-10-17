@@ -159,7 +159,7 @@ public partial class UIStoresController
                 });
 
                 await _storeRepo.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer[$"{0} Lightning node updated.", network.CryptoCode].Value;
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning node updated.", network.CryptoCode].Value;
                 return RedirectToAction(nameof(LightningSettings), new { storeId, cryptoCode });
 
             case "test":
@@ -175,7 +175,7 @@ public partial class UIStoresController
                     TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Connection to the Lightning node successful."].Value + " " +
                         (hasPublicAddress
                             ? StringLocalizer["Your node address: {0}", info.First()].Value
-                            : StringLocalizer["No public address has been configured"].Value);
+                            : StringLocalizer["No public address has been configured."].Value);
                 }
                 catch (Exception ex)
                 {
@@ -290,7 +290,7 @@ public partial class UIStoresController
         {
             await _storeRepo.UpdateStore(store);
 
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning settings successfully updated.", network.CryptoCode];
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} Lightning settings successfully updated.", network.CryptoCode].Value;
         }
 
         return RedirectToAction(nameof(LightningSettings), new { vm.StoreId, vm.CryptoCode });

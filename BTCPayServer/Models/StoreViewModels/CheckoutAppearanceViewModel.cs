@@ -107,18 +107,5 @@ namespace BTCPayServer.Models.StoreViewModels
             GreaterThan,
             LessThan
         }
-        public static string ToString(CriteriaType type)
-        {
-            switch (type)
-            {
-                case CriteriaType.GreaterThan:
-                    return "Greater than";
-                case CriteriaType.LessThan:
-                    return "Less than";
-                default:
-                    throw new ArgumentOutOfRangeException(nameof(type), type, null);
-            }
-        }
-
     }
 }

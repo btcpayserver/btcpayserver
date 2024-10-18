@@ -3,12 +3,24 @@
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
+@using BTCPayServer.TagHelpers
 @inject IFileService FileService
 @model CheckoutAppearanceViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, StringLocalizer["Checkout Experience"], Context.GetStoreData().Id);
 
     var canUpload = await FileService.IsAvailable();
+}
+@functions {
+    private string CriteriaTypeDisplayName(PaymentMethodCriteriaViewModel.CriteriaType type)
+    {
+        return type switch
+        {
+            PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan => StringLocalizer["Greater than"],
+            PaymentMethodCriteriaViewModel.CriteriaType.LessThan => StringLocalizer["Less than"],
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
 }
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
@@ -88,7 +100,7 @@
                                 </td>
                                 <td class="border-0">
                                     <select asp-for="PaymentMethodCriteria[index].Type" class="form-select"
-                                            asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(PaymentMethodCriteriaViewModel.ToString(s), s.ToString()))">
+                                            asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(CriteriaTypeDisplayName(s), s.ToString()))">
                                     </select>
                                 </td>
                                 <td class="border-0">

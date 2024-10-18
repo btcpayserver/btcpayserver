@@ -18,11 +18,13 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Rates;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
@@ -583,6 +585,8 @@ namespace BTCPayServer.HostedServices
                         break;
                 }
                 payout.State = req.Request.State;
+                if (req.Request.Blob is { } b)
+                    payout.SetBlob(b, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
                 req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.Ok);
@@ -923,6 +927,7 @@ namespace BTCPayServer.HostedServices
         public string PayoutId { get; set; }
         public JObject Proof { get; set; }
         public PayoutState State { get; set; } = PayoutState.Completed;
+        public PayoutBlob Blob { get; internal set; }
 
         public static string GetErrorMessage(PayoutPaidResult result)
         {

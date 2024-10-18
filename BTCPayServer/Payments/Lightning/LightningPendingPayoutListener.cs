@@ -102,39 +102,35 @@ public class LightningPendingPayoutListener : BaseAsyncService
                 foreach (PayoutData payoutData in payoutByStoreByPaymentMethod)
                 {
                     var handler = _payoutHandlers.TryGet(payoutData.GetPayoutMethodId());
-                    var proof = handler is null ? null : handler.ParseProof(payoutData);
-                    switch (proof)
-                    {
-                        case null:
-                            break;
-                        case PayoutLightningBlob payoutLightningBlob:
-                            {
-                                LightningPayment payment = null;
-                                try
-                                {
-                                    payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
-                                }
-                                catch
-                                {
-                                }
-                                if (payment is null)
-                                    continue;
-                                switch (payment.Status)
-                                {
-                                    case LightningPaymentStatus.Complete:
-                                        payoutData.State = PayoutState.Completed;
-                                        payoutLightningBlob.Preimage = payment.Preimage;
-                                        payoutData.SetProofBlob(payoutLightningBlob, null);
-                                        break;
-                                    case LightningPaymentStatus.Failed:
-                                        payoutData.State = PayoutState.Cancelled;
-                                        break;
-                                }
-
-                                break;
-                            }
-                    }
-                }
+                    var proof = (handler is null ? null : handler.ParseProof(payoutData)) as PayoutLightningBlob;
+					// If pending without proof, then the automated payout process is currently running
+					if (proof is null)
+						continue;
+					LightningPayment payment = null;
+					try
+					{
+						payment = await client.GetPayment(proof.Id, CancellationToken);
+					}
+					catch
+					{
+					}
+					if (payment is null)
+					{
+						payoutData.State = PayoutState.Cancelled;
+						continue;
+					}
+					switch (payment.Status)
+					{
+						case LightningPaymentStatus.Complete:
+							payoutData.State = PayoutState.Completed;
+							proof.Preimage = payment.Preimage;
+							payoutData.SetProofBlob(proof, null);
+							break;
+						case LightningPaymentStatus.Failed:
+							payoutData.State = PayoutState.Cancelled;
+							break;
+					}
+				}
             }
         }
 

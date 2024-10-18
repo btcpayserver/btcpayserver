@@ -1,15 +1,17 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Components.QRCode
 @using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
-@using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Stores
 @using LNURL
-@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject StoreRepository StoreRepository
 @inject PaymentMethodHandlerDictionary Handlers
-@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @inject DisplayFormatter DisplayFormatter
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
 	var store = await StoreRepository.FindStore(Model.StoreId);
 	Layout = "PointOfSale/Public/_Layout";
@@ -58,16 +60,15 @@ else
         {
             if (Model.ShowCustomAmount)
             {
-                Model.Items = Model.Items.Concat(new[]
-                {
-                    new ViewPointOfSaleViewModel.Item()
+                Model.Items = Model.Items.Concat([
+                    new AppItem
                     {
                         Description = "Create invoice to pay custom amount",
                         Title = "Custom amount",
                         BuyButtonText = Model.CustomButtonText,
-                        PriceType = ViewPointOfSaleViewModel.ItemPriceType.Topup
+                        PriceType = AppItemPriceType.Topup
                     }
-                }).ToArray();
+                ]).ToArray();
             }
         }
 
@@ -76,7 +77,7 @@ else
             {
                 var item = Model.Items[x];
                 var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-                if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && item.Price == 0) continue;
+                if (item.PriceType == AppItemPriceType.Fixed && item.Price == 0) continue;
                 <div class="d-flex flex-wrap">
                     <div class="tile card w-100" data-id="@x">
                         <div class="card-body pt-0 d-flex flex-column gap-2">
@@ -85,13 +86,13 @@ else
                                 <span class="fw-semibold">
                                     @switch (item.PriceType)
                                     {
-                                        case ViewPointOfSaleViewModel.ItemPriceType.Topup:
+                                        case AppItemPriceType.Topup:
                                             <span>Any amount</span>
                                             break;
-                                        case ViewPointOfSaleViewModel.ItemPriceType.Minimum:
+                                        case AppItemPriceType.Minimum:
                                             <span>@formatted minimum</span>
                                             break;
-                                        case ViewPointOfSaleViewModel.ItemPriceType.Fixed:
+                                        case AppItemPriceType.Fixed:
                                             @formatted
                                             break;
                                         default:

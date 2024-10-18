@@ -17,7 +17,6 @@ using BTCPayServer.Forms;
 using BTCPayServer.Forms.Models;
 using BTCPayServer.Models;
 using BTCPayServer.Plugins.Crowdfund.Models;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -149,36 +148,28 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             decimal? price = request.Amount;
             var title = settings.Title;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
-            ViewPointOfSaleViewModel.Item choice = null;
             if (!string.IsNullOrEmpty(request.ChoiceKey))
             {
                 var choices = AppService.Parse(settings.PerksTemplate, false);
-                choice = choices?.FirstOrDefault(c => c.Id == request.ChoiceKey);
+                AppItem choice = choices.FirstOrDefault(c => c.Id == request.ChoiceKey);
                 if (choice == null)
                     return NotFound("Incorrect option provided");
                 title = choice.Title;
 
-                if (choice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
+                if (choice.PriceType == AppItemPriceType.Topup)
                 {
                     price = null;
                 }
                 else
                 {
-                    price = choice.Price.Value;
+                    if (choice.Price.HasValue)
+                        price = choice.Price.Value;
                     if (request.Amount > price)
                         price = request.Amount;
                 }
-                if (choice.Inventory.HasValue)
+                if (choice.Inventory is <= 0)
                 {
-                    if (choice.Inventory <= 0)
-                    {
-                        return NotFound("Option was out of stock");
-                    }
-                }
-                if (choice?.PaymentMethods?.Any() is true)
-                {
-                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
+                    return NotFound("Option was out of stock");
                 }
             }
             else
@@ -230,8 +221,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                     }
                 }
             }
-
-            
 
             if (!isAdmin && (settings.EnforceTargetAmount && info.TargetAmount.HasValue && price >
                              (info.TargetAmount - (info.Info.CurrentAmount + info.Info.CurrentPendingAmount))))

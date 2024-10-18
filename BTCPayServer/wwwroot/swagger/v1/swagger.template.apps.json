@@ -747,34 +747,31 @@
                         "type": "object",
                         "properties": {
                             "items": {
-                                "type": "object",
+                                "type": "array",
+                                "items": {
+                                    "$ref": "#/components/schemas/AppItem"
+                                },
                                 "description": "JSON object of app items",
                                 "example": [
                                     {
-                                        "description": "Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years.",
                                         "id": "green tea",
-                                        "image": "~/img/pos-sample/green-tea.jpg",
-                                        "price": {
-                                            "type": 2,
-                                            "formatted": "$1.00",
-                                            "value": 1.0
-                                        },
                                         "title": "Green Tea",
+                                        "description": "Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years.",
+                                        "image": "~/img/pos-sample/green-tea.jpg",
+                                        "price": "1.0",
+                                        "priceType": "Fixed",
                                         "buyButtonText": null,
                                         "inventory": 5,
                                         "paymentMethods": null,
                                         "disabled": false
                                     },
                                     {
-                                        "description": "Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available.",
                                         "id": "black tea",
-                                        "image": "~/img/pos-sample/black-tea.jpg",
-                                        "price": {
-                                            "type": 2,
-                                            "formatted": "$1.00",
-                                            "value": 1.0
-                                        },
                                         "title": "Black Tea",
+                                        "description": "Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available.",
+                                        "image": "~/img/pos-sample/black-tea.jpg",
+                                        "price": "2.0",
+                                        "priceType": "Fixed",
                                         "buyButtonText": "Test Buy Button Text",
                                         "inventory": null,
                                         "paymentMethods": null,
@@ -1011,6 +1008,66 @@
                         }
                     }
                 ]
+            },
+            "AppItem": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "example": "green-tea",
+                        "description": "Unique ID of the item"
+                    },
+                    "title": {
+                        "type": "string",
+                        "example": "Green Tea",
+                        "description": "The display name of the item"
+                    },
+                    "description": {
+                        "type": "string",
+                        "example": "Lovely, fresh and tender.",
+                        "description": "A description text for the item"
+                    },
+                    "image": {
+                        "type": "string",
+                        "example": "http://teashop.com/img/green-tea.jpg",
+                        "description": "An image URL for the item"
+                    },
+                    "price": {
+                        "type": "string",
+                        "format": "decimal",
+                        "nullable": true,
+                        "example": "21.0"
+                    },
+                    "priceType": {
+                        "type": "string",
+                        "x-enumNames": [
+                            "Fixed",
+                            "Topup",
+                            "Minimum"
+                        ],
+                        "enum": [
+                            "Fixed",
+                            "Topup",
+                            "Minimum"
+                        ]
+                    },
+                    "buyButtonText": {
+                        "type": "string",
+                        "example": "Buy me!",
+                        "description": "A custom text for the buy button for the item"
+                    },
+                    "inventory": {
+                        "type": "integer",
+                        "nullable": true,
+                        "example": 21,
+                        "description": "The remaining stock the item"
+                    },
+                    "disabled": {
+                        "type": "boolean",
+                        "description": "If true, the item does not appear in the list by default.",
+                        "default": false
+                    }
+                }
             },
             "AppSalesStats": {
                 "type": "object",

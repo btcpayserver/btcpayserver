@@ -1,6 +1,6 @@
 @model BTCPayServer.Controllers.UIManageController.NotificationSettingsViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.Notifications, "Notification Settings");
+    ViewData.SetActivePage(ManageNavPages.Notifications, StringLocalizer["Notification Settings"]);
 }
 
 <form method="post" asp-action="NotificationSettings">
@@ -22,7 +22,7 @@
             @if (Model.All)
             {
                 <p text-translate="true">All notifications are disabled.</p>
-                <button type="submit" class="btn btn-primary" name="command" value="enable-all">Enable notifications</button>
+                <button type="submit" class="btn btn-primary" name="command" value="enable-all" text-translate="true">Enable notifications</button>
             }
             else
             {

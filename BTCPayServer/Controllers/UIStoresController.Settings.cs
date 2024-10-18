@@ -101,34 +101,19 @@ public partial class UIStoresController
 
         if (model.LogoFile != null)
         {
-            if (model.LogoFile.Length > 1_000_000)
-            {
-                ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file should be less than {0}", "1MB"]);
-            }
-            else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
-            {
-                ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file needs to be an image"]);
-            }
+            var imageUpload = await _fileService.UploadImage(model.LogoFile, userId);
+            if (!imageUpload.Success)
+                ModelState.AddModelError(nameof(model.LogoFile), imageUpload.Response);
             else
             {
-                var formFile = await model.LogoFile.Bufferize();
-                if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                try
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file needs to be an image"]);
+                    var storedFile = imageUpload.StoredFile!;
+                    blob.LogoUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
                 }
-                else
+                catch (Exception e)
                 {
-                    model.LogoFile = formFile;
-                    // add new image
-                    try
-                    {
-                        var storedFile = await _fileService.AddFile(model.LogoFile, userId);
-                        blob.LogoUrl = new UnresolvedUri.FileIdUri(storedFile.Id);
-                    }
-                    catch (Exception e)
-                    {
-                        ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["Could not save logo: {0}", e.Message]);
-                    }
+                    ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["Could not save logo: {0}", e.Message]);
                 }
             }
         }

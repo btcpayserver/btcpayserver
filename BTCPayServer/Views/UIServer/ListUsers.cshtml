@@ -73,6 +73,7 @@
                 { InvitationUrl: not null } => (StringLocalizer["Pending Invitation"], "warning"),
                 _ => (StringLocalizer["Active"], "success")
             };
+            var storesCount = user.Stores.Count();
             var pendingInvite = !string.IsNullOrEmpty(user.InvitationUrl);
             var detailsId = user.Stores.Any() ? $"user_details_{user.Id}" : null;
             <tr id="user_@user.Id" class="user-overview-row mass-action-row">
@@ -85,7 +86,7 @@
                         }
                     </div>
                 </td>
-                <td class="@(user.Stores.Any() ? null : "text-muted")">@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
+                <td class="@(storesCount > 0 ? null : "text-muted")">@(storesCount == 1 ? StringLocalizer["{0} Store", storesCount] : StringLocalizer["{0} Stores", storesCount])</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
                     <span class="user-status badge bg-@status.Item2" text-translate="true">@status.Item1</span>

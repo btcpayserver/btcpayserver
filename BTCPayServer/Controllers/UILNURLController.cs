@@ -102,11 +102,11 @@ namespace BTCPayServer
         [HttpGet("withdraw/pp/{pullPaymentId}")]
         public Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, [FromQuery] string pr, CancellationToken cancellationToken)
         {
-            return GetLNURLForPullPayment(cryptoCode, pullPaymentId, pr, pullPaymentId, cancellationToken);
+            return GetLNURLForPullPayment(cryptoCode, pullPaymentId, pr, pullPaymentId, false, cancellationToken);
         }
 
         [NonAction]
-        internal async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, string k1, CancellationToken cancellationToken)
+        internal async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, string k1, bool nonInteractiveOnly, CancellationToken cancellationToken)
         {
             var network = GetNetwork(cryptoCode);
             if (network is null || !network.SupportLightning)
@@ -175,8 +175,18 @@ namespace BTCPayServer
             });
             var processorBlob = processors.FirstOrDefault()?.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob();
 			var instantProcessing = processorBlob?.ProcessNewPayoutsInstantly is true;
+            if (nonInteractiveOnly && !instantProcessing)
+            {
+                return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment cancelled: The payer must activate the lightning automated payment process and must check \"Process approved payouts instantly\"." });
+            }
+
 			var interval = processorBlob?.Interval.TotalMinutes;
 			var autoApprove = pp.GetBlob().AutoApproveClaims;
+            if (nonInteractiveOnly && !autoApprove)
+            {
+                return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment cancelled: The payer must activate \"Automatically approve claims\" in the settings of the pull payment." });
+            }
+
 			var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),

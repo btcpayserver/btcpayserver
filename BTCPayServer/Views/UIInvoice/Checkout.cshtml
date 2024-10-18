@@ -12,7 +12,7 @@
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
-	var displayedPaymentMethods = Model.AvailablePaymentMethods.Where(c => c.Displayed).ToList();
+    var checkoutLink = Url.Action("Checkout", new { invoiceId = Model.InvoiceId });
 }
 @functions {
     private string ToJsValue(object value)
@@ -90,24 +90,20 @@
                         :show-recommended-fee="showRecommendedFee"
                         class="pb-4" />
                 </div>
-                @if (displayedPaymentMethods.Count > 1 || hasPaymentPlugins)
-                {
-                    <div class="mt-3 mb-2">
-                        <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
-                        <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
-                            @foreach (var crypto in displayedPaymentMethods)
-                            {
-                                <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" asp-route-paymentMethodId="@crypto.PaymentMethodId"
-                                   class="btcpay-pill m-0 payment-method"
-                                   :class="{ active: pmId === @ToJsValue(crypto.PaymentMethodId) }"
-                                   v-on:click.prevent="changePaymentMethod(@ToJsValue(crypto.PaymentMethodId))">
-                                    @crypto.PaymentMethodName
-                                </a>
-                            }
-                            @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
-                        </div>
+                <div v-if="displayedPaymentMethods.length > 1 || @Safe.Json(hasPaymentPlugins)" class="mt-3 mb-2">
+                    <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
+                    <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
+                        <a
+                            v-for="crypto in displayedPaymentMethods"
+                            :href="@ToJsValue(checkoutLink) + '/' + crypto.paymentMethodId"
+                           class="btcpay-pill m-0 payment-method"
+                           :class="{ active: srvModel.paymentMethodId === crypto.paymentMethodId }"
+                           v-on:click.prevent="changePaymentMethod(crypto.paymentMethodId)"
+                           v-text="crypto.paymentMethodName">
+                        </a>
                     </div>
-                }
+                    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
+                </div>
 				<component v-if="paymentMethodComponent" :is="paymentMethodComponent"
                            :model="srvModel"
                            :nfc-scanning="nfc.scanning"

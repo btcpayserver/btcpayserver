@@ -295,7 +295,7 @@ namespace BTCPayServer.Payments
         /// </summary>
         public List<string> TrackedDestinations { get; } = new();
 
-        internal async Task BeforeFetchingRates()
+        public async Task BeforeFetchingRates()
         {
             await Handler.BeforeFetchingRates(this);
             // We need to fetch the rates necessary for the evaluation of the payment method criteria

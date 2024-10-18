@@ -193,7 +193,7 @@ namespace BTCPayServer
                 PayoutMethodId = pmi,
                 PullPaymentId = pullPaymentId,
                 StoreId = pp.StoreId,
-                Value = result.MinimumAmount.ToDecimal(unit),
+                ClaimedAmount = result.MinimumAmount.ToDecimal(unit),
             });
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)

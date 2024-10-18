@@ -73,17 +73,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
 
         foreach (IGrouping<string, PayoutData> payoutByStore in payouts.GroupBy(data => data.StoreDataId))
         {
-            //this should never happen
-            if (!stores.TryGetValue(payoutByStore.Key, out var store))
-            {
-                foreach (PayoutData payoutData in payoutByStore)
-                {
-                    payoutData.State = PayoutState.Cancelled;
-                }
-
-                continue;
-            }
-
+			var store = stores[payoutByStore.Key];
             foreach (IGrouping<string, PayoutData> payoutByStoreByPaymentMethod in payoutByStore.GroupBy(data =>
                          data.PayoutMethodId))
             {
@@ -101,40 +91,37 @@ public class LightningPendingPayoutListener : BaseAsyncService
                     pm.CreateLightningClient(networks[pmi], _options.Value, _lightningClientFactoryService);
                 foreach (PayoutData payoutData in payoutByStoreByPaymentMethod)
                 {
-                    var handler = _payoutHandlers.TryGet(payoutData.GetPayoutMethodId());
-                    var proof = handler is null ? null : handler.ParseProof(payoutData);
-                    switch (proof)
-                    {
-                        case null:
-                            break;
-                        case PayoutLightningBlob payoutLightningBlob:
-                            {
-                                LightningPayment payment = null;
-                                try
-                                {
-                                    payment = await client.GetPayment(payoutLightningBlob.Id, CancellationToken);
-                                }
-                                catch
-                                {
-                                }
-                                if (payment is null)
-                                    continue;
-                                switch (payment.Status)
-                                {
-                                    case LightningPaymentStatus.Complete:
-                                        payoutData.State = PayoutState.Completed;
-                                        payoutLightningBlob.Preimage = payment.Preimage;
-                                        payoutData.SetProofBlob(payoutLightningBlob, null);
-                                        break;
-                                    case LightningPaymentStatus.Failed:
-                                        payoutData.State = PayoutState.Cancelled;
-                                        break;
-                                }
+                    var handler = _payoutHandlers.TryGet(payoutData.GetPayoutMethodId()) as LightningLikePayoutHandler;
+					if (handler is null || handler.PayoutsPaymentProcessing.Contains(payoutData.Id))
+						continue;
+                    var proof = handler.ParseProof(payoutData) as PayoutLightningBlob;
 
-                                break;
-                            }
-                    }
-                }
+					LightningPayment payment = null;
+					try
+					{
+						if (proof is not null)
+							payment = await client.GetPayment(proof.Id, CancellationToken);
+					}
+					catch
+					{
+					}
+					if (payment is null)
+					{
+						payoutData.State = PayoutState.Cancelled;
+						continue;
+					}
+					switch (payment.Status)
+					{
+						case LightningPaymentStatus.Complete:
+							payoutData.State = PayoutState.Completed;
+							proof.Preimage = payment.Preimage;
+							payoutData.SetProofBlob(proof, null);
+							break;
+						case LightningPaymentStatus.Failed:
+							payoutData.State = PayoutState.Cancelled;
+							break;
+					}
+				}
             }
         }
 

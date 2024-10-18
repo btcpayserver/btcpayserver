@@ -757,7 +757,7 @@ namespace BTCPayServer.Controllers
                     {
                         Destination = new AddressClaimDestination(
                             BitcoinAddress.Create(output.DestinationAddress, network.NBitcoinNetwork)),
-                        Value = output.Amount,
+                        ClaimedAmount = output.Amount,
                         PayoutMethodId = pmi,
                         StoreId = walletId.StoreId,
                         PreApprove = true,
@@ -777,7 +777,7 @@ namespace BTCPayServer.Controllers
                             message = "Payouts scheduled:<br/>";
                         }
 
-                        message += $"{claimRequest.Value} to {claimRequest.Destination.ToString()}<br/>";
+                        message += $"{claimRequest.ClaimedAmount} to {claimRequest.Destination.ToString()}<br/>";
 
                     }
                     else
@@ -791,10 +791,10 @@ namespace BTCPayServer.Controllers
                         switch (response.Result)
                         {
                             case ClaimRequest.ClaimResult.Duplicate:
-                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString()} - address reuse<br/>";
+                                errorMessage += $"{claimRequest.ClaimedAmount} to {claimRequest.Destination.ToString()} - address reuse<br/>";
                                 break;
                             case ClaimRequest.ClaimResult.AmountTooLow:
-                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString()} - amount too low<br/>";
+                                errorMessage += $"{claimRequest.ClaimedAmount} to {claimRequest.Destination.ToString()} - amount too low<br/>";
                                 break;
                         }
                     }

@@ -47,14 +47,17 @@ public class LightningAutomatedPayoutSenderFactory : IPayoutProcessorFactory
     public static string ProcessorName => nameof(LightningAutomatedPayoutSenderFactory);
     public IEnumerable<PayoutMethodId> GetSupportedPayoutMethods() => _supportedPayoutMethods;
 
-    public Task<IHostedService> ConstructProcessor(PayoutProcessorData settings)
+    public LightningAutomatedPayoutProcessor ConstructProcessor(PayoutProcessorData settings)
     {
         if (settings.Processor != Processor)
         {
             throw new NotSupportedException("This processor cannot handle the provided requirements");
         }
         var payoutMethodId = settings.GetPayoutMethodId();
-        return Task.FromResult<IHostedService>(ActivatorUtilities.CreateInstance<LightningAutomatedPayoutProcessor>(_serviceProvider, settings, payoutMethodId));
-
+        return ActivatorUtilities.CreateInstance<LightningAutomatedPayoutProcessor>(_serviceProvider, settings, payoutMethodId);
+    }
+    Task<IHostedService> IPayoutProcessorFactory.ConstructProcessor(PayoutProcessorData settings)
+    {
+        return Task.FromResult<IHostedService>(ConstructProcessor(settings));
     }
 }

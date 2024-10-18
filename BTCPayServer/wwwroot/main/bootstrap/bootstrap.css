@@ -12862,7 +12862,7 @@ input.btcpay-toggle {
 
 input.btcpay-toggle:checked,
 .btcpay-toggle.btcpay-toggle--active {
-  background: var(--btcpay-toggle-bg-hover);
+  background: var(--btcpay-toggle-bg-active);
 }
 
 input.btcpay-toggle:not(:disabled):checked:hover,

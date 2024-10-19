@@ -120,10 +120,9 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         bool updateBlob = false;
 		if (result.Result is PayResult.Error or PayResult.CouldNotFindRoute && payoutData.State == PayoutState.AwaitingPayment)
 		{
-			var errorCount = IncrementErrorCount(blob);
 			updateBlob = true;
-			if (errorCount >= 10)
-				payoutData.State = PayoutState.Cancelled;
+            if (blob.IncrementErrorCount() >= 10)
+                blob.DisableProcessor(LightningAutomatedPayoutSenderFactory.ProcessorName);
 		}
 		if (payoutData.State != PayoutState.InProgress || payoutData.Proof is not null)
 		{
@@ -145,22 +144,6 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
             Result = PayResult.Error,
             Message = "The payout isn't in a valid state"
         };
-
-    private int IncrementErrorCount(PayoutBlob blob)
-    {
-		int count;
-		if (blob.AdditionalData.TryGetValue("ErrorCount", out var v) && v.Type == JTokenType.Integer)
-		{
-			count = v.Value<int>() + 1;
-			blob.AdditionalData["ErrorCount"] = count;
-		}
-		else
-		{
-			count = 1;
-			blob.AdditionalData.Add("ErrorCount", count);
-		}
-		return count;
-    }
 
     async Task<(BOLT11PaymentRequest, ResultVM)> GetInvoiceFromLNURL(PayoutData payoutData,
             LightningLikePayoutHandler handler, PayoutBlob blob, LNURLPayClaimDestinaton lnurlPayClaimDestinaton, CancellationToken cancellationToken)

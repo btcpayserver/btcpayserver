@@ -173,6 +173,12 @@ namespace BTCPayServer.HostedServices
             public bool IncludePullPaymentData { get; set; }
             public DateTimeOffset? From { get; set; }
             public DateTimeOffset? To { get; set; }
+            /// <summary>
+            /// All payouts are elligible for every processors with matching payout method.
+            /// However, some processor may be disabled for some payouts.
+            /// Setting this field will filter out payouts that have the processor disabled.
+            /// </summary>
+            public string Processor { get; set; }
         }
 
         public async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery)
@@ -264,6 +270,14 @@ namespace BTCPayServer.HostedServices
             if (payoutQuery.To is not null)
             {
                 query = query.Where(data => data.Date <= payoutQuery.To);
+            }
+            if (payoutQuery.Processor is not null)
+            {
+                var q = new JObject()
+                {
+                    ["DisabledProcessors"] = new JArray(payoutQuery.Processor)
+                }.ToString();
+                query = query.Where(data => !EF.Functions.JsonContains(data.Blob, q));
             }
             return await query.ToListAsync(cancellationToken);
         }

@@ -1302,6 +1302,7 @@ namespace BTCPayServer.Services
   "Transaction broadcasted successfully ({0})": "",
   "Transaction fee rate:": "",
   "Translations": "",
+  "Translations are formatted as JSON; for example, <b>{0}</b> translates <b>{1}</b> to <b>{2}</b>.": "",
   "Two Factor Authentication": "",
   "Two-Factor Authentication": "",
   "Two-Factor Authentication (2FA) is an additional measure to protect your account.\n            In addition to your password you will be asked for a second proof on login.\n            This can be provided by an app (such as Google or Microsoft Authenticator)\n            or a security device (like a Yubikey or your hardware wallet supporting FIDO2).": "",

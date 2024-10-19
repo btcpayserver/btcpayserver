@@ -88,6 +88,9 @@ namespace BTCPayServer.Controllers
                 foreach (var prop in jobj.Properties())
                 {
                     prop.Value = "OK";
+                    if (prop.Name.Contains("{0}")) prop.Value += " {0}";
+                    if (prop.Name.Contains("{1}")) prop.Value += " {1}";
+                    if (prop.Name.Contains("{2}")) prop.Value += " {2}";
                 }
                 viewModel.Translations = Translations.CreateFromJson(jobj.ToString()).ToJsonFormat();
             }

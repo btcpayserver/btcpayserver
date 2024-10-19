@@ -21,8 +21,8 @@ namespace BTCPayServer.Payments.Bitcoin
         private readonly IPaymentLinkExtension? lnPaymentLinkExtension;
         private readonly IPaymentLinkExtension? lnurlPaymentLinkExtension;
         private readonly string? _bech32Prefix;
-        private PaymentMethodId lnPmi => PaymentTypes.LN.GetPaymentMethodId(_Network.CryptoCode);
-        private PaymentMethodId lnurlPmi => PaymentTypes.LNURL.GetPaymentMethodId(_Network.CryptoCode);
+        private readonly PaymentMethodId lnPmi;
+        private readonly PaymentMethodId lnurlPmi;
 
         public BitcoinCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
@@ -33,6 +33,8 @@ namespace BTCPayServer.Payments.Bitcoin
             PaymentMethodId = paymentMethodId;
             _Network = network;
             _displayFormatter = displayFormatter;
+            lnPmi = PaymentTypes.LN.GetPaymentMethodId(_Network.CryptoCode);
+            lnurlPmi = PaymentTypes.LNURL.GetPaymentMethodId(_Network.CryptoCode);
             paymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
             lnPaymentLinkExtension = paymentLinkExtensions.SingleOrDefault(p => p.PaymentMethodId == lnPmi);
             lnurlPaymentLinkExtension = paymentLinkExtensions.SingleOrDefault(p => p.PaymentMethodId == lnurlPmi);

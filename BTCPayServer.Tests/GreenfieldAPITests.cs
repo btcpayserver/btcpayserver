@@ -4201,8 +4201,8 @@ namespace BTCPayServer.Tests
             await TestUtils.EventuallyAsync(async () =>
             {
                 var payoutC =
-                    (await adminClient.GetStorePayouts(admin.StoreId, false)).Single(data => data.Id == payout.Id);
-                Assert.Equal(PayoutState.Completed, payoutC.State);
+                    (await adminClient.GetStorePayouts(admin.StoreId, false)).SingleOrDefault(data => data.Id == payout.Id);
+                Assert.Equal(PayoutState.Completed, payoutC?.State);
             });
 
             payout = await adminClient.CreatePayout(admin.StoreId,

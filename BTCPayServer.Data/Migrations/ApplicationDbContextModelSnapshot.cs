@@ -560,7 +560,7 @@ namespace BTCPayServer.Migrations
                         .HasColumnType("numeric");
 
                     b.Property<string>("Blob")
-                        .HasColumnType("JSONB");
+                        .HasColumnType("jsonb");
 
                     b.Property<string>("Currency")
                         .HasColumnType("text");

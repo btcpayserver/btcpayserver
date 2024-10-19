@@ -17,6 +17,7 @@ using BTCPayServer.NTag424;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors;
+using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
@@ -4177,7 +4178,11 @@ namespace BTCPayServer.Tests
             var resp = await tester.CustomerLightningD.Pay(inv.BOLT11);
             Assert.Equal(PayResult.Ok, resp.Result);
 
+            var ppService = tester.PayTester.GetService<HostedServices.PullPaymentHostedService>();
+            var serializers = tester.PayTester.GetService<BTCPayNetworkJsonSerializerSettings>();
             var store = tester.PayTester.GetService<StoreRepository>();
+            var dbContextFactory = tester.PayTester.GetService<Data.ApplicationDbContextFactory>();
+
             Assert.True(await store.InternalNodePayoutAuthorized(admin.StoreId));
             Assert.False(await store.InternalNodePayoutAuthorized("blah"));
             await admin.MakeAdmin(false);
@@ -4244,6 +4249,36 @@ namespace BTCPayServer.Tests
                     Destination = customerInvoice.BOLT11
                 });
             Assert.Equal(payout2.OriginalAmount, new Money(100, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC));
+
+            // Checking if we can disable a payout...
+            var allLNPayouts = await ppService.GetPayouts(new ()
+            {
+                PayoutIds = new[] { payout2.Id },
+                Processor = LightningAutomatedPayoutSenderFactory.ProcessorName
+            });
+            Assert.NotEmpty(allLNPayouts);
+            var b = JsonConvert.DeserializeObject<Data.PayoutBlob>(allLNPayouts[0].Blob);
+            b.DisableProcessor(LightningAutomatedPayoutSenderFactory.ProcessorName);
+            Assert.Equal(1, b.IncrementErrorCount());
+            Assert.Equal(2, b.IncrementErrorCount());
+            allLNPayouts[0].Blob = JsonConvert.SerializeObject(b);
+            Assert.Equal(3, JsonConvert.DeserializeObject<Data.PayoutBlob>(allLNPayouts[0].Blob).IncrementErrorCount());
+            using var ctx = dbContextFactory.CreateContext();
+            var p = ctx.Payouts.Find(allLNPayouts[0].Id);
+            p.Blob = allLNPayouts[0].Blob;
+            await ctx.SaveChangesAsync();
+            var allLNPayouts2 = await ppService.GetPayouts(new()
+            {
+                PayoutIds = new[] { payout2.Id },
+                Processor = LightningAutomatedPayoutSenderFactory.ProcessorName
+            });
+            Assert.DoesNotContain(allLNPayouts[0].Id, allLNPayouts2.Select(a => a.Id));
+            allLNPayouts2 = await ppService.GetPayouts(new()
+            {
+                PayoutIds = new[] { payout2.Id },
+                Processor = "hello"
+            });
+            Assert.Contains(allLNPayouts[0].Id, allLNPayouts2.Select(a => a.Id));
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

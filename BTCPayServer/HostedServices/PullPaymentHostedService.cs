@@ -588,7 +588,7 @@ namespace BTCPayServer.HostedServices
                         break;
                 }
                 payout.State = req.Request.State;
-                if (req.Request.Blob is { } b)
+                if (req.Request.UpdateBlob is { } b)
                     payout.SetBlob(b, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
@@ -939,7 +939,7 @@ namespace BTCPayServer.HostedServices
         public string PayoutId { get; set; }
         public JObject Proof { get; set; }
         public PayoutState State { get; set; } = PayoutState.Completed;
-        public PayoutBlob Blob { get; internal set; }
+        public PayoutBlob UpdateBlob { get; internal set; }
 
         public static string GetErrorMessage(PayoutPaidResult result)
         {

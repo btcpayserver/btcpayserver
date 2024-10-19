@@ -132,7 +132,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 				State = payoutData.State,
 				PayoutId = payoutData.Id,
 				Proof = payoutData.GetProofBlobJson(),
-				Blob = updateBlob ? blob : null
+				UpdateBlob = updateBlob ? blob : null
 			});
 		}
         return result;

@@ -856,7 +856,7 @@ namespace BTCPayServer.Controllers
             var model = new CheckoutModel
             {
                 Activated = prompt.Activated,
-                PaymentMethodName = _prettyName.PrettyName(paymentMethodId),
+                PaymentMethodName = _prettyName.PrettyName(paymentMethodId, true),
                 PaymentMethodCurrency = prompt.Currency,
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = orderId,
@@ -908,7 +908,7 @@ namespace BTCPayServer.Controllers
                                               {
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
                                                   PaymentMethodId = kv.PaymentMethodId,
-                                                  PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId),
+                                                  PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId, true),
                                                   Order = kv.PaymentMethodId switch
                                                   {
                                                       _ when PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode) == kv.PaymentMethodId => 0,

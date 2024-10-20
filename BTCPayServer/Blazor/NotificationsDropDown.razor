@@ -4,10 +4,12 @@
 @using BTCPayServer.Services.Notifications;
 @using Microsoft.AspNetCore.Identity;
 @using Microsoft.AspNetCore.Routing;
+@using Microsoft.Extensions.Localization
 @implements IDisposable
 @inject AuthenticationStateProvider _AuthenticationStateProvider
 @inject NotificationManager _NotificationManager
 @inject UserManager<ApplicationUser> _UserManager
+@inject IStringLocalizer StringLocalizer
 @inject IJSRuntime _JSRuntime
 @inject LinkGenerator _LinkGenerator
 @inject BTCPayServerOptions _BTCPayServerOptions
@@ -16,7 +18,7 @@
 <div id="Notifications">
 	@if (UnseenCount == "0")
 	{
-		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="Notifications">
+		<a href="@NotificationsUrl" id="NotificationsHandle" class="mainMenuButton" title="@StringLocalizer["Notifications"]">
 			<Icon Symbol="nav-notifications" />
 		</a>
 	}

@@ -121,7 +121,7 @@
             </div>
             <div class="form-group mt-4">
                 <label asp-for="NetworkFeeMode" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 @* For whatever reason wrapping the select with this div fixes this Safari bug: https://github.com/btcpayserver/btcpayserver/issues/3699 *@
@@ -135,7 +135,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceExpiration" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
@@ -146,7 +146,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="PaymentTolerance" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
@@ -165,7 +165,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="MonitoringExpiration" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
@@ -176,7 +176,7 @@
             </div>
             <div class="form-group">
                 <label asp-for="SpeedPolicy" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0'">
@@ -194,7 +194,7 @@
             <div class="form-group d-flex align-items-center">
                 <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-3"/>
                 <label asp-for="AnyoneCanCreateInvoice" class="form-check-label me-1"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
             </div>
@@ -224,19 +224,19 @@
             <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
                 @if (Model.Archived)
                 {
-					<span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store" text-translate="true">Unarchive this store</span>
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this store"]" text-translate="true">Unarchive this store</span>
                 }
                 else
                 {
-					<span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default" text-translate="true">Archive this store</span>
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this store so that it does not appear in the stores list by default"]" text-translate="true">Archive this store</span>
                 }
             </button>
         </form>
-		<a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE" text-translate="true">Delete this store</a>
+		<a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["The store <strong>{0}</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", Html.Encode(Model.StoreName)]" data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Delete this store</a>
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete store"], StringLocalizer["The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>

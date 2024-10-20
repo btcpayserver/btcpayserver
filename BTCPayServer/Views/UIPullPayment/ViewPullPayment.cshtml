@@ -43,7 +43,7 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button" title="LNURL-Withdraw">
+                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button" title="@StringLocalizer["LNURL-Withdraw"]">
                                             <vc:icon symbol="qr-code" />
                                         </button>
                                     }
@@ -61,7 +61,7 @@
                                     {
                                         <select class="form-select w-auto" asp-for="SelectedPayoutMethod" asp-items="Model.PayoutMethodIds.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
                                     }
-                                    <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan destination with camera" id="scandestination-button">
+                                    <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan destination with camera"]" id="scandestination-button">
                                         <vc:icon symbol="scan-qr"/>
                                     </button>
                                 </div>

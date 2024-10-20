@@ -191,7 +191,7 @@
                 <h5 class="alert-heading" text-translate="true">Warning: Payment button should only be used for tips and donations</h5>
                 <p>
                     @ViewLocalizer["Using the payment button for e-commerce integrations is not recommended since order relevant information can be modified by the user. For e-commerce, you should use our {0}. If this store process commercial transactions, we advise you to {1} before using the payment button.",
-                        new HtmlString($"<a href=\"https://docs.btcpayserver.org/API/Greenfield/v1/\" class=\"alert-link\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["Greenfield API"]}</a>"),
+                        Html.ActionLink(StringLocalizer["Greenfield API"], "SwaggerDocs", "UIHome", new { }, new { @class = "alert-link" }),
                         Html.ActionLink(StringLocalizer["create a separate store"], "CreateStore", "UIUserStores", new { }, new { @class = "alert-link" })]
                 </p>
                 <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">

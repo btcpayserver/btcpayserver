@@ -82,7 +82,7 @@
                 else
                 {
                     <input asp-for="LogoFile" type="file" class="form-control" disabled>
-                    <div class="form-text">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                 }
             </div>
             <div class="form-group">
@@ -109,7 +109,7 @@
                 else
                 {
                     <input asp-for="CssFile" type="file" class="form-control" disabled>
-                    <div class="form-text">In order to upload a CSS file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                 }
             </div>
 

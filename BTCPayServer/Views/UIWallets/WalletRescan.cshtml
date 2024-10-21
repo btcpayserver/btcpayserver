@@ -62,19 +62,19 @@ else if (!Model.Progress.HasValue)
         @if (Model.PreviousError != null)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
-                <span text-translate="true">The previous scan stopped with an error: @Model.PreviousError</span>
+                <span text-translate="true">The previous scan stopped with an error:</span> @Model.PreviousError
             </div>
         }
         else if (Model.LastSuccess != null)
         {
             <div class="alert alert-success alert-dismissible" role="alert">
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
-                <span text-translate="true">The previous scan completed and found <b>@Model.LastSuccess.Found</b> UTXOs in <b>@Model.TimeOfScan</b> (The total UTXO set size is @Model.LastSuccess.TotalSizeOfUTXOSet.Value)</span>
+                <span>@StringLocalizer["The previous scan completed and found <b>{0}</b> UTXOs in <b>{1}</b> (The total UTXO set size is {2})", Model.LastSuccess.Found, Model.TimeOfScan, Model.LastSuccess.TotalSizeOfUTXOSet.Value]</span>
             </div>
         }
         <div class="col-lg-8">

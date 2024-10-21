@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Confirm addresses", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Confirm addresses"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -12,7 +12,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Please check that your @Model.CryptoCode wallet is generating the same addresses as below.</p>
+    <p class="lead text-secondary mt-3" text-translate="true">Please check that your wallet is generating the same addresses as below.</p>
 </header>
 
 @if (!ViewContext.ModelState.IsValid)
@@ -28,20 +28,20 @@
     <div class="modal-dialog" role="document">
         <form class="modal-content" method="post" enctype="multipart/form-data">
             <div class="modal-header">
-                <h5 class="modal-title" id="addressVerification">Address verification</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" id="addressVerification" text-translate="true">Address verification</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
             </div>
             <div class="modal-body">
                 <p>
-                    Confirm that you see the following address on the device:
+                    <span text-translate="true">Confirm that you see the following address on the device:</span>
                     <code id="displayed-address"></code>
                 </p>
                 <div id="vault-status"></div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Close</button>
                 <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
             </div>
         </form>
@@ -61,8 +61,8 @@
         <table class="table table-hover w-auto mx-auto">
             <thead>
             <tr>
-                <th>Key path</th>
-                <th>Address</th>
+                <th text-translate="true">Key path</th>
+                <th text-translate="true">Address</th>
                 @if (Model.Source == "Vault")
                 {
                     <th></th>
@@ -79,7 +79,7 @@
                     {
                         <td class="text-end">
                             @* Using single quotes for the data attributes on purpose *@
-                            <a href="#" data-address='@Safe.Json(sample.Address)' data-rooted-key-path='@Safe.Json(sample.RootedKeyPath.ToString())'>Show on device</a>
+                            <a href="#" data-address='@Safe.Json(sample.Address)' data-rooted-key-path='@Safe.Json(sample.RootedKeyPath.ToString())' text-translate="true">Show on device</a>
                         </td>
                     }
                 </tr>
@@ -89,7 +89,7 @@
     </div>
 
     <div class="text-center">
-        <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm">Confirm</button>
+        <button name="command" type="submit" class="btn btn-primary" value="save" id="Confirm" text-translate="true">Confirm</button>
     </div>
 </form>
 

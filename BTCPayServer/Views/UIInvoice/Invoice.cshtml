@@ -155,7 +155,7 @@
             <div class="modal-content">
                 <div class="modal-header">
                     <h4 class="modal-title" id="RefundTitle">Issue Refund</h4>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
                         <vc:icon symbol="close" />
                     </button>
                 </div>
@@ -194,17 +194,17 @@
         }
         else
         {
-            <button class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="You can only refund an invoice that has been settled. Please wait for the transaction to confirm on the blockchain before attempting to refund it." disabled>Issue refund</button>
+            <button class="btn btn-secondary text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["You can only refund an invoice that has been settled. Please wait for the transaction to confirm on the blockchain before attempting to refund it."]" disabled>Issue refund</button>
         }
         <form asp-action="ToggleArchive" asp-route-invoiceId="@Model.Id" method="post">
             <button type="submit" class="btn btn-secondary" id="btn-archive-toggle">
                 @if (Model.Archived)
                 {
-                    <span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this invoice">Unarchive</span>
+                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this invoice"]">Unarchive</span>
                 }
                 else
                 {
-                    <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this invoice so that it does not appear in the invoice list by default">Archive</span>
+                    <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this invoice so that it does not appear in the invoice list by default"]">Archive</span>
                 }
             </button>
         </form>

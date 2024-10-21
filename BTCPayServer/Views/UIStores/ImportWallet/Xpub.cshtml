@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter your extended public key", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Enter your extended public key"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -13,8 +13,8 @@
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
     <p class="lead text-secondary mt-3">
-        This key, also called "xpub", is used to generate individual destination addresses for your invoices.
-        <a href="https://docs.btcpayserver.org/FAQ/Wallet/#what-is-a-derivation-scheme" target="_blank" rel="noreferrer noopener" title="More information...">
+        <span text-translate="true">This key, also called "xpub", is used to generate individual destination addresses for your invoices.</span>
+        <a href="https://docs.btcpayserver.org/FAQ/Wallet/#what-is-a-derivation-scheme" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
             <vc:icon symbol="info"/>
         </a>
     </p>
@@ -27,12 +27,12 @@
     <input asp-for="AccountKey" type="hidden" />
 
     <div class="form-group">
-        <label asp-for="DerivationScheme" class="form-label">Extended public key</label>
+        <label asp-for="DerivationScheme" class="form-label" text-translate="true">Extended public key</label>
         <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2" rows="2"></textarea>
         <span asp-validation-for="DerivationScheme" class="text-danger"></span>
     </div>
 
-    <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
+    <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue" text-translate="true">Continue</button>
 </form>
 <style>
     #AddressTypes .additional { display: none; }
@@ -41,8 +41,8 @@
 <table id="AddressTypes" class="table">
     <thead>
     <tr>
-        <th class="w-175px">Address type</th>
-        <th>Example</th>
+        <th class="w-175px" text-translate="true">Address type</th>
+        <th text-translate="true">Example</th>
     </tr>
     </thead>
     <tbody>
@@ -120,5 +120,5 @@
 
 <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="ToggleAdditional" data-bs-toggle="collapse" data-bs-target="#MultiSigExamples" aria-expanded="false" aria-controls="MultiSigExamples">
     <vc:icon symbol="caret-down"/>
-    <span class="ms-1">Show multi-sig examples</span>
+    <span class="ms-1" text-translate="true">Show multi-sig examples</span>
 </button>

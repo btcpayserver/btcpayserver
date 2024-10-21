@@ -19,13 +19,11 @@
 @if (Model.ShowQR)
 {
     <div class="alert alert-warning alert-dismissible" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
-        <div>
-            <span><b>CONFIDENTIAL:</b> This QR Code is confidential, close this window as soon as you don't need it anymore.<br /></span>
-            <span text-translate="true">A malicious actor with access to this QR Code could steal the funds on your lightning wallet.</span>
-        </div>
+        <span text-translate="true">CONFIDENTIAL: This QR Code is confidential, close this window as soon as you don't need it anymore.</span>
+        <span text-translate="true">A malicious actor with access to this QR Code could steal the funds on your lightning wallet.</span>
     </div>
 }
 
@@ -44,9 +42,7 @@
 
         <div class="form-group">
             <h5 text-translate="true">QR Code connection</h5>
-            <p>
-                <span>You can use QR Code to connect to your @Model.WalletName from your mobile.<br/></span>
-            </p>
+            <p>@StringLocalizer["You can use QR Code to connect to your {0} from your mobile.", Model.WalletName]</p>
         </div>
         <div class="form-group">
             @if (!Model.ShowQR)

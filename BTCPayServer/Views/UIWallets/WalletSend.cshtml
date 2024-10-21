@@ -104,7 +104,7 @@
                     </div>
                     <div class="input-group">
                         <input asp-for="Outputs[index].DestinationAddress" class="form-control font-monospace flex-grow-1" autocomplete="off" autofocus="@(index == Model.Outputs.Count - 1 ? "autofocus" : null)"/>
-                        <button type="button" id="scanqrcode" class="btn btn-secondary px-3 only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera" data-index="@index">
+                        <button type="button" id="scanqrcode" class="btn btn-secondary px-3 only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan with camera"]" data-index="@index">
                             <vc:icon symbol="scan-qr" />
                         </button>
                     </div>

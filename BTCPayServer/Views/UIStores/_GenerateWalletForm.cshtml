@@ -59,10 +59,7 @@
                 <div>
                     <label asp-for="SavePrivateKeys" class="form-check-label" text-translate="true">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
-                    <p class="text-muted pt-2 mb-0" text-translate="true">
-                        If checked, each private key associated with an address generated will be stored as metadata
-                        and would be accessible to anyone with admin access to your server. Enable at your own risk!
-                    </p>
+                    <p class="text-muted pt-2 mb-0" text-translate="true">If checked, each private key associated with an address generated will be stored as metadata and would be accessible to anyone with admin access to your server. Enable at your own risk!</p>
                 </div>
             </label>
         </div>
@@ -80,10 +77,7 @@
                         <span text-translate="true">Enable PayJoin</span>
                         <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
                         <p class="text-muted pt-2 mb-0">
-                            <span text-translate="true">
-                                PayJoin enhances the privacy for you and your customers.
-                                Enabling it gives your customers the option to use PayJoin during checkout.
-                            </span>
+                            <span text-translate="true">PayJoin enhances the privacy for you and your customers. Enabling it gives your customers the option to use PayJoin during checkout.</span>
                             <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener">
                                 <vc:icon symbol="info" />
                             </a>
@@ -126,7 +120,7 @@
                         <label class="d-flex align-items-center">
                             <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3"/>
                             <div>
-                                <label asp-for="ImportKeysToRPC" class="form-check-label">Import keys to RPC</label>
+                                <label asp-for="ImportKeysToRPC" class="form-check-label" text-translate="true">Import keys to RPC</label>
                                 <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                                 <p class="text-muted pt-2 mb-0">
                                     <span text-translate="true">Each address generated will be imported into the node wallet and you can view your balance through the node.</span>
@@ -149,7 +143,7 @@
             <input type="hidden" asp-for="AdditionalOptions[dictKeys.Key]" />
         }
     }
-    <button type="submit" class="btn btn-primary" id="Continue">@(isImport ? "Continue" : "Create")</button>
+    <button type="submit" class="btn btn-primary" id="Continue">@(isImport ? StringLocalizer["Continue"] : StringLocalizer["Create"])</button>
 </form>
 
 <script>
@@ -159,7 +153,7 @@
         if ($form.elements["passphrase_conf"].value !== $form.elements["Passphrase"].value) {
             const $validation = document.getElementById("passphrase_conf_validation");
             $validation.classList.remove("field-validation-valid");
-            $validation.innerText = "Invalid passphrase confirmation";
+            $validation.innerText = @StringLocalizer["Invalid passphrase confirmation"];
             event.preventDefault();
         }
     });

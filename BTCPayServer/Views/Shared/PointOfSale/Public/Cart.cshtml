@@ -97,7 +97,14 @@
                                         @if (item.Inventory.HasValue)
                                         {
                                             <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
-                                                @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                                @if (item.Inventory > 0)
+                                                {
+                                                    <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                                }
+                                                else
+                                                {
+                                                    <span text-translate="true">Sold out</span>
+                                                }
                                             </span>
                                         }
                                     </div>
@@ -138,10 +145,10 @@
         <div class="public-page-wrap" v-cloak>
             <header class="sticky-top bg-tile offcanvas-header py-3 py-lg-4 d-flex align-items-baseline justify-content-center gap-3 px-5 pe-lg-0">
                 <h1 class="mb-0" id="cartLabel">Cart</h1>
-                <button id="CartClear" type="reset" v-on:click="clear" class="btn btn-text text-primary p-1" v-if="cartCount > 0">
+                <button id="CartClear" type="reset" v-on:click="clear" class="btn btn-text text-primary p-1" v-if="cartCount > 0" text-translate="true">
                     Empty
                 </button>
-                <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="Close">
+                <button id="CartClose" type="button" class="cart-toggle-btn" v-on:click="toggleCart" aria-controls="cart" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="cross" />
                 </button>   
             </header>
@@ -156,7 +163,7 @@
                         <tr v-for="item in cart" :key="item.id">
                             <td class="align-middle">
                                 <h6 class="fw-semibold mb-1">{{ item.title }}</h6>
-                                <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-sm btn-link p-0 text-danger fw-semibold">Remove</button>
+                                <button type="button" v-on:click="removeFromCart(item.id)" class="btn btn-sm btn-link p-0 text-danger fw-semibold" text-translate="true">Remove</button>
                             </td>
                             <td class="align-middle">
                                 <div class="d-flex align-items-center gap-2 justify-content-end quantity">
@@ -182,7 +189,7 @@
                     </table>
                     <table class="table table-borderless my-4" v-if="showDiscount || enableTips">
                         <tr v-if="showDiscount">
-                            <th class="align-middle">Discount</th>
+                            <th class="align-middle" text-translate="true">Discount</th>
                             <th class="align-middle" colspan="3">
                                 <div class="input-group input-group-sm w-100px pull-right">
                                     <input class="form-control hide-number-spin" type="number" min="0" step="1" max="100" id="Discount" v-model.number="discountPercent">
@@ -191,7 +198,7 @@
                             </th>
                         </tr>
                         <tr v-if="enableTips">
-                            <th class="align-middle">Tip</th>
+                            <th class="align-middle" text-translate="true">Tip</th>
                             <th class="align-middle" colspan="3">
                                 <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-end gap-2" v-if="customTipPercentages">
                                     <div class="btcpay-pill d-flex align-items-center px-3" id="Tip-Custom" :class="{ active: !tipPercent && tip }" v-on:click.prevent="tipPercent = null">
@@ -219,25 +226,25 @@
                     </table>
                     <table class="table table-borderless mt-4 mb-0">
                         <tr>
-                            <td class="align-middle">Subtotal</td>
+                            <td class="align-middle" text-translate="true">Subtotal</td>
                             <td class="align-middle text-end" id="CartAmount">{{ formatCurrency(amountNumeric, true) }}</td>
                         </tr>
                         <tr v-if="discountNumeric">
-                            <td class="align-middle">Discount</td>
+                            <td class="align-middle" text-translate="true">Discount</td>
                             <td class="align-middle text-end" id="CartDiscount">
                                 <span v-if="discountPercent">{{discountPercent}}% =</span>
                                 {{ formatCurrency(discountNumeric, true) }}
                             </td>
                         </tr>
                         <tr v-if="tipNumeric">
-                            <td class="align-middle">Tip</td>
+                            <td class="align-middle" text-translate="true">Tip</td>
                             <td class="align-middle text-end" id="CartTip">
                                 <span v-if="tipPercent">{{tipPercent}}% =</span>
                                 {{ formatCurrency(tipNumeric, true) }}
                             </td>
                         </tr>
                         <tr>
-                            <td class="align-middle h5 border-0">Total</td>
+                            <td class="align-middle h5 border-0" text-translate="true">Total</td>
                             <td class="align-middle h5 border-0 text-end" id="CartTotal">{{ formatCurrency(totalNumeric, true) }}</td>
                         </tr>
                         <tr>
@@ -246,13 +253,13 @@
                                     <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
                                         <span class="visually-hidden" text-translate="true">Loading...</span>
                                     </div>
-                                    <template v-else>Pay</template>
+                                    <template v-else text-translate="true">Pay</template>
                                 </button>
                             </td>
                         </tr>
                     </table>
                 </form>
-                <p id="CartItems" v-else class="text-muted text-center my-0">There are no items in your cart yet.</p>
+                <p id="CartItems" v-else class="text-muted text-center my-0" text-translate="true">There are no items in your cart yet.</p>
             </div>
         </div>
     </aside>

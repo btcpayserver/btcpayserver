@@ -727,5 +727,39 @@
       },
       "version": 2
     }
+  },
+  {
+    "type": "payment",
+    "input": {
+      "output": null,
+      "version": 1,
+      "outpoint": null,
+      "accounted": true,
+      "cryptoCode": "XMR",
+      "networkFee": 0.0000000019,
+      "receivedTimeMs": 1705500405468,
+      "cryptoPaymentData": "{\"Amount\":62700000000,\"Address\":\"85CjjvQyW7PjNmiFRKZuEHKzZjiB3rjSu6n8zPzji4PtQxw1CyEY5H5FBge6GRUMJqR7FqsgBHU7H1FpEppvZXS6HGpFF6t\",\"SubaddressIndex\":23,\"SubaccountIndex\":0,\"BlockHeight\":3063946,\"ConfirmationCount\":10,\"TransactionId\":\"cc2e9ef03864c6af5e0d6f1c730ba142144f6588c50035b2996a59a6f3771b06\",\"LockTime\":0}",
+      "cryptoPaymentDataType": "MoneroLike"
+    },
+    "expected": {
+      "divisibility": 12,
+      "destination": "85CjjvQyW7PjNmiFRKZuEHKzZjiB3rjSu6n8zPzji4PtQxw1CyEY5H5FBge6GRUMJqR7FqsgBHU7H1FpEppvZXS6HGpFF6t",
+      "details": {
+        "blockHeight": 3063946,
+        "confirmationCount": 10,
+        "lockTime": 0,
+        "subaccountIndex": 0,
+        "subaddressIndex": 23,
+        "transactionId": "cc2e9ef03864c6af5e0d6f1c730ba142144f6588c50035b2996a59a6f3771b06"
+      },
+      "version": 2
+    },
+    "expectedProperties": {
+      "Amount": "0.0627",
+      "PaymentMethodId": "XMR-CHAIN",
+      "Currency": "XMR",
+      "Status": "Settled",
+      "Accounted": null
+    }
   }
 ]

@@ -1,23 +1,41 @@
 #nullable enable
 using System.Collections.Generic;
 using BTCPayServer.Payments;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services
 {
     public class PrettyNameProvider
     {
-        private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _extensions;
-
-        public PrettyNameProvider(Dictionary<PaymentMethodId, IPaymentModelExtension> extensions)
+        public record UntranslatedPrettyName(PaymentMethodId PaymentMethodId, string Text);
+        public static string GetTranslationKey(PaymentMethodId paymentMethodId) => $"PrettyName({paymentMethodId})";
+        private readonly IStringLocalizer _stringLocalizer;
+        Dictionary<PaymentMethodId, string> _untranslated = new Dictionary<PaymentMethodId, string>();
+        public PrettyNameProvider(IEnumerable<UntranslatedPrettyName> untranslatedPrettyNames, IStringLocalizer stringLocalizer)
         {
-            _extensions = extensions;
+            _stringLocalizer = stringLocalizer;
+            foreach (var e in untranslatedPrettyNames)
+                _untranslated.TryAdd(e.PaymentMethodId, e.Text);
         }
-        public string PrettyName(PaymentMethodId paymentMethodId)
+        public string PrettyName(PaymentMethodId paymentMethodId, bool untranslated)
         {
             if (paymentMethodId is null)
                 return "<NULL>";
-            _extensions.TryGetValue(paymentMethodId, out var n);
-            return n?.DisplayName ?? paymentMethodId.ToString();
+            if (untranslated)
+            {
+                if (_untranslated.TryGetValue(paymentMethodId, out var v))
+                    return v;
+                return paymentMethodId.ToString();
+            }
+            else
+            {
+                var key = GetTranslationKey(paymentMethodId);
+                var result = _stringLocalizer[key]?.Value;
+                if (string.IsNullOrEmpty(result) || result == key)
+                    return paymentMethodId.ToString();
+                return result;
+            }
         }
+        public string PrettyName(PaymentMethodId paymentMethodId) => PrettyName(paymentMethodId, false);
     }
 }

@@ -60,7 +60,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 PayoutMethodId = data.PayoutMethodId,
                 IntervalSeconds = blob.Interval,
-                CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
             };
         }
@@ -69,7 +68,6 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return new LightningAutomatedPayoutBlob() { 
                 Interval = data.IntervalSeconds, 
-                CancelPayoutAfterFailures = data.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = data.ProcessNewPayoutsInstantly
             };
         }

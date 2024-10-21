@@ -9,7 +9,7 @@
 
 <div class="sticky-header">
     <h2>
-        <span>@ViewData["Title"]</span>
+        <span text-translate="true">@ViewData["Title"]</span>
         <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
             <vc:icon symbol="info" />
         </a>
@@ -27,8 +27,8 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Name</th>
-                            <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
+                            <th text-translate="true">Name</th>
+                            <th text-translate="true" class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -40,8 +40,8 @@
                                     <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" not-permission="@Policies.CanModifyStoreSettings">@item.Name</a>
                                 </td>
                                 <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
-                                    <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="DELETE">Remove</a> - 
-                                    <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name">View</a>
+                                    <a asp-action="Remove" asp-route-storeId="@item.StoreId" asp-route-id="@item.Id" id="Remove-@item.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal"  data-confirm-input="DELETE" text-translate="true">Remove</a> - 
+                                    <a asp-action="ViewPublicForm" asp-route-formId="@item.Id" id="View-@item.Name" text-translate="true">View</a>
                                 </td>
                             </tr>
                         }
@@ -51,7 +51,7 @@
         }
         else
         {
-            <p class="text-secondary">
+            <p class="text-secondary" text-translate="true">
                 There are no forms yet.
             </p>
         }

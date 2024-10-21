@@ -1,11 +1,22 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Rating
 {
     public class CurrencyPair
     {
+        private static readonly HashSet<string> _knownCurrencies;
+
+        static CurrencyPair()
+        {
+            var prov = new AssemblyCurrencyDataProvider(typeof(BTCPayServer.Rating.BidAsk).Assembly, "BTCPayServer.Rating.Currencies.json");
+            // It's OK this is sync function
+            _knownCurrencies = prov.LoadCurrencyData(default).GetAwaiter().GetResult()
+                .Select(c => c.Code).ToHashSet(StringComparer.OrdinalIgnoreCase);
+        }
         public CurrencyPair(string left, string right)
         {
             ArgumentNullException.ThrowIfNull(right);
@@ -49,10 +60,9 @@ namespace BTCPayServer.Rating
                 for (int i = 3; i < 5; i++)
                 {
                     var potentialCryptoName = currencyPair.Substring(0, i);
-                    var currency = CurrencyNameTable.Instance.GetCurrencyData(potentialCryptoName, false);
-                    if (currency != null)
+                    if (_knownCurrencies.Contains(potentialCryptoName))
                     {
-                        value = new CurrencyPair(currency.Code, currencyPair.Substring(i));
+                        value = new CurrencyPair(potentialCryptoName, currencyPair.Substring(i));
                         return true;
                     }
                 }

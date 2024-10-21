@@ -5,6 +5,9 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using Newtonsoft.Json;
 
@@ -18,14 +21,74 @@ namespace BTCPayServer.Services.Rates
         public string Symbol { get; set; }
         public bool Crypto { get; set; }
     }
-    public class CurrencyNameTable
+    public interface CurrencyDataProvider
     {
-        public static CurrencyNameTable Instance = new();
-        public CurrencyNameTable()
+        Task<CurrencyData[]> LoadCurrencyData(CancellationToken cancellationToken);
+    }
+    public class InMemoryCurrencyDataProvider : CurrencyDataProvider
+    {
+        private readonly CurrencyData[] _currencyData;
+
+        public InMemoryCurrencyDataProvider(CurrencyData[] currencyData)
         {
-            _Currencies = LoadCurrency().ToDictionary(k => k.Code, StringComparer.InvariantCultureIgnoreCase);
+            _currencyData = currencyData;
         }
 
+        public Task<CurrencyData[]> LoadCurrencyData(CancellationToken cancellationToken) => Task.FromResult(_currencyData);
+    }
+    public class AssemblyCurrencyDataProvider : CurrencyDataProvider
+    {
+        private readonly Assembly _assembly;
+        private readonly string _manifestResourceStream;
+
+        public AssemblyCurrencyDataProvider(Assembly assembly, string manifestResourceStream)
+        {
+            _assembly = assembly;
+            _manifestResourceStream = manifestResourceStream;
+        }
+        public Task<CurrencyData[]> LoadCurrencyData(CancellationToken cancellationToken)
+        {
+            var stream = _assembly.GetManifestResourceStream(_manifestResourceStream);
+            if (stream is null)
+                throw new InvalidOperationException("Unknown manifestResourceStream");
+            string content = null;
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                content = reader.ReadToEnd();
+            }
+
+            var currencies = JsonConvert.DeserializeObject<CurrencyData[]>(content);
+            return Task.FromResult(currencies.ToArray());
+        }
+    }
+    public class CurrencyNameTable
+    {
+        public CurrencyNameTable(IEnumerable<CurrencyDataProvider> currencyDataProviders, ILogger<CurrencyNameTable> logger)
+        {
+            _currencyDataProviders = currencyDataProviders;
+            _logger = logger;
+        }
+
+        public async Task ReloadCurrencyData(CancellationToken cancellationToken)
+        {
+            var currencies = new Dictionary<string, CurrencyData>(StringComparer.InvariantCultureIgnoreCase);
+            var loadings = _currencyDataProviders.Select(c => (Task: c.LoadCurrencyData(cancellationToken), Prov: c)).ToList();
+            foreach (var loading in loadings)
+            {
+                try
+                {
+                    foreach (var curr in await loading.Task)
+                    {
+                        currencies.TryAdd(curr.Code, curr);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error loading currency data for " + loading.Prov.GetType().FullName);
+                }
+            }
+            _Currencies = currencies;
+        }
         static readonly Dictionary<string, IFormatProvider> _CurrencyProviders = new();
 
         public NumberFormatInfo GetNumberFormatInfo(string currency, bool useFallback)
@@ -123,20 +186,9 @@ namespace BTCPayServer.Services.Rates
             currencyProviders.TryAdd(code, number);
         }
 
-        readonly Dictionary<string, CurrencyData> _Currencies;
-
-        static CurrencyData[] LoadCurrency()
-        {
-            var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream("BTCPayServer.Rating.Currencies.json");
-            string content = null;
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                content = reader.ReadToEnd();
-            }
-
-            var currencies = JsonConvert.DeserializeObject<CurrencyData[]>(content);
-            return currencies;
-        }
+        Dictionary<string, CurrencyData> _Currencies = new();
+        private readonly IEnumerable<CurrencyDataProvider> _currencyDataProviders;
+        private readonly ILogger<CurrencyNameTable> _logger;
 
         public IEnumerable<CurrencyData> Currencies => _Currencies.Values;
 

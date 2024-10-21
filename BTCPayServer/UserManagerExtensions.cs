@@ -32,6 +32,12 @@ namespace BTCPayServer
             return await userManager.SetInvitationTokenAsync<TUser>(userId, null);
         }
 
+        public static bool HasInvitationToken<TUser>(this UserManager<ApplicationUser> userManager, ApplicationUser user, string? token = null) where TUser : class
+        {
+            var blob = user.GetBlob() ?? new UserBlob();
+            return token == null ? !string.IsNullOrEmpty(blob.InvitationToken) : blob.InvitationToken == token;
+        }
+
         private static async Task<bool> SetInvitationTokenAsync<TUser>(this UserManager<ApplicationUser> userManager, string userId, string? token) where TUser : class
         {
             var user = await userManager.FindByIdAsync(userId);

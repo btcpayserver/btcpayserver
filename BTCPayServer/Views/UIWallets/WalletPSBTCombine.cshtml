@@ -21,7 +21,7 @@
 }
 
 <header class="text-center">
-    <h1>@ViewData["Title"]</h1>
+    <h1 text-translate="true">@ViewData["Title"]</h1>
 </header>
 
 <form class="form-group" method="post" asp-action="WalletPSBTCombine" asp-route-walletId="@Context.GetRouteValue("walletId")" enctype="multipart/form-data">
@@ -37,5 +37,5 @@
         <label asp-for="UploadedPSBTFile" class="form-label"></label>
         <input type="file" class="form-control" asp-for="UploadedPSBTFile">
     </div>
-    <button id="Submit" type="submit" class="btn btn-primary">Combine</button>
+    <button id="Submit" type="submit" class="btn btn-primary" text-translate="true">Combine</button>
 </form>

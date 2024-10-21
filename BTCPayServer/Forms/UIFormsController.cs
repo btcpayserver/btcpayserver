@@ -20,6 +20,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
@@ -32,9 +33,11 @@ public class UIFormsController : Controller
     private readonly IAuthorizationService _authorizationService;
     private readonly StoreRepository _storeRepository;
     private FormComponentProviders FormProviders { get; }
+    private IStringLocalizer StringLocalizer { get; }
 
     public UIFormsController(FormComponentProviders formProviders, FormDataService formDataService,
         UriResolver uriResolver,
+        IStringLocalizer stringLocalizer,
         StoreRepository storeRepository, IAuthorizationService authorizationService)
     {
         FormProviders = formProviders;
@@ -42,6 +45,7 @@ public class UIFormsController : Controller
         _uriResolver = uriResolver;
         _authorizationService = authorizationService;
         _storeRepository = storeRepository;
+        StringLocalizer = stringLocalizer;
     }
 
     [HttpGet("~/stores/{storeId}/forms")]
@@ -137,7 +141,7 @@ public class UIFormsController : Controller
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
-            Message = "Form removed"
+            Message = StringLocalizer["Form removed"].Value
         });
         return RedirectToAction("FormsList", new { storeId });
     }
@@ -224,10 +228,10 @@ public class UIFormsController : Controller
         }
         catch (Exception e)
         {
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = "Could not generate invoice: "+ e.Message
+                Message = StringLocalizer["Could not generate invoice: {0}", e.Message].Value
             });
             return await GetFormView(formData, form);
         }

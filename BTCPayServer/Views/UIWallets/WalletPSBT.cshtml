@@ -70,7 +70,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3 mx-md-5">You can decode a PSBT by either pasting its content, uploading the file or scanning the wallet QR code.</p>
+    <p class="lead text-secondary mt-3 mx-md-5" text-translate="true">You can decode a PSBT by either pasting its content, uploading the file or scanning the wallet QR code.</p>
 </header>
 
 <div class="my-5">
@@ -101,8 +101,8 @@
             <input asp-for="UploadedPSBTFile" type="file" class="form-control">
         </div>
         <div class="d-flex">
-            <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode">Decode PSBT</button>
-            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+            <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode" text-translate="true">Decode PSBT</button>
+            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal" text-translate="true">Scan wallet QR with camera</button>
         </div>
     </form>
 </div>

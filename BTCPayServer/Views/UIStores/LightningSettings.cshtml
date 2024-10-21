@@ -43,10 +43,11 @@
                        asp-route-cryptoCode="@Model.CryptoCode"
                        asp-route-storeId="@Model.StoreId"
                        target="_blank"
-                       id="PublicNodeInfo">
+                       id="PublicNodeInfo"
+                       text-translate="true">
                         Public Node Info
                     </a>
-                    <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink">
+                    <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink" text-translate="true">
                         Change connection
                     </a>
                 </div>
@@ -77,13 +78,13 @@
                         <label asp-for="LightningDescriptionTemplate" class="form-label"></label>
                         <input asp-for="LightningDescriptionTemplate" class="form-control"/>
                         <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
-                        <div class="form-text">
+                        <div class="form-text" html-translate="true">
                             Available placeholders:
                             <code>{StoreName} {ItemDescription} {OrderId}</code>
                         </div>
                     </div>
                     
-                    <h3 class="mt-5 mb-3" id="ln-url">LNURL</h3>
+                    <h3 class="mt-5 mb-3" id="ln-url" text-translate="true">LNURL</h3>
                     <div class="form-group d-flex align-items-center">
                         <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
                         <label asp-for="LNURLEnabled" class="form-check-label"></label>
@@ -96,7 +97,7 @@
                                 <div>
                                     <label asp-for="LNURLBech32Mode" class="form-check-label"></label>
                                     <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
-                                    <div class="form-text">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</div>
+                                    <div class="form-text" text-translate="true">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</div>
                                 </div>
                             </label>
                         </div>

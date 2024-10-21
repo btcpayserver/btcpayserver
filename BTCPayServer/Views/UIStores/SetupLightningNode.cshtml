@@ -6,7 +6,7 @@
 
 @{
     Layout = "_LayoutWalletSetup.cshtml";
-    ViewData.SetActivePage(StoreNavPages.LightningSettings, "Connect to a Lightning node", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.LightningSettings, StringLocalizer["Connect to a Lightning node"], Context.GetStoreData().Id);
 }
 
 @section PageHeadContent {
@@ -33,10 +33,10 @@
 <form method="post" class="mt-n2 text-center">
     <div id="LightningNodeTypeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-3" role="tablist">
         <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" data-bs-toggle="pill" data-bs-target="#InternalSetup" role="tab" aria-controls="InternalSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Internal ? "true" : "false")" class="@(Model.LightningNodeType == LightningNodeType.Internal ? "active" : "")" disabled="@(!Model.CanUseInternalNode)">
-        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")">Use internal node</label>
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")" text-translate="true">Use internal node</label>
         
         <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill" data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")" class="@(Model.LightningNodeType == LightningNodeType.Custom ? "active" : "")">
-        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")">Use custom node</label>
+        <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")" text-translate="true">Use custom node</label>
 
         <vc:ui-extension-point location="ln-payment-method-setup-tabhead" model="@Model"/>
     </div>
@@ -45,24 +45,24 @@
         <div id="InternalSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.Internal ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.Internal">
             @if (Model.CanUseInternalNode)
             {
-                <p class="mb-4">Using the BTCPay Server internal node for this store requires no further configuration. Click the save button below to start accepting Bitcoin through the Lightning Network.</p>
+                <p class="mb-4" text-translate="true">Using the BTCPay Server internal node for this store requires no further configuration. Click the save button below to start accepting Bitcoin through the Lightning Network.</p>
             }
             else
             {
-                <p class="mb-4">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
+                <p class="mb-4" text-translate="true">Your instance administrator has disabled the use of the Internal node for non-admin users.</p>
             }
         </div>
         <div id="CustomSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.Custom ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.Custom">
             <div class="form-group">
-                <label asp-for="ConnectionString" class="form-label">Connection configuration for your custom Lightning node:</label>
+                <label asp-for="ConnectionString" class="form-label" text-translate="true">Connection configuration for your custom Lightning node:</label>
                 <div class="d-sm-flex">
                     <input asp-for="ConnectionString" class="form-control mb-2 me-2" placeholder="type=…;server=…;" value="@(Model.LightningNodeType == LightningNodeType.Internal ? "" : Model.ConnectionString)"/>
-                    <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2">Test connection</button>
+                    <button id="test" name="command" type="submit" value="test" class="btn btn-secondary text-nowrap mb-2" text-translate="true">Test connection</button>
                 </div>
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
             </div>
             <vc:ui-extension-point location="ln-payment-method-setup-custom" model="@Model"/>
-            <p class="mt-4 mb-2">BTCPay Server currently supports:</p>
+            <p class="mt-4 mb-2" text-translate="true">BTCPay Server currently supports:</p>
             <div class="accordion" id="CustomNodeSupport">
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodeCLightningHeader">

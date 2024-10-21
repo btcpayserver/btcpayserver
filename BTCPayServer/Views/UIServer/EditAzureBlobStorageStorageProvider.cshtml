@@ -7,12 +7,12 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Files">Files</a>
+                <a asp-action="Files" text-translate="true">Files</a>
             </li>
             <li class="breadcrumb-item">
-                <a asp-action="Storage">Storage Provider</a>
+                <a asp-action="Storage" text-translate="true">Storage Provider</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">Provider</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Provider</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
@@ -23,18 +23,18 @@
     <div class="col-xl-10 col-xxl-constrain">
         <form method="post">
             <div class="form-group">
-                <label asp-for="ContainerName" class="form-label">Container Name</label>
+                <label asp-for="ContainerName" class="form-label" text-translate="true">Container Name</label>
                 <input asp-for="ContainerName" class="form-control" />
                 <span asp-validation-for="ContainerName" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="ConnectionString" class="form-label">Connection String</label>
+                <label asp-for="ConnectionString" class="form-label" text-translate="true">Connection String</label>
                 <input asp-for="ConnectionString" class="form-control" />
                 <span asp-validation-for="ConnectionString" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-            <a asp-action="Storage" asp-route-forceChoice="true" class="ms-2">Change Storage provider</a>
+            <button type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
+            <a asp-action="Storage" asp-route-forceChoice="true" class="ms-2" text-translate="true">Change Storage provider</a>
         </form>
     </div>
 </div>

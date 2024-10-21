@@ -13,6 +13,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using NBitcoin;
@@ -152,7 +153,7 @@ namespace BTCPayServer.Payments.Bitcoin
             var paymentMethod = paymentContext.Prompt;
             var onchainMethod = new BitcoinPaymentPromptDetails();
             var blob = paymentContext.StoreBlob;
-
+            onchainMethod.AssetId = GetAssetId();
             onchainMethod.FeeMode = blob.NetworkFeeMode;
             onchainMethod.RecommendedFeeRate = await prepare.GetRecommendedFeeRate;
             switch (onchainMethod.FeeMode)
@@ -175,10 +176,13 @@ namespace BTCPayServer.Payments.Bitcoin
                 var txOut = _Network.NBitcoinNetwork.Consensus.ConsensusFactory.CreateTxOut();
                 txOut.ScriptPubKey =
                     new Key().GetScriptPubKey(accountDerivation.ScriptPubKeyType());
-                var dust = txOut.GetDustThreshold();
-                var amount = paymentMethod.Calculate().Due;
-                if (amount < dust.ToDecimal(MoneyUnit.BTC))
-                    throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable an off-chain (Lightning) payment method");
+                if (Network is not ElementsBTCPayNetwork { IsNativeAsset: false })
+                {
+                    var dust = txOut.GetDustThreshold();
+                    var amount = paymentMethod.Calculate().Due;
+                    if (amount < dust.ToDecimal(MoneyUnit.BTC))
+                        throw new PaymentMethodUnavailableException("Amount below the dust threshold. For amounts of this size, it is recommended to enable an off-chain (Lightning) payment method");
+                }
             }
 
             var reserved = await prepare.ReserveAddress;
@@ -206,6 +210,11 @@ namespace BTCPayServer.Payments.Bitcoin
             }
 
             paymentMethod.Details = JObject.FromObject(onchainMethod, Serializer);
+        }
+
+        private uint256 GetAssetId()
+        {
+            return Network is ElementsBTCPayNetwork e ? e.AssetId : null;
         }
 
         public static DerivationStrategyBase GetAccountDerivation(JToken activationData, BTCPayNetwork network)

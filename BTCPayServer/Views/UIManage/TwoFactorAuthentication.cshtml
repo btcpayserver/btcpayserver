@@ -9,14 +9,14 @@
 <partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
-        <p>
+        <p text-translate="true">
             Two-Factor Authentication (2FA) is an additional measure to protect your account.
             In addition to your password you will be asked for a second proof on login.
             This can be provided by an app (such as Google or Microsoft Authenticator)
             or a security device (like a Yubikey or your hardware wallet supporting FIDO2).
         </p>
 
-        <h4 class="mb-3">App-based 2FA</h4>
+        <h4 class="mb-3" text-translate="true">App-based 2FA</h4>
 
         @if (Model.Is2faEnabled)
         {
@@ -25,7 +25,7 @@
                 <div class="alert alert-danger">
                     <h4 class="alert-heading mb-3">
                         <vc:icon symbol="warning" />
-                        You have no recovery codes left.
+                        <span text-translate="true">You have no recovery codes left.</span>
                     </h4>
                     <p class="mb-0">You must <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a> before you can log in with a recovery code.</p>
                 </div>
@@ -35,7 +35,7 @@
                 <div class="alert alert-danger">
                     <h4 class="alert-heading mb-3">
                         <vc:icon symbol="warning" />
-                        You only have 1 recovery code left.
+                        <span text-translate="true">You only have 1 recovery code left.</span>
                     </h4>
                     <p class="mb-0">You can <a asp-action="GenerateRecoveryCodes" class="alert-link">generate a new set of recovery codes</a>.</p>
                 </div>
@@ -57,29 +57,29 @@
             {
                 <a asp-action="Disable2fa" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Disable two-factor authentication (2FA)" data-description="Disabling 2FA does not change the keys used in the authenticator apps. If you wish to change the key used in an authenticator app you should reset your authenticator keys." data-confirm="Disable" data-confirm-input="DISABLE">
                     <div>
-                        <h5>Disable 2FA</h5>
-                        <p class="mb-0 me-3">Re-enabling will not require you to reconfigure your app.</p>
+                        <h5 text-translate="true">Disable 2FA</h5>
+                        <p class="mb-0 me-3" text-translate="true">Re-enabling will not require you to reconfigure your app.</p>
                     </div>
                     <vc:icon symbol="caret-right"/>
                 </a>
                 <a asp-action="GenerateRecoveryCodes" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Reset recovery codes" data-description="Your existing recovery codes will no longer be valid!" data-confirm="Reset" data-confirm-input="RESET">
                     <div>
-                        <h5>Reset recovery codes</h5>
-                        <p class="mb-0 me-3">Regenerate your 2FA recovery codes.</p>
+                        <h5 text-translate="true">Reset recovery codes</h5>
+                        <p class="mb-0 me-3" text-translate="true">Regenerate your 2FA recovery codes.</p>
                     </div>
                     <vc:icon symbol="caret-right"/>
                 </a>
                 <a asp-action="ResetAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Reset authenticator app" data-description="This process disables 2FA until you verify your authenticator app and will also reset your 2FA recovery codes. If you do not complete your authenticator app configuration you may lose access to your account." data-confirm="Reset" data-confirm-input="RESET">
                     <div>
-                        <h5>Reset app</h5>
-                        <p class="mb-0 me-3">Invalidates the current authenticator configuration. Useful if you believe your authenticator settings were compromised.</p>
+                        <h5 text-translate="true">Reset app</h5>
+                        <p class="mb-0 me-3" text-translate="true">Invalidates the current authenticator configuration. Useful if you believe your authenticator settings were compromised.</p>
                     </div>
                     <vc:icon symbol="caret-right"/>
                 </a>
                 <a asp-action="EnableAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
                     <div>
-                        <h5>Configure app</h5>
-                        <p class="mb-0 me-3">Display the key or QR code to configure an authenticator app with your current setup.</p>
+                        <h5 text-translate="true">Configure app</h5>
+                        <p class="mb-0 me-3" text-translate="true">Display the key or QR code to configure an authenticator app with your current setup.</p>
                     </div>
                     <vc:icon symbol="caret-right"/>
                 </a>
@@ -88,15 +88,15 @@
             {
                 <a asp-action="EnableAuthenticator" class="list-group-item d-flex justify-content-between align-items-center list-group-item-action py-3">
                     <div>
-                        <h5>Enable 2FA</h5>
-                        <p class="mb-0 me-3">Using apps such as Google or Microsoft Authenticator.</p>
+                        <h5 text-translate="true">Enable 2FA</h5>
+                        <p class="mb-0 me-3" text-translate="true">Using apps such as Google or Microsoft Authenticator.</p>
                     </div>
                     <vc:icon symbol="caret-right"/>
                 </a>
             }
         </div>
 
-        <h4 class="mt-4 mb-3">Security devices</h4>
+        <h4 class="mt-4 mb-3" text-translate="true">Security devices</h4>
 
         @if (Model.Credentials.Any())
         {
@@ -110,21 +110,21 @@
                             @switch (device.Type)
                             {
                                 case Fido2Credential.CredentialType.FIDO2:
-                                    <span class="text-muted">Security device (FIDO2)</span>
+                                    <span class="text-muted" text-translate="true">Security device (FIDO2)</span>
                                     break;
                                 case Fido2Credential.CredentialType.LNURLAuth:
-                                    <span class="text-muted">Lightning node (LNURL Auth)</span>
+                                    <span class="text-muted" text-translate="true">Lightning node (LNURL Auth)</span>
                                     break;
                             }
                         </div>
 
                         @if (device.Type == Fido2Credential.CredentialType.FIDO2)
                         {
-                            <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove security device" data-description="Your account will no longer have the security device <strong>@Html.Encode(name)</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                            <a asp-controller="UIFido2" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove security device" data-description="Your account will no longer have the security device <strong>@Html.Encode(name)</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE" text-translate="true">Remove</a>
                         }
                         else if (device.Type == Fido2Credential.CredentialType.LNURLAuth)
                         {
-                            <a asp-controller="UILNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove Lightning security" data-description="Your account will no longer be linked to the lightning node <strong>@Html.Encode(name)</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE">Remove</a>
+                            <a asp-controller="UILNURLAuth" asp-action="Remove" asp-route-id="@device.Id" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Remove Lightning security" data-description="Your account will no longer be linked to the lightning node <strong>@Html.Encode(name)</strong> as an option for two-factor authentication." data-confirm="Remove" data-confirm-input="REMOVE" text-translate="true">Remove</a>
                         }
                     </div>
                 }
@@ -135,7 +135,7 @@
             <div class="input-group">
                 <input type="text" class="form-control" name="Name" placeholder="Security device name"/>
                 <select asp-items="@Html.GetEnumSelectList<Fido2Credential.CredentialType>()" class="form-select w-auto" name="type"></select>
-                <button id="btn-add" type="submit" class="btn btn-primary">
+                <button id="btn-add" type="submit" class="btn btn-primary" text-translate="true">
                     Add 
                 </button>
             </div>

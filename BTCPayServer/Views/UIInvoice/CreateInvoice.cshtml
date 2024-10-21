@@ -32,9 +32,9 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId">Invoices</a>
+                    <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" text-translate="true">Invoices</a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
             </ol>
             <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
@@ -91,29 +91,29 @@
             <div class="form-group">
                 <label asp-for="DefaultPaymentMethod" class="form-label"></label>
                 <select asp-for="DefaultPaymentMethod" asp-items="Model.AvailablePaymentMethods" class="form-select">
-                    <option value="" selected>Use the store’s default</option>
+                    <option value="" selected text-translate="true">Use the store’s default</option>
                 </select>
                 <span asp-validation-for="DefaultPaymentMethod" class="text-danger"></span>
             </div>
-            <h4 class="mt-5 mb-4">Customer Information</h4>
+            <h4 class="mt-5 mb-4" text-translate="true">Customer Information</h4>
             <div class="form-group">
                 <label asp-for="BuyerEmail" class="form-label"></label>
                 <input asp-for="BuyerEmail" class="form-control"/>
                 <span asp-validation-for="BuyerEmail" class="text-danger"></span>
             </div>
 
-            <h4 class="mt-5 mb-2">Additional Options</h4>
+            <h4 class="mt-5 mb-2" text-translate="true">Additional Options</h4>
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-pos-data-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-pos-data" aria-expanded="false" aria-controls="additional-pos-data">
-                                Metadata
+                                <span text-translate="true">Metadata</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
                         <div id="additional-pos-data" class="accordion-collapse collapse" aria-labelledby="additional-pos-data-header">
-                            <p>Custom data to expand the invoice. This data is a JSON object, e.g. <code>{ "orderId": 615, "product": "Pizza" }</code></p>
+                            <p html-translate="true">Custom data to expand the invoice. This data is a JSON object, e.g. <code>{ "orderId": 615, "product": "Pizza" }</code></p>
                             <div class="form-group">
                                 <label asp-for="Metadata" class="form-label"></label>
                                 <textarea asp-for="Metadata" class="form-control" rows="10" cols="40"></textarea>
@@ -124,7 +124,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-notifications-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notifications" aria-expanded="false" aria-controls="additional-notifications">
-                                Invoice Notifications
+                                <span text-translate="true">Invoice Notifications</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -139,7 +139,7 @@
                                     <label asp-for="NotificationEmail" class="form-label"></label>
                                     <input asp-for="NotificationEmail" class="form-control" />
                                     <span asp-validation-for="NotificationEmail" class="text-danger"></span>
-                                    <div id="InvoiceEmailHelpBlock" class="form-text">Receive updates for this invoice.</div>
+                                    <div id="InvoiceEmailHelpBlock" class="form-text" text-translate="true">Receive updates for this invoice.</div>
                                 </div>
                             </div>
                         </div>

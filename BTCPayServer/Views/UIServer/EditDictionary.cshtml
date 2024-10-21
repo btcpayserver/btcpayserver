@@ -10,15 +10,15 @@
 		<nav aria-label="breadcrumb">
 			<ol class="breadcrumb">
 				<li class="breadcrumb-item">
-					<a asp-action="ListDictionaries">Dictionaries</a>
+					<a asp-action="ListDictionaries" text-translate="true">Dictionaries</a>
 				</li>
-				<li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+				<li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
 			</ol>
 			<h2 text-translate="true">@ViewData["Title"]</h2>
 		</nav>
 		<div>
-			<button cheat-mode="true" class="btn btn-outline-info" name="command" value="Fake">Fill fake</button>
-			<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
+			<button cheat-mode="true" class="btn btn-outline-info" name="command" value="Fake" text-translate="true">Fill fake</button>
+			<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
 		</div>
 	</div>
 	<partial name="_StatusMessage" />
@@ -26,17 +26,16 @@
 	<div class="d-flex mb-4">
 		<div class="flex-fill">
 			<p>
-
 				Translations are formatted as JSON <b>{ "Key": "Translation", "Key2": "Translation2" }</b>; for example, <b>{ "Welcome": "Bienvenue" }</b> translates <b>Welcome</b> to <b>Bienvenue</b>.
 			</p>
-			<p class="mb-0">
+			<p class="mb-0" text-translate="true">
 				To use the translation from this dictionary's fallback, you can:
-				<ul>
-					<li>Remove the translation from this dictionary.</li>
-					<li>Set the translation to match the string in the fallback.</li>
-				</ul>
 			</p>
-			<p class="mb-0">Please note that not all text is translatable, and future updates may modify existing translations or introduce new translatable phrases.</p>
+            <ul>
+                <li text-translate="true">Remove the translation from this dictionary.</li>
+                <li text-translate="true">Set the translation to match the string in the fallback.</li>
+            </ul>
+			<p class="mb-0" text-translate="true">Please note that not all text is translatable, and future updates may modify existing translations or introduce new translatable phrases.</p>
 		</div>
 	</div>
 

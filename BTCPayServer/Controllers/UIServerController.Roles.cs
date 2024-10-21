@@ -67,12 +67,12 @@ namespace BTCPayServer.Controllers
             string successMessage = null;
             if (role == "create")
             {
-                successMessage = "Role created";
+                successMessage = StringLocalizer["Role created"];
                 role = viewModel.Role;
             }
             else
             {
-                successMessage = "Role updated";
+                successMessage = StringLocalizer["Role updated"];
                 var storeRole = await _StoreRepository.GetStoreRole(new StoreRoleId(role));
                 if (storeRole == null)
                     return NotFound();
@@ -86,15 +86,15 @@ namespace BTCPayServer.Controllers
             var r = await _StoreRepository.AddOrUpdateStoreRole(new StoreRoleId(role), viewModel.Policies);
             if (r is null)
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Role could not be updated"
+                    Message = StringLocalizer["Role could not be updated"].Value
                 });
                 return View(viewModel);
             }
 
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 Message = successMessage
@@ -114,11 +114,11 @@ namespace BTCPayServer.Controllers
 
             return View("Confirm",
                 roleData.IsUsed is true
-                    ? new ConfirmModel("Delete role",
+                    ? new ConfirmModel(StringLocalizer["Delete role"],
                         $"Unable to proceed: The role <strong>{Html.Encode(roleData.Role)}</strong> is currently assigned to one or more users, it cannot be removed.")
-                    : new ConfirmModel("Delete role",
+                    : new ConfirmModel(StringLocalizer["Delete role"],
                         $"The role <strong>{Html.Encode(roleData.Role)}</strong> will be permanently deleted. Are you sure?",
-                        "Delete"));
+                        StringLocalizer["Delete"]));
         }
 
         [HttpPost("server/roles/{role}/delete")]
@@ -137,7 +137,7 @@ namespace BTCPayServer.Controllers
             if (errorMessage is null)
             {
                 
-                TempData[WellKnownTempData.SuccessMessage] = "Role deleted";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Role deleted"].Value;
             }
             else
             {
@@ -153,12 +153,12 @@ namespace BTCPayServer.Controllers
             var resolved = await _StoreRepository.ResolveStoreRoleId(null, role);
             if (resolved is null)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Role could not be set as default";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Role could not be set as default"].Value;
             }
             else
             {
                 await _StoreRepository.SetDefaultRole(role);
-                TempData[WellKnownTempData.SuccessMessage] = "Role set default";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Role set default"].Value;
             }
             
             return RedirectToAction(nameof(ListRoles));

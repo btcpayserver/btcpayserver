@@ -10,7 +10,7 @@
         await StoreRepository.GetStoreRoles(storeId),
         nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),
         Model.Role);
-    ViewData.SetActivePage(StoreNavPages.Users, "Store Users", storeId);
+    ViewData.SetActivePage(StoreNavPages.Users, StringLocalizer["Store Users"], storeId);
 }
 @section PageHeadContent {
     <style>
@@ -37,17 +37,17 @@
         <form method="post" class="d-flex flex-wrap align-items-center gap-3" permission="@Policies.CanModifyStoreSettings">
             <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com" style="flex: 1 1 14rem">
             <select asp-for="Role" class="form-select" asp-items="roles"></select>
-            <button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddUser">Add User</button>
+            <button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddUser" text-translate="true">Add User</button>
         </form>
 
         <div class="table-responsive-md">
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th>Email</th>
-                    <th>Name</th>
-                    <th>Role</th>
-                    <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
+                    <th text-translate="true">Email</th>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true">Role</th>
+                    <th class="actions-col" permission="@Policies.CanModifyStoreSettings"></th>
                 </tr>
                 </thead>
                 <tbody id="StoreUsersList">
@@ -59,8 +59,8 @@
                         <td>@user.Role</td>
                         <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                             <div class="d-inline-flex align-items-center gap-3">
-                                <a asp-action="UpdateStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#EditModal" data-user-email="@user.Email" data-user-role="@user.Role">Change Role</a>
-                                <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@Html.Encode(user.Email)</strong> from accessing this store and its settings." data-confirm-input="REMOVE">Remove</a>
+                                <a asp-action="UpdateStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#EditModal" data-user-email="@user.Email" data-user-role="@user.Role" text-translate="true">Change Role</a>
+                                <a asp-action="DeleteStoreUser" asp-route-storeId="@Model.StoreId" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="This action will prevent <strong>@Html.Encode(user.Email)</strong> from accessing this store and its settings." data-confirm-input="REMOVE" text-translate="true">Remove</a>
                             </div>
                         </td>
                     </tr>
@@ -77,19 +77,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <div class="modal-header">
-                <h4 class="modal-title" id="EditTitle">Edit <span id="EditUserEmail">store user</span></h4>
+                <h4 class="modal-title" id="EditTitle"><span text-translate="true">Edit</span> <span id="EditUserEmail">store user</span></h4>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
                     <vc:icon symbol="close" />
                 </button>
             </div>
     		<form id="EditForm" method="post" rel="noreferrer noopener">
                 <div class="modal-body">
-                    <label asp-for="Role" for="EditUserRole" class="form-label">New role</label>
+                    <label asp-for="Role" for="EditUserRole" class="form-label" text-translate="true">New role</label>
                     <select asp-for="Role" id="EditUserRole" class="form-select w-auto" asp-items="roles"></select>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="EditCancel">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="EditContinue">Change Role</button>
+                    <button type="button" class="btn btn-secondary only-for-js" data-bs-dismiss="modal" id="EditCancel" text-translate="true">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="EditContinue" text-translate="true">Change Role</button>
                 </div>
             </form>
         </div>

@@ -10,7 +10,10 @@
 <div class="sticky-header">
 	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
 </div>
-<p>Payout Processors allow BTCPay Server to handle payouts in an automated way.</p>
+
+<partial name="_StatusMessage" />
+
+<p text-translate="true">Payout Processors allow BTCPay Server to handle payouts in an automated way.</p>
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
@@ -22,7 +25,7 @@
                 <table class="table table-hover mt-0">
                     <thead>
                     <tr>
-                        <th>Payment Method</th>
+                        <th text-translate="true">Payment Method</th>
                         <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
                     </tr>
                     </thead>
@@ -36,16 +39,16 @@
                             <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                                 @if (conf.Value is null)
                                 {
-                                    <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Configure</a>
+                                    <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)" text-translate="true">Configure</a>
                                 }
                                 else
                                 {
-                                    <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)">Modify</a>
+                                    <a href="@processorsView.Factory.ConfigureLink(storeId, conf.Key, Context.Request)" text-translate="true">Modify</a>
                                     
                                     @if (await processorsView.Factory.CanRemove())
                                     {
                                         <span>-</span>
-											<a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @Html.Encode(processorsView.Factory.FriendlyName) (@Html.Encode(conf.Key.ToString())) will be removed from your store.">Remove</a>
+											<a asp-action="Remove" asp-route-storeId="@storeId" asp-route-id="@conf.Value.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The @Html.Encode(processorsView.Factory.FriendlyName) (@Html.Encode(conf.Key.ToString())) will be removed from your store." text-translate="true">Remove</a>
                                     }
                                 }
                             </td>
@@ -57,7 +60,7 @@
         }
         else
         {
-            <p class="text-secondary mt-3">
+            <p class="text-secondary mt-3" text-translate="true">
                 There are no processors available.
             </p>
         }

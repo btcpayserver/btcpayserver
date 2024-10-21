@@ -213,9 +213,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                     }
                     string txId = paymentEntity.Id;
 
-                    // TODO: Move that in an extension
-                    var cryptoCode = handlers.TryGetNetwork(paymentMethodId)?.CryptoCode;
-                    string link = cryptoCode is null ? null : txLinkProvider.GetTransactionLink(cryptoCode, txId);
+                    string link = paymentMethodId is null ? null : txLinkProvider.GetTransactionLink(paymentMethodId, txId);
 
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
                     {
@@ -228,8 +226,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
                         PaymentMethod = paymentMethodId.ToString(),
                         Link = link,
                         Id = txId,
-                        Destination = paymentEntity.Destination,
-                        //PaymentProof = paymentData.GetPaymentProof()
+                        Destination = paymentEntity.Destination
                     };
                 })
                 .Where(payment => payment != null)

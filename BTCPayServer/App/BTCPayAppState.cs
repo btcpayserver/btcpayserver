@@ -300,9 +300,9 @@ public class BTCPayAppState : IHostedService
 
     private async Task OnNewTransaction(NewOnChainTransactionEvent obj)
     {
-        if (obj.CryptoCode != "BTC") return;
+        if (!obj.PaymentMethodId.ToString().StartsWith("BTC")) return;
         var identifier = obj.NewTransactionEvent.TrackedSource.ToString()!;
-        var explorer = _explorerClientProvider.GetExplorerClient(obj.CryptoCode);
+        var explorer = _explorerClientProvider.GetExplorerClient("BTC");
         var expandedTx = await explorer.GetTransactionAsync(obj.NewTransactionEvent.TrackedSource,
             obj.NewTransactionEvent.TransactionData.TransactionHash);
         await _hubContext.Clients

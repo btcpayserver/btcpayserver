@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client.Models;
@@ -35,7 +36,7 @@ namespace BTCPayServer.Plugins.Crowdfund
 
         public override void Execute(IServiceCollection services)
         {
-            services.AddSingleton<IUIExtension>(new UIExtension("Crowdfund/NavExtension", "header-nav"));
+            services.AddUIExtension("header-nav", "Crowdfund/NavExtension");
             services.AddSingleton<CrowdfundAppType>();
             services.AddSingleton<AppBaseType, CrowdfundAppType>();
 
@@ -49,22 +50,28 @@ namespace BTCPayServer.Plugins.Crowdfund
         private readonly IOptions<BTCPayServerOptions> _options;
         private readonly DisplayFormatter _displayFormatter;
         private readonly CurrencyNameTable _currencyNameTable;
+        private readonly UriResolver _uriResolver;
         private readonly InvoiceRepository _invoiceRepository;
+        private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly PrettyNameProvider _prettyNameProvider;
         public const string AppType = "Crowdfund";
 
         public CrowdfundAppType(
             LinkGenerator linkGenerator,
             IOptions<BTCPayServerOptions> options,
+            UriResolver uriResolver,
             InvoiceRepository invoiceRepository,
             PrettyNameProvider prettyNameProvider,
             DisplayFormatter displayFormatter,
+            IHttpContextAccessor httpContextAccessor,
             CurrencyNameTable currencyNameTable)
         {
             Description = Type = AppType;
             _linkGenerator = linkGenerator;
             _options = options;
+            _uriResolver = uriResolver;
             _displayFormatter = displayFormatter;
+            _httpContextAccessor = httpContextAccessor;
             _currencyNameTable = currencyNameTable;
             _invoiceRepository = invoiceRepository;
             _prettyNameProvider = prettyNameProvider;
@@ -186,12 +193,11 @@ namespace BTCPayServer.Plugins.Crowdfund
                 ? _linkGenerator.GetPathByAction(nameof(UICrowdfundController.CrowdfundForm), "UICrowdfund",
                     new { appId = appData.Id }, _options.Value.RootPath)
                 : null;
-            return new ViewCrowdfundViewModel
+            var vm =  new ViewCrowdfundViewModel
             {
                 Title = settings.Title,
                 Tagline = settings.Tagline,
                 Description = settings.Description,
-                MainImageUrl = settings.MainImageUrl,
                 StoreName = store.StoreName,
                 StoreId = appData.StoreDataId,
                 AppId = appData.Id,
@@ -230,6 +236,12 @@ namespace BTCPayServer.Plugins.Crowdfund
                     CurrentAmount = currentPayments.TotalCurrency
                 }
             };
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext != null && settings.MainImageUrl != null)
+            {
+                vm.MainImageUrl = await _uriResolver.Resolve(httpContext.Request.GetAbsoluteRootUri(), settings.MainImageUrl);
+            }
+            return vm;
         }
 
         private Dictionary<string, PaymentStat> GetPaymentStats(InvoiceStatistics stats)

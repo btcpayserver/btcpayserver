@@ -31,7 +31,7 @@
                     <span asp-validation-for="SelectedPayoutMethod" class="text-danger"></span>
                 </div>
             
-                <button id="ok" type="submit" class="btn btn-primary w-100">Next</button>
+                <button id="ok" type="submit" class="btn btn-primary w-100" text-translate="true">Next</button>
             }
             break;
             
@@ -56,8 +56,8 @@
                 <div class="form-group">
                     <div class="form-check">
                         <input id="OverpaidAmountOption" asp-for="SelectedRefundOption" type="radio" value="OverpaidAmount" class="form-check-input"/>
-                        <label for="OverpaidAmountOption" class="form-check-label d-flex align-items-center gap-2">@Model.OverpaidAmountText <span class="badge bg-info">Overpaid amount</span></label>
-                        <div class="form-text">The crypto currency amount that was overpaid.</div>
+                        <label for="OverpaidAmountOption" class="form-check-label d-flex align-items-center gap-2">@Model.OverpaidAmountText <span class="badge bg-info" text-translate="true">Overpaid amount</span></label>
+                        <div class="form-text" text-translate="true">The crypto currency amount that was overpaid.</div>
                     </div>
                 </div>
                 <hr class="border" />
@@ -68,7 +68,7 @@
                     <div class="form-check">
                         <input id="RateThenOption" asp-for="SelectedRefundOption" type="radio" value="RateThen" class="form-check-input" />
                         <label for="RateThenOption" class="form-check-label">@Model.RateThenText</label>
-                        <div class="form-text">The crypto currency price, at the rate the invoice got paid.</div>
+                        <div class="form-text" text-translate="true">The crypto currency price, at the rate the invoice got paid.</div>
                     </div>
                 </div>
             }
@@ -78,7 +78,7 @@
                     <div class="form-check">
                         <input id="CurrentRateOption" asp-for="SelectedRefundOption" type="radio" value="CurrentRate" class="form-check-input" />
                         <label for="CurrentRateOption" class="form-check-label">@Model.CurrentRateText</label>
-                        <div class="form-text">The crypto currency price, at the current rate.</div>
+                        <div class="form-text" text-translate="true">The crypto currency price, at the current rate.</div>
                     </div>
                 </div>
             }
@@ -88,7 +88,7 @@
                     <div class="form-check">
                         <input id="FiatOption" asp-for="SelectedRefundOption" type="radio" value="Fiat" class="form-check-input" />
                         <label for="FiatOption" class="form-check-label">@Model.FiatText</label>
-                        <div class="form-text">The invoice currency, at the rate when the refund will be sent.</div>
+                        <div class="form-text" text-translate="true">The invoice currency, at the rate when the refund will be sent.</div>
                     </div>
                 </div>
             }
@@ -96,14 +96,14 @@
                 <div class="form-check">
                     <input id="CustomOption" asp-for="SelectedRefundOption" type="radio" value="Custom" class="form-check-input"/>
                     <label for="CustomOption" class="form-check-label">Custom amount</label>
-                    <div class="form-text">The specified amount with the specified currency, at the rate when the refund will be sent.</div>
+                    <div class="form-text" text-translate="true">The specified amount with the specified currency, at the rate when the refund will be sent.</div>
                     <div class="form-group pt-2 additional-options">
                         <label asp-for="CustomAmount" class="form-label"></label>
                         <div class="input-group">
                             <input asp-for="CustomAmount" type="number" step="any" asp-format="{0}" class="form-control"/>
                             <input asp-for="CustomCurrency" type="text" class="form-control w-auto" currency-selection />
                         </div>
-                        <div class="alert alert-warning my-2" hidden id="CustomAmountWarning" role="alert">
+                        <div class="alert alert-warning my-2" hidden id="CustomAmountWarning" role="alert" text-translate="true">
                             This is an overpayment of the initial amount.
                         </div>
                         <span asp-validation-for="CustomAmount" class="text-danger w-100"></span>
@@ -113,7 +113,7 @@
             </div>
             <hr class="border" />
             <div class="form-group form-check">
-                <label asp-for="SubtractPercentage" class="form-label">
+                <label asp-for="SubtractPercentage" class="form-label" text-translate="true">
                     Optional: Specify the percentage by which to reduce the refund, e.g. as processing charge or to compensate for the mining fee.
                 </label>
                 <div class="input-group">
@@ -124,7 +124,7 @@
                 <span asp-validation-for="SubtractPercentage" class="text-danger w-100"></span>
             </div>
             
-            <button id="ok" type="submit" class="btn btn-primary w-100">Create refund</button>
+            <button id="ok" type="submit" class="btn btn-primary w-100" text-translate="true">Create refund</button>
             break;
     }
 </form>

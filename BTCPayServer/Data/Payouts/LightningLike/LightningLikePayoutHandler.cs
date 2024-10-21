@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -208,5 +209,6 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 "UILightningLikePayout", new { cryptoCode, payoutIds }));
         }
 
+        public ResourceTracker<string> PayoutsPaymentProcessing { get; } = new ResourceTracker<string>();
     }
 }

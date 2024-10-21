@@ -14,10 +14,10 @@
             <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th>Crypto</th>
-                    <th>Account Index</th>
-                    <th class="text-center">Enabled</th>
-                    <th class="text-right">Actions</th>
+                    <th text-translate="true">Crypto</th>
+                    <th text-translate="true">Account Index</th>
+                    <th class="text-center" text-translate="true">Enabled</th>
+                    <th class="text-right" text-translate="true">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -39,7 +39,8 @@
                         <td class="text-right">
                             <a id="Modify" asp-action="GetStoreMoneroLikePaymentMethod"
                                asp-route-storeId="@Context.GetRouteValue("storeId")"
-                               asp-route-cryptoCode="@item.CryptoCode">
+                               asp-route-cryptoCode="@item.CryptoCode"
+                               text-translate="true">
                                 Modify
                             </a>
                         </td>

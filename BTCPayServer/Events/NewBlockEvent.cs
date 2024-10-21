@@ -1,10 +1,13 @@
+using BTCPayServer.Payments;
+
 namespace BTCPayServer.Events
 {
     public class NewBlockEvent:NBXplorer.Models.NewBlockEvent
     {
+        public PaymentMethodId PaymentMethodId { get; set; }
         public override string ToString()
         {
-            return $"{CryptoCode}: New block";
+            return $"{PaymentMethodId}: New block";
         }
     }
 }

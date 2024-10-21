@@ -22,6 +22,7 @@ namespace BTCPayServer.PayoutProcessors;
 public class AutomatedPayoutConstants
 {
     public const double MinIntervalMinutes = 1.0;
+    public const double DefaultIntervalMinutes = 60.0;
     public const double MaxIntervalMinutes = 24 * 60; //1 day
     public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
     {
@@ -115,7 +116,8 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 {
                     States = new[] { PayoutState.AwaitingPayment },
                     PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
-                    Stores = new[] {PayoutProcessorSettings.StoreId}
+					Processor = PayoutProcessorSettings.Processor,
+					Stores = new[] {PayoutProcessorSettings.StoreId}
                 }, context, CancellationToken);
 
             await _pluginHookService.ApplyAction("before-automated-payout-processing",

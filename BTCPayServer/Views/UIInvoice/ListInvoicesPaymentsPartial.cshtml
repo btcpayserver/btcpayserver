@@ -1,5 +1,3 @@
-@using BTCPayServer.Payments
-@inject PaymentMethodViewProvider paymentMethodViewProvider
 @model (InvoiceDetailsModel Invoice, bool ShowAddress)
 @{
     var invoice = Model.Invoice;
@@ -10,10 +8,10 @@
     var usedPaymentMethods = invoice.CryptoPayments.Count(p => p.Paid != null);
     <p class="info-note text-warning">
         <vc:icon symbol="warning"/>
-        This invoice got overpaid.
+        <span text-translate="true">This invoice got overpaid.</span>
         @if (usedPaymentMethods > 1)
         {
-            @("Each payment method shows the total excess amount.")
+            <span text-translate="true">Each payment method shows the total excess amount.</span>
         }
     </p>
 }
@@ -21,25 +19,25 @@
     <table class="table table-hover mb-0">
         <thead>
             <tr>
-                <th class="text-nowrap w-175px">Payment method</th>
+                <th class="text-nowrap w-175px" text-translate="true">Payment method</th>
                 @if (Model.ShowAddress)
                 {
-                    <th>Destination</th>
+                    <th text-translate="true">Destination</th>
                 }
                 @if (invoice.HasRates)
                 {
-                    <th class="w-150px text-end">Rate</th>
+                    <th class="w-150px text-end" text-translate="true">Rate</th>
                 }
-                <th class="w-150px text-end">Total due</th>
+                <th class="w-150px text-end" text-translate="true">Total due</th>
                 @if (invoice.StillDue)
                 {
-                    <th class="w-150px text-end">Still due</th>
+                    <th class="w-150px text-end" text-translate="true">Still due</th>
                 }
                 else if (invoice.Overpaid)
                 {
-                    <th class="w-150px text-end">Overpaid</th>
+                    <th class="w-150px text-end" text-translate="true">Overpaid</th>
                 }
-                <th class="w-150px text-end">Paid</th>
+                <th class="w-150px text-end" text-translate="true">Paid</th>
             </tr>
         </thead>
         <tbody>
@@ -87,14 +85,10 @@
                         }
                     </td>
                 </tr>
-				var vvm = paymentMethodViewProvider.TryGetViewViewModel(payment.PaymentMethodRaw, "AdditionalPaymentMethodDetails");;
-				if (vvm != null)
-                {
-                    <partial name="@((string)vvm.View)" model="@vvm.ViewModel" />
-                }
+				<vc:ui-extension-point location="invoice-payments-list" />
             }
         </tbody>
     </table>
 </div>
 
-<vc:ui-extension-point location="store-invoices-payments" model="@invoice.Payments" />
+<vc:ui-extension-point location="store-invoices-payments" model="@invoice" />

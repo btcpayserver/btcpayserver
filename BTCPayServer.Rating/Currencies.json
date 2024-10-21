@@ -1176,13 +1176,6 @@
       "crypto":true
    },
    {
-      "name":"USDt",
-      "code":"USDT",
-      "divisibility":8,
-      "symbol":null,
-      "crypto":true
-   },
-   {
       "name":"LCAD",
       "code":"LCAD",
       "divisibility":8,
@@ -1314,13 +1307,6 @@
        "divisibility": 18,
        "symbol": null,
        "crypto": true
-   },
-   {
-       "name":"USDt",
-       "code":"USDT20",
-       "divisibility":6,
-       "symbol":null,
-       "crypto":true
    },
    {
        "name":"FaucetToken",

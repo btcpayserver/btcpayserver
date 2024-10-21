@@ -7,6 +7,15 @@
     <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
     <PreserveCompilationContext>true</PreserveCompilationContext>
   </PropertyGroup>
+
+  <ItemGroup>
+    <AssemblyAttribute Include="BTCPayServer.Tests.OutputPathAttribute">
+      <!-- _Parameter1, _Parameter2, etc. correspond to the
+        matching parameter of a constructor of that .NET attribute type -->
+      <_Parameter1>$([System.IO.Path]::Combine('$(MSBuildProjectDirectory)', '$(OutputPath)'))</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
   <!--https://devblogs.microsoft.com/aspnet/testing-asp-net-core-mvc-web-apps-in-memory/-->
   <Target Name="CopyAditionalFiles" AfterTargets="Build" Condition="'$(TargetFramework)'!=''">
     <ItemGroup>
@@ -61,4 +70,7 @@
     <ProjectReference Include="..\BTCPayServer\BTCPayServer.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="obj\Debug\net8.0\" />
+  </ItemGroup>
 </Project>

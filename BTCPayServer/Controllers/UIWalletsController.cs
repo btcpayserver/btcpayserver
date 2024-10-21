@@ -36,6 +36,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -59,6 +60,7 @@ namespace BTCPayServer.Controllers
         private ExplorerClientProvider ExplorerClientProvider { get; }
         public IServiceProvider ServiceProvider { get; }
         public RateFetcher RateFetcher { get; }
+        public IStringLocalizer StringLocalizer { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NBXplorerDashboard _dashboard;
@@ -72,7 +74,7 @@ namespace BTCPayServer.Controllers
         private readonly LabelService _labelService;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly DefaultRulesCollection _defaultRules;
-        private readonly Dictionary<PaymentMethodId, IPaymentModelExtension> _paymentModelExtensions;
+        private readonly Dictionary<PaymentMethodId, ICheckoutModelExtension> _paymentModelExtensions;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
@@ -100,7 +102,8 @@ namespace BTCPayServer.Controllers
                                  LabelService labelService,
                                  DefaultRulesCollection defaultRules,
                                  PaymentMethodHandlerDictionary handlers,
-                                 Dictionary<PaymentMethodId, IPaymentModelExtension> paymentModelExtensions,
+                                 Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
+                                 IStringLocalizer stringLocalizer,
                                  TransactionLinkProviders transactionLinkProviders)
         {
             _currencyTable = currencyTable;
@@ -126,6 +129,7 @@ namespace BTCPayServer.Controllers
             _pullPaymentHostedService = pullPaymentHostedService;
             ServiceProvider = serviceProvider;
             _walletHistogramService = walletHistogramService;
+            StringLocalizer = stringLocalizer;
         }
 
         [HttpPost]
@@ -268,7 +272,7 @@ namespace BTCPayServer.Controllers
                 {
                     var vm = new ListTransactionsViewModel.TransactionViewModel();
                     vm.Id = tx.TransactionId.ToString();
-                    vm.Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, vm.Id);
+                    vm.Link = _transactionLinkProviders.GetTransactionLink(pmi, vm.Id);
                     vm.Timestamp = tx.SeenAt;
                     vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
                     vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
@@ -601,7 +605,7 @@ namespace BTCPayServer.Controllers
                         Amount = coin.Value.GetValue(network),
                         Comment = info?.Comment,
                         Labels = _labelService.CreateTransactionTagModels(info, Request),
-                        Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, coin.OutPoint.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Confirmations = coin.Confirmations
                     };
                 }).ToArray();
@@ -754,7 +758,7 @@ namespace BTCPayServer.Controllers
                     {
                         Destination = new AddressClaimDestination(
                             BitcoinAddress.Create(output.DestinationAddress, network.NBitcoinNetwork)),
-                        Value = output.Amount,
+                        ClaimedAmount = output.Amount,
                         PayoutMethodId = pmi,
                         StoreId = walletId.StoreId,
                         PreApprove = true,
@@ -774,7 +778,7 @@ namespace BTCPayServer.Controllers
                             message = "Payouts scheduled:<br/>";
                         }
 
-                        message += $"{claimRequest.Value} to {claimRequest.Destination.ToString()}<br/>";
+                        message += $"{claimRequest.ClaimedAmount} to {claimRequest.Destination.ToString()}<br/>";
 
                     }
                     else
@@ -788,10 +792,10 @@ namespace BTCPayServer.Controllers
                         switch (response.Result)
                         {
                             case ClaimRequest.ClaimResult.Duplicate:
-                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString()} - address reuse<br/>";
+                                errorMessage += $"{claimRequest.ClaimedAmount} to {claimRequest.Destination.ToString()} - address reuse<br/>";
                                 break;
                             case ClaimRequest.ClaimResult.AmountTooLow:
-                                errorMessage += $"{claimRequest.Value} to {claimRequest.Destination.ToString()} - amount too low<br/>";
+                                errorMessage += $"{claimRequest.ClaimedAmount} to {claimRequest.Destination.ToString()} - amount too low<br/>";
                                 break;
                         }
                     }
@@ -909,18 +913,17 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     address = BitcoinAddress.Create(bip21, network.NBitcoinNetwork);
-                    vm.Outputs.Add(new WalletSendModel.TransactionOutput()
+                    vm.Outputs.Add(new WalletSendModel.TransactionOutput
                     {
                         DestinationAddress = address.ToString()
-                    }
-                    );
+                    });
                 }
                 catch
                 {
-                    TempData.SetStatusMessageModel(new StatusMessageModel()
+                    TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Error,
-                        Message = "The provided BIP21 payment URI was malformed"
+                        Message = StringLocalizer["The provided BIP21 payment URI was malformed"].Value
                     });
                 }
             }
@@ -1257,7 +1260,7 @@ namespace BTCPayServer.Controllers
                         selectedTransactions ??= Array.Empty<string>();
                         if (selectedTransactions.Length == 0)
                         {
-                            TempData[WellKnownTempData.ErrorMessage] = $"No transaction selected";
+                            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["No transaction selected"].Value;
                             return RedirectToAction(nameof(WalletTransactions), new { walletId });
                         }
 
@@ -1288,12 +1291,12 @@ namespace BTCPayServer.Controllers
                             .PruneAsync(derivationScheme.AccountDerivation, new PruneRequest(), cancellationToken);
                         if (result.TotalPruned == 0)
                         {
-                            TempData[WellKnownTempData.SuccessMessage] = "The wallet is already pruned";
+                            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The wallet is already pruned"].Value;
                         }
                         else
                         {
                             TempData[WellKnownTempData.SuccessMessage] =
-                                $"The wallet has been successfully pruned ({result.TotalPruned} transactions have been removed from the history)";
+                                StringLocalizer["The wallet has been successfully pruned ({0} transactions have been removed from the history)", result.TotalPruned].Value;
                         }
 
                         return RedirectToAction(nameof(WalletTransactions), new { walletId });
@@ -1456,11 +1459,11 @@ namespace BTCPayServer.Controllers
             ;
             if (await WalletRepository.RemoveWalletLabels(walletId, labels))
             {
-                TempData[WellKnownTempData.SuccessMessage] = "The label has been successfully removed.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The label has been successfully removed."].Value;
             }
             else
             {
-                TempData[WellKnownTempData.ErrorMessage] = "The label could not be removed.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The label could not be removed."].Value;
             }
 
             return RedirectToAction(nameof(WalletLabels), new { walletId });

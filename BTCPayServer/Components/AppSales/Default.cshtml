@@ -2,23 +2,30 @@
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Plugins.Crowdfund
 @model BTCPayServer.Components.AppSales.AppSalesViewModel
-@{
-    var label = Model.AppType == CrowdfundAppType.AppType ? "Contributions" : "Sales";
-}
 
 <div id="AppSales-@Model.Id" class="widget app-sales">
     <header class="mb-3">
-        <h3>@Model.Name @label</h3>
+        <h3>
+            @Model.Name
+            @if (Model.AppType == CrowdfundAppType.AppType)
+            {
+                <span text-translate="true">Contributions</span>
+            }
+            else
+            {
+                <span text-translate="true">Sales</span>
+            }
+        </h3>
         @if (!string.IsNullOrEmpty(Model.AppUrl))
         {
-            <a href="@Model.AppUrl">Manage</a>
+            <a href="@Model.AppUrl" text-translate="true">Manage</a>
         }
     </header>
     @if (Model.InitialRendering)
     {
         <div class="loading d-flex justify-content-center p-3">
             <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <span class="visually-hidden" text-translate="true">Loading...</span>
             </div>
         </div>
         <script src="~/Components/AppSales/Default.cshtml.js" asp-append-version="true"></script>
@@ -39,7 +46,15 @@
     {
         <header class="mb-3">
             <span>
-                <span class="sales-count">@Model.SalesCount</span> Total @label
+                <span class="sales-count">@Model.SalesCount</span>
+                @if (Model.AppType == CrowdfundAppType.AppType)
+                {
+                    <span text-translate="true">Total Contributions</span>
+                }
+                else
+                {
+                    <span text-translate="true">Total Sales</span>
+                }
             </span>
             <div class="btn-group only-for-js" role="group" aria-label="Filter">
                 <input type="radio" class="btn-check" name="AppSalesPeriod-@Model.Id" id="AppSalesPeriodWeek-@Model.Id" value="@AppSalesPeriod.Week" @(Model.Period == AppSalesPeriod.Week ? "checked" : "")>

@@ -34,10 +34,8 @@ public class TruncateCenter : ViewComponent
         };
         if (!vm.IsVue)
         {
-            vm.Start = vm.IsTruncated ? text[..padding] : text;
+            vm.Start = vm.IsTruncated && !vm.Elastic ? $"{text[..padding]}…" : text;
             vm.End = vm.IsTruncated ? text[^padding..] : string.Empty;
-            if (!vm.Elastic && vm.IsTruncated)
-                vm.Start = $"{vm.Start}…";
         }
         return View(vm);
     }

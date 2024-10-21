@@ -1,6 +1,7 @@
 <template id="lnurl-withdraw-template">
     <div v-if="display" class="mt-4" id="NFC">
         <div v-if="nfcErrorMessage" class="alert alert-danger" v-text="nfcErrorMessage"></div>
+        <div v-if="nfcWarningMessage" class="alert alert-warning" v-text="nfcWarningMessage"></div>
         <button class="btn btn-secondary rounded-pill w-100" type="button" id="PayByNFC"
                 :disabled="nfcScanning || submitting" v-on:click="handleClick">{{btnText}}</button>
     </div>
@@ -12,14 +13,15 @@ Vue.component("lnurl-withdraw-checkout", {
         model: Object,
         nfcSupported: Boolean,
         nfcScanning: Boolean,
-        nfcErrorMessage: String
+        nfcErrorMessage: String,
+        nfcWarningMessage: String
     },
     computed: {
         display () {
             const {
                 onChainWithLnInvoiceFallback: isUnified,
                 paymentMethodId: activePaymentMethodId,
-                availableCryptos: availablePaymentMethods,
+                availablePaymentMethods: availablePaymentMethods,
                 invoiceBitcoinUrl: paymentUrl
             } = this.model
             const lnurlwAvailable = 

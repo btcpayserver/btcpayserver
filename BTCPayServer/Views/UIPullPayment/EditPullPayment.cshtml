@@ -19,9 +19,9 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@storeId">Pull Payments</a>
+                    <a asp-controller="UIStorePullPayments" asp-action="PullPayments" asp-route-storeId="@storeId" text-translate="true">Pull Payments</a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
             </ol>
             <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
@@ -33,7 +33,7 @@
             else
             {
 				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
-                <a class="btn btn-secondary" asp-action="ViewPullPayment" asp-route-pullPaymentId="@Model.Id" id="ViewPullPayment" target="_blank">View</a>
+                <a class="btn btn-secondary" asp-action="ViewPullPayment" asp-route-pullPaymentId="@Model.Id" id="ViewPullPayment" target="_blank" text-translate="true">View</a>
             }
         </div>
     </div>

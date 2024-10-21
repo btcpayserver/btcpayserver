@@ -8,11 +8,19 @@
                         <vc:icon symbol="close"/>
                     </button>
                 </div>
-                <div class="modal-body text-center">
-                    <div class="text-center my-2" :style="{height: `${qrOptions.height}px`}">
-                        <component v-if="currentFragment" :is="currentMode.href ? 'a': 'div'" class="qr-container d-inline-block" :href="currentMode.href">
-                            <qrcode  :value="currentFragment" :options="qrOptions"></qrcode>
-                        </component>
+                <div class="modal-body pt-0">
+                    <div class="payment-box m-0">
+                        <div class="qr-container justify-content-start">
+                            <component v-if="currentFragment" :is="currentMode.href ? 'a': 'div'" class="qr-container d-inline-block" :href="currentMode.href">
+                                <qrcode :value="currentFragment" :options="qrOptions"></qrcode>
+                            </component>
+                        </div>
+                        <div v-if="currentFragment" class="input-group mt-3">
+                            <div class="form-floating">
+                                <vc:truncate-center text="currentFragment" padding="15" elastic="true" is-vue="true" classes="form-control-plaintext"/>
+                                <label>{{title}}</label>
+                            </div>
+                        </div>
                     </div>
                     <ul class="nav btcpay-pills justify-content-center mt-4 mb-3" v-if="modes && Object.keys(modes).length > 1">
                         <li class="nav-item" v-for="(item, key) in modes">
@@ -107,8 +115,9 @@ function initQRShow(data) {
                  }
                  setTimeout(this.playNext, this.speed);
  			},
- 			showData(data) {
-                this.modes = { default: { title: 'Default', fragments: [data] } };
+ 			showData(data, title) {
+ 			    if (title) this.title = title;
+                this.modes = { default: { title: title || 'Default', fragments: [data] } };
                 this.mode = "default";
                 this.show();
             },

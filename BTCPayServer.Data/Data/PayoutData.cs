@@ -1,11 +1,9 @@
 using System;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text;
 using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NBitcoin;
 
 namespace BTCPayServer.Data
@@ -73,7 +71,7 @@ namespace BTCPayServer.Data
 
             builder.Entity<PayoutData>()
                 .Property(o => o.Blob)
-                .HasColumnType("JSONB");
+                .HasColumnType("jsonb");
             builder.Entity<PayoutData>()
                 .Property(o => o.Proof)
                 .HasColumnType("JSONB");

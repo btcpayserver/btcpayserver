@@ -609,9 +609,7 @@ retry:
             var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
             var method = methods.First(m => m.PaymentMethodId == $"{cryptoCode}-LN");
             var bolt11 = method.Destination;
-            TestLogs.LogInformation("PAYING");
             await parent.CustomerLightningD.Pay(bolt11);
-            TestLogs.LogInformation("PAID");
             await WaitInvoicePaid(invoiceId);
         }
 

@@ -6,19 +6,19 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="TwoFactorAuthentication">Two Factor Authentication</a>
+                <a asp-action="TwoFactorAuthentication" text-translate="true">Two Factor Authentication</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
 </div>
 <partial name="_StatusMessage" />
-<p class="my-3">To use an authenticator app go through the following steps:</p>
+<p class="my-3" text-translate="true">To use an authenticator app go through the following steps:</p>
 <div class="col-xl-8 col-xxl-constrain">
     <ol class="ps-3">
         <li class="mb-5">
-            <div class="mb-2">Download a two-factor authenticator app like …</div>
+            <div class="mb-2" text-translate="true">Download a two-factor authenticator app like …</div>
             <ul>
                 <li>
                     Authy for
@@ -38,7 +38,7 @@
             </ul>
         </li>
         <li class="mb-5">
-            <p class="mb-2">Scan the QR Code or enter the following key into your two-factor authenticator app:</p>
+            <p class="mb-2" text-translate="true">Scan the QR Code or enter the following key into your two-factor authenticator app:</p>
             <div class="input-group input-group-sm mb-4">
                 <input readonly class="form-control font-monospace" value="@Model.SharedKey" id="SharedKey" style="max-width:20rem">
                 <button type="button" class="btn btn-outline-secondary" data-clipboard-target="#SharedKey">
@@ -50,19 +50,19 @@
         </li>
         <li>
             <p>
-                Your two-factor authenticator app will provide you with a unique code.
+                <span text-translate="true">Your two-factor authenticator app will provide you with a unique code.</span>
                 <br/>
-                Enter the code in the confirmation box below.
+                <span text-translate="true">Enter the code in the confirmation box below.</span>
             </p>    
             <form method="post">
                 <input asp-for="AuthenticatorUri" type="hidden" />
                 <input asp-for="SharedKey" type="hidden" />
                 <div class="form-group">
-                    <label asp-for="Code" class="form-label">Verification Code</label>
+                    <label asp-for="Code" class="form-label" text-translate="true">Verification Code</label>
                     <input asp-for="Code" class="form-control" autocomplete="off" autofocus style="width:14ch"/>
                     <span asp-validation-for="Code" class="text-danger"></span>
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">Verify</button>
+                <button type="submit" class="btn btn-primary mt-2" text-translate="true">Verify</button>
                 <div asp-validation-summary="ModelOnly"></div>
             </form>
         </li>

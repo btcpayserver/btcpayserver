@@ -9,13 +9,13 @@
 <partial name="_StatusMessage" />
 
 <div class="mb-5">
-    <h4 class="mb-3">Crypto services exposed by your server</h4>
+    <h4 class="mb-3" text-translate="true">Crypto services exposed by your server</h4>
     <table class="table table-hover mt-2">
         <thead>
             <tr>
-                <th>Crypto</th>
-                <th>Access Type</th>
-                <th style="text-align: right">Actions</th>
+                <th text-translate="true">Crypto</th>
+                <th text-translate="true">Access Type</th>
+                <th text-translate="true" style="text-align: right">Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -43,13 +43,13 @@
 @if (Model.OtherExternalServices.Count != 0 || Model.ExternalServices.Any(service => string.IsNullOrEmpty(service.CryptoCode)))
 {
     <div class="mb-5">
-        <h4 class="mb-3">Other external services</h4>
+        <h4 class="mb-3" text-translate="true">Other external services</h4>
 
         <table class="table table-hover mt-2">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th style="text-align: right">Actions</th>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true" style="text-align: right">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -58,7 +58,7 @@
                 <tr>
                     <td>@s.DisplayName</td>
                     <td style="text-align: right">
-                        <a asp-action="Service" asp-route-serviceName="@s.ServiceName">See information</a>
+                        <a asp-action="Service" asp-route-serviceName="@s.ServiceName" text-translate="true">See information</a>
                     </td>
                 </tr>
             }
@@ -67,7 +67,7 @@
                 <tr>
                     <td>@s.Name</td>
                     <td style="text-align: right">
-                        <a href="@s.Link" rel="noreferrer noopener">See information</a>
+                        <a href="@s.Link" rel="noreferrer noopener" text-translate="true">See information</a>
                     </td>
                 </tr>
             }
@@ -79,13 +79,13 @@
 @if (Model.TorHttpServices.Count != 0)
 {
     <div class="mb-5">
-        <h4 class="mb-3">HTTP-based Tor hidden services</h4>
+        <h4 class="mb-3" text-translate="true">HTTP-based Tor hidden services</h4>
 
         <table class="table table-hover mt-2">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th style="text-align: right">Actions</th>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true" style="text-align: right">Actions</th>
                 </tr>
             </thead>
             <tbody>
@@ -94,7 +94,7 @@
                 <tr>
                     <td>@s.Name</td>
                     <td style="text-align: right">
-                        <a href="@s.Link" target="_blank" rel="noreferrer noopener">See information</a>
+                        <a href="@s.Link" target="_blank" rel="noreferrer noopener" text-translate="true">See information</a>
                     </td>
                 </tr>
             }
@@ -106,13 +106,13 @@
 @if (Model.TorOtherServices.Count != 0)
 {
     <div class="mb-5">
-        <h4 class="mb-3">Other Tor hidden services</h4>
+        <h4 class="mb-3" text-translate="true">Other Tor hidden services</h4>
 
         <table class="table table-hover mt-2">
             <thead>
                 <tr>
-                    <th>Name</th>
-                    <th>URL</th>
+                    <th text-translate="true">Name</th>
+                    <th text-translate="true">URL</th>
                 </tr>
             </thead>
             <tbody>

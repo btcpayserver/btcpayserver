@@ -37,7 +37,7 @@ public abstract class CrowdfundBaseData : AppBaseData
 
 public class CrowdfundAppData : CrowdfundBaseData
 {
-    public object? Perks { get; set; }
+    public AppItem[]? Perks { get; set; }
 }
 
 public class CrowdfundAppRequest : CrowdfundBaseData, IAppRequest

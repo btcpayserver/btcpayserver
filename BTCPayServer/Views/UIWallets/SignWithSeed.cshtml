@@ -5,7 +5,7 @@
     var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, "Sign PSBT", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Sign PSBT"], walletId);
 }
 
 @section Navbar {
@@ -22,19 +22,19 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Using an HD private key or mnemonic seed</p>
+    <p class="lead text-secondary mt-3" text-translate="true">Using an HD private key or mnemonic seed</p>
 </header>
 
 <div class="alert alert-warning alert-dismissible my-4" role="alert">
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
         <vc:icon symbol="close" />
     </button>
-    <p>Before you proceed, please understand the following:</p>
+    <p text-translate="true">Before you proceed, please understand the following:</p>
     <ol>
-        <li>Make sure this BTCPay Server instance <b>belongs to you</b>.</li>
-        <li>Use <b>Incognito mode or the Tor Browser</b> to ensure no malicious browser plugins are running that could steal your key.</li>
+        <li text-translate="true">Make sure this BTCPay Server instance belongs to you.</li>
+        <li text-translate="true">Use Incognito mode or the Tor Browser to ensure no malicious browser plugins are running that could steal your key.</li>
     </ol>
-    <p class="mb-0">Otherwise you are exposing yourself to malicious site owners, or to malicious plugins installed in your browser.</p>
+    <p class="mb-0" text-translate="true">Otherwise you are exposing yourself to malicious site owners, or to malicious plugins installed in your browser.</p>
 </div>
 
 @if (!ViewContext.ModelState.IsValid)

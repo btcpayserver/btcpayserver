@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Connect your hardware wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Connect your hardware wallet"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -12,7 +12,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">In order to securely connect to your hardware wallet you must first download, install, and run the BTCPay Server Vault.</p>
+    <p class="lead text-secondary mt-3" text-translate="true">In order to securely connect to your hardware wallet you must first download, install, and run the BTCPay Server Vault.</p>
 </header>
 
 @if (!ViewContext.ModelState.IsValid)
@@ -27,25 +27,25 @@
         <div id="vault-status" class="mb-4"></div>
         <div id="vault-xpub" class="mt-4" style="display:none;">
             <div class="form-group">
-                <label for="addressType" class="form-label">Address type</label>
+                <label for="addressType" class="form-label" text-translate="true">Address type</label>
                 <select id="addressType" name="addressType" class="form-select w-auto">
-                    <option value="segwit">Segwit (Recommended, cheapest fee)</option>
-                    <option value="segwitWrapped">Segwit wrapped (Compatible with old wallets)</option>
-                    <option value="legacy">Legacy (Not recommended)</option>
+                    <option value="segwit" text-translate="true">Segwit (Recommended, cheapest fee)</option>
+                    <option value="segwitWrapped" text-translate="true">Segwit wrapped (Compatible with old wallets)</option>
+                    <option value="legacy" text-translate="true">Legacy (Not recommended)</option>
                     @if (ViewData["CanUseTaproot"] is true)
                     {
-                        <option value="taproot">Taproot (ONLY FOR DEVELOPMENT)</option>
+                        <option value="taproot" text-translate="true">Taproot (ONLY FOR DEVELOPMENT)</option>
                     }
                 </select>
             </div>
             <div class="form-group">
-                <label for="accountNumber" class="form-label">Account</label>
+                <label for="accountNumber" class="form-label" text-translate="true">Account</label>
                 <input id="accountNumber" class="form-control" name="accountNumber" type="number" value="0" min="0" step="1" style="max-width:12ch;" />
             </div>
         </div>
         <div>
             <button type="submit" id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
-            <button type="button" id="vault-retry" class="btn btn-secondary" style="display:none;">Retry</button>
+            <button type="button" id="vault-retry" class="btn btn-secondary" style="display:none;" text-translate="true">Retry</button>
         </div>
     </div>
 </div>
@@ -59,7 +59,7 @@
 
     <div class="row mb-5">
         <div class="col-md-8 mx-auto">
-            <h4 class="mb-3">Public Key Information</h4>
+            <h4 class="mb-3" text-translate="true">Public Key Information</h4>
             <div class="form-group">
                 <label asp-for="DerivationScheme" class="form-label"></label>
                 <textarea asp-for="DerivationScheme" class="form-control store-derivation-scheme font-monospace py-2" rows="3" readonly></textarea>
@@ -72,7 +72,7 @@
                 <label asp-for="KeyPath" class="form-label"></label>
                 <input asp-for="KeyPath" class="form-control" readonly />
             </div>
-            <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue">Continue</button>
+            <button name="command" type="submit" class="btn btn-primary" value="save" id="Continue" text-translate="true">Continue</button>
         </div>
     </div>
 </form>

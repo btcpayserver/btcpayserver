@@ -9,7 +9,7 @@
 @if (Model.StoreNotConfigured)
 {
     <div class="alert alert-warning alert-dismissible mb-5" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
         <span text-translate="true">Warning: No wallet has been linked to your BTCPay Server Store.</span><br/>

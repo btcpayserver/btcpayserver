@@ -1,6 +1,7 @@
 <div class="alert alert-warning alert-dismissible">
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
         <vc:icon symbol="close" />
     </button>
-    The Email settings have not been configured on this server or store yet. Setting this field will not send emails until then. <a asp-action="StoreEmailSettings" asp-controller="UIStores" asp-route-storeId="@Model" class="alert-link">Configure store email settings</a>
+    <span text-translate="true">The Email settings have not been configured on this server or store yet. Setting this field will not send emails until then.</span>
+    <a asp-action="StoreEmailSettings" asp-controller="UIStores" asp-route-storeId="@Model" class="alert-link" text-translate="true">Configure store email settings</a>
 </div>

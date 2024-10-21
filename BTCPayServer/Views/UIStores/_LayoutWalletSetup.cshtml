@@ -14,7 +14,7 @@
     @await RenderSectionAsync("Navbar", false)
 
     <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@Context.GetRouteValue("storeId")" class="cancel">
-        <vc:icon symbol="close" />
+        <vc:icon symbol="cross" />
     </a>
 }
 

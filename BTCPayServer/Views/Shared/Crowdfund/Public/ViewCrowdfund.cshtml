@@ -249,7 +249,7 @@
                 </div>
             </div>
         </noscript>
-        <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="Close" ref="modalContribute">
+        <b-modal title="Contribute" v-model="contributeModalOpen" size="lg" ok-only="true" ok-variant="secondary" ok-title="@StringLocalizer["Close"]" ref="modalContribute">
             <contribute v-if="contributeModalOpen"
                         :target-currency="srvModel.targetCurrency"
                         :active="active"

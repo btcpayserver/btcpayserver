@@ -1,6 +1,10 @@
 @namespace BTCPayServer.Client
 @using BTCPayServer.Abstractions.Models
-@inject BTCPayServer.Security.ContentSecurityPolicies Csp
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Html
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Controllers.UIManageController.ApiKeysViewModel
 @{
 	ViewData.SetActivePage(ManageNavPages.APIKeys, "API Keys");
@@ -17,9 +21,10 @@
 <div class="row">
     <div class="col-xl-10 col-xxl-constrain">
         <p>
-            The <a asp-controller="UIHome" asp-action="SwaggerDocs" target="_blank">BTCPay Server Greenfield API</a> offers programmatic access to your instance. You can manage your BTCPay
-            Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see <a href="https://docs.btcpayserver.org/Development/GreenFieldExample/" rel="noreferrer noopener">use case examples</a>).
-            For that you need the API keys, which can be generated here. Find more information in the <a href="@Url.Action("SwaggerDocs", "UIHome")#section/Authentication" target="_blank" rel="noreferrer noopener">API authentication docs</a>.
+            @ViewLocalizer["The {0} offers programmatic access to your instance. You can manage your BTCPay Server (e.g. stores, invoices, users) as well as automate workflows and integrations (see {1}). For that you need the API keys, which can be generated here. Find more information in the {2}.",
+                Html.ActionLink(StringLocalizer["Greenfield API"], "SwaggerDocs", "UIHome", new { }, new { target = "_blank",  rel = "noreferrer noopener" }),
+                new HtmlString($"<a href=\"https://docs.btcpayserver.org/Development/GreenFieldExample/\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["use case examples"]}</a>"),
+                Html.ActionLink(StringLocalizer["API authentication docs"], "SwaggerDocs", "UIHome", null, null, "section/Authentication", new { }, new { target = "_blank",  rel = "noreferrer noopener" })]
         </p>
 
         @if (Model.ApiKeyDatas.Any())

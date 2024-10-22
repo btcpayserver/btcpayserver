@@ -181,14 +181,14 @@ X_X = kraken(X_X);</code></pre>
 
 			<h3 class="mt-5 mb-3" text-translate="true">Default Currency Pairs</h3>
             <div class="form-group">
-                <label asp-for="DefaultCurrencyPairs" class="form-label">Query pairs via REST by querying <a asp-controller="BitpayRate" asp-action="GetRates2" asp-route-storeId="@Model.StoreId" target="_blank">this link</a> without the need to specify currencyPairs.</label>
+                <label asp-for="DefaultCurrencyPairs" class="form-label">@ViewLocalizer["Query pairs via REST by querying {0} without the need to specify currencyPairs.", Html.ActionLink(StringLocalizer["this link"], "GetRates2", "BitpayRate", new { storeId = Model.StoreId }, new { target = "_blank" })]</label>
                 <input asp-for="DefaultCurrencyPairs" class="form-control" placeholder="BTC_USD, BTC_CAD" />
                 <span asp-validation-for="DefaultCurrencyPairs" class="text-danger"></span>
             </div>
         </div>
     </div>
 </form>
-<partial name="_Confirm" model="@(new ConfirmModel("Rate rule scripting", Model.ShowScripting ? "This action will delete your rate script. Are you sure to turn off rate rules scripting?" : "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)", "Continue", Model.ShowScripting ? "btn-danger" : "btn-primary"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Rate rule scripting"], Model.ShowScripting ? StringLocalizer["This action will delete your rate script. Are you sure to turn off rate rules scripting?"] : StringLocalizer["This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"], StringLocalizer["Continue"], Model.ShowScripting ? "btn-danger" : "btn-primary"))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageHeadContent {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">

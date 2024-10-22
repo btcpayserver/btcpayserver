@@ -68,7 +68,7 @@
 
 @if (!Model.Removed)
 {
-    <partial name="_Confirm" model="@(new ConfirmModel("Delete LND seed", "This action will permanently delete your LND seed and password. You will not be able to recover them if you don't have a backup.", "Delete"))"/>
+    <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete LND seed"], StringLocalizer["This action will permanently delete your LND seed and password. You will not be able to recover them if you don't have a backup."], StringLocalizer["Delete"]))"/>
 }
 
 @section PageFootContent {

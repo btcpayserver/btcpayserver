@@ -354,7 +354,7 @@
             <div class="form-group" v-if="!srvModel.appIdEndpoint">
                 <label class="form-label" for="email-notifications" text-translate="true">Email Notifications</label>
                 <input name="notifyEmail" type="text" class="form-control" id="email-notifications"
-                       placeholder="name@domain.com"
+                       placeholder="@StringLocalizer["user@example.com"]"
                        v-model="srvModel.notifyEmail" v-on:change="inputChanges"
                        v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
                 <small class="text-danger">{{ errors.first('notifyEmail') }}</small>

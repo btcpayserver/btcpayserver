@@ -183,7 +183,7 @@
                     <div class="form-group mb-0 pt-2 w-250px">
                         <label asp-for="ResetEveryAmount" class="form-label"></label>
                         <div class="d-flex align-items-center">
-                            <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control me-3" min="0">
+                            <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="@StringLocalizer["Amount"]" class="form-control me-3" min="0">
                             <select class="form-select w-auto" asp-for="ResetEvery">
                                 @foreach (var opt in Model.ResetEveryValues)
                                 {

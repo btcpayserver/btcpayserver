@@ -128,7 +128,7 @@
 
         <form  asp-action="CreateCredential">
             <div class="input-group">
-                <input type="text" class="form-control" name="Name" placeholder="Security device name"/>
+                <input type="text" class="form-control" name="Name" placeholder="@StringLocalizer["Security device name"]"/>
                 <select asp-items="@Html.GetEnumSelectList<Fido2Credential.CredentialType>()" class="form-select w-auto" name="type"></select>
                 <button id="btn-add" type="submit" class="btn btn-primary" text-translate="true">
                     Add 

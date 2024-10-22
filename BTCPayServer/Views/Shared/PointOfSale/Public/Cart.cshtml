@@ -46,7 +46,7 @@
                 </div>
                 @if (Model.ShowSearch)
                 {
-                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm" v-if="showSearch">
+                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="@StringLocalizer["Search…"]" v-model="searchTerm" v-if="showSearch">
                 }
                 @if (Model.ShowCategories)
                 {
@@ -120,7 +120,7 @@
                                         {
                                             <div class="input-group mb-2">
                                                 <span class="input-group-text">@Model.CurrencySymbol</span>
-                                                <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@item.Price" required v-on:click.stop>
+                                                <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" value="@item.Price" required v-on:click.stop>
                                             </div>
                                         }
                                         <button type="button" class="btn btn-primary w-100" :disabled="!inStock(@index)">
@@ -174,7 +174,7 @@
                                         <button type="button" v-on:click="updateQuantity(item.id, -1)" class="btn btn-minus">
                                             <span><vc:icon symbol="minus" /></span>
                                         </button>
-                                        <input class="form-control hide-number-spin w-50px text-center" type="number" placeholder="Qty" min="1" step="1" :max="item.inventory" v-model.number="item.count">
+                                        <input class="form-control hide-number-spin w-50px text-center" type="number" placeholder="@StringLocalizer["Qty"]" min="1" step="1" :max="item.inventory" v-model.number="item.count">
                                         <button type="button" v-on:click="updateQuantity(item.id, +1)" class="btn btn-plus">
                                             <span><vc:icon symbol="plus" /></span>
                                         </button>

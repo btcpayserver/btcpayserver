@@ -312,7 +312,7 @@
 <form method="get" asp-action="ListPlugins" class="row mb-4" id="searchForm">
     <div class="col-12 col-lg-6">
         <div class="input-group">
-            <input type="text" name="search" class="form-control" placeholder="Search for plugins..."
+            <input type="text" name="search" class="form-control" placeholder="@StringLocalizer["Search…"]"
                    value="@ViewContext.HttpContext.Request.Query["search"]" />
             <button type="submit" class="btn btn-primary">
                 <vc:icon symbol="actions-search" />

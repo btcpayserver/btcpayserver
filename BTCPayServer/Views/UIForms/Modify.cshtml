@@ -90,15 +90,15 @@
                 <div class="options">
                     <div v-if="field.valuemap" v-for="(v, k, index) in field.valuemap" :key="k" class="d-flex align-items-start gap-2 pt-3">
                         <div class="field flex-grow-1">
-                            <label :for="`field-valuemap-value-${index}`" class="form-label">Original Value</label>
+                            <label :for="`field-valuemap-value-${index}`" class="form-label" text-translate="true">Original Value</label>
                             <select v-if="mirroredField && mirroredField.type === 'select'" :id="`field-valuemap-value-${index}`" class="form-select" v-on:change="updateValueMap(k, $event.target.value, v)">
                                 <option v-for="option in mirroredField.options" v-if="option.text && option.value" :key="option.value" :value="option.value" :selected="k === option.value" v-text="`${option.value} (${option.text})`"></option>
                             </select>
-                            <input v-else :id="`field-valuemap-value-${index}`" class="form-control" placeholder="Value to match" :value="k" v-on:change="updateValueMap(k, $event.target.value, v)" />
+                            <input v-else :id="`field-valuemap-value-${index}`" class="form-control" placeholder="@StringLocalizer["Value to match"]" :value="k" v-on:change="updateValueMap(k, $event.target.value, v)" />
                         </div>
                         <div class="field flex-grow-1">
-                            <label :for="`field-valuemap-mapped-${index}`" class="form-label">Mapped Value</label>
-                            <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="Value to set" :value="v" v-on:change="updateValueMap(k, k, $event.target.value)" />
+                            <label :for="`field-valuemap-mapped-${index}`" class="form-label" text-translate="true">Mapped Value</label>
+                            <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="@StringLocalizer["Value to set"]" :value="v" v-on:change="updateValueMap(k, k, $event.target.value)" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeValueMap($event, k)">
                             <vc:icon symbol="remove" />

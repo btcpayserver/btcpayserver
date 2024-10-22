@@ -35,7 +35,7 @@
         }
 
         <form method="post" class="d-flex flex-wrap align-items-center gap-3" permission="@Policies.CanModifyStoreSettings">
-            <input asp-for="Email" type="text" class="form-control" placeholder="user@example.com" style="flex: 1 1 14rem">
+            <input asp-for="Email" type="text" class="form-control" placeholder="@StringLocalizer["user@example.com"]" style="flex: 1 1 14rem">
             <select asp-for="Role" class="form-select" asp-items="roles"></select>
             <button type="submit" role="button" class="btn btn-primary text-nowrap flex-grow-1 flex-sm-grow-0" id="AddUser" text-translate="true">Add User</button>
         </form>

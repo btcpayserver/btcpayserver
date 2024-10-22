@@ -155,8 +155,8 @@
                         <div class="input-group">
                             <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
                                    data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="Start Date" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="Clear">
+                                   placeholder="@StringLocalizer["Start Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
                                 <vc:icon symbol="close" />
                             </button>
                         </div>
@@ -168,8 +168,8 @@
                         <div class="input-group">
                             <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
                                    data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="End Date" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="Clear">
+                                   placeholder="@StringLocalizer["End Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
                                 <vc:icon symbol="close" />
                             </button>
                         </div>
@@ -187,7 +187,7 @@
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
+    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)

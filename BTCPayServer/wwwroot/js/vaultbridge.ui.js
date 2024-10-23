@@ -184,13 +184,13 @@ var vaultui = (function () {
             var button = $("#vault-retry");
             return new Promise(function (resolve) {
                 button.click(function () {
-                    // Cleanup old feedback
-                    var icon = $(".vault-feedback-icon");
-                    icon.removeClass();
-                    icon.addClass("vault-feedback-icon");
-                    var content = $(".vault-feedback-content");
-                    content.html('');
-                    ///////////////////
+                    // Reset feedback statuses
+                    $(".vault-feedback").each(function () {
+                        var icon = $(this).find(".vault-feedback-icon");
+                        icon.removeClass().addClass("vault-feedback-icon d-none");
+                        $(this).find(".vault-feedback-content").html('');
+                    });
+
                     button.hide();
                     self.retryShowing = false;
                     resolve(true);

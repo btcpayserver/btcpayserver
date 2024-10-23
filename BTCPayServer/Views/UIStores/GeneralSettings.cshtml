@@ -6,7 +6,7 @@
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
-	ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
+	ViewData.SetActivePage(StoreNavPages.General, StringLocalizer["General"], Context.GetStoreData().Id);
 	var canUpload = await FileService.IsAvailable();
 }
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">

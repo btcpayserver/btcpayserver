@@ -5,7 +5,7 @@
     var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, "Combine PSBT", walletId);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, StringLocalizer["Combine PSBT"], walletId);
 }
 
 @section Navbar {

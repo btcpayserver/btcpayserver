@@ -2,7 +2,7 @@
 @model BTCPayServer.Services.Altcoins.Zcash.UI.UIZcashLikeStoreController.ZcashLikePaymentMethodViewModel
 
 @{
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["{0} Settings", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 <div class="row">

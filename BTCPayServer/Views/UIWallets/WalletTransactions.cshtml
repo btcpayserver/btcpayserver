@@ -1,5 +1,10 @@
+@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Client
 @using BTCPayServer.Components
+@using BTCPayServer.Components.WalletNav
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Html
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model ListTransactionsViewModel
 
 @{
@@ -9,7 +14,7 @@
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
 
-    ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Transactions, StringLocalizer["{0} Transactions", Model.CryptoCode], walletId);
 }
 
 @section PageHeadContent {
@@ -229,7 +234,7 @@
 </div>
 
 <p class="mt-4 mb-0">
-    If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>.
-    <br />
-    If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet" rel="noreferrer noopener">follow these instructions</a>.
+    @ViewLocalizer["If BTCPay Server shows you an invalid balance, {0}.<br />If some transactions appear in BTCPay Server, but are missing in another wallet, {1}.",
+        Html.ActionLink(StringLocalizer["rescan your wallet"], "WalletRescan", "UIWallets", new { walletId = Context.GetRouteValue("walletId") }), 
+        new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["follow these instructions"]}</a>")]
 </p>

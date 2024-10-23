@@ -3,7 +3,7 @@
 @using BTCPayServer.Client
 @model List<BTCPayServer.Data.FormData>
 @{
-    ViewData.SetActivePage(StoreNavPages.Forms, "Forms");
+    ViewData.SetActivePage(StoreNavPages.Forms, StringLocalizer["Forms"]);
     var storeId = Context.GetCurrentStoreId();
 }
 

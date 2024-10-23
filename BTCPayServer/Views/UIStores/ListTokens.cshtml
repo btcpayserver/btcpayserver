@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model TokensViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Access Tokens"], Context.GetStoreData().Id);
 }
 
 @if (Model.StoreNotConfigured)

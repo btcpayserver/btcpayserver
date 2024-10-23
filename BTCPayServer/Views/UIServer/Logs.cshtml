@@ -1,6 +1,6 @@
 @model BTCPayServer.Models.ServerViewModels.LogsViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Logs, "Logs");
+    ViewData.SetActivePage(ServerNavPages.Logs, StringLocalizer["Logs"]);
 }
 
 <div class="sticky-header">
@@ -23,9 +23,9 @@
             <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)">&laquo;</a>
         </li>
         <li class="page-item disabled">
-            <span class="page-link">Showing @Model.LogFileOffset - (@(Model.LogFileOffset+Model.LogFiles.Count)) of @Model.LogFileCount</span>
+            <span class="page-link">@StringLocalizer["Showing {0} of {1}", Model.LogFileOffset - (Model.LogFileOffset + Model.LogFiles.Count), Model.LogFileCount]</span>
         </li>
-        <li class="page-item @((Model.LogFileOffset + Model.LogFiles.Count) < Model.LogFileCount ? null : "disabled")">
+        <li class="page-item @(Model.LogFileOffset + Model.LogFiles.Count < Model.LogFileCount ? null : "disabled")">
             <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">&raquo;</a>
         </li>
     </ul>

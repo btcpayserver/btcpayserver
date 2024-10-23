@@ -2,7 +2,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model UsersViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Users);
+    ViewData.SetActivePage(ServerNavPages.Users, StringLocalizer["Users"]);
     var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];
     var userEmailSortOrder = nextUserEmailSortOrder switch
     {

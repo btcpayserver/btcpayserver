@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebhooksViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, StringLocalizer["Webhooks"], Context.GetStoreData().Id);
 }
 
 <div class="sticky-header">

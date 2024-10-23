@@ -360,7 +360,9 @@ retry:
             {
                 await tester.StartAsync();
                 var engine = tester.PayTester.GetService<RazorProjectEngine>();
-                foreach (var file in soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories))
+                var files = soldir.EnumerateFiles("*.cshtml", SearchOption.AllDirectories)
+                    .Union(soldir.EnumerateFiles("*.razor", SearchOption.AllDirectories));
+                foreach (var file in files)
                 {
                     var filePath = file.FullName;
                     var txt = File.ReadAllText(file.FullName);

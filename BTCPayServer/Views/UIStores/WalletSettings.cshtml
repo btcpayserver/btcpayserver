@@ -5,7 +5,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSettingsViewModel
 @{
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Wallet Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["{0} Wallet Settings", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 	Csp.UnsafeEval();
 }
 
@@ -122,7 +122,7 @@
                 }
                 @for (var i = 0; i < Model.AccountKeys.Count; i++)
                 {
-                    <h4 class="mt-5 mb-3">Account Key @i</h4>
+                    <h4 class="mt-5 mb-3">@StringLocalizer["Account Key"] @i</h4>
                     <div class="form-group">
                         <div class="d-flex align-items-center justify-content-between">
                             <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
@@ -155,18 +155,18 @@
                         </div>
                     }
                 }
-                <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings">Save Wallet Settings</button>
+                <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings" text-translate="true">Save Wallet Settings</button>
             </form>
             
-            <h3 class="mt-5">Labels</h3>
+            <h3 class="mt-5" text-translate="true">Labels</h3>
             <p>
-                <a asp-controller="UIWallets" asp-action="WalletLabels" asp-route-walletId="@Model.WalletId">Manage labels</a>
+                <a asp-controller="UIWallets" asp-action="WalletLabels" asp-route-walletId="@Model.WalletId" text-translate="true">Manage labels</a>
             </p>
         </div>
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel($"{Model.CryptoCode} wallet", "Change", "Update"))" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["{0} wallet", Model.CryptoCode], StringLocalizer["Change"], "Update"))" />
 <partial name="ShowQR"/>
 
 @section PageFootContent {

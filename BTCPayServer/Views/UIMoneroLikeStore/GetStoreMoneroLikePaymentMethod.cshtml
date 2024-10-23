@@ -3,7 +3,7 @@
 @model MoneroLikePaymentMethodViewModel
 
 @{
-    ViewData.SetActivePage(Model.CryptoCode, $"{Model.CryptoCode} Settings", Model.CryptoCode);
+    ViewData.SetActivePage(Model.CryptoCode, StringLocalizer["{0} Settings", Model.CryptoCode], Model.CryptoCode);
 }
 
 <partial name="_StatusMessage" />

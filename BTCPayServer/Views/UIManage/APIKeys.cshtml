@@ -7,7 +7,7 @@
 @inject Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Controllers.UIManageController.ApiKeysViewModel
 @{
-	ViewData.SetActivePage(ManageNavPages.APIKeys, "API Keys");
+	ViewData.SetActivePage(ManageNavPages.APIKeys, StringLocalizer["API Keys"]);
 	Csp.UnsafeEval();
 }
 

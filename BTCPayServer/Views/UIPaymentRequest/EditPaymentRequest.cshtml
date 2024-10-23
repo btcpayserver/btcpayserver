@@ -9,7 +9,7 @@
 @{
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 
-    ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
+    ViewData.SetActivePage(PaymentRequestsNavPages.Create, string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"], Model.Id);
 }
 
 @section PageHeadContent {
@@ -87,8 +87,8 @@
                 <div class="input-group ">
                     <input asp-for="ExpiryDate"
                            value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
-                           class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />
-                    <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                           class="form-control flatdtpicker" min="today" placeholder="@StringLocalizer["No expiry date has been set for this payment request"]" />
+                    <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="@StringLocalizer["Clear"]">
                         <vc:icon symbol="close" />
                     </button>
                 </div>
@@ -96,11 +96,10 @@
             </div>
             <div class="form-group">
                 <label asp-for="Email" class="form-label"></label>
-                <input type="email" asp-for="Email" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
+                <input type="email" asp-for="Email" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
                 <div id="PaymentRequestEmailHelpBlock" class="form-text">
-                    This will send notification mails to the recipient, as configured by the
-                    <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Model.StoreId">email rules</a>.
+                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the {0}.", Html.ActionLink(StringLocalizer["email rules"], "StoreEmails", "UIStores", new { storeId = Model.StoreId })]
                     @if (Model.HasEmailRules is not true)
                     {
                         <div class="info-note mt-1 text-warning" role="alert">
@@ -148,11 +147,11 @@
         <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest"  permission="@Policies.CanModifyPaymentRequests" text-translate="true">Clone</a>
         @if (!Model.Archived)
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Archive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this payment request so that it does not appear in the payment request list by default"]" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Archive</a>
         }
         else
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Unarchive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this payment request"]" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Unarchive</a>
         }
     </div>
 }

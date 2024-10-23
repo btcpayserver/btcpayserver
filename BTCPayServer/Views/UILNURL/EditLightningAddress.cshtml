@@ -2,7 +2,7 @@
 @using BTCPayServer.Abstractions.Models
 @model UILNURLController.EditLightningAddressVM
 @{
-    ViewData.SetActivePage("LightningAddress", nameof(StoreNavPages), "Lightning Address", Context.GetStoreData().Id);
+    ViewData.SetActivePage("LightningAddress", nameof(StoreNavPages), StringLocalizer["Lightning Address"], Context.GetStoreData().Id);
 }
 
 @section PageHeadContent {
@@ -65,21 +65,21 @@
         <div id="AdvancedSettings" class="collapse @(showAdvancedOptions ? "show" : "")">
             <div class="row">
                 <div class="col-12 col-sm-auto">
-                    <div class="form-group" title="The currency to generate the invoice in when generated through this lightning address ">
+                    <div class="form-group" title="@StringLocalizer["The currency to generate the invoice in when generated through this lightning address"]">
                         <label asp-for="Add.CurrencyCode" class="form-label"></label>
                         <input asp-for="Add.CurrencyCode" class="form-control w-auto" currency-selection style="max-width:16ch;"/>
                         <span asp-validation-for="Add.CurrencyCode" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-12 col-sm-auto">
-                    <div class="form-group" title="Minimum amount of sats to allow to be sent to this ln address">
+                    <div class="form-group" title="@StringLocalizer["Minimum amount of sats to allow to be sent to this ln address"]">
                         <label asp-for="Add.Min" class="form-label"></label>
                         <input asp-for="Add.Min" class="form-control" type="number" inputmode="numeric" min="1" style="max-width:16ch;"/>
                         <span asp-validation-for="Add.Min" class="text-danger"></span>
                     </div>
                 </div>
                 <div class="col-12 col-sm-auto">
-                    <div class="form-group" title="Maximum amount of sats to allow to be sent to this ln address">
+                    <div class="form-group" title="@StringLocalizer["Maximum amount of sats to allow to be sent to this ln address"]">
                         <label asp-for="Add.Max" class="form-label"></label>
                         <input asp-for="Add.Max" class="form-control" type="number" inputmode="numeric" min="1" max="@int.MaxValue" style="max-width:16ch;"/>
                         <span asp-validation-for="Add.Max" class="text-danger"></span>
@@ -162,7 +162,7 @@
     }
     else
     {
-        <p class="text-secondary">
+        <p class="text-secondary" text-translate="true">
             There are no Lightning Addresses yet.
         </p>
     }

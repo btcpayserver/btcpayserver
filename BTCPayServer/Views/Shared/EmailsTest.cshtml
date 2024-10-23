@@ -5,7 +5,7 @@
     <div class="col-xl-10 col-xxl-constrain">
         <div class="form-group">
             <label asp-for="TestEmail" class="form-label" text-translate="true">To test your settings, enter an email address</label>
-            <input asp-for="TestEmail" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
+            <input asp-for="TestEmail" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
             <span asp-validation-for="TestEmail" class="text-danger"></span>
         </div>
         <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test" text-translate="true">Send Test Email</button>

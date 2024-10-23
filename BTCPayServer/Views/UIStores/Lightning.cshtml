@@ -4,7 +4,7 @@
 @inject LightningClientFactoryService LightningClientFactoryService
 @inject BTCPayNetworkProvider NetworkProvider
 @{
-    ViewData.SetActivePage(StoreNavPages.Lightning, $"{Model.CryptoCode} Lightning", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.Lightning, StringLocalizer["{0} Lightning", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 <h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>

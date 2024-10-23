@@ -3,12 +3,24 @@
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Client
+@using BTCPayServer.TagHelpers
 @inject IFileService FileService
 @model CheckoutAppearanceViewModel
 @{
     ViewData.SetActivePage(StoreNavPages.CheckoutAppearance, StringLocalizer["Checkout Experience"], Context.GetStoreData().Id);
 
     var canUpload = await FileService.IsAvailable();
+}
+@functions {
+    private string CriteriaTypeDisplayName(PaymentMethodCriteriaViewModel.CriteriaType type)
+    {
+        return type switch
+        {
+            PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan => StringLocalizer["Greater than"],
+            PaymentMethodCriteriaViewModel.CriteriaType.LessThan => StringLocalizer["Less than"],
+            _ => throw new ArgumentOutOfRangeException(nameof(type), type, null)
+        };
+    }
 }
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
@@ -88,7 +100,7 @@
                                 </td>
                                 <td class="border-0">
                                     <select asp-for="PaymentMethodCriteria[index].Type" class="form-select"
-                                            asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(PaymentMethodCriteriaViewModel.ToString(s), s.ToString()))">
+                                            asp-items="@((PaymentMethodCriteriaViewModel.CriteriaType[]) Enum.GetValues(typeof(PaymentMethodCriteriaViewModel.CriteriaType))).Select(s => new SelectListItem(CriteriaTypeDisplayName(s), s.ToString()))">
                                     </select>
                                 </td>
                                 <td class="border-0">
@@ -166,7 +178,7 @@
                             else
                             {
                                 <input asp-for="SoundFile" type="file" class="form-control" disabled>
-                                <div class="form-text">In order to upload a custom sound, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                                <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                             }
                         </div>
                     </div>
@@ -211,12 +223,7 @@
                 <label asp-for="SupportUrl" class="form-label"></label>
                 <input asp-for="SupportUrl" class="form-control" />
                 <span asp-validation-for="SupportUrl" class="text-danger"></span>
-                <div class="form-text" html-translate="true">
-                    For support requests related to partially paid invoices.
-                    A "Contact Us" button with this link will be shown on the invoice expired page.
-                    Can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>.
-                    Can be any valid URI, such as a website, email, and Nostr.
-                </div>
+                <div class="form-text" html-translate="true">For support requests related to partially paid invoices. A "Contact Us" button with this link will be shown on the invoice expired page. Can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and Nostr.</div>
             </div>
             <div class="d-flex my-3">
                 <input asp-for="LazyPaymentMethods" type="checkbox" class="btcpay-toggle me-3" />

@@ -3,7 +3,7 @@
 @model MoneroLikePaymentMethodViewModel
 
 @{
-    ViewData.SetActivePage(Model.CryptoCode, $"{Model.CryptoCode} Settings", Model.CryptoCode);
+    ViewData.SetActivePage(Model.CryptoCode, StringLocalizer["{0} Settings", Model.CryptoCode], Model.CryptoCode);
 }
 
 <partial name="_StatusMessage" />
@@ -83,7 +83,7 @@
                 </div>
                 <div class="form-group">
                     <div class="input-group my-3">
-                        <input type="text" class="form-control" placeholder="New account label" asp-for="NewAccountLabel">
+                        <input type="text" class="form-control" placeholder="@StringLocalizer["New account label"]" asp-for="NewAccountLabel">
                         <button name="command" value="add-account" class="input-group-text btn btn-secondary" type="submit">Add account</button>
                     </div>
                 </div>
@@ -97,7 +97,7 @@
 
             <div class="form-group">
                 <label asp-for="SettlementConfirmationThresholdChoice" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info" />
                 </a>
                 <select

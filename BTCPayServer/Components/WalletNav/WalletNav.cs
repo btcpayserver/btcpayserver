@@ -1,27 +1,15 @@
 #nullable enable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Services;
-using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Mvc.ViewComponents;
 using Microsoft.AspNetCore.Mvc.ViewFeatures;
-using NBitcoin;
-using NBitcoin.Secp256k1;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Components.WalletNav
 {
@@ -33,6 +21,7 @@ namespace BTCPayServer.Components.WalletNav
         private readonly CurrencyNameTable _currencies;
         private readonly DefaultRulesCollection _defaultRules;
         private readonly RateFetcher _rateFetcher;
+        private IStringLocalizer StringLocalizer { get; }
 
         public WalletNav(
             BTCPayWalletProvider walletProvider,
@@ -40,6 +29,7 @@ namespace BTCPayServer.Components.WalletNav
             UIWalletsController walletsController,
             CurrencyNameTable currencies,
             DefaultRulesCollection defaultRules,
+            IStringLocalizer stringLocalizer,
             RateFetcher rateFetcher)
         {
             _walletProvider = walletProvider;
@@ -48,6 +38,7 @@ namespace BTCPayServer.Components.WalletNav
             _currencies = currencies;
             _defaultRules = defaultRules;
             _rateFetcher = rateFetcher;
+            StringLocalizer = stringLocalizer;
         }
 
         public async Task<IViewComponentResult> InvokeAsync(WalletId walletId)
@@ -71,7 +62,7 @@ namespace BTCPayServer.Components.WalletNav
                 Network = network,
                 Balance = balance.ShowMoney(network),
                 DefaultCurrency = defaultCurrency,
-                Label = derivation?.Label ?? $"{store.StoreName} {walletId.CryptoCode} Wallet"
+                Label = derivation?.Label ?? $"{store.StoreName} {StringLocalizer["{0} Wallet", walletId.CryptoCode]}"
             };
 
             if (defaultCurrency != network.CryptoCode)

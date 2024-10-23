@@ -145,7 +145,7 @@
                             <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
                                 <form v-on:submit="submitCustomAmountForm">
                                     <div class="input-group mb-3">
-                                        <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="Amount" step="any" required />
+                                        <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="@StringLocalizer["Amount"]" step="any" required />
                                         <span class="input-group-text">{{currency}}</span>
                                     </div>
                                     <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading }" :disabled="loading" type="submit" id="PayInvoice">
@@ -189,7 +189,7 @@
                             {
                                 <form method="get" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id">
                                     <div class="input-group mb-3">
-                                        <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="Amount" required />
+                                        <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="@StringLocalizer["Amount"]" required />
                                         <span class="input-group-text">@Model.Currency.ToUpper()</span>
                                     </div>
                                     <button class="btn btn-primary btn-lg w-100 text-nowrap" type="submit" id="PayInvoice" text-translate="true">Pay Invoice</button>

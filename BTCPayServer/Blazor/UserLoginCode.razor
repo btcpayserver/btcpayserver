@@ -5,11 +5,13 @@
 @using Microsoft.AspNetCore.Identity
 @using Microsoft.AspNetCore.Mvc
 @using Microsoft.AspNetCore.Routing
+@using Microsoft.Extensions.Localization
 @inject AuthenticationStateProvider AuthenticationStateProvider
-@inject UserManager<ApplicationUser> UserManager;
-@inject UserLoginCodeService UserLoginCodeService;
-@inject LinkGenerator LinkGenerator;
-@inject IHttpContextAccessor HttpContextAccessor;
+@inject UserManager<ApplicationUser> UserManager
+@inject UserLoginCodeService UserLoginCodeService
+@inject LinkGenerator LinkGenerator
+@inject IHttpContextAccessor HttpContextAccessor
+@inject IStringLocalizer StringLocalizer
 @implements IDisposable
 
 @if (!string.IsNullOrEmpty(_data))
@@ -18,7 +20,7 @@
         <div class="qr-container mb-2">
             <QrCode Data="@_data" Size="Size"/>
         </div>
-        <p class="text-center text-muted mb-1" id="progress">Valid for @_seconds seconds</p>
+        <p class="text-center text-muted mb-1" id="progress">@StringLocalizer["Valid for {0} seconds", _seconds]</p>
         <div class="progress only-for-js" data-bs-toggle="tooltip" data-bs-placement="top">
             <div class="progress-bar progress-bar-striped progress-bar-animated @(Percent < 15 ? "bg-warning" : null)" role="progressbar" style="width:@Percent%" id="progressbar"></div>
         </div>

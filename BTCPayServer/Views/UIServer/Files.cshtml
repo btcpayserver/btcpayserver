@@ -1,6 +1,6 @@
 @model ViewFilesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, "File Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["File Storage"]);
 }
 
 <div class="sticky-header">
@@ -14,9 +14,8 @@
 @if (!Model.StorageConfigured)
 {
     <p>
-        Before being able to upload you first need to
-        <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]">choose your file storage service provider</a>.
-        <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-upload-files-to-btcpay" target="_blank" rel="noreferrer noopener" title="More information...">
+        @ViewLocalizer["Before being able to upload you first need to {0}.", Html.ActionLink(StringLocalizer["choose your file storage service provider"], "Storage", "UIServer", new { forceChoice = "true", returnurl = ViewData["ReturnUrl"] })]
+        <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-upload-files-to-btcpay" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
             <vc:icon symbol="info" />
         </a>
     </p>
@@ -24,8 +23,8 @@
 else
 {
     <p>
-        Change your <a asp-action="storage" asp-route-forceChoice="true" asp-route-returnurl="@ViewData["ReturnUrl"]">file storage service</a> provider.
-        <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-upload-files-to-btcpay" target="_blank" rel="noreferrer noopener" title="More information...">
+        @ViewLocalizer["Change your {0} provider.", Html.ActionLink(StringLocalizer["file storage service"], "Storage", "UIServer", new { forceChoice = "true", returnurl = ViewData["ReturnUrl"] })]
+        <a href="https://docs.btcpayserver.org/FAQ/ServerSettings/#how-to-upload-files-to-btcpay" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
             <vc:icon symbol="info" />
         </a>
     </p>

@@ -2,7 +2,7 @@
 @model WalletSetupViewModel
 @{
 	Layout = "_LayoutWalletSetup";
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Scan QR code", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Scan QR code"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 	Csp.UnsafeEval();
 }
 
@@ -14,7 +14,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Scan the extended public key, also called "xpub", shown on your wallet's display.</p>
+    <p class="lead text-secondary mt-3" text-translate="true">Scan the extended public key, also called "xpub", shown on your wallet's display.</p>
 </header>
 
 @if (!ViewContext.ModelState.IsValid)
@@ -29,7 +29,7 @@
     </form>
 </div>
 
-<p class="mt-5">
+<p class="mt-5" text-translate="true">
     Generate a QR code of the extended public key in your wallet (see instructions for supported wallets below).
     Allow the browser access to your camera and hold the code to the camera when the scan prompt appears.
 </p>
@@ -37,8 +37,8 @@
 <table class="table table-hover">
     <thead>
     <tr>
-        <th>Wallet</th>
-        <th>Instructions</th>
+        <th text-translate="true">Wallet</th>
+        <th text-translate="true">Instructions</th>
     </tr>
     </thead>
     <tbody>

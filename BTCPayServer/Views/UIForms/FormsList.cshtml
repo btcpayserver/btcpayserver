@@ -3,18 +3,18 @@
 @using BTCPayServer.Client
 @model List<BTCPayServer.Data.FormData>
 @{
-    ViewData.SetActivePage(StoreNavPages.Forms, "Forms");
+    ViewData.SetActivePage(StoreNavPages.Forms, StringLocalizer["Forms"]);
     var storeId = Context.GetCurrentStoreId();
 }
 
 <div class="sticky-header">
     <h2>
         <span text-translate="true">@ViewData["Title"]</span>
-        <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+        <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
             <vc:icon symbol="info" />
         </a>
     </h2>
-	<a id="page-primary" asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyStoreSettings">
+	<a id="page-primary" asp-action="Create" asp-route-storeId="@storeId" class="btn btn-primary mt-3 mt-sm-0" role="button" permission="@Policies.CanModifyStoreSettings" text-translate="true">
         Create Form
     </a>
 </div>

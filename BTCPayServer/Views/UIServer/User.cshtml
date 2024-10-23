@@ -67,7 +67,7 @@
         else
         {
             <input asp-for="ImageFile" type="file" class="form-control" disabled>
-            <div class="form-text">In order to upload an image, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+            <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
         }
     </div>
     <div class="form-check my-3">

@@ -89,7 +89,7 @@
             @if (Model.ShowSearch)
             {
                 <div class="w-100 mt-3">
-                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm" v-if="showSearch">
+                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="@StringLocalizer["Search…"]" v-model="searchTerm" v-if="showSearch">
                 </div>
             }
             @if (Model.ShowCategories)
@@ -135,7 +135,14 @@
                                     @if (item.Inventory.HasValue)
                                     {
                                         <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
-                                            @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                            @if (item.Inventory > 0)
+                                            {
+                                                <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                            }
+                                            else
+                                            {
+                                                <span text-translate="true">Sold out</span>
+                                            }
                                         </span>
                                     }
                                 </div>

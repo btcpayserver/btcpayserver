@@ -7,9 +7,9 @@
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
     if (string.IsNullOrEmpty(storeId))
-        ViewData.SetActivePage(ServerNavPages.Roles);
+        ViewData.SetActivePage(ServerNavPages.Roles, StringLocalizer["Roles"]);
     else
-        ViewData.SetActivePage(StoreNavPages.Roles);
+        ViewData.SetActivePage(StoreNavPages.Roles, StringLocalizer["Roles"]);
     var permission = string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings;
     var nextRoleSortOrder = (string) ViewData["NextRoleSortOrder"];
     var roleSortOrder = nextRoleSortOrder switch
@@ -19,8 +19,8 @@
         _ => null
     };
 
-    const string sortByDesc = "Sort by name descending...";
-    const string sortByAsc = "Sort by name ascending...";
+    var sortByDesc = StringLocalizer["Sort by name descending..."];
+    var sortByAsc = StringLocalizer["Sort by name ascending..."];
     var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
 }
 

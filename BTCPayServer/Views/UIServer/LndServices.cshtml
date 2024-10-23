@@ -1,6 +1,6 @@
 @model LndServicesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, $"LND {Model.ConnectionType}");
+    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["LND {0}", Model.ConnectionType]);
 }
 
 <div class="sticky-header">

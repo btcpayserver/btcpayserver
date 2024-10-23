@@ -34,27 +34,21 @@
 </header>
 <template id="badUrl">
 	<div class="alert alert-danger alert-dismissible m-3" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close"/>
         </button>
-        <span>
-            BTCPay is expecting you to access this website from <strong>@(expectedScheme)://@(expectedHost)/</strong>.
-            If you use a reverse proxy, please set the <strong>X-Forwarded-Proto</strong> header to <strong id="browserScheme">@(expectedScheme)</strong>
-            (<a href="https://docs.btcpayserver.org/FAQ/Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link" rel="noreferrer noopener">More information</a>)
-        </span>
+        <span html-translate="true">BTCPay is expecting you to access this website from <strong>@(expectedScheme)://@(expectedHost)/</strong>. If you use a reverse proxy, please set the <strong>X-Forwarded-Proto</strong> header to <strong id="browserScheme">@(expectedScheme)</strong></span>
+        (<a href="https://docs.btcpayserver.org/FAQ/Deployment/#cause-3-btcpay-is-expecting-you-to-access-this-website-from" target="_blank" class="alert-link" rel="noreferrer noopener" text-translate="true">More information</a>)
     </div>
 </template>
 <main id="mainContent">
     @if (!_env.IsSecure(_context.HttpContext))
     {
         <div id="insecureEnv" class="alert alert-danger alert-dismissible" style="position:absolute; top:75px;" role="alert">
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                 <vc:icon symbol="close"/>
             </button>
-            <span>
-                Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. <br/>
-                We disabled the register and login link so you don't leak your credentials.
-            </span>
+            <span text-translate="true">Your access to BTCPay Server is over an unsecured network. If you are using the docker deployment method with NGINX and HTTPS is not available, you probably did not configure your DNS settings correctly. We disabled the register and login link so you don't leak your credentials.</span>
         </div>
     }
     <section>

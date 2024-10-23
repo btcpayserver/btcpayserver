@@ -6,6 +6,7 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
@@ -16,11 +17,13 @@ namespace BTCPayServer.Services.Notifications.Blobs
         {
             private readonly LinkGenerator _linkGenerator;
             private readonly BTCPayServerOptions _options;
+            private IStringLocalizer StringLocalizer { get; }
 
-            public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options)
+            public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer)
             {
                 _linkGenerator = linkGenerator;
                 _options = options;
+                StringLocalizer = stringLocalizer;
             }
 
             public override string NotificationType => TYPE;
@@ -29,25 +32,25 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 get
                 {
-                    return new (string identifier, string name)[] { (TYPE, "All invoice updates"), }
-                        .Concat(TextMapping.Select(pair => ($"{TYPE}_{pair.Key}", $"Invoice {pair.Value}"))).ToArray();
+                    return new (string identifier, string name)[] { (TYPE, StringLocalizer["All invoice updates"]), }
+                        .Concat(TextMapping.Select(pair => ($"{TYPE}_{pair.Key}", StringLocalizer["Invoice {0}", pair.Value].Value))).ToArray();
                 }
             }
 
-            internal static Dictionary<string, string> TextMapping = new Dictionary<string, string>()
+            private Dictionary<string, string> TextMapping => new()
             {
-                // {InvoiceEvent.PaidInFull, "was fully paid"},
-                {InvoiceEvent.PaidAfterExpiration, "was paid after expiration"},
-                {InvoiceEvent.ExpiredPaidPartial, "expired with partial payments"},
-                {InvoiceEvent.FailedToConfirm, "has payments that failed to confirm on time"},
-                // {InvoiceEvent.ReceivedPayment, "received a payment"},
-                {InvoiceEvent.Confirmed, "is settled"}
+                // {InvoiceEvent.PaidInFull, StringLocalizer["was fully paid"},
+                {InvoiceEvent.PaidAfterExpiration, StringLocalizer["was paid after expiration"]},
+                {InvoiceEvent.ExpiredPaidPartial, StringLocalizer["expired with partial payments"]},
+                {InvoiceEvent.FailedToConfirm, StringLocalizer["has payments that failed to confirm on time"]},
+                // {InvoiceEvent.ReceivedPayment, StringLocalizer["received a payment"},
+                {InvoiceEvent.Confirmed, StringLocalizer["is settled"]}
             };
 
             protected override void FillViewModel(InvoiceEventNotification notification,
                 NotificationViewModel vm)
             {
-                var baseStr = $"Invoice {notification.InvoiceId.Substring(0, 5)}..";
+                var baseStr = StringLocalizer["Invoice {0}..", notification.InvoiceId.Substring(0, 5)];
                 if (TextMapping.ContainsKey(notification.Event))
                 {
                     vm.Body = $"{baseStr} {TextMapping[notification.Event]}";
@@ -74,7 +77,12 @@ namespace BTCPayServer.Services.Notifications.Blobs
 
         public static bool HandlesEvent(string invoiceEvent)
         {
-            return Handler.TextMapping.Keys.Any(s => s == invoiceEvent);
+            return ((string[])[
+                InvoiceEvent.PaidAfterExpiration,
+                InvoiceEvent.ExpiredPaidPartial,
+                InvoiceEvent.FailedToConfirm,
+                InvoiceEvent.Confirmed])
+                .Any(s => s == invoiceEvent);
         }
 
         public string InvoiceId { get; set; }

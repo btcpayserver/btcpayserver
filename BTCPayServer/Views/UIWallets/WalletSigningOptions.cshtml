@@ -6,7 +6,7 @@
     var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId.ToString());
+    ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Sign the transaction"], walletId.ToString());
 }
 
 @section Navbar {
@@ -71,7 +71,7 @@
                 <h4>
                     <span text-translate="true">Partially Signed Bitcoin Transaction</span>
                     <small>
-                        <a href="https://docs.btcpayserver.org/Wallet/#signing-with-a-wallet-supporting-psbt" target="_blank" rel="noreferrer noopener" title="More information...">
+                        <a href="https://docs.btcpayserver.org/Wallet/#signing-with-a-wallet-supporting-psbt" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                             <vc:icon symbol="info" />
                         </a>
                     </small>
@@ -92,7 +92,7 @@
                     <h4 text-translate="true">Private key or seed</h4>
                     <p class="mb-0 text-secondary" text-translate="true">Provide the 12 or 24 word recovery seed</p>
                 </div>
-                <small class="d-block text-danger mt-2 mt-lg-0" data-bs-toggle="tooltip" data-bs-placement="top" title="You really should not type your seed into a device that is connected to the internet.">
+                <small class="d-block text-danger mt-2 mt-lg-0" data-bs-toggle="tooltip" data-bs-placement="top" title="@StringLocalizer["You really should not type your seed into a device that is connected to the internet."]">
                     <span text-translate="true">Not recommended</span> <vc:icon symbol="info" />
                 </small>
             </div>

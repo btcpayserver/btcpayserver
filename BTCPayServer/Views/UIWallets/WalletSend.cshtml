@@ -24,7 +24,7 @@
         </a>
     }
 	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
-        <vc:icon symbol="close" />
+        <vc:icon symbol="cross" />
     </a>
 }
 
@@ -104,7 +104,7 @@
                     </div>
                     <div class="input-group">
                         <input asp-for="Outputs[index].DestinationAddress" class="form-control font-monospace flex-grow-1" autocomplete="off" autofocus="@(index == Model.Outputs.Count - 1 ? "autofocus" : null)"/>
-                        <button type="button" id="scanqrcode" class="btn btn-secondary px-3 only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan with camera" data-index="@index">
+                        <button type="button" id="scanqrcode" class="btn btn-secondary px-3 only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan with camera"]" data-index="@index">
                             <vc:icon symbol="scan-qr" />
                         </button>
                     </div>
@@ -140,7 +140,7 @@
                         <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
                         @if (Model.ImmatureBalance > 0)
                         {
-                            <span><br>Note: @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
+                            <span><br>@StringLocalizer["Note: {0} are still immature and require additional confirmations.", $"{Model.ImmatureBalance} {Model.CryptoCode}"]</span>
                         }
                     </div>
                     <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
@@ -181,9 +181,7 @@
         @if (Model.RecommendedSatoshiPerByte.Any())
         {
             <div>
-                <div class="form-label text-secondary" text-translate="true">
-                    Confirm in the next …
-                </div>
+                <div class="form-label text-secondary" text-translate="true">Confirm in the next …</div>
                 <div class="btn-group btn-group-toggle feerate-options" role="group" data-bs-toggle="buttons">
                     @for (var index = 0; index < Model.RecommendedSatoshiPerByte.Count; index++)
                     {

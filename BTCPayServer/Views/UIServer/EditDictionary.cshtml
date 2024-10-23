@@ -25,9 +25,7 @@
 
 	<div class="d-flex mb-4">
 		<div class="flex-fill">
-			<p>
-				Translations are formatted as JSON <b>{ "Key": "Translation", "Key2": "Translation2" }</b>; for example, <b>{ "Welcome": "Bienvenue" }</b> translates <b>Welcome</b> to <b>Bienvenue</b>.
-			</p>
+			<p>@ViewLocalizer["Translations are formatted as JSON; for example, <b>{0}</b> translates <b>{1}</b> to <b>{2}</b>.", "{ \"Welcome\": \"Bienvenue\" }", "Welcome", "Bienvenue"]</p>
 			<p class="mb-0" text-translate="true">
 				To use the translation from this dictionary's fallback, you can:
 			</p>

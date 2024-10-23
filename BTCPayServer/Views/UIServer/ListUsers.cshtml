@@ -2,7 +2,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model UsersViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Users);
+    ViewData.SetActivePage(ServerNavPages.Users, StringLocalizer["Users"]);
     var nextUserEmailSortOrder = (string)ViewData["NextUserEmailSortOrder"];
     var userEmailSortOrder = nextUserEmailSortOrder switch
     {
@@ -73,6 +73,7 @@
                 { InvitationUrl: not null } => (StringLocalizer["Pending Invitation"], "warning"),
                 _ => (StringLocalizer["Active"], "success")
             };
+            var storesCount = user.Stores.Count();
             var pendingInvite = !string.IsNullOrEmpty(user.InvitationUrl);
             var detailsId = user.Stores.Any() ? $"user_details_{user.Id}" : null;
             <tr id="user_@user.Id" class="user-overview-row mass-action-row">
@@ -85,7 +86,7 @@
                         }
                     </div>
                 </td>
-                <td class="@(user.Stores.Any() ? null : "text-muted")">@user.Stores.Count() Store@(user.Stores.Count() == 1 ? "" : "s")</td>
+                <td class="@(storesCount > 0 ? null : "text-muted")">@(storesCount == 1 ? StringLocalizer["{0} Store", storesCount] : StringLocalizer["{0} Stores", storesCount])</td>
                 <td>@user.Created?.ToBrowserDate()</td>
                 <td>
                     <span class="user-status badge bg-@status.Item2" text-translate="true">@status.Item1</span>
@@ -93,11 +94,11 @@
                 <td class="actions-col">
                     <div class="d-inline-flex align-items-center gap-3">
                         @if (user is { EmailConfirmed: false, Disabled: false }) {
-                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Send verification email" data-description="This will send a verification email to <strong>@Html.Encode(user.Email)</strong>." data-confirm="Send" class="text-nowrap" text-translate="true">Resend email</a>
+                            <a asp-action="SendVerificationEmail" asp-route-userId="@user.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Send verification email"]" data-description="@ViewLocalizer["This will send a verification email to <strong>{0}</strong>.", Html.Encode(user.Email)]" data-confirm="@StringLocalizer["Send"]" class="text-nowrap" text-translate="true">Resend email</a>
                         }
                         @if (user is { Approved: false, Disabled: false })
                         {
-                            <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="Approve user" data-description="This will approve the user <strong>@Html.Encode(user.Email)</strong>." data-confirm="Approve" text-translate="true">Approve</a>
+                            <a asp-action="ApproveUser" asp-route-userId="@user.Id" asp-route-approved="true" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-title="@StringLocalizer["Approve user"]" data-description="@ViewLocalizer["This will approve the user <strong>{0}</strong>.", Html.Encode(user.Email)]" data-confirm="@StringLocalizer["Approve"]" text-translate="true">Approve</a>
                         }
                         @if (pendingInvite)
                         {

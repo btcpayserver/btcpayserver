@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebhooksViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, StringLocalizer["Webhooks"], Context.GetStoreData().Id);
 }
 
 <div class="sticky-header">
@@ -37,7 +37,7 @@
                                     {
                                         <span id="delivery-status-icon"
                                               data-bs-toggle="tooltip"
-                                              title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery " + @wh.LastDeliveryTimeStamp?.ToTimeAgo())">
+                                              title="@(wh.LastDeliveryTimeStamp == null ? StringLocalizer["No deliveries for this webhook yet"] : StringLocalizer["Last delivery {0}", wh.LastDeliveryTimeStamp.Value.ToTimeAgo()])">
                                             <vc:icon symbol="checkmark" css-class="text-success" />
                                         </span>
                                     }
@@ -62,7 +62,7 @@
                     </tbody>
                 </table>
             </div>
-            <partial name="_Confirm" model="@(new ConfirmModel("Delete Webhook", "This webhook will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+            <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete Webhook"], StringLocalizer["This webhook will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
         }
         else
         {

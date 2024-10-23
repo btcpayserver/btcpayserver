@@ -2,7 +2,7 @@
 @model BTCPayServer.Services.Altcoins.Zcash.UI.UIZcashLikeStoreController.ZcashLikePaymentMethodViewModel
 
 @{
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["{0} Settings", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 <div class="row">
@@ -80,7 +80,7 @@
                 </div>
                 <div class="form-group">
                     <div class="input-group my-3">
-                        <input type="text" class="form-control" placeholder="New account label" asp-for="NewAccountLabel">
+                        <input type="text" class="form-control" placeholder="@StringLocalizer["New account label"]" asp-for="NewAccountLabel">
                         <button name="command" value="add-account" class="input-group-text btn btn-secondary" type="submit" text-translate="true">Add account</button>
                     </div>
                 </div>

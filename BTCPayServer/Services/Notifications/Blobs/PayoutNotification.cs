@@ -5,6 +5,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using ExchangeSharp;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
@@ -16,11 +17,13 @@ namespace BTCPayServer.Services.Notifications.Blobs
         {
             private readonly LinkGenerator _linkGenerator;
             private readonly BTCPayServerOptions _options;
+            private IStringLocalizer StringLocalizer { get; }
 
-            public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options)
+            public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer)
             {
                 _linkGenerator = linkGenerator;
                 _options = options;
+                StringLocalizer = stringLocalizer;
             }
 
             public override string NotificationType => TYPE;
@@ -28,7 +31,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 get
                 {
-                    return new (string identifier, string name)[] { (TYPE, "Payouts") };
+                    return [(TYPE, StringLocalizer["Payouts"])];
                 }
             }
 
@@ -39,8 +42,8 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 vm.StoreId = notification.StoreId;
                 vm.Body = (notification.Status ?? PayoutState.AwaitingApproval) switch
                 {
-                    PayoutState.AwaitingApproval => "A new payout is awaiting for approval",
-                    PayoutState.AwaitingPayment => "A new payout is approved and awaiting payment",
+                    PayoutState.AwaitingApproval => StringLocalizer["A new payout is awaiting for approval"],
+                    PayoutState.AwaitingPayment => StringLocalizer["A new payout is approved and awaiting payment"],
                     _ => throw new ArgumentOutOfRangeException()
                 };
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),

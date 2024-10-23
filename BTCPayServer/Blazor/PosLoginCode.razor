@@ -1,13 +1,13 @@
 @using Microsoft.AspNetCore.Http
 
-@inject IHttpContextAccessor HttpContextAccessor;
+@inject IHttpContextAccessor HttpContextAccessor
 
 @if (Users?.Any() is true)
 {
     <div @attributes="Attrs" class="@CssClass">
-        <label for="SignedInUser" class="form-label">Signed in user</label>
+        <label for="SignedInUser" class="form-label" text-translate="true">Signed in user</label>
         <select id="SignedInUser" class="form-select" value="@_userId" @onchange="@(e => _userId = e.Value?.ToString())">
-            <option value="">None, just open the URL</option>
+            <option value="" text-translate="true">None, just open the URL</option>
             @foreach (var u in Users)
             {
                 <option value="@u.Key">@u.Value</option>

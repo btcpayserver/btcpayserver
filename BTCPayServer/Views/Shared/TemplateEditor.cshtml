@@ -22,7 +22,7 @@
                 <label for="EditorId" class="form-label" data-required>ID</label>
                 <input id="EditorId" required class="form-control mb-2" v-model="editingItem && editingItem.id" v-on:change="onIdChange" />
                 <div class="text-danger mb-3" v-if="errors.id">{{errors.id}}</div>
-                <div class="form-text" v-else>Leave blank to generate ID from title.</div>
+                <div class="form-text" v-else text-translate="true">Leave blank to generate ID from title.</div>
             </div>
             <div class="form-group row">
                 <div class="col-sm-6">
@@ -51,35 +51,35 @@
                 <div class="text-danger" v-if="errors.price">{{errors.price}}</div>
             </div>
             <div class="form-group">
-                <label for="EditorImageUrl" class="form-label">Image Url</label>
+                <label for="EditorImageUrl" class="form-label" text-translate="true">Image Url</label>
                 <input id="EditorImageUrl" class="form-control mb-2" v-model="editingItem && editingItem.image" ref="txtImage" />
                 <item-editor-upload upload-url=@Safe.Json(Url.Action("FileUpload", "UIApps", new { appId = Context.GetRouteValue("appId") })) v-on:uploaded="url => editingItem.image = url" />
             </div>
             <div class="form-group">
-                <label for="EditorDescription" class="form-label">Description</label>
+                <label for="EditorDescription" class="form-label" text-translate="true">Description</label>
                 <textarea id="EditorDescription" rows="3" cols="40" class="form-control" v-model="editingItem && editingItem.description"></textarea>
             </div>
             <div class="form-group">
-                <label for="EditorCategories" class="form-label">Categories</label>
+                <label for="EditorCategories" class="form-label" text-translate="true">Categories</label>
                 <input id="EditorCategories" class="form-control mb-2" autocomplete="off" ref="editorCategories" />
-                <div class="form-text">Easily filter the different items using categories, used only in the product list with cart.</div>
+                <div class="form-text" text-translate="true">Easily filter the different items using categories, used only in the product list with cart.</div>
             </div>
             <div class="form-group">
-                <label for="EditorInventory" class="form-label">Inventory</label>
+                <label for="EditorInventory" class="form-label" text-translate="true">Inventory</label>
                 <input id="EditorInventory" type="number" inputmode="numeric" min="0" step="1" class="form-control mb-2" v-model="editingItem && editingItem.inventory" v-on:change="onInventoryChange" />
-                <div class="form-text">Leave blank to not use this feature.</div>
+                <div class="form-text" text-translate="true">Leave blank to not use this feature.</div>
             </div>
             <div class="form-group">
-                <label for="BuyButtonText" class="form-label">Buy Button Text</label>
+                <label for="BuyButtonText" class="form-label" text-translate="true">Buy Button Text</label>
                 <input id="BuyButtonText" type="text" class="form-control mb-2" v-model="editingItem && editingItem.buyButtonText" />
             </div>
             <div class="form-group d-flex align-items-center">
                 <input type="checkbox" id="Disabled" class="btcpay-toggle me-3" :checked="editingItem && !editingItem.disabled" v-on:change="$event => editingItem.disabled = !$event.target.checked" />
-                <label for="Disabled" class="form-check-label">Enable</label>
+                <label for="Disabled" class="form-check-label" text-translate="true">Enable</label>
             </div>
             <vc:ui-extension-point location="app-template-editor-item-detail" model="Model"></vc:ui-extension-point>
         </div>
-        <div v-if="!editingItem">Select an item to edit</div>
+        <div v-if="!editingItem" text-translate="true">Select an item to edit</div>
     </div>
 </template>
 
@@ -112,7 +112,7 @@
         </div>
         <button type="button" id="btAddItem" class="btn btn-link py-0 px-2 mt-2 mb-2 gap-1 add fw-semibold d-inline-flex align-items-center" v-on:click.stop="$emit('add-item', $event)">
             <vc:icon symbol="actions-add" />
-            Add Item
+            <span text-translate="true">Add Item</span>
         </button>
     </div>
 </template>
@@ -129,10 +129,10 @@
     <div class="d-flex flex-wrap align-items-end justify-content-between gap-3 mb-3">
         <ul class="nav nav-pills gap-4" role="tablist">
             <li class="nav-item" role="presentation">
-                <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true">Editor</button>
+                <button class="nav-link active" id="EditorTabButton" data-bs-toggle="pill" data-bs-target="#EditorTabPane" type="button" role="tab" aria-controls="EditorTabPane" aria-selected="true" text-translate="true">Editor</button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false">Code</button>
+                <button class="nav-link" id="CodeTabButton" data-bs-toggle="pill" data-bs-target="#CodeTabPane" type="button" role="tab" aria-controls="CodeTabPane" aria-selected="false" text-translate="true">Code</button>
             </li>
         </ul>
     </div>
@@ -151,7 +151,7 @@
                 </div>
                 <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
                     <div class="offcanvas-header justify-content-between p-3">
-                        <h5 class="offcanvas-title">Edit Item</h5>
+                        <h5 class="offcanvas-title" text-translate="true">Edit Item</h5>
                         <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': itemChanged, 'btn-outline-secondary': !itemChanged }" v-on:click="hideOffcanvas" v-text="itemChanged ? 'Apply' : 'Close'"></button>
                     </div>
                     <div class="offcanvas-body p-3 p-xl-0">
@@ -161,7 +161,7 @@
             </div>
         </div>
         <div class="tab-pane fade" id="CodeTabPane" role="tabpanel" aria-labelledby="CodeTabButton" tabindex="0">
-            <label for="TemplateConfig" class="form-label">Template JSON</label>
+            <label for="TemplateConfig" class="form-label" text-translate="true">Template JSON</label>
             <textarea id="TemplateConfig" name="@Model.templateId" rows="21" cols="21" class="form-control font-monospace" style="font-size:.85rem" v-model="itemsJSON" v-on:change="updateFromJSON">@Model.template</textarea>
             <span asp-validation-for="@Model.templateId" class="text-danger"></span>
         </div>

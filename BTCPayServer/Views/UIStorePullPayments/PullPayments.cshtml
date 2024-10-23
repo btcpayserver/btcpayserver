@@ -6,24 +6,21 @@
 @model BTCPayServer.Models.WalletViewModels.PullPaymentsModel
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.PullPayments, "Pull Payments", storeId);
     var nextStartDateSortOrder = (string)ViewData["NextStartSortOrder"];
+    var sortByDesc = StringLocalizer["Sort by date descending..."];
+    var sortByAsc = StringLocalizer["Sort by date ascending..."];
     var startDateSortOrder = nextStartDateSortOrder switch
     {
         "asc" => "desc",
         "desc" => "asc",
         _ => null
     };
-
-    const string sortByDesc = "Sort by date descending...";
-    const string sortByAsc = "Sort by date ascending...";
+    ViewData.SetActivePage(StoreNavPages.PullPayments, StringLocalizer["Pull Payments"], storeId);
 }
 
 @section PageHeadContent {
     <style>
-        .tooltip-inner {
-            text-align: left;
-        }
+        .tooltip-inner { text-align: left; }
     </style>
 }
 
@@ -45,7 +42,7 @@
             <p class="mb-3" text-translate="true">Pull Payments allow receivers to claim specified funds from your wallet at their convenience. Once submitted and approved, the funds will be released.</p>
             <a href="https://docs.btcpayserver.org/PullPayments/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
-        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
     </div>
@@ -71,15 +68,15 @@
     @foreach (var pp in Model.PullPayments)
     {
         <script id="tooptip_template_@pp.Id" type="text/template">
-            <span>Awaiting:&nbsp;<span class="float-end">@pp.Progress.AwaitingFormatted</span></span>
+            <span>@StringLocalizer["Awaiting"]:&nbsp;<span class="float-end">@pp.Progress.AwaitingFormatted</span></span>
             <br />
-            <span>Completed:&nbsp;<span class="float-end">@pp.Progress.CompletedFormatted</span></span>
+            <span>@StringLocalizer["Completed"]:&nbsp;<span class="float-end">@pp.Progress.CompletedFormatted</span></span>
             <br />
-            <span>Limit:&nbsp;<span class="float-end">@pp.Progress.LimitFormatted</span></span>
+            <span>@StringLocalizer["Limit"]:&nbsp;<span class="float-end">@pp.Progress.LimitFormatted</span></span>
             @if (pp.Progress.EndIn != null)
             {
                 <br />
-                <span>Expires in:&nbsp;<span class="float-end">@pp.Progress.EndIn</span></span>
+                <span>@StringLocalizer["Expires in"]:&nbsp;<span class="float-end">@pp.Progress.EndIn</span></span>
             }
         </script>
     }
@@ -97,7 +94,7 @@
                             <span text-translate="true">Start</span>
                             <vc:icon symbol="actions-sort-@(startDateSortOrder ?? nextStartDateSortOrder ?? "desc")" />
                         </a>
-                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                             <vc:icon symbol="time" />
                         </button>
                     </div>
@@ -175,7 +172,7 @@
     </div>
     <vc:pager view-model="Model" />
 
-    <partial name="_Confirm" model="@(new ConfirmModel("Archive pull payment", "Do you really want to archive the pull payment?", "Archive"))" />
+    <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Archive pull payment"], StringLocalizer["Do you really want to archive the pull payment?"], StringLocalizer["Archive"]))" />
 
     @section PageFootContent {
         <script>
@@ -192,6 +189,6 @@
 else
 {
     <p class="text-secondary mt-4">
-        There are no @Model.ActiveState.ToStringLowerInvariant() pull payments yet.
+        @StringLocalizer["There are no {0} pull payments yet.", Model.ActiveState.ToStringLowerInvariant()]
     </p>
 }

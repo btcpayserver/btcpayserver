@@ -4,7 +4,7 @@
 @{
     var storeId = Context.GetStoreData().Id;
     var hasCustomSettings = (Model.IsSetup() && !Model.UsesFallback()) || ViewBag.UseCustomSMTP ?? false;
-    ViewData.SetActivePage(StoreNavPages.Emails, "Email Rules", storeId);
+    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer["Email Rules"], storeId);
 }
 
 <form method="post" autocomplete="off" permissioned="@Policies.CanModifyStoreSettings">

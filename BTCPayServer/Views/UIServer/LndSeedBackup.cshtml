@@ -1,7 +1,7 @@
 @using BTCPayServer.Abstractions.Models
 @model LndSeedBackupViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, "LND Seed Backup");
+    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["LND Seed Backup"]);
 }
 
 <div class="sticky-header">
@@ -41,7 +41,7 @@
                         <label asp-for="Seed" class="form-label"></label>
                         <div class="input-group">
                             <input asp-for="Seed" type="password" class="form-control" value="@Model.Seed">
-                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle seed visibility" data-toggle-password="#Seed">
+                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="@StringLocalizer["Toggle seed visibility"]" data-toggle-password="#Seed">
                                 <vc:icon symbol="actions-show" />
                             </button>
                         </div>
@@ -50,7 +50,7 @@
                         <label asp-for="WalletPassword" class="form-label" text-translate="true">Password</label>
                         <div class="input-group">
                             <input asp-for="WalletPassword" type="password" class="form-control" value="@Model.WalletPassword">
-                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle password visibility" data-toggle-password="#WalletPassword">
+                            <button type="button" class="btn btn-secondary px-3 only-for-js" title="@StringLocalizer["Toggle password visibility"]" data-toggle-password="#WalletPassword">
                                 <vc:icon symbol="actions-show" />
                             </button>
                         </div>
@@ -58,7 +58,7 @@
                 </div>
                 <div class="form-group collapse">
                     <form method="get" asp-action="RemoveLndSeed" asp-route-serviceName="@Context.GetRouteValue("serviceName")" asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")">
-                        <button id="delete" class="btn btn-primary" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE" text-translate="true">Delete LND seed from server</button>
+                        <button id="delete" class="btn btn-primary" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Delete LND seed from server</button>
                     </form>
                 </div>
             }
@@ -68,7 +68,7 @@
 
 @if (!Model.Removed)
 {
-    <partial name="_Confirm" model="@(new ConfirmModel("Delete LND seed", "This action will permanently delete your LND seed and password. You will not be able to recover them if you don't have a backup.", "Delete"))"/>
+    <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete LND seed"], StringLocalizer["This action will permanently delete your LND seed and password. You will not be able to recover them if you don't have a backup."], StringLocalizer["Delete"]))"/>
 }
 
 @section PageFootContent {

@@ -4,10 +4,10 @@
 @model BTCPayServer.Forms.ModifyForm
 @{
     Csp.UnsafeEval();
+    var storeId = Context.GetCurrentStoreId();
     var formId = Context.GetRouteValue("id");
     var isNew = formId is null;
-    ViewData.SetActivePage(StoreNavPages.Forms, $"{(isNew ? "Create" : "Edit")} Form", Model.Name);
-    var storeId = Context.GetCurrentStoreId();
+    ViewData.SetActivePage(StoreNavPages.Forms, isNew ? StringLocalizer["Create Form"] : StringLocalizer["Edit Form"], Model.Name);
 }
 
 @section PageHeadContent {
@@ -30,17 +30,17 @@
     <template id="field-editor">
         <div class="field" v-if="field">
             <div class="form-group">
-                <label for="field-editor-field-type" class="form-label" data-required>Type</label>
+                <label for="field-editor-field-type" class="form-label" data-required text-translate="true">Type</label>
                 <select id="field-editor-field-type" class="form-select" required v-model="field.type">
                     <option v-for="option in fieldTypeOptions" :key="option" :value="option" v-text="option.charAt(0).toUpperCase() + option.slice(1)"></option>
                 </select>
             </div>
             <div class="form-group">
-                <label for="field-editor-field-label" class="form-label" data-required>Label</label>
+                <label for="field-editor-field-label" class="form-label" data-required text-translate="true">Label</label>
                 <input id="field-editor-field-label" class="form-control" required v-model="field.label" />
             </div>
             <div class="form-group">
-                <label for="field-editor-field-name" class="form-label" data-required>Name</label>
+                <label for="field-editor-field-name" class="form-label" data-required text-translate="true">Name</label>
                 <input id="field-editor-field-name" class="form-control" list="special-field-names" required v-model="field.name" />
                 <div text-translate="true" class="form-text">The name of the field in the invoice's metadata.</div>
                 <div text-translate="true" class="form-text text-info" v-if="field.name === 'invoice_currency'">The configured name means the value of this field will determine the invoice currency for public forms.</div>
@@ -56,11 +56,11 @@
                             <vc:icon symbol="drag" />
                         </button>
                         <div class="field flex-grow-1">
-                            <label :for="`field-option-value-${index}`" class="form-label">Value</label>
+                            <label :for="`field-option-value-${index}`" class="form-label" text-translate="true">Value</label>
                             <input :id="`field-option-value-${index}`" class="form-control" v-model.lazy="option.value" />
                         </div>
                         <div class="field flex-grow-1">
-                            <label :for="`field-option-text-${index}`" class="form-label">Text</label>
+                            <label :for="`field-option-text-${index}`" class="form-label" text-translate="true">Text</label>
                             <input :id="`field-option-text-${index}`" class="form-control" v-model="option.text" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeOption($event, index)">
@@ -90,15 +90,15 @@
                 <div class="options">
                     <div v-if="field.valuemap" v-for="(v, k, index) in field.valuemap" :key="k" class="d-flex align-items-start gap-2 pt-3">
                         <div class="field flex-grow-1">
-                            <label :for="`field-valuemap-value-${index}`" class="form-label">Original Value</label>
+                            <label :for="`field-valuemap-value-${index}`" class="form-label" text-translate="true">Original Value</label>
                             <select v-if="mirroredField && mirroredField.type === 'select'" :id="`field-valuemap-value-${index}`" class="form-select" v-on:change="updateValueMap(k, $event.target.value, v)">
                                 <option v-for="option in mirroredField.options" v-if="option.text && option.value" :key="option.value" :value="option.value" :selected="k === option.value" v-text="`${option.value} (${option.text})`"></option>
                             </select>
-                            <input v-else :id="`field-valuemap-value-${index}`" class="form-control" placeholder="Value to match" :value="k" v-on:change="updateValueMap(k, $event.target.value, v)" />
+                            <input v-else :id="`field-valuemap-value-${index}`" class="form-control" placeholder="@StringLocalizer["Value to match"]" :value="k" v-on:change="updateValueMap(k, $event.target.value, v)" />
                         </div>
                         <div class="field flex-grow-1">
-                            <label :for="`field-valuemap-mapped-${index}`" class="form-label">Mapped Value</label>
-                            <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="Value to set" :value="v" v-on:change="updateValueMap(k, k, $event.target.value)" />
+                            <label :for="`field-valuemap-mapped-${index}`" class="form-label" text-translate="true">Mapped Value</label>
+                            <input :id="`field-valuemap-mapped-${index}`" class="form-control" placeholder="@StringLocalizer["Value to set"]" :value="v" v-on:change="updateValueMap(k, k, $event.target.value)" />
                         </div>
                         <button type="button" class="btn b-0 control remove" v-on:click="removeValueMap($event, k)">
                             <vc:icon symbol="remove" />
@@ -202,7 +202,7 @@
             </ol>
             <h2>
                 @ViewData["Title"]
-                <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/Forms" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info" />
                 </a>
             </h2>
@@ -230,10 +230,7 @@
                 <input asp-for="Public" type="checkbox" class="btcpay-toggle" />
                 <div>
                     <label asp-for="Public"></label>
-                    <div class="form-text" text-translate="true">
-                        Standalone mode, which can be used to generate invoices
-                        independent of payment requests or apps.
-                    </div>
+                    <div class="form-text" text-translate="true">Standalone mode, which can be used to generate invoices independent of payment requests or apps.</div>
                 </div>
             </div>
         </div>
@@ -272,7 +269,7 @@
                     <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
                         <div class="offcanvas-header justify-content-between p-3">
                             <h5 class="offcanvas-title" text-translate="true">Edit Field</h5>
-                            <button type="button" class="btn-close" aria-label="Close" v-on:click="hideOffcanvas">
+                            <button type="button" class="btn-close" aria-label="@StringLocalizer["Close"]" v-on:click="hideOffcanvas">
                                 <vc:icon symbol="close" />
                             </button>
                         </div>

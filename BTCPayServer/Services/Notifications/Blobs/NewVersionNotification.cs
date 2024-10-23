@@ -1,19 +1,20 @@
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Models.NotificationViewModels;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
     internal class NewVersionNotification : BaseNotification
     {
         private const string TYPE = "newversion";
-        internal class Handler : NotificationHandler<NewVersionNotification>
+        internal class Handler(IStringLocalizer stringLocalizer) : NotificationHandler<NewVersionNotification>
         {
+            private IStringLocalizer StringLocalizer { get; } = stringLocalizer;
             public override string NotificationType => TYPE;
             public override (string identifier, string name)[] Meta
             {
                 get
                 {
-                    return new (string identifier, string name)[] { (TYPE, "New version") };
+                    return [(TYPE, StringLocalizer["New version"])];
                 }
             }
 
@@ -21,7 +22,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
-                vm.Body = $"New version {notification.Version} released!";
+                vm.Body = StringLocalizer["New version {0} released!", notification.Version];
                 vm.ActionLink = $"https://github.com/btcpayserver/btcpayserver/releases/tag/v{notification.Version}";
             }
         }

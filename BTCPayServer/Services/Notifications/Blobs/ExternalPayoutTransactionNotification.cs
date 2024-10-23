@@ -3,6 +3,7 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Notifications.Blobs
 {
@@ -14,11 +15,13 @@ namespace BTCPayServer.Services.Notifications.Blobs
         {
             private readonly LinkGenerator _linkGenerator;
             private readonly BTCPayServerOptions _options;
+            private IStringLocalizer StringLocalizer { get; }
 
-            public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options)
+            public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer)
             {
                 _linkGenerator = linkGenerator;
                 _options = options;
+                StringLocalizer = stringLocalizer;
             }
 
             public override string NotificationType => TYPE;
@@ -27,7 +30,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
             {
                 get
                 {
-                    return new (string identifier, string name)[] { (TYPE, "External payout approval") };
+                    return new (string identifier, string name)[] { (TYPE, StringLocalizer["External payout approval"]) };
                 }
             }
 
@@ -38,7 +41,7 @@ namespace BTCPayServer.Services.Notifications.Blobs
                 vm.Type = notification.NotificationType;
                 vm.StoreId = notification.StoreId;
                 vm.Body =
-                    "A payment that was made to an approved payout by an external wallet is waiting for your confirmation.";
+                    StringLocalizer["A payment that was made to an approved payout by an external wallet is waiting for your confirmation."];
                 vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIStorePullPaymentsController.Payouts),
                     "UIStorePullPayments",
                     new

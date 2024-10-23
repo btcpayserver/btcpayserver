@@ -1,7 +1,7 @@
 @using BTCPayServer.Client
 @model BTCPayServer.Models.StoreViewModels.ListStoresViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Index, Model.Archived ? "Archived Stores" : "Stores");
+    ViewData.SetActivePage(StoreNavPages.Index, Model.Archived ? StringLocalizer["Archived Stores"] : StringLocalizer["Stores"]);
 }
 
 <h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>

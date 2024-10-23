@@ -9,7 +9,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Update Point of Sale"], Model.Id);
 	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
     var posPath = Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id });
@@ -34,12 +34,12 @@
 			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
             @if (Model.Archived)
             {
-                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>
+                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true">Unarchive</button>
             }
             else
             {
                 <div class="btn-group" role="group" aria-label="View Point of Sale">
-                    <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank">View</a>
+                    <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank" text-translate="true">View</a>
                     <button type="button" class="btn btn-secondary px-3 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#OpenPosModal">
                         <vc:icon symbol="qr-code" />
                     </button>
@@ -76,7 +76,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label asp-for="DefaultView" class="form-label" data-required>Choose Point of Sale Style</label>
+                <label asp-for="DefaultView" class="form-label" data-required text-translate="true">Choose Point of Sale Style</label>
                 <div class="btcpay-list-select">
                     @foreach (var type in Enum.GetValues<PosViewType>())
                     {
@@ -91,7 +91,7 @@
             <div class="form-group mb-0">
                 <label asp-for="Currency" class="form-label"></label>
                 <input asp-for="Currency" class="form-control w-auto" currency-selection />
-                <div class="form-text">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</div>
+                <div class="form-text">@StringLocalizer["Uses the store's default currency ({0}) if empty.", Model.StoreDefaultCurrency]</div>
                 <span asp-validation-for="Currency" class="text-danger"></span>
             </div>
         </div>
@@ -112,7 +112,7 @@
     </div>
     <div class="row mt-5">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
-            <h3 class="mb-4">Checkout</h3>
+            <h3 class="mb-4" text-translate="true">Checkout</h3>
             <fieldset>
                 <div class="form-group" id="button-price-text">
                     <label asp-for="ButtonText" class="form-label" data-required></label>
@@ -126,7 +126,7 @@
                 </div>
             </fieldset>
             <fieldset id="keypad-display" class="mt-2">
-                <legend class="h5 mb-3 fw-semibold">Keypad</legend>
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Keypad</legend>
                 <div class="form-group d-flex align-items-center pt-2">
                     <input asp-for="ShowItems" type="checkbox" class="btcpay-toggle me-3" />
                     <label asp-for="ShowItems" class="form-label mb-0"></label>
@@ -147,7 +147,7 @@
                 </div>
             </fieldset>
             <fieldset id="tips" class="mt-2">
-                <legend class="h5 mb-3 fw-semibold">Tips</legend>
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Tips</legend>
                 <div class="form-group d-flex align-items-center pt-2">
                     <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
                     <label asp-for="EnableTips" class="form-check-label"></label>
@@ -167,18 +167,18 @@
                 </div>
             </fieldset>
             <fieldset id="discounts" class="mt-2">
-                <legend class="h5 mb-3 fw-semibold">Discounts</legend>
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Discounts</legend>
                 <div class="form-group d-flex align-items-center">
                     <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-3" />
                     <div>
                         <label asp-for="ShowDiscount" class="form-check-label"></label>
-                        <div class="text-muted">Not recommended for customer self-checkout.</div>
+                        <div class="text-muted" text-translate="true">Not recommended for customer self-checkout.</div>
                     </div>
                     <span asp-validation-for="ShowDiscount" class="text-danger"></span>
                 </div>
             </fieldset>
             <fieldset id="custom-payments" class="mt-2">
-                <legend class="h5 mb-3 fw-semibold">Custom Payments</legend>
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Custom Payments</legend>
                 <div class="form-group mb-4 d-flex align-items-center">
                     <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
                     <label asp-for="ShowCustomAmount" class="form-check-label"></label>
@@ -202,21 +202,21 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-embed-payment-button-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-payment-button" aria-expanded="false" aria-controls="additional-embed-payment-button">
-                                Embed a payment button linking to POS item
+                                <span text-translate="true">Embed a payment button linking to POS item</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
                         <div id="additional-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="additional-embed-payment-button-header">
                             <div class="accordion-body">
-                                <p>You can host point of sale buttons in an external website with the following code.</p>
+                                <p text-translate="true">You can host point of sale buttons in an external website with the following code.</p>
                                 @if (Model.Example1 != null)
                                 {
-                                    <span>For anything with a custom amount</span>
+                                    <span text-translate="true">For anything with a custom amount</span>
                                     <pre class="p-3">@Model.Example1</pre>
                                 }
                                 @if (Model.Example2 != null)
                                 {
-                                    <span>For a specific item of your template</span>
+                                    <span text-translate="true">For a specific item of your template</span>
                                     <pre class="p-3">@Model.Example2</pre>
                                 }
                             </div>
@@ -225,13 +225,13 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-embed-pos-iframe-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-pos-iframe" aria-expanded="false" aria-controls="additional-embed-pos-iframe">
-                                Embed Point of Sale via Iframe
+                                <span text-translate="true">Embed Point of Sale via iframe</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
                         <div id="additional-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="additional-embed-pos-iframe-header">
                             <div class="accordion-body">
-                                You can embed this POS via an iframe.
+                                <span text-translate="true">You can embed this POS via an iframe.</span>
                                 @{
                                     var iframe = $"<iframe src='{Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id }, Context.Request.Scheme)}' style='max-width: 100%; border: 0;'></iframe>";
                                 }
@@ -242,7 +242,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-redirect-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-redirect" aria-expanded="false" aria-controls="additional-redirect">
-                                Redirects
+                                <span text-translate="true">Redirects</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -264,7 +264,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-notification-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notification" aria-expanded="false" aria-controls="additional-notification">
-                                Notification URL Callbacks
+                                <span text-translate="true">Notification URL Callbacks</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -275,13 +275,13 @@
                                     <input asp-for="NotificationUrl" class="form-control" />
                                     <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                                 </div>
-                                <p>A <code>POST</code> callback will be sent to the specified <code>notificationUrl</code> (for on-chain transactions when there are sufficient confirmations):</p>
+                                <p html-translate="true">A <code>POST</code> callback will be sent to the specified <code>notificationUrl</code> (for on-chain transactions when there are sufficient confirmations):</p>
                                 <pre class="p-3">@Model.ExampleCallback</pre>
-                                <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
+                                <p html-translate="true"><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
                                 <ul>
-                                    <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
-                                    <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
-                                    <li>You can then ship your order</li>
+                                    <li html-translate="true">Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
+                                    <li html-translate="true">Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
+                                    <li text-translate="true">You can then ship your order</li>
                                 </ul>
                             </div>
                         </div>
@@ -293,30 +293,30 @@
 </form>
 
 <div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
-    <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
+    <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
     <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.Id">
         <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle" permission="@Policies.CanModifyStoreSettings">
             @if (Model.Archived)
             {
-                <span class="text-nowrap">Unarchive this app</span>
+                <span class="text-nowrap" text-translate="true">Unarchive this app</span>
             }
             else
             {
-                <span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this app so that it does not appear in the apps list by default">Archive this app</span>
+                <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this app so that it does not appear in the apps list by default"]" text-translate="true">Archive this app</span>
             }
         </button>
     </form>
-    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE" permission="@Policies.CanModifyStoreSettings">Delete this app</a>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["The app <strong>{0}</strong> and its settings will be permanently deleted.", Html.Encode(Model.AppName)]" data-confirm-input="@StringLocalizer["DELETE"]" permission="@Policies.CanModifyStoreSettings" text-translate="true">Delete this app</a>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete app"], StringLocalizer["This app will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
 
 <div class="modal fade" id="OpenPosModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Scan the QR code to open the Point of Sale</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <h5 class="modal-title" text-translate="true">Scan the QR code to open the Point of Sale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close"/>
                 </button>
             </div>

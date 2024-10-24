@@ -1,6 +1,5 @@
+@using System.Web
 @using BTCPayServer.TagHelpers
-@using Microsoft.AspNetCore.Http
-@using Microsoft.AspNetCore.WebUtilities
 @model BasePagingViewModel
 
 @{
@@ -88,11 +87,26 @@
         {
             // merge both, preferring the `query` properties in case of duplicate keys
             query = query.Concat(Model.PaginationQuery)
+                .Where(e => e.Value != null)
                 .GroupBy(e => e.Key)
                 .ToDictionary(g => g.Key, g => g.First().Value);
         }
 
-        return QueryHelpers.AddQueryString(ViewContext.HttpContext.Request.GetCurrentUrlWithQueryString(),
-            query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString()));
+        return ReplaceQueryParameters(query);
+    }
+    
+    string ReplaceQueryParameters(Dictionary<string, object> query)
+    {
+        var uri = new Uri(ViewContext.HttpContext.Request.GetCurrentUrlWithQueryString());
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
+        foreach (var (key, value) in query)
+        {
+            if (value != null) queryParams[key] = value?.ToString();
+        }
+        var uriBuilder = new UriBuilder(uri)
+        {
+            Query = queryParams.ToString()!
+        };
+        return uriBuilder.ToString();
     }
 }

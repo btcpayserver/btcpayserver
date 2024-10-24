@@ -50,6 +50,56 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/histogram": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Get store on-chain wallet balance histogram",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "description": "View the balance histogram of the specified wallet",
+                "operationId": "StoreOnChainWallets_ShowOnChainWalletHistogram",
+                "responses": {
+                    "200": {
+                        "description": "specified wallet",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HistogramData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/wallet"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate": {
             "get": {
                 "tags": [

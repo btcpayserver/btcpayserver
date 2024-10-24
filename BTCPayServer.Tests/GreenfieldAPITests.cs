@@ -745,9 +745,9 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
             var client = await user.CreateClient();
 
-            var item1 = new ViewPointOfSaleViewModel.Item { Id = "item1", Title = "Item 1", Price = 1, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed };
-            var item2 = new ViewPointOfSaleViewModel.Item { Id = "item2", Title = "Item 2", Price = 2, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed };
-            var item3 = new ViewPointOfSaleViewModel.Item { Id = "item3", Title = "Item 3", Price = 3, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed };
+            var item1 = new AppItem { Id = "item1", Title = "Item 1", Price = 1, PriceType = AppItemPriceType.Fixed };
+            var item2 = new AppItem { Id = "item2", Title = "Item 2", Price = 2, PriceType = AppItemPriceType.Fixed };
+            var item3 = new AppItem { Id = "item3", Title = "Item 3", Price = 3, PriceType = AppItemPriceType.Fixed };
             var posItems = AppService.SerializeTemplate([item1, item2, item3]);
             var posApp = await client.CreatePointOfSaleApp(user.StoreId, new PointOfSaleAppRequest { AppName = "test pos", Template = posItems, });
             var crowdfundApp = await client.CreateCrowdfundApp(user.StoreId, new CrowdfundAppRequest { AppName = "test crowdfund" });

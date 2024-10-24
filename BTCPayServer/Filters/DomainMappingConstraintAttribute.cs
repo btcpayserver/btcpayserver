@@ -46,6 +46,8 @@ namespace BTCPayServer.Filters
                     var uri = new UriBuilder(req.Scheme, redirectDomain);
                     if (req.Host.Port.HasValue)
                         uri.Port = req.Host.Port.Value;
+                    if (req.QueryString.HasValue)
+                        uri.Query = req.QueryString.Value!;
                     context.RouteContext.HttpContext.Response.Redirect(uri.ToString());
                 }
                 return true;

@@ -1,3 +1,6 @@
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Http
+@using Microsoft.AspNetCore.WebUtilities
 @model BasePagingViewModel
 
 @{
@@ -89,6 +92,7 @@
                 .ToDictionary(g => g.Key, g => g.First().Value);
         }
 
-        return Url.Action(null, query);
+        return QueryHelpers.AddQueryString(ViewContext.HttpContext.Request.GetCurrentUrlWithQueryString(),
+            query.ToDictionary(kvp => kvp.Key, kvp => kvp.Value?.ToString()));
     }
 }

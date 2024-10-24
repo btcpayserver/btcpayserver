@@ -1329,8 +1329,11 @@ namespace BTCPayServer.Controllers
                             FileDownloadName = file
                         };
                     }
-                    using var reader = new StreamReader(fileStream);
-                    vm.Log = await reader.ReadToEndAsync();
+                    await using (fileStream)
+                    {
+                        using var reader = new StreamReader(fileStream);
+                        vm.Log = await reader.ReadToEndAsync();
+                    }
                 }
                 catch
                 {

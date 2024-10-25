@@ -4,7 +4,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model StoreReportsViewModel
 @{
-	ViewData.SetActivePage(StoreNavPages.Reporting, "Reporting");
+	ViewData.SetActivePage(StoreNavPages.Reporting, StringLocalizer["Reporting"]);
 	Csp.UnsafeEval();
 }
 @section PageHeadContent
@@ -22,7 +22,7 @@
 <div class="sticky-header">
     <h2>
         @ViewData["Title"]
-        <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener" title="More information...">
+        <a href="https://docs.btcpayserver.org/Accounting/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
             <vc:icon symbol="info" />
         </a>
     </h2>
@@ -45,7 +45,7 @@
 		<input id="fromDate" class="form-control flatdtpicker" type="datetime-local"
 			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
 			   placeholder="Start Date" />
-		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
+		<button type="button" class="btn btn-primary input-group-clear" title="@StringLocalizer["Clear"]">
             <vc:icon symbol="close" />
 		</button>
 	</div>
@@ -53,7 +53,7 @@
 		<input id="toDate" class="form-control flatdtpicker" type="datetime-local"
 			   data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
 			   placeholder="End Date" />
-		<button type="button" class="btn btn-primary input-group-clear" title="Clear">
+		<button type="button" class="btn btn-primary input-group-clear" title="@StringLocalizer["Clear"]">
             <vc:icon symbol="close" />
 		</button>
     </div>

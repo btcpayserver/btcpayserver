@@ -9,7 +9,7 @@
 	var isSignable = !isReady;
 	var needsExport = !isSignable && !isReady;
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? "Confirm broadcasting this transaction" : "Transaction Details", walletId);
+	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? StringLocalizer["Confirm broadcasting this transaction"] : StringLocalizer["Transaction Details"], walletId);
 	Csp.UnsafeEval();
 }
 
@@ -133,10 +133,7 @@ else if (isReady)
 }
 else
 {
-    <p class="lead text-secondary mt-5" text-translate="true">
-        Export the PSBT for your wallet. Sign it with your wallet and 
-        import the signed PSBT version here for finalization and broadcasting.
-    </p>
+    <p class="lead text-secondary mt-5" text-translate="true">Export the PSBT for your wallet. Sign it with your wallet and import the signed PSBT version here for finalization and broadcasting.</p>
 }
 
 <div class="accordion" id="PSBTOptions">

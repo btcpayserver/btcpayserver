@@ -6,7 +6,7 @@
 	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
 	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", walletId);
+	ViewData.SetActivePage(WalletsNavPages.PSBT, StringLocalizer["Decode PSBT"], walletId);
 	Csp.UnsafeEval();
 }
 
@@ -77,7 +77,7 @@
     @if (Model.Errors != null && Model.Errors.Count != 0)
     {
         <div class="alert alert-danger alert-dismissible" role="alert">
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                 <vc:icon symbol="close" />
             </button>
             @foreach (var error in Model.Errors)

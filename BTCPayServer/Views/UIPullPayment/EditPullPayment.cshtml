@@ -2,7 +2,7 @@
 @model BTCPayServer.Models.WalletViewModels.UpdatePullPaymentModel
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.Create, "Edit Pull Payment", Model.Id);
+    ViewData.SetActivePage(StoreNavPages.Create, StringLocalizer["Edit Pull Payment"], Model.Id);
 }
 
 @section PageHeadContent {

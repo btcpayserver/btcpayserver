@@ -1,7 +1,7 @@
 @model BTCPayServer.Models.StoreViewModels.ListStoresViewModel
 @{
     Layout = "_Layout";
-    ViewData.SetActivePage(ServerNavPages.Stores, "Store Overview");
+    ViewData.SetActivePage(ServerNavPages.Stores, StringLocalizer["Store Overview"]);
 }
 <div class="sticky-header">
 	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>

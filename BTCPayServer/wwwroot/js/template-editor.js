@@ -235,7 +235,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return {
                 items,
                 selectedItem: null,
-                editorOffcanvas: null
+                selectedItemInitial: null,
+                editorOffcanvas: null,
             }
         },
         computed: {
@@ -247,6 +248,12 @@ document.addEventListener('DOMContentLoaded', () => {
                     (item.categories || []).forEach(category => { res.add(category); });
                     return res;
                 }, new Set()));
+            },
+            itemChanged() {
+                return (!this.selectedItem && this.selectedItemInitial) ||
+                    (!this.selectedItem && this.selectedItemInitial) ||
+                    (JSON.stringify(this.selectedItem) !== JSON.stringify(this.selectedItemInitial))
+                
             }
         },
         methods: {
@@ -254,7 +261,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const items = parseConfig(event.target.value)
                 if (!items) return
                 this.items = items
-                this.selectedItem = null
+                this.selectedItem = this.selectedItemInitial = null
             },
             addItem(event) {
                 const length = this.items.push({
@@ -268,27 +275,28 @@ document.addEventListener('DOMContentLoaded', () => {
                     inventory: null,
                     disabled: false
                 })
-                this.selectedItem = this.items[length - 1]
-                this.showOffcanvas()
+                this.selectItem(null, length - 1)
             },
             selectItem(event, index) {
                 this.selectedItem = this.items[index]
+                this.selectedItemInitial = { ...this.selectedItem } // pristine copy
                 this.showOffcanvas()
             },
             removeItem(event, index) {
                 this.items.splice(index, 1)
-                this.selectedItem = null
+                this.selectedItem = this.selectedItemInitial = null
             },
             sortItems(event) {
                 const { newIndex, oldIndex } = event
                 this.items.splice(newIndex, 0, this.items.splice(oldIndex, 1)[0])
             },
             showOffcanvas() {
-                if (window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
+                if (this.editorOffcanvas && window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
                     this.editorOffcanvas.show();
             },
             hideOffcanvas() {
-                this.editorOffcanvas.hide();
+                if (this.editorOffcanvas)
+                    this.editorOffcanvas.hide();
             }
         },
         mounted() {

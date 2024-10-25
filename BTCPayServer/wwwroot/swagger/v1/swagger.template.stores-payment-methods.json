@@ -19,10 +19,19 @@
                         }
                     },
                     {
-                        "name": "enabled",
+                        "name": "onlyEnabled",
                         "in": "query",
                         "required": false,
                         "description": "Fetch payment methods that are enabled/disabled only",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "includeConfig",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch the config of the payment methods, if `true`, the permission `btcpay.store.canmodifystoresettings` is required.",
                         "schema": {
                             "type": "boolean"
                         }
@@ -72,10 +81,280 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}": {
+            "get": {
+                "tags": [
+                    "Store Payment Methods"
+                ],
+                "summary": "Get store payment method",
+                "description": "View information about the stores' configured payment method",
+                "operationId": "StorePaymentMethods_GetStorePaymentMethod",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "includeConfig",
+                        "in": "query",
+                        "required": false,
+                        "description": "Fetch the config of the payment methods, if `true`, the permission `btcpay.store.canmodifystoresettings` is required.",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The payment method config",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenericPaymentMethodData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": [
+                    "Store Payment Methods"
+                ],
+                "summary": "Update store's payment method",
+                "description": "Update information about the stores' configured payment method",
+                "operationId": "StorePaymentMethods_UpdateStorePaymentMethod",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePaymentMethodConfig"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The payment method config",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GenericPaymentMethodData"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Store Payment Methods"
+                ],
+                "summary": "Delete store's payment method",
+                "description": "Delete information about the stores' configured payment method",
+                "operationId": "StorePaymentMethods_DeleteStorePaymentMethod",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The configuration got deleted"
+                    },
+                    "401": {
+                        "description": "Missing authorization",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "default": {
+                        "description": "Unexpected error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
+        "parameters": {
+            "PaymentMethodId": {
+                "name": "paymentMethodId",
+                "in": "path",
+                "required": true,
+                "description": "The payment method id of the payment method to update",
+                "schema": {
+                    "$ref": "#/components/schemas/PaymentMethodId"
+                },
+                "example": "BTC-CHAIN"
+            },
+            "PayoutMethodId": {
+                "name": "paymentMethodId",
+                "in": "path",
+                "required": true,
+                "description": "The payout method id",
+                "schema": {
+                    "$ref": "#/components/schemas/PayoutMethodId"
+                },
+                "example": "BTC-CHAIN"
+            }
+        },
         "schemas": {
+            "UpdatePaymentMethodConfig": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the payment method is enabled, leave null or unspecified to not change current setting",
+                        "default": null,
+                        "nullable": true,
+                        "example": true
+                    },
+                    "config": {
+                        "type": "object",
+                        "description": "The new payment method config, leave null or unspecified to not change current setting",
+                        "default": null,
+                        "nullable": true,
+                        "oneOf": [
+                            {
+                                "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                            },
+                            {
+                                "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
+                            },
+                            {
+                                "$ref": "#/components/schemas/LNURLPayPaymentMethodBaseData"
+                            },
+                            {
+                                "type": "string",
+                                "title": "Lightning connection string",
+                                "description": "A lightning connection string or `Internal Node` (See [this documentation](https://github.com/btcpayserver/btcpayserver.lightning) for the format)"
+                            },
+                            {
+                                "type": "string",
+                                "title": "Derivation scheme",
+                                "description": "A derivation scheme in NBXplorer's format (See [this documentation](https://github.com/dgarage/NBXplorer/blob/master/docs/API.md#derivation-scheme) for the format)"
+                            },
+                            {
+                                "type": "string",
+                                "title": "Output descriptor",
+                                "description": "An output descriptor. Only a subset of them are supported. (See [this documentation](https://github.com/bitcoin/bitcoin/blob/master/doc/descriptors.md) for the format)"
+                            },
+                            {
+                                "description": "Any other unofficial payment method data",
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        ]
+                    }
+                }
+            },
             "GenericPaymentMethodData": {
                 "type": "object",
                 "additionalProperties": false,
@@ -84,11 +363,10 @@
                         "type": "boolean",
                         "description": "Whether the payment method is enabled"
                     },
-                    "cryptoCode": {
-                        "type": "string",
-                        "description": "The currency code of the payment method"
+                    "paymentMethodId": {
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
-                    "data": {
+                    "config": {
                         "type": "object",
                         "additionalProperties": false,
                         "description": "Associated dynamic data based on payment method type.",
@@ -98,6 +376,9 @@
                             },
                             {
                                 "$ref": "#/components/schemas/LightningNetworkPaymentMethodBaseData"
+                            },
+                            {
+                                "$ref": "#/components/schemas/LNURLPayPaymentMethodBaseData"
                             },
                             {
                                 "description": "Any other unofficial payment method data",

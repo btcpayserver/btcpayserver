@@ -5,6 +5,7 @@ using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -44,7 +45,6 @@ namespace BTCPayServer.Data
         public IEnumerable<LightningAddressData> LightningAddresses { get; set; }
         public IEnumerable<PayoutProcessorData> PayoutProcessors { get; set; }
         public IEnumerable<PayoutData> Payouts { get; set; }
-        public IEnumerable<CustodianAccountData> CustodianAccounts { get; set; }
         public IEnumerable<StoreSettingData> Settings { get; set; }
         public IEnumerable<FormData> Forms { get; set; }
         public IEnumerable<StoreRole> StoreRoles { get; set; }
@@ -52,26 +52,13 @@ namespace BTCPayServer.Data
 
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<StoreData>()
-                    .Property(o => o.StoreBlob)
-                    .HasColumnType("JSONB");
+            builder.Entity<StoreData>()
+                .Property(o => o.StoreBlob)
+                .HasColumnType("JSONB");
 
-                builder.Entity<StoreData>()
-                    .Property(o => o.DerivationStrategies)
-                    .HasColumnType("JSONB");
-            }
-            else if (databaseFacade.IsMySql())
-            {
-                builder.Entity<StoreData>()
-                    .Property(o => o.StoreBlob)
-                    .HasConversion(new ValueConverter<string, byte[]>
-                    (
-                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
-                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
-                    ));
-            }
+            builder.Entity<StoreData>()
+                .Property(o => o.DerivationStrategies)
+                .HasColumnType("JSONB");
         }
     }
 }

@@ -47,7 +47,7 @@ namespace BTCPayServer.Tests
             s.GoToLogin();
             s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
             s.GoToProfile(ManageNavPages.APIKeys);
-            s.Driver.FindElement(By.Id("AddApiKey")).Click();
+            s.ClickPagePrimary();
 
             //not an admin, so this permission should not show
             Assert.DoesNotContain("btcpay.server.canmodifyserversettings", s.Driver.PageSource);
@@ -56,34 +56,34 @@ namespace BTCPayServer.Tests
             s.GoToLogin();
             s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
             s.GoToProfile(ManageNavPages.APIKeys);
-            s.Driver.FindElement(By.Id("AddApiKey")).Click();
+            s.ClickPagePrimary();
             Assert.Contains("btcpay.server.canmodifyserversettings", s.Driver.PageSource);
 
             //server management should show now
             s.Driver.SetCheckbox(By.Id("btcpay.server.canmodifyserversettings"), true);
             s.Driver.SetCheckbox(By.Id("btcpay.store.canmodifystoresettings"), true);
             s.Driver.SetCheckbox(By.Id("btcpay.user.canviewprofile"), true);
-            s.Driver.FindElement(By.Id("Generate")).Click();
+            s.ClickPagePrimary();
             var superApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
 
             //this api key has access to everything
             await TestApiAgainstAccessToken(superApiKey, tester, user, Policies.CanModifyServerSettings, Policies.CanModifyStoreSettings, Policies.CanViewProfile);
 
-            s.Driver.FindElement(By.Id("AddApiKey")).Click();
+            s.ClickPagePrimary();
             s.Driver.SetCheckbox(By.Id("btcpay.server.canmodifyserversettings"), true);
-            s.Driver.FindElement(By.Id("Generate")).Click();
+            s.ClickPagePrimary();
             var serverOnlyApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
             await TestApiAgainstAccessToken(serverOnlyApiKey, tester, user,
                 Policies.CanModifyServerSettings);
 
-            s.Driver.FindElement(By.Id("AddApiKey")).Click();
+            s.ClickPagePrimary();
             s.Driver.SetCheckbox(By.Id("btcpay.store.canmodifystoresettings"), true);
-            s.Driver.FindElement(By.Id("Generate")).Click();
+            s.ClickPagePrimary();
             var allStoreOnlyApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
             await TestApiAgainstAccessToken(allStoreOnlyApiKey, tester, user,
                 Policies.CanModifyStoreSettings);
 
-            s.Driver.FindElement(By.Id("AddApiKey")).Click();
+            s.ClickPagePrimary();
             s.Driver.FindElement(By.CssSelector("button[value='btcpay.store.canmodifystoresettings:change-store-mode']")).Click();
             //there should be a store already by default in the dropdown
             var getPermissionValueIndex =
@@ -94,13 +94,13 @@ namespace BTCPayServer.Tests
             var option = dropdown.FindElement(By.TagName("option"));
             var storeId = option.GetAttribute("value");
             option.Click();
-            s.Driver.WaitForAndClick(By.Id("Generate"));
+            s.ClickPagePrimary();
             var selectiveStoreApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
             await TestApiAgainstAccessToken(selectiveStoreApiKey, tester, user,
                 Permission.Create(Policies.CanModifyStoreSettings, storeId).ToString());
 
-            s.Driver.WaitForAndClick(By.Id("AddApiKey"));
-            s.Driver.WaitForAndClick(By.Id("Generate"));
+            s.ClickPagePrimary(); // New API key
+            s.ClickPagePrimary(); // Generate
             var noPermissionsApiKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
             await TestApiAgainstAccessToken(noPermissionsApiKey, tester, user);
             await Assert.ThrowsAnyAsync<HttpRequestException>(async () =>
@@ -223,12 +223,12 @@ namespace BTCPayServer.Tests
             s.GoToLogin();
             s.LogIn(user.RegisterDetails.Email, user.RegisterDetails.Password);
             s.GoToUrl("/account/apikeys");
-            s.Driver.WaitForAndClick(By.Id("AddApiKey"));
+            s.ClickPagePrimary();
             int checkedPermissionCount = s.Driver.FindElements(By.ClassName("form-check-input")).Count;
             s.Driver.ExecuteJavaScript("document.querySelectorAll('#Permissions .form-check-input').forEach(i => i.click())");
 
             TestLogs.LogInformation("Generating API key");
-            s.Driver.WaitForAndClick(By.Id("Generate"));
+            s.ClickPagePrimary();
             var allAPIKey = s.FindAlertMessage().FindElement(By.TagName("code")).Text;
 
             TestLogs.LogInformation($"Checking API key permissions: {allAPIKey}");

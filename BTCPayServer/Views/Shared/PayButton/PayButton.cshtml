@@ -1,4 +1,5 @@
 @using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Html
 @inject Security.ContentSecurityPolicies Csp
 @inject BTCPayNetworkProvider NetworkProvider
 @model BTCPayServer.Plugins.PayButton.Models.PayButtonViewModel
@@ -174,84 +175,85 @@
     </script>
 }
 
+<div class="sticky-header">
+	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+</div>
+
 <partial name="_StatusMessage" />
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
 <div id="payButtonCtrl">
     <div class="row">
         <div class="col-xl-8">
             <div class="alert alert-warning alert-dismissible mb-4" role="alert">
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
-                <h5 class="alert-heading">Warning: Payment button should only be used for tips and donations</h5>
+                <h5 class="alert-heading" text-translate="true">Warning: Payment button should only be used for tips and donations</h5>
                 <p>
-                    Using the payment button for e-commerce integrations is not recommended since order relevant information can be modified by the user.
-                    For e-commerce, you should use our 
-                    <a href="https://docs.btcpayserver.org/API/Greenfield/v1/" class="alert-link" target="_blank" rel="noreferrer noopener">Greenfield API</a>.
-                    If this store process commercial transactions, we advise you to 
-                    <a asp-controller="UIUserStores" asp-action="CreateStore" class="alert-link">create a separate store</a> before using the payment button.
+                    @ViewLocalizer["Using the payment button for e-commerce integrations is not recommended since order relevant information can be modified by the user. For e-commerce, you should use our {0}. If this store process commercial transactions, we advise you to {1} before using the payment button.",
+                        Html.ActionLink(StringLocalizer["Greenfield API"], "SwaggerDocs", "UIHome", new { }, new { @class = "alert-link" }),
+                        Html.ActionLink(StringLocalizer["create a separate store"], "CreateStore", "UIUserStores", new { }, new { @class = "alert-link" })]
                 </p>
                 <form asp-action="DisableAnyoneCanCreateInvoice" asp-route-storeId="@Context.GetRouteValue("storeId")" method="post">
-                    <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger mt-0" value="Save">Disable payment button</button>
+                    <button name="command" id="disable-pay-button" type="submit" class="btn btn-danger mt-0" value="Save" text-translate="true">Disable payment button</button>
                 </form>
             </div>
-            <p>Configure your Pay Button, and the generated code will be displayed at the bottom of the page to copy into your project.</p>
-            <h4 class="mt-3 mb-3">General Settings</h4>
+            <p text-translate="true">Configure your Pay Button, and the generated code will be displayed at the bottom of the page to copy into your project.</p>
+            <h4 class="mt-3 mb-3" text-translate="true">General Settings</h4>
             <div class="form-group col-md-8">
-                <label class="form-label" for="price">Price</label>
+                <label class="form-label" for="price" text-translate="true">Price</label>
                 <input name="price" type="text" class="form-control" id="price" inputmode="decimal"
                        v-model="srvModel.price" v-on:change="inputChanges"
                        v-validate="'decimal|min_value:0'" :class="{'is-invalid': errors.has('price') }">
                 <small class="text-danger">{{ errors.first('price') }}</small>
             </div>
             <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
-                <label class="form-label" for="Currency">Currency</label>
+                <label class="form-label" for="Currency" text-translate="true">Currency</label>
                 <input asp-for="Currency" name="currency" class="form-control w-auto" currency-selection
                        v-model="srvModel.currency" v-on:change="inputChanges"
                        :class="{'is-invalid': errors.has('currency') }" />
             </div>
             <div class="form-group col-md-4" v-if="!srvModel.appIdEndpoint">
-                <label class="form-label" for="defaultPaymentMethod">Default Payment Method</label>
+                <label class="form-label" for="defaultPaymentMethod" text-translate="true">Default Payment Method</label>
                 <select v-model="srvModel.defaultPaymentMethod" v-on:change="inputChanges" class="form-select" id="default-payment-method">
-                    <option value="" selected>Use the store’s default</option>
+                    <option value="" selected text-translate="true">Use the store’s default</option>
                     <option  v-for="pm in srvModel.paymentMethods" v-bind:value="pm.value">{{pm.name}}</option>
                 </select>
             </div>
             <div class="form-group" v-if="!srvModel.appIdEndpoint">
-                <label class="form-label" for="description">Checkout Description</label>
+                <label class="form-label" for="description" text-translate="true">Checkout Description</label>
                 <input name="checkoutDesc" type="text" class="form-control" id="description"
                        v-model="srvModel.checkoutDesc" v-on:change="inputChanges">
             </div>
             <div class="form-group">
-                <label class="form-label" for="order-id">Order ID</label>
+                <label class="form-label" for="order-id" text-translate="true">Order ID</label>
                 <input name="orderId" type="text" class="form-control" id="order-id"
                        v-model="srvModel.orderId" v-on:change="inputChanges">
             </div>
         </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Display Options</h4>
+    <h4 class="mt-5 mb-3" text-translate="true">Display Options</h4>
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
                 <div class="form-check" v-if="!srvModel.appIdEndpoint">
                     <input id="useModal" type="checkbox" v-model="srvModel.useModal" v-on:change="inputChanges" class="form-check-input"/>
-                    <label for="useModal" class="form-check-label">Use Modal</label>
+                    <label for="useModal" class="form-check-label" text-translate="true">Use Modal</label>
                 </div>
                 <div class="form-check">
                     <input id="buttonInlineTextMode" type="checkbox" v-model="buttonInlineTextMode" v-on:change="inputChanges" class="form-check-input"/>
-                    <label for="buttonInlineTextMode" class="form-check-label">Customize Pay Button Text</label>
+                    <label for="buttonInlineTextMode" class="form-check-label" text-translate="true">Customize Pay Button Text</label>
                 </div>
             </div>
             
             <div class="form-group" v-show="buttonInlineTextMode">
-                <label class="form-label" for="pb-text">Pay Button Text</label>
+                <label class="form-label" for="pb-text" text-translate="true">Pay Button Text</label>
                 <input name="payButtonText" type="text" class="form-control" id="pb-text"
                        v-model="srvModel.payButtonText" v-on:change="inputChanges">
             </div>
             <div class="form-group mb-4">
-                <label class="form-label" for="pb-image-url">Pay Button Image Url</label>
+                <label class="form-label" for="pb-image-url" text-translate="true">Pay Button Image Url</label>
                 <input name="payButtonImageUrl" type="text" class="form-control" id="pb-image-url"
                        v-model="srvModel.payButtonImageUrl" v-on:change="inputChanges"
                        v-validate="{ required: this.imageUrlRequired, url: {require_tld:false} }"
@@ -259,7 +261,7 @@
                 <small class="text-danger">{{ errors.first('payButtonImageUrl') }}</small>
             </div>
             <div class="form-group mb-4">
-                <label class="form-label">Image Size</label>
+                <label class="form-label" text-translate="true">Image Size</label>
                 <div class="btn-group d-flex" role="group">
                     <button type="button" class="btn btn-outline-secondary" 
                             v-on:click="inputChanges($event, 0)">146 x 40 px</button>
@@ -270,37 +272,37 @@
                 </div>
             </div>
             <div class="form-group">
-                <label class="form-label">Button Type</label>
+                <label class="form-label" text-translate="true">Button Type</label>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="button-type" id="btn-fixed" value="0" v-model="srvModel.buttonType" v-on:change="inputChanges" checked/>
-                    <label for="btn-fixed" class="form-check-label">Fixed amount</label>
+                    <label for="btn-fixed" class="form-check-label" text-translate="true">Fixed amount</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="button-type" id="btn-custom" value="1" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
-                    <label for="btn-custom" class="form-check-label">Custom amount</label>
+                    <label for="btn-custom" class="form-check-label" text-translate="true">Custom amount</label>
                 </div>
                 <div class="form-check">
                     <input class="form-check-input" type="radio" name="button-type" id="btn-slider" value="2" v-model="srvModel.buttonType" v-on:change="inputChanges"/>
-                    <label for="btn-slider" class="form-check-label">Slider</label>
+                    <label for="btn-slider" class="form-check-label" text-translate="true">Slider</label>
                 </div>
             </div>
             <div class="row" v-if="srvModel.buttonType === '1' ||srvModel.buttonType === '2'">
                 <div class="form-group col-md-4">
-                    <label class="form-label" for="pb-min">Min</label>
+                    <label class="form-label" for="pb-min" text-translate="true">Min</label>
                     <input name="min" type="text" class="form-control" id="pb-min"
                            v-model="srvModel.min" v-on:change="inputChanges"
                            v-validate="'required|decimal|min_value:0'" :class="{'is-invalid': errors.has('min') }">
                     <small class="text-danger">{{ errors.first('min') }}</small>
                 </div>
                 <div class="form-group col-md-4">
-                    <label class="form-label" for="pb-max">Max</label>
+                    <label class="form-label" for="pb-max" text-translate="true">Max</label>
                     <input name="max" type="text" class="form-control" id="pb-max"
                            v-model="srvModel.max" v-on:change="inputChanges"
                            v-validate="'required|decimal'" :class="{'is-invalid': errors.has('max') }">
                     <small class="text-danger">{{ errors.first('max') }}</small>
                 </div>
                 <div class="form-group col-md-4">
-                    <label class="form-label" for="pb-step">Step</label>
+                    <label class="form-label" for="pb-step" text-translate="true">Step</label>
                     <input name="step" type="text" class="form-control" id="pb-step"
                            v-model="srvModel.step" v-on:change="inputChanges"
                            v-validate="'required'" :class="{'is-invalid': errors.has('step') }">
@@ -316,7 +318,7 @@
                            v-model="srvModel.simpleInput"
                            v-on:change="inputChanges"
                            :class="{'is-invalid': errors.has('simpleInput') }">
-                    <label class="form-check-label" for="simpleInput">Use a simple input style</label>
+                    <label class="form-check-label" for="simpleInput" text-translate="true">Use a simple input style</label>
                     <small class="text-danger">{{ errors.first('simpleInput') }}</small>
                 </div>
                 <div class="form-check">
@@ -327,57 +329,54 @@
                            v-model="srvModel.fitButtonInline"
                            v-on:change="inputChanges"
                            :class="{'is-invalid': errors.has('fitButtonInline') }">
-                    <label class="form-check-label" for="fitButtonInline">Fit button inline</label>
+                    <label class="form-check-label" for="fitButtonInline" text-translate="true">Fit button inline</label>
                     <small class="text-danger">{{ errors.first('fitButtonInline') }}</small>
                 </div>
             </template>
         </div>
         <div class="col-xl-4 mt-4 mt-xl-0">
-            <h5 class="mb-3">Preview</h5>
+            <h5 class="mb-3" text-translate="true">Preview</h5>
             <div id="preview"></div>
         </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Payment Notifications</h4>
+    <h4 class="mt-5 mb-3" text-translate="true">Payment Notifications</h4>
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
             <div class="form-group">
-                <label class="form-label" for="server-ipn">Server IPN</label>
+                <label class="form-label" for="server-ipn" text-translate="true">Server IPN</label>
                 <input name="serverIpn" type="text" class="form-control" id="server-ipn"
                        v-model="srvModel.serverIpn" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('serverIpn') }">
                 <small class="text-danger">{{ errors.first('serverIpn') }}</small>
-                <div class="form-text">The URL to post purchase data.</div>
+                <div class="form-text" text-translate="true">The URL to post purchase data.</div>
             </div>
             <div class="form-group" v-if="!srvModel.appIdEndpoint">
-                <label class="form-label" for="email-notifications">Email Notifications</label>
+                <label class="form-label" for="email-notifications" text-translate="true">Email Notifications</label>
                 <input name="notifyEmail" type="text" class="form-control" id="email-notifications"
-                       placeholder="name@domain.com"
+                       placeholder="@StringLocalizer["user@example.com"]"
                        v-model="srvModel.notifyEmail" v-on:change="inputChanges"
                        v-validate="'email'" :class="{'is-invalid': errors.has('notifyEmail') }">
                 <small class="text-danger">{{ errors.first('notifyEmail') }}</small>
-                <div class="form-text">Receive email notification updates.</div>
+                <div class="form-text" text-translate="true">Receive email notification updates.</div>
             </div>
             <div class="form-group">
-                <label class="form-label" for="browser-redirect">Browser Redirect</label>
+                <label class="form-label" for="browser-redirect" text-translate="true">Browser Redirect</label>
                 <input name="browserRedirect" type="text" class="form-control" id="browser-redirect"
                        v-model="srvModel.browserRedirect" v-on:change="inputChanges"
                        v-validate="'url'" :class="{'is-invalid': errors.has('browserRedirect') }">
                 <small class="text-danger">{{ errors.first('browserRedirect') }}</small>
-                <div class="form-text">Where to redirect the customer after payment is complete</div>
+                <div class="form-text" text-translate="true">Where to redirect the customer after payment is complete</div>
             </div>
         </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Advanced Options</h4>
+    <h4 class="mt-5 mb-3" text-translate="true">Advanced Options</h4>
     <div class="row" v-if="!srvModel.appIdEndpoint">
         <div class="col-xl-8 col-xxl-constrain">
-            <p>
-                Specify additional query string parameters that should be appended to the checkout page once the invoice is created.
-                For example, <code>lang=da-DK</code> would load the checkout page in Danish by default.
-            </p>
+            <p>@ViewLocalizer["Specify additional query string parameters that should be appended to the checkout page once the invoice is created. For example, <code>lang=da-DK</code> would load the checkout page in Danish by default."]</p>
             <div class="form-group">
-                <label class="form-label" for="query-string">Checkout Additional Query String</label>
+                <label class="form-label" for="query-string" text-translate="true">Checkout Additional Query String</label>
                 <input name="checkoutQueryString" type="text" class="form-control" id="query-string"
                        v-model="srvModel.checkoutQueryString" v-on:change="inputChanges"
                        :class="{'is-invalid': errors.has('checkoutQueryString') }">
@@ -388,17 +387,17 @@
 
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <p>Link this Pay Button to an app instead. Some features are disabled due to the different endpoint capabilities. You can set which perk/item this button should be targeting.</p>
+            <p text-translate="true">Link this Pay Button to an app instead. Some features are disabled due to the different endpoint capabilities. You can set which perk/item this button should be targeting.</p>
             <div class="form-group">
-                <label class="form-label" for="app-as-endpoint">Use App As Endpoint</label>
+                <label class="form-label" for="app-as-endpoint" text-translate="true">Use App As Endpoint</label>
                 <select v-model="srvModel.appIdEndpoint" v-on:change="inputChanges" class="form-select" id="app-as-endpoint">
-                    <option value="">Use default pay button endpoint</option>
+                    <option value="" text-translate="true">Use default pay button endpoint</option>
                     <option  v-for="app in srvModel.apps" v-bind:value="app.id" >{{app.appName}} ({{app.appType}})</option>
                 </select>
                 <small class="text-danger">{{ errors.first('appIdEndpoint') }}</small>
             </div>
             <div class="form-group" v-if="srvModel.appIdEndpoint">
-                <label class="form-label" for="app-item">App Item/Perk</label>
+                <label class="form-label" for="app-item" text-translate="true">App Item/Perk</label>
                 <input name="appChoiceKey" type="text" class="form-control" id="app-item"
                        v-model="srvModel.appChoiceKey" v-on:change="inputChanges"
                        :class="{'is-invalid': errors.has('appChoiceKey') }">
@@ -407,57 +406,61 @@
         </div>
     </div>
 
-    <h4 class="mt-5 mb-3">Generated Code</h4>
+    <h4 class="mt-5 mb-3" text-translate="true">Generated Code</h4>
     <div class="row" v-show="!errors.any()">
         <div class="col-xxl-8">
             <pre><code id="mainCode" class="html"></code></pre>
             <button class="btn btn-outline-secondary" data-clipboard-target="#mainCode">
-                <vc:icon symbol="copy"/>&nbsp;Copy Code
+                <vc:icon symbol="actions-copy"/>&nbsp;<span text-translate="true">Copy Code</span>
             </button>
         </div>
     </div>
     <div class="row" v-show="errors.any()">
-        <div class="col-xl-8 col-xxl-constrain text-danger">
+        <div class="col-xl-8 col-xxl-constrain text-danger" text-translate="true">
             Please fix errors shown in order for code generation to successfully execute.
         </div>
     </div>
     
     <div v-if="!srvModel.appIdEndpoint && (previewLink || lnurlLink)">
-        <h4 class="mt-4 mb-3">Alternatives</h4>
-        <p>You can also share the link/LNURL or encode it in a QR code.</p>
+        <h4 class="mt-5 mb-3" text-translate="true">Alternatives</h4>
+        <p text-translate="true">You can also share the link/LNURL or encode it in a QR code.</p>
         <div class="align-items-center" style="width:256px">
             <ul class="nav my-3 btcpay-pills align-items-center gap-2">
                 <li class="nav-item" v-if="previewLink">
-                    <a class="btcpay-pill" :class="{ active: alternativeMode === 'link' }" data-bs-toggle="tab" data-bs-target="#Alternative-Link" role="tab" href="#Alternative-Link">
+                    <a class="btcpay-pill" :class="{ active: alternativeMode === 'link' }" data-bs-toggle="tab" data-bs-target="#Alternative-Link" role="tab" href="#Alternative-Link" text-translate="true">
                         Link
                     </a>
                 </li>
                 <li class="nav-item" v-if="previewLink">
-                    <a class="btcpay-pill" :class="{ active: alternativeMode === 'lnurl' }" data-bs-toggle="tab" data-bs-target="#Alternative-LNURL" role="tab" href="#Alternative-LNURL">
+                    <a class="btcpay-pill" :class="{ active: alternativeMode === 'lnurl' }" data-bs-toggle="tab" data-bs-target="#Alternative-LNURL" role="tab" href="#Alternative-LNURL" text-translate="true">
                         LNURL
                     </a>
                 </li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane" :class="{ active: alternativeMode === 'link' }" id="Alternative-Link" role="tabpanel">
-                    <a class="qr-container d-inline-block" :class="{ active: true }" :href="previewLink">
-                        <qrcode :value="previewLink" :options="qrOptions" tag="img"></qrcode>
-                    </a>
-                    <div class="input-group mt-3">
-                        <div class="form-floating">
-                            <vc:truncate-center text="previewLink" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
-                            <label>Link URL</label>
+                    <div class="payment-box">
+                        <a class="qr-container d-inline-block" :class="{ active: true }" :href="previewLink">
+                            <qrcode :value="previewLink" :options="qrOptions" tag="img"></qrcode>
+                        </a>
+                        <div class="input-group mt-3">
+                            <div class="form-floating">
+                                <vc:truncate-center text="previewLink" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                                <label text-translate="true">Link URL</label>
+                            </div>
                         </div>
                     </div>
                 </div>
                 <div class="tab-pane" :class="{ active: alternativeMode === 'lnurl' }" id="Alternative-LNURL" role="tabpanel">
-                    <a class="qr-container d-inline-block" :href="lnurlLink">
-                        <qrcode :value="lnurlLink" :options="qrOptions" tag="img"></qrcode>
-                    </a>
-                    <div class="input-group mt-3">
-                        <div class="form-floating">
-                            <vc:truncate-center text="lnurlLink" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
-                            <label>LNURL</label>
+                    <div class="payment-box">
+                        <a class="qr-container d-inline-block" :href="lnurlLink">
+                            <qrcode :value="lnurlLink" :options="qrOptions" tag="img"></qrcode>
+                        </a>
+                        <div class="input-group mt-3">
+                            <div class="form-floating">
+                                <vc:truncate-center text="lnurlLink" is-vue="true" padding="15" elastic="true" classes="form-control-plaintext" />
+                                <label text-translate="true">LNURL</label>
+                            </div>
                         </div>
                     </div>
                 </div>

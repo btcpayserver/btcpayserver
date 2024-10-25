@@ -37,15 +37,17 @@ namespace BTCPayServer.Filters
             }
 
             // If we have an appId, we can redirect to the canonical domain
-            if ((string)context.RouteContext.RouteData.Values["appId"] is { } appId && !req.IsOnion())
+            if ((string)context.RouteContext.RouteData.Values["appId"] is { } appId)
             {
                 var redirectDomain = mapping.FirstOrDefault(item => item.AppId == appId)?.Domain;
                 // App is accessed via path, redirect to canonical domain
-                if (!string.IsNullOrEmpty(redirectDomain) && req.Method != "POST" && !req.HasFormContentType)
+                if (!string.IsNullOrEmpty(redirectDomain) && req.Method != "POST" && !req.HasFormContentType && !req.IsOnion())
                 {
                     var uri = new UriBuilder(req.Scheme, redirectDomain);
                     if (req.Host.Port.HasValue)
                         uri.Port = req.Host.Port.Value;
+                    if (req.QueryString.HasValue)
+                        uri.Query = req.QueryString.Value!;
                     context.RouteContext.HttpContext.Response.Redirect(uri.ToString());
                 }
                 return true;

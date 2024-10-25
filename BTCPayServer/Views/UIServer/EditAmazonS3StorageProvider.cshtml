@@ -1,9 +1,23 @@
 @model BTCPayServer.Storage.Services.Providers.AmazonS3Storage.Configuration.AmazonS3StorageConfiguration
 @{
-    ViewData.SetActivePage(ServerNavPages.Files, "Amazon S3 Storage");
+    ViewData.SetActivePage(ServerNavPages.Files, StringLocalizer["Amazon S3 Storage"]);
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Files" text-translate="true">Files</a>
+            </li>
+            <li class="breadcrumb-item">
+                <a asp-action="Storage" text-translate="true">Storage Provider</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">Provider</li>
+        </ol>
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
 
 <div class="row">
     <div class="col-xl-10 col-xxl-constrain">
@@ -44,8 +58,8 @@
                 <span asp-validation-for="ChunkedUploadThreshold" class="text-danger"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-            <a asp-action="Storage" asp-route-forceChoice="true">Change Storage provider</a>
+            <button type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
+            <a asp-action="Storage" asp-route-forceChoice="true" text-translate="true">Change Storage provider</a>
         </form>
     </div>
 </div>

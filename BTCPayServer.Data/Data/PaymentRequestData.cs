@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
-    public class PaymentRequestData : IHasBlobUntyped
+    public partial class PaymentRequestData : IHasBlobUntyped
     {
         public string Id { get; set; }
         public DateTimeOffset Created { get; set; }
@@ -32,12 +32,9 @@ namespace BTCPayServer.Data
             builder.Entity<PaymentRequestData>()
                 .HasIndex(o => o.Status);
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<PaymentRequestData>()
-                    .Property(o => o.Blob2)
-                    .HasColumnType("JSONB");
-            }
+            builder.Entity<PaymentRequestData>()
+                .Property(o => o.Blob2)
+                .HasColumnType("JSONB");
         }
     }
 }

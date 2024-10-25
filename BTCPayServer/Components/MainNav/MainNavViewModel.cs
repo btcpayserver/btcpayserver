@@ -10,9 +10,10 @@ namespace BTCPayServer.Components.MainNav
         public List<StoreDerivationScheme> DerivationSchemes { get; set; }
         public List<StoreLightningNode> LightningNodes { get; set; }
         public List<StoreApp> Apps { get; set; }
-        public CustodianAccountData[] CustodianAccounts { get; set; }
-        public bool AltcoinsBuild { get; set; }
         public int ArchivedAppsCount { get; set; }
+        public string ContactUrl { get; set; }
+        public string UserName { get; set; }
+        public string UserImageUrl { get; set; }
     }
 
     public class StoreApp

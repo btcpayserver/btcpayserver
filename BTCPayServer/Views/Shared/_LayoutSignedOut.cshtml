@@ -1,13 +1,19 @@
 @using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Components.MainLogo
+@using System.Text
 @inject SettingsRepository SettingsRepository
 @{
     Layout = "_LayoutSimple";
     ViewBag.ShowTitle ??= true;
     ViewBag.ShowLeadText ??= false;
-    
+    // obfuscate email on public page, decode via JS (see below)
     var settings = await SettingsRepository.GetSettingAsync<ServerSettings>() ?? new ServerSettings();
+    var contactUrl = settings.ContactUrl;
+    if (contactUrl?.StartsWith("mailto:") is true)
+    {
+        contactUrl = Convert.ToBase64String(Encoding.UTF8.GetBytes(contactUrl));
+    }
 }
 
 @section PageHeadContent {
@@ -43,12 +49,12 @@
             <vc:main-logo />
         </a>
 
-        <h1 class="h2 mb-3">Welcome to @(string.IsNullOrWhiteSpace(settings.ServerName) ? "your BTCPay\u00a0Server" : settings.ServerName)</h1>
+		<h1 class="h2 mb-3" text-translate="true">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h1>
         @if (ViewBag.ShowLeadText)
         {
             <p class="lead">
-                <span class="d-sm-block">A self-hosted, open-source bitcoin payment processor.</span>
-                <span class="d-sm-block">It is secure, private, censorship-resistant and free.</span>
+                <span class="d-sm-block" text-translate="true">A self-hosted, open-source bitcoin payment processor.</span>
+                <span class="d-sm-block" text-translate="true">It is secure, private, censorship-resistant and free.</span>
             </p>
         }
 
@@ -64,11 +70,20 @@
     @RenderBody()
 </div>
 
-@if (!string.IsNullOrWhiteSpace(settings.ContactUrl))
+@if (!string.IsNullOrWhiteSpace(contactUrl))
 {
     <p class="text-center mt-n5 mb-5 pt-2">
-        <a class="text-secondary" href="@settings.ContactUrl" id="ContactLink">Contact Us</a>
+        <a class="text-secondary" href="@contactUrl" id="ContactLink">Contact Us</a>
     </p>
+    @if (contactUrl != settings.ContactUrl)
+    {
+        <script>
+            (function() {
+                const link = document.getElementById('ContactLink')
+                link.setAttribute('href', atob(link.getAttribute('href')))
+            })()
+        </script>
+    }
 }
 
 <div class="row justify-content-center mt-5">

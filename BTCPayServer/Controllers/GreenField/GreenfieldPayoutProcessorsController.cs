@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 Name = factory.Processor,
                 FriendlyName = factory.FriendlyName,
-                PaymentMethods = factory.GetSupportedPaymentMethods().Select(id => id.ToStringNormalized())
+                PayoutMethods = factory.GetSupportedPayoutMethods().Select(id => id.ToString())
                     .ToArray()
             }));
         }

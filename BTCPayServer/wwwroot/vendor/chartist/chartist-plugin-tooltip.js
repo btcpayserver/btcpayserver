@@ -84,6 +84,7 @@
                 var tooltipElement = getTooltipElement();
                 var pointValues = getPointValues();
                 var hideDelayTimer;
+                var containerRect;
 
                 options.template = tooltipElement.innerHTML;
 
@@ -178,7 +179,6 @@
                     var valueGroup;
                     var valueIndex;
                     var itemData;
-
                     var seriesData;
 
                     clearTimeout(hideDelayTimer);
@@ -199,21 +199,15 @@
                     seriesData = chart.options.reverseData ? seriesData.reverse()[seriesIndex] : seriesData[seriesIndex];
                     seriesData = (!Array.isArray(seriesData) && typeof seriesData == 'object' && seriesData.data) ? seriesData.data : seriesData;
 
-                    if (!seriesData) {
-                        return;
-                    }
-
+                    if (!seriesData) return;
                     itemData = (!Array.isArray(seriesData) && typeof seriesData == 'object') ? seriesData : seriesData[valueIndex];
-
-                    if (typeof itemData == 'undefined') {
-                        return;
-                    }
-
+                    if (!itemData && typeof seriesData == 'number') itemData = { value: seriesData, meta: chart.data.labels[seriesIndex] };
+                    if (typeof itemData == 'undefined') return;
                     meta = itemData.meta;
                     value = itemData.value || itemData;
-
+                    if (typeof itemData == 'undefined') return;
                     if (typeof options.valueTransformFunction === 'function') {
-                        value = options.valueTransformFunction.call(chart, value);
+                        value = options.valueTransformFunction.call(chart, value, chart.data.labels[valueIndex], valueIndex);
                     }
 
                     // Remove the hover class and the aria-describedby attribute from the currently active triggers
@@ -241,7 +235,6 @@
 
                     // series name
                     textMarkup = textMarkup.replace(new RegExp('{{seriesName}}', 'gi'), seriesName || '');
-                    console.log(textMarkup)
                     tooltipElement.innerHTML = textMarkup;
                     tooltipElement.removeAttribute('hidden');
                     setTooltipPosition(triggerElement);
@@ -318,9 +311,13 @@
                  * @param Boolean ignoreClasses
                  */
                 function setTooltipPosition(relativeElement, ignoreClasses) {
-                    var positionData = getTooltipPosition(relativeElement);
+                    containerRect = chart.container.getBoundingClientRect();
+                    var isLine = tooltipElement.innerHTML.match('chartist-tooltip-line');
+                    var positionData = getTooltipPosition(relativeElement, isLine);
 
                     tooltipElement.style.transform = 'translate(' + positionData.left + 'px, ' + positionData.top + 'px)';
+                    if (isLine)
+                        tooltipElement.style.height = containerRect.height + options.offset.y + 'px';
 
                     if (ignoreClasses) {
                         return;
@@ -336,7 +333,7 @@
                  * @param Element relativeElement
                  * @return Object positionData
                  */
-                function getTooltipPosition(relativeElement) {
+                function getTooltipPosition(relativeElement, isLine) {
                     var positionData = {
                         alignment: 'center',
                     };
@@ -345,7 +342,9 @@
 
                     var boxData = relativeElement.getBoundingClientRect();
                     var left = boxData.left + window.scrollX + options.offset.x - width / 2 + boxData.width / 2;
-                    var top = boxData.top + window.scrollY - height + options.offset.y;
+                    var top = isLine
+                        ? containerRect.top + window.scrollY + options.offset.y
+                        : boxData.top + window.scrollY - height + options.offset.y;
 
                     // Minimum horizontal collision detection
                     if (left + width > document.body.clientWidth) {

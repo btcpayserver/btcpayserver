@@ -34,6 +34,7 @@ namespace BTCPayServer.Plugins.Shopify
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public class UIShopifyController : Controller
     {
+        private readonly ShopifyService _shopifyService;
         private readonly BTCPayServerEnvironment _btcPayServerEnvironment;
         private readonly IOptions<BTCPayServerOptions> _btcPayServerOptions;
         private readonly IWebHostEnvironment _webHostEnvironment;
@@ -43,7 +44,9 @@ namespace BTCPayServer.Plugins.Shopify
         private readonly IJsonHelper _jsonHelper;
         private readonly IHttpClientFactory _clientFactory;
 
-        public UIShopifyController(BTCPayServerEnvironment btcPayServerEnvironment,
+        public UIShopifyController(
+            ShopifyService shopifyService,
+            BTCPayServerEnvironment btcPayServerEnvironment,
             IOptions<BTCPayServerOptions> btcPayServerOptions,
             IWebHostEnvironment webHostEnvironment,
             StoreRepository storeRepository,
@@ -52,6 +55,7 @@ namespace BTCPayServer.Plugins.Shopify
             IJsonHelper jsonHelper,
             IHttpClientFactory clientFactory)
         {
+            _shopifyService = shopifyService;
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _btcPayServerOptions = btcPayServerOptions;
             _webHostEnvironment = webHostEnvironment;
@@ -106,20 +110,20 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task<IActionResult> ShopifyInvoiceEndpoint(
             string storeId, string orderId, decimal amount, bool checkOnly = false)
         {
-            var shopifySearchTerm = $"{ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
+            var shopifySearchTerm = $"{ShopifyService.SHOPIFY_ORDER_ID_PREFIX}{orderId}";
             var matchedExistingInvoices = await _invoiceRepository.GetInvoices(new InvoiceQuery()
             {
                 TextSearch = shopifySearchTerm,
                 StoreId = new[] { storeId }
             });
             matchedExistingInvoices = matchedExistingInvoices.Where(entity =>
-                    entity.GetInternalTags(ShopifyOrderMarkerHostedService.SHOPIFY_ORDER_ID_PREFIX)
+                    entity.GetInternalTags(ShopifyService.SHOPIFY_ORDER_ID_PREFIX)
                         .Any(s => s == orderId))
                 .ToArray();
 
             var firstInvoiceStillPending =
                 matchedExistingInvoices.FirstOrDefault(entity =>
-                    entity.GetInvoiceState().Status == InvoiceStatusLegacy.New);
+                    entity.GetInvoiceState().Status == InvoiceStatus.New);
             if (firstInvoiceStillPending != null)
             {
                 return Ok(new
@@ -131,7 +135,7 @@ namespace BTCPayServer.Plugins.Shopify
 
             var firstInvoiceSettled =
                 matchedExistingInvoices.LastOrDefault(entity =>
-                    new[] { InvoiceStatusLegacy.Paid, InvoiceStatusLegacy.Complete, InvoiceStatusLegacy.Confirmed }
+                    new[] { InvoiceStatus.Processing, InvoiceStatus.Settled }
                         .Contains(
                             entity.GetInvoiceState().Status));
 
@@ -153,9 +157,9 @@ namespace BTCPayServer.Plugins.Shopify
             {
                 //if BTCPay was shut down before the tx managed to get registered on shopify, this will fix it on the next UI load in shopify
                 if (client != null && order?.FinancialStatus == "pending" &&
-                    firstInvoiceSettled.Status != InvoiceStatusLegacy.Paid)
+                    firstInvoiceSettled.Status != InvoiceStatus.Processing)
                 {
-                    await new OrderTransactionRegisterLogic(client).Process(orderId, firstInvoiceSettled.Id,
+                    await _shopifyService.Process(client, orderId, firstInvoiceSettled.Id,
                         firstInvoiceSettled.Currency,
                         firstInvoiceSettled.Price.ToString(CultureInfo.InvariantCulture), true);
                     order = await client.GetOrder(orderId);

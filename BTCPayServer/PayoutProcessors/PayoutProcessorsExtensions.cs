@@ -2,6 +2,7 @@ using BTCPayServer.Data;
 using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.PayoutProcessors.OnChain;
+using BTCPayServer.Payouts;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.PayoutProcessors;
@@ -18,8 +19,8 @@ public static class PayoutProcessorsExtensions
         serviceCollection.AddHostedService(s => s.GetRequiredService<PayoutProcessorService>());
     }
 
-    public static PaymentMethodId GetPaymentMethodId(this PayoutProcessorData data)
+    public static PayoutMethodId GetPayoutMethodId(this PayoutProcessorData data)
     {
-        return PaymentMethodId.Parse(data.PaymentMethod);
+        return PayoutMethodId.Parse(data.PayoutMethodId);
     }
 }

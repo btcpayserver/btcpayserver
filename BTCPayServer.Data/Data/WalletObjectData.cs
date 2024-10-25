@@ -83,13 +83,9 @@ namespace BTCPayServer.Data
                 o.Id
             });
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<WalletObjectData>()
-                    .Property(o => o.Data)
-                    .HasColumnType("JSONB");
-                
-            }
+            builder.Entity<WalletObjectData>()
+                .Property(o => o.Data)
+                .HasColumnType("JSONB");
         }
 
         public bool Equals(WalletObjectData x, WalletObjectData y)

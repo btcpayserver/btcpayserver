@@ -10,13 +10,12 @@ services:
       context: ..
       dockerfile: BTCPayServer.Tests/Dockerfile
       args:
-        CONFIGURATION_NAME: Altcoins-Release
+        CONFIGURATION_NAME: Release
     environment:
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_LTCRPCCONNECTION: server=http://litecoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
       TESTS_LTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
       TESTS_HOSTNAME: tests
@@ -89,7 +88,7 @@ services:
       - merchant_lnd
 
   selenium:
-    image: selenium/standalone-chrome:101.0
+    image: selenium/standalone-chrome:125.0
     extra_hosts:
       - "tests:172.23.0.18"
     expose:
@@ -99,7 +98,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.0
+    image: nicolasdorier/nbxplorer:2.5.4
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -163,7 +162,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -171,6 +170,7 @@ services:
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=customer_lightningd:9735
@@ -190,13 +190,15 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=merchant_lightningd:9735
@@ -214,8 +216,9 @@ services:
       - "merchant_lightningd_datadir:/root/.lightning"
     depends_on:
       - bitcoind
+
   postgres:
-    image:  postgres:13.4
+    image:  postgres:13.13
     environment:
         POSTGRES_HOST_AUTH_METHOD: trust
     ports:
@@ -224,7 +227,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.17.4-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -259,7 +262,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.17.4-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -306,27 +309,29 @@ services:
         - "tor_datadir:/home/tor/.tor"
         - "torrcdir:/usr/local/etc/tor"
         - "tor_servicesdir:/var/lib/tor/hidden_services"
+
   monerod:
-        image: btcpayserver/monero:0.18.2.2-5
-        restart: unless-stopped
-        container_name: xmr_monerod
-        entrypoint: sleep 999999
-#        entrypoint: monerod --fixed-difficulty 200 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --block-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/block?cryptoCode=xmr&hash=%s" --testnet --no-igd --hide-my-port --offline
-        volumes:
-            - "monero_data:/home/monero/.bitmonero"
-        ports:
-            - "18081:18081"
+      image: btcpayserver/monero:0.18.3.3
+      restart: unless-stopped
+      container_name: xmr_monerod
+      entrypoint: monerod --fixed-difficulty 200 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --block-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/block?cryptoCode=xmr&hash=%s" --testnet --no-igd --hide-my-port --offline --non-interactive
+      volumes:
+          - "monero_data:/home/monero/.bitmonero"
+      ports:
+          - "18081:18081"
+
   monero_wallet:
-      image: btcpayserver/monero:0.18.2.2-5
+      image: btcpayserver/monero:0.18.3.3
       restart: unless-stopped
       container_name: xmr_wallet_rpc
-      entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --disable-rpc-login --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon  --daemon-address=monerod:18081 --wallet-file=/wallet/wallet.keys --password-file=/wallet/password --tx-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/tx?cryptoCode=xmr&hash=%s"
+      entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --disable-rpc-login --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon  --daemon-address=monerod:18081 --wallet-dir=/wallet --tx-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/tx?cryptoCode=xmr&hash=%s"
       ports:
           - "18082:18082"
       volumes:
           - "./monero_wallet:/wallet"
       depends_on:
-            - monerod
+          - monerod
+
   litecoind:
     restart: unless-stopped
     image: btcpayserver/litecoin:0.18.1

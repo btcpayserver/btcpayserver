@@ -49,6 +49,7 @@ namespace BTCPayServer.Services
 
         public static ApplicationUserData FromModel(ApplicationUser data, string?[] roles)
         {
+            var blob = data.GetBlob() ?? new();
             return new ApplicationUserData
             {
                 Id = data.Id,
@@ -58,6 +59,8 @@ namespace BTCPayServer.Services
                 Approved = data.Approved,
                 RequiresApproval = data.RequiresApproval,
                 Created = data.Created,
+                Name = blob.Name,
+                ImageUrl = blob.ImageUrl,
                 Roles = roles,
                 Disabled = data.LockoutEnabled && data.LockoutEnd is not null && DateTimeOffset.UtcNow < data.LockoutEnd.Value.UtcDateTime
             };
@@ -155,13 +158,6 @@ namespace BTCPayServer.Services
             }
 
             return res.Succeeded;
-        }
-
-        public async Task<bool> IsAdminUser(string userId)
-        {
-            using var scope = _serviceProvider.CreateScope();
-            var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
-            return Roles.HasServerAdmin(await userManager.GetRolesAsync(new ApplicationUser() { Id = userId }));
         }
 
         public async Task<bool> IsAdminUser(ApplicationUser user)

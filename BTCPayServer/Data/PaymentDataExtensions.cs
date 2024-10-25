@@ -1,54 +1,53 @@
+#nullable enable
+using System;
+using System.Reflection.Metadata;
 using System.Runtime.InteropServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
     public static class PaymentDataExtensions
     {
-        public static void SetBlob(this PaymentData paymentData, PaymentEntity entity)
+        public static PaymentData Set(this PaymentData paymentData, InvoiceEntity invoiceEntity, IPaymentMethodHandler handler, object details)
         {
-            paymentData.Type = entity.GetPaymentMethodId().ToStringNormalized();
-            paymentData.Blob2 = entity.Network.ToString(entity);
+            var prompt = invoiceEntity.GetPaymentPrompt(handler.PaymentMethodId) ?? throw new InvalidOperationException($"Payment prompt for {handler.PaymentMethodId} is not found");
+            var paymentBlob = new PaymentBlob()
+            {
+                Destination = prompt.Destination,
+                PaymentMethodFee = prompt.PaymentMethodFee,
+                Divisibility = prompt.Divisibility
+            }.SetDetails(handler, details);
+            paymentData.InvoiceDataId = invoiceEntity.Id;
+            paymentData.SetBlob(handler.PaymentMethodId, paymentBlob);
+            return paymentData;
         }
-        public static PaymentEntity GetBlob(this PaymentData paymentData, BTCPayNetworkProvider networks)
+        public static PaymentEntity SetBlob(this PaymentData paymentData, PaymentEntity entity)
         {
-#pragma warning disable CS0618 // Type or member is obsolete
-            if (paymentData.Blob is not null && paymentData.Blob.Length != 0)
-            {
-                var unziped = ZipUtils.Unzip(paymentData.Blob);
-                var cryptoCode = "BTC";
-                if (JObject.Parse(unziped).TryGetValue("cryptoCode", out var v) && v.Type == JTokenType.String)
-                    cryptoCode = v.Value<string>();
-                var network = networks.GetNetwork<BTCPayNetworkBase>(cryptoCode);
-                PaymentEntity paymentEntity = null;
-                if (network == null)
-                {
-                    return null;
-                }
-                else
-                {
-                    paymentEntity = network.ToObject<PaymentEntity>(unziped);
-                }
-                paymentEntity.Network = network;
-                paymentEntity.Accounted = paymentData.Accounted;
-                return paymentEntity;
-            }
-#pragma warning restore CS0618 // Type or member is obsolete
-            if (paymentData.Blob2 is not null)
-            {
-                if (!PaymentMethodId.TryParse(paymentData.Type, out var pmi))
-                    return null;
-                var network = networks.GetNetwork<BTCPayNetworkBase>(pmi.CryptoCode);
-                if (network is null)
-                    return null;
-                var entity = network.ToObject<PaymentEntity>(paymentData.Blob2);
-                entity.Network = network;
-                entity.Accounted = paymentData.Accounted;
-                return entity;
-            }
-            return null;
+            paymentData.Amount = entity.Value;
+            paymentData.Currency = entity.Currency;
+            paymentData.Status = entity.Status;
+            paymentData.SetBlob(entity.PaymentMethodId, (PaymentBlob)entity);
+            return entity;
+        }
+        public static PaymentData SetBlob(this PaymentData paymentData, PaymentMethodId paymentMethodId, PaymentBlob blob)
+        {
+            paymentData.PaymentMethodId = paymentMethodId.ToString();
+            paymentData.Blob2 = JToken.FromObject(blob, InvoiceDataExtensions.DefaultSerializer).ToString(Newtonsoft.Json.Formatting.None);
+            return paymentData;
+        }
+        public static PaymentEntity GetBlob(this PaymentData paymentData)
+        {
+            var entity = JToken.Parse(paymentData.Blob2).ToObject<PaymentEntity>(InvoiceDataExtensions.DefaultSerializer) ?? throw new FormatException($"Invalid {nameof(PaymentEntity)}");
+            entity.Status = paymentData.Status!.Value;
+            entity.Currency = paymentData.Currency;
+            entity.PaymentMethodId = PaymentMethodId.Parse(paymentData.PaymentMethodId);
+            entity.Value = paymentData.Amount!.Value;
+            entity.Id = paymentData.Id;
+            entity.ReceivedTime = paymentData.Created!.Value;
+            return entity;
         }
     }
 }

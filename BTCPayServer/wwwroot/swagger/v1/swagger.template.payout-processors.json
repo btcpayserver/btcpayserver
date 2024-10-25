@@ -50,7 +50,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payout-processors/{processor}/{paymentMethod}": {
+        "/api/v1/stores/{storeId}/payout-processors/{processor}/{paymentMethodId}": {
             "delete": {
                 "tags": [
                     "Stores (Payout Processors)"
@@ -76,13 +76,7 @@
                         }
                     },
                     {
-                        "name": "paymentMethod",
-                        "in": "path",
-                        "required": true,
-                        "description": "The payment method",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "Remove store configured payout processor",
@@ -139,7 +133,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethod}": {
+        "/api/v1/stores/{storeId}/payout-processors/OnChainAutomatedPayoutSenderFactory/{paymentMethodId}": {
             "get": {
                 "tags": [
                     "Stores (Payout Processors)"
@@ -156,13 +150,7 @@
                         }
                     },
                     {
-                        "name": "paymentMethod",
-                        "in": "path",
-                        "required": true,
-                        "description": "A specific payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "Get configured store onchain automated payout processors",
@@ -213,13 +201,7 @@
                         }
                     },
                     {
-                        "name": "paymentMethod",
-                        "in": "path",
-                        "required": true,
-                        "description": "A specific payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "Update configured store onchain automated payout processors",
@@ -264,7 +246,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{paymentMethod}": {
+        "/api/v1/stores/{storeId}/payout-processors/LightningAutomatedPayoutSenderFactory/{payoutMethodId}": {
             "get": {
                 "tags": [
                     "Stores (Payout Processors)"
@@ -281,13 +263,7 @@
                         }
                     },
                     {
-                        "name": "paymentMethod",
-                        "in": "path",
-                        "required": true,
-                        "description": "A specific payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/PayoutMethodId"
                     }
                 ],
                 "description": "Get configured store Lightning automated payout processors",
@@ -338,13 +314,7 @@
                         }
                     },
                     {
-                        "name": "paymentMethod",
-                        "in": "path",
-                        "required": true,
-                        "description": "A specific payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "Update configured store Lightning automated payout processors",
@@ -561,7 +531,7 @@
                         "description": "Human name of the payout processor",
                         "type": "string"
                     },
-                    "paymentMethods": {
+                    "payoutMethods": {
                         "nullable": true,
                         "description": "Supported, payment methods by this processor",
                         "type": "array",
@@ -599,8 +569,8 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethod": {
-                        "$ref": "#/components/schemas/PaymentMethodId"
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     },
                     "intervalSeconds": {
                         "description": "How often should the processor run",
@@ -657,8 +627,8 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "paymentMethod": {
-                        "$ref": "#/components/schemas/PaymentMethodId"
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     },
                     "feeTargetBlock": {
                         "type": "number",

@@ -32,6 +32,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -168,6 +169,7 @@ namespace BTCPayServer.Hosting
             .AddNewtonsoftJson()
             .AddRazorRuntimeCompilation()
             .AddPlugins(services, Configuration, LoggerFactory, bootstrapServiceProvider)
+            .AddDataAnnotationsLocalization()
             .AddControllersAsServices();
 
             services.AddServerSideBlazor();
@@ -279,6 +281,10 @@ namespace BTCPayServer.Hosting
             var rewriteOptions = new RewriteOptions();
             rewriteOptions.AddRewrite("_blazor/(negotiate|initializers|disconnect)$", "/_blazor/$1", skipRemainingRules: true);
             rewriteOptions.AddRewrite("_blazor$", "/_blazor", skipRemainingRules: true);
+
+            // A rewrite rule to support the old API
+            rewriteOptions.AddRewrite("api/v1/stores/([^/]+)/payment-methods/[Oo]n[Cc]hain/([^/]+)/(preview|generate)", "/api/v1/stores/$1/payment-methods/$2-CHAIN/wallet/$3", skipRemainingRules: true);
+            rewriteOptions.AddRewrite("api/v1/stores/([^/]+)/payment-methods/[Oo]n[Cc]hain/([^/]+)(.*)", "/api/v1/stores/$1/payment-methods/$2-CHAIN$3", skipRemainingRules: true);
             app.UseRewriter(rewriteOptions);
 
             app.UseHeadersOverride();
@@ -293,6 +299,7 @@ namespace BTCPayServer.Hosting
 
             app.UseStatusCodePagesWithReExecute("/errors/{0}");
 
+            app.UseExceptionHandler("/errors/{0}");
             app.UsePayServer();
             app.UseRouting();
             app.UseCors();

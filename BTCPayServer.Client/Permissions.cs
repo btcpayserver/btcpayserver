@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Text.RegularExpressions;
 
 namespace BTCPayServer.Client
 {
@@ -16,7 +18,7 @@ namespace BTCPayServer.Client
         public const string CanUseLightningNodeInStore = "btcpay.store.canuselightningnode";
         public const string CanModifyServerSettings = "btcpay.server.canmodifyserversettings";
         public const string CanModifyStoreSettings = "btcpay.store.canmodifystoresettings";
-        public const string CanModifyStoreWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
+        public const string CanModifyWebhooks = "btcpay.store.webhooks.canmodifywebhooks";
         public const string CanModifyStoreSettingsUnscoped = "btcpay.store.canmodifystoresettings:";
         public const string CanViewStoreSettings = "btcpay.store.canviewstoresettings";
         public const string CanViewReports = "btcpay.store.canviewreports";
@@ -40,11 +42,6 @@ namespace BTCPayServer.Client
         public const string CanCreatePullPayments = "btcpay.store.cancreatepullpayments";
         public const string CanViewPullPayments = "btcpay.store.canviewpullpayments";
         public const string CanCreateNonApprovedPullPayments = "btcpay.store.cancreatenonapprovedpullpayments";
-        public const string CanViewCustodianAccounts = "btcpay.store.canviewcustodianaccounts";
-        public const string CanManageCustodianAccounts = "btcpay.store.canmanagecustodianaccounts";
-        public const string CanDepositToCustodianAccounts = "btcpay.store.candeposittocustodianaccount";
-        public const string CanWithdrawFromCustodianAccounts = "btcpay.store.canwithdrawfromcustodianaccount";
-        public const string CanTradeCustodianAccount = "btcpay.store.cantradecustodianaccount";
         public const string Unrestricted = "unrestricted";
         public static IEnumerable<string> AllPolicies
         {
@@ -53,7 +50,7 @@ namespace BTCPayServer.Client
                 yield return CanViewInvoices;
                 yield return CanCreateInvoice;
                 yield return CanModifyInvoices;
-                yield return CanModifyStoreWebhooks;
+                yield return CanModifyWebhooks;
                 yield return CanModifyServerSettings;
                 yield return CanModifyStoreSettings;
                 yield return CanViewStoreSettings;
@@ -79,11 +76,6 @@ namespace BTCPayServer.Client
                 yield return CanCreatePullPayments;
                 yield return CanViewPullPayments;
                 yield return CanCreateNonApprovedPullPayments;
-                yield return CanViewCustodianAccounts;
-                yield return CanManageCustodianAccounts;
-                yield return CanDepositToCustodianAccounts;
-                yield return CanWithdrawFromCustodianAccounts;
-                yield return CanTradeCustodianAccount;
                 yield return CanManageUsers;
                 yield return CanManagePayouts;
                 yield return CanViewPayouts;
@@ -113,6 +105,16 @@ namespace BTCPayServer.Client
         public static bool IsUserPolicy(string policy)
         {
             return policy.StartsWith("btcpay.user", StringComparison.OrdinalIgnoreCase);
+        }
+
+        private static readonly CultureInfo _culture = new (CultureInfo.InvariantCulture.Name);
+        public static string DisplayName(string policy)
+        {
+            var p = policy.Split(".");
+            if (p.Length < 3 || p[0] != "btcpay") return policy;
+            var constName = typeof(Policies).GetFields().Select(f => f.Name).FirstOrDefault(f => f.Equals(p[^1], StringComparison.OrdinalIgnoreCase));
+            var perm = string.IsNullOrEmpty(constName) ? string.Join(' ', p[2..]) : Regex.Replace(constName, "([A-Z])", " $1", RegexOptions.Compiled).Trim();
+            return $"{_culture.TextInfo.ToTitleCase(p[1])}: {_culture.TextInfo.ToTitleCase(perm)}";
         }
     }
 
@@ -254,11 +256,10 @@ namespace BTCPayServer.Client
         {
             var policyMap = new Dictionary<string, HashSet<string>>();
             PolicyHasChild(policyMap, Policies.CanModifyStoreSettings,
-                Policies.CanManageCustodianAccounts,
                 Policies.CanManagePullPayments,
                 Policies.CanModifyInvoices,
                 Policies.CanViewStoreSettings,
-                Policies.CanModifyStoreWebhooks,
+                Policies.CanModifyWebhooks,
                 Policies.CanModifyPaymentRequests,
                 Policies.CanManagePayouts,
                 Policies.CanUseLightningNodeInStore);
@@ -275,7 +276,6 @@ namespace BTCPayServer.Client
                 Policies.CanUseInternalLightningNode,
                 Policies.CanManageUsers);
             PolicyHasChild(policyMap, Policies.CanUseInternalLightningNode, Policies.CanCreateLightningInvoiceInternalNode, Policies.CanViewLightningInvoiceInternalNode);
-            PolicyHasChild(policyMap, Policies.CanManageCustodianAccounts, Policies.CanViewCustodianAccounts);
             PolicyHasChild(policyMap, Policies.CanModifyInvoices, Policies.CanViewInvoices, Policies.CanCreateInvoice, Policies.CanCreateLightningInvoiceInStore);
             PolicyHasChild(policyMap, Policies.CanViewStoreSettings, Policies.CanViewInvoices, Policies.CanViewPaymentRequests, Policies.CanViewReports, Policies.CanViewPullPayments, Policies.CanViewPayouts);
             PolicyHasChild(policyMap, Policies.CanManagePayouts, Policies.CanViewPayouts);

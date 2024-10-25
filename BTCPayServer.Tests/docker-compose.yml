@@ -14,7 +14,6 @@ services:
     environment:
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
       TESTS_HOSTNAME: tests
@@ -86,7 +85,7 @@ services:
       - merchant_lnd
 
   selenium:
-    image: selenium/standalone-chrome:101.0
+    image: selenium/standalone-chrome:125.0
     extra_hosts:
       - "tests:172.23.0.18"
     expose:
@@ -96,7 +95,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.0
+    image: nicolasdorier/nbxplorer:2.5.4
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -149,7 +148,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -157,6 +156,7 @@ services:
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=customer_lightningd:9735
@@ -176,13 +176,15 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v23.08-dev
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=merchant_lightningd:9735
@@ -202,7 +204,7 @@ services:
       - bitcoind
 
   postgres:
-    image:  postgres:13.4
+    image:  postgres:13.13
     environment:
         POSTGRES_HOST_AUTH_METHOD: trust
     ports:
@@ -211,7 +213,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.17.4-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -248,7 +250,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.17.4-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

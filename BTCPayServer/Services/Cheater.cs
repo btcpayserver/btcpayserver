@@ -13,13 +13,11 @@ namespace BTCPayServer.Services
     {
         private readonly ExplorerClientProvider _prov;
         private readonly InvoiceRepository _invoiceRepository;
-        public RPCClient CashCow { get; set; }
 
         public Cheater(
             ExplorerClientProvider prov,
             InvoiceRepository invoiceRepository)
         {
-            CashCow = prov.GetExplorerClient("BTC")?.RPCClient;
             _prov = prov;
             _invoiceRepository = invoiceRepository;
         }
@@ -36,7 +34,6 @@ namespace BTCPayServer.Services
 
         async Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
-#if ALTCOINS
             var liquid = _prov.GetNetwork("LBTC");
             if (liquid is not null)
             {
@@ -58,10 +55,8 @@ namespace BTCPayServer.Services
                     }
                 }
             }
-#else
-            if (CashCow is { } c)
-                await c.ScanRPCCapabilitiesAsync(cancellationToken);
-#endif
+
+            await Task.WhenAll(_prov.GetAll().Select(o => o.Item2.RPCClient.ScanRPCCapabilitiesAsync()));
         }
 
         Task IHostedService.StopAsync(CancellationToken cancellationToken)

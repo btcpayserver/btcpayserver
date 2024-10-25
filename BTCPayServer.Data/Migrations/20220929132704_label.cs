@@ -17,16 +17,14 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxlength = migrationBuilder.IsMySql() ? 255 : null;
-
             migrationBuilder.CreateTable(
                 name: "WalletObjects",
                 columns: table => new
                 {
-                    WalletId = table.Column<string>(nullable: false, maxLength: maxlength),
-                    Type = table.Column<string>(nullable: false, maxLength: maxlength),
-                    Id = table.Column<string>(nullable: false, maxLength: maxlength),
-                    Data = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true)
+                    WalletId = table.Column<string>(nullable: false, maxLength: null),
+                    Type = table.Column<string>(nullable: false, maxLength: null),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
+                    Data = table.Column<string>(type: "JSONB", nullable: true)
                 },
                 constraints: table =>
                 {
@@ -37,18 +35,16 @@ namespace BTCPayServer.Migrations
                 table: "WalletObjects",
                 columns: new[] { "Type", "Id" });
 
-
-            maxlength = migrationBuilder.IsMySql() ? 100 : null;
             migrationBuilder.CreateTable(
                 name: "WalletObjectLinks",
                 columns: table => new
                 {
-                    WalletId = table.Column<string>(nullable: false, maxLength: maxlength),
-                    AType = table.Column<string>(nullable: false, maxLength: maxlength),
-                    AId = table.Column<string>(nullable: false, maxLength: maxlength),
-                    BType = table.Column<string>(nullable: false, maxLength: maxlength),
-                    BId = table.Column<string>(nullable: false, maxLength: maxlength),
-                    Data = table.Column<string>(type: migrationBuilder.IsNpgsql() ? "JSONB" : "TEXT", nullable: true)
+                    WalletId = table.Column<string>(nullable: false, maxLength: null),
+                    AType = table.Column<string>(nullable: false, maxLength: null),
+                    AId = table.Column<string>(nullable: false, maxLength: null),
+                    BType = table.Column<string>(nullable: false, maxLength: null),
+                    BId = table.Column<string>(nullable: false, maxLength: null),
+                    Data = table.Column<string>(type: "JSONB", nullable: true)
                 },
                 constraints: table =>
                 {

@@ -1,6 +1,7 @@
 #nullable enable
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Hosting;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
@@ -17,7 +18,7 @@ namespace BTCPayServer.Plugins.Bitcoin
         public override void Execute(IServiceCollection applicationBuilder)
         {
             var services = (PluginServiceCollection)applicationBuilder;
-            var onChain = new Payments.PaymentMethodId("BTC", Payments.PaymentTypes.BTCLike);
+            var onChain = Payments.PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
             var nbxplorerNetworkProvider = services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>();
             var nbxplorerNetwork = nbxplorerNetworkProvider.GetFromCryptoCode("BTC");
             var chainName = nbxplorerNetwork.NBitcoinNetwork.ChainName;
@@ -47,7 +48,7 @@ namespace BTCPayServer.Plugins.Bitcoin
             }.SetDefaultElectrumMapping(chainName);
            
             applicationBuilder.AddBTCPayNetwork(network);
-            applicationBuilder.AddTransactionLinkProvider(onChain, defaultTransactionLinkProvider);
+            applicationBuilder.AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), defaultTransactionLinkProvider);
         }
     }
 }

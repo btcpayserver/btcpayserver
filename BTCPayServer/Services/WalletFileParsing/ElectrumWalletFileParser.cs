@@ -29,7 +29,7 @@ public class ElectrumWalletFileParser : IWalletFileParser
         if (jobj?.keystore is null)
             return false;
 
-        var result = new DerivationSchemeSettings { Network = network };
+        var result = new DerivationSchemeSettings();
         var derivationSchemeParser = network.GetDerivationSchemeParser();
         result.Source = "ElectrumFile";
 

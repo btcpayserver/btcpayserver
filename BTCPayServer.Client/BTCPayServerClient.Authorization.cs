@@ -1,34 +1,29 @@
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 
-namespace BTCPayServer.Client
+namespace BTCPayServer.Client;
+
+public partial class BTCPayServerClient
 {
-    public partial class BTCPayServerClient
+    public static Uri GenerateAuthorizeUri(Uri btcpayHost, string[] permissions, bool strict = true,
+        bool selectiveStores = false, (string ApplicationIdentifier, Uri Redirect) applicationDetails = default)
     {
-
-        public static Uri GenerateAuthorizeUri(Uri btcpayHost, string[] permissions, bool strict = true,
-            bool selectiveStores = false, (string ApplicationIdentifier, Uri Redirect) applicationDetails = default)
-        {
-            var result = new UriBuilder(btcpayHost);
-            result.Path = "api-keys/authorize";
-
-            AppendPayloadToQuery(result,
-                new Dictionary<string, object>()
-                {
-                    {"strict", strict}, {"selectiveStores", selectiveStores}, {"permissions", permissions}
-                });
-
-            if (applicationDetails.Redirect != null)
+        var result = new UriBuilder(btcpayHost) { Path = "api-keys/authorize" };
+        AppendPayloadToQuery(result,
+            new Dictionary<string, object>
             {
-                AppendPayloadToQuery(result, new KeyValuePair<string, object>("redirect", applicationDetails.Redirect));
-                if (!string.IsNullOrEmpty(applicationDetails.ApplicationIdentifier))
-                {
-                    AppendPayloadToQuery(result, new KeyValuePair<string, object>("applicationIdentifier", applicationDetails.ApplicationIdentifier));
-                }
-            }
+                {"strict", strict}, {"selectiveStores", selectiveStores}, {"permissions", permissions}
+            });
 
-            return result.Uri;
+        if (applicationDetails.Redirect != null)
+        {
+            AppendPayloadToQuery(result, new KeyValuePair<string, object>("redirect", applicationDetails.Redirect));
+            if (!string.IsNullOrEmpty(applicationDetails.ApplicationIdentifier))
+            {
+                AppendPayloadToQuery(result, new KeyValuePair<string, object>("applicationIdentifier", applicationDetails.ApplicationIdentifier));
+            }
         }
+
+        return result.Uri;
     }
 }

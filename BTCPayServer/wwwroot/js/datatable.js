@@ -187,6 +187,7 @@
     }
 
     function createTable(summaryDefinition, fields, rows) {
+        rows = clone(rows);
         var groupIndices = summaryDefinition.groups.map(g => fields.findIndex((a) => a === g)).filter(g => g !== -1);
         var aggregatesIndices = summaryDefinition.aggregates.map(g => fields.findIndex((a) => a === g)).filter(g => g !== -1);
         aggregatesIndices = aggregatesIndices.filter(g => g !== -1);

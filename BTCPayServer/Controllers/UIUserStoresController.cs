@@ -2,16 +2,19 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Controllers
 {
@@ -20,18 +23,27 @@ namespace BTCPayServer.Controllers
     public class UIUserStoresController : Controller
     {
         private readonly StoreRepository _repo;
+        private readonly IStringLocalizer StringLocalizer;
+        private readonly SettingsRepository _settingsRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly DefaultRulesCollection _defaultRules;
         private readonly RateFetcher _rateFactory;
         public string CreatedStoreId { get; set; }
 
         public UIUserStoresController(
             UserManager<ApplicationUser> userManager,
+			DefaultRulesCollection defaultRules,
             StoreRepository storeRepository,
-            RateFetcher rateFactory)
+            IStringLocalizer stringLocalizer,
+            RateFetcher rateFactory,
+            SettingsRepository settingsRepository)
         {
             _repo = storeRepository;
+            StringLocalizer = stringLocalizer;
             _userManager = userManager;
+            _defaultRules = defaultRules;
             _rateFactory = rateFactory;
+            _settingsRepository = settingsRepository;
         }
 
         [HttpGet]
@@ -62,7 +74,7 @@ namespace BTCPayServer.Controllers
             var vm = new CreateStoreViewModel
             {
                 IsFirstStore = !(stores.Any() || skipWizard),
-                DefaultCurrency = StoreBlob.StandardDefaultCurrency,
+                DefaultCurrency = (await _settingsRepository.GetSettingAsync<PoliciesSettings>())?.DefaultCurrency ?? StoreBlob.StandardDefaultCurrency,
                 Exchanges = GetExchangesSelectList(null)
             };
 
@@ -77,7 +89,7 @@ namespace BTCPayServer.Controllers
             {
                 var stores = await _repo.GetStoresByUserId(GetUserId());
                 vm.IsFirstStore = !stores.Any();
-                vm.Exchanges = GetExchangesSelectList(vm.PreferredExchange);
+                vm.Exchanges = GetExchangesSelectList(null);
                 return View(vm);
             }
 
@@ -88,7 +100,7 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _repo.CreateStore(GetUserId(), store);
             CreatedStoreId = store.Id;
-            TempData[WellKnownTempData.SuccessMessage] = "Store successfully created";
+            TempData.SetStatusSuccess(StringLocalizer["Store successfully created"]);
             return RedirectToAction(nameof(UIStoresController.Index), "UIStores", new
             {
                 storeId = store.Id
@@ -102,7 +114,7 @@ namespace BTCPayServer.Controllers
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return NotFound();
-            return View("Confirm", new ConfirmModel($"Delete store {store.StoreName}", "This store will still be accessible to users sharing it", "Delete"));
+            return View("Confirm", new ConfirmModel(StringLocalizer["Delete store {0}", store.StoreName], StringLocalizer["This store will still be accessible to users sharing it"], "Delete"));
         }
 
         [HttpPost("{storeId}/me/delete")]
@@ -114,21 +126,25 @@ namespace BTCPayServer.Controllers
             if (store == null)
                 return NotFound();
             await _repo.RemoveStore(storeId, userId);
-            TempData[WellKnownTempData.SuccessMessage] = "Store removed successfully";
+            TempData.SetStatusSuccess(StringLocalizer["Store removed successfully"]);
             return RedirectToAction(nameof(UIHomeController.Index), "UIHome");
         }
 
         private string GetUserId() => _userManager.GetUserId(User);
 
-        private SelectList GetExchangesSelectList(string selected)
-        {
-            var exchanges = _rateFactory.RateProviderFactory
-                .AvailableRateProviders
-                .OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
-                .ToList();
-            exchanges.Insert(0, new (null, "Recommended", ""));
-            var chosen = exchanges.FirstOrDefault(f => f.Id == selected) ?? exchanges.First();
-            return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
-        }
-    }
+		internal SelectList GetExchangesSelectList(StoreBlob storeBlob)
+		{
+			if (storeBlob is null)
+				storeBlob = new StoreBlob();
+			var defaultExchange = _defaultRules.GetRecommendedExchange(storeBlob.DefaultCurrency);
+			var exchanges = _rateFactory.RateProviderFactory
+				.AvailableRateProviders
+				.OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase)
+				.ToList();
+			var exchange = exchanges.First(e => e.Id == defaultExchange);
+			exchanges.Insert(0, new(null, StringLocalizer["Recommendation ({0})", exchange.DisplayName], ""));
+			var chosen = exchanges.FirstOrDefault(f => f.Id == storeBlob.PreferredExchange) ?? exchanges.First();
+			return new SelectList(exchanges, nameof(chosen.Id), nameof(chosen.DisplayName), chosen.Id);
+		}
+	}
 }

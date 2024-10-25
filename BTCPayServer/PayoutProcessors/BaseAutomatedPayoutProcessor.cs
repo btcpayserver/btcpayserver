@@ -9,6 +9,8 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
@@ -20,6 +22,7 @@ namespace BTCPayServer.PayoutProcessors;
 public class AutomatedPayoutConstants
 {
     public const double MinIntervalMinutes = 1.0;
+    public const double DefaultIntervalMinutes = 60.0;
     public const double MaxIntervalMinutes = 24 * 60; //1 day
     public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
     {
@@ -38,25 +41,28 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     protected readonly StoreRepository _storeRepository;
     protected readonly PayoutProcessorData PayoutProcessorSettings;
     protected readonly ApplicationDbContextFactory _applicationDbContextFactory;
-    protected readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+    private readonly PaymentMethodHandlerDictionary _paymentHandlers;
+    protected readonly PayoutMethodId PayoutMethodId;
     protected readonly PaymentMethodId PaymentMethodId;
     private readonly IPluginHookService _pluginHookService;
     protected readonly EventAggregator _eventAggregator;
 
     protected BaseAutomatedPayoutProcessor(
+        PaymentMethodId paymentMethodId,
         ILoggerFactory logger,
         StoreRepository storeRepository,
         PayoutProcessorData payoutProcessorSettings,
         ApplicationDbContextFactory applicationDbContextFactory,
-        BTCPayNetworkProvider btcPayNetworkProvider,
+        PaymentMethodHandlerDictionary paymentHandlers,
         IPluginHookService pluginHookService,
-        EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PaymentMethod}"))
+        EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PayoutMethodId}"))
     {
+        PaymentMethodId = paymentMethodId;
         _storeRepository = storeRepository;
         PayoutProcessorSettings = payoutProcessorSettings;
-        PaymentMethodId = PayoutProcessorSettings.GetPaymentMethodId();
+        PayoutMethodId = PayoutProcessorSettings.GetPayoutMethodId();
         _applicationDbContextFactory = applicationDbContextFactory;
-        _btcPayNetworkProvider = btcPayNetworkProvider;
+        _paymentHandlers = paymentHandlers;
         _pluginHookService = pluginHookService;
         _eventAggregator = eventAggregator;
         this.NoLogsOnExit = true;
@@ -79,7 +85,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     {
         if (arg.Type == PayoutEvent.PayoutEventType.Approved && 
             PayoutProcessorSettings.StoreId == arg.Payout.StoreDataId &&
-            arg.Payout.GetPaymentMethodId() == PaymentMethodId &&
+            arg.Payout.GetPayoutMethodId() == PayoutMethodId &&
             GetBlob(PayoutProcessorSettings).ProcessNewPayoutsInstantly)
         {
             SkipInterval();
@@ -87,22 +93,19 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         return Task.CompletedTask;
     }
 
-    protected virtual Task Process(ISupportedPaymentMethod paymentMethod, List<PayoutData> payouts) =>
+    protected virtual Task Process(object paymentMethodConfig, List<PayoutData> payouts) =>
         throw  new NotImplementedException();
 
-    protected virtual async Task<bool> ProcessShouldSave(ISupportedPaymentMethod paymentMethod,
-        List<PayoutData> payouts)
+    protected virtual async Task<bool> ProcessShouldSave(object paymentMethodConfig, List<PayoutData> payouts)
     {
-        await Process(paymentMethod, payouts);
+        await Process(paymentMethodConfig, payouts);
         return true;
     }
 
-    private async Task Act()
+	private async Task Act()
     {
         var store = await _storeRepository.FindStore(PayoutProcessorSettings.StoreId);
-        var paymentMethod = store?.GetEnabledPaymentMethods(_btcPayNetworkProvider).FirstOrDefault(
-            method =>
-                method.PaymentId == PaymentMethodId);
+        var paymentMethod = store?.GetPaymentMethodConfig(PaymentMethodId, _paymentHandlers, true);
 
         var blob = GetBlob(PayoutProcessorSettings);
         if (paymentMethod is not null)
@@ -112,8 +115,9 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 new PullPaymentHostedService.PayoutQuery()
                 {
                     States = new[] { PayoutState.AwaitingPayment },
-                    PaymentMethods = new[] { PayoutProcessorSettings.PaymentMethod },
-                    Stores = new[] {PayoutProcessorSettings.StoreId}
+                    PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
+					Processor = PayoutProcessorSettings.Processor,
+					Stores = new[] {PayoutProcessorSettings.StoreId}
                 }, context, CancellationToken);
 
             await _pluginHookService.ApplyAction("before-automated-payout-processing",

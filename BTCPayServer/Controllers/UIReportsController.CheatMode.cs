@@ -64,7 +64,27 @@ public partial class UIReportsController
             decimal randomValue = ((decimal)rand.NextDouble() * range) + from;
             return decimal.Round(randomValue, precision);
         }
-
+        JObject GetFormattedAmount()
+        {
+            string? curr = null;
+            decimal value = 0m;
+            int offset = 0;
+            while (curr is null)
+            {
+                curr = row[fi - 1 - offset]?.ToString();
+                value = curr switch
+                {
+                    "USD" or "EUR" or "CHF" => GenerateDecimal(30_000m, 60_000, 2),
+                    "JPY" => GenerateDecimal(400_0000m, 1000_0000m, 0),
+                    _ => 0.0m
+                };
+                if (value != 0.0m)
+                    break;
+                curr = null;
+                offset++;
+            }
+            return DisplayFormatter.ToFormattedAmount(value, curr);
+        }
         var fiatCurrency = rand.NextSingle() > 0.2 ? "USD" : TakeOne("JPY", "EUR", "CHF");
         var cryptoCurrency = rand.NextSingle() > 0.2 ? "BTC" : TakeOne("LTC", "DOGE", "DASH");
         
@@ -72,8 +92,10 @@ public partial class UIReportsController
             return Encoders.Base58.EncodeData(GenerateBytes(20));
         if (f.Type == "boolean")
             return GenerateBytes(1)[0] % 2 == 0;
-        if (f.Name == "PaymentType")
+        if (f.Name == "PaymentType" || f.Name == "Category")
             return TakeOne("On-Chain", "Lightning");
+        if (f.Name == "PaymentMethodId")
+            return TakeOne("BTC-CHAIN", "BTC-LN", "BTC-LNURL");
         if (f.Name == "PaymentId")
             if (row[fi -1] is "On-Chain")
                 return Encoders.Hex.EncodeData(GenerateBytes(32)) + "-" + rand.NextInt64(0, 4);
@@ -81,9 +103,9 @@ public partial class UIReportsController
                 return Encoders.Hex.EncodeData(GenerateBytes(32));
         if (f.Name == "Address")
             return Encoders.Bech32("bc1").Encode(0, GenerateBytes(20));
-        if (f.Name == "Crypto")
+        if (f.Name == "Crypto" || f.Name == "PaymentCurrency")
             return cryptoCurrency;
-        if (f.Name == "CryptoAmount")
+        if (f.Name == "CryptoAmount" || f.Name == "PaymentAmount")
             return DisplayFormatter.ToFormattedAmount(GenerateDecimal(0.1m, 5m, 8), cryptoCurrency);
         if (f.Name == "LightningAddress")
             return TakeOne("satoshi", "satosan", "satoichi") + "@bitcoin.org";
@@ -99,9 +121,9 @@ public partial class UIReportsController
             return TakeOne("AppA", "AppB");
         if (f.Name == "Quantity")
             return TakeOne(1, 2, 3, 4, 5);
-        if (f.Name == "Currency")
+        if (f.Name.EndsWith("Currency"))
             return fiatCurrency;
-        if (f.Name == "CurrencyAmount")
+        if (f.Name.EndsWith("CurrencyAmount"))
         {
             var curr = row[fi - 1]?.ToString();
             var value = curr switch
@@ -116,14 +138,11 @@ public partial class UIReportsController
             return Encoders.Hex.EncodeData(GenerateBytes(32));
         if (f.Name == "Rate")
         {
-            var curr = row[fi - 1]?.ToString();
-            var value = curr switch
-            {
-                "USD" or "EUR" or "CHF" => GenerateDecimal(30_000m, 60_000, 2),
-                "JPY" => GenerateDecimal(400_0000m, 1000_0000m, 0),
-                _ => GenerateDecimal(30_000m, 60_000, 2)
-            };
-            return DisplayFormatter.ToFormattedAmount(value, curr);
+            return GetFormattedAmount();
+        }
+        if (f.Type == "amount")
+        {
+            return GetFormattedAmount();
         }
         return null;
     }

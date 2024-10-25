@@ -3,6 +3,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Notifications.Blobs;
 
@@ -28,15 +29,16 @@ internal class InviteAcceptedNotification : BaseNotification
         StoreName = store.StoreName;
     }
 
-    internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options)
+    internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer)
         : NotificationHandler<InviteAcceptedNotification>
     {
+        private IStringLocalizer StringLocalizer { get; } = stringLocalizer;
         public override string NotificationType => TYPE;
         public override (string identifier, string name)[] Meta
         {
             get
             {
-                return [(TYPE, "User accepted invitation")];
+                return [(TYPE, StringLocalizer["User accepted invitation"])];
             }
         }
 
@@ -44,7 +46,8 @@ internal class InviteAcceptedNotification : BaseNotification
         {
             vm.Identifier = notification.Identifier;
             vm.Type = notification.NotificationType;
-            vm.Body = $"User {notification.UserEmail} accepted the invite to {notification.StoreName}.";
+            vm.StoreId = notification.StoreId;
+            vm.Body = StringLocalizer["User {0} accepted the invite to {1}.", notification.UserEmail, notification.StoreName];
             vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIStoresController.StoreUsers),
                 "UIStores",
                 new { storeId = notification.StoreId }, options.RootPath);

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Threading;
@@ -33,7 +33,7 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 new("ReceivedDate", "datetime"),
                 new("StoreId", "text"),
                 new("OrderId", "text"),
-                new("InvoiceId", "text"),
+                new("InvoiceId", "invoice_id"),
                 new("InvoiceCreatedDate", "datetime"),
                 new("InvoiceExpirationDate", "datetime"),
                 new("InvoiceMonitoringDate", "datetime"),
@@ -68,7 +68,6 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
             {
                 foreach (var payment in payments)
                 {
-                    var pdata = payment.GetCryptoPaymentData();
                     invoiceDue -= payment.InvoicePaidAmount.Net;
                     var data = queryContext.AddData();
 
@@ -80,12 +79,12 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                     data.Add(invoiceEntity.InvoiceTime);
                     data.Add(invoiceEntity.ExpirationTime);
                     data.Add(invoiceEntity.MonitoringExpiration);
-                    data.Add(pdata.GetPaymentId());
-                    data.Add(pdata.GetDestination());
-                    data.Add(payment.GetPaymentMethodId().PaymentType.ToPrettyString());
+                    data.Add(payment.Id);
+                    data.Add(payment.Destination);
+                    data.Add(payment.PaymentMethodId.ToString());
                     data.Add(payment.Currency);
                     data.Add(payment.PaidAmount.Gross.ToString(CultureInfo.InvariantCulture));
-                    data.Add(payment.NetworkFee.ToString(CultureInfo.InvariantCulture));
+                    data.Add(payment.PaymentMethodFee.ToString(CultureInfo.InvariantCulture));
                     data.Add(payment.Rate);
                     data.Add(Math.Round(payment.InvoicePaidAmount.Gross, currency.NumberDecimalDigits)
                         .ToString(CultureInfo.InvariantCulture));
@@ -96,8 +95,8 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                     data.Add(invoiceEntity.Metadata.ItemDesc);
                     data.Add(invoiceEntity.GetInvoiceState().ToString());
 #pragma warning disable CS0618 // Type or member is obsolete
-                    data.Add(invoiceEntity.StatusString);
-                    data.Add(invoiceEntity.ExceptionStatusString);
+                    data.Add(invoiceEntity.Status.ToLegacyStatusString());
+                    data.Add(invoiceEntity.ExceptionStatus.ToLegacyExceptionStatusString());
 #pragma warning restore CS0618 // Type or member is obsolete
                     data.Add(invoiceEntity.Metadata.BuyerEmail);
                     data.Add(payment.Accounted);
@@ -129,10 +128,8 @@ public class LegacyInvoiceExportReportProvider : ReportProvider
                 data.Add(invoiceEntity.Metadata.ItemCode);
                 data.Add(invoiceEntity.Metadata.ItemDesc);
                 data.Add(invoiceEntity.GetInvoiceState().ToString());
-#pragma warning disable CS0618 // Type or member is obsolete
-                data.Add(invoiceEntity.StatusString);
-                data.Add(invoiceEntity.ExceptionStatusString);
-#pragma warning restore CS0618 // Type or member is obsolete
+                data.Add(invoiceEntity.Status.ToLegacyStatusString());
+                data.Add(invoiceEntity.ExceptionStatus.ToLegacyExceptionStatusString());
                 data.Add(invoiceEntity.Metadata.BuyerEmail);
                 data.Add(null); // Accounted
             }

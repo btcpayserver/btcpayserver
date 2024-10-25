@@ -1,7 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 
@@ -18,20 +18,10 @@ namespace BTCPayServer.Services.Apps
     }
     public interface IHasSaleStatsAppType
     {
-        Task<SalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
+        Task<AppSalesStats> GetSalesStats(AppData app, InvoiceEntity[] paidInvoices, int numberOfDays);
     }
     public interface IHasItemStatsAppType
     {
-        Task<IEnumerable<ItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
-    }
-
-    public enum RequiresRefundEmail
-    {
-        [Display(Name = "Inherit from store settings")]
-        InheritFromStore,
-        [Display(Name = "On")]
-        On,
-        [Display(Name = "Off")]
-        Off
+        Task<IEnumerable<AppItemStats>> GetItemStats(AppData appData, InvoiceEntity[] invoiceEntities);
     }
 }

@@ -213,13 +213,15 @@ BTCPay Server software, logo and designs are provided under [MIT License](https:
 
 The BTCPay Server Project is proudly supported by these entities through the [BTCPay Server Foundation](https://foundation.btcpayserver.org/).
 
-[![Spiral](BTCPayServer/wwwroot/img/readme/supporter_spiral.svg)](https://spiral.xyz)
-[![Baillie Gifford](BTCPayServer/wwwroot/img/readme/supporter_bailliegifford.svg)](https://www.bailliegifford.com)
-[![Strike](BTCPayServer/wwwroot/img/readme/supporter_strike.svg)](https://strike.me)
-[![Human Rights Foundation](BTCPayServer/wwwroot/img/readme/supporter_hrf.svg)](https://hrf.org)
-[![LunaNode](BTCPayServer/wwwroot/img/readme/supporter_lunanode.svg)](https://lunanode.com)
-[![Wallet of Satoshi](BTCPayServer/wwwroot/img/readme/supporter_walletofsatoshi.svg)](https://walletofsatoshi.com/)
-[![Coincards](BTCPayServer/wwwroot/img/readme/supporter_coincards.svg)](https://coincards.com/)
-[![IVPN](BTCPayServer/wwwroot/img/readme/supporter_ivpn.svg)](https://ivpn.net/)
+[![Spiral](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_spiral.svg)](https://spiral.xyz)
+[![OpenSats](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_opensats.svg)](https://opensats.org)
+[![Baillie Gifford](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_bailliegifford.svg)](https://www.bailliegifford.com)
+[![Tether](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_tether.svg)](https://tether.to)
+[![Human Rights Foundation](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_hrf.svg)](https://hrf.org)
+[![LunaNode](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_lunanode.svg)](https://lunanode.com)
+[![Wallet of Satoshi](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_walletofsatoshi.svg)](https://walletofsatoshi.com/)
+[![Coincards](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_coincards.svg)](https://coincards.com/)
+[![IVPN](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_ivpn.svg)](https://ivpn.net/)
+[![Unbank](https://raw.githubusercontent.com/btcpayserver/btcpayserver/master/BTCPayServer/wwwroot/img/readme/supporter_unbank.svg)](https://unbank.com/)
 
 If you'd like to support the project, please visit the [donation page](https://btcpayserver.org/donate/).

@@ -1,22 +1,17 @@
-﻿@using BTCPayServer.Client
+@using BTCPayServer.Client
 @model BTCPayServer.Models.StoreViewModels.ListStoresViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Index, Model.Archived ? "Archived Stores" : "Stores");
+    ViewData.SetActivePage(StoreNavPages.Index, Model.Archived ? StringLocalizer["Archived Stores"] : StringLocalizer["Stores"]);
 }
 
+<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
-
-<div class="d-sm-flex justify-content-between mb-2">
-    <h2 class="mb-0">
-        @ViewData["Title"]
-    </h2>
-</div>
 @if (Model.Stores.Any())
 {
     <table class="table table-hover">
         <thead>
             <tr>
-                <th>Store Name</th>
+                <th text-translate="true">Store Name</th>
             </tr>
         </thead>
         <tbody>
@@ -27,7 +22,7 @@
                         <a asp-action="Index" asp-controller="UIStores" asp-route-storeId="@store.StoreId" id="Store-@store.StoreId">@store.StoreName</a>
                         @if (store.Archived)
                         {
-                            <span class="badge bg-info ms-2">archived</span>
+                            <span class="badge bg-info ms-2" text-translate="true">archived</span>
                         }
                     </td>
                 </tr>
@@ -38,7 +33,7 @@
 else
 {
     <p class="text-secondary mt-3">
-        There are no stores yet. 
-        <span permission="@Policies.CanModifyStoreSettingsUnscoped"><a asp-action="CreateStore">Create a store</a>.</span>
+        <span text-translate="true">There are no stores yet.</span>
+        <span permission="@Policies.CanModifyStoreSettingsUnscoped"><a asp-action="CreateStore" text-translate="true">Create a store</a>.</span>
     </p>
 }

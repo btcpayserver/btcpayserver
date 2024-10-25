@@ -1,4 +1,6 @@
 using System;
+using BTCPayServer.JsonConverters;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Apps
 {
@@ -10,7 +12,6 @@ namespace BTCPayServer.Services.Apps
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
         public string TargetCurrency { get; set; }
-
         decimal? _TargetAmount;
         public decimal? TargetAmount
         {
@@ -28,11 +29,10 @@ namespace BTCPayServer.Services.Apps
         }
 
         public bool EnforceTargetAmount { get; set; }
-        public string CustomCSSLink { get; set; }
-        public string MainImageUrl { get; set; }
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri MainImageUrl { get; set; }
         public string NotificationUrl { get; set; }
         public string Tagline { get; set; }
-        public string EmbeddedCSS { get; set; }
         public string PerksTemplate { get; set; }
         public bool DisqusEnabled { get; set; }
         public bool SoundsEnabled { get; set; }
@@ -40,21 +40,17 @@ namespace BTCPayServer.Services.Apps
         public bool AnimationsEnabled { get; set; }
         public int ResetEveryAmount { get; set; } = 1;
         public CrowdfundResetEvery ResetEvery { get; set; } = CrowdfundResetEvery.Never;
-        [Obsolete("Use AppData.TagAllInvoices instead")]
-        public bool UseAllStoreInvoices { get; set; }
         public bool DisplayPerksRanking { get; set; }
         public bool DisplayPerksValue { get; set; }
         public bool SortPerksByPopularity { get; set; }
-        public string FormId { get; set; } = null;
-
-
+        public string FormId { get; set; }
         public string[] AnimationColors { get; set; } =
-        {
+        [
             "#FF6138", "#FFBE53", "#2980B9", "#282741"
-        };
+        ];
 
         public string[] Sounds { get; set; } =
-        {
+        [
             "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/dominating.wav",
             "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/doublekill.wav",
             "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/doublekill2.wav",
@@ -82,7 +78,7 @@ namespace BTCPayServer.Services.Apps
             "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/ultrakill.wav",
             "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/unstoppable.wav",
             "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/tree/master/sound/AQS/whickedsick.wav"
-        };
+        ];
     }
     public enum CrowdfundResetEvery
     {

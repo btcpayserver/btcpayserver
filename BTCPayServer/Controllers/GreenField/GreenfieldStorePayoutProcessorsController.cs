@@ -5,7 +5,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
+using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -37,7 +39,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     Name = datas.Key,
                     FriendlyName = _factories.FirstOrDefault(factory => factory.Processor == datas.Key)?.FriendlyName,
-                    PaymentMethods = datas.Select(data => data.PaymentMethod).ToArray()
+                    PayoutMethods = datas.Select(data => data.PayoutMethodId).ToArray()
                 });
             return Ok(configured);
 
@@ -53,7 +55,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { processor },
-                        PaymentMethods = new[] { paymentMethod }
+                        PayoutMethods = new[] { PayoutMethodId.Parse(paymentMethod) }
                     })).FirstOrDefault();
             if (matched is null)
             {

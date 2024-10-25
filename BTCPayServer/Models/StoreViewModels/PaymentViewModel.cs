@@ -17,7 +17,7 @@ namespace BTCPayServer.Models.StoreViewModels
         [Display(Name = "Add additional fee (network fee) to invoice …")]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
-        [Display(Name = "Consider the invoice paid even if the paid amount is ... % less than expected")]
+        [Display(Name = "Consider the invoice paid even if the paid amount is … % less than expected")]
         [Range(0, 100)]
         public double PaymentTolerance { get; set; }
 

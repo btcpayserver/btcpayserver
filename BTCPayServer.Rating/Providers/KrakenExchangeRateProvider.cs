@@ -93,7 +93,7 @@ namespace BTCPayServer.Services.Rates
                 if (ticker != null)
                 {
                     var pair = GetCurrencyPair(symbol);
-                    if (pair is not null)
+                    if (pair is not null && ticker.Bid <= ticker.Ask)
                         result.Add(new PairRate(pair, new BidAsk(ticker.Bid, ticker.Ask)));
                 }
             }

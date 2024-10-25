@@ -11,14 +11,13 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            int? maxLength = this.IsMySql(migrationBuilder.ActiveProvider) ? (int?)255 : null;
-            migrationBuilder.CreateTable(
+                        migrationBuilder.CreateTable(
                 name: "Fido2Credentials",
                 columns: table => new
                 {
-                    Id = table.Column<string>(nullable: false, maxLength: maxLength),
+                    Id = table.Column<string>(nullable: false, maxLength: null),
                     Name = table.Column<string>(nullable: true),
-                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: maxLength),
+                    ApplicationUserId = table.Column<string>(nullable: true, maxLength: null),
                     Blob = table.Column<byte[]>(nullable: true),
                     Type = table.Column<int>(nullable: false)
                 },

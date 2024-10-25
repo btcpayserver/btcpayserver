@@ -14,6 +14,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Payments;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitpayClient;
@@ -26,12 +27,18 @@ namespace BTCPayServer.Controllers
     public class BitpayInvoiceController : Controller
     {
         private readonly UIInvoiceController _InvoiceController;
+        private readonly Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> _bitpayExtensions;
+        private readonly CurrencyNameTable _currencyNameTable;
         private readonly InvoiceRepository _InvoiceRepository;
 
         public BitpayInvoiceController(UIInvoiceController invoiceController,
+                                    Dictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions,
+                                    CurrencyNameTable currencyNameTable,
                                     InvoiceRepository invoiceRepository)
         {
             _InvoiceController = invoiceController;
+            _bitpayExtensions = bitpayExtensions;
+            _currencyNameTable = currencyNameTable;
             _InvoiceRepository = invoiceRepository;
         }
 
@@ -56,7 +63,7 @@ namespace BTCPayServer.Controllers
             })).FirstOrDefault();
             if (invoice == null)
                 throw new BitpayHttpException(404, "Object not found");
-            return new DataWrapper<InvoiceResponse>(invoice.EntityToDTO());
+            return new DataWrapper<InvoiceResponse>(invoice.EntityToDTO(_bitpayExtensions, Url, _currencyNameTable));
         }
         [HttpGet]
         [Route("invoices")]
@@ -90,7 +97,7 @@ namespace BTCPayServer.Controllers
             };
 
             var entities = (await _InvoiceRepository.GetInvoices(query))
-                            .Select((o) => o.EntityToDTO()).ToArray();
+                            .Select((o) => o.EntityToDTO(_bitpayExtensions, Url, _currencyNameTable)).ToArray();
 
             return Json(DataWrapper.Create(entities));
         }
@@ -100,7 +107,7 @@ namespace BTCPayServer.Controllers
             CancellationToken cancellationToken = default, Action<InvoiceEntity> entityManipulator = null)
         {
             var entity = await CreateInvoiceCoreRaw(invoice, store, serverUrl, additionalTags, cancellationToken, entityManipulator);
-            var resp = entity.EntityToDTO();
+            var resp = entity.EntityToDTO(_bitpayExtensions, Url, _currencyNameTable);
             return new DataWrapper<InvoiceResponse>(resp) { Facade = "pos/invoice" };
         }
 
@@ -154,7 +161,6 @@ namespace BTCPayServer.Controllers
             entity.RedirectURLTemplate = invoice.RedirectURL ?? store.StoreWebsite;
             entity.RedirectAutomatically =
                 invoice.RedirectAutomatically.GetValueOrDefault(storeBlob.RedirectAutomatically);
-            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
             entity.SpeedPolicy = ParseSpeedPolicy(invoice.TransactionSpeed, store.SpeedPolicy);
 
             IPaymentFilter excludeFilter = null;
@@ -178,8 +184,10 @@ namespace BTCPayServer.Controllers
                 excludeFilter = PaymentFilter.Where(p => !supportedTransactionCurrencies.Contains(p));
             }
             entity.PaymentTolerance = storeBlob.PaymentTolerance;
-            entity.DefaultPaymentMethod = invoice.DefaultPaymentMethod;
-            entity.RequiresRefundEmail = invoice.RequiresRefundEmail;
+            if (invoice.DefaultPaymentMethod is not null && PaymentMethodId.TryParse(invoice.DefaultPaymentMethod, out var defaultPaymentMethod))
+            {
+                entity.DefaultPaymentMethod = defaultPaymentMethod;
+            }
 
             return await _InvoiceController.CreateInvoiceCoreRaw(entity, store, excludeFilter, null, cancellationToken, entityManipulator);
         }

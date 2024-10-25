@@ -1,10 +1,11 @@
 using System;
-using System.Data.Common;
 using BTCPayServer.Abstractions.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.Extensions.Options;
+using Npgsql;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Infrastructure;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Migrations.Operations;
 
@@ -13,15 +14,16 @@ namespace BTCPayServer.Abstractions.Contracts
     public abstract class BaseDbContextFactory<T> where T : DbContext
     {
         private readonly IOptions<DatabaseOptions> _options;
-        private readonly string _schemaPrefix;
+        private readonly string _migrationTableName;
 
-        public BaseDbContextFactory(IOptions<DatabaseOptions> options, string schemaPrefix)
+        public BaseDbContextFactory(IOptions<DatabaseOptions> options, string migrationTableName)
         {
             _options = options;
-            _schemaPrefix = schemaPrefix;
+            _migrationTableName = migrationTableName;
         }
 
-        public abstract T CreateContext();
+        public T CreateContext() => CreateContext(null);
+        public abstract T CreateContext(Action<NpgsqlDbContextOptionsBuilder> npgsqlOptionsAction = null);
         class CustomNpgsqlMigrationsSqlGenerator : NpgsqlMigrationsSqlGenerator
         {
 #pragma warning disable EF1001 // Internal EF Core API usage.
@@ -66,47 +68,27 @@ namespace BTCPayServer.Abstractions.Contracts
             }
         }
 
-        public void ConfigureBuilder(DbContextOptionsBuilder builder)
+        public void ConfigureBuilder(DbContextOptionsBuilder builder) => ConfigureBuilder(builder, null);
+        public void ConfigureBuilder(DbContextOptionsBuilder builder, Action<NpgsqlDbContextOptionsBuilder> npgsqlOptionsAction = null)
         {
-            switch (_options.Value.DatabaseType)
+            builder
+            .UseNpgsql(_options.Value.ConnectionString, o =>
             {
-                case DatabaseType.Sqlite:
-                    builder.UseSqlite(_options.Value.ConnectionString, o =>
-                    {
-                        if (!string.IsNullOrEmpty(_schemaPrefix))
-                        {
-                            o.MigrationsHistoryTable(_schemaPrefix);
-                        }
-                    });
-                    break;
-                case DatabaseType.Postgres:
-                    builder
-                        .UseNpgsql(_options.Value.ConnectionString, o =>
-                        {
-                            o.EnableRetryOnFailure(10);
-                            o.SetPostgresVersion(12, 0);
-                            if (!string.IsNullOrEmpty(_schemaPrefix))
-                            {
-                                o.MigrationsHistoryTable(_schemaPrefix);
-                            }
-                        })
-                        .ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
-                    break;
-                case DatabaseType.MySQL:
-                    builder.UseMySql(_options.Value.ConnectionString, ServerVersion.AutoDetect(_options.Value.ConnectionString), o =>
-                    {
-                        o.EnableRetryOnFailure(10);
-
-                        if (!string.IsNullOrEmpty(_schemaPrefix))
-                        {
-                            o.MigrationsHistoryTable(_schemaPrefix);
-                        }
-                    });
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException();
-            }
+                o.EnableRetryOnFailure(10);
+                o.SetPostgresVersion(12, 0);
+                npgsqlOptionsAction?.Invoke(o);
+                var mainSearchPath = GetSearchPath(_options.Value.ConnectionString);
+                var schemaPrefix = string.IsNullOrEmpty(_migrationTableName) ? "__EFMigrationsHistory" : _migrationTableName;
+                o.MigrationsHistoryTable(schemaPrefix, mainSearchPath);
+            })
+            .ReplaceService<IMigrationsSqlGenerator, CustomNpgsqlMigrationsSqlGenerator>();
         }
 
+        private string GetSearchPath(string connectionString)
+        {
+            var connectionStringBuilder = new NpgsqlConnectionStringBuilder(connectionString);
+            var searchPaths = connectionStringBuilder.SearchPath?.Split(',');
+            return searchPaths is not { Length: > 0 } ? null : searchPaths[0];
+        }
     }
 }

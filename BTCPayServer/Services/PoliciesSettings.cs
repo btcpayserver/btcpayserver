@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.JsonConverters;
+using BTCPayServer.Payments;
 using BTCPayServer.Validation;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services
 {
@@ -22,6 +25,11 @@ namespace BTCPayServer.Services
             get => !LockSubscription;
             set { LockSubscription = !value; }
         }
+
+        [DefaultValue("English")]
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
+        [Display(Name = "Backend's language")]
+        public string LangDictionary { get; set; } = "English";
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         [Display(Name = "Admin must approve new users")]
@@ -72,6 +80,8 @@ namespace BTCPayServer.Services
 
         [Display(Name = "Show plugins in pre-release")]
         public bool PluginPreReleases { get; set; }
+        [Display(Name = "Select the Default Currency during Store Creation")]
+        public string DefaultCurrency { get; set; }
 
         public bool DisableSSHService { get; set; }
 
@@ -91,7 +101,8 @@ namespace BTCPayServer.Services
 
         public class BlockExplorerOverrideItem
         {
-            public string CryptoCode { get; set; }
+            [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
+            public PaymentMethodId PaymentMethodId { get; set; }
             public string Link { get; set; }
         }
 

@@ -15,6 +15,8 @@ namespace BTCPayServer.Models.StoreViewModels
         public string CryptoCode { get; set; }
         public bool CanUseInternalNode { get; set; }
         public bool SkipPortTest { get; set; }
+
+        [Display(Name = "Enabled")]
         public bool Enabled { get; set; } = true;
 
         [Display(Name = "Connection string")]

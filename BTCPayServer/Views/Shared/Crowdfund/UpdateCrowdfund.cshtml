@@ -1,5 +1,5 @@
 @using System.Globalization
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Abstractions.Contracts
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Client
 @using BTCPayServer.TagHelpers
@@ -7,11 +7,13 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Forms
 @inject FormDataService FormDataService
+@inject IFileService FileService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.Crowdfund.Models.UpdateCrowdfundViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, "Update Crowdfund", Model.AppId);
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Update Crowdfund"], Model.AppId);
 	Csp.UnsafeEval();
+    var canUpload = await FileService.IsAvailable();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 }
 
@@ -26,18 +28,18 @@
     <script src="~/crowdfund/admin.js" asp-append-version="true"></script>
 }
 
-<form method="post" permissioned="@Policies.CanModifyStoreSettings">
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>   
-            @if (Model.Archived)
+<form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2 text-translate="true">@ViewData["Title"]</h2>
+        <div>
+			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+			@if (Model.Archived)
             {
-                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False">Unarchive</button>
+                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true">Unarchive</button>
             }
             else if (Model.ModelWithMinimumData)
             {
-                <a class="btn btn-secondary" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@Model.AppId" id="ViewApp" target="_blank">View</a>
+                <a class="btn btn-secondary" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@Model.AppId" id="ViewApp" target="_blank" text-translate="true">View</a>
             }
         </div>
     </div>
@@ -46,8 +48,11 @@
 
     <input type="hidden" asp-for="StoreId" />
     <input type="hidden" asp-for="Archived" />
-    <div asp-validation-summary="ModelOnly"></div>
 
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+    }
     <div class="row">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
             <div class="row">
@@ -72,9 +77,31 @@
                 <span asp-validation-for="Tagline" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="MainImageUrl" class="form-label"></label>
-                <input asp-for="MainImageUrl" class="form-control" />
-                <span asp-validation-for="MainImageUrl" class="text-danger"></span>
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <label asp-for="MainImageFile" class="form-label"></label>
+                    @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+                    {
+                        <button type="submit" class="btn btn-link p-0 text-danger" name="RemoveLogoFile" value="true">
+                            <vc:icon symbol="cross" /> <span text-translate="true">Remove</span>
+                        </button>
+                    }
+                </div>
+                @if (canUpload)
+                {
+                    <div class="d-flex align-items-center gap-3">
+                        <input asp-for="MainImageFile" type="file" class="form-control flex-grow">
+                        @if (!string.IsNullOrEmpty(Model.MainImageUrl))
+                        {
+                            <img src="@Model.MainImageUrl" alt="Logo" style="height:2.1rem;max-width:10.5rem;" />
+                        }
+                    </div>
+                    <span asp-validation-for="MainImageFile" class="text-danger"></span>
+                }
+                else
+                {
+                    <input asp-for="MainImageFile" type="file" class="form-control" disabled>
+                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
+                }
             </div>
             <div class="form-group">
                 <div class="d-flex align-items-center">
@@ -82,7 +109,7 @@
                     <div>
                         <label asp-for="Enabled" class="form-check-label"></label>
                         <span asp-validation-for="Enabled" class="text-danger"></span>
-                        <div class="text-muted">The crowdfund will be visible to anyone.</div>
+                        <div class="text-muted" text-translate="true">The crowdfund will be visible to anyone.</div>
                     </div>
                 </div>
             </div>
@@ -109,7 +136,7 @@
                 <div class="form-group">
                     <label asp-for="TargetCurrency" class="form-label"></label>
                     <input asp-for="TargetCurrency" class="form-control w-auto" currency-selection />
-                    <div class="form-text">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</div>
+                    <div class="form-text">@StringLocalizer["Uses the store's default currency ({0}) if empty.", @Model.StoreDefaultCurrency]</div>
                     <span asp-validation-for="TargetCurrency" class="text-danger"></span>
                 </div>
             </div>
@@ -120,7 +147,7 @@
                         <input type="datetime-local" asp-for="StartDate"
                                value="@(Model.StartDate?.ToString("u", CultureInfo.InvariantCulture))"
                                class="form-control flatdtpicker"
-                               placeholder="No start date has been set" />
+                               placeholder="@StringLocalizer["No start date has been set"]" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
                             <vc:icon symbol="close"/>
                         </button>
@@ -132,7 +159,7 @@
                         <input type="datetime-local" asp-for="EndDate"
                                value="@(Model.EndDate?.ToString("u", CultureInfo.InvariantCulture))"
                                class="form-control flatdtpicker"
-                               placeholder="No end date has been set" />
+                               placeholder="@StringLocalizer["No end date has been set"]" />
                         <button class="btn btn-secondary input-group-clear px-3" type="button" title="Clear">
                             <vc:icon symbol="close"/>
                         </button>
@@ -146,9 +173,9 @@
                 <div class="d-flex align-items-center mb-3">
                     <input asp-for="IsRecurring" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#ResetEverySettings" aria-expanded="@(Model.IsRecurring)" aria-controls="ResetEverySettings" />
                     <div>
-                        <label asp-for="IsRecurring" class="form-check-label">Recurring Goal</label>
+                        <label asp-for="IsRecurring" class="form-check-label" text-translate="true">Recurring Goal</label>
                         <span asp-validation-for="IsRecurring" class="text-danger"></span>
-                        <div class="text-muted">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
+                        <div class="text-muted" text-translate="true">Reset goal after a specific period of time, based on your crowdfund's start date.</div>
                     </div>
                 </div>
                 
@@ -156,7 +183,7 @@
                     <div class="form-group mb-0 pt-2 w-250px">
                         <label asp-for="ResetEveryAmount" class="form-label"></label>
                         <div class="d-flex align-items-center">
-                            <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="Amount" class="form-control me-3" min="0">
+                            <input type="number" inputmode="numeric" asp-for="ResetEveryAmount" placeholder="@StringLocalizer["Amount"]" class="form-control me-3" min="0">
                             <select class="form-select w-auto" asp-for="ResetEvery">
                                 @foreach (var opt in Model.ResetEveryValues)
                                 {
@@ -177,7 +204,7 @@
     </div>
     <div class="row">
         <div class="col-xl-8 col-xxl-constrain">
-            <h3 class="mt-5 mb-4">Contributions</h3>
+            <h3 class="mt-5 mb-4" text-translate="true">Contributions</h3>
             <div class="d-flex mb-3">
                 <input asp-for="SortPerksByPopularity" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="SortPerksByPopularity" class="form-check-label"></label>
@@ -199,27 +226,27 @@
                 <span asp-validation-for="EnforceTargetAmount" class="text-danger"></span>
             </div>
             
-            <h3 class="mt-5 mb-4">Crowdfund Behavior</h3>
+            <h3 class="mt-5 mb-4" text-translate="true">Crowdfund Behavior</h3>
             <div class="d-flex">
                 <input asp-for="UseAllStoreInvoices" type="checkbox" class="btcpay-toggle me-3" />
                 <label asp-for="UseAllStoreInvoices" class="form-check-label"></label>
                 <span asp-validation-for="UseAllStoreInvoices" class="text-danger"></span>
             </div>
             
-            <h3 class="mt-5 mb-4">Checkout</h3>
+            <h3 class="mt-5 mb-4" text-translate="true">Checkout</h3>
             <div class="form-group">
                 <label asp-for="FormId" class="form-label"></label>
                 <select asp-for="FormId" class="form-select w-auto" asp-items="@checkoutFormOptions"></select>
                 <span asp-validation-for="FormId" class="text-danger"></span>
             </div>
 
-            <h3 class="mt-5 mb-2">Additional Options</h3>
+            <h3 class="mt-5 mb-2" text-translate="true">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-sound-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-sound" aria-expanded="false" aria-controls="additional-sound">
-                                Sound
+                                <span text-translate="true">Sound</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -245,7 +272,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-animation-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-animation" aria-expanded="false" aria-controls="additional-animation">
-                                Animation
+                                <span text-translate="true">Animation</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -311,36 +338,6 @@
                             </div>
                         </div>
                     </div>
-                    @* We are deprecating the custom CSS options in favor of the store branding approach.
-                       Display this section only if these values are set. *@
-                    @if (!string.IsNullOrWhiteSpace(Model.CustomCSSLink) || !string.IsNullOrWhiteSpace(Model.EmbeddedCSS))
-                    {
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="additional-custom-css-header">
-                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
-                                    Custom CSS
-                                    <vc:icon symbol="caret-down" />
-                                </button>
-                            </h2>
-                            <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
-                                <div class="accordion-body">
-                                    <div class="form-group">
-                                        <label asp-for="CustomCSSLink" class="form-label"></label>
-                                        <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener" title="More information...">
-                                            <vc:icon symbol="info" />
-                                        </a>
-                                        <input asp-for="CustomCSSLink" class="form-control" />
-                                        <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                                    </div>
-                                    <div class="form-group mb-4">
-                                        <label asp-for="EmbeddedCSS" class="form-label"></label>
-                                        <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                                        <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    }
                 </div>
             </div>
         </div>

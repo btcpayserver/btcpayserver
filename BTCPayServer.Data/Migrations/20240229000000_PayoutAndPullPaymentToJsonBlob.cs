@@ -13,12 +13,9 @@ namespace BTCPayServer.Migrations
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            if (migrationBuilder.IsNpgsql())
-            {
-                migrationBuilder.Sql("ALTER TABLE \"Payouts\" ALTER COLUMN \"Blob\" TYPE JSONB USING regexp_replace(convert_from(\"Blob\",'UTF8'), '\\\\u0000', '', 'g')::JSONB");
-                migrationBuilder.Sql("ALTER TABLE \"Payouts\" ALTER COLUMN \"Proof\" TYPE JSONB USING regexp_replace(convert_from(\"Proof\",'UTF8'), '\\\\u0000', '', 'g')::JSONB");
-                migrationBuilder.Sql("ALTER TABLE \"PullPayments\" ALTER COLUMN \"Blob\" TYPE JSONB USING regexp_replace(convert_from(\"Blob\",'UTF8'), '\\\\u0000', '', 'g')::JSONB");
-            }
+            migrationBuilder.Sql("ALTER TABLE \"Payouts\" ALTER COLUMN \"Blob\" TYPE JSONB USING regexp_replace(convert_from(\"Blob\",'UTF8'), '\\\\u0000', '', 'g')::JSONB");
+            migrationBuilder.Sql("ALTER TABLE \"Payouts\" ALTER COLUMN \"Proof\" TYPE JSONB USING regexp_replace(convert_from(\"Proof\",'UTF8'), '\\\\u0000', '', 'g')::JSONB");
+            migrationBuilder.Sql("ALTER TABLE \"PullPayments\" ALTER COLUMN \"Blob\" TYPE JSONB USING regexp_replace(convert_from(\"Blob\",'UTF8'), '\\\\u0000', '', 'g')::JSONB");
         }
 
         protected override void Down(MigrationBuilder migrationBuilder)

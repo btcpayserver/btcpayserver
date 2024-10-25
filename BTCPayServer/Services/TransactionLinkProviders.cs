@@ -17,7 +17,7 @@ public class TransactionLinkProviders : Dictionary<PaymentMethodId, TransactionL
     {
         foreach (var e in entries)
         {
-            Add(e.PaymentMethodId, e.Provider);
+            TryAdd(e.PaymentMethodId, e.Provider);
         }
         SettingsRepository = settingsRepository;
     }
@@ -29,9 +29,7 @@ public class TransactionLinkProviders : Dictionary<PaymentMethodId, TransactionL
         {
             foreach ((var pmi, var prov) in this)
             {
-                var overrideLink = links.SingleOrDefault(item =>
-                    item.CryptoCode.Equals(pmi.CryptoCode, StringComparison.InvariantCultureIgnoreCase) ||
-                    item.CryptoCode.Equals(pmi.ToString(), StringComparison.InvariantCultureIgnoreCase));
+                var overrideLink = links.FirstOrDefault(item => item.PaymentMethodId == pmi);
                 prov.OverrideBlockExplorerLink = overrideLink?.Link ?? prov.BlockExplorerLinkDefault;
             }
         }

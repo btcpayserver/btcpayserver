@@ -1,40 +1,37 @@
 @using BTCPayServer.Client.Models
-@using BTCPayServer.Payments
+@using BTCPayServer.Payouts
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @using BTCPayServer.Client
-@using BTCPayServer.PayoutProcessors
 @model BTCPayServer.Models.WalletViewModels.PayoutsModel
 
-@inject IEnumerable<IPayoutHandler> PayoutHandlers;
-@inject PayoutProcessorService _payoutProcessorService;
-@inject IEnumerable<IPayoutProcessorFactory> _payoutProcessorFactories;
+@inject PayoutMethodHandlerDictionary PayoutHandlers;
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
-    ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Payouts, string.IsNullOrEmpty(Model.PullPaymentName) ? StringLocalizer["Payouts"] : StringLocalizer["Payouts for pull payment {0}", Model.PullPaymentName], Context.GetStoreData().Id);
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
-    Model.PaginationQuery.Add("paymentMethodId", Model.PaymentMethodId);
+    Model.PaginationQuery.Add("payoutMethodId", Model.PayoutMethodId);
     Model.PaginationQuery.Add("payoutState", Model.PayoutState);
     var stateActions = new List<(string Action, string Text)>();
-    if (PaymentMethodId.TryParse(Model.PaymentMethodId, out var paymentMethodId))
+    if (PayoutMethodId.TryParse(Model.PayoutMethodId, out var payoutMethodId))
     {
-        var payoutHandler = PayoutHandlers.FindPayoutHandler(paymentMethodId);
+		var payoutHandler = PayoutHandlers.TryGet(payoutMethodId);
         if (payoutHandler is null)
             return;
         stateActions.AddRange(payoutHandler.GetPayoutSpecificActions().Where(pair => pair.Key == Model.PayoutState).SelectMany(pair => pair.Value));
     }
+
     switch (Model.PayoutState)
     {
         case PayoutState.AwaitingApproval:
-            stateActions.Add(("approve", "Approve"));
-            stateActions.Add(("approve-pay", "Approve & Send"));
-            stateActions.Add(("cancel", "Cancel"));
+            if (!Model.HasPayoutProcessor) stateActions.Add(("approve-pay", StringLocalizer["Approve & Send"]));
+            stateActions.Add(("approve", StringLocalizer["Approve"]));
+            stateActions.Add(("cancel", StringLocalizer["Cancel"]));
             break;
         case PayoutState.AwaitingPayment:
-            stateActions.Add(("pay", "Send"));
-            stateActions.Add(("cancel", "Cancel"));
-            stateActions.Add(("mark-paid", "Mark as already paid"));
+            if (!Model.HasPayoutProcessor) stateActions.Add(("pay", StringLocalizer["Send"]));
+            stateActions.Add(("cancel", StringLocalizer["Cancel"]));
+            stateActions.Add(("mark-paid", StringLocalizer["Mark as already paid"]));
             break;
     }
 }
@@ -59,8 +56,8 @@
     </script>
 }
 
-<div class="sticky-header d-flex align-items-center justify-content-between">
-    <h2 class="mb-0">
+<div class="sticky-header">
+    <h2 class="my-1">
         @ViewData["Title"]
         <a href="#descriptor" data-bs-toggle="collapse">
             <vc:icon symbol="info" />
@@ -72,14 +69,12 @@
     <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
         <div class="flex-fill">
             <p class="mb-3">
-                Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.
-                <span permission="@Policies.CanModifyStoreSettings">You can also
-                <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">configure payout processors</a>
-                to automate payouts.</span>
+                <span text-translate="true">Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.</span>
+                <span permission="@Policies.CanModifyStoreSettings">You can also <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">configure payout processors</a> to automate payouts.</span>
             </p>
-            <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener">Learn More</a>
+            <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
-        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
     </div>
@@ -87,36 +82,32 @@
 
 <partial name="_StatusMessage" />
 
-@if (_payoutProcessorFactories.Any(factory => factory.GetSupportedPaymentMethods().Contains(paymentMethodId)) && !(await _payoutProcessorService.GetProcessors(new PayoutProcessorService.PayoutProcessorQuery()
-{
-    Stores = new[] { storeId },
-    PaymentMethods = new[] { Model.PaymentMethodId }
-})).Any())
+@if (!Model.HasPayoutProcessor)
 {
     <div class="alert alert-info mb-5" role="alert" permission="@Policies.CanModifyStoreSettings">
-        <strong>Pro tip:</strong> There are supported but unconfigured Payout Processors for this payout payment method.<br/>
-        Payout Processors help automate payouts so that you do not need to manually handle them.
-        <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">Configure now</a>
+        <span text-translate="true">Pro tip: There are supported but unconfigured Payout Processors for this payout payment method.</span><br/>
+        <span text-translate="true">Payout Processors help automate payouts so that you do not need to manually handle them.</span>
+        <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId" text-translate="true">Configure now</a>
     </div>
 }
 
 <form method="post" id="Payouts">
-    <input type="hidden" asp-for="PaymentMethodId" />
+    <input type="hidden" asp-for="PayoutMethodId" />
     <input type="hidden" asp-for="PayoutState" />
     <div class="d-flex justify-content-between mb-4">
         <ul class="nav mb-1 gap-2">
-            @foreach (var state in Model.PaymentMethods)
+            @foreach (var state in Model.PayoutMethods)
             {
                 <li class="nav-item py-0">
                     <a asp-action="Payouts" asp-route-storeId="@Context.GetRouteValue("storeId")"
                        asp-route-payoutState="@Model.PayoutState"
-                       asp-route-paymentMethodId="@state.ToString()"
+                       asp-route-payoutMethodId="@state.ToString()"
                        asp-route-pullPaymentId="@Model.PullPaymentId"
-                       class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PaymentMethodId ? "active" : "")"
+                       class="btcpay-pill position-relative me-0 @(state.ToString() == Model.PayoutMethodId ? "active" : "")"
                        id="@state.ToString()-view"
                        role="tab">
-                        @state.ToPrettyString()
-                        @if (Model.PaymentMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
+                        @state.ToString()
+                        @if (Model.PayoutMethodCount.TryGetValue(state.ToString(), out var count) && count > 0)
                         {
                             <span class="badge rounded-pill fw-semibold pe-0">@count</span>
                         }
@@ -134,7 +125,7 @@
                    asp-route-storeId="@Context.GetRouteValue("storeId")"
                    asp-route-payoutState="@state.Key"
                    asp-route-pullPaymentId="@Model.PullPaymentId"
-                   asp-route-paymentMethodId="@Model.PaymentMethodId"
+                   asp-route-payoutMethodId="@Model.PayoutMethodId"
                    class="nav-link @(state.Key == Model.PayoutState ? "active" : "")" role="tab">
                     @state.Key.GetStateString()
                     @if (state.Value > 0)
@@ -159,16 +150,18 @@
                         }
                         <th class="date-col">
                             <div class="d-flex align-items-center gap-1">
-                                Date
-                                <button type="button" class="btn btn-link p-0 fa fa-clock-o switch-time-format only-for-js" title="Switch date format"></button>
+                                <span text-translate="true">Date</span>
+                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                                    <vc:icon symbol="time" />
+                                </button>
                             </div>
                         </th>
-                        <th>Source</th>
-                        <th>Destination</th>
-                        <th class="amount-col">Amount</th>
+                        <th text-translate="true">Source</th>
+                        <th text-translate="true">Destination</th>
+                        <th text-translate="true" class="amount-col">Amount</th>
                         @if (Model.PayoutState != PayoutState.AwaitingApproval)
                         {
-                            <th class="text-end">Transaction</th>
+                            <th text-translate="true" class="text-end">Transaction</th>
                         }
                     </tr>
                 </thead>
@@ -183,7 +176,7 @@
                             <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                                 <div>
                                     <strong class="mass-action-selected-count">0</strong>
-                                    selected
+                                    <span text-translate="true">selected</span>
                                 </div>
                                 <div class="d-inline-flex align-items-center gap-3">
                                     @foreach (var action in stateActions)
@@ -232,7 +225,7 @@
                                 <td class="text-end align-middle">
                                     @if (!string.IsNullOrEmpty(pp.ProofLink))
                                     {
-                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener">Link</a>
+                                        <a class="transaction-link" href="@pp.ProofLink" rel="noreferrer noopener" text-translate="true">Link</a>
                                     }
                                 </td>
                             }
@@ -245,6 +238,6 @@
     }
     else
     {
-        <p class="text-muted mb-0" id="@Model.PayoutState-no-payouts">There are no payouts matching this criteria.</p>
+        <p class="text-muted mb-0" id="@Model.PayoutState-no-payouts" text-translate="true">There are no payouts matching these criteria.</p>
     }
 </form>

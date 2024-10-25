@@ -1,24 +1,23 @@
-@using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Services.Altcoins.Monero.UI.UIMoneroLikeStoreController.MoneroLikePaymentMethodListViewModel
 
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage("Monero Settings", "Monero Settings", "Monero Settings");
-    ViewData["NavPartialName"] = "../UIStores/_Nav";
+    ViewData.SetActivePage("Monero Settings", StringLocalizer["{0} Settings", "Monero"], "Monero Settings");
 }
 
 <div class="row">
     <div class="col-md-8">
-        <div asp-validation-summary="All" class="text-danger"></div>
-        <div class="form-group">
-            <table class="table table-hover table-responsive-md">
+        @if (!ViewContext.ModelState.IsValid)
+        {
+            <div asp-validation-summary="All"></div>
+        }
+        <div class="table-responsive-md">
+            <table class="table table-hover">
                 <thead>
                 <tr>
-                    <th>Crypto</th>
-                    <th>Account Index</th>
-                    <th class="text-center">Enabled</th>
-                    <th class="text-right">Actions</th>
+                    <th text-translate="true">Crypto</th>
+                    <th text-translate="true">Account Index</th>
+                    <th class="text-center" text-translate="true">Enabled</th>
+                    <th class="text-right" text-translate="true">Actions</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -30,17 +29,18 @@
                         <td class="text-center">
                             @if (item.Enabled)
                             {
-                                <span class="text-success fa fa-check"></span>
+                                <vc:icon symbol="checkmark" css-class="text-success" />
                             }
                             else
                             {
-                                <span class="text-danger fa fa-times"></span>
+                                <vc:icon symbol="cross" css-class="text-danger" />
                             }
                         </td>
                         <td class="text-right">
                             <a id="Modify" asp-action="GetStoreMoneroLikePaymentMethod"
                                asp-route-storeId="@Context.GetRouteValue("storeId")"
-                               asp-route-cryptoCode="@item.CryptoCode">
+                               asp-route-cryptoCode="@item.CryptoCode"
+                               text-translate="true">
                                 Modify
                             </a>
                         </td>

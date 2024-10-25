@@ -12,6 +12,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -30,6 +31,7 @@ public class StoreLightningBalance : ViewComponent
     private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
     private readonly IAuthorizationService _authorizationService;
+    private readonly PaymentMethodHandlerDictionary _handlers;
 
     public StoreLightningBalance(
         StoreRepository storeRepo,
@@ -38,8 +40,9 @@ public class StoreLightningBalance : ViewComponent
         BTCPayServerOptions btcpayServerOptions,
         LightningClientFactoryService lightningClientFactory,
         IOptions<LightningNetworkOptions> lightningNetworkOptions,
-        IOptions<ExternalServicesOptions> externalServiceOptions, 
-        IAuthorizationService authorizationService)
+        IOptions<ExternalServicesOptions> externalServiceOptions,
+        IAuthorizationService authorizationService,
+        PaymentMethodHandlerDictionary handlers)
     {
         _storeRepo = storeRepo;
         _currencies = currencies;
@@ -47,6 +50,7 @@ public class StoreLightningBalance : ViewComponent
         _btcpayServerOptions = btcpayServerOptions;
         _externalServiceOptions = externalServiceOptions;
         _authorizationService = authorizationService;
+        _handlers = handlers;
         _lightningClientFactory = lightningClientFactory;
         _lightningNetworkOptions = lightningNetworkOptions;
     }
@@ -101,10 +105,8 @@ public class StoreLightningBalance : ViewComponent
     private async Task<ILightningClient> GetLightningClient(StoreData store, string cryptoCode )
     {
         var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-        var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-        var existing = store.GetSupportedPaymentMethods(_networkProvider)
-            .OfType<LightningSupportedPaymentMethod>()
-            .FirstOrDefault(d => d.PaymentId == id);
+        var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+        var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, _handlers);
         if (existing == null)
             return null;
 

@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -6,22 +5,29 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices;
 using BTCPayServer.Payments;
 using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services.Altcoins.Zcash.Configuration;
 using BTCPayServer.Services.Altcoins.Zcash.Payments;
 using BTCPayServer.Services.Altcoins.Zcash.RPC;
 using BTCPayServer.Services.Altcoins.Zcash.RPC.Models;
+using BTCPayServer.Services.Altcoins.Zcash.Utils;
 using BTCPayServer.Services.Invoices;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitpayClient;
 using NBXplorer;
+using Newtonsoft.Json.Linq;
+using static BTCPayServer.Client.Models.InvoicePaymentMethodDataModel;
 
 namespace BTCPayServer.Services.Altcoins.Zcash.Services
 {
-    public class ZcashListener : IHostedService
+    public class ZcashListener : EventHostedServiceBase
     {
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
@@ -30,17 +36,18 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         private readonly BTCPayNetworkProvider _networkProvider;
         private readonly ILogger<ZcashListener> _logger;
         private readonly PaymentService _paymentService;
-        private readonly CompositeDisposable leases = new CompositeDisposable();
-        private readonly Channel<Func<Task>> _requests = Channel.CreateUnbounded<Func<Task>>();
-        private CancellationTokenSource _Cts;
+        private readonly InvoiceActivator _invoiceActivator;
+        private readonly PaymentMethodHandlerDictionary _handlers;
 
         public ZcashListener(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
             ZcashRPCProvider ZcashRpcProvider,
             ZcashLikeConfiguration ZcashLikeConfiguration,
             BTCPayNetworkProvider networkProvider,
-            ILogger<ZcashListener> logger, 
-            PaymentService paymentService)
+            ILogger<ZcashListener> logger,
+            PaymentService paymentService,
+            InvoiceActivator invoiceActivator,
+            PaymentMethodHandlerDictionary handlers) : base(eventAggregator, logger)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
@@ -49,65 +56,43 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
             _networkProvider = networkProvider;
             _logger = logger;
             _paymentService = paymentService;
+            _invoiceActivator = invoiceActivator;
+            _handlers = handlers;
         }
 
-        public Task StartAsync(CancellationToken cancellationToken)
+        protected override void SubscribeToEvents()
         {
-            if (!_ZcashLikeConfiguration.ZcashLikeConfigurationItems.Any())
-            {
-                return Task.CompletedTask;
-            }
-            _Cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+            base.SubscribeToEvents();
+            Subscribe<ZcashEvent>();
+            Subscribe<ZcashRPCProvider.ZcashDaemonStateChange>();
+        }
 
-            leases.Add(_eventAggregator.Subscribe<ZcashEvent>(OnZcashEvent));
-            leases.Add(_eventAggregator.Subscribe<ZcashRPCProvider.ZcashDaemonStateChange>(e =>
+        protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
+        {
+            if (evt is ZcashRPCProvider.ZcashDaemonStateChange stateChanged)
             {
-                if (_ZcashRpcProvider.IsAvailable(e.CryptoCode))
+                if (_ZcashRpcProvider.IsAvailable(stateChanged.CryptoCode))
                 {
-                    _logger.LogInformation($"{e.CryptoCode} just became available");
-                    _ = UpdateAnyPendingZcashLikePayment(e.CryptoCode);
+                    _logger.LogInformation($"{stateChanged.CryptoCode} just became available");
+                    _ = UpdateAnyPendingZcashLikePayment(stateChanged.CryptoCode);
                 }
                 else
                 {
-                    _logger.LogInformation($"{e.CryptoCode} just became unavailable");
+                    _logger.LogInformation($"{stateChanged.CryptoCode} just became unavailable");
                 }
-            }));
-            _ = WorkThroughQueue(_Cts.Token);
-            return Task.CompletedTask;
-        }
+            }
+            else if (evt is ZcashEvent zcashEvent)
+            {
+                if (!_ZcashRpcProvider.IsAvailable(zcashEvent.CryptoCode))
+                    return;
 
-        private async Task WorkThroughQueue(CancellationToken token)
-        {
-            while (await _requests.Reader.WaitToReadAsync(token) && _requests.Reader.TryRead(out var action)) {
-                token.ThrowIfCancellationRequested();
-                try {
-                    await action.Invoke();
-                }
-                catch (Exception e)
+                if (!string.IsNullOrEmpty(zcashEvent.BlockHash))
                 {
-                    _logger.LogError($"error with action item {e}");
+                    await OnNewBlock(zcashEvent.CryptoCode);
                 }
-            }
-        }
-
-        private void OnZcashEvent(ZcashEvent obj)
-        {
-            if (!_ZcashRpcProvider.IsAvailable(obj.CryptoCode))
-            {
-                return;
-            }
-
-            if (!string.IsNullOrEmpty(obj.BlockHash))
-            {
-                if (!_requests.Writer.TryWrite(() => OnNewBlock(obj.CryptoCode))) {
-                    _logger.LogWarning($"Failed to write new block task to channel");
-                }
-            }
-
-            if (!string.IsNullOrEmpty(obj.TransactionHash))
-            {
-                if (!_requests.Writer.TryWrite(() => OnTransactionUpdated(obj.CryptoCode, obj.TransactionHash))) {
-                    _logger.LogWarning($"Failed to write new tx task to channel");
+                if (!string.IsNullOrEmpty(zcashEvent.TransactionHash))
+                {
+                    await OnTransactionUpdated(zcashEvent.CryptoCode, zcashEvent.TransactionHash);
                 }
             }
         }
@@ -115,31 +100,18 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         private async Task ReceivedPayment(InvoiceEntity invoice, PaymentEntity payment)
         {
             _logger.LogInformation(
-                $"Invoice {invoice.Id} received payment {payment.GetCryptoPaymentData().GetValue()} {payment.Currency} {payment.GetCryptoPaymentData().GetPaymentId()}");
-            var paymentData = (ZcashLikePaymentData)payment.GetCryptoPaymentData();
-            var paymentMethod = invoice.GetPaymentMethod(payment.Network, ZcashPaymentType.Instance);
-            if (paymentMethod != null &&
-                paymentMethod.GetPaymentMethodDetails() is ZcashLikeOnChainPaymentMethodDetails Zcash &&
-                Zcash.Activated && 
-                Zcash.GetPaymentDestination() == paymentData.GetDestination() &&
-                paymentMethod.Calculate().Due > 0.0m)
-            {
-                var walletClient = _ZcashRpcProvider.WalletRpcClients[payment.Currency];
+                $"Invoice {invoice.Id} received payment {payment.Value} {payment.Currency} {payment.Id}");
 
-                var address = await walletClient.SendCommandAsync<CreateAddressRequest, CreateAddressResponse>(
-                    "create_address",
-                    new CreateAddressRequest()
-                    {
-                        Label = $"btcpay invoice #{invoice.Id}",
-                        AccountIndex = Zcash.AccountIndex
-                    });
-                Zcash.DepositAddress = address.Address;
-                Zcash.AddressIndex = address.AddressIndex;
-                await _invoiceRepository.NewPaymentDetails(invoice.Id, Zcash, payment.Network);
-                _eventAggregator.Publish(
-                    new InvoiceNewPaymentDetailsEvent(invoice.Id, Zcash, payment.GetPaymentMethodId()));
-                paymentMethod.SetPaymentMethodDetails(Zcash);
-                invoice.SetPaymentMethod(paymentMethod);
+
+            var prompt = invoice.GetPaymentPrompt(payment.PaymentMethodId);
+
+            if (prompt != null &&
+                prompt.Activated &&
+                prompt.Destination == payment.Destination &&
+                prompt.Calculate().Due > 0.0m)
+            {
+                await _invoiceActivator.ActivateInvoicePaymentMethod(invoice.Id, payment.PaymentMethodId, true);
+                invoice = await _invoiceRepository.GetInvoice(invoice.Id);
             }
 
             _eventAggregator.Publish(
@@ -156,17 +128,20 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
             var ZcashWalletRpcClient = _ZcashRpcProvider.WalletRpcClients[cryptoCode];
             var network = _networkProvider.GetNetwork(cryptoCode);
 
+            var paymentId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+            var handler = (ZcashLikePaymentMethodHandler)_handlers[paymentId];
 
             //get all the required data in one list (invoice, its existing payments and the current payment method details)
             var expandedInvoices = invoices.Select(entity => (Invoice: entity,
                     ExistingPayments: GetAllZcashLikePayments(entity, cryptoCode),
-                    PaymentMethodDetails: entity.GetPaymentMethod(network, ZcashPaymentType.Instance)
-                        .GetPaymentMethodDetails() as ZcashLikeOnChainPaymentMethodDetails))
+                    Prompt: entity.GetPaymentPrompt(paymentId),
+                    PaymentMethodDetails: handler.ParsePaymentPromptDetails(entity.GetPaymentPrompt(paymentId).Details)))
                 .Select(tuple => (
                     tuple.Invoice,
                     tuple.PaymentMethodDetails,
+                    tuple.Prompt,
                     ExistingPayments: tuple.ExistingPayments.Select(entity =>
-                        (Payment: entity, PaymentData: (ZcashLikePaymentData)entity.GetCryptoPaymentData(),
+                        (Payment: entity, PaymentData: handler.ParsePaymentDetails(entity.Details),
                             tuple.Invoice))
                 ));
 
@@ -201,7 +176,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
 
             var transferProcessingTasks = new List<Task>();
 
-            var updatedPaymentEntities = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
+            var updatedPaymentEntities = new List<(PaymentEntity Payment, InvoiceEntity invoice)>();
             foreach (var keyValuePair in tasks)
             {
                 var transfers = keyValuePair.Value.Result.In;
@@ -214,7 +189,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
                 {
                     InvoiceEntity invoice = null;
                     var existingMatch = existingPaymentData.SingleOrDefault(tuple =>
-                        tuple.PaymentData.Address == transfer.Address &&
+                        tuple.Payment.Destination == transfer.Address &&
                         tuple.PaymentData.TransactionId == transfer.Txid);
 
                     if (existingMatch.Invoice != null)
@@ -224,7 +199,7 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
                     else
                     {
                         var newMatch = expandedInvoices.SingleOrDefault(tuple =>
-                            tuple.PaymentMethodDetails.GetPaymentDestination() == transfer.Address);
+                            tuple.Prompt.Destination == transfer.Address);
 
                         if (newMatch.Invoice == null)
                         {
@@ -253,40 +228,29 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
             }
         }
 
-
-        public Task StopAsync(CancellationToken cancellationToken)
-        {
-            leases.Dispose();
-            _Cts?.Cancel();
-            return Task.CompletedTask;
-        }
-
         private async Task OnNewBlock(string cryptoCode)
         {
             await UpdateAnyPendingZcashLikePayment(cryptoCode);
-            _eventAggregator.Publish(new NewBlockEvent() { CryptoCode = cryptoCode });
+            _eventAggregator.Publish(new NewBlockEvent() { PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode) });
         }
 
         private async Task OnTransactionUpdated(string cryptoCode, string transactionHash)
         {
-            var paymentMethodId = new PaymentMethodId(cryptoCode, ZcashPaymentType.Instance);
+            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
             var transfer = await _ZcashRpcProvider.WalletRpcClients[cryptoCode]
                 .SendCommandAsync<GetTransferByTransactionIdRequest, GetTransferByTransactionIdResponse>(
                     "get_transfer_by_txid",
                     new GetTransferByTransactionIdRequest() { TransactionId = transactionHash });
 
-            var paymentsToUpdate = new BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)>();
+            var paymentsToUpdate = new List<(PaymentEntity Payment, InvoiceEntity invoice)>();
 
             //group all destinations of the tx together and loop through the sets
             foreach (var destination in transfer.Transfers.GroupBy(destination => destination.Address))
             {
                 //find the invoice corresponding to this address, else skip
-                var address = destination.Key + "#" + paymentMethodId;
-                var invoice = (await _invoiceRepository.GetInvoicesFromAddresses(new[] { address })).FirstOrDefault();
+                var invoice = await _invoiceRepository.GetInvoiceFromAddress(paymentMethodId, destination.Key);
                 if (invoice == null)
-                {
                     continue;
-                }
 
                 var index = destination.First().SubaddrIndex;
 
@@ -317,58 +281,76 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         private async Task HandlePaymentData(string cryptoCode, string address, long totalAmount, long subaccountIndex,
             long subaddressIndex,
             string txId, long confirmations, long blockHeight, InvoiceEntity invoice,
-            BlockingCollection<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
+            List<(PaymentEntity Payment, InvoiceEntity invoice)> paymentsToUpdate)
         {
-            //construct the payment data
-            var paymentData = new ZcashLikePaymentData()
+            var network = _networkProvider.GetNetwork(cryptoCode);
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
+            var handler = (ZcashLikePaymentMethodHandler)_handlers[pmi];
+
+            var details = new ZcashLikePaymentData()
             {
-                Address = address,
                 SubaccountIndex = subaccountIndex,
                 SubaddressIndex = subaddressIndex,
                 TransactionId = txId,
                 ConfirmationCount = confirmations,
-                Amount = totalAmount,
-                BlockHeight = blockHeight,
-                Network = _networkProvider.GetNetwork(cryptoCode)
+                BlockHeight = blockHeight
             };
+            var status = GetStatus(details, invoice.SpeedPolicy) ? PaymentStatus.Settled : PaymentStatus.Processing;
+            var paymentData = new Data.PaymentData()
+            {
+                Status = status,
+                Amount = ZcashMoney.Convert(totalAmount),
+                Created = DateTimeOffset.UtcNow,
+                Id = $"{txId}#{subaccountIndex}#{subaddressIndex}",
+                Currency = network.CryptoCode
+            }.Set(invoice, handler, details);
 
-            //check if this tx exists as a payment to this invoice already
+
             var alreadyExistingPaymentThatMatches = GetAllZcashLikePayments(invoice, cryptoCode)
-                .Select(entity => (Payment: entity, PaymentData: entity.GetCryptoPaymentData()))
-                .SingleOrDefault(c => c.PaymentData.GetPaymentId() == paymentData.GetPaymentId());
+                .SingleOrDefault(c => c.Id == paymentData.Id && c.PaymentMethodId == pmi);
 
             //if it doesnt, add it and assign a new Zcashlike address to the system if a balance is still due
-            if (alreadyExistingPaymentThatMatches.Payment == null)
+            if (alreadyExistingPaymentThatMatches == null)
             {
-                var payment = await _paymentService.AddPayment(invoice.Id, DateTimeOffset.UtcNow,
-                    paymentData, _networkProvider.GetNetwork<ZcashLikeSpecificBtcPayNetwork>(cryptoCode), true);
+                var payment = await _paymentService.AddPayment(paymentData, [txId]);
                 if (payment != null)
                     await ReceivedPayment(invoice, payment);
             }
             else
             {
                 //else update it with the new data
-                alreadyExistingPaymentThatMatches.PaymentData = paymentData;
-                alreadyExistingPaymentThatMatches.Payment.SetCryptoPaymentData(paymentData);
-                paymentsToUpdate.Add((alreadyExistingPaymentThatMatches.Payment, invoice));
+                alreadyExistingPaymentThatMatches.Status = status;
+                alreadyExistingPaymentThatMatches.Details = JToken.FromObject(details, handler.Serializer);
+                paymentsToUpdate.Add((alreadyExistingPaymentThatMatches, invoice));
             }
         }
 
+        private bool GetStatus(ZcashLikePaymentData details, SpeedPolicy speedPolicy)
+            => details.ConfirmationCount >= ConfirmationsRequired(speedPolicy);
+        public static int ConfirmationsRequired(SpeedPolicy speedPolicy)
+        => speedPolicy switch
+        {
+            SpeedPolicy.HighSpeed => 0,
+            SpeedPolicy.MediumSpeed => 1,
+            SpeedPolicy.LowMediumSpeed => 2,
+            SpeedPolicy.LowSpeed => 6,
+            _ => 6,
+        };
+
         private async Task UpdateAnyPendingZcashLikePayment(string cryptoCode)
         {
-            var invoices = await _invoiceRepository.GetPendingInvoices();
+            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
+            var invoices = await _invoiceRepository.GetMonitoredInvoices(paymentMethodId);
             if (!invoices.Any())
                 return;
-            invoices = invoices.Where(entity => entity.GetPaymentMethod(new PaymentMethodId(cryptoCode, ZcashPaymentType.Instance))
-                ?.GetPaymentMethodDetails().Activated is true).ToArray();
+            invoices = invoices.Where(entity => entity.GetPaymentPrompt(paymentMethodId).Activated).ToArray();
             await UpdatePaymentStates(cryptoCode, invoices);
         }
 
         private IEnumerable<PaymentEntity> GetAllZcashLikePayments(InvoiceEntity invoice, string cryptoCode)
         {
             return invoice.GetPayments(false)
-                .Where(p => p.GetPaymentMethodId() == new PaymentMethodId(cryptoCode, ZcashPaymentType.Instance));
+                .Where(p => p.PaymentMethodId == PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode));
         }
     }
 }
-#endif

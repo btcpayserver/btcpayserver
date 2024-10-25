@@ -4,11 +4,13 @@ using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NBitcoin;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace BTCPayServer.Data
 {
@@ -22,7 +24,8 @@ namespace BTCPayServer.Data
         public StoreData StoreData { get; set; }
         [MaxLength(50)]
         public string StoreId { get; set; }
-        public long? Period { get; set; }
+        public string Currency { get; set; }
+        public decimal Limit { get; set; }
         public DateTimeOffset StartDate { get; set; }
         public DateTimeOffset? EndDate { get; set; }
         public bool Archived { get; set; }
@@ -38,22 +41,9 @@ namespace BTCPayServer.Data
             .HasOne(o => o.StoreData)
                 .WithMany(o => o.PullPayments).OnDelete(DeleteBehavior.Cascade);
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<PullPaymentData>()
-                    .Property(o => o.Blob)
-                    .HasColumnType("JSONB");
-            }
-            else if (databaseFacade.IsMySql())
-            {
-                builder.Entity<PullPaymentData>()
-                    .Property(o => o.Blob)
-                    .HasConversion(new ValueConverter<string, byte[]>
-                    (
-                        convertToProviderExpression: (str) => Encoding.UTF8.GetBytes(str),
-                        convertFromProviderExpression: (bytes) => Encoding.UTF8.GetString(bytes)
-                    ));
-            }
+            builder.Entity<PullPaymentData>()
+                .Property(o => o.Blob)
+                .HasColumnType("JSONB");
         }
 
         public (DateTimeOffset Start, DateTimeOffset? End)? GetPeriod(DateTimeOffset now)
@@ -62,26 +52,24 @@ namespace BTCPayServer.Data
                 return null;
             if (EndDate is DateTimeOffset end && now >= end)
                 return null;
-            DateTimeOffset startPeriod = StartDate;
-            DateTimeOffset? endPeriod = null;
-            if (Period is long periodSeconds)
-            {
-                var period = TimeSpan.FromSeconds(periodSeconds);
-                var timeToNow = now - StartDate;
-                var periodCount = (long)timeToNow.TotalSeconds / (long)period.TotalSeconds;
-                startPeriod = StartDate + (period * periodCount);
-                endPeriod = startPeriod + period;
-            }
-            if (EndDate is DateTimeOffset end2 &&
-                ((endPeriod is null) ||
-                (endPeriod is DateTimeOffset endP && endP > end2)))
-                endPeriod = end2;
-            return (startPeriod, endPeriod);
+            return (StartDate, EndDate);
         }
 
         public bool HasStarted()
         {
             return HasStarted(DateTimeOffset.UtcNow);
+        }
+        public TimeSpan? EndsIn() => EndsIn(DateTimeOffset.UtcNow);
+        public TimeSpan? EndsIn(DateTimeOffset now)
+        {
+            if (EndDate is DateTimeOffset e)
+            {
+                var resetIn = (e - now);
+                if (resetIn < TimeSpan.Zero)
+                    resetIn = TimeSpan.Zero;
+                return resetIn;
+            }
+            return null;
         }
         public bool HasStarted(DateTimeOffset now)
         {
@@ -110,32 +98,6 @@ namespace BTCPayServer.Data
 
     public static class PayoutExtensions
     {
-        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp)
-        {
-            return GetPayoutInPeriod(payouts, pp, DateTimeOffset.UtcNow);
-        }
-        public static IQueryable<PayoutData> GetPayoutInPeriod(this IQueryable<PayoutData> payouts, PullPaymentData pp, DateTimeOffset now)
-        {
-            var request = payouts.Where(p => p.PullPaymentDataId == pp.Id);
-            var period = pp.GetPeriod(now);
-            if (period is { } p)
-            {
-                var start = p.Start;
-                if (p.End is DateTimeOffset end)
-                {
-                    return request.Where(p => p.Date >= start && p.Date < end);
-                }
-                else
-                {
-                    return request.Where(p => p.Date >= start);
-                }
-            }
-            else
-            {
-                return request.Where(p => false);
-            }
-        }
-
         public static string GetStateString(this PayoutState state)
         {
             switch (state)

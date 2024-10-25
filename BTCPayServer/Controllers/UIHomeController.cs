@@ -108,9 +108,7 @@ namespace BTCPayServer.Controllers
         public IActionResult GetTranslations(string resource, string lang)
         {
             string path;
-            if (resource == "checkout-v1")
-                path = "locales";
-            else if (resource == "checkout-v2")
+            if (resource.StartsWith("checkout"))
                 path = "locales/checkout";
             else
                 return NotFound();

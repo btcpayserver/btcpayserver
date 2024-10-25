@@ -3,8 +3,8 @@
         <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false">
             <div class="input-group">
                 <span class="input-group-text">@Model.CurrencySymbol</span>
-                <input class="form-control" type="number" step="@Model.Step" name="amount" placeholder="Amount">
-                <button class="btn btn-primary" type="submit">Pay</button>
+                <input class="form-control" type="number" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]">
+                <button class="btn btn-primary" type="submit" text-translate="true">Pay</button>
             </div>
         </form>
     </div>

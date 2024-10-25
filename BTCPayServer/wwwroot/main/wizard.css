@@ -38,10 +38,9 @@ body {
     background-color: transparent;
 }
 
-#wizard-navbar a svg.icon,
-#wizard-navbar button svg.icon{
-    width: 19px;
-    height: 16px;
+#wizard-navbar a .icon,
+#wizard-navbar button .icon {
+    --icon-size: 1.75rem;
 }
 
 #wizard-navbar a:hover::after,
@@ -81,8 +80,7 @@ body {
 }
 
 .list-group-item .image .icon {
-    width: 32px;
-    height: 32px;
+    --icon-size: 2rem;
 }
 
 .list-group-item .content {

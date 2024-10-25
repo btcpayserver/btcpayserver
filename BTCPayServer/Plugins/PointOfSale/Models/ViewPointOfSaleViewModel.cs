@@ -108,8 +108,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public int[] CustomTipPercentages { get; set; }
         public string Description { get; set; }
         public SelectList AllCategories { get; set; }
-        [Display(Name = "Custom CSS Code")]
-        public RequiresRefundEmail RequiresRefundEmail { get; set; } = RequiresRefundEmail.InheritFromStore;
         public string StoreId { get; set; }
     }
 }

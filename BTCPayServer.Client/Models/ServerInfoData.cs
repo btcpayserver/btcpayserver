@@ -32,7 +32,7 @@ namespace BTCPayServer.Client.Models
 
     public class SyncStatus
     {
-        public string CryptoCode { get; set; }
+        public string PaymentMethodId { get; set; }
         public virtual bool Available { get; set; }
     }
 

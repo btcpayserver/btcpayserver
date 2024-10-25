@@ -1,0 +1,34 @@
+@model CreateDictionaryViewModel
+@{
+	ViewData.SetActivePage(ServerNavPages.Translations, "Create a new dictionary");
+}
+<form method="post">
+	<div class="sticky-header">
+		<nav aria-label="breadcrumb">
+			<ol class="breadcrumb">
+				<li class="breadcrumb-item">
+					<a asp-action="ListDictionaries" text-translate="true">Dictionaries</a>
+				</li>
+				<li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
+			</ol>
+			<h2 text-translate="true">@ViewData["Title"]</h2>
+		</nav>
+		<input id="page-primary" type="submit" value="Create" class="btn btn-primary" />
+	</div>
+
+	<div class="row">
+		<div class="col-xl-8 col-xxl-constrain">
+			<div class="form-group">
+				<label asp-for="Name" class="form-label" text-translate="true"></label>
+				<input asp-for="Name" class="form-control" />
+				<span asp-validation-for="Name" class="text-danger"></span>
+			</div>
+            <div class="form-group">
+				<label asp-for="Fallback" class="form-label" text-translate="true"></label>
+				<select asp-for="Fallback" class="form-select w-auto" asp-items="@Model.DictionariesListItems"></select>
+				<span asp-validation-for="Fallback" class="text-danger"></span>
+				<div class="form-text" text-translate="true">If a translation isn’t available in the new dictionary, it will be searched in the fallback.</div>
+            </div>
+		</div>
+	</div>
+</form>

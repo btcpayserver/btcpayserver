@@ -5,7 +5,7 @@
     ViewData["Title"] = "Lightning Payout Result";
 }
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
+<h2 class="mt-1 mb-4" text-translate="true">@ViewData["Title"]</h2>
 @foreach (var item in Model)
 {
     <div class="alert alert-@(item.Result == PayResult.Ok ? "success" : "danger") mb-3" role="alert">

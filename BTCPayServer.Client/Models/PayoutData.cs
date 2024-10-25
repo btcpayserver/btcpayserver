@@ -21,12 +21,13 @@ namespace BTCPayServer.Client.Models
         public string Id { get; set; }
         public string PullPaymentId { get; set; }
         public string Destination { get; set; }
-        public string PaymentMethod { get; set; }
-        public string CryptoCode { get; set; }
+        public string PayoutMethodId { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
-        public decimal Amount { get; set; }
+        public decimal OriginalAmount { get; set; }
+        public string OriginalCurrency { get; set; }
+        public string PayoutCurrency { get; set; }
         [JsonConverter(typeof(NumericStringJsonConverter))]
-        public decimal? PaymentMethodAmount { get; set; }
+        public decimal? PayoutAmount { get; set; }
         [JsonConverter(typeof(StringEnumConverter))]
         public PayoutState State { get; set; }
         public int Revision { get; set; }

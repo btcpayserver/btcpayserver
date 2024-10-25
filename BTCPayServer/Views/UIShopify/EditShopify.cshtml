@@ -1,27 +1,28 @@
 @using BTCPayServer.Views.Stores
-@using BTCPayServer.Abstractions.Extensions
 @model BTCPayServer.Plugins.Shopify.Models.ShopifySettings
 @{
-    ViewData.SetActivePage("shopify", nameof(StoreNavPages), "Shopify", Context.GetStoreData().Id);
+    ViewData.SetActivePage("shopify", nameof(StoreNavPages), StringLocalizer["Shopify"], Context.GetStoreData().Id);
 
     var shopifyCredsSet = Model?.IntegratedAt.HasValue is true;
     var shopifyUrl = Model?.ShopifyUrl;
 }
 
-<partial name="_StatusMessage"/>
+<div class="sticky-header">
+    <h2 class="my-1">
+        @ViewData["Title"]
+        <small>
+            <a href="https://docs.btcpayserver.org/Shopify" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                <vc:icon symbol="info" />
+            </a>
+        </small>
+    </h2>
+</div>
 
+<partial name="_StatusMessage" />
 
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <h3 class="mb-3">
-            @ViewData["Title"]
-            <small>
-                <a href="https://docs.btcpayserver.org/Shopify" target="_blank" rel="noreferrer noopener" title="More information...">
-                    <vc:icon symbol="info" />
-                </a>
-            </small>
-        </h3>
-        <p>Connect BTCPay Server to your Shopify checkout experience to accept Bitcoin.</p>
+        <p text-translate="true">Connect BTCPay Server to your Shopify checkout experience to accept Bitcoin.</p>
 
         @if (!ViewContext.ModelState.IsValid)
         {
@@ -61,7 +62,7 @@
             @if (shopifyCredsSet)
             {
                 <div class="alert alert-warning">
-                    <h5 class="alert-heading">In Shopify, please do the following …</h5> 
+                    <h5 class="alert-heading" text-translate="true">In Shopify, please do the following …</h5> 
                     <ul>
                         <li>
                             Add a payment method at <a href="@shopifyUrl/admin/settings/payments" class="alert-link fw-bold" target="_blank" rel="noreferrer noopener">Settings &gt; Payments &gt; Manual Payment Methods</a> with the name <strong>Bitcoin with BTCPay Server</strong>
@@ -77,13 +78,13 @@
                     Started: @Model.IntegratedAt.Value.ToBrowserDate()
                 </p>
 
-                <button name="command" type="submit" class="btn btn-danger mt-3" value="ShopifyClearCredentials">
+                <button name="command" type="submit" class="btn btn-danger mt-3" value="ShopifyClearCredentials" text-translate="true">
                     Stop Shopify calls and clear credentials
                 </button>
             }
             else
             {
-                <button name="command" type="submit" class="btn btn-primary mt-3" value="ShopifySaveCredentials">
+                <button name="command" type="submit" class="btn btn-primary mt-3" value="ShopifySaveCredentials" text-translate="true">
                     Save
                 </button>
             }

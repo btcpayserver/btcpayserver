@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
@@ -16,6 +17,7 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Npgsql;
 using Encoders = NBitcoin.DataEncoders.Encoders;
 using InvoiceData = BTCPayServer.Data.InvoiceData;
 
@@ -32,13 +34,11 @@ namespace BTCPayServer.Services.Invoices
 
         private readonly ApplicationDbContextFactory _applicationDbContextFactory;
         private readonly EventAggregator _eventAggregator;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-
+        public ApplicationDbContextFactory DbContextFactory => _applicationDbContextFactory;
         public InvoiceRepository(ApplicationDbContextFactory contextFactory,
-            BTCPayNetworkProvider networks, EventAggregator eventAggregator)
+            EventAggregator eventAggregator)
         {
             _applicationDbContextFactory = contextFactory;
-            _btcPayNetworkProvider = networks;
             _eventAggregator = eventAggregator;
         }
 
@@ -57,7 +57,6 @@ namespace BTCPayServer.Services.Invoices
             {
                 Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(16)),
                 StoreId = storeId,
-                Networks = _btcPayNetworkProvider,
                 Version = InvoiceEntity.Lastest_Version,
                 // Truncating was an unintended side effect of previous code. Might want to remove that one day 
                 InvoiceTime = DateTimeOffset.UtcNow.TruncateMilliSeconds(),
@@ -68,47 +67,93 @@ namespace BTCPayServer.Services.Invoices
             };
         }
 
-        public async Task<bool> RemovePendingInvoice(string invoiceId)
-        {
-            using var ctx = _applicationDbContextFactory.CreateContext();
-            ctx.PendingInvoices.Remove(new PendingInvoiceData() { Id = invoiceId });
-            try
-            {
-                await ctx.SaveChangesAsync();
-                return true;
-            }
-            catch (DbUpdateException) { return false; }
-        }
-
-        public async Task<IEnumerable<InvoiceEntity>> GetInvoicesFromAddresses(string[] addresses)
+        public async Task<InvoiceEntity> GetInvoiceFromAddress(PaymentMethodId paymentMethodId, string address)
         {
             using var db = _applicationDbContextFactory.CreateContext();
-            return (await db.AddressInvoices
-                .Include(a => a.InvoiceData.Payments)
-#pragma warning disable CS0618
-                    .Where(a => addresses.Contains(a.Address))
-#pragma warning restore CS0618
-                    .Select(a => a.InvoiceData)
-                .ToListAsync()).Select(ToEntity);
-        }
+			var row = (await db.AddressInvoices
+			.Include(a => a.InvoiceData.Payments)
+				.Where(a => a.Address == address && a.PaymentMethodId == paymentMethodId.ToString())
+				.Select(a => a.InvoiceData)
+			.FirstOrDefaultAsync());
+			return row is null ? null : ToEntity(row);
+		}
 
-        public async Task<InvoiceEntity[]> GetPendingInvoices(bool includeAddressData = false, bool skipNoPaymentInvoices = false, CancellationToken cancellationToken = default)
+        /// <summary>
+        /// Returns all invoices which either:
+        /// * Have the <paramref name="paymentMethodId"/> activated and are pending
+        /// * Aren't pending but have a payment from the <paramref name="paymentMethodId"/> that is pending
+        /// <see cref="InvoiceData.AddressInvoices"/> is filled with the monitored addresses of the <paramref name="paymentMethodId"/> for this invoice.
+        /// <see cref="InvoiceData.Payments"/> include the <paramref name="paymentMethodId"/> payments for this invoice.
+        /// </summary>
+        /// <param name="paymentMethodId">The payment method id</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns></returns>
+        public Task<InvoiceEntity[]> GetMonitoredInvoices(PaymentMethodId paymentMethodId, CancellationToken cancellationToken = default)
+        => GetMonitoredInvoices(paymentMethodId, false, cancellationToken: cancellationToken);
+
+        /// <summary>
+        /// Returns all invoices which either:
+        /// * Have the <paramref name="paymentMethodId"/> activated and are pending
+        /// * Aren't pending but have a payment from the <paramref name="paymentMethodId"/> that is pending
+        /// <see cref="InvoiceData.AddressInvoices"/> is filled with the monitored addresses of the <paramref name="paymentMethodId"/> for this invoice.
+        /// <see cref="InvoiceData.Payments"/> include the <paramref name="paymentMethodId"/> payments for this invoice.
+        /// </summary>
+        /// <param name="paymentMethodId">The payment method id</param>
+        /// <param name="includeNonActivated">If true, include pending invoice with non activated payment methods</param>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns></returns>
+        public async Task<InvoiceEntity[]> GetMonitoredInvoices(PaymentMethodId paymentMethodId, bool includeNonActivated, CancellationToken cancellationToken = default)
         {
             using var ctx = _applicationDbContextFactory.CreateContext();
-            var q = ctx.PendingInvoices.AsQueryable();
-            q = q.Include(o => o.InvoiceData)
-                 .ThenInclude(o => o.Payments);
-            if (includeAddressData)
-                q = q.Include(o => o.InvoiceData)
-                    .ThenInclude(o => o.AddressInvoices);
-            if (skipNoPaymentInvoices)
-                q = q.Where(i => i.InvoiceData.Payments.Any());
-            return (await q.Select(o => o.InvoiceData).ToArrayAsync(cancellationToken)).Select(ToEntity).ToArray();
-        }
-        public async Task<string[]> GetPendingInvoiceIds()
-        {
-            using var ctx = _applicationDbContextFactory.CreateContext();
-            return await ctx.PendingInvoices.AsQueryable().Select(data => data.Id).ToArrayAsync();
+            var conn = ctx.Database.GetDbConnection();
+
+            var rows = await conn.QueryAsync<(string Id, uint xmin, string[] addresses, string[] payments, string invoice)>(new("""
+                WITH invoices_payments AS (
+                SELECT
+                    m.invoice_id,
+                    array_agg(to_jsonb(p)) FILTER (WHERE p."Id" IS NOT NULL) as payments
+                FROM get_monitored_invoices(@pmi, @includeNonActivated) m
+                LEFT JOIN "Payments" p ON p."Id" = m.payment_id AND p."PaymentMethodId" = m.payment_method_id
+                GROUP BY 1
+                ),
+                invoices_addresses AS (
+                SELECT m.invoice_id,
+                       array_agg(ai."Address") addresses
+                FROM get_monitored_invoices(@pmi, @includeNonActivated) m
+                JOIN "AddressInvoices" ai ON ai."InvoiceDataId" = m.invoice_id
+                WHERE ai."PaymentMethodId" = @pmi
+                GROUP BY 1
+                )
+                SELECT
+                    ip.invoice_id, i.xmin, COALESCE(ia.addresses, '{}'), COALESCE(ip.payments, '{}'), to_jsonb(i)
+                FROM invoices_payments ip
+                JOIN "Invoices" i ON i."Id" = ip.invoice_id
+                LEFT JOIN invoices_addresses ia ON ia.invoice_id = ip.invoice_id;
+                """
+                , new { pmi = paymentMethodId.ToString(), includeNonActivated }));
+            if (Enumerable.TryGetNonEnumeratedCount(rows, out var c) && c == 0)
+                return Array.Empty<InvoiceEntity>();
+            List<InvoiceEntity> invoices = new List<InvoiceEntity>();
+            foreach (var row in rows)
+            {
+                var jobj = JObject.Parse(row.invoice);
+                jobj.Remove("Blob");
+                jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
+                var invoiceData = jobj.ToObject<InvoiceData>();
+                invoiceData.XMin = row.xmin;
+                invoiceData.AddressInvoices = row.addresses.Select((a) => new AddressInvoiceData() { InvoiceDataId = invoiceData.Id, Address = a, PaymentMethodId = paymentMethodId.ToString() }).ToList();
+                invoiceData.Payments = new List<PaymentData>();
+                foreach (var payment in row.payments)
+                {
+                    jobj = JObject.Parse(payment);
+                    jobj.Remove("Blob");
+                    jobj["Blob2"] = jobj["Blob2"].ToString(Formatting.None);
+                    var paymentData = jobj.ToObject<PaymentData>();
+                    invoiceData.Payments.Add(paymentData);
+                }
+                invoices.Add(ToEntity(invoiceData));
+            }
+            return invoices.ToArray();
         }
 
         public async Task<List<Data.WebhookDeliveryData>> GetWebhookDeliveries(string invoiceId)
@@ -129,37 +174,13 @@ namespace BTCPayServer.Services.Invoices
             return await ctx.Apps.Where(a => a.StoreDataId == storeId && a.TagAllInvoices).ToArrayAsync();
         }
 
-        public async Task UpdateInvoice(string invoiceId, UpdateCustomerModel data)
-        {
-            retry:
-            using (var ctx = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
-                if (invoiceData == null)
-                    return;
-                if (invoiceData.CustomerEmail == null && data.Email != null)
-                {
-                    invoiceData.CustomerEmail = data.Email;
-                    AddToTextSearch(ctx, invoiceData, invoiceData.CustomerEmail);
-                }
-                try
-                {
-                    await ctx.SaveChangesAsync().ConfigureAwait(false);
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    goto retry;
-                }
-            }
-        }
-
         public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
         {
-            retry:
+retry:
             await using (var ctx = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
-                var invoice = invoiceData.GetBlob(_btcPayNetworkProvider);
+                var invoice = invoiceData.GetBlob();
                 var expiry = DateTimeOffset.Now + seconds;
                 invoice.ExpirationTime = expiry;
                 invoice.MonitoringExpiration = expiry.AddHours(1);
@@ -183,29 +204,9 @@ namespace BTCPayServer.Services.Invoices
             _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoiceId));
         }
 
-        public async Task ExtendInvoiceMonitor(string invoiceId)
+        public async Task CreateInvoiceAsync(InvoiceCreationContext creationContext)
         {
-            retry:
-            using (var ctx = _applicationDbContextFactory.CreateContext())
-            {
-                var invoiceData = await ctx.Invoices.FindAsync(invoiceId);
-
-                var invoice = invoiceData.GetBlob(_btcPayNetworkProvider);
-                invoice.MonitoringExpiration = invoice.MonitoringExpiration.AddHours(1);
-                invoiceData.SetBlob(invoice);
-                try
-                {
-                    await ctx.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    goto retry;
-                }
-            }
-        }
-
-        public async Task CreateInvoiceAsync(InvoiceEntity invoice, string[] additionalSearchTerms = null)
-        {
+            var invoice = creationContext.InvoiceEntity;
             var textSearch = new HashSet<string>();
             using (var context = _applicationDbContextFactory.CreateContext())
             {
@@ -213,45 +214,31 @@ namespace BTCPayServer.Services.Invoices
                 {
                     StoreDataId = invoice.StoreId,
                     Id = invoice.Id,
-                    Created = invoice.InvoiceTime,
-                    OrderId = invoice.Metadata.OrderId,
-#pragma warning disable CS0618 // Type or member is obsolete
-                    Status = invoice.StatusString,
-#pragma warning restore CS0618 // Type or member is obsolete
-                    ItemCode = invoice.Metadata.ItemCode,
-                    CustomerEmail = invoice.RefundMail,
+                    Status = invoice.Status.ToString(),
                     Archived = false
                 };
                 invoiceData.SetBlob(invoice);
                 await context.Invoices.AddAsync(invoiceData);
 
-
-                foreach (var paymentMethod in invoice.GetPaymentMethods())
+                foreach (var ctx in creationContext.PaymentMethodContexts.Where(p => p.Value.Status is PaymentMethodContext.ContextStatus.Created or PaymentMethodContext.ContextStatus.WaitingForActivation))
                 {
-                    if (paymentMethod.Network == null)
-                        throw new InvalidOperationException("CryptoCode unsupported");
-                    var details = paymentMethod.GetPaymentMethodDetails();
-                    if (!details.Activated)
-                    {
-                        continue;
-                    }
-                    var paymentDestination = details.GetPaymentDestination();
-                    string address = GetDestination(paymentMethod);
-                    if (address != null)
+                    foreach (var trackedDestination in ctx.Value.TrackedDestinations)
                     {
                         await context.AddressInvoices.AddAsync(new AddressInvoiceData()
                         {
                             InvoiceDataId = invoice.Id,
-                            CreatedTime = DateTimeOffset.UtcNow,
-                        }.Set(address, paymentMethod.GetId()));
+                            Address = trackedDestination,
+                            PaymentMethodId = ctx.Key.ToString()
+                        });
                     }
-                    if (paymentDestination != null)
-                    {
-                        textSearch.Add(paymentDestination);
-                    }
-                    textSearch.Add(paymentMethod.Calculate().TotalDue.ToString());
                 }
-                await context.PendingInvoices.AddAsync(new PendingInvoiceData() { Id = invoice.Id });
+                foreach (var prompt in invoice.GetPaymentPrompts())
+                {
+                    if (prompt.Destination != null)
+                        textSearch.Add(prompt.Destination);
+                    if (prompt.Activated)
+                        textSearch.Add(prompt.Calculate().TotalDue.ToString());
+                }
 
                 textSearch.Add(invoice.Id);
                 textSearch.Add(invoice.InvoiceTime.ToString(CultureInfo.InvariantCulture));
@@ -260,11 +247,7 @@ namespace BTCPayServer.Services.Invoices
                 textSearch.Add(invoice.Metadata.OrderId);
                 textSearch.Add(invoice.StoreId);
                 textSearch.Add(invoice.Metadata.BuyerEmail);
-
-                if (additionalSearchTerms != null)
-                {
-                    textSearch.AddRange(additionalSearchTerms);
-                }
+                textSearch.AddRange(creationContext.GetAllSearchTerms());
                 AddToTextSearch(context, invoiceData, textSearch.ToArray());
 
                 await context.SaveChangesAsync().ConfigureAwait(false);
@@ -274,103 +257,109 @@ namespace BTCPayServer.Services.Invoices
         public async Task AddInvoiceLogs(string invoiceId, InvoiceLogs logs)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            foreach (var log in logs.ToList())
+            var db = context.Database.GetDbConnection();
+            var data = logs.ToList().Select(log => new InvoiceEventData()
             {
-                await context.InvoiceEvents.AddAsync(new InvoiceEventData()
-                {
-                    Severity = log.Severity,
-                    InvoiceDataId = invoiceId,
-                    Message = log.Log,
-                    Timestamp = log.Timestamp,
-                    UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-                });
-            }
-            await context.SaveChangesAsync().ConfigureAwait(false);
+                Severity = log.Severity,
+                InvoiceDataId = invoiceId,
+                Message = log.Log,
+                Timestamp = log.Timestamp
+            }).ToArray();
+
+            await db.ExecuteAsync(InsertInvoiceEvent, data);
         }
 
-        private string GetDestination(PaymentMethod paymentMethod)
+        public async Task<InvoiceEventData[]> GetInvoiceLogs(string invoiceId)
         {
-            // For legacy reason, BitcoinLikeOnChain is putting the hashes of addresses in database
-            if (paymentMethod.GetId().PaymentType == Payments.PaymentTypes.BTCLike)
-            {
-                var network = (BTCPayNetwork)paymentMethod.Network;
-                var details =
-                    (Payments.Bitcoin.BitcoinLikeOnChainPaymentMethod)paymentMethod.GetPaymentMethodDetails();
-                if (!details.Activated)
-                {
-                    return null;
-                }
-                return details.GetDepositAddress(network.NBitcoinNetwork).ScriptPubKey.Hash.ToString();
-            }
-            ///////////////
-            return paymentMethod.GetPaymentMethodDetails().GetPaymentDestination();
+            await using var context = _applicationDbContextFactory.CreateContext();
+            var db = context.Database.GetDbConnection();
+            return (await db.QueryAsync<InvoiceEventData>("SELECT * FROM \"InvoiceEvents\" WHERE \"InvoiceDataId\"=@InvoiceDataId ORDER BY \"Timestamp\"", new { InvoiceDataId = invoiceId })).ToArray();
         }
 
-        public async Task<bool> NewPaymentDetails(string invoiceId, IPaymentMethodDetails paymentMethodDetails, BTCPayNetworkBase network)
+        public Task UpdatePaymentDetails(string invoiceId, IPaymentMethodHandler handler, object details)
         {
-            retry:
-            await using (var context = _applicationDbContextFactory.CreateContext())
+            return UpdatePaymentDetails(invoiceId, handler.PaymentMethodId, details is null ? null : JToken.FromObject(details, handler.Serializer));
+
+        }
+        public async Task UpdatePaymentDetails(string invoiceId, PaymentMethodId paymentMethodId, JToken details)
+        {
+retry:
+            using (var context = _applicationDbContextFactory.CreateContext())
             {
-                var invoice = (await context.Invoices.Where(i => i.Id == invoiceId).ToListAsync()).FirstOrDefault();
-                if (invoice == null)
-                    return false;
-
-                var invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
-                var paymentMethod = invoiceEntity.GetPaymentMethod(network, paymentMethodDetails.GetPaymentType());
-                if (paymentMethod == null)
-                    return false;
-                paymentMethod.SetPaymentMethodDetails(paymentMethodDetails);
-#pragma warning disable CS0618
-                if (network.IsBTC)
-                {
-                    invoiceEntity.DepositAddress = paymentMethod.DepositAddress;
-                }
-#pragma warning restore CS0618
-                invoiceEntity.SetPaymentMethod(paymentMethod);
-                invoice.SetBlob(invoiceEntity);
-                await context.AddressInvoices.AddAsync(new AddressInvoiceData()
-                {
-                    InvoiceDataId = invoiceId,
-                    CreatedTime = DateTimeOffset.UtcNow
-                }
-                .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
-
-                AddToTextSearch(context, invoice, paymentMethodDetails.GetPaymentDestination());
                 try
                 {
+                    var invoice = await context.Invoices.FindAsync(invoiceId);
+                    if (invoice == null)
+                        return;
+                    var invoiceEntity = invoice.GetBlob();
+                    var prompt = invoiceEntity.GetPaymentPrompt(paymentMethodId);
+                    if (prompt == null)
+                        return;
+                    prompt.Details = details;
+                    invoiceEntity.SetPaymentPrompt(paymentMethodId, prompt);
+                    invoice.SetBlob(invoiceEntity);
                     await context.SaveChangesAsync();
                 }
                 catch (DbUpdateConcurrencyException)
                 {
                     goto retry;
                 }
-                return true;
             }
         }
-
-        public async Task UpdateInvoicePaymentMethod(string invoiceId, PaymentMethod paymentMethod)
+        public async Task UpdatePrompt(string invoiceId, PaymentPrompt prompt)
         {
-            retry:
+retry:
+            using (var context = _applicationDbContextFactory.CreateContext())
+            {
+                try
+                {
+                    var invoice = await context.Invoices.FindAsync(invoiceId);
+                    if (invoice == null)
+                        return;
+                    var invoiceEntity = invoice.GetBlob();
+                    var existingPrompt = invoiceEntity.GetPaymentPrompt(prompt.PaymentMethodId);
+                    if (existingPrompt == null)
+                        return;
+                    invoiceEntity.SetPaymentPrompt(prompt.PaymentMethodId, prompt);
+                    invoice.SetBlob(invoiceEntity);
+                    await context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    goto retry;
+                }
+            }
+        }
+        public async Task NewPaymentPrompt(string invoiceId, PaymentMethodContext paymentPromptContext)
+        {
+            var prompt = paymentPromptContext.Prompt;
+retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoice = await context.Invoices.FindAsync(invoiceId);
                 if (invoice == null)
                     return;
-                var invoiceEntity = invoice.GetBlob(_btcPayNetworkProvider);
-                var newDetails = paymentMethod.GetPaymentMethodDetails();
-                var existing = invoiceEntity.GetPaymentMethod(paymentMethod.GetId());
-                if (existing.GetPaymentMethodDetails().GetPaymentDestination() != newDetails.GetPaymentDestination() && newDetails.Activated)
+                var invoiceEntity = invoice.GetBlob();
+                var newDetails = prompt.Details;
+                var existing = invoiceEntity.GetPaymentPrompt(prompt.PaymentMethodId);
+                if (existing.Destination != prompt.Destination && prompt.Activated && prompt.Destination is not null)
                 {
-                    await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                    foreach (var tracked in paymentPromptContext.TrackedDestinations)
                     {
-                        InvoiceDataId = invoiceId,
-                        CreatedTime = DateTimeOffset.UtcNow
+                        await context.AddressInvoices.AddAsync(new AddressInvoiceData()
+                        {
+                            InvoiceDataId = invoiceId,
+                            Address = tracked,
+                            PaymentMethodId = paymentPromptContext.PaymentMethodId.ToString()
+                        });
                     }
-                        .Set(GetDestination(paymentMethod), paymentMethod.GetId()));
+                    AddToTextSearch(context, invoice, prompt.Destination);
                 }
-                invoiceEntity.SetPaymentMethod(paymentMethod);
+                var search = new List<String>();
+                search.Add(prompt.Calculate().TotalDue.ToString());
+                invoiceEntity.SetPaymentPrompt(prompt.PaymentMethodId, prompt);
                 invoice.SetBlob(invoiceEntity);
-                AddToTextSearch(context, invoice, paymentMethod.GetPaymentMethodDetails().GetPaymentDestination());
+                AddToTextSearch(context, invoice, search.Concat(paymentPromptContext.AdditionalSearchTerms).Distinct().ToArray());
                 try
                 {
                     await context.SaveChangesAsync();
@@ -382,36 +371,27 @@ namespace BTCPayServer.Services.Invoices
             }
         }
 
-        public async Task AddPendingInvoiceIfNotPresent(string invoiceId)
-        {
-            using var context = _applicationDbContextFactory.CreateContext();
-            if (!context.PendingInvoices.Any(a => a.Id == invoiceId))
-            {
-                context.PendingInvoices.Add(new PendingInvoiceData() { Id = invoiceId });
-                try
-                {
-                    await context.SaveChangesAsync();
-                }
-                catch (DbUpdateException) { } // Already exists
-            }
-        }
+        const string InsertInvoiceEvent = "INSERT INTO \"InvoiceEvents\" (\"InvoiceDataId\", \"Severity\", \"Message\", \"Timestamp\") VALUES (@InvoiceDataId, @Severity, @Message, @Timestamp)";
 
         public async Task AddInvoiceEvent(string invoiceId, object evt, InvoiceEventData.EventSeverity severity)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            await context.InvoiceEvents.AddAsync(new InvoiceEventData()
-            {
-                Severity = severity,
-                InvoiceDataId = invoiceId,
-                Message = evt.ToString(),
-                Timestamp = DateTimeOffset.UtcNow,
-                UniqueId = Encoders.Hex.EncodeData(RandomUtils.GetBytes(10))
-            });
+            var conn = context.Database.GetDbConnection();
             try
             {
-                await context.SaveChangesAsync();
+                await conn.ExecuteAsync(InsertInvoiceEvent,
+                    new InvoiceEventData()
+                    {
+                        Severity = severity,
+                        InvoiceDataId = invoiceId,
+                        Message = evt.ToString(),
+                        Timestamp = DateTimeOffset.UtcNow
+                    });
             }
-            catch (DbUpdateException) { } // Probably the invoice does not exists anymore
+            catch (Npgsql.NpgsqlException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
+            {
+                // Invoice does not exists
+            }
         }
 
         public static void AddToTextSearch(ApplicationDbContext context, InvoiceData invoice, params string[] terms)
@@ -439,19 +419,19 @@ namespace BTCPayServer.Services.Invoices
                 new
                 {
                     id = invoiceId,
-                    status = InvoiceState.ToString(invoiceState.Status),
-                    exstatus = InvoiceState.ToString(invoiceState.ExceptionStatus)
+                    status = invoiceState.Status.ToString(),
+                    exstatus = invoiceState.ExceptionStatus is InvoiceExceptionStatus.None ? string.Empty : invoiceState.ExceptionStatus.ToString()
                 });
         }
         internal async Task UpdateInvoicePrice(string invoiceId, decimal price)
         {
-            retry:
+retry:
             using (var context = _applicationDbContextFactory.CreateContext())
             {
                 var invoiceData = await context.FindAsync<Data.InvoiceData>(invoiceId).ConfigureAwait(false);
                 if (invoiceData == null)
                     return;
-                var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
+                var blob = invoiceData.GetBlob();
                 if (blob.Type != InvoiceType.TopUp)
                     throw new ArgumentException("The invoice type should be TopUp to be able to update invoice price", nameof(invoiceId));
                 blob.Price = price;
@@ -501,7 +481,7 @@ retry:
                                             !invoiceData.StoreDataId.Equals(storeId,
                                                 StringComparison.InvariantCultureIgnoreCase)))
                     return null;
-                var blob = invoiceData.GetBlob(_btcPayNetworkProvider);
+                var blob = invoiceData.GetBlob();
 
                 var newMetadata = InvoiceMetadata.FromJObject(metadata);
                 var oldOrderId = blob.Metadata.OrderId;
@@ -509,9 +489,6 @@ retry:
 
                 if (newOrderId != oldOrderId)
                 {
-                    // OrderId is saved in 2 places: (1) the invoice table and (2) in the metadata field. We are updating both for consistency.
-                    invoiceData.OrderId = newOrderId;
-
                     if (oldOrderId != null && (newOrderId is null || !newOrderId.Equals(oldOrderId, StringComparison.InvariantCulture)))
                     {
                         RemoveFromTextSearch(context, invoiceData, oldOrderId);
@@ -547,7 +524,6 @@ retry:
 
                 context.Attach(invoiceData);
                 string eventName;
-                string legacyStatus;
                 switch (status)
                 {
                     case InvoiceStatus.Settled:
@@ -557,7 +533,6 @@ retry:
                         }
 
                         eventName = InvoiceEvent.MarkedCompleted;
-                        legacyStatus = InvoiceStatusLegacy.Complete.ToString();
                         break;
                     case InvoiceStatus.Invalid:
                         if (!invoiceData.GetInvoiceState().CanMarkInvalid())
@@ -565,14 +540,13 @@ retry:
                             return false;
                         }
                         eventName = InvoiceEvent.MarkedInvalid;
-                        legacyStatus = InvoiceStatusLegacy.Invalid.ToString();
                         break;
                     default:
                         return false;
                 }
 
-                invoiceData.Status = legacyStatus.ToLowerInvariant();
-                invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString().ToLowerInvariant();
+                invoiceData.Status = status.ToString();
+                invoiceData.ExceptionStatus = InvoiceExceptionStatus.Marked.ToString();
                 try
                 {
                     await context.SaveChangesAsync();
@@ -621,53 +595,7 @@ retry:
 
         public InvoiceEntity ToEntity(InvoiceData invoice)
         {
-            var entity = invoice.GetBlob(_btcPayNetworkProvider);
-            PaymentMethodDictionary paymentMethods = null;
-#pragma warning disable CS0618
-            entity.Payments = invoice.Payments.Select(p =>
-            {
-                var paymentEntity = p.GetBlob(_btcPayNetworkProvider);
-                if (paymentEntity is null)
-                    return null;
-                // PaymentEntity on version 0 does not have their own fee, because it was assumed that the payment method have fixed fee.
-                // We want to hide this legacy detail in InvoiceRepository, so we fetch the fee from the PaymentMethod and assign it to the PaymentEntity.
-                if (paymentEntity.Version == 0)
-                {
-                    if (paymentMethods == null)
-                        paymentMethods = entity.GetPaymentMethods();
-                    var paymentMethodDetails = paymentMethods.TryGet(paymentEntity.GetPaymentMethodId())?.GetPaymentMethodDetails();
-                    if (paymentMethodDetails != null) // == null should never happen, but we never know.
-                        paymentEntity.NetworkFee = paymentMethodDetails.GetNextNetworkFee();
-                }
-
-                return paymentEntity;
-            })
-            .Where(p => p != null)
-            .OrderBy(a => a.ReceivedTime).ToList();
-#pragma warning restore CS0618
-            var state = invoice.GetInvoiceState();
-            entity.ExceptionStatus = state.ExceptionStatus;
-            entity.Status = state.Status;
-            entity.RefundMail = invoice.CustomerEmail;
-            if (invoice.AddressInvoices != null)
-            {
-                entity.AvailableAddressHashes = invoice.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId()).ToHashSet();
-            }
-            if (invoice.Events != null)
-            {
-                entity.Events = invoice.Events.OrderBy(c => c.Timestamp).ToList();
-            }
-            if (invoice.Refunds != null)
-            {
-                entity.Refunds = invoice.Refunds.OrderBy(c => c.PullPaymentData.StartDate).ToList();
-            }
-            if (!string.IsNullOrEmpty(entity.RefundMail) && string.IsNullOrEmpty(entity.Metadata.BuyerEmail))
-            {
-                entity.Metadata.BuyerEmail = entity.RefundMail;
-            }
-            entity.Archived = invoice.Archived;
-            entity.UpdateTotals();
-            return entity;
+            return invoice.GetBlob();
         }
 
         private IQueryable<InvoiceData> GetInvoiceQuery(ApplicationDbContext context, InvoiceQuery queryObject)
@@ -729,52 +657,74 @@ retry:
 
             if (queryObject.OrderId is { Length: > 0 })
             {
-                var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
-                query = query.Where(i => orderIdSet.Contains(i.OrderId));
+                if (queryObject.OrderId is [var orderId])
+                {
+                    query = query.Where(i => InvoiceData.GetOrderId(i.Blob2) == orderId);
+                }
+                else
+                {
+                    var orderIdSet = queryObject.OrderId.ToHashSet().ToArray();
+                    query = query.Where(i => orderIdSet.Contains(InvoiceData.GetOrderId(i.Blob2)));
+                }
             }
             if (queryObject.ItemCode is { Length: > 0 })
             {
-                var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
-                query = query.Where(i => itemCodeSet.Contains(i.ItemCode));
+                if (queryObject.ItemCode is [var itemCode])
+                {
+                    query = query.Where(i => InvoiceData.GetItemCode(i.Blob2) == itemCode);
+                }
+                else
+                {
+                    var itemCodeSet = queryObject.ItemCode.ToHashSet().ToArray();
+                    query = query.Where(i => itemCodeSet.Contains(InvoiceData.GetItemCode(i.Blob2)));
+                }
             }
 
             var statusSet = queryObject.Status is { Length: > 0 }
-                ? queryObject.Status.Select(s => s.ToLowerInvariant()).ToHashSet()
+                ? queryObject.Status.Select(NormalizeStatus).Where(n => n is not null).ToHashSet()
                 : new HashSet<string>();
             var exceptionStatusSet = queryObject.ExceptionStatus is { Length: > 0 }
-                ? queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).ToHashSet()
+                ? queryObject.ExceptionStatus.Select(NormalizeExceptionStatus).Where(n => n is not null).ToHashSet()
                 : new HashSet<string>();
-
-            // We make sure here that the old filters still work
-            if (statusSet.Contains("paid"))
-                statusSet.Add("processing");
-            if (statusSet.Contains("processing"))
-                statusSet.Add("paid");
-            if (statusSet.Contains("confirmed"))
-            {
-                statusSet.Add("complete");
-                statusSet.Add("settled");
-            }
-            if (statusSet.Contains("settled"))
-            {
-                statusSet.Add("complete");
-                statusSet.Add("confirmed");
-            }
-            if (statusSet.Contains("complete"))
-            {
-                statusSet.Add("settled");
-                statusSet.Add("confirmed");
-            }
 
             if (statusSet.Any() || exceptionStatusSet.Any())
             {
-                query = query.Where(i => statusSet.Contains(i.Status) || exceptionStatusSet.Contains(i.ExceptionStatus));
+                Expression<Func<InvoiceData, bool>> statusExpression = null;
+                Expression<Func<InvoiceData, bool>> exceptionStatusExpression = null;
+                if (statusSet.Count is 1)
+                {
+                    var status = statusSet.First();
+                    statusExpression = i => i.Status == status;
+                }
+                else if (statusSet.Count is > 1)
+                {
+                    statusExpression = i => statusSet.Contains(i.Status);
+                }
+
+                if (exceptionStatusSet.Count is 1)
+                {
+                    var exceptionStatus = exceptionStatusSet.First();
+                    exceptionStatusExpression = i => i.ExceptionStatus == exceptionStatus;
+                }
+                else if (exceptionStatusSet.Count is > 1)
+                {
+                    exceptionStatusExpression = i => exceptionStatusSet.Contains(i.ExceptionStatus);
+                }
+                (Expression predicate, ParameterExpression parameter) = (statusExpression, exceptionStatusExpression) switch
+                {
+                    ({ } a, { } b) => ((Expression)Expression.Or(a.Body, b.Body), a.Parameters[0]),
+                    ({ } a, null) => (a.Body, a.Parameters[0]),
+                    (null, { } b) => (b.Body, b.Parameters[0]),
+                    _ => throw new NotSupportedException()
+                };
+                var expression = Expression.Lambda<Func<InvoiceData, bool>>(predicate, parameter);
+                query = query.Where(expression);
             }
 
             if (queryObject.Unusual != null)
             {
                 var unusual = queryObject.Unusual.Value;
-                query = query.Where(i => unusual == (i.Status == "invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
+                query = query.Where(i => unusual == (i.Status == "Invalid" || !string.IsNullOrEmpty(i.ExceptionStatus)));
             }
 
             if (queryObject.OrderByDesc)
@@ -787,7 +737,7 @@ retry:
 
             if (queryObject.Take != null)
                 query = query.Take(queryObject.Take.Value);
-            
+
             return query;
         }
         public Task<InvoiceEntity[]> GetInvoices(InvoiceQuery queryObject)
@@ -801,41 +751,59 @@ retry:
             query = query.Include(o => o.Payments);
             if (queryObject.IncludeAddresses)
                 query = query.Include(o => o.AddressInvoices);
-            if (queryObject.IncludeEvents)
-                query = query.Include(o => o.Events);
             if (queryObject.IncludeRefunds)
                 query = query.Include(o => o.Refunds).ThenInclude(refundData => refundData.PullPaymentData);
             var data = await query.AsNoTracking().ToArrayAsync(cancellationToken).ConfigureAwait(false);
             return data.Select(ToEntity).ToArray();
         }
-        
+
+        public async Task AddSearchTerms(string invoiceId, List<string> searchTerms)
+        {
+            if (searchTerms is null or { Count: 0 })
+                return;
+            await using var context = _applicationDbContextFactory.CreateContext();
+            foreach (var t in searchTerms)
+            {
+                context.InvoiceSearches.Add(new InvoiceSearchData()
+                {
+                    InvoiceDataId = invoiceId,
+                    Value = t
+                });
+                await context.SaveChangesAsync();
+            }
+        }
+
         public async Task<int> GetInvoiceCount(InvoiceQuery queryObject)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
             return await GetInvoiceQuery(context, queryObject).CountAsync();
         }
 
+        private string NormalizeStatus(string status)
+        {
+            status = status.ToLowerInvariant();
+            return status switch
+            {
+                "new" => "New",
+                "paid" or "processing" => "Processing",
+                "complete" or "confirmed" or "settled" => "Settled",
+                "expired" => "Expired",
+                "invalid" => "Invalid",
+                _ => null
+            };
+        }
+
         private string NormalizeExceptionStatus(string status)
         {
             status = status.ToLowerInvariant();
-            switch (status)
+            return status switch
             {
-                case "paidover":
-                case "over":
-                case "overpaid":
-                    status = "paidOver";
-                    break;
-                case "paidlate":
-                case "late":
-                    status = "paidLate";
-                    break;
-                case "paidpartial":
-                case "underpaid":
-                case "partial":
-                    status = "paidPartial";
-                    break;
-            }
-            return status;
+                "paidover" or "over" or "overpaid" => "PaidOver",
+                "paidlate" or "late" => "PaidLate",
+                "paidpartial" or "underpaid" or "partial" => "PaidPartial",
+                "none" or "" => "",
+                _ => null
+            };
         }
 
         public static T FromBytes<T>(byte[] blob, BTCPayNetworkBase network = null)
@@ -858,14 +826,15 @@ retry:
                 {
                     var contribution = new InvoiceStatistics.Contribution
                     {
-                        PaymentMethodId = new PaymentMethodId(p.Currency, PaymentTypes.BTCLike),
+                        GroupKey = p.Currency,
+                        Currency = p.Currency,
                         CurrencyValue = p.Price,
-                        States = new [] { p.GetInvoiceState() }
+                        Settled = p.GetInvoiceState().IsSettled()
                     };
                     contribution.Value = contribution.CurrencyValue;
 
                     // For hardcap, we count newly created invoices as part of the contributions
-                    if (!softcap && p.Status == InvoiceStatusLegacy.New)
+                    if (!softcap && p.Status == InvoiceStatus.New)
                         return new[] { contribution };
 
                     // If the user get a donation via other mean, he can register an invoice manually for such amount
@@ -873,7 +842,7 @@ retry:
                     var payments = p.GetPayments(true);
                     if (payments.Count == 0 &&
                         p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
-                        p.Status == InvoiceStatusLegacy.Complete)
+                        p.Status == InvoiceStatus.Settled)
                         return new[] { contribution };
 
                     contribution.CurrencyValue = 0m;
@@ -881,7 +850,7 @@ retry:
 
                     // If an invoice has been marked invalid, remove the contribution
                     if (p.ExceptionStatus == InvoiceExceptionStatus.Marked &&
-                        p.Status == InvoiceStatusLegacy.Invalid)
+                        p.Status == InvoiceStatus.Invalid)
                         return new[] { contribution };
 
                     // Else, we just sum the payments
@@ -890,24 +859,40 @@ retry:
                              {
                                  var paymentMethodContribution = new InvoiceStatistics.Contribution
                                  {
-                                     PaymentMethodId = pay.GetPaymentMethodId(),
+                                     GroupKey = GetGroupKey(pay),
+                                     Currency = pay.Currency,
                                      CurrencyValue = pay.InvoicePaidAmount.Net,
                                      Value = pay.PaidAmount.Net,
-                                     States = new [] { pay.InvoiceEntity.GetInvoiceState() }
+                                     Divisibility = pay.Divisibility,
+                                     Settled = p.GetInvoiceState().IsSettled()
                                  };
                                  return paymentMethodContribution;
                              })
                              .ToArray();
                 })
-                .GroupBy(p => p.PaymentMethodId)
+                .GroupBy(p => p.GroupKey)
                 .ToDictionary(p => p.Key, p => new InvoiceStatistics.Contribution
                 {
-                    PaymentMethodId = p.Key,
-                    States = p.SelectMany(v => v.States),
+                    Currency = p.Key,
+                    Settled = p.All(v => v.Settled),
+                    Divisibility = p.Max(p => p.Divisibility),
                     Value = p.Select(v => v.Value).Sum(),
                     CurrencyValue = p.Select(v => v.CurrencyValue).Sum()
                 });
             return new InvoiceStatistics(contributions);
+        }
+
+        private string GetGroupKey(PaymentEntity pay)
+        {
+            // If BTC-CHAIN, group by BTC
+            if (PaymentTypes.CHAIN.GetPaymentMethodId(pay.Currency) == pay.PaymentMethodId)
+                return pay.Currency;
+            // If BTC-LN|LNURL, group them together by BTC-LN
+            if (PaymentTypes.LN.GetPaymentMethodId(pay.Currency) == pay.PaymentMethodId ||
+                PaymentTypes.LNURL.GetPaymentMethodId(pay.Currency) == pay.PaymentMethodId)
+                return PaymentTypes.LN.GetPaymentMethodId(pay.Currency).ToString();
+            // Else just group by payment method id
+            return pay.PaymentMethodId.ToString();
         }
     }
 
@@ -973,16 +958,14 @@ retry:
             set;
         }
         public bool IncludeAddresses { get; set; }
-
-        public bool IncludeEvents { get; set; }
         public bool IncludeArchived { get; set; } = true;
         public bool IncludeRefunds { get; set; }
         public bool OrderByDesc { get; set; } = true;
     }
 
-    public class InvoiceStatistics : Dictionary<PaymentMethodId, InvoiceStatistics.Contribution>
+    public class InvoiceStatistics : Dictionary<string, InvoiceStatistics.Contribution>
     {
-        public InvoiceStatistics(IEnumerable<KeyValuePair<PaymentMethodId, Contribution>> collection) : base(collection)
+        public InvoiceStatistics(IEnumerable<KeyValuePair<string, Contribution>> collection) : base(collection)
         {
             TotalCurrency = Values.Select(v => v.CurrencyValue).Sum();
         }
@@ -990,10 +973,12 @@ retry:
 
         public class Contribution
         {
-            public PaymentMethodId PaymentMethodId { get; set; }
-            public IEnumerable<InvoiceState> States { get; set; }
+            public string Currency { get; set; }
+            public int Divisibility { get; set; }
+            public bool Settled { get; set; }
             public decimal Value { get; set; }
             public decimal CurrencyValue { get; set; }
+            public string GroupKey { get; set; }
         }
     }
 }

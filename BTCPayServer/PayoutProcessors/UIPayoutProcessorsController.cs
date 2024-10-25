@@ -7,29 +7,30 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.PayoutProcessors;
 
 public class UIPayoutProcessorsController : Controller
 {
     private readonly EventAggregator _eventAggregator;
-    private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
     private readonly IEnumerable<IPayoutProcessorFactory> _payoutProcessorFactories;
     private readonly PayoutProcessorService _payoutProcessorService;
+    private IStringLocalizer StringLocalizer { get; }
 
     public UIPayoutProcessorsController(
         EventAggregator eventAggregator,
-        BTCPayNetworkProvider btcPayNetworkProvider,
         IEnumerable<IPayoutProcessorFactory> payoutProcessorFactories,
-        PayoutProcessorService payoutProcessorService)
+        PayoutProcessorService payoutProcessorService,
+        IStringLocalizer stringLocalizer)
     {
         _eventAggregator = eventAggregator;
-        _btcPayNetworkProvider = btcPayNetworkProvider;
         _payoutProcessorFactories = payoutProcessorFactories;
         _payoutProcessorService = payoutProcessorService;
-        ;
+        StringLocalizer = stringLocalizer;
     }
 
     [HttpGet("~/stores/{storeId}/payout-processors")]
@@ -45,9 +46,9 @@ public class UIPayoutProcessorsController : Controller
         return View(_payoutProcessorFactories.Select(factory =>
         {
             var conf = activeProcessors.FirstOrDefault(datas => datas.Key == factory.Processor)
-                           ?.ToDictionary(data => data.GetPaymentMethodId(), data => data) ??
-                       new Dictionary<PaymentMethodId, PayoutProcessorData>();
-            foreach (PaymentMethodId supportedPaymentMethod in factory.GetSupportedPaymentMethods())
+                           ?.ToDictionary(data => data.GetPayoutMethodId(), data => data) ??
+                       new Dictionary<PayoutMethodId, PayoutProcessorData>();
+            foreach (var supportedPaymentMethod in factory.GetSupportedPayoutMethods())
             {
                 conf.TryAdd(supportedPaymentMethod, null);
             }
@@ -68,10 +69,10 @@ public class UIPayoutProcessorsController : Controller
             Id = id,
             Processed = tcs
         });
-        TempData.SetStatusMessageModel(new StatusMessageModel()
+        TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
-            Message = "Payout Processor removed"
+            Message = StringLocalizer["Payout Processor removed"].Value
         });
         await tcs.Task;
         return RedirectToAction("ConfigureStorePayoutProcessors", new { storeId });
@@ -80,7 +81,7 @@ public class UIPayoutProcessorsController : Controller
 
     public class StorePayoutProcessorsView
     {
-        public Dictionary<PaymentMethodId, PayoutProcessorData> Configured { get; set; }
+        public Dictionary<PayoutMethodId, PayoutProcessorData> Configured { get; set; }
         public IPayoutProcessorFactory Factory { get; set; }
     }
 }

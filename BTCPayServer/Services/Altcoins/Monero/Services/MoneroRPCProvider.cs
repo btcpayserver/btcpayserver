@@ -1,4 +1,3 @@
-#if ALTCOINS
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Immutable;
@@ -59,12 +58,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             try
             {
                 var daemonResult =
-                    await daemonRpcClient.SendCommandAsync<JsonRpcClient.NoRequestModel, SyncInfoResponse>("sync_info",
+                    await daemonRpcClient.SendCommandAsync<JsonRpcClient.NoRequestModel, GetInfoResponse>("get_info",
                         JsonRpcClient.NoRequestModel.Instance);
                 summary.TargetHeight = daemonResult.TargetHeight.GetValueOrDefault(0);
                 summary.CurrentHeight = daemonResult.Height;
                 summary.TargetHeight = summary.TargetHeight == 0 ? summary.CurrentHeight : summary.TargetHeight;
-                summary.Synced = daemonResult.Height >= summary.TargetHeight && summary.CurrentHeight > 0;
+                summary.Synced = !daemonResult.BusySyncing;
                 summary.UpdatedAt = DateTime.UtcNow;
                 summary.DaemonAvailable = true;
             }
@@ -117,4 +116,3 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         }
     }
 }
-#endif

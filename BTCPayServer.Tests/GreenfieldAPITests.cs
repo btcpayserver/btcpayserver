@@ -1133,7 +1133,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("avatar.jpg", changed.ImageUrl);
         }
 
-        [Fact]
+        [Fact(Timeout = 30_000)]
         [Trait("Integration", "Integration")]
         public async Task CanUsePullPaymentViaAPI()
         {

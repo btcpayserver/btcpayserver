@@ -2181,7 +2181,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("PP1 Edited", s.Driver.PageSource);
         }
 
-        [Fact]
+        [Fact(Timeout = 60_000)]
         [Trait("Selenium", "Selenium")]
         [Trait("Lightning", "Lightning")]
         public async Task CanUsePullPaymentsViaUI()

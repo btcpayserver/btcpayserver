@@ -266,9 +266,11 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
             catch (Exception ex)
             {
                 exception = ex;
+                Logs.PayServer.LogError(ex, "ERR");
             }
             if (payment is null)
             {
+                Logs.PayServer.LogError("NULL payments");
                 payoutData.State = PayoutState.Cancelled;
                 var exceptionMessage = "";
                 if (exception is not null)
@@ -288,6 +290,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 
             if (payment.Status == LightningPaymentStatus.Complete)
             {
+                Logs.PayServer.LogError("COMPLETE");
                 payoutData.State = PayoutState.Completed;
                 payoutData.SetProofBlob(proofBlob, null);
                 return new ResultVM

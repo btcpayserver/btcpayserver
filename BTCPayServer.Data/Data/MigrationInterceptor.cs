@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.Data
 {
@@ -15,6 +16,7 @@ namespace BTCPayServer.Data
     /// </summary>
     public class MigrationInterceptor : IMaterializationInterceptor, ISaveChangesInterceptor
     {
+        public static ILogger Logger;
         public interface IHasMigration
         {
             bool TryMigrate();
@@ -41,7 +43,7 @@ namespace BTCPayServer.Data
 
                 if (entry is { Entity: PayoutData { State: Client.Models.PayoutState.Cancelled } payout })
                 {
-                    throw new Exception(Environment.StackTrace);
+                    Logger?.LogInformation(Environment.StackTrace);
                 }
             }
             return new ValueTask<InterceptionResult<int>>(result);

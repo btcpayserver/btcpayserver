@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
+using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Rating;
@@ -203,7 +204,7 @@ namespace BTCPayServer.Tests
             InvoiceRepository = (InvoiceRepository)_Host.Services.GetService(typeof(InvoiceRepository));
             StoreRepository = (StoreRepository)_Host.Services.GetService(typeof(StoreRepository));
             Networks = (BTCPayNetworkProvider)_Host.Services.GetService(typeof(BTCPayNetworkProvider));
-
+            MigrationInterceptor.Logger = _Host.Services.GetService<BTCPayServer.Logging.Logs>().PayServer;
             if (MockRates)
             {
                 var rateProvider = (RateProviderFactory)_Host.Services.GetService(typeof(RateProviderFactory));

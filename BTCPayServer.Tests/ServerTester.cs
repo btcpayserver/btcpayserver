@@ -20,6 +20,7 @@ using NBitpayClient;
 using NBXplorer;
 using BTCPayServer.Abstractions.Contracts;
 using System.Diagnostics.Metrics;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Tests
 {

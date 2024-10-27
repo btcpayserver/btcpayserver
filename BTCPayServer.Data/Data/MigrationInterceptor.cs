@@ -39,7 +39,7 @@ namespace BTCPayServer.Data
                     // It seems doing nothing, but this actually set all properties as modified
                     entry.State = EntityState.Modified;
 
-                if (entry is { Entity: PayoutData payout } && payout.State == Client.Models.PayoutState.Cancelled)
+                if (entry is { Entity: PayoutData { State: Client.Models.PayoutState.Cancelled } payout })
                 {
                     throw new Exception(Environment.StackTrace);
                 }

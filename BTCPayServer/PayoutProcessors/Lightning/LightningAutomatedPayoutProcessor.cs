@@ -74,6 +74,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 
     public async Task<ResultVM> HandlePayout(PayoutData payoutData, ILightningClient lightningClient, CancellationToken cancellationToken)
 	{
+        Logs.PayServer.LogInformation("HandlePayout");
         using var scope = _payoutHandler.PayoutsPaymentProcessing.StartTracking();
 		if (payoutData.State != PayoutState.AwaitingPayment || !scope.TryTrack(payoutData.Id))
 			return InvalidState(payoutData.Id);
@@ -193,6 +194,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
     async Task<ResultVM> TrypayBolt(
             ILightningClient lightningClient, PayoutBlob payoutBlob, PayoutData payoutData, BOLT11PaymentRequest bolt11PaymentRequest, CancellationToken cancellationToken)
     {
+        Logs.PayServer.LogInformation("TrypayBolt");
         var boltAmount = bolt11PaymentRequest.MinimumAmount.ToDecimal(LightMoneyUnit.BTC);
 
         // BoltAmount == 0: Any amount is OK.
@@ -237,6 +239,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 
                 if (pay?.ErrorDetail is string err)
                     Logs.PayServer.LogInformation("ERR: " + err);
+                Logs.PayServer.LogInformation("CODE: " + pay?.Result);
                 if (pay?.Result is PayResult.CouldNotFindRoute)
                 {
                     // Payment failed for sure... we can try again later!

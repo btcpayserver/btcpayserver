@@ -3,7 +3,7 @@
 @model BrandingViewModel;
 @inject IFileService FileService
 @{
-    ViewData.SetActivePage(ServerNavPages.Branding, "Branding");
+    ViewData.SetActivePage(ServerNavPages.Branding, StringLocalizer["Branding"]);
     var canUpload = await FileService.IsAvailable();
     var themeExtension = ((ThemeExtension[])Enum.GetValues(typeof(ThemeExtension))).Select(t =>
         new SelectListItem(typeof(ThemeExtension).DisplayName(t.ToString()), t == ThemeExtension.Custom ? null : t.ToString()));
@@ -31,10 +31,7 @@
             <div class="form-group">
                 <label asp-for="ContactUrl" class="form-label"></label>
                 <input asp-for="ContactUrl" class="form-control" />
-                <div class="form-text" text-translate="true">
-                    Add an email address or an external URL where users can contact you for support requests
-                    through a "Contact Us" button, displayed at the bottom of the public facing pages.
-                </div>
+                <div class="form-text" text-translate="true">Add an email address or an external URL where users can contact you for support requests through a "Contact Us" button, displayed at the bottom of the public facing pages.</div>
                 <span asp-validation-for="ContactUrl" class="text-danger"></span>
             </div>
             <div class="form-group">
@@ -62,7 +59,7 @@
                 else
                 {
                     <input asp-for="LogoFile" type="file" class="form-control" disabled>
-                    <div class="form-text">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                 }
             </div>
 
@@ -111,7 +108,7 @@
                     else
                     {
                         <input asp-for="CustomThemeFile" type="file" class="form-control" disabled>
-                        <p class="form-text text-muted">In order to upload a theme file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</p>
+                        <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                     }
                 </div>
             </div>

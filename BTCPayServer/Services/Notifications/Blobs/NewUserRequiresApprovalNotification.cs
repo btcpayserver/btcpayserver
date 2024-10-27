@@ -3,6 +3,7 @@ using BTCPayServer.Configuration;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.Services.Notifications.Blobs;
 
@@ -28,11 +29,13 @@ internal class NewUserRequiresApprovalNotification : BaseNotification
     {
         private readonly LinkGenerator _linkGenerator;
         private readonly BTCPayServerOptions _options;
+        private IStringLocalizer StringLocalizer { get; }
 
-        public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options)
+        public Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer)
         {
             _linkGenerator = linkGenerator;
             _options = options;
+            StringLocalizer = stringLocalizer;
         }
 
         public override string NotificationType => TYPE;
@@ -40,7 +43,7 @@ internal class NewUserRequiresApprovalNotification : BaseNotification
         {
             get
             {
-                return [(TYPE, "New user requires approval")];
+                return [(TYPE, StringLocalizer["New user requires approval"])];
             }
         }
 
@@ -48,7 +51,7 @@ internal class NewUserRequiresApprovalNotification : BaseNotification
         {
             vm.Identifier = notification.Identifier;
             vm.Type = notification.NotificationType;
-            vm.Body = $"New user {notification.UserEmail} requires approval.";
+            vm.Body = StringLocalizer["New user {0} requires approval.", notification.UserEmail];
             vm.ActionLink = _linkGenerator.GetPathByAction(nameof(UIServerController.User),
                 "UIServer",
                 new { userId = notification.UserId }, _options.RootPath);

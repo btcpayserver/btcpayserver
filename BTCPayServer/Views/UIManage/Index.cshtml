@@ -4,7 +4,7 @@
 @inject IFileService FileService
 @model IndexViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.Index, "Update your account");
+    ViewData.SetActivePage(ManageNavPages.Index, StringLocalizer["Update your account"]);
     var canUpload = await FileService.IsAvailable();
 }
 
@@ -62,7 +62,7 @@
                     <input asp-for="ImageFile" type="file" class="form-control flex-grow">
                     @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
-                        <img src="@Model.ImageUrl" alt="Profile picture" class="profile-picture"/>
+                        <img src="@Model.ImageUrl" alt="@StringLocalizer["Profile Picture"]" class="profile-picture"/>
                     }
                 </div>
                 <span asp-validation-for="ImageFile" class="text-danger"></span>
@@ -70,12 +70,12 @@
         }
         <h3 class="mt-5 mb-4" text-translate="true">Delete Account</h3>
         <div id="danger-zone">
-            <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="This action will also delete all stores, invoices, apps and data associated with the user." text-translate="true">Delete Account</a>
+            <a id="delete-user" class="btn btn-outline-danger mb-5" data-confirm-input="DELETE" data-bs-toggle="modal" data-bs-target="#ConfirmModal" asp-action="DeleteUserPost" data-description="@StringLocalizer["This action will also delete all stores, invoices, apps and data associated with the user."]" text-translate="true">Delete Account</a>
         </div>
     </div>
 </form>
 <partial name="_Confirm"
-         model="@(new ConfirmModel("Delete user", "The user will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your user.", "Delete", actionName: nameof(BTCPayServer.Controllers.UIManageController.DeleteUserPost)))"/>
+         model="@(new ConfirmModel(StringLocalizer["Delete user"], StringLocalizer["The user will be permanently deleted. This action will also delete all stores, invoices, apps and data associated with your user."], StringLocalizer["Delete"], actionName: nameof(BTCPayServer.Controllers.UIManageController.DeleteUserPost)))"/>
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>

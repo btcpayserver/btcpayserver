@@ -17,9 +17,9 @@
             <small class="badge bg-warning rounded-pill ms-1 ms-sm-0" title="@type">@displayType</small>
         }
     }
-    private static string StoreName(string title)
+    private string StoreName(string title)
     {
-        return string.IsNullOrEmpty(title) ? "Unnamed Store" : title;
+        return string.IsNullOrEmpty(title) ? StringLocalizer["Unnamed Store"] : title;
     }
 	#pragma warning restore 1998
 }
@@ -44,7 +44,7 @@ else
                 {
                     <vc:icon symbol="nav-store"/>
                 }
-                <span>@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</span>
+                <span>@(Model.CurrentStoreId == null ? StringLocalizer["Select Store"] : Model.CurrentDisplayName)</span>
                 <vc:icon symbol="caret-down"/>
             </button>
             <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
@@ -58,15 +58,15 @@ else
                 {
                     <li><hr class="dropdown-divider"></li>
                 }
-                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Create)" id="StoreSelectorCreate">Create Store</a></li>
+                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Create)" id="StoreSelectorCreate" text-translate="true">Create Store</a></li>
                 @if (Model.ArchivedCount > 0)
                 {
                     <li><hr class="dropdown-divider"></li>
-                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Index)" id="StoreSelectorArchived">@Model.ArchivedCount Archived Store@(Model.ArchivedCount == 1 ? "" : "s")</a></li>
+                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Index)" id="StoreSelectorArchived">@(Model.ArchivedCount == 1 ? StringLocalizer["{0} Archived Store", Model.ArchivedCount] : StringLocalizer["{0} Archived Stores", Model.ArchivedCount])</a></li>
                 }
                 @*
                 <li permission="@Policies.CanModifyServerSettings"><hr class="dropdown-divider"></li>
-                <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.ActivePageClass(ServerNavPages.Stores)" id="StoreSelectorAdminStores">Admin Store Overview</a></li>
+                <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.ActivePageClass(ServerNavPages.Stores)" id="StoreSelectorAdminStores" text-translate="true">Admin Store Overview</a></li>
                 *@
             </ul>
         </div>

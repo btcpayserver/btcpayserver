@@ -1,7 +1,7 @@
 @using BTCPayServer.Views.Stores
 @model BTCPayServer.Plugins.Shopify.Models.ShopifySettings
 @{
-    ViewData.SetActivePage("shopify", nameof(StoreNavPages), "Shopify", Context.GetStoreData().Id);
+    ViewData.SetActivePage("shopify", nameof(StoreNavPages), StringLocalizer["Shopify"], Context.GetStoreData().Id);
 
     var shopifyCredsSet = Model?.IntegratedAt.HasValue is true;
     var shopifyUrl = Model?.ShopifyUrl;
@@ -11,7 +11,7 @@
     <h2 class="my-1">
         @ViewData["Title"]
         <small>
-            <a href="https://docs.btcpayserver.org/Shopify" target="_blank" rel="noreferrer noopener" title="More information...">
+            <a href="https://docs.btcpayserver.org/Shopify" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                 <vc:icon symbol="info" />
             </a>
         </small>

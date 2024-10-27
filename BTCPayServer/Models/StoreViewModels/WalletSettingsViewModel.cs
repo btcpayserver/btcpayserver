@@ -9,12 +9,15 @@ namespace BTCPayServer.Models.StoreViewModels
         public WalletId WalletId { get; set; }
         public string StoreId { get; set; }
         public bool IsHotWallet { get; set; }
+
+        [Display(Name = "Enabled")]
         public bool Enabled { get; set; }
         public bool CanUsePayJoin { get; set; }
 
         [Display(Name = "Enable Payjoin/P2EP")]
         public bool PayJoinEnabled { get; set; }
 
+        [Display(Name = "Label")]
         public string Label { get; set; }
 
         public string DerivationSchemeInput { get; set; }

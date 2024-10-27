@@ -44,7 +44,7 @@
     <input type="hidden" asp-for="Status" value="@Model.Status" />
 
     <div class="col-12 col-md-6 col-lg-4 mb-3 mb-md-0">
-        <input asp-for="SearchText" class="form-control" placeholder="Search…" />
+        <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
     </div>
 
     <div class="btn-group col-12 col-md-auto mb-3 mb-md-0" role="group" aria-label="View Notification">
@@ -76,11 +76,11 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "invoicestate")" class="dropdown-item @(HasArrayFilter("type", "invoicestate") ? "custom-active" : "")">Invoice</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "payout")" class="dropdown-item @(HasArrayFilter("type", "payout") ? "custom-active" : "")">Payouts</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "newversion")" class="dropdown-item @(HasArrayFilter("type", "newversion") ? "custom-active" : "")">New Version</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "pluginupdate")" class="dropdown-item @(HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")">Plugin Updates</a>
-            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "userupdate")" class="dropdown-item @(HasArrayFilter("type", "userupdate") ? "custom-active" : "")">User Updates</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "invoicestate")" class="dropdown-item @(HasArrayFilter("type", "invoicestate") ? "custom-active" : "")" text-translate="true">Invoice</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "payout")" class="dropdown-item @(HasArrayFilter("type", "payout") ? "custom-active" : "")" text-translate="true">Payouts</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "newversion")" class="dropdown-item @(HasArrayFilter("type", "newversion") ? "custom-active" : "")" text-translate="true">New Version</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "pluginupdate")" class="dropdown-item @(HasArrayFilter("type", "pluginupdate") ? "custom-active" : "")" text-translate="true">Plugin Updates</a>
+            <a asp-action="Index" asp-route-count="@Model.Count" asp-route-status="@Model.Status" asp-route-searchTerm="@Model.Search.Toggle("type", "userupdate")" class="dropdown-item @(HasArrayFilter("type", "userupdate") ? "custom-active" : "")" text-translate="true">User Updates</a>
         </div>
     </div>
 
@@ -88,7 +88,7 @@
         <button id="StoresOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret w-100 w-md-auto" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (storesFilterCount > 0)
             {
-                <span>@storesFilterCount Store@(storesFilterCount > 1 ? "s" : "")</span>
+                <span>@(storesFilterCount == 1 ? StringLocalizer["{0} Store", storesFilterCount] : StringLocalizer["{0} Stores", storesFilterCount])</span>
             }
             else
             {
@@ -110,8 +110,6 @@
     </div>
 </form>
 
-
-
 @if (Model.Items.Count > 0)
 {
     <form method="post" asp-action="MassAction">
@@ -128,7 +126,7 @@
                             <th class="date-col">
                                 <div class="d-flex align-items-center gap-1">
                                     <span text-translate="true">Date</span>
-                                    <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                                    <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                                         <vc:icon symbol="time" />
                                     </button>
                                 </div>
@@ -182,12 +180,12 @@
                                     <div class="d-inline-flex align-items-center gap-3">
                                         @if (!string.IsNullOrEmpty(item.ActionLink))
                                         {
-                                            <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener">Details</a>
+                                            <a href="@item.ActionLink" class="btn btn-link p-0" rel="noreferrer noopener" text-translate="true">Details</a>
                                         }
                                         @if (!item.Seen)
                                         {
                                             <button class="btn btn-link p-0 btn-toggle-seen text-nowrap" type="submit" name="command" value="flip-individual:@(item.Id)">
-                                                <span>Mark as seen</span>
+                                                <span text-translate="true">Mark as seen</span>
                                             </button>
                                         }
                                     </div>
@@ -204,13 +202,10 @@
 }
 else
 {
-    <p class="text-secondary mt-3">
+    <p class="text-secondary mt-3" text-translate="true">
         There are no notifications.
     </p>
 }
-
-
-
 
 <style>
     .notification-row.loading {

@@ -7,7 +7,6 @@ using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 
@@ -16,29 +15,28 @@ namespace BTCPayServer.Payments.Bitcoin
     public class BitcoinCheckoutModelExtension : ICheckoutModelExtension
     {
         public const string CheckoutBodyComponentName = "BitcoinCheckoutBody";
-        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly BTCPayNetwork _Network;
         private readonly DisplayFormatter _displayFormatter;
         private readonly IPaymentLinkExtension paymentLinkExtension;
         private readonly IPaymentLinkExtension? lnPaymentLinkExtension;
         private readonly IPaymentLinkExtension? lnurlPaymentLinkExtension;
         private readonly string? _bech32Prefix;
+        private readonly PaymentMethodId lnPmi;
+        private readonly PaymentMethodId lnurlPmi;
 
         public BitcoinCheckoutModelExtension(
             PaymentMethodId paymentMethodId,
             BTCPayNetwork network,
             IEnumerable<IPaymentLinkExtension> paymentLinkExtensions,
-            DisplayFormatter displayFormatter,
-            PaymentMethodHandlerDictionary handlers)
+            DisplayFormatter displayFormatter)
         {
             PaymentMethodId = paymentMethodId;
-            _handlers = handlers;
             _Network = network;
             _displayFormatter = displayFormatter;
+            lnPmi = PaymentTypes.LN.GetPaymentMethodId(_Network.CryptoCode);
+            lnurlPmi = PaymentTypes.LNURL.GetPaymentMethodId(_Network.CryptoCode);
             paymentLinkExtension = paymentLinkExtensions.Single(p => p.PaymentMethodId == PaymentMethodId);
-            var lnPmi = PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode);
             lnPaymentLinkExtension = paymentLinkExtensions.SingleOrDefault(p => p.PaymentMethodId == lnPmi);
-            var lnurlPmi = PaymentTypes.LNURL.GetPaymentMethodId(network.CryptoCode);
             lnurlPaymentLinkExtension = paymentLinkExtensions.SingleOrDefault(p => p.PaymentMethodId == lnurlPmi);
             _bech32Prefix = network.NBitcoinNetwork.GetBech32Encoder(Bech32Type.WITNESS_PUBKEY_ADDRESS, false) is { } enc ? Encoders.ASCII.EncodeData(enc.HumanReadablePart) : null;
         }
@@ -47,11 +45,10 @@ namespace BTCPayServer.Payments.Bitcoin
         public PaymentMethodId PaymentMethodId { get; }
         public void ModifyCheckoutModel(CheckoutModelContext context)
         {
-            if (context is not { Handler: BitcoinLikePaymentHandler handler })
-                return;
-
+            var handler = context.Handler;
             var prompt = context.Prompt;
-            var details = handler.ParsePaymentPromptDetails(prompt.Details);
+            if (handler.ParsePaymentPromptDetails(prompt.Details) is not BitcoinPaymentPromptDetails details)
+                return;
             context.Model.CheckoutBodyComponentName = CheckoutBodyComponentName;
             context.Model.ShowRecommendedFee = context.StoreBlob.ShowRecommendedFee;
             context.Model.FeeRate = details.RecommendedFeeRate.SatoshiPerByte;
@@ -62,7 +59,6 @@ namespace BTCPayServer.Payments.Bitcoin
             string? lightningFallback = null;
             if (bip21Case)
             {
-                var lnPmi = PaymentTypes.LN.GetPaymentMethodId(handler.Network.CryptoCode);
                 var lnPrompt = context.InvoiceEntity.GetPaymentPrompt(lnPmi);
                 if (lnPrompt is { Destination: not null })
                 {
@@ -72,9 +68,10 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
                 else
                 {
-                    var lnurlPmi = PaymentTypes.LNURL.GetPaymentMethodId(handler.Network.CryptoCode);
                     var lnurlPrompt = context.InvoiceEntity.GetPaymentPrompt(lnurlPmi);
-                    var lnUrl = lnurlPrompt is null ? null : lnurlPaymentLinkExtension?.GetPaymentLink(lnurlPrompt, context.UrlHelper);
+                    var lnUrl = lnurlPrompt is null
+                        ? null
+                        : lnurlPaymentLinkExtension?.GetPaymentLink(lnurlPrompt, context.UrlHelper);
                     if (lnUrl is not null)
                         lightningFallback = lnUrl;
 
@@ -86,12 +83,15 @@ namespace BTCPayServer.Payments.Bitcoin
                 }
             }
 
-            
-            var paymentData = context.InvoiceEntity.GetAllBitcoinPaymentData(handler, true)?.MinBy(o => o.ConfirmationCount);
-            if (paymentData is not null)
+
+            if (handler is BitcoinLikePaymentHandler bitcoinHandler)
             {
-                context.Model.RequiredConfirmations = NBXplorerListener.ConfirmationRequired(context.InvoiceEntity, paymentData);
-                context.Model.ReceivedConfirmations = paymentData.ConfirmationCount;
+                var paymentData = context.InvoiceEntity.GetAllBitcoinPaymentData(bitcoinHandler, true)?.MinBy(o => o.ConfirmationCount);
+                if (paymentData is not null)
+                {
+                    context.Model.RequiredConfirmations = NBXplorerListener.ConfirmationRequired(context.InvoiceEntity, paymentData);
+                    context.Model.ReceivedConfirmations = paymentData.ConfirmationCount;
+                }
             }
 
             // We're leading the way in Bitcoin community with adding UPPERCASE Bech32 addresses in QR Code

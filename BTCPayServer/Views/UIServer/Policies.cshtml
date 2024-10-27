@@ -223,8 +223,9 @@
                                 <div class="form-group">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <label asp-for="DomainToAppMapping[index].Domain" class="form-label"></label>
-                                        <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
-                                            <span class="fa fa-times"></span> Remove Mapping
+                                        <button type="submit" title="@StringLocalizer["Remove domain mapping"]" name="command" value="@($"remove-domain:{index}")" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
+                                            <span class="fa fa-times"></span>
+                                            <span text-translate="true">Remove Mapping</span>
                                         </button>
                                     </div>
                                     <input asp-for="DomainToAppMapping[index].Domain" class="form-control"/>

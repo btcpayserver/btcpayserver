@@ -7,7 +7,7 @@
 @inject PayoutMethodHandlerDictionary PayoutHandlers;
 @{
     var storeId = Context.GetRouteValue("storeId") as string;
-    ViewData.SetActivePage(StoreNavPages.Payouts, $"Payouts{(string.IsNullOrEmpty(Model.PullPaymentName) ? string.Empty : " for pull payment " + Model.PullPaymentName)}", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Payouts, string.IsNullOrEmpty(Model.PullPaymentName) ? StringLocalizer["Payouts"] : StringLocalizer["Payouts for pull payment {0}", Model.PullPaymentName], Context.GetStoreData().Id);
     Model.PaginationQuery ??= new Dictionary<string, object>();
     Model.PaginationQuery.Add("pullPaymentId", Model.PullPaymentId);
     Model.PaginationQuery.Add("payoutMethodId", Model.PayoutMethodId);
@@ -24,14 +24,14 @@
     switch (Model.PayoutState)
     {
         case PayoutState.AwaitingApproval:
-            if (!Model.HasPayoutProcessor) stateActions.Add(("approve-pay", "Approve & Send"));
-            stateActions.Add(("approve", "Approve"));
-            stateActions.Add(("cancel", "Cancel"));
+            if (!Model.HasPayoutProcessor) stateActions.Add(("approve-pay", StringLocalizer["Approve & Send"]));
+            stateActions.Add(("approve", StringLocalizer["Approve"]));
+            stateActions.Add(("cancel", StringLocalizer["Cancel"]));
             break;
         case PayoutState.AwaitingPayment:
-            if (!Model.HasPayoutProcessor) stateActions.Add(("pay", "Send"));
-            stateActions.Add(("cancel", "Cancel"));
-            stateActions.Add(("mark-paid", "Mark as already paid"));
+            if (!Model.HasPayoutProcessor) stateActions.Add(("pay", StringLocalizer["Send"]));
+            stateActions.Add(("cancel", StringLocalizer["Cancel"]));
+            stateActions.Add(("mark-paid", StringLocalizer["Mark as already paid"]));
             break;
     }
 }
@@ -69,14 +69,12 @@
     <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
         <div class="flex-fill">
             <p class="mb-3">
-                Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.
-                <span permission="@Policies.CanModifyStoreSettings">You can also
-                <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">configure payout processors</a>
-                to automate payouts.</span>
+                <span text-translate="true">Payouts allow you to process pull payments, in the form of refunds, salary payouts, or withdrawals.</span>
+                <span permission="@Policies.CanModifyStoreSettings">You can also <a id="PayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId">configure payout processors</a> to automate payouts.</span>
             </p>
             <a href="https://docs.btcpayserver.org/Payouts/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
-        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
     </div>
@@ -87,8 +85,8 @@
 @if (!Model.HasPayoutProcessor)
 {
     <div class="alert alert-info mb-5" role="alert" permission="@Policies.CanModifyStoreSettings">
-        <strong>Pro tip:</strong> There are supported but unconfigured Payout Processors for this payout payment method.<br/>
-        Payout Processors help automate payouts so that you do not need to manually handle them.
+        <span text-translate="true">Pro tip: There are supported but unconfigured Payout Processors for this payout payment method.</span><br/>
+        <span text-translate="true">Payout Processors help automate payouts so that you do not need to manually handle them.</span>
         <a class="alert-link p-0" asp-action="ConfigureStorePayoutProcessors" asp-controller="UIPayoutProcessors" asp-route-storeId="@storeId" text-translate="true">Configure now</a>
     </div>
 }
@@ -240,6 +238,6 @@
     }
     else
     {
-        <p class="text-muted mb-0" id="@Model.PayoutState-no-payouts">There are no payouts matching this criteria.</p>
+        <p class="text-muted mb-0" id="@Model.PayoutState-no-payouts" text-translate="true">There are no payouts matching these criteria.</p>
     }
 </form>

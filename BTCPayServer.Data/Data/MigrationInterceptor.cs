@@ -38,6 +38,11 @@ namespace BTCPayServer.Data
                 if (entry is { Entity: IHasMigration { Migrated: true }, State: EntityState.Modified })
                     // It seems doing nothing, but this actually set all properties as modified
                     entry.State = EntityState.Modified;
+
+                if (entry is { Entity: PayoutData payout } && payout.State == Client.Models.PayoutState.Cancelled)
+                {
+                    throw new Exception(Environment.StackTrace);
+                }
             }
             return new ValueTask<InterceptionResult<int>>(result);
         }

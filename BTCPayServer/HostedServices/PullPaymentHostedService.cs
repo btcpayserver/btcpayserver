@@ -608,6 +608,7 @@ namespace BTCPayServer.HostedServices
                 if (req.Request.UpdateBlob is { } b)
                     payout.SetBlob(b, _jsonSerializerSettings);
                 Logs.PayServer.LogInformation("SAVING " + req.Request.State);
+                Logs.PayServer.LogInformation("SAVING " + req.Request.PayoutId);
                 await ctx.SaveChangesAsync();
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
                 req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.Ok);
@@ -792,6 +793,7 @@ namespace BTCPayServer.HostedServices
 
         private async Task HandleCancel(CancelRequest cancel)
         {
+            Logs.PayServer.LogInformation("CANCEL: " + cancel.PayoutIds.FirstOrDefault());
             try
             {
                 using var ctx = this._dbContextFactory.CreateContext();

@@ -571,6 +571,7 @@ namespace BTCPayServer.HostedServices
 
         private async Task HandleMarkPaid(InternalPayoutPaidRequest req)
         {
+            Logs.PayServer.LogInformation("HANDLE MARK PAID " + req.Request.State);
             try
             {
                 await using var ctx = _dbContextFactory.CreateContext();
@@ -578,12 +579,14 @@ namespace BTCPayServer.HostedServices
                     .FirstOrDefaultAsync();
                 if (payout is null)
                 {
+                    Logs.PayServer.LogInformation("payout is null");
                     req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.NotFound);
                     return;
                 }
 
                 if (payout.State == PayoutState.Completed)
                 {
+                    Logs.PayServer.LogInformation("payout is already complete");
                     req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.InvalidState);
                     return;
                 }
@@ -604,6 +607,7 @@ namespace BTCPayServer.HostedServices
                 payout.State = req.Request.State;
                 if (req.Request.UpdateBlob is { } b)
                     payout.SetBlob(b, _jsonSerializerSettings);
+                Logs.PayServer.LogInformation("SAVING " + req.Request.State);
                 await ctx.SaveChangesAsync();
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
                 req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.Ok);

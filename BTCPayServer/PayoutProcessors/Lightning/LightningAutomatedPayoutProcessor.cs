@@ -127,7 +127,8 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 		}
 		if (payoutData.State != PayoutState.InProgress || payoutData.Proof is not null)
 		{
-			await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
+            Logs.PayServer.LogError("MARK PAID " + payoutData.State);
+            await _pullPaymentHostedService.MarkPaid(new MarkPayoutRequest()
 			{
 				State = payoutData.State,
 				PayoutId = payoutData.Id,

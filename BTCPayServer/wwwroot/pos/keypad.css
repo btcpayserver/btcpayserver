@@ -74,30 +74,14 @@ button[data-bs-toggle] .icon {
     max-height: 6rem;
     color: var(--btcpay-body-text);
 }
+.keypad .btn:disabled,
+.keypad .btn.disabled {
+    color: var(--btcpay-body-text-muted);
+}
 .btcpay-pills label,
 .btn-secondary.rounded-pill {
     padding-left: 1rem;
     padding-right: 1rem;
-}
-
-/* make borders collapse by shifting rows and columns by 1px */
-/* second column */
-.keypad .btn:nth-child(3n-1) {
-    margin-left: -1px;
-}
-/* third column */
-.keypad .btn:nth-child(3n) {
-    margin-left: -1px;
-}
-/* from second row downwards */
-.keypad .btn:nth-child(n+4) {
-    margin-top: -1px;
-}
-/* ensure highlighted button is topmost */
-.keypad .btn:hover,
-.keypad .btn:focus,
-.keypad .btn:active {
-    z-index: 1;
 }
 
 #Calculation {

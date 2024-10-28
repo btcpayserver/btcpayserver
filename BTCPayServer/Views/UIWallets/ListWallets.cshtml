@@ -1,7 +1,7 @@
 ﻿@using BTCPayServer.Client
 @model BTCPayServer.Models.WalletViewModels.ListWalletsViewModel
 @{
-    ViewData.SetActivePage(WalletsNavPages.Index, "Wallets");
+    ViewData.SetActivePage(WalletsNavPages.Index, StringLocalizer["Wallets"]);
 }
 
 <partial name="_StatusMessage" />
@@ -10,7 +10,7 @@
     <h2 class="mb-0">
         @ViewData["Title"]
         <small>
-            <a href="https://docs.btcpayserver.org/Wallet/" target="_blank" rel="noreferrer noopener" title="More information...">
+            <a href="https://docs.btcpayserver.org/Wallet/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                 <vc:icon symbol="info" />
             </a>
         </small>

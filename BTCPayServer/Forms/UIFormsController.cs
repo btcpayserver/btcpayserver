@@ -89,8 +89,7 @@ public class UIFormsController : Controller
 
         if (!_formDataService.IsFormSchemaValid(modifyForm.FormConfig, out var form, out var error))
         {
-            ModelState.AddModelError(nameof(modifyForm.FormConfig),
-                $"Form config was invalid: {error})");
+            ModelState.AddModelError(nameof(modifyForm.FormConfig), StringLocalizer["Form config was invalid: {0}", error!]);
         }
         else
         {
@@ -117,7 +116,9 @@ public class UIFormsController : Controller
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = $"Form {(isNew ? "created" : "updated")} successfully."
+                Message = isNew
+                    ? StringLocalizer["Form created successfully."].Value
+                    : StringLocalizer["Form updated successfully."].Value
             });
             if (isNew)
             {
@@ -126,7 +127,7 @@ public class UIFormsController : Controller
         }
         catch (Exception e)
         {
-            ModelState.AddModelError("", $"An error occurred while saving: {e.Message}");
+            ModelState.AddModelError("", StringLocalizer["An error occurred while saving: {0}", e.Message]);
         }
 
         return View(modifyForm);
@@ -216,14 +217,13 @@ public class UIFormsController : Controller
 
         try
         {
-
-        var request = _formDataService.GenerateInvoiceParametersFromForm(form);
-        var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
-        if (inv.Price == 0 && inv.Type == InvoiceType.Standard && inv.ReceiptOptions?.Enabled is not false)
-        {
-            return RedirectToAction("InvoiceReceipt", "UIInvoice", new { invoiceId = inv.Id });
-        }
-        return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
+            var request = _formDataService.GenerateInvoiceParametersFromForm(form);
+            var inv = await invoiceController.CreateInvoiceCoreRaw(request, store, Request.GetAbsoluteRoot());
+            if (inv.Price == 0 && inv.Type == InvoiceType.Standard && inv.ReceiptOptions?.Enabled is not false)
+            {
+                return RedirectToAction("InvoiceReceipt", "UIInvoice", new { invoiceId = inv.Id });
+            }
+            return RedirectToAction("Checkout", "UIInvoice", new { invoiceId = inv.Id });
         }
         catch (Exception e)
         {

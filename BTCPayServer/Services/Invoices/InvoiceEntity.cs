@@ -371,6 +371,45 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         } = new Dictionary<string, decimal>();
+
+#nullable enable
+        public PaymentMethodId? GetDefaultPaymentMethodId(Data.StoreData store, BTCPayNetworkProvider networkProvider, HashSet<PaymentMethodId>? authorized = null)
+        {
+            PaymentMethodId? paymentMethodId = null;
+            PaymentMethodId? invoicePaymentId = DefaultPaymentMethod;
+            PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
+            authorized ??= GetPaymentPrompts().Select(p => p.PaymentMethodId).ToHashSet();
+            if (invoicePaymentId is not null)
+            {
+                if (authorized.Contains(invoicePaymentId))
+                    paymentMethodId = invoicePaymentId;
+            }
+            if (paymentMethodId is null && storePaymentId is not null)
+            {
+                if (authorized.Contains(storePaymentId))
+                    paymentMethodId = storePaymentId;
+            }
+            if (paymentMethodId is null && invoicePaymentId is not null)
+            {
+                paymentMethodId = invoicePaymentId.FindNearest(authorized);
+            }
+            if (paymentMethodId is null && storePaymentId is not null)
+            {
+                paymentMethodId = storePaymentId.FindNearest(authorized);
+            }
+            if (paymentMethodId is null)
+            {
+                var defaultBTC = PaymentTypes.CHAIN.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
+                var defaultLNURLPay = PaymentTypes.LNURL.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
+                paymentMethodId = authorized.FirstOrDefault(e => e == defaultBTC) ??
+                                  authorized.FirstOrDefault(e => e == defaultLNURLPay) ??
+                                  authorized.FirstOrDefault();
+            }
+
+            return paymentMethodId;
+        }
+#nullable restore
+
         public void UpdateTotals()
         {
             PaidAmount = new Amounts()

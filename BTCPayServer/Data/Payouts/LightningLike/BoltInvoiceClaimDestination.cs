@@ -23,6 +23,5 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         public uint256 PaymentHash { get; }
         public string Id => PaymentHash.ToString();
         public decimal? Amount { get; }
-        public bool IsExplicitAmountMinimum => true;
-    }
+    };
 }

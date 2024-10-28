@@ -36,7 +36,7 @@
         </div>
         <div class="form-group">
             <label asp-for="Settings.From" class="form-label" text-translate="true">Sender's Email Address</label>
-            <input asp-for="Settings.From" class="form-control" placeholder="Firstname Lastname <email@example.com>" />
+            <input asp-for="Settings.From" class="form-control" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" />
             <span asp-validation-for="Settings.From" class="text-danger"></span>
         </div>
         <div class="form-group">
@@ -55,8 +55,8 @@
             else
             {
                 <div class="input-group">
-                    <input value="Configured" type="text" readonly class="form-control"/>
-                    <button type="submit" class="btn btn-danger" name="command" value="ResetPassword" id="ResetPassword">Reset</button>
+                    <input value="@StringLocalizer["Configured"]" type="text" readonly class="form-control"/>
+                    <button type="submit" class="btn btn-danger" name="command" value="ResetPassword" id="ResetPassword" text-translate="true">Reset</button>
                 </div>
             }
         </div>

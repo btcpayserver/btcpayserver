@@ -5,7 +5,7 @@
 @model List<BTCPayServer.PayoutProcessors.UIPayoutProcessorsController.StorePayoutProcessorsView>
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, "Payout Processors", storeId);
+    ViewData.SetActivePage(StoreNavPages.PayoutProcessors, StringLocalizer["Payout Processors"], storeId);
 }
 <div class="sticky-header">
 	<h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
@@ -26,7 +26,7 @@
                     <thead>
                     <tr>
                         <th text-translate="true">Payment Method</th>
-                        <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
+                        <th class="actions-col" permission="@Policies.CanModifyStoreSettings"></th>
                     </tr>
                     </thead>
                     <tbody>

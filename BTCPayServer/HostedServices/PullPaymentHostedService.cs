@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Lightning;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments;
@@ -18,11 +19,13 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Rates;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBXplorer;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PullPaymentData = BTCPayServer.Data.PullPaymentData;
@@ -170,6 +173,12 @@ namespace BTCPayServer.HostedServices
             public bool IncludePullPaymentData { get; set; }
             public DateTimeOffset? From { get; set; }
             public DateTimeOffset? To { get; set; }
+            /// <summary>
+            /// All payouts are elligible for every processors with matching payout method.
+            /// However, some processor may be disabled for some payouts.
+            /// Setting this field will filter out payouts that have the processor disabled.
+            /// </summary>
+            public string Processor { get; set; }
         }
 
         public async Task<List<PayoutData>> GetPayouts(PayoutQuery payoutQuery)
@@ -261,6 +270,14 @@ namespace BTCPayServer.HostedServices
             if (payoutQuery.To is not null)
             {
                 query = query.Where(data => data.Date <= payoutQuery.To);
+            }
+            if (payoutQuery.Processor is not null)
+            {
+                var q = new JObject()
+                {
+                    ["DisabledProcessors"] = new JArray(payoutQuery.Processor)
+                }.ToString();
+                query = query.Where(data => !EF.Functions.JsonContains(data.Blob, q));
             }
             return await query.ToListAsync(cancellationToken);
         }
@@ -534,6 +551,8 @@ namespace BTCPayServer.HostedServices
                 if (cryptoAmount < minimumCryptoAmount)
                 {
                     req.Completion.TrySetResult(new PayoutApproval.ApprovalResult(PayoutApproval.Result.TooLowAmount, null));
+                    payout.State = PayoutState.Cancelled;
+                    await ctx.SaveChangesAsync();
                     return;
                 }
 
@@ -583,6 +602,8 @@ namespace BTCPayServer.HostedServices
                         break;
                 }
                 payout.State = req.Request.State;
+                if (req.Request.UpdateBlob is { } b)
+                    payout.SetBlob(b, _jsonSerializerSettings);
                 await ctx.SaveChangesAsync();
                 _eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payout));
                 req.Completion.SetResult(MarkPayoutRequest.PayoutPaidResult.Ok);
@@ -657,13 +678,6 @@ namespace BTCPayServer.HostedServices
                     }
                 }
 
-                if (req.ClaimRequest.Value <
-                    await payoutHandler.GetMinimumPayoutAmount(req.ClaimRequest.Destination))
-                {
-                    req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.AmountTooLow));
-                    return;
-                }
-
                 var payoutsRaw = withoutPullPayment
                     ? null
                     : await ctx.Payouts.Where(p => p.PullPaymentDataId == pp.Id)
@@ -672,7 +686,7 @@ namespace BTCPayServer.HostedServices
                 var payouts = payoutsRaw?.Select(o => new { Entity = o, Blob = o.GetBlob(_jsonSerializerSettings) });
                 var limit = pp?.Limit ?? 0;
                 var totalPayout = payouts?.Select(p => p.Entity.OriginalAmount)?.Sum();
-                var claimed = req.ClaimRequest.Value is decimal v ? v : limit - (totalPayout ?? 0);
+                var claimed = req.ClaimRequest.ClaimedAmount is decimal v ? v : limit - (totalPayout ?? 0);
                 if (totalPayout is not null && totalPayout + claimed > limit)
                 {
                     req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Overdraft));
@@ -730,6 +744,22 @@ namespace BTCPayServer.HostedServices
                             {
                                 payout.State = PayoutState.AwaitingPayment;
                                 payout.Amount = approveResult.CryptoAmount;
+                            }
+                            else if (approveResult.Result == PayoutApproval.Result.TooLowAmount)
+                            {
+                                payout.State = PayoutState.Cancelled;
+                                await ctx.SaveChangesAsync();
+                                req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.AmountTooLow));
+                                return;
+                            }
+                            else
+                            {
+                                payout.State = PayoutState.Cancelled;
+                                await ctx.SaveChangesAsync();
+                                // We returns Ok even if the approval failed. This is expected.
+                                // Because the claim worked, what didn't is the approval
+                                req.Completion.TrySetResult(new ClaimRequest.ClaimResponse(ClaimRequest.ClaimResult.Ok));
+                                return;
                             }
                         }
                     }
@@ -923,6 +953,7 @@ namespace BTCPayServer.HostedServices
         public string PayoutId { get; set; }
         public JObject Proof { get; set; }
         public PayoutState State { get; set; } = PayoutState.Completed;
+        public PayoutBlob UpdateBlob { get; internal set; }
 
         public static string GetErrorMessage(PayoutPaidResult result)
         {
@@ -942,28 +973,40 @@ namespace BTCPayServer.HostedServices
 
     public class ClaimRequest
     {
-        public static (string error, decimal? amount) IsPayoutAmountOk(IClaimDestination destination, decimal? amount, string payoutCurrency = null, string ppCurrency = null)
+        public record ClaimedAmountResult
         {
-            return amount switch
+            public record Error(string Message) : ClaimedAmountResult;
+            public record Success(decimal? Amount) : ClaimedAmountResult;
+        }
+        
+        
+        public static ClaimedAmountResult GetClaimedAmount(IClaimDestination destination, decimal? amount, string payoutCurrency, string ppCurrency)
+        {
+            var amountsComparable = false;
+            var destinationAmount = destination.Amount;
+            if (destinationAmount is not null && 
+                payoutCurrency == "BTC" &&
+                ppCurrency == "SATS")
             {
-                null when destination.Amount is null && ppCurrency is null => ("Amount is not specified in destination or payout request", null),
-                null when destination.Amount is null => (null, null),
-                null when destination.Amount != null => (null, destination.Amount),
-                not null when destination.Amount is null => (null, amount),
-                not null when destination.Amount != null && amount != destination.Amount &&
-                              destination.IsExplicitAmountMinimum &&
-                              payoutCurrency == "BTC" && ppCurrency == "SATS" &&
-                              new Money(amount.Value, MoneyUnit.Satoshi).ToUnit(MoneyUnit.BTC) < destination.Amount =>
-                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount", null),
-                not null when destination.Amount != null && amount != destination.Amount &&
-                              destination.IsExplicitAmountMinimum &&
-                              !(payoutCurrency == "BTC" && ppCurrency == "SATS") &&
-                              amount < destination.Amount =>
-                    ($"Amount is implied in both destination ({destination.Amount}) and payout request ({amount}), but the payout request amount is less than the destination amount", null),
-                not null when destination.Amount != null && amount != destination.Amount &&
-                              !destination.IsExplicitAmountMinimum =>
-                    ($"Amount is implied in destination ({destination.Amount}) that does not match the payout amount provided {amount})", null),
-                _ => (null, amount)
+                destinationAmount = new LightMoney(destinationAmount.Value, LightMoneyUnit.BTC).ToUnit(LightMoneyUnit.Satoshi);
+                amountsComparable = true;
+            }
+            if (destinationAmount is not null && payoutCurrency == ppCurrency)
+            {
+                amountsComparable = true;
+            }
+            return (destinationAmount, amount) switch
+            {
+                (null, null) when ppCurrency is null => new ClaimedAmountResult.Error("Amount is not specified in destination or payout request"),
+                ({ } a, null) when ppCurrency is null => new ClaimedAmountResult.Success(a),
+                (null, null) => new ClaimedAmountResult.Success(null),
+                ({ } a, null) when amountsComparable => new ClaimedAmountResult.Success(a),
+                (null, { } b) => new ClaimedAmountResult.Success(b),
+                ({ } a, { } b) when amountsComparable && a == b => new ClaimedAmountResult.Success(a),
+                ({ } a, { } b) when amountsComparable && a > b => new ClaimedAmountResult.Error($"The destination's amount ({a} {ppCurrency}) is more than the claimed amount ({b} {ppCurrency})."),
+                ({ } a, { } b) when amountsComparable && a < b => new ClaimedAmountResult.Success(a),
+                ({ } a, { } b) when !amountsComparable => new ClaimedAmountResult.Success(b),
+                _ => new ClaimedAmountResult.Success(amount)
             };
         }
 
@@ -1020,7 +1063,7 @@ namespace BTCPayServer.HostedServices
 
         public PayoutMethodId PayoutMethodId { get; set; }
         public string PullPaymentId { get; set; }
-        public decimal? Value { get; set; }
+        public decimal? ClaimedAmount { get; set; }
         public IClaimDestination Destination { get; set; }
         public string StoreId { get; set; }
         public bool? PreApprove { get; set; }

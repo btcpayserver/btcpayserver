@@ -331,8 +331,8 @@ namespace BTCPayServer.Controllers
                 }
 
                 return View("Confirm", new ConfirmModel(StringLocalizer["Delete admin"],
-                    $"The admin <strong>{Html.Encode(user.Email)}</strong> will be permanently deleted. This action will also delete all accounts, users and data associated with the server account. Are you sure?",
-                    "Delete"));
+                    StringLocalizer["The admin {0} will be permanently deleted. This action will also delete all accounts, users and data associated with the server account. Are you sure?", Html.Encode(user.Email)],
+                    StringLocalizer["Delete"]));
             }
 
             return View("Confirm", new ConfirmModel(StringLocalizer["Delete user"], $"The user <strong>{Html.Encode(user.Email)}</strong> will be permanently deleted. Are you sure?", "Delete"));

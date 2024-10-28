@@ -3,7 +3,7 @@
 @inject WebhookSender WebhookSender 
 @{
     var storeId = Context.GetStoreData().Id;
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhook", storeId);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, StringLocalizer["Webhook"], storeId);
 }
 
 @section PageHeadContent {
@@ -45,7 +45,7 @@
                 <label asp-for="Secret" class="form-label"></label>
                 <div class="input-group">
                     <input asp-for="Secret" type="password" class="form-control" value="@Model.Secret">
-                    <button type="button" class="btn btn-secondary px-3 only-for-js" title="Toggle password visibility" data-toggle-password="#Secret">
+                    <button type="button" class="btn btn-secondary px-3 only-for-js" title="@StringLocalizer["Toggle password visibility"]" data-toggle-password="#Secret">
                         <vc:icon symbol="actions-show" />
                     </button>
                 </div>

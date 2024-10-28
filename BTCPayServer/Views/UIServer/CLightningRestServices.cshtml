@@ -1,6 +1,6 @@
 ﻿@model LndServicesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, $"C-Lightning {Model.ConnectionType}");
+    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Core Lightning {0}", Model.ConnectionType]);
 }
 
 <div class="sticky-header">

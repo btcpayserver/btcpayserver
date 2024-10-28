@@ -42,7 +42,7 @@
             <p class="mb-3" text-translate="true">Requests may be paid in partial. They will remain valid until time expires or when paid what is due.</p>
             <a href="https://docs.btcpayserver.org/PaymentRequests/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
-        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
     </div>
@@ -54,7 +54,7 @@
     <input type="hidden" asp-for="Count" />
     <input type="hidden" asp-for="TimezoneOffset" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
+    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
@@ -86,7 +86,7 @@
                     <th class="date-col">
                         <div class="d-flex align-items-center gap-1">
                             <span text-translate="true">Expiry</span>
-                            <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                            <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                                 <vc:icon symbol="time" />
                             </button>
                         </div>
@@ -138,7 +138,7 @@
 }
 else
 {
-    <p class="text-secondary mt-3">
+    <p class="text-secondary mt-3" text-translate="true">
         There are no payment requests matching your criteria.
     </p>
 }

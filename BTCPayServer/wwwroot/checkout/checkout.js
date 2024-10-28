@@ -185,6 +185,9 @@ function initApp() {
             },
             realPaymentMethodCurrency () {
                 return this.srvModel.paymentMethodCurrency.toLowerCase() === 'sats' ? 'BTC' : this.srvModel.paymentMethodCurrency;
+            },
+            displayedPaymentMethods: function () {
+                return this.srvModel?.availablePaymentMethods?.filter(pm => pm.displayed) ?? [];
             }
         },
         watch: {

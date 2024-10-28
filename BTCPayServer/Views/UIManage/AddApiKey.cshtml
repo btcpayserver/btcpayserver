@@ -113,7 +113,7 @@
                                                 <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-select w-auto flex-grow-0" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
                                             }
                                             <span asp-validation-for="PermissionValues[i].SpecificStores[index]" class="text-danger"></span>
-                                            <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")" class="btn btn-danger">
+                                            <button type="submit" title="@StringLocalizer["Remove Store Permission"]" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")" class="btn btn-danger">
                                                 Remove
                                             </button>
                                         </div>

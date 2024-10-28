@@ -196,10 +196,13 @@ namespace BTCPayServer.Controllers
         }
 
         [AllowAnonymous]
-        [HttpPost("pull-payments/{pullPaymentId}/claim")]
+        [HttpPost("pull-payments/{pullPaymentId}")]
         public async Task<IActionResult> ClaimPullPayment(string pullPaymentId, ViewPullPaymentModel vm, CancellationToken cancellationToken)
         {
-            await using var ctx = _dbContextFactory.CreateContext();
+			if (vm.ClaimedAmount == 0)
+				vm.ClaimedAmount = null;
+
+			await using var ctx = _dbContextFactory.CreateContext();
             var pp = await ctx.PullPayments.FindAsync(pullPaymentId);
             if (pp is null)
             {
@@ -251,14 +254,14 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError(nameof(vm.Destination), error ?? StringLocalizer["Invalid destination or payment method"]);
                 return await ViewPullPayment(pullPaymentId);
             }
-            var amtError = ClaimRequest.IsPayoutAmountOk(destination, vm.ClaimedAmount == 0 ? null : vm.ClaimedAmount, payoutHandler.Currency, pp.Currency);
-            if (amtError.error is not null)
+            var claimedAmount = ClaimRequest.GetClaimedAmount(destination, vm.ClaimedAmount, payoutHandler.Currency, pp.Currency);
+            if (claimedAmount is ClaimRequest.ClaimedAmountResult.Error err2)
             {
-                ModelState.AddModelError(nameof(vm.ClaimedAmount), amtError.error);
+                ModelState.AddModelError(nameof(vm.ClaimedAmount), err2.Message);
             }
-            else if (amtError.amount is not null)
+            else if (claimedAmount is ClaimRequest.ClaimedAmountResult.Success succ)
             {
-                vm.ClaimedAmount = amtError.amount.Value;
+				vm.ClaimedAmount = succ.Amount;
             }
 
             if (!ModelState.IsValid)
@@ -270,7 +273,7 @@ namespace BTCPayServer.Controllers
             {
                 Destination = destination,
                 PullPaymentId = pullPaymentId,
-                Value = vm.ClaimedAmount,
+                ClaimedAmount = vm.ClaimedAmount,
                 PayoutMethodId = payoutMethodId,
                 StoreId = pp.StoreId
             });
@@ -283,11 +286,19 @@ namespace BTCPayServer.Controllers
                 return await ViewPullPayment(pullPaymentId);
             }
 
-            TempData.SetStatusMessageModel(new StatusMessageModel
-            {
-                Message = $"Your claim request of {_displayFormatter.Currency(vm.ClaimedAmount, pp.Currency, DisplayFormatter.CurrencyFormat.Symbol)} to {vm.Destination} has been submitted and is awaiting {(result.PayoutData.State == PayoutState.AwaitingApproval ? "approval" : "payment")}.",
-                Severity = StatusMessageModel.StatusSeverity.Success
-            });
+
+			TempData.SetStatusMessageModel(new StatusMessageModel
+			{
+				Message = (vm.ClaimedAmount, result.PayoutData.State) switch
+				{
+					(null, PayoutState.AwaitingApproval) => $"Your claim request to {vm.Destination} has been submitted and is awaiting approval",
+					(null, PayoutState.AwaitingPayment) => $"Your claim request to {vm.Destination} has been submitted and is awaiting payment",
+					({ } a, PayoutState.AwaitingApproval) => $"Your claim request of {_displayFormatter.Currency(a, pp.Currency, DisplayFormatter.CurrencyFormat.Symbol)} to {vm.Destination} has been submitted and is awaiting approval",
+					({ } a, PayoutState.AwaitingPayment) => $"Your claim request of {_displayFormatter.Currency(a, pp.Currency, DisplayFormatter.CurrencyFormat.Symbol)} to {vm.Destination} has been submitted and is awaiting payment",
+					_ => $"Unexpected payout state ({result.PayoutData.State})"
+				},
+				Severity = StatusMessageModel.StatusSeverity.Success
+			});
 
             return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId });
         }

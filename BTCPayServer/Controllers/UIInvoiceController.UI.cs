@@ -764,34 +764,7 @@ namespace BTCPayServer.Controllers
                 paymentMethodId = null;
             if (paymentMethodId is null)
             {
-                PaymentMethodId? invoicePaymentId = invoice.DefaultPaymentMethod;
-                PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
-                if (invoicePaymentId is not null)
-                {
-                    if (displayedPaymentMethods.Contains(invoicePaymentId))
-                        paymentMethodId = invoicePaymentId;
-                }
-                if (paymentMethodId is null && storePaymentId is not null)
-                {
-                    if (displayedPaymentMethods.Contains(storePaymentId))
-                        paymentMethodId = storePaymentId;
-                }
-                if (paymentMethodId is null && invoicePaymentId is not null)
-                {
-                    paymentMethodId = invoicePaymentId.FindNearest(displayedPaymentMethods);
-                }
-                if (paymentMethodId is null && storePaymentId is not null)
-                {
-                    paymentMethodId = storePaymentId.FindNearest(displayedPaymentMethods);
-                }
-                if (paymentMethodId is null)
-                {
-                    var defaultBTC = PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode);
-                    var defaultLNURLPay  = PaymentTypes.LNURL.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode);
-                    paymentMethodId = displayedPaymentMethods.FirstOrDefault(e => e == defaultBTC) ??
-                                      displayedPaymentMethods.FirstOrDefault(e => e == defaultLNURLPay) ??
-                                      displayedPaymentMethods.FirstOrDefault();
-                }
+                paymentMethodId = invoice.GetDefaultPaymentMethodId(store, _NetworkProvider, displayedPaymentMethods);
                 isDefaultPaymentId = true;
             }
             if (paymentMethodId is null)
@@ -883,7 +856,7 @@ namespace BTCPayServer.Controllers
             var model = new CheckoutModel
             {
                 Activated = prompt.Activated,
-                PaymentMethodName = _prettyName.PrettyName(paymentMethodId),
+                PaymentMethodName = _prettyName.PrettyName(paymentMethodId, true),
                 PaymentMethodCurrency = prompt.Currency,
                 RootPath = Request.PathBase.Value.WithTrailingSlash(),
                 OrderId = orderId,
@@ -935,7 +908,7 @@ namespace BTCPayServer.Controllers
                                               {
                                                   Displayed = displayedPaymentMethods.Contains(kv.PaymentMethodId),
                                                   PaymentMethodId = kv.PaymentMethodId,
-                                                  PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId),
+                                                  PaymentMethodName = _prettyName.PrettyName(kv.PaymentMethodId, true),
                                                   Order = kv.PaymentMethodId switch
                                                   {
                                                       _ when PaymentTypes.CHAIN.GetPaymentMethodId(_NetworkProvider.DefaultNetwork.CryptoCode) == kv.PaymentMethodId => 0,

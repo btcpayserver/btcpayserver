@@ -16,16 +16,16 @@
 </style>
 <div id="coin-selection-app" class="only-for-js" v-cloak>
     <div class="d-sm-flex justify-content-between align-items-center">
-        <h5 class="mb-sm-0">Coin selection</h5>
+        <h5 class="mb-sm-0" text-translate="true">Coin selection</h5>
         <span class="text-muted text-end">
-            <span>{{selectedItems.length}} selected</span>
+            <span>@StringLocalizer["{0} selected", "{{selectedItems.length}}"]</span>
             <span v-show="selectedItems.length > 0">({{selectedAmount}} @Model.CryptoCode)</span>
-            <span>/ {{items.length}} total (@Model.CurrentBalance&nbsp;@Model.CryptoCode)</span>
+            <span>/ @StringLocalizer["{0} total", "{{items.length}}"] (@Model.CurrentBalance&nbsp;@Model.CryptoCode)</span>
         </span>
     </div>
-    <input type="text" v-model="filter" class="form-control my-3" placeholder="Filter by transaction id, amount, label, comment.."/>
+    <input type="text" v-model="filter" class="form-control my-3" placeholder="@StringLocalizer["Filter by transaction id, amount, label, comment"]"/>
     <div class="d-flex gap-3 my-2 align-items-center">
-        <span>Sort by</span>
+        <span text-translate="true">Sort by</span>
         <div class="btn-group gap-3" role="group">
           <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('amount')}" v-on:click="sortBy('amount')" text-translate="true">Amount</button>
           <button type="button" class="btn btn-link p-0" :class="{active: sortOrder.startsWith('confs')}" v-on:click="sortBy('confs')" text-translate="true">Confirmations</button>
@@ -74,9 +74,7 @@
                 <a class="page-link p-0" tabindex="-1" href="#" v-on:click.prevent="page = page -1">«</a>
             </li>
             <li class="page-item disabled">
-                <span class="page-link p-0">
-                    Showing {{pageStart+1}}-{{pageEnd}} of {{currentItems.length}}
-                </span>
+                <span class="page-link p-0">@StringLocalizer["Showing {0} of {1}", "{{pageStart+1}}-{{pageEnd}}", "{{currentItems.length}}"]</span>
             </li>
             <li class="page-item" :class="{'disabled' : pageEnd>= currentItems.length}">
                 <a class="page-link p-0" href="#" v-on:click.prevent="page = page +1">»</a>

@@ -31,5 +31,5 @@ public class AppItem
     public int? Inventory { get; set; }
 
     [JsonExtensionData]
-    public Dictionary<string, object> AdditionalData { get; set; }
+    public Dictionary<string, JToken> AdditionalData { get; set; }
 }

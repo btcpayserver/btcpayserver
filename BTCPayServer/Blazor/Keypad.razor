@@ -18,6 +18,7 @@
         <div class="fw-bold lh-sm" id="Amount" style="font-size:@($"{FontSize}px")" @ref="_keypadAmount">@FormatCurrency(GetTotal(), false)</div>
         <div class="text-muted text-center mt-2" id="Calculation">@Calculation(Model)</div>
     </div>
+    @{ var amount = GetAmount(); }
     @if (IsDiscountEnabled || IsTipEnabled)
     {
         <div id="ModeTabs" class="tab-content mb-n2">
@@ -65,7 +66,6 @@
             }
         </div>
         <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2 pb-1" role="tablist">
-            @{ var amount = GetAmount(); }
             @foreach (var mode in GetModes())
             {
                 <input id="ModeTablist-@mode" name="mode" value="@mode" type="radio" role="tab"
@@ -81,7 +81,7 @@
     <div class="keypad">
         @foreach (var key in Keys)
         {
-            <button disabled="@(key == '+' && Mode != InputMode.Amount)" @onclick="@(_ => KeyPress(key))" @onclick:preventDefault @ondblclick="@(_ => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">
+            <button disabled="@(key == '+' && (Mode != InputMode.Amount || amount <= 0))" @onclick="@(_ => KeyPress(key))" @onclick:preventDefault @ondblclick="@(_ => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">
                 @switch (key)
                 {
                     case 'C':
@@ -373,8 +373,8 @@
                     // clear latest value
                     Model.Amounts[lastIndex] = 0;
                 }
-            } else if (key == '+' && lastAmount != 0) {
-                Model.Amounts.Add(0);
+            } else if (key == '+') {
+                if (lastAmount > 0) Model.Amounts.Add(0);
             } else { // Is a digit
                 Model.Amounts[lastIndex] = Math.Min(ApplyKeyToValue(key, lastAmount, CurrencyDivisibility), decimal.MaxValue / 10);
             }

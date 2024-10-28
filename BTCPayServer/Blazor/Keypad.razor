@@ -81,7 +81,20 @@
     <div class="keypad">
         @foreach (var key in Keys)
         {
-            <button disabled="@(key == '+' && Mode != InputMode.Amount)" @onclick="@(_ => KeyPress(key))" @onclick:preventDefault @ondblclick="@(_ => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">@key</button>
+            <button disabled="@(key == '+' && Mode != InputMode.Amount)" @onclick="@(_ => KeyPress(key))" @onclick:preventDefault @ondblclick="@(_ => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">
+                @switch (key)
+                {
+                    case 'C':
+                        <Icon Symbol="keypad-clear" />
+                        break;
+                    case '+':
+                        <Icon Symbol="keypad-plus" />
+                        break;
+                    default:
+                        <span>@key</span>
+                        break;
+                }
+            </button>
         }
     </div>
     <button class="btn btn-lg btn-primary mx-3" type="submit" disabled="@IsSubmitting" id="pay-button" @onclick="@(_ => { IsSubmitting = true; })">

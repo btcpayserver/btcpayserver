@@ -10,6 +10,8 @@
     grid-template-columns: repeat(3, 1fr);
 }
 .keypad .btn {
+    --icon-size: 1.75rem;
+
     display: flex;
     align-items: center;
     justify-content: center;
@@ -17,8 +19,8 @@
     position: relative;
     border-radius: 0;
     border-color: transparent !important;
-    font-weight: var(--btcpay-font-weight-semibold);
-    font-size: 24px;
+    font-weight: var(--btcpay-font-weight-bold);
+    font-size: var(--icon-size);
     min-height: 3.5rem;
     height: 8vh;
     max-height: 6rem;

@@ -27,7 +27,11 @@ public partial class AltcoinsPlugin
             CryptoImagePath = "imlegacy/liquid.png",
             DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainName),
             CoinType = ChainName == ChainName.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
-            SupportRBF = true
+            SupportRBF = true,
+            SupportLightning = false,
+            SupportPayJoin = false,
+            VaultSupported = false,
+            ReadonlyWallet = true
         }.SetDefaultElectrumMapping(ChainName);
 
         var blockExplorerLink = ChainName == ChainName.Mainnet ? "https://liquid.network/tx/{0}" : "https://liquid.network/testnet/tx/{0}";

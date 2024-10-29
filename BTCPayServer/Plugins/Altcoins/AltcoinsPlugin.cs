@@ -1,15 +1,6 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Hosting;
-using BTCPayServer.Logging;
-using Microsoft.AspNetCore.HttpOverrides;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Protocol;
 using NBXplorer;
 
 namespace BTCPayServer.Plugins.Altcoins
@@ -37,15 +28,12 @@ namespace BTCPayServer.Plugins.Altcoins
                 {
                     // Activating LBTC automatically activate the other liquid assets
                     InitUSDT(services, selectedChains, liquidNBX);
-                    InitETB(services, selectedChains, liquidNBX);
                     InitLCAD(services, selectedChains, liquidNBX);
                 }
                 else
                 {
                     if (selectedChains.Contains("USDT"))
                         InitUSDT(services, selectedChains, liquidNBX);
-                    if (selectedChains.Contains("ETB"))
-                        InitETB(services, selectedChains, liquidNBX);
                     if (selectedChains.Contains("LCAD"))
                         InitLCAD(services, selectedChains, liquidNBX);
                 }

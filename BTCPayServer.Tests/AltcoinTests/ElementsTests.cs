@@ -63,7 +63,6 @@ namespace BTCPayServer.Tests
                 //no tether on our regtest, lets create it and set it
                 var tether = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT");
                 var lbtc = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("LBTC");
-                var etb = tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("ETB");
                 var issueAssetResult = await tester.LBTCExplorerNode.SendCommandAsync("issueasset", 100000, 0);
                 tether.AssetId = uint256.Parse(issueAssetResult.Result["asset"].ToString());
                 ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("USDT").Network)
@@ -71,15 +70,10 @@ namespace BTCPayServer.Tests
                 Assert.Equal(tether.AssetId, tester.NetworkProvider.GetNetwork<ElementsBTCPayNetwork>("USDT").AssetId);
                 Assert.Equal(tether.AssetId, ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("USDT").Network).AssetId);
 
-                var issueAssetResult2 = await tester.LBTCExplorerNode.SendCommandAsync("issueasset", 100000, 0);
-                etb.AssetId = uint256.Parse(issueAssetResult2.Result["asset"].ToString());
-                ((ElementsBTCPayNetwork)tester.PayTester.GetService<BTCPayWalletProvider>().GetWallet("ETB").Network)
-                    .AssetId = etb.AssetId;
 
 
                 user.RegisterDerivationScheme("LBTC");
                 user.RegisterDerivationScheme("USDT");
-                user.RegisterDerivationScheme("ETB");
                 
                 //test: register 2 assets on the same elements network and make sure paying an invoice on one does not affect the other in any way
                 var invoice = await user.BitPay.CreateInvoiceAsync(new Invoice(0.1m, "BTC"));
@@ -109,11 +103,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", localInvoice.Status);
                     Assert.Single(localInvoice.CryptoInfo.Single(info => info.CryptoCode.Equals("USDT", StringComparison.InvariantCultureIgnoreCase)).Payments);
                 });
-
-                //test precision based on https://github.com/ElementsProject/elements/issues/805#issuecomment-601277606
-                var etbBip21 = new BitcoinUrlBuilder(invoice.CryptoInfo.Single(info => info.CryptoCode == "ETB").PaymentUrls.BIP21, etb.NBitcoinNetwork);
-                //precision = 2, 1ETB  = 0.00000100
-                Assert.Equal(100, etbBip21.Amount.Satoshi);
+                
 
                 var lbtcBip21 = new BitcoinUrlBuilder(invoice.CryptoInfo.Single(info => info.CryptoCode == "LBTC").PaymentUrls.BIP21, lbtc.NBitcoinNetwork);
                 //precision = 8, 0.1 = 0.1

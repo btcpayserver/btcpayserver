@@ -84,7 +84,8 @@ document.addEventListener("DOMContentLoaded",function () {
             keyPressed (key) {
                 if (this.keypadTarget === 'amounts') {
                     const lastIndex = this.amounts.length - 1;
-                    const lastAmount = this.amounts[lastIndex];
+                    let lastAmount = this.amounts[lastIndex];
+                    if (isNaN(lastAmount)) lastAmount = null;
                     if (key === 'C') {
                         if (!lastAmount && lastIndex === 0) {
                             // clear completely

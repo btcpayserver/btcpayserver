@@ -89,6 +89,9 @@ public class LightningPendingPayoutListener : BaseAsyncService
                     var handler = _payoutHandlers.TryGet(payoutData.GetPayoutMethodId()) as LightningLikePayoutHandler;
 					if (handler is null || handler.PayoutsPaymentProcessing.Contains(payoutData.Id))
 						continue;
+                    using var track = handler.PayoutsPaymentProcessing.StartTracking();
+                    if (!track.TryTrack(payoutData.Id))
+                        continue;
                     var proof = handler.ParseProof(payoutData) as PayoutLightningBlob;
 
 					LightningPayment payment = null;

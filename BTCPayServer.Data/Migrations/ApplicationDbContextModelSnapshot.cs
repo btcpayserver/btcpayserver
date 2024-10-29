@@ -1582,8 +1582,6 @@ namespace BTCPayServer.Migrations
 
                     b.Navigation("Payouts");
 
-                    b.Navigation("PendingTransactions");
-
                     b.Navigation("PullPayments");
 
                     b.Navigation("Settings");

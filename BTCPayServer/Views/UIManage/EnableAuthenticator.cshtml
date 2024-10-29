@@ -1,6 +1,11 @@
+@using BTCPayServer.Components.QRCode
+@using BTCPayServer.Migrations
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Html
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model EnableAuthenticatorViewModel
 @{
-    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, "Enable Authenticator App");
+    ViewData.SetActivePage(ManageNavPages.TwoFactorAuthentication, StringLocalizer["Enable Authenticator App"]);
 }
 <div class="sticky-header">
     <nav aria-label="breadcrumb">
@@ -21,19 +26,20 @@
             <div class="mb-2" text-translate="true">Download a two-factor authenticator app like …</div>
             <ul>
                 <li>
-                    Authy for
-                    <a href="https://play.google.com/store/apps/details?id=com.authy.authy" rel="noreferrer noopener">Android</a> or
-					<a href="https://apps.apple.com/us/app/authy/id494168017" rel="noreferrer noopener">iOS</a>
+                    @ViewLocalizer["{0} for {1} or {2}", "Authy",
+                        new HtmlString("<a href=\"https://play.google.com/store/apps/details?id=com.authy.authy\" target=\"_blank\" rel=\"noreferrer noopener\">Android</a>"),
+                        new HtmlString("<a href=\"https://apps.apple.com/us/app/authy/id494168017\" target=\"_blank\" rel=\"noreferrer noopener\">iOS</a>")]
                 </li>
                 <li>
-                    Microsoft Authenticator for
-                    <a href="https://play.google.com/store/apps/details?id=com.azure.authenticator" rel="noreferrer noopener">Android</a> or
-					<a href="https://apps.apple.com/us/app/microsoft-authenticator/id983156458" rel="noreferrer noopener">iOS</a>
+                    @ViewLocalizer["{0} for {1} or {2}", "Microsoft Authenticator",
+                        new HtmlString("<a href=\"https://play.google.com/store/apps/details?id=com.azure.authenticator\" target=\"_blank\" rel=\"noreferrer noopener\">Android</a>"),
+                        new HtmlString("<a href=\"https://apps.apple.com/us/app/microsoft-authenticator/id983156458\" target=\"_blank\" rel=\"noreferrer noopener\">iOS</a>")]
                 </li>
                 <li>
-                    Google Authenticator for
-                    <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&amp;hl=en" rel="noreferrer noopener">Android</a> or
-                    <a href="https://apps.apple.com/us/app/google-authenticator/id388497605" rel="noreferrer noopener">iOS</a>
+
+                    @ViewLocalizer["{0} for {1} or {2}", "Google Authenticator",
+                        new HtmlString("<a href=\"https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2&hl=en\" target=\"_blank\" rel=\"noreferrer noopener\">Android</a>"),
+                        new HtmlString("<a href=\"https://apps.apple.com/us/app/google-authenticator/id388497605\" target=\"_blank\" rel=\"noreferrer noopener\">iOS</a>")]
                 </li>
             </ul>
         </li>

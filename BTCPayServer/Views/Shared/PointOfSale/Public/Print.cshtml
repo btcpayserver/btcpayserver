@@ -101,7 +101,14 @@ else
                                 @if (item.Inventory.HasValue)
                                 {
                                     <span class="badge text-bg-light">
-                                        @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                        @if (item.Inventory > 0)
+                                        {
+                                            <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                        }
+                                        else
+                                        {
+                                            <span text-translate="true">Sold out</span>
+                                        }
                                     </span>
                                 }
                             </div>

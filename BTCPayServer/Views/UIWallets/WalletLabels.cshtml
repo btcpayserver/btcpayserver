@@ -2,7 +2,7 @@
 @model WalletLabelsModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    ViewData.SetActivePage(WalletsNavPages.Settings, $"{Model.WalletId.CryptoCode} Wallet Labels", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Settings, StringLocalizer["{0} Wallet Labels", Model.WalletId.CryptoCode], walletId);
 }
 
 @section PageFootContent {
@@ -35,7 +35,7 @@
                 </td>
                 <td class="text-end">
                     <form method="post" asp-action="RemoveWalletLabel" asp-route-walletId="@Model.WalletId" asp-route-id="@label.Label">
-                        <button class="btn btn-link btn-delete p-0" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The label <strong>@Html.Encode(label.Label)</strong> will be removed from this wallet and its associated transactions." data-confirm-input="DELETE" text-translate="true">Remove</button>
+                        <button class="btn btn-link btn-delete p-0" type="submit" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["The label {0} will be removed from this wallet and its associated transactions.", Html.Encode(label.Label)]" data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Remove</button>
                     </form>
                 </td>
             </tr>
@@ -43,12 +43,13 @@
             </tbody>
         </table>
     </div>
-    <partial name="_Confirm" model="@(new ConfirmModel("Remove label", "This label will be removed from this wallet and its associated transactions.", "Remove"))" />
+    <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Remove label"], StringLocalizer["This label will be removed from this wallet and its associated transactions."], StringLocalizer["Remove"]))" />
 }
 else
 {
     <p class="text-secondary mt-3">
-        There are no custom labels yet. You can create custom labels by assigning them to your <a asp-action="WalletTransactions" asp-route-walletId="@walletId">transactions</a>.
+        @ViewLocalizer["There are no custom labels yet. You can create custom labels by assigning them to your {0}.",
+            Html.ActionLink(StringLocalizer["transactions"], "WalletTransactions", "UIWallets", new { walletId })]
     </p>
 }
 

@@ -67,7 +67,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodeCLightningHeader">
                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeCLightningContent" aria-controls="CustomNodeCLightningContent" aria-expanded="false">
-                            <span><strong>c-lightning</strong> via TCP or unix domain socket connection</span>
+                            <span><strong>Core Lightning</strong> <span text-translate="true">via TCP or unix domain socket connection</span></span>
                             <vc:icon symbol="caret-down"/>
                         </button>
                     </h2>
@@ -87,7 +87,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodeChargeHeader">
                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeChargeContent" aria-controls="CustomNodeChargeContent" aria-expanded="false">
-                            <span><strong>Lightning Charge</strong> via HTTPS</span>
+                            <span><strong>Lightning Charge</strong> <span text-translate="true">via HTTPS</span></span>
                             <vc:icon symbol="caret-down"/>
                         </button>
                     </h2>
@@ -104,7 +104,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodeEclairHeader">
                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeEclairContent" aria-controls="CustomNodeEclairContent" aria-expanded="false">
-                            <span><strong>Eclair</strong> via HTTPS</span>
+                            <span><strong>Eclair</strong> <span text-translate="true">via HTTPS</span></span>
                             <vc:icon symbol="caret-down"/>
                         </button>
                     </h2>
@@ -115,7 +115,7 @@
                                     <code><b>type=</b>eclair;<b>server=</b>https://eclair:8080/;<b>password=</b>eclairpassword...</code>
                                 </li>
                             </ul>
-                            <p class="mt-2">
+                            <p class="mt-2" html-translate="true">
                                 Note that <code>bitcoin-host</code> and <code>bitcoin-auth</code> are optional, only useful if you want to use <code>GetDepositAddress</code> on Eclair:
                             </p>
                             <ul class="mb-0">
@@ -129,7 +129,7 @@
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodeLNDHeader">
                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDContent" aria-controls="CustomNodeLNDContent" aria-expanded="false">
-                            <span><strong>LND</strong> via the REST proxy</span>
+                            <span><strong>LND</strong> <span text-translate="true">via the REST API</span></span>
                             <vc:icon symbol="caret-down"/>
                         </button>
                     </h2>
@@ -144,26 +144,27 @@
                                 </li>
                             </ul>
                             <p>
-                                For the macaroon options you need to provide a macaroon with the <code>invoices:write</code> permission (e.g. <code>invoice.macaroon</code>, see
-                                <a href="https://docs.lightning.engineering/lightning-network-tools/lnd/macaroons" target="_blank" rel="noreferrer noopener">details</a>). If you
-                                want to display the node connection details, it also needs the <code>info:read</code> permission.<br/>
-                                The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.
+                                <span html-translate="true">For the macaroon options you need to provide a macaroon with the <code>invoices:write</code> permission (e.g. <code>invoice.macaroon</code>. If you want to display the node connection details, it also needs the <code>info:read</code> permission.</span>
+                                <a href="https://docs.lightning.engineering/lightning-network-tools/lnd/macaroons" target="_blank" rel="noreferrer noopener">
+                                    <vc:icon symbol="info" />
+                                </a>
+                                <br />
+                                <span html-translate="true">The path to the LND data directory may vary, the following examples assume <code>/root/.lnd</code>.</span>
                             </p>
-                            <p class="mb-2">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this command:</p>
+                            <p class="mb-2" html-translate="true">The <code>macaroon</code> parameter expects the HEX value, it can be obtained using this command:</p>
                             <pre class="mb-4">xxd -p -c 256 /root/.lnd/data/chain/bitcoin/mainnet/invoice.macaroon | tr -d '\n'</pre>
-                            <p class="mb-2">
-                                You can omit <code>certthumbprint</code> if the certificate is trusted by your machine.<br/>
-                                The <code>certthumbprint</code> can be obtained using this command:
+                            <p class="mb-2" html-translate="true">
+                                You can omit <code>certthumbprint</code> if the certificate is trusted by your machine. The <code>certthumbprint</code> can be obtained using this command:
                             </p>
                             <pre class="mb-4">openssl x509 -noout -fingerprint -sha256 -in /root/.lnd/tls.cert | sed -e 's/.*=//;s/://g'</pre>
-                            <p class="mb-0">If your LND REST server is using HTTP or HTTPS with an untrusted certificate, you can set <code>allowinsecure=true</code> as a fallback.</p>
+                            <p class="mb-0" html-translate="true">If your LND REST server is using HTTP or HTTPS with an untrusted certificate, you can set <code>allowinsecure=true</code> as a fallback.</p>
                         </div>
                     </div>
                 </div>
                 <div class="accordion-item">
                     <h2 class="accordion-header" id="CustomNodeLNDhubHeader">
                         <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#CustomNodeLNDhubContent" aria-controls="CustomNodeLNDhubContent" aria-expanded="false">
-                            <span><strong>LNDhub</strong> via the REST API</span>
+                            <span><strong>LNDhub</strong> <span text-translate="true">via the REST API</span></span>
                             <vc:icon symbol="caret-down"/>
                         </button>
                     </h2>
@@ -174,8 +175,8 @@
                                     <code><b>type=</b>lndhub;<b>server=</b>https://login:password@lndhub.io</code>
                                 </li>
                             </ul>
-                            <p class="my-2">The credentials and server address are shown as a <code>lndhub://</code> URL on the "Export/Backup" screen in BlueWallet.</p>
-                            <p>You can also use this LNDhub-URL as the connection string and BTCPay Server converts it into the expected <code>type=lndhub</code> connection string format:</p>
+                            <p class="my-2" html-translate="true">The credentials and server address are shown as a <code>lndhub://</code> URL on the "Export/Backup" screen in BlueWallet.</p>
+                            <p html-translate="true">You can also use this LNDhub-URL as the connection string and BTCPay Server converts it into the expected <code>type=lndhub</code> connection string format:</p>
                             <ul class="mb-0">
                                 <li>
                                     <code>lndhub://<b>login</b>:<b>password</b>@@<b>https://lndhub.io</b></code>

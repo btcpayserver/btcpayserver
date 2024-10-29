@@ -5,7 +5,7 @@
 @inject DisplayFormatter DisplayFormatter
 @model InvoicesModel
 @{
-    ViewData.SetActivePage(InvoiceNavPages.Index, "Invoices");
+    ViewData.SetActivePage(InvoiceNavPages.Index, StringLocalizer["Invoices"]);
     var statusFilterCount = CountArrayFilter("status") + CountArrayFilter("exceptionstatus") + (HasBooleanFilter("includearchived") ? 1 : 0) + (HasBooleanFilter("unusual") ? 1 : 0);
     var hasDateFilter = HasArrayFilter("startdate") || HasArrayFilter("enddate");
     var appFilterCount = Model.Apps.Count(app => HasArrayFilter("appid", app.Id));
@@ -123,24 +123,20 @@
         <div class="flex-fill">
             <p text-translate="true" class="mb-2">Invoices are documents issued by the seller to a buyer to collect payment.</p>
             <p text-translate="true" class="mb-3">An invoice must be paid within a defined time interval at a fixed exchange rate to protect the issuer from price fluctuations.</p>
-            <p class="mb-3">
-                You can also apply filters to your search by searching for <code>filtername:value</code>.
-                Be sure to split your search parameters with comma. Supported filters are:
-            </p>
+            <p class="mb-3" html-translate="true">You can also apply filters to your search by searching for <code>filtername:value</code>. Be sure to split your search parameters with comma. Supported filters are:</p>
             <ul>
-                <li><code>orderid:id</code> for filtering a specific order</li>
-                <li><code>itemcode:code</code> for filtering a specific type of item purchased through the pos or crowdfund apps</li>
+                <li html-translate="true"><code>orderid:id</code> for filtering a specific order</li>
+                <li html-translate="true"><code>itemcode:code</code> for filtering a specific type of item purchased through the pos or crowdfund apps</li>
             </ul>
             <a href="https://docs.btcpayserver.org/Invoices/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
-        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
     </div>
 </div>
 
 <partial name="_StatusMessage" />
-<partial name="InvoiceStatusChangePartial" />
 
 @* Custom Range Modal *@
 <div class="modal fade" id="customRangeModal" tabindex="-1" role="dialog" aria-labelledby="customRangeModalTitle" aria-hidden="true" data-bs-backdrop="static">
@@ -148,7 +144,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="customRangeModalTitle" text-translate="true">Filter invoices by Custom Range</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
             </div>
@@ -159,8 +155,8 @@
                         <div class="input-group">
                             <input id="dtpStartDate" class="form-control flatdtpicker" type="datetime-local"
                                    data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="Start Date" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="Clear">
+                                   placeholder="@StringLocalizer["Start Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
                                 <vc:icon symbol="close" />
                             </button>
                         </div>
@@ -172,8 +168,8 @@
                         <div class="input-group">
                             <input id="dtpEndDate" class="form-control flatdtpicker" type="datetime-local"
                                    data-fdtp='{ "enableTime": true, "enableSeconds": true, "dateFormat": "Y-m-d H:i:S", "time_24hr": true, "defaultHour": 0 }'
-                                   placeholder="End Date" />
-                            <button type="button" class="btn btn-secondary input-group-clear" title="Clear">
+                                   placeholder="@StringLocalizer["End Date"]" />
+                            <button type="button" class="btn btn-secondary input-group-clear" title="@StringLocalizer["Clear"]">
                                 <vc:icon symbol="close" />
                             </button>
                         </div>
@@ -191,12 +187,12 @@
     <input asp-for="Count" type="hidden" />
     <input asp-for="TimezoneOffset" type="hidden" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
+    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
             {
-                <span>@statusFilterCount Status</span>
+                <span>@StringLocalizer["{0} Status", statusFilterCount]</span>
             }
             else
             {
@@ -287,7 +283,7 @@
                         <th class="date-col">
                             <div class="d-flex align-items-center gap-1">
                                 <span text-translate="true">Date</span>
-                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                                <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                                     <vc:icon symbol="time" />
                                 </button>
                             </div>

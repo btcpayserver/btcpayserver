@@ -2981,9 +2981,10 @@ namespace BTCPayServer.Tests
 
             // check list for store with paid invoice
             var merchantInvoices = await merchantClient.GetLightningInvoices(merchant.StoreId, "BTC");
-            merchantPendingInvoices = await merchantClient.GetLightningInvoices(merchant.StoreId, "BTC", true);
             Assert.NotEmpty(merchantInvoices);
-            Assert.Empty(merchantPendingInvoices);
+            merchantPendingInvoices = await merchantClient.GetLightningInvoices(merchant.StoreId, "BTC", true);
+            Assert.True(merchantPendingInvoices.Length < merchantInvoices.Length);
+            Assert.All(merchantPendingInvoices, m => Assert.Equal(LightningInvoiceStatus.Unpaid, m.Status));
             // if the test ran too many times the invoice might be on a later page
             if (merchantInvoices.Length < 100)
                 Assert.Contains(merchantInvoices, i => i.Id == merchantInvoice.Id);
@@ -3047,7 +3048,7 @@ namespace BTCPayServer.Tests
                 new CreateInvoiceRequest
                 {
                     Currency = "USD",
-                    Amount = 100,
+                    Amount = 0.1m,
                     Checkout = new CreateInvoiceRequest.CheckoutOptions
                     {
                         PaymentMethods = new[] { "BTC-LN" },
@@ -4172,7 +4173,7 @@ namespace BTCPayServer.Tests
             await admin.GrantAccessAsync(true);
 
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
-            admin.RegisterLightningNode("BTC", LightningConnectionType.LndREST);
+            admin.RegisterLightningNode("BTC", LightningConnectionType.CLightning);
             var payoutAmount = LightMoney.Satoshis(1000);
             var inv = await tester.MerchantLnd.Client.CreateInvoice(payoutAmount, "Donation to merchant", TimeSpan.FromHours(1), default);
             var resp = await tester.CustomerLightningD.Pay(inv.BOLT11);

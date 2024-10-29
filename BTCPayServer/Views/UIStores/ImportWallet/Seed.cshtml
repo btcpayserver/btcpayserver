@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Enter the wallet seed", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Enter the wallet seed"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -12,7 +12,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Manually enter your 12 or 24 word recovery seed.</p>
+    <p class="lead text-secondary mt-3" text-translate="true">Manually enter your 12 or 24 word recovery seed.</p>
 </header>
 
 <div class="my-5">
@@ -28,7 +28,7 @@
     }
     else
     {
-        <p class="mb-0">Please note that creating a wallet is not supported by your instance.</p>
+        <p class="mb-0" text-translate="true">Please note that creating a wallet is not supported by your instance.</p>
     }
 </div>
 

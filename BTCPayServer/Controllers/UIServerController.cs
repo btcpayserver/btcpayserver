@@ -1275,7 +1275,7 @@ namespace BTCPayServer.Controllers
         }
 
         [Route("server/logs/{file?}")]
-        public async Task<IActionResult> LogsView(string? file = null, int offset = 0)
+        public async Task<IActionResult> LogsView(string? file = null, int offset = 0, bool download = false)
         {
             if (offset < 0)
             {
@@ -1317,13 +1317,23 @@ namespace BTCPayServer.Controllers
                     return NotFound();
                 try
                 {
-                    using var fileStream = new FileStream(
+                    var fileStream = new FileStream(
                         fi.FullName,
                         FileMode.Open,
                         FileAccess.Read,
                         FileShare.ReadWrite);
-                    using var reader = new StreamReader(fileStream);
-                    vm.Log = await reader.ReadToEndAsync();
+                    if (download)
+                    {
+                        return new FileStreamResult(fileStream, "text/plain")
+                        {
+                            FileDownloadName = file
+                        };
+                    }
+                    await using (fileStream)
+                    {
+                        using var reader = new StreamReader(fileStream);
+                        vm.Log = await reader.ReadToEndAsync();
+                    }
                 }
                 catch
                 {

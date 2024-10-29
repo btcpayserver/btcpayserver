@@ -13,6 +13,7 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json.Linq;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -21,7 +22,6 @@ namespace BTCPayServer.Payments.Lightning;
 public class LightningPendingPayoutListener : BaseAsyncService
 {
     private readonly LightningClientFactoryService _lightningClientFactoryService;
-    private readonly ApplicationDbContextFactory _applicationDbContextFactory;
     private readonly PullPaymentHostedService _pullPaymentHostedService;
     private readonly StoreRepository _storeRepository;
     private readonly IOptions<LightningNetworkOptions> _options;
@@ -32,7 +32,6 @@ public class LightningPendingPayoutListener : BaseAsyncService
 
     public LightningPendingPayoutListener(
         LightningClientFactoryService lightningClientFactoryService,
-        ApplicationDbContextFactory applicationDbContextFactory,
         PullPaymentHostedService pullPaymentHostedService,
         StoreRepository storeRepository,
         IOptions<LightningNetworkOptions> options,
@@ -42,7 +41,6 @@ public class LightningPendingPayoutListener : BaseAsyncService
         ILogger<LightningPendingPayoutListener> logger) : base(logger)
     {
         _lightningClientFactoryService = lightningClientFactoryService;
-        _applicationDbContextFactory = applicationDbContextFactory;
         _pullPaymentHostedService = pullPaymentHostedService;
         _storeRepository = storeRepository;
         _options = options;
@@ -54,19 +52,18 @@ public class LightningPendingPayoutListener : BaseAsyncService
 
     private async Task Act()
     {
-        await using var context = _applicationDbContextFactory.CreateContext();
         var networks = _networkProvider.GetAll()
             .OfType<BTCPayNetwork>()
             .Where(network => network.SupportLightning)
             .ToDictionary(network => PaymentTypes.LN.GetPaymentMethodId(network.CryptoCode));
 
 
-        var payouts = await PullPaymentHostedService.GetPayouts(
+        var payouts = await _pullPaymentHostedService.GetPayouts(
             new PullPaymentHostedService.PayoutQuery()
             {
                 States = new PayoutState[] { PayoutState.InProgress },
                 PayoutMethods = networks.Keys.Select(id => id.ToString()).ToArray()
-            }, context);
+            });
         var storeIds = payouts.Select(data => data.StoreDataId).Distinct();
         var stores = (await Task.WhenAll(storeIds.Select(_storeRepository.FindStore)))
             .Where(data => data is not null).ToDictionary(data => data.Id, data => (StoreData)data);
@@ -83,9 +80,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
                     .Select(c => (LightningPaymentMethodConfig)c.Value)
                     .FirstOrDefault();
                 if (pm is null)
-                {
                     continue;
-                }
 
                 var client =
                     pm.CreateLightningClient(networks[pmi], _options.Value, _lightningClientFactoryService);
@@ -94,6 +89,9 @@ public class LightningPendingPayoutListener : BaseAsyncService
                     var handler = _payoutHandlers.TryGet(payoutData.GetPayoutMethodId()) as LightningLikePayoutHandler;
 					if (handler is null || handler.PayoutsPaymentProcessing.Contains(payoutData.Id))
 						continue;
+                    using var track = handler.PayoutsPaymentProcessing.StartTracking();
+                    if (!track.TryTrack(payoutData.Id))
+                        continue;
                     var proof = handler.ParseProof(payoutData) as PayoutLightningBlob;
 
 					LightningPayment payment = null;
@@ -122,10 +120,23 @@ public class LightningPendingPayoutListener : BaseAsyncService
 							break;
 					}
 				}
+
+                foreach (PayoutData payoutData in payoutByStoreByPaymentMethod)
+                {
+                    if (payoutData.State != PayoutState.InProgress)
+                    {
+                        // This update can fail if the payout has been updated in the meantime
+                        await _pullPaymentHostedService.MarkPaid(new HostedServices.MarkPayoutRequest()
+                        {
+                            PayoutId = payoutData.Id,
+                            State = payoutData.State,
+                            Proof = payoutData.State is PayoutState.Completed ? JObject.Parse(payoutData.Proof) : null
+                        });
+                    }
+                }
             }
         }
 
-        await context.SaveChangesAsync(CancellationToken);
         await Task.Delay(TimeSpan.FromSeconds(SecondsDelay), CancellationToken);
     }
 

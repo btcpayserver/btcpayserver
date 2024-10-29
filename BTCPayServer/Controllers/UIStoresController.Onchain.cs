@@ -494,16 +494,14 @@ public partial class UIStoresController
 
         for (int i = 0; i < derivation.AccountKeySettings.Length; i++)
         {
-            KeyPath accountKeyPath;
-            HDFingerprint? rootFingerprint;
-
             try
             {
-                accountKeyPath = string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath)
-                    ? null
-                    : new KeyPath(vm.AccountKeys[i].AccountKeyPath);
+                var strKeyPath = vm.AccountKeys[i].AccountKeyPath;
+                var accountKeyPath = string.IsNullOrWhiteSpace(strKeyPath) ? null : new KeyPath(strKeyPath);
 
-                if (accountKeyPath != null && derivation.AccountKeySettings[i].AccountKeyPath != accountKeyPath)
+                bool pathsDiffer = accountKeyPath != derivation.AccountKeySettings[i].AccountKeyPath;
+
+                if (pathsDiffer)
                 {
                     needUpdate = true;
                     derivation.AccountKeySettings[i].AccountKeyPath = accountKeyPath;
@@ -516,7 +514,7 @@ public partial class UIStoresController
 
             try
             {
-                rootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
+                HDFingerprint? rootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
                     ? null
                     : new HDFingerprint(Encoders.Hex.DecodeData(vm.AccountKeys[i].MasterFingerprint));
 

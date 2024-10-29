@@ -252,7 +252,7 @@ namespace BTCPayServer.Controllers
             {
                 case "createpending":
                     var pt = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt);
-                    return RedirectToAction(nameof(ViewPendingTransaction), new { walletId = walletId.ToString(), transactionId = pt.TransactionId });
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, vm);
                 case "decode":

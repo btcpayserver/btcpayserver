@@ -137,29 +137,26 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{walletId}/pending/{transactionId}/cancel")]
-        public async Task<IActionResult> CancelPendingTransaction(
+        public IActionResult CancelPendingTransaction(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             string transactionId)
         {
-            
-            return View("Confirm", new ConfirmModel("Cancel Pending transaction", "Cancelling a pending transaction will invalidate all accepted signatures.", "Cancel"));
-            
-            
+            return View("Confirm", new ConfirmModel("Abort Pending Transaction", 
+                "Proceeding with this action will invalidate Pending Transaction and all accepted signatures.", 
+                "Confirm Abort"));
         }
         [HttpPost("{walletId}/pending/{transactionId}/cancel")]
         public async Task<IActionResult> CancelPendingTransactionConfirmed(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             string transactionId)
         {
-            
             await _pendingTransactionService.CancelPendingTransaction(walletId.CryptoCode, walletId.StoreId, transactionId);
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = "Pending transaction cancelled"
+                Message = $"Aborted Pending Transaction {transactionId}"
             });
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
-            
         }
         
 

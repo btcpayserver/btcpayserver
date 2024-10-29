@@ -214,9 +214,10 @@
                     </td>
                     <td>
                     <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">
-                        @(pendingTransaction.State == PendingTransactionState.Signed? "Broadcast" : "View")
+                        @(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")
                     </a>-
-                        <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">Cancel</a>
+                    <a asp-action="CancelPendingTransaction" 
+                       asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">Abort</a>
                 </tr>
             }
         </table>

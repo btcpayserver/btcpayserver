@@ -110,11 +110,13 @@
             <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
             @if (Model.SigningContext.PendingTransactionId is null && !Model.NBXSeedAvailable)
             {
-                <button type="submit" id="CreatePendingTransaction" name="command" value="createpending" class="btn btn-primary">Create pending transaction</button>
+                <button type="submit" id="CreatePendingTransaction" name="command" value="createpending" 
+                        class="btn btn-primary">Create pending transaction</button>
             }
             else if (Model.SigningContext.PendingTransactionId is not null)
             {
-                <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
+                <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
+                   asp-route-transactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
             }
         </div>
     </form>

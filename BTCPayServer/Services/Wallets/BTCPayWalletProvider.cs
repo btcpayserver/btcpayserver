@@ -263,16 +263,14 @@ namespace BTCPayServer.Services.Wallets
 
         public async Task CancelPendingTransaction(string cryptoCode, string storeId, string transactionId)
         {
-            
             await using var ctx = _dbContextFactory.CreateContext();
             var pt = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
                 p.CryptoCode == cryptoCode && p.StoreId == storeId && p.TransactionId == transactionId &&
                 (p.State == PendingTransactionState.Pending || p.State == PendingTransactionState.Signed));
             
             if (pt is null)
-            {
                 return;
-            }
+            
             pt.State = PendingTransactionState.Cancelled;
             await ctx.SaveChangesAsync();
         }

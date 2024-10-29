@@ -65,7 +65,11 @@
         </template>
     </div>
     <div class="keypad">
-        <button v-for="k in keys" :key="k" :disabled="k === '+' && mode !== 'amounts'" v-on:click.prevent="keyPressed(k)" v-on:dblclick.prevent="doubleClick(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">{{ k }}</button>
+        <button v-for="k in keys" :key="k" :disabled="k === '+' && mode !== 'amounts'" v-on:click.prevent="keyPressed(k)" v-on:dblclick.prevent="doubleClick(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">
+            <template v-if="k === 'C'"><vc:icon symbol="keypad-clear"/></template>
+            <template v-else-if="k === '+'"><vc:icon symbol="keypad-plus"/></template>
+            <template v-else>{{ k }}</template>
+        </button>
     </div>
     <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading || totalNumeric <= 0" id="pay-button">
         <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">

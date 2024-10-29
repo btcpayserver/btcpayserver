@@ -271,10 +271,12 @@ const posCommon = {
                 item.classList.remove('posItem--first')
                 item.classList.remove('posItem--last')
             })
-            const $displayed = this.$refs.posItems.querySelectorAll('.posItem.posItem--displayed')
-            if ($displayed.length > 0) {
-                $displayed[0].classList.add('posItem--first')
-                $displayed[$displayed.length - 1].classList.add('posItem--last')
+            if (this.$refs.posItems) {
+                const $displayed = this.$refs.posItems.querySelectorAll('.posItem.posItem--displayed')
+                if ($displayed.length > 0) {
+                    $displayed[0].classList.add('posItem--first')
+                    $displayed[$displayed.length - 1].classList.add('posItem--last')
+                }
             }
         },
         hideRecentTransactions() {

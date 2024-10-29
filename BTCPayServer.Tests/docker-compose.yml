@@ -102,7 +102,7 @@ services:
     expose:
       - "32838"
     environment:
-      NBXPLORER_NETWORK: regtest
+      NBXPLORER_NETWORK: mainnet
       NBXPLORER_CHAINS: "btc"
       NBXPLORER_BTCRPCURL: http://bitcoind:43782/
       NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
@@ -122,7 +122,7 @@ services:
     restart: unless-stopped
     image: btcpayserver/bitcoin:26.0
     environment:
-      BITCOIN_NETWORK: regtest
+      BITCOIN_NETWORK: mainnet
       BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
@@ -136,6 +136,7 @@ services:
         zmqpubrawtx=tcp://0.0.0.0:28333
         deprecatedrpc=signrawtransaction
         fallbackfee=0.0002
+        prune=50000
     ports:
       - "43782:43782"
       - "39388:39388"

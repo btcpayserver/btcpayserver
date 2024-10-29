@@ -37,8 +37,8 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
-        "BTCPAY_NETWORK": "regtest",
-        "BTCPAY_LAUNCHSETTINGS": "true",
+        "BTCPAY_NETWORK": "mainnet",
+        "BTCPAY_LAUNCHSETTINGS": "false",
         "BTCPAY_PORT": "14142",
         "BTCPAY_HttpsUseDefaultCertificate": "true",
         "BTCPAY_VERBOSE": "true",
@@ -65,7 +65,7 @@
         "BTCPAY_SOCKSENDPOINT": "localhost:9050",
         "BTCPAY_DOCKERDEPLOYMENT": "true",
         "BTCPAY_RECOMMENDED-PLUGINS": "",
-        "BTCPAY_CHEATMODE": "true",
+        "BTCPAY_CHEATMODE": "false",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
       "applicationUrl": "https://localhost:14142/"

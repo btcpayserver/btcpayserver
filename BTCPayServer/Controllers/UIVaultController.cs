@@ -141,6 +141,8 @@ namespace BTCPayServer.Controllers
                                 var psbt = PSBT.Parse(o["psbt"].Value<string>(), network.NBitcoinNetwork);
                                 var derivationSettings = GetDerivationSchemeSettings(walletId);
                                 derivationSettings.RebaseKeyPaths(psbt);
+                                
+                                // TODO: Check if this is multsig, if it is, we need to check the other fingerprints
                                 var signing = derivationSettings.GetSigningAccountKeySettings();
                                 if (signing.GetRootedKeyPath()?.MasterFingerprint != fingerprint)
                                 {
@@ -164,7 +166,7 @@ namespace BTCPayServer.Controllers
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);
                                 }
-                                catch (Hwi.HwiException)
+                                catch (Hwi.HwiException hwiex)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"user-reject\"}", cancellationToken);
                                     continue;

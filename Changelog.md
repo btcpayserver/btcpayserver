@@ -1,5 +1,101 @@
 # Changelog
 
+## 2.0.0
+
+BTCPay Server 2.0 contains a lot of new features, but also breaking changes.
+Please refer to our blog post before upgrading — here are the most noteworthy things:
+
+* Large instances may experience a few minutes of database migration
+* Custom integrations and plugins need to get updated as well to ensure compatibility with our 2.0 API
+* Developers leveraging the Greenfield API should check our breaking changes to ensure 2.0 compatibility
+
+### New feature
+
+* Interface localization (#5662 #6118 #6119 #6120 #6203 #6271 #6292 #6302 #6318) @NicolasDorier @dennisreimann
+* New sidebar navigation (#5744 #6267)  @dstrukt @dennisreimann
+* Improved onboarding flow (#6188 #6231 #6233)  @dstrukt @dennisreimann @pavlenex
+* Improved branding options (#5947 #5992) @dennisreimann @dstrukt
+* Support pluginable rate providers (#5777) @Kukks
+* User: Add name and profile picture (#6008) @dennisreimann @NicolasDorier
+* Greenfield: Manage notifications (#6058) @dennisreimann
+* Greenfield: Add file endpoints and upload (#6075) @dennisreimann
+
+### Bug fixes
+
+* Greenfield: Fix payment method update regression (#5932) @dennisreimann
+* Allow to use a different Postgres schema (#5901) @NicolasDorier
+* Checkout: Minor fixes and improvements (#5962 #6181 #6297) @dennisreimann @NicolasDorier
+* Fix connecting to websockets without reverse proxy (#5981) @NicolasDorier
+* Allow user to input a passphrase for Trezor v1 (#5980) @NicolasDorier
+* Fix taproot PSBT parsing and show better error message (#5993) @NicolasDorier
+* Invoice refund fixes (#6086) @NicolasDorier
+* Lightning: Incorrect rounding of amounts (#6201 #6202) @NicolasDorier
+* Lightning: Fix lightning payment status check (#6219) @jackstar12
+* POS: Fix accounting for manually entered keypad amounts (#6178) @dennisreimann
+* XMR: Fix status message (#6111) @napoly
+* Fix Monero and ZCash not tracking addresses @NicolasDorier
+* Move wallet payment settings back to store settings (#6251) @dennisreimann
+* Dashboard: Fix app stats sorting (#6265) @dennisreimann
+
+### Improvements
+
+* The Big Cleanup: Refactor BTCPay internals (#5809 #5900 #5944 #5974 #5982 #6152 #6153 #6197 #6198 #6215 #6243 #6304 #6314) @NicolasDorier
+* Database and Migration cleanups (#5905 #5904 #5939 #5937 #5971 #5989 #6170 #6173 #6207 #6232 #6240 #6244 #6260) @NicolasDorier
+* Show Lightning node availability in navigation (#5951) @dennisreimann @NicolasDorier
+* Deployment: Guard against running current master (#5959) @Kukks
+* Pull Payments: Show better error message for invalid destination (#5969) @NicolasDorier
+* Payout: Add topups to payouts (#6187) @NicolasDorier
+* Payout: Automated processors get disabled after repeated failures (#6320) @NicolasDorier
+* Receipt: Cut lightning payment so receipt takes less space @rockstardev
+* Recommended exchange to be resolved during invoice creation (#5976) @NicolasDorier
+* Design system and icon updates for 2.0 (#5938) @dstrukt @dennisreimann
+* POS: UI improvements (#6009 #6055 #6088 #6172) @dennisreimann @TChukwuleta
+* POS: Validate IDs when parsing items template (#6228) @dennisreimann
+* POS: Option for user sign in via the QR code (#6231) @dennisreimann
+* Shopify: Refactor logic (#6029) @Kukks
+* BTCPayServerClient refactoring (#6024) @dennisreimann
+* Greenfield: API clarifications @ndeet
+* Greenfield: Uniformize Wallet API's path (#6209) @NicolasDorier
+* Greenfield: Refactor app endpoints (#6051) @dennisreimann
+* Greenfield: Add store id for notifications (#6093) @dennisreimann
+* Greenfield: App endpoints for sales statistics (#6103) @dennisreimann
+* Greenfield: Set the label when generating a wallet for store (#6186) @NicolasDorier
+* Greenfield: Renaming of various properties in the Payouts API (#6246) @NicolasDorier
+* Greenfield: Select default payoutMethodId if none are selected in the refund route (#6315) @NicolasDorier
+* Notifications: Improved List View (#6050 #6169) @TChukwuleta
+* Shopify: Create invoice when the payment page opens (#6109) @NicolasDorier
+* Dashboard: Include hover to display total sales per day (#6174)
+* Invoice: Improve zero amount invoice handling (#6199) @dennisreimann
+* Wallet: Improve TX ID display (#6190) @dennisreimann
+* Wallet: Generate receive address automatically (#6122) @dennisreimann
+* Wallet: UI improvemnts (#5851) @dennisreimann
+* Make Role Permissions more human legible (#6191) @dennisreimann
+* Handle password reset when SMTP isn't configured or validated (#6150) @TChukwuleta
+* Prevent app creation without wallet creation (#6255) @TChukwuleta
+* Crowdfund: Add image upload support (#6254) @TChukwuleta
+* Optimize load time of StoreRoles related pages/routes (#6245) @NicolasDorier
+* Plugins: Make development of plugins easier (#6270) @NicolasDorier
+* Plugins: Support for searching plugins by name @rockstardev
+* Plugins: Disable plugins crashing at startup (#6290) @NicolasDorier
+* Plugins: Improve UX for uninstalling disabled plugins (#6291) @NicolasDorier
+* Plugins: Provide store info to modify-lnurlp-request filter (#6312) @jackstar12
+* Checkout: Show warnings if NFC payment isn't complete (#6288) @NicolasDorier
+* Checkout: Make `BitcoinCheckoutModelExtension` support other payment handlers (#6311) @jackstar12
+* UI: Paging improvements (#6332) @dennisreimann
+* UI: Add download button to logs view (#6330) @jackstar12
+* Boltcard: Require non interactivity for payments (#6289) @NicolasDorier
+* LND: Upgrade to 0.18.3-beta (#6303) @rockstardev
+* Core Lightning: Upgrade to 24.08.2 (#6323) @NicolasDorier
+
+## Deprecations
+
+* Remove experimental custodian accounts feature (#5863 #6193) @Kukks
+* Remove Checkout V1 (#5906) @NicolasDorier
+* Remove MySQL and SQlite dependencies (#5910) @NicolasDorier
+* Remove period concept from PullPayment (#5963) @NicolasDorier
+* Remove the Altcoins build (#6177) @NicolasDorier
+* Dashboard: Remove View All link for Top Items (#6072) @dennisreimann
+
 ## 1.13.5
 
 ### Bug fixes
@@ -35,7 +131,6 @@
 * Fix potential crash on receipt print page (#6045) @dennisreimann
 * Fix invoice paid for topping up a pull payment didn't top up. @NicolasDorier
 * Pull payment: Enable CORS for LNURL request (#6044) @dennisreimann
-
 
 ## 1.13.2
 

@@ -75,7 +75,8 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
         {
             _leases.Add(eventAggregator.SubscribeAsync<Events.NewBlockEvent>(async evt =>
             {
-                if (evt.CryptoCode == "LTC") await UpdatePaymentStates(((NBXplorer.Models.NewBlockEvent)evt.AdditionalInfo).Height);
+                var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("LTC");
+                if (evt.PaymentMethodId == pmi) await UpdatePaymentStates(((NBXplorer.Models.NewBlockEvent)evt.AdditionalInfo).Height);
             }));
 
             foreach (var store in await storeRepository.GetStores())
@@ -159,13 +160,13 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
         private async Task CheckInvoice(DerivationSchemeSettings derivationScheme, Utxo utxo, int height)
         {
             var network = networks.GetNetwork<BTCPayNetwork>("MWEB");
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
             var coin = await CoinFromUtxo(derivationScheme, utxo, height);
             if (coin == null) return;
             var key = network.GetTrackedDestination(coin.ScriptPubKey);
-            var invoice = (await invoiceRepository.GetInvoicesFromAddresses([key])).FirstOrDefault();
+            var invoice = await invoiceRepository.GetInvoiceFromAddress(pmi, key);
             if (invoice != null)
             {
-                var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
                 var details = new BitcoinLikePaymentData(coin.OutPoint, false, coin.KeyPath)
                 {
                     ConfirmationCount = coin.Confirmations
@@ -175,7 +176,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                 {
                     Id = coin.OutPoint.ToString(),
                     Created = DateTimeOffset.UtcNow,
-                    Status = NBXplorerListener.IsSettled(invoice, details) ? PaymentStatus.Settled : PaymentStatus.Processing,
+                    Status = NBXplorerListener.ConfirmationRequired(invoice, details) <= details.ConfirmationCount ? PaymentStatus.Settled : PaymentStatus.Processing,
                     Amount = ((Money)coin.Value).ToDecimal(MoneyUnit.BTC),
                     Currency = network.Currency
                 }.Set(invoice, handlers[pmi], details);
@@ -201,7 +202,7 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
             transaction.Outputs.Add((Money)coin.Value, coin.ScriptPubKey);
             eventAggregator.Publish(new NewOnChainTransactionEvent
             {
-                CryptoCode = "MWEB",
+                PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId("MWEB"),
                 NewTransactionEvent = new NewTransactionEvent
                 {
                     DerivationStrategy = derivationScheme.AccountDerivation,
@@ -244,7 +245,8 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
 
         private async Task UpdatePaymentStates(int height)
         {
-            var invoices = await invoiceRepository.GetPendingInvoices(skipNoPaymentInvoices: true);
+            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("MWEB");
+            var invoices = await invoiceRepository.GetMonitoredInvoices(pmi);
             await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(i, height)).ToArray());
         }
 
@@ -275,12 +277,8 @@ namespace BTCPayServer.Services.Altcoins.Litecoin.Services
                 }
 
                 var prevStatus = payment.Status;
-                payment.Status = NBXplorerListener.IsSettled(invoice, paymentData) ? PaymentStatus.Settled : PaymentStatus.Processing;
+                payment.Status = NBXplorerListener.ConfirmationRequired(invoice, paymentData) <= paymentData.ConfirmationCount ? PaymentStatus.Settled : PaymentStatus.Processing;
                 updated |= prevStatus != payment.Status;
-
-                // if needed add invoice back to pending to track number of confirmations
-                if (paymentData.ConfirmationCount < network.MaxTrackedConfirmation)
-                    await invoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
                 if (updated) updatedPaymentEntities.Add(payment);
             }
 

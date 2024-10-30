@@ -21,7 +21,7 @@ namespace BTCPayServer.Tests
     {
         public static Task<KeyPathInformation> ReserveAddressAsync(this BTCPayWallet wallet, DerivationStrategyBase derivationStrategyBase)
         {
-            return wallet.ReserveAddressAsync(null, derivationStrategyBase, "test");
+            return wallet.ReserveAddressAsync(null, new DerivationSchemeSettings(derivationStrategyBase, wallet.Network), "test");
         }
         private static readonly JsonSerializerSettings JsonSettings = new JsonSerializerSettings { ContractResolver = new CamelCasePropertyNamesContractResolver() };
         public static string ToJson(this object o) => JsonConvert.SerializeObject(o, Formatting.None, JsonSettings);

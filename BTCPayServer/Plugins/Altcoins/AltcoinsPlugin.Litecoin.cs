@@ -94,7 +94,7 @@ public partial class AltcoinsPlugin
                 ? "https://live.blockcypher.com/ltc/tx/{0}/"
                 : "http://explorer.litecointools.com/tx/{0}";
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(blockExplorerLinks));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(blockExplorerLinks));
         services.TryAddSingleton<MwebScannerService>();
         services.AddSingleton<IHostedService>(provider => provider.GetService<MwebScannerService>());
     }

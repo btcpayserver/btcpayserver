@@ -60,7 +60,7 @@ public class StoreRecentTransactions : ViewComponent
             if (vm.CryptoCode == "LTC")
             {
                 wallet = _walletProvider.GetWallet("MWEB");
-                derivationSettings = vm.Store.GetDerivationSchemeSettings(_handlers, "MWEB");
+                derivationSettings = store.GetDerivationSchemeSettings(_handlers, "MWEB");
                 if (derivationSettings?.AccountDerivation is not null)
                 {
                     foreach (var tx in await wallet.FetchTransactionHistory(derivationSettings.AccountDerivation, 0, 5, TimeSpan.FromDays(31.0), cancellationToken: HttpContext.RequestAborted))

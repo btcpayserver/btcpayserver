@@ -23,6 +23,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
+using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Services;
 using BTCPayServer.Storage.Services.Providers;
@@ -70,6 +71,7 @@ namespace BTCPayServer.Controllers
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
         private readonly LocalizerService _localizer;
+        private readonly RateFetcher _rateFactory;
         public IStringLocalizer StringLocalizer { get; }
 
         public UIServerController(
@@ -99,6 +101,7 @@ namespace BTCPayServer.Controllers
             TransactionLinkProviders transactionLinkProviders,
             LocalizerService localizer,
             IStringLocalizer stringLocalizer,
+            RateFetcher rateFetcher,
             BTCPayServerEnvironment environment
         )
         {
@@ -128,6 +131,7 @@ namespace BTCPayServer.Controllers
             _transactionLinkProviders = transactionLinkProviders;
             _localizer = localizer;
             Environment = environment;
+            _rateFactory = rateFetcher;
             StringLocalizer = stringLocalizer;
         }
 
@@ -337,6 +341,11 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> Policies()
         {
             await UpdateViewBag();
+            var exchanges = _rateFactory.RateProviderFactory
+                .AvailableRateProviders.OrderBy(s => s.Id, StringComparer.OrdinalIgnoreCase).ToList();
+            exchanges.Insert(0, new(null, "Select a Default Provider", ""));
+            var defaultExchange = exchanges.First();
+            _policiesSettings.Exchanges = new SelectList(exchanges, nameof(defaultExchange.Id), nameof(defaultExchange.DisplayName), defaultExchange.Id);
             return View(_policiesSettings);
         }
 

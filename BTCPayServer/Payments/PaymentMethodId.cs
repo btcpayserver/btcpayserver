@@ -104,7 +104,6 @@ namespace BTCPayServer.Payments
             "XMR",
             "ZEC",
             "LCAD",
-            "ETB",
             "LBTC",
             "USDt",
             "MONA",

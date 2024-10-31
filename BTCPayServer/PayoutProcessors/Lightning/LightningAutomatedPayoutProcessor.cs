@@ -311,11 +311,13 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
             }
             else
             {
+                // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
                 payoutData.State = PayoutState.InProgress;
+                payoutData.SetProofBlob(proofBlob, null);
                 return new ResultVM
                 {
                     PayoutId = payoutData.Id,
-                    Result = PayResult.Unknown,
+                    Result = PayResult.Ok,
                     Destination = payoutBlob.Destination,
                     Message = "The payment has been initiated but is still in-flight."
                 };

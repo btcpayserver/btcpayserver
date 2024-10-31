@@ -11,7 +11,6 @@ public class LightningAutomatedPayoutSettings
     [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
     public TimeSpan IntervalSeconds { get; set; }
 
-    public int? CancelPayoutAfterFailures { get; set; }
     [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
     public bool  ProcessNewPayoutsInstantly { get; set; }
     

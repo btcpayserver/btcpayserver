@@ -1,4 +1,17 @@
-@inject BTCPayServer.Services.PoliciesSettings PoliciesSettings
+@using BTCPayServer.Services
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@inject PoliciesSettings PoliciesSettings
+@inject UriResolver UriResolver
+@{
+    ViewData.TryGetValue("StoreBranding", out var storeBranding);
+    var store = Context.GetStoreData();
+    var storeBlob = store?.GetStoreBlob();
+    var isBackend = store != null && storeBranding == null; 
+    if (isBackend && storeBlob.ApplyBrandColorToBackend)
+    {
+        storeBranding = await StoreBrandingViewModel.CreateAsync(Context.Request, UriResolver, storeBlob);
+    }
+}
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 @if (PoliciesSettings.DiscourageSearchEngines)
@@ -14,7 +27,7 @@
 <link href="~/main/site.css" asp-append-version="true"  rel="stylesheet" />
 
 <partial name="LayoutHeadTheme" />
-@if (ViewData.TryGetValue("StoreBranding", out var storeBranding) && storeBranding != null)
+@if (storeBranding != null)
 {
     <partial name="LayoutHeadStoreBranding" model="storeBranding" />
 }

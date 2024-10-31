@@ -6,17 +6,17 @@
 
 <div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.Store.Id">
     <header>
-        <h3>Recent Invoices</h3>
+        <h3 text-translate="true">Recent Invoices</h3>
         @if (Model.Invoices.Any())
         {
-            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id">View All</a>
+            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" text-translate="true">View All</a>
         }
     </header>
     @if (Model.InitialRendering)
     {
         <div class="loading d-flex justify-content-center p-3">
             <div class="spinner-border text-light" role="status">
-                <span class="visually-hidden">Loading...</span>
+                <span class="visually-hidden" text-translate="true">Loading...</span>
             </div>
         </div>
         <script>
@@ -36,10 +36,10 @@
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
-                    <th class="w-125px">Date</th>
-                    <th class="text-nowrap">Invoice Id</th>
-                    <th>Status</th>
-                    <th class="text-end">Amount</th>
+                    <th class="w-125px" text-translate="true">Date</th>
+                    <th class="text-nowrap" text-translate="true">Invoice Id</th>
+                    <th text-translate="true">Status</th>
+                    <th class="text-end" text-translate="true">Amount</th>
                 </tr>
                 </thead>
                 <tbody>
@@ -65,10 +65,10 @@
     }
     else
     {
-        <p class="text-secondary my-3">
+        <p class="text-secondary my-3" text-translate="true">
             There are no recent invoices.
         </p>
-        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="fw-semibold">
+        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="fw-semibold" text-translate="true">
             Create Invoice
         </a>
     }

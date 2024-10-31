@@ -334,7 +334,7 @@ namespace BTCPayServer.Controllers.Greenfield
 #pragma warning disable CS0612 // Type or member is obsolete
                         Labels = info?.LegacyLabels ?? new Dictionary<string, LabelData>(),
 #pragma warning restore CS0612 // Type or member is obsolete
-                        Link = _transactionLinkProviders.GetTransactionLink(network.CryptoCode, coin.OutPoint.ToString()),
+                        Link = _transactionLinkProviders.GetTransactionLink(pmi, coin.OutPoint.ToString()),
                         Timestamp = coin.Timestamp,
                         KeyPath = coin.KeyPath,
                         Confirmations = coin.Confirmations,
@@ -430,7 +430,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 try
                 {
                     bip21 = new BitcoinUrlBuilder(destination.Destination, network.NBitcoinNetwork);
-                    amount ??= bip21.Amount.GetValue(network);
+                    amount ??= bip21.Amount?.GetValue(network);
                     if (bip21.Address is null)
                         request.AddModelError(transactionRequest => transactionRequest.Destinations[index],
                             "This BIP21 destination is missing a bitcoin address", this);

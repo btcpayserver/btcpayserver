@@ -9,6 +9,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string Value { get; set; }
         public WalletId WalletId { get; set; }
         public bool WalletSupported { get; set; }
+        public bool ReadonlyWallet { get; set; }
         public bool Enabled { get; set; }
         public bool Collapsed { get; set; }
     }

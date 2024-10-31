@@ -1,9 +1,12 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.JsonConverters;
+using BTCPayServer.Payments;
 using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services
 {
@@ -104,7 +107,8 @@ namespace BTCPayServer.Services
 
         public class BlockExplorerOverrideItem
         {
-            public string CryptoCode { get; set; }
+            [JsonConverter(typeof(PaymentMethodIdJsonConverter))]
+            public PaymentMethodId PaymentMethodId { get; set; }
             public string Link { get; set; }
         }
 

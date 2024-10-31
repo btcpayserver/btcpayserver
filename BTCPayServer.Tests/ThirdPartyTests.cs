@@ -488,10 +488,14 @@ retry:
             expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/tom-select@{version}/dist/js/tom-select.complete.min.js")).Content.ReadAsStringAsync()).Trim();
             EqualJsContent(expected, actual);
 
-            actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "dom-confetti", "dom-confetti.min.js").Trim();
-            version = Regex.Match(actual, "Original file: /npm/dom-confetti@([0-9]+.[0-9]+.[0-9]+)/lib/main.js").Groups[1].Value;
-            expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/dom-confetti@{version}")).Content.ReadAsStringAsync()).Trim();
-            EqualJsContent(expected, actual);
+            // This test is flaky probably because of the CDN sending the wrong file's version in some regions.
+            // https://app.circleci.com/pipelines/github/btcpayserver/btcpayserver/13750/workflows/44aaf31d-0057-4fd8-a5bb-1a2c47fc530f/jobs/42963
+            // It works locally depending on where you live.
+
+            //actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "dom-confetti", "dom-confetti.min.js").Trim();
+            //version = Regex.Match(actual, "Original file: /npm/dom-confetti@([0-9]+.[0-9]+.[0-9]+)/lib/main.js").Groups[1].Value;
+            //expected = (await (await client.GetAsync($"https://cdn.jsdelivr.net/npm/dom-confetti@{version}")).Content.ReadAsStringAsync()).Trim();
+            //EqualJsContent(expected, actual);
 
             actual = GetFileContent("BTCPayServer", "wwwroot", "vendor", "vue-sortable", "sortable.min.js").Trim();
             version = Regex.Match(actual, "Sortable ([0-9]+.[0-9]+.[0-9]+) ").Groups[1].Value;

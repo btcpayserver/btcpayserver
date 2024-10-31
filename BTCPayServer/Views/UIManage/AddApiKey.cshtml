@@ -30,15 +30,15 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="APIKeys">API Keys</a>
+                    <a asp-action="APIKeys" text-translate="true">API Keys</a>
                 </li>
-                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+                <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
             </ol>
             <h2 text-translate="true">@ViewData["Title"]</h2>
         </nav>
 		<button id="page-primary" type="submit" class="btn btn-primary">Generate API Key</button>
     </div>
-    <p>Generate a new api key to use BTCPay through its API.</p>
+    <p text-translate="true">Generate a new api key to use BTCPay through its API.</p>
     <div class="row">
         <div class="col-xl-10 col-xxl-constrain">
             @if (!ViewContext.ModelState.IsValid)
@@ -113,7 +113,7 @@
                                                 <select asp-for="PermissionValues[i].SpecificStores[index]" class="form-select w-auto flex-grow-0" asp-items="@(new SelectList(new[] {store}, nameof(StoreData.Id), nameof(StoreData.StoreName), store.Id))"></select>
                                             }
                                             <span asp-validation-for="PermissionValues[i].SpecificStores[index]" class="text-danger"></span>
-                                            <button type="submit" title="Remove Store Permission" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")" class="btn btn-danger">
+                                            <button type="submit" title="@StringLocalizer["Remove Store Permission"]" name="command" value="@($"{Model.PermissionValues[i].Permission}:remove-store:{index}")" class="btn btn-danger">
                                                 Remove
                                             </button>
                                         </div>

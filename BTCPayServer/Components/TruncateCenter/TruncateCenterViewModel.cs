@@ -1,16 +1,17 @@
-namespace BTCPayServer.Components.TruncateCenter
+#nullable enable
+namespace BTCPayServer.Components.TruncateCenter;
+
+public class TruncateCenterViewModel
 {
-    public class TruncateCenterViewModel
-    {
-        public string Text { get; set; }
-        public string Start { get; set; }
-        public string End { get; set; }
-        public string Id { get; set; }
-        public string Classes { get; set; }
-        public string Link { get; set; }
-        public int Padding { get; set; }
-        public bool Copy { get; set; }
-        public bool Elastic { get; set; }
-        public bool IsVue { get; set; }
-    }
+    public string Text { get; init; } = null!;
+    public string? Start { get; set; }
+    public string? End { get; set; }
+    public string? Id { get; init; }
+    public string? Classes { get; init; }
+    public string? Link { get; init; }
+    public int Padding { get; init; }
+    public bool Copy { get; init; }
+    public bool Elastic { get; init; }
+    public bool IsVue { get; init; }
+    public bool IsTruncated { get; init; }
 }

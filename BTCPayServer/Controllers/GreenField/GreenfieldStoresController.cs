@@ -27,17 +27,20 @@ namespace BTCPayServer.Controllers.Greenfield
     public class GreenfieldStoresController : ControllerBase
     {
         private readonly StoreRepository _storeRepository;
+        private readonly CurrencyNameTable _currencyNameTable;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly IFileService _fileService;
         private readonly UriResolver _uriResolver;
 
         public GreenfieldStoresController(
             StoreRepository storeRepository,
+            CurrencyNameTable currencyNameTable,
             UserManager<ApplicationUser> userManager,
             IFileService fileService,
             UriResolver uriResolver)
         {
             _storeRepository = storeRepository;
+            _currencyNameTable = currencyNameTable;
             _userManager = userManager;
             _fileService = fileService;
             _uriResolver = uriResolver;
@@ -175,6 +178,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
                 BrandColor = storeBlob.BrandColor,
+                ApplyBrandColorToBackend = storeBlob.ApplyBrandColorToBackend,
                 CssUrl = storeBlob.CssUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
                 LogoUrl = storeBlob.LogoUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
                 PaymentSoundUrl = storeBlob.PaymentSoundUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.PaymentSoundUrl),
@@ -255,6 +259,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.PaymentTolerance = restModel.PaymentTolerance;
             blob.PayJoinEnabled = restModel.PayJoinEnabled;
             blob.BrandColor = restModel.BrandColor;
+            blob.ApplyBrandColorToBackend = restModel.ApplyBrandColorToBackend;
             blob.LogoUrl = restModel.LogoUrl is null ? null : UnresolvedUri.Create(restModel.LogoUrl);
             blob.CssUrl = restModel.CssUrl is null ? null : UnresolvedUri.Create(restModel.CssUrl);
             blob.PaymentSoundUrl = restModel.PaymentSoundUrl is null ? null : UnresolvedUri.Create(restModel.PaymentSoundUrl);
@@ -333,7 +338,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is required", this);
                     }
-                    else if (CurrencyNameTable.Instance.GetCurrencyData(pmc.CurrencyCode, false) is null)
+                    else if (_currencyNameTable.GetCurrencyData(pmc.CurrencyCode, false) is null)
                     {
                         request.AddModelError(data => data.PaymentMethodCriteria[index].CurrencyCode, "CurrencyCode is invalid", this);
                     }

@@ -7,9 +7,9 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Services">Services</a>
+                <a asp-action="Services" text-translate="true">Services</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
@@ -19,13 +19,11 @@
 @if (Model.ShowQR)
 {
     <div class="alert alert-warning alert-dismissible" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
-        <div>
-            <span><b>CONFIDENTIAL:</b> This QR Code is confidential, close this window as soon as you don't need it anymore.<br /></span>
-            <span>A malicious actor with access to this QR Code can <b>affect the performances of your server</b> and <b>might steal your funds</b>.</span>
-        </div>
+        <span text-translate="true">CONFIDENTIAL: This QR Code is confidential, close this window as soon as you don't need it anymore.</span>
+        <span text-translate="true">A malicious actor with access to this QR Code could affect the performances of your server and might steal your funds.</span>
     </div>
 }
 
@@ -34,10 +32,10 @@
     <div asp-validation-summary="All"></div>
 }
 
-<h4 class="mb-3">Full node connection</h4>
-<p>This page exposes information to connect remotely to your full node via the RPC protocol.</p>
+<h4 class="mb-3" text-translate="true">Full node connection</h4>
+<p text-translate="true">This page exposes information to connect remotely to your full node via the RPC protocol.</p>
 
-<h4 class="mb-3">Compatible wallets</h4>
+<h4 class="mb-3" text-translate="true">Compatible wallets</h4>
 <div class="services-list">
     <a href="https://fullynoded.app/" target="_blank" class="service" rel="noreferrer noopener">
         <img src="~/img/fullynoded.png" width="100" height="100" asp-append-version="true" alt="Fully Noded" />
@@ -49,8 +47,8 @@
     </a>
 </div>
 
-<h4 class="mt-4 mb-3">QR Code connection</h4>
-<p>You can use QR Code to connect to @Model.WalletName with compatible wallets.</p>
+<h4 class="mt-4 mb-3" text-translate="true">QR Code connection</h4>
+<p>@StringLocalizer["You can use QR Code to connect to your {0} from your mobile.", Model.WalletName]</p>
 
 <div class="form-group">
     @if (!Model.ShowQR)
@@ -58,7 +56,7 @@
         <div class="form-group">
             <form method="get">
                 <input type="hidden" asp-for="ShowQR" value="true"/>
-                <button type="submit" class="btn btn-primary">Show Confidential QR Code</button>
+                <button type="submit" class="btn btn-primary" text-translate="true">Show Confidential QR Code</button>
             </form>
         </div>
     }
@@ -71,7 +69,7 @@
         <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a></p>
         <div id="detailsQR" class="collapse">
             <div class="form-group">
-                <label class="form-label">QR Code data</label>
+                <label class="form-label" text-translate="true">QR Code data</label>
                 <input asp-for="ServiceLink" readonly class="form-control"/>
             </div>
         </div>

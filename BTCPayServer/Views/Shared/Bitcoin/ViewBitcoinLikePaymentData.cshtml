@@ -7,10 +7,10 @@
 @inject DisplayFormatter DisplayFormatter
 @inject TransactionLinkProviders TransactionLinkProviders
 @inject PaymentMethodHandlerDictionary handlers
-@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+@model InvoiceDetailsModel
 @{
 	PayjoinInformation payjoinInformation = null;
-	var payments = Model
+	var payments = Model.Payments
 		.Select(payment =>
         {
 			if (!handlers.TryGetValue(payment.PaymentMethodId, out var h) || h is not BitcoinLikePaymentHandler handler)
@@ -18,36 +18,32 @@
 			var network = handler.Network;
             var m = new OnchainPaymentViewModel();
             var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
-			m.Crypto = network.CryptoCode;
+            m.PaymentMethodId = payment.PaymentMethodId;
             m.DepositAddress = BitcoinAddress.Create(payment.Destination, network.NBitcoinNetwork);
 
-            var confirmationCount = onChainPaymentData.ConfirmationCount;
-            if (confirmationCount >= network.MaxTrackedConfirmation)
-            {
-                m.Confirmations = "At least " + (network.MaxTrackedConfirmation);
-            }
-            else
-            {
-                m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-            }
+            var confReq = NBXplorerListener.ConfirmationRequired(payment.InvoiceEntity, onChainPaymentData);
+            var confCount = onChainPaymentData.ConfirmationCount;
+            confCount = Math.Min(confReq, confCount);
+            m.Confirmations = $"{confCount} / {confReq}";
             if (onChainPaymentData.PayjoinInformation is PayjoinInformation pj)
             {
                 payjoinInformation = pj;
-                m.AdditionalInformation = "Original transaction";
+                m.AdditionalInformation = StringLocalizer["Original transaction"];
             }
             if (payjoinInformation is PayjoinInformation &&
                 payjoinInformation.CoinjoinTransactionHash == onChainPaymentData?.Outpoint.Hash)
             {
-                m.AdditionalInformation = "Payjoin transaction";
+                m.AdditionalInformation = StringLocalizer["Payjoin transaction"];
             }
             m.TransactionId = onChainPaymentData.Outpoint.Hash.ToString();
             m.ReceivedTime = payment.ReceivedTime;
-			m.TransactionLink = TransactionLinkProviders.GetTransactionLink(network.CryptoCode, onChainPaymentData.Outpoint.ToString());
+            m.TransactionLink = TransactionLinkProviders.GetTransactionLink(payment.PaymentMethodId, onChainPaymentData.Outpoint.ToString());
             m.Replaced = !payment.Accounted;
             m.CryptoPaymentData = onChainPaymentData;
 			m.Value = payment.Value;
             m.NetworkFee = payment.PaymentMethodFee;
             m.PaymentProof = onChainPaymentData.Outpoint.ToString();
+            m.Currency = payment.Currency;
             return m;
         })
         .Where(model => model != null)
@@ -58,34 +54,34 @@
 {
     var hasNetworkFee = payments.Sum(a => a.NetworkFee) > 0;
     <section>
-        <h5>On-Chain Payments</h5>
+        <h5 text-translate="true">On-Chain Payments</h5>
         <div class="invoice-payments table-responsive mt-0">
             <table class="table table-hover mb-0">
                 <thead>
                 <tr>
-                    <th class="w-75px">Crypto</th>
-                    <th class="w-100px">Index</th>
-                    <th class="w-175px">Destination</th>
-                    <th class="text-nowrap">Payment Proof</th>
+                    <th text-translate="true" class="w-75px">Payment Method</th>
+                    <th text-translate="true" class="w-100px">Index</th>
+                    <th text-translate="true" class="w-175px">Destination</th>
+                    <th text-translate="true" class="text-nowrap">Payment Proof</th>
                     @if (hasNetworkFee)
                     {
                         <th class="text-end">
-                            Network Fee
-                            <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
+                            <span text-translate="true">Network Fee</span>
+                            <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                                 <vc:icon symbol="info" />
                             </a>
                         </th>
                     }
-                    <th class="text-end">Confirmations</th>
-                    <th class="w-150px text-end">Paid</th>
+                    <th text-translate="true" class="text-end">Confirmations</th>
+                    <th text-translate="true" class="w-150px text-end">Paid</th>
                 </tr>
                 </thead>
                 <tbody>
                 @foreach (var payment in payments)
                 {
                     <tr style="@(payment.Replaced ? "text-decoration: line-through" : "")">
-                        <td>@payment.Crypto</td>
-                        <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? "Unknown")</td>
+                        <td>@payment.PaymentMethodId</td>
+                        <td>@(payment.CryptoPaymentData.KeyPath?.ToString()?? StringLocalizer["Unknown"])</td>
                         <td>
                             <vc:truncate-center text="@payment.DepositAddress.ToString()" classes="truncate-center-id" />
                         </td>
@@ -98,7 +94,7 @@
                         }
                         <td class="text-end">@payment.Confirmations</td>
                         <td class="payment-value text-end text-nowrap">
-                            <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Value, payment.Crypto)</span>
+                            <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Value, payment.Currency)</span>
                             @if (!string.IsNullOrEmpty(payment.AdditionalInformation))
                             {
                                 <div>(@payment.AdditionalInformation)</div>

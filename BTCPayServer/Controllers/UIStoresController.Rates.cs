@@ -52,7 +52,7 @@ public partial class UIStoresController
         }
         catch
         {
-            ModelState.AddModelError(nameof(model.DefaultCurrencyPairs), "Invalid currency pairs (should be for example: BTC_USD,BTC_CAD,BTC_JPY)");
+            ModelState.AddModelError(nameof(model.DefaultCurrencyPairs), StringLocalizer["Invalid currency pairs (should be for example: {0})", "BTC_USD,BTC_CAD,BTC_JPY"]);
         }
         if (!ModelState.IsValid)
         {
@@ -71,7 +71,7 @@ public partial class UIStoresController
             {
                 errors ??= [];
                 var errorString = string.Join(", ", errors.ToArray());
-                ModelState.AddModelError(nameof(model.Script), $"Parsing error ({errorString})");
+                ModelState.AddModelError(nameof(model.Script), StringLocalizer["Parsing error: {0}", errorString]);
                 FillFromStore(model, blob);
                 return View(model);
             }
@@ -90,7 +90,7 @@ public partial class UIStoresController
         {
             if (string.IsNullOrWhiteSpace(model.ScriptTest))
             {
-                ModelState.AddModelError(nameof(model.ScriptTest), "Fill out currency pair to test for (like BTC_USD,BTC_CAD)");
+                ModelState.AddModelError(nameof(model.ScriptTest), StringLocalizer["Fill out currency pair to test for (like {0})", "BTC_USD,BTC_CAD"]);
                 return View(model);
             }
             var splitted = model.ScriptTest.Split(',', StringSplitOptions.RemoveEmptyEntries);
@@ -100,7 +100,7 @@ public partial class UIStoresController
             {
                 if (!CurrencyPair.TryParse(pair, out var currencyPair))
                 {
-                    ModelState.AddModelError(nameof(model.ScriptTest), $"Invalid currency pair '{pair}' (it should be formatted like BTC_USD,BTC_CAD)");
+                    ModelState.AddModelError(nameof(model.ScriptTest), StringLocalizer["Invalid currency pair '{0}' (it should be formatted like {1})", pair, "BTC_USD,BTC_CAD"]);
                     return View(model);
                 }
                 pairs.Add(currencyPair);
@@ -125,7 +125,7 @@ public partial class UIStoresController
 
         if (model.PreferredExchange is not null && !model.AvailableExchanges.Any(a => a.Id == model.PreferredExchange))
         {
-            ModelState.AddModelError(nameof(model.PreferredExchange), $"Unsupported exchange");
+            ModelState.AddModelError(nameof(model.PreferredExchange), StringLocalizer["Unsupported exchange"]);
             return View(model);
         }
 
@@ -147,11 +147,11 @@ public partial class UIStoresController
     {
         return View("Confirm", new ConfirmModel
         {
-            Action = "Continue",
-            Title = "Rate rule scripting",
-            Description = scripting ?
-                "This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"
-                : "This action will delete your rate script. Are you sure to turn off rate rules scripting?",
+            Action = StringLocalizer["Continue"],
+            Title = StringLocalizer["Rate rule scripting"],
+            Description = scripting
+                ? StringLocalizer["This action will modify your current rate sources. Are you sure to turn on rate rules scripting? (Advanced users)"]
+                : StringLocalizer["This action will delete your rate script. Are you sure to turn off rate rules scripting?"],
             ButtonClass = scripting ? "btn-primary" : "btn-danger"
         });
     }
@@ -176,7 +176,7 @@ public partial class UIStoresController
         vm.AvailableExchanges = sources;
         var exchange = storeBlob.GetPreferredExchange(_defaultRules);
         var chosenSource = sources.First(r => r.Id == exchange);
-        vm.Exchanges = UIUserStoresController.GetExchangesSelectList(_rateFactory, _defaultRules, storeBlob);
+        vm.Exchanges = _userStoresController.GetExchangesSelectList(storeBlob);
         vm.PreferredExchange = vm.Exchanges.SelectedValue as string;
         vm.PreferredResolvedExchange = chosenSource.Id;
         vm.RateSource = chosenSource.Url;

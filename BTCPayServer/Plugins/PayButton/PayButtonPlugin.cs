@@ -13,7 +13,7 @@ namespace BTCPayServer.Plugins.PayButton
 
         public override void Execute(IServiceCollection services)
         {
-            services.AddSingleton<IUIExtension>(new UIExtension("PayButton/NavExtension", "header-nav"));
+            services.AddUIExtension("header-nav", "PayButton/NavExtension");
             base.Execute(services);
         }
     }

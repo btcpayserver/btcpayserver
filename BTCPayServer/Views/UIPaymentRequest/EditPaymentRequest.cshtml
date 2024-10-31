@@ -9,7 +9,7 @@
 @{
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
 
-    ViewData.SetActivePage(PaymentRequestsNavPages.Create, $"{(string.IsNullOrEmpty(Model.Id) ? "Create" : "Edit")} Payment Request", Model.Id);
+    ViewData.SetActivePage(PaymentRequestsNavPages.Create, string.IsNullOrEmpty(Model.Id) ? StringLocalizer["Create Payment Request"] : StringLocalizer["Edit Payment Request"], Model.Id);
 }
 
 @section PageHeadContent {
@@ -26,7 +26,7 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId">Requests</a>
+                    <a asp-action="GetPaymentRequests" asp-route-storeId="@Model.StoreId" text-translate="true">Requests</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
@@ -35,12 +35,12 @@
         <div>
             @if (string.IsNullOrEmpty(Model.Id))
             {
-                <button id="page-primary" type="submit" class="btn btn-primary" permission="@Policies.CanModifyPaymentRequests">Create</button>
+                <button id="page-primary" type="submit" class="btn btn-primary" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Create</button>
             }
             else
             {
-				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" permission="@Policies.CanModifyPaymentRequests">Save</button>
-                <a class="btn btn-secondary" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest" target="_blank">View</a>
+				<button id="page-primary" type="submit" class="btn btn-primary order-sm-1" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Save</button>
+                <a class="btn btn-secondary" asp-action="ViewPaymentRequest" asp-route-payReqId="@Model.Id" id="ViewPaymentRequest" target="_blank" text-translate="true">View</a>
             }
         </div>
     </div>
@@ -67,7 +67,7 @@
                     {
                         <p class="info-note text-warning mb-0 mt-2">
                             <vc:icon symbol="warning"/>
-                            Amount and currency are not editable once payment request has invoices
+                            <span text-translate="true">Amount and currency are not editable once payment request has invoices</span>
                         </p>
                     }
                 </div>
@@ -87,8 +87,8 @@
                 <div class="input-group ">
                     <input asp-for="ExpiryDate"
                            value="@(Model.ExpiryDate?.ToString("u", CultureInfo.InvariantCulture))"
-                           class="form-control flatdtpicker" min="today" placeholder="No expiry date has been set for this payment request" />
-                    <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="Clear">
+                           class="form-control flatdtpicker" min="today" placeholder="@StringLocalizer["No expiry date has been set for this payment request"]" />
+                    <button id="ClearExpiryDate" class="btn btn-secondary input-group-clear" type="button" title="@StringLocalizer["Clear"]">
                         <vc:icon symbol="close" />
                     </button>
                 </div>
@@ -96,16 +96,15 @@
             </div>
             <div class="form-group">
                 <label asp-for="Email" class="form-label"></label>
-                <input type="email" asp-for="Email" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
+                <input type="email" asp-for="Email" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
                 <span asp-validation-for="Email" class="text-danger"></span>
                 <div id="PaymentRequestEmailHelpBlock" class="form-text">
-                    This will send notification mails to the recipient, as configured by the
-                    <a asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@Model.StoreId">email rules</a>.
+                    @ViewLocalizer["This will send notification mails to the recipient, as configured by the {0}.", Html.ActionLink(StringLocalizer["email rules"], "StoreEmails", "UIStores", new { storeId = Model.StoreId })]
                     @if (Model.HasEmailRules is not true)
                     {
                         <div class="info-note mt-1 text-warning" role="alert">
                             <vc:icon symbol="warning"/>
-                            No payment request related email rules have been configured for this store.
+                            <span text-translate="true">No payment request related email rules have been configured for this store.</span>
                         </div>
                     }
                 </div>
@@ -144,15 +143,15 @@
            asp-action="ListInvoices"
            asp-controller="UIInvoice"
            asp-route-storeId="@Model.StoreId"
-           asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")">Invoices</a>
-        <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest"  permission="@Policies.CanModifyPaymentRequests">Clone</a>
+           asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(Model.Id)}")" text-translate="true">Invoices</a>
+        <a class="btn btn-secondary" asp-route-payReqId="@Model.Id" asp-action="ClonePaymentRequest" id="ClonePaymentRequest"  permission="@Policies.CanModifyPaymentRequests" text-translate="true">Clone</a>
         @if (!Model.Archived)
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Archive this payment request so that it does not appear in the payment request list by default" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests">Archive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this payment request so that it does not appear in the payment request list by default"]" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="ArchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Archive</a>
         }
         else
         {
-            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="Unarchive this payment request" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests">Unarchive</a>
+            <a class="btn btn-secondary" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this payment request"]" asp-controller="UIPaymentRequest" asp-action="TogglePaymentRequestArchival" asp-route-payReqId="@Model.Id" id="UnarchivePaymentRequest" permission="@Policies.CanModifyPaymentRequests" text-translate="true">Unarchive</a>
         }
     </div>
 }

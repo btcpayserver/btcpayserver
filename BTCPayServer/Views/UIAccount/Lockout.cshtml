@@ -6,13 +6,13 @@
 
 @if (Model is null)
 {
-    <p class="mb-0">This account has been locked out because of multiple invalid login attempts. Please try again later.</p>  
+    <p class="mb-0" text-translate="true">This account has been locked out because of multiple invalid login attempts. Please try again later.</p>  
 }
 else if (DateTimeOffset.MaxValue - Model.Value < TimeSpan.FromSeconds(1))
 {
-    <p class="mb-0">Your account has been disabled. Please contact server administrator.</p>
+    <p class="mb-0" text-translate="true">Your account has been disabled. Please contact server administrator.</p>
 }
 else
 {
-    <p class="mb-0">This account has been locked out. Please try again @Model.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative).</p>  
+    <p class="mb-0"><span text-translate="true">This account has been locked out. Please try again</span> @Model.Value.ToBrowserDate(ViewsRazor.DateDisplayFormat.Relative).</p>  
 }

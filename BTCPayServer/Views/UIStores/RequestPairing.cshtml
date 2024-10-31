@@ -5,7 +5,7 @@
 @{
     var store = Context.GetStoreData();
     Layout = store is null ? "_LayoutWizard" : "_Layout";
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Pairing Permission", store?.Id);
+    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Pairing Permission"], store?.Id);
 }
 
 @if (store is null)
@@ -23,10 +23,10 @@
             <nav aria-label="breadcrumb">
                 <ol class="breadcrumb">
                     <li class="breadcrumb-item">
-                        <a asp-action="ListTokens" asp-route-storeId="@store.Id">Access Tokens</a>
+                        <a asp-action="ListTokens" asp-route-storeId="@store.Id" text-translate="true">Access Tokens</a>
                     </li>
                     <li class="breadcrumb-item">
-                        <a asp-action="CreateToken" asp-route-storeId="@store.Id">Create Token</a>
+                        <a asp-action="CreateToken" asp-route-storeId="@store.Id" text-translate="true">Create Token</a>
                     </li>
                     <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
                 </ol>
@@ -37,7 +37,7 @@
         {
             <h2 text-translate="true">@ViewData["Title"]</h2>
         }
-		<button id="page-primary" type="submit" class="btn btn-primary mt-3" title="Approve this pairing demand">Approve</button>
+		<button id="page-primary" type="submit" class="btn btn-primary mt-3" title="@StringLocalizer["Approve this pairing demand"]">Approve</button>
     </div>
     <partial name="_StatusMessage" />
     <div class="row">

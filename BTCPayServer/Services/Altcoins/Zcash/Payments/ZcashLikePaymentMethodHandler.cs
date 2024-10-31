@@ -73,15 +73,16 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
                 AddressIndex = address.AddressIndex,
                 DepositAddress = address.Address
             }, Serializer);
+            context.TrackedDestinations.Add(address.Address);
         }
 
-        object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
-        {
-            return ParsePaymentPromptDetails(details);
-        }
         public ZcashPaymentPromptDetails ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
         {
             return details.ToObject<ZcashPaymentPromptDetails>(Serializer);
+        }
+        object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
+        {
+            return ParsePaymentPromptDetails(details);
         }
         object IPaymentMethodHandler.ParsePaymentMethodConfig(JToken config)
         {
@@ -99,17 +100,6 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Payments
             public Task<GetFeeEstimateResponse> GetFeeRate;
             public Func<string, Task<CreateAddressResponse>> ReserveAddress;
             public long AccountIndex { get; internal set; }
-        }
-
-        public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
-        {
-            return new CheckoutUIPaymentMethodSettings
-            {
-                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
-            };
         }
 
         public ZcashLikePaymentData ParsePaymentDetails(JToken details)

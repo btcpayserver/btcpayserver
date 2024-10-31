@@ -76,10 +76,11 @@ namespace BTCPayServer.PayoutProcessors.OnChain
 		protected override async Task Process(object paymentMethodConfig, List<PayoutData> payouts)
 		{
 			if (paymentMethodConfig is not DerivationSchemeSettings { IsHotWallet: true } config)
-			{
-				return;
-			}
-			if (!_explorerClientProvider.IsAvailable(Network.CryptoCode))
+            {
+                DisableProcessor(payouts);
+                return;
+            }
+            if (!_explorerClientProvider.IsAvailable(Network.CryptoCode))
             {
                 return;
             }
@@ -91,6 +92,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 WellknownMetadataKeys.AccountHDKey);
             if (extKeyStr == null)
             {
+                DisableProcessor(payouts);
                 return;
             }
 
@@ -108,9 +110,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
 
             var processorBlob = GetBlob(PayoutProcessorSettings);
             if (payouts.Sum(p => p.Amount) < processorBlob.Threshold)
-            {
                 return;
-            }
             
             var feeRate = await this._feeProviderFactory.CreateFeeProvider(Network).GetFeeRateAsync(Math.Max(processorBlob.FeeTargetBlock, 1));
 
@@ -127,6 +127,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     await _bitcoinLikePayoutHandler.ParseClaimDestination(blob.Destination, CancellationToken);
                 if (!string.IsNullOrEmpty(claimDestination.error))
                 {
+                    DisableProcessor([payout]);
                     continue;
                 }
 
@@ -156,8 +157,10 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 }
                 catch (NotEnoughFundsException)
                 {
-
-                    failedAmount = payout.Amount;
+					failedAmount = payout.Amount;
+					if (blob.IncrementErrorCount() >= 10)
+						blob.DisableProcessor(OnChainAutomatedPayoutSenderFactory.ProcessorName);
+					payout.SetBlob(blob, _btcPayNetworkJsonSerializerSettings);
                     //keep going, we prioritize withdraws by time but if there is some other we can fit, we should
                 }
             }
@@ -205,6 +208,16 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 {
                     Logs.PayServer.LogError(e, "Could not finalize and broadcast");
                 }
+            }
+        }
+
+        private void DisableProcessor(List<PayoutData> payouts)
+        {
+            foreach (var payout in payouts)
+            {
+                var b = payout.GetBlob(_btcPayNetworkJsonSerializerSettings);
+                b.DisableProcessor(OnChainAutomatedPayoutSenderFactory.ProcessorName);
+                payout.SetBlob(b, _btcPayNetworkJsonSerializerSettings);
             }
         }
     }

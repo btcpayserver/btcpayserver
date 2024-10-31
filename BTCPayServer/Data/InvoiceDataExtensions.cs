@@ -32,7 +32,7 @@ namespace BTCPayServer.Data
 #nullable enable
         public static PayoutMethodId? GetClosestPayoutMethodId(this InvoiceData invoice, IEnumerable<PayoutMethodId> pmids)
         {
-            var paymentMethodIds = invoice.Payments.Select(o => o.GetPaymentMethodId()).ToArray();
+            var paymentMethodIds = invoice.Payments.Select(o => PaymentMethodId.Parse(o.PaymentMethodId)).ToArray();
             if (paymentMethodIds.Length == 0)
                 paymentMethodIds = invoice.GetBlob().GetPaymentPrompts().Select(p => p.PaymentMethodId).ToArray();
             return PaymentMethodId.GetSimilarities(pmids, paymentMethodIds)
@@ -73,7 +73,7 @@ namespace BTCPayServer.Data
             entity.Status = state.Status;
             if (invoiceData.AddressInvoices != null)
             {
-                entity.AvailableAddressHashes = invoiceData.AddressInvoices.Select(a => a.GetAddress() + a.GetPaymentMethodId()).ToHashSet();
+                entity.Addresses = invoiceData.AddressInvoices.Select(a => (PaymentMethodId.Parse(a.PaymentMethodId), a.Address)).ToHashSet();
             }
             if (invoiceData.Refunds != null)
             {

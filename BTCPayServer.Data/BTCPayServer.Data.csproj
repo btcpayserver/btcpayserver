@@ -20,5 +20,7 @@
   <ItemGroup>
     <None Remove="DBScripts\001.InvoiceFunctions.sql" />
     <None Remove="DBScripts\002.RefactorPayouts.sql" />
+    <None Remove="DBScripts\003.RefactorPendingInvoicesPayments.sql" />
+    <None Remove="DBScripts\004.MonitoredInvoices.sql" />
   </ItemGroup>
 </Project>

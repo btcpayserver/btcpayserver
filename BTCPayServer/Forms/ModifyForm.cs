@@ -4,6 +4,7 @@ namespace BTCPayServer.Forms;
 
 public class ModifyForm
 {
+    [DisplayName("Name")]
     public string Name { get; set; }
 
     [DisplayName("Form configuration (JSON)")]

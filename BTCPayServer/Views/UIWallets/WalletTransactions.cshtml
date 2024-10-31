@@ -1,5 +1,10 @@
+@using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Client
 @using BTCPayServer.Components
+@using BTCPayServer.Components.WalletNav
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Html
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model ListTransactionsViewModel
 
 @{
@@ -9,7 +14,7 @@
     var labelFilter = Context.Request.Query["labelFilter"].ToString();
     var wallet = walletId != null ? WalletId.Parse(walletId) : new WalletId(storeId, cryptoCode);
 
-    ViewData.SetActivePage(WalletsNavPages.Transactions, $"{Model.CryptoCode} Transactions", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Transactions, StringLocalizer["{0} Transactions", Model.CryptoCode], walletId);
 }
 
 @section PageHeadContent {
@@ -134,11 +139,11 @@
             <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                 @if (string.IsNullOrEmpty(labelFilter))
                 {
-                    <span class="text-secondary">Filter by label</span>
+                    <span class="text-secondary" text-translate="true">Filter by label</span>
                 }
                 else
                 {
-                    <span class="text-secondary">Label:</span>
+                    <span class="text-secondary" text-translate="true">Label:</span>
                     <span>@labelFilter</span>
                 }
             </button>
@@ -150,13 +155,13 @@
                 @if (!string.IsNullOrEmpty(labelFilter))
                 {
                     <li><hr class="dropdown-divider"></li>
-                    <li><a class="dropdown-item" asp-route-labelFilter="">Clear filter</a></li>
+                    <li><a class="dropdown-item" asp-route-labelFilter="" text-translate="true">Clear filter</a></li>
                 }
             </ul>
         </div>
     }
     <div class="dropdown d-inline-flex align-items-center gap-3 ms-auto" id="Export">
-        <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+        <button class="btn btn-secondary dropdown-toggle" type="button" id="ExportDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
             Export
         </button>
         <div class="dropdown-menu" aria-labelledby="ExportDropdownToggle">
@@ -177,15 +182,15 @@
                 </th>
                 <th class="date-col">
                     <div class="d-flex align-items-center gap-1">
-                        Date
-                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                        <span text-translate="true">Date</span>
+                        <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                             <vc:icon symbol="time" />
                         </button>
                     </div>
                 </th>
-                <th class="text-start">Label</th>
-                <th>Transaction</th>
-                <th class="amount-col">Amount</th>
+                <th text-translate="true" class="text-start">Label</th>
+                <th text-translate="true">Transaction</th>
+                <th text-translate="true" class="amount-col">Amount</th>
                 <th></th>
             </tr>
         </thead>
@@ -198,12 +203,12 @@
                     <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
                         <div>
                             <strong class="mass-action-selected-count">0</strong>
-                            selected
+                            <span text-translate="true">selected</span>
                         </div>
                         <form id="WalletActions" method="post" asp-action="WalletActions" asp-route-walletId="@walletId" permission="@Policies.CanModifyStoreSettings" class="d-inline-flex align-items-center gap-3">
                             <button id="BumpFee" name="command" type="submit" value="cpfp" class="btn btn-link">
                                 <vc:icon symbol="actions-send" />
-                                Bump fee
+                                <span text-translate="true">Bump fee</span>
                             </button>
                         </form>
                     </div>
@@ -221,15 +226,15 @@
     
 <div class="text-center only-for-js d-none" id="LoadingIndicator">
     <div class="spinner-border spinner-border-sm text-secondary ms-2" role="status">
-        <span class="visually-hidden">Loading...</span>
+        <span class="visually-hidden" text-translate="true">Loading...</span>
     </div>
 </div>
 <div class="d-flex flex-wrap align-items-center justify-content-center gap-3 mb-5 only-for-js" id="ListActions">
-    <button type="button" class="btn btn-secondary d-none" id="GoToTop">Go to top</button>
+    <button type="button" class="btn btn-secondary d-none" id="GoToTop" text-translate="true">Go to top</button>
 </div>
 
 <p class="mt-4 mb-0">
-    If BTCPay Server shows you an invalid balance, <a asp-action="WalletRescan" asp-route-walletId="@Context.GetRouteValue("walletId")">rescan your wallet</a>.
-    <br />
-    If some transactions appear in BTCPay Server, but are missing in another wallet, <a href="https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet" rel="noreferrer noopener">follow these instructions</a>.
+    @ViewLocalizer["If BTCPay Server shows you an invalid balance, {0}.<br />If some transactions appear in BTCPay Server, but are missing in another wallet, {1}.",
+        Html.ActionLink(StringLocalizer["rescan your wallet"], "WalletRescan", "UIWallets", new { walletId = Context.GetRouteValue("walletId") }), 
+        new HtmlString($"<a href=\"https://docs.btcpayserver.org/FAQ/Wallet/#missing-payments-in-my-software-or-hardware-wallet\" target=\"_blank\" rel=\"noreferrer noopener\">{StringLocalizer["follow these instructions"]}</a>")]
 </p>

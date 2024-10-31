@@ -26,14 +26,14 @@ namespace BTCPayServer.Data
         public string ExceptionStatus { get; set; }
         public List<AddressInvoiceData> AddressInvoices { get; set; }
         public bool Archived { get; set; }
-        public List<PendingInvoiceData> PendingInvoices { get; set; }
         public List<InvoiceSearchData> InvoiceSearchData { get; set; }
         public List<RefundData> Refunds { get; set; }
 
 		public static string GetOrderId(string blob) => throw new NotSupportedException();
 		public static string GetItemCode(string blob) => throw new NotSupportedException();
+        public static bool IsPending(string status) => throw new NotSupportedException();
 
-		[Timestamp]
+        [Timestamp]
         // With this, update of InvoiceData will fail if the row was modified by another process
         public uint XMin { get; set; }
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
@@ -51,7 +51,7 @@ namespace BTCPayServer.Data
                     .HasColumnType("NUMERIC");
 			builder.HasDbFunction(typeof(InvoiceData).GetMethod(nameof(GetOrderId), new[] { typeof(string) }), b => b.HasName("get_orderid"));
 			builder.HasDbFunction(typeof(InvoiceData).GetMethod(nameof(GetItemCode), new[] { typeof(string) }), b => b.HasName("get_itemcode"));
-
-		}
+            builder.HasDbFunction(typeof(InvoiceData).GetMethod(nameof(IsPending), new[] { typeof(string) }), b => b.HasName("is_pending"));
+        }
     }
 }

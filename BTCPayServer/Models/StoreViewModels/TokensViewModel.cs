@@ -13,6 +13,7 @@ namespace BTCPayServer.Models.StoreViewModels
             get; set;
         }
 
+        [Display(Name = "Label")]
         public string Label
         {
             get; set;

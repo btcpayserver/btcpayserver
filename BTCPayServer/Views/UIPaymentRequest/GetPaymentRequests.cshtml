@@ -6,7 +6,7 @@
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
 @{
     Layout = "_Layout";
-    ViewData["Title"] = "Payment Requests";
+    ViewData["Title"] = ViewLocalizer["Payment Requests"];
     var storeId = Context.GetStoreData().Id;
     var statusFilterCount = CountArrayFilter("status") + (HasBooleanFilter("includearchived") ? 1 : 0);
 }
@@ -38,11 +38,11 @@
 <div id="descriptor" class="collapse">
     <div class="d-flex px-4 py-4 mb-4 bg-tile rounded">
         <div class="flex-fill">
-            <p class="mb-2">Payment requests are persistent shareable pages that enable the receiver to pay at their convenience. Funds are paid to a payment request at the current exchange rate.</p>
-            <p class="mb-3">Requests may be paid in partial. They will remain valid until time expires or when paid what is due.</p>
-            <a href="https://docs.btcpayserver.org/PaymentRequests/" target="_blank" rel="noreferrer noopener">Learn More</a>
+            <p class="mb-2" text-translate="true">Payment requests are persistent shareable pages that enable the receiver to pay at their convenience. Funds are paid to a payment request at the current exchange rate.</p>
+            <p class="mb-3" text-translate="true">Requests may be paid in partial. They will remain valid until time expires or when paid what is due.</p>
+            <a href="https://docs.btcpayserver.org/PaymentRequests/" target="_blank" rel="noreferrer noopener" text-translate="true">Learn More</a>
         </div>
-        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="Close">
+        <button type="button" class="btn-close ms-auto" data-bs-toggle="collapse" data-bs-target="#descriptor" aria-expanded="false" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
     </div>
@@ -54,7 +54,7 @@
     <input type="hidden" asp-for="Count" />
     <input type="hidden" asp-for="TimezoneOffset" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="Search…" />
+    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
@@ -63,15 +63,15 @@
             }
             else
             {
-                <span>All Status</span>
+                <span text-translate="true">All Status</span>
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StatusOptionsToggle">
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "pending")" class="dropdown-item @(HasArrayFilter("status", "pending") ? "custom-active" : "")">Pending</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "completed")" class="dropdown-item @(HasArrayFilter("status", "completed") ? "custom-active" : "")">Settled</a>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")">Expired</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "pending")" class="dropdown-item @(HasArrayFilter("status", "pending") ? "custom-active" : "")" text-translate="true">Pending</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "completed")" class="dropdown-item @(HasArrayFilter("status", "completed") ? "custom-active" : "")" text-translate="true">Settled</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("status", "expired")" class="dropdown-item @(HasArrayFilter("status", "expired") ? "custom-active" : "")" text-translate="true">Expired</a>
             <div role="separator" class="dropdown-divider"></div>
-            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived">Archived</a>
+            <a asp-action="GetPaymentRequests" asp-route-storeId="@storeId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("includearchived", "true")" class="dropdown-item @(HasBooleanFilter("includearchived") ? "custom-active" : "")" id="StatusOptionsIncludeArchived" text-translate="true">Archived</a>
         </div>
     </div>
 </form>
@@ -82,17 +82,17 @@
         <table class="table table-hover">
             <thead>
                 <tr>
-                    <th>Title</th>
+                    <th text-translate="true">Title</th>
                     <th class="date-col">
                         <div class="d-flex align-items-center gap-1">
-                            Expiry
-                            <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="Switch date format">
+                            <span text-translate="true">Expiry</span>
+                            <button type="button" class="btn btn-link p-0 switch-time-format only-for-js" title="@StringLocalizer["Switch date format"]">
                                 <vc:icon symbol="time" />
                             </button>
                         </div>
                     </th>
-                    <th>Status</th>
-                    <th class="amount-col">Amount</th>
+                    <th text-translate="true">Status</th>
+                    <th class="amount-col" text-translate="true">Amount</th>
                     <th></th>
                 </tr>
             </thead>
@@ -114,14 +114,14 @@
                         </td>
                         <td class="text-end">
                             <div class="d-inline-flex align-items-center gap-3">
-                                <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id" target="_blank">View</a>
+                                <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id" target="_blank" text-translate="true">View</a>
                                 <div class="dropdown">
                                     <button class="btn btn-link dropdown-toggle p-0 dropdown-toggle-no-caret text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="ToggleActions-@item.Id">
                                         <vc:icon symbol="dots" />   
                                     </button>
                                     <ul class="dropdown-menu" aria-labelledby="actionDropdown">
-                                        <li><a class="dropdown-item"  permission="@Policies.CanViewInvoices" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")">Invoices</a></li>
-                                        <li><a class="dropdown-item"  permission="@Policies.CanModifyPaymentRequests" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id">Clone</a></li>
+                                        <li><a class="dropdown-item"  permission="@Policies.CanViewInvoices" asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@item.StoreId" asp-route-searchterm="@($"orderid:{PaymentRequestRepository.GetOrderIdForPaymentRequest(item.Id)}")" text-translate="true">Invoices</a></li>
+                                        <li><a class="dropdown-item"  permission="@Policies.CanModifyPaymentRequests" asp-action="ClonePaymentRequest" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="Clone-@item.Id" text-translate="true">Clone</a></li>
                                         <li class="dropdown-divider"></li>
                                         <li><a class="dropdown-item"  permission="@Policies.CanModifyPaymentRequests" asp-action="TogglePaymentRequestArchival" asp-route-storeId="@item.StoreId" asp-route-payReqId="@item.Id" id="ToggleArchival-@item.Id">@(item.Archived ? "Unarchive" : "Archive")</a></li>
                                     </ul>
@@ -138,7 +138,7 @@
 }
 else
 {
-    <p class="text-secondary mt-3">
+    <p class="text-secondary mt-3" text-translate="true">
         There are no payment requests matching your criteria.
     </p>
 }

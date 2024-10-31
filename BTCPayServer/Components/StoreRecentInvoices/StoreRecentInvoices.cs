@@ -68,7 +68,7 @@ public class StoreRecentInvoices : ViewComponent
                 Details = new InvoiceDetailsModel
                 {
                     Archived = invoice.Archived,
-                    Payments = invoice.GetPayments(false) 
+                    Payments = invoice.GetPayments(false)
                 }
            }).ToList();
 

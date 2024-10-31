@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Plugins.Crowdfund.Models
 {
@@ -31,6 +33,10 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
 
         [Display(Name = "Featured Image URL")]
         public string MainImageUrl { get; set; }
+
+        [Display(Name = "Featured Image URL")]
+        [JsonIgnore]
+        public IFormFile MainImageFile { get; set; }
 
         [Display(Name = "Callback Notification URL")]
         [Uri]

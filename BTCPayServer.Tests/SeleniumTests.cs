@@ -404,6 +404,84 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanManageUsers()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            //Create Users
+            s.RegisterNewUser();
+            var user = s.AsTestAccount();
+            s.Logout();
+            s.GoToRegister();
+            s.RegisterNewUser(true);
+            var admin = s.AsTestAccount();
+            s.GoToHome();
+            s.GoToServer(ServerNavPages.Users);
+
+            // Manage user password reset
+            var rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .reset-password")).Click();
+            s.Driver.WaitForElement(By.Id("Password")).SendKeys("Password@1!");
+            s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("Password@1!");
+            s.ClickPagePrimary();
+            Assert.Contains("Password successfully set", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            // Manage user status (disable and enable)
+            // Disable user
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .disable-user")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
+            Assert.Contains("User disabled", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+            //Enable user
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .enable-user")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
+            Assert.Contains("User enabled", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            // Manage user details (edit)
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .user-edit")).Click();
+            s.Driver.WaitForElement(By.Id("Name")).SendKeys("Test User");
+            s.ClickPagePrimary();
+            Assert.Contains("User successfully updated", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            // Manage user deletion
+            s.GoToServer(ServerNavPages.Users);
+            s.Driver.FindElement(By.Id("SearchTerm")).Clear();
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(user.RegisterDetails.Email);
+            s.Driver.FindElement(By.Id("SearchTerm")).SendKeys(Keys.Enter);
+            rows = s.Driver.FindElements(By.CssSelector("#UsersList tr.user-overview-row"));
+            Assert.Single(rows);
+            Assert.Contains(user.RegisterDetails.Email, rows.First().Text);
+            s.Driver.FindElement(By.CssSelector("#UsersList tr.user-overview-row:first-child .delete-user")).Click();
+            s.Driver.WaitForElement(By.Id("ConfirmContinue")).Click();
+            Assert.Contains("User deleted", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success).Text);
+
+            s.Driver.AssertNoError();
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanRequireApprovalForNewAccounts()
         {
             using var s = CreateSeleniumTester();
@@ -1160,6 +1238,7 @@ namespace BTCPayServer.Tests
             await s.StartAsync();
             var userId = s.RegisterNewUser(true);
             s.CreateNewStore();
+            s.GenerateWallet();
             (_, string appId) = s.CreateApp("PointOfSale");
             s.Driver.FindElement(By.Id("Title")).Clear();
             s.Driver.FindElement(By.Id("Title")).SendKeys("Tea shop");
@@ -1171,10 +1250,20 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("CodeTabButton")).Click();
 			var template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
             Assert.Contains("\"buyButtonText\": \"Take my money\"", template);
-            Assert.Matches("\"categories\": \\[\n\\s+\"Drinks\"\n\\s+\\]", template);
+            Assert.Matches("\"categories\": \\[\r?\n\\s*\"Drinks\"\\s*\\]", template);
+
 
             s.ClickPagePrimary();
             Assert.Contains("App updated", s.FindAlertMessage().Text);
+            
+            s.Driver.ScrollTo(By.Id("CodeTabButton"));
+            s.Driver.FindElement(By.Id("CodeTabButton")).Click();
+            template = s.Driver.FindElement(By.Id("TemplateConfig")).GetAttribute("value");
+            s.Driver.FindElement(By.Id("TemplateConfig")).Clear();
+            s.Driver.FindElement(By.Id("TemplateConfig")).SendKeys(template.Replace(@"""id"": ""green-tea"",", ""));
+
+            s.ClickPagePrimary();
+            Assert.Contains("Invalid template: Missing ID for item \"Green Tea\".", s.Driver.FindElement(By.CssSelector(".validation-summary-errors")).Text);
 
             s.Driver.FindElement(By.Id("ViewApp")).Click();
             var windows = s.Driver.WindowHandles;
@@ -1553,7 +1642,6 @@ namespace BTCPayServer.Tests
             s.GenerateWallet("BTC", "", false, true);
             var walletId = new WalletId(storeId, "BTC");
             s.GoToWallet(walletId, WalletsNavPages.Receive);
-            s.Driver.FindElement(By.Id("generateButton")).Click();
             var addressStr = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
             var address = BitcoinAddress.Create(addressStr,
                 ((BTCPayNetwork)s.Server.NetworkProvider.GetNetwork("BTC")).NBitcoinNetwork);
@@ -1758,7 +1846,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
 
             //generate a receiving address
-            s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             // no previous page in the wizard, hence no back button
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
@@ -1780,10 +1867,6 @@ namespace BTCPayServer.Tests
                 Assert.NotNull(s.Driver.FindElement(By.CssSelector("[data-value='test-label']")));
             });
 
-            //unreserve
-            s.Driver.FindElement(By.CssSelector("button[value=unreserve-current-address]")).Click();
-            //generate it again, should be the same one as before as nothing got used in the meantime
-            s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
             Assert.True(s.Driver.FindElement(By.CssSelector("#address-tab .qr-container")).Displayed);
             Assert.Equal(receiveAddr, s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text"));
             TestUtils.Eventually(() =>
@@ -1901,6 +1984,7 @@ namespace BTCPayServer.Tests
             var jack = new Key().PubKey.Hash.GetAddress(Network.RegTest);
             SetTransactionOutput(s, 0, jack, 0.01m);
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
+            s.Driver.WaitForElement(By.CssSelector("button[value=broadcast]"));
             Assert.Contains(jack.ToString(), s.Driver.PageSource);
             Assert.Contains("0.01000000", s.Driver.PageSource);
             Assert.EndsWith("psbt/ready", s.Driver.Url);
@@ -2403,7 +2487,16 @@ namespace BTCPayServer.Tests
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
             var response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
-            await TestUtils.EventuallyAsync(async () =>
+            // Oops!
+            Assert.Equal("The request has been approved. The sender needs to send the payment manually. (Or activate the lightning automated payment processor)", response.Reason);
+			var account = await s.AsTestAccount().CreateClient();
+			await account.UpdateStoreLightningAutomatedPayoutProcessors(s.StoreId, "BTC-LN", new()
+			{
+				ProcessNewPayoutsInstantly = true,
+				IntervalSeconds = TimeSpan.FromSeconds(60)
+			});
+			// Now it should process to complete
+			await TestUtils.EventuallyAsync(async () =>
             {
                 s.Driver.Navigate().Refresh();
                 Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
@@ -2493,7 +2586,9 @@ namespace BTCPayServer.Tests
                 $"LNurl w payout test {DateTime.UtcNow.Ticks}",
                 TimeSpan.FromHours(1), CancellationToken.None));
             response = await info.SendRequest(bolt2.BOLT11, s.Server.PayTester.HttpClient, null,null);
-            TestUtils.Eventually(() =>
+			// Nope, you need to approve the claim automatically
+			Assert.Equal("The request has been recorded, but still need to be approved before execution.", response.Reason);
+			TestUtils.Eventually(() =>
             {
                 s.Driver.Navigate().Refresh();
                 Assert.Contains(bolt2.BOLT11, s.Driver.PageSource);
@@ -3180,6 +3275,7 @@ namespace BTCPayServer.Tests
         public async Task CanUseLNAddress()
         {
             using var s = CreateSeleniumTester();
+            s.Server.DeleteStore = false;
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
@@ -3332,7 +3428,13 @@ namespace BTCPayServer.Tests
                 var succ = JsonConvert.DeserializeObject<LNURLPayRequest.LNURLPayRequestCallbackResponse>(str);
                 Assert.NotNull(succ.Pr);
                 Assert.Equal(new LightMoney(2001), BOLT11PaymentRequest.Parse(succ.Pr, Network.RegTest).MinimumAmount);
+                await s.Server.CustomerLightningD.Pay(succ.Pr);
             }
+
+            // Can we find our comment and address in the payment list?
+            s.GoToInvoices();
+            var source = s.Driver.PageSource;
+            Assert.Contains(lnUsername, source);
         }
 
         [Fact]
@@ -3344,11 +3446,14 @@ namespace BTCPayServer.Tests
             var user = s.RegisterNewUser();
             s.GoToHome();
             s.GoToProfile(ManageNavPages.LoginCodes);
-            var code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
-            s.ClickPagePrimary();
-            Assert.NotEqual(code, s.Driver.FindElement(By.Id("logincode")).GetAttribute("value"));
 
-            code = s.Driver.FindElement(By.Id("logincode")).GetAttribute("value");
+            string code = null;
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
+            string prevCode = code;
+            await s.Driver.Navigate().RefreshAsync();
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
+            Assert.NotEqual(prevCode, code);
+            TestUtils.Eventually(() => { code = s.Driver.FindElement(By.CssSelector("#LoginCode .qr-code")).GetAttribute("alt"); });
             s.Logout();
             s.GoToLogin();
             s.Driver.SetAttribute("LoginCode", "value", "bad code");

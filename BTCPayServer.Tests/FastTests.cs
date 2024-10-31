@@ -40,6 +40,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -679,9 +680,28 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
+        public void ResourceTrackerTest()
+        {
+            var tracker = new ResourceTracker<string>();
+            var t1 = tracker.StartTracking();
+            Assert.True(t1.TryTrack("1"));
+            Assert.False(t1.TryTrack("1"));
+            var t2 = tracker.StartTracking();
+            Assert.True(t2.TryTrack("2"));
+            Assert.False(t2.TryTrack("1"));
+            Assert.True(t1.Contains("1"));
+            Assert.True(t2.Contains("2"));
+            Assert.True(tracker.Contains("1"));
+            Assert.True(tracker.Contains("2"));
+            t1.Dispose();
+            Assert.False(tracker.Contains("1"));
+            Assert.True(tracker.Contains("2"));
+            Assert.True(t2.TryTrack("1"));
+        }
+
+        [Fact]
         public void CanAcceptInvoiceWithTolerance()
         {
-            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
             var entity = new InvoiceEntity() { Currency = "USD" };
 #pragma warning disable CS0618
             entity.Payments = new List<PaymentEntity>();
@@ -738,10 +758,29 @@ namespace BTCPayServer.Tests
             Assert.True(FileTypeDetector.IsAudio(new byte[] { 0xFF, 0xF3, 0xE4, 0x64, 0x00, 0x20, 0xAD, 0xBD, 0x04, 0x00 }, "music.mp3"));
         }
 
+        CurrencyNameTable GetCurrencyNameTable()
+        {
+            ServiceCollection services = new ServiceCollection();
+            services.AddLogging(o => o.AddProvider(this.TestLogProvider));
+            BTCPayServerServices.RegisterCurrencyData(services);
+            // One test fail without.
+            services.AddCurrencyData(new CurrencyData()
+            {
+                Code = "USDt",
+                Name = "USDt",
+                Divisibility = 8,
+                Symbol = null,
+                Crypto = true
+            });
+            var table = services.BuildServiceProvider().GetRequiredService<CurrencyNameTable>();
+            table.ReloadCurrencyData(default).GetAwaiter().GetResult();
+            return table;
+        }
+
         [Fact]
         public void RoundupCurrenciesCorrectly()
         {
-            DisplayFormatter displayFormatter = new(CurrencyNameTable.Instance);
+            DisplayFormatter displayFormatter = new(GetCurrencyNameTable());
             foreach (var test in new[]
             {
                 (0.0005m, "0.0005 USD", "USD"), (0.001m, "0.001 USD", "USD"), (0.01m, "0.01 USD", "USD"),
@@ -754,8 +793,8 @@ namespace BTCPayServer.Tests
                 actual = actual.Replace("￥", "¥"); // Hack so JPY test pass on linux as well
                 Assert.Equal(test.Item2, actual);
             }
-            Assert.Equal(0, CurrencyNameTable.Instance.GetNumberFormatInfo("ARS").CurrencyDecimalDigits);
-            Assert.Equal(0, CurrencyNameTable.Instance.GetNumberFormatInfo("COP").CurrencyDecimalDigits);
+            Assert.Equal(0, GetCurrencyNameTable().GetNumberFormatInfo("ARS").CurrencyDecimalDigits);
+            Assert.Equal(0, GetCurrencyNameTable().GetNumberFormatInfo("COP").CurrencyDecimalDigits);
         }
 
         [Fact]
@@ -1377,7 +1416,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             var btcPayNetworkProvider = CreateNetworkProvider(ChainName.Regtest);
             foreach (var network in btcPayNetworkProvider.GetAll())
             {
-                var cd = CurrencyNameTable.Instance.GetCurrencyData(network.CryptoCode, false);
+                var cd = GetCurrencyNameTable().GetCurrencyData(network.CryptoCode, false);
                 Assert.NotNull(cd);
                 Assert.Equal(network.Divisibility, cd.Divisibility);
                 Assert.True(cd.Crypto);
@@ -1445,8 +1484,8 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.True(CurrencyValue.TryParse("1usd", out result));
             Assert.Equal("1 USD", result.ToString());
             Assert.True(CurrencyValue.TryParse("1.501 usd", out result));
-            Assert.Equal("1.50 USD", result.ToString());
-            Assert.False(CurrencyValue.TryParse("1.501 WTFF", out result));
+            Assert.Equal("1.501 USD", result.ToString());
+            Assert.True(CurrencyValue.TryParse("1.501 WTFF", out result));
             Assert.False(CurrencyValue.TryParse("1,501 usd", out result));
             Assert.False(CurrencyValue.TryParse("1.501", out result));
         }

@@ -14,6 +14,7 @@ using BTCPayServer.Payouts;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 
 namespace BTCPayServer.PayoutProcessors.Lightning;
 
@@ -22,15 +23,18 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
     private readonly EventAggregator _eventAggregator;
     private readonly LightningAutomatedPayoutSenderFactory _lightningAutomatedPayoutSenderFactory;
     private readonly PayoutProcessorService _payoutProcessorService;
+    private IStringLocalizer StringLocalizer { get; }
 
     public UILightningAutomatedPayoutProcessorsController(
         EventAggregator eventAggregator,
         LightningAutomatedPayoutSenderFactory lightningAutomatedPayoutSenderFactory,
-        PayoutProcessorService payoutProcessorService)
+        PayoutProcessorService payoutProcessorService,
+        IStringLocalizer stringLocalizer)
     {
         _eventAggregator = eventAggregator;
         _lightningAutomatedPayoutSenderFactory = lightningAutomatedPayoutSenderFactory;
         _payoutProcessorService = payoutProcessorService;
+        StringLocalizer = stringLocalizer;
     }
 
     [HttpGet("~/stores/{storeId}/payout-processors/lightning-automated/{cryptocode}")]
@@ -41,10 +45,10 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         var id = GetPayoutMethodId(cryptoCode);
         if (!_lightningAutomatedPayoutSenderFactory.GetSupportedPayoutMethods().Any(i => id == i))
         {
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = $"This processor cannot handle {cryptoCode}."
+                Message = StringLocalizer["This processor cannot handle {0}.", cryptoCode].Value
             });
             return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors");
         }
@@ -54,7 +58,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 {
                     Stores = new[] { storeId },
                     Processors = new[] { _lightningAutomatedPayoutSenderFactory.Processor },
-                    PayoutMethodIds = new[]
+                    PayoutMethods = new[]
                     {
                         PayoutTypes.LN.GetPayoutMethodId(cryptoCode)
                     }
@@ -75,10 +79,10 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         var id = GetPayoutMethodId(cryptoCode);
         if (!_lightningAutomatedPayoutSenderFactory.GetSupportedPayoutMethods().Any(i => id == i))
         {
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Message = $"This processor cannot handle {cryptoCode}."
+                Message = StringLocalizer["This processor cannot handle {0}.", cryptoCode].Value
             });
             return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors");
         }
@@ -88,7 +92,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
                 {
                     Stores = new[] { storeId },
                     Processors = new[] { _lightningAutomatedPayoutSenderFactory.Processor },
-                    PayoutMethodIds = new[]
+                    PayoutMethods = new[]
                     {
                         PayoutTypes.LN.GetPayoutMethodId(cryptoCode)
                     }
@@ -109,7 +113,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Success,
-            Message = "Processor updated."
+            Message = StringLocalizer["Processor updated."].Value
         });
         await tcs.Task;
         return RedirectToAction("ConfigureStorePayoutProcessors", "UiPayoutProcessors", new { storeId });
@@ -125,13 +129,10 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
         public LightningTransferViewModel(LightningAutomatedPayoutBlob blob)
         {
             IntervalMinutes = blob.Interval.TotalMinutes;
-            CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures;
             ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly;
         }
-
+        [Display(Name = "Process approved payouts instantly")]
         public bool ProcessNewPayoutsInstantly { get; set; }
-
-        public int? CancelPayoutAfterFailures { get; set; }
 
         [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]
         public double IntervalMinutes { get; set; }
@@ -141,7 +142,7 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
             return new LightningAutomatedPayoutBlob {
                 ProcessNewPayoutsInstantly = ProcessNewPayoutsInstantly,
                 Interval = TimeSpan.FromMinutes(IntervalMinutes), 
-                CancelPayoutAfterFailures = CancelPayoutAfterFailures};
+            };
         }
     }
 }

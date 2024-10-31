@@ -531,7 +531,7 @@
                         "description": "Human name of the payout processor",
                         "type": "string"
                     },
-                    "paymentMethods": {
+                    "payoutMethods": {
                         "nullable": true,
                         "description": "Supported, payment methods by this processor",
                         "type": "array",

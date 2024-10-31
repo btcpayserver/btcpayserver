@@ -1,7 +1,7 @@
 @model LoginWith2faViewModel
 
 <div class="twoFaBox">
-    <h2 class="h3 mb-3">Two-Factor Authentication</h2>
+    <h2 class="h3 mb-3" text-translate="true">Two-Factor Authentication</h2>
     <form method="post" asp-route-returnUrl="@ViewData["ReturnUrl"]" asp-action="LoginWith2fa">
         @if (!ViewContext.ModelState.IsValid)
         {
@@ -19,7 +19,7 @@
             <span asp-validation-for="RememberMachine" class="text-danger"></span>
         </div>
         <div class="form-group">
-            <button type="submit" class="btn btn-primary">Log in</button>
+            <button type="submit" class="btn btn-primary" text-translate="true">Log in</button>
         </div>
     </form>
     <p class="text-secondary mt-4 mb-0">

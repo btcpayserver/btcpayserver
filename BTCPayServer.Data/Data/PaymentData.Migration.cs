@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Reflection.Metadata;
 using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Migrations;
+using Microsoft.EntityFrameworkCore.ChangeTracking.Internal;
 using NBitcoin;
 using NBitcoin.Altcoins;
 using NBitcoin.DataEncoders;
@@ -44,9 +46,10 @@ namespace BTCPayServer.Data
             }
 
             var cryptoCode = blob["cryptoCode"].Value<string>();
-            Type = cryptoCode + "_" + blob["cryptoPaymentDataType"].Value<string>();
-            Type = MigrationExtensions.MigratePaymentMethodId(Type);
-            var divisibility = MigrationExtensions.GetDivisibility(Type);
+            MigratedPaymentMethodId = PaymentMethodId;
+            PaymentMethodId = cryptoCode + "_" + blob["cryptoPaymentDataType"].Value<string>();
+            PaymentMethodId = MigrationExtensions.MigratePaymentMethodId(PaymentMethodId);
+            var divisibility = MigrationExtensions.GetDivisibility(PaymentMethodId);
             Currency = blob["cryptoCode"].Value<string>();
             blob.Remove("cryptoCode");
             blob.Remove("cryptoPaymentDataType");
@@ -89,7 +92,7 @@ namespace BTCPayServer.Data
             blob.Remove("output");
             blob.Remove("outpoint");
             // Convert from sats to btc
-            if (cryptoData["value"] is not (null or { Type: JTokenType.Null }))
+            if (cryptoData["value"] is not (null or { Type: JTokenType.Null } or { Type: JTokenType.Object }))
             {
                 var v = cryptoData["value"].Value<long>();
                 Amount = (decimal)v / (decimal)Money.COIN;
@@ -100,7 +103,22 @@ namespace BTCPayServer.Data
                 blob.ConvertNumberToString("paymentMethodFee");
                 blob.Remove("networkFee");
                 blob.RemoveIfNull("paymentMethodFee");
-			}
+            }
+            // Liquid
+            else if (cryptoData["value"] is { Type: JTokenType.Object })
+            {
+                var v = cryptoData["value"]["value"].Value<long>();
+                var assetId = cryptoData["value"]["assetId"].Value<string>();
+                divisibility = GetDivisibility(assetId) ?? 8;
+                Amount = (decimal)v / (decimal)Math.Pow(10.0, divisibility);
+                cryptoData.Remove("value");
+                cryptoData["assetId"] = assetId;
+                blob["paymentMethodFee"] = blob["networkFee"];
+                blob.RemoveIfValue<decimal>("paymentMethodFee", 0.0m);
+                blob.ConvertNumberToString("paymentMethodFee");
+                blob.Remove("networkFee");
+                blob.RemoveIfNull("paymentMethodFee");
+            }
             // Convert from millisats to btc
             else if (cryptoData["amount"] is not (null or { Type: JTokenType.Null }))
             {
@@ -161,8 +179,22 @@ namespace BTCPayServer.Data
 #pragma warning restore CS0618 // Type or member is obsolete
             return true;
         }
+
+        private int? GetDivisibility(string assetId) =>
+        assetId switch
+        {
+            "ce091c998b83c78bb71a632313ba3760f1763d9cfcffae02258ffa9865a37bd2" => 8,
+            "aa775044c32a7df391902b3659f46dfe004ccb2644ce2ddc7dba31e889391caf" => 2,
+            "0e99c1a6da379d1f4151fb9df90449d40d0608f6cb33a5bcbfc8c265f42bab0a" => 8,
+            "6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d" => 8,
+            _ => null,
+        };
+
         [NotMapped]
         public bool Migrated { get; set; }
+        [NotMapped]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public string MigratedPaymentMethodId { get; set; }
 
         static readonly DateTimeOffset unixRef = new DateTimeOffset(1970, 1, 1, 0, 0, 0, TimeSpan.Zero);
         public static long DateTimeToMilliUnixTime(in DateTime time)

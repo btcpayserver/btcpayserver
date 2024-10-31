@@ -20,10 +20,9 @@ namespace BTCPayServer.Tests
 #else
         public const int TestTimeout = 90_000;
 #endif
-        public static DirectoryInfo TryGetSolutionDirectoryInfo(string currentPath = null)
+        public static DirectoryInfo TryGetSolutionDirectoryInfo()
         {
-            var directory = new DirectoryInfo(
-                currentPath ?? Directory.GetCurrentDirectory());
+            var directory = new DirectoryInfo(TestDirectory);
             while (directory != null && !directory.GetFiles("*.sln").Any())
             {
                 directory = directory.Parent;
@@ -31,10 +30,15 @@ namespace BTCPayServer.Tests
             return directory;
         }
 
+        static TestUtils()
+        {
+            TestDirectory = ((OutputPathAttribute)typeof(TestUtils).Assembly.GetCustomAttributes(typeof(OutputPathAttribute), true)[0]).BuiltPath;
+        }
+        public readonly static string TestDirectory;
 
         public static string GetTestDataFullPath(string relativeFilePath)
         {
-            var directory = new DirectoryInfo(Directory.GetCurrentDirectory());
+            var directory = new DirectoryInfo(TestDirectory);
             while (directory != null && !directory.GetFiles("*.csproj").Any())
             {
                 directory = directory.Parent;

@@ -2,36 +2,35 @@
 @using BTCPayServer.Plugins.Altcoins;
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Altcoins.Monero.Payments
+@using BTCPayServer.Services.Altcoins.Monero.Services
 @using BTCPayServer.Services.Altcoins.Monero.UI
 @using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
-@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+@model InvoiceDetailsModel
 @inject TransactionLinkProviders TransactionLinkProviders
 @inject PaymentMethodHandlerDictionary handlers
 
 @{
-	var payments = Model.Select(payment =>
+	var payments = Model.Payments.Select(payment =>
 	{
 		if (!handlers.TryGetValue(payment.PaymentMethodId, out var h) || h is not MoneroLikePaymentMethodHandler handler)
 			return null;
         var m = new MoneroPaymentViewModel();
 		var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
-		m.Crypto = handler.Network.CryptoCode;
+		m.PaymentMethodId = handler.PaymentMethodId;
 		m.DepositAddress = payment.Destination;
 		m.Amount = payment.Value.ToString(CultureInfo.InvariantCulture);
-        var confirmationCount = onChainPaymentData.ConfirmationCount;
-		if (confirmationCount >= handler.Network.MaxTrackedConfirmation)
-        {
-			m.Confirmations = "At least " + (handler.Network.MaxTrackedConfirmation);
-        }
-        else
-        {
-            m.Confirmations = confirmationCount.ToString(CultureInfo.InvariantCulture);
-        }
+
+		var confReq = MoneroListener.ConfirmationsRequired(onChainPaymentData, payment.InvoiceEntity.SpeedPolicy);
+		var confCount = onChainPaymentData.ConfirmationCount;
+		confCount = Math.Min(confReq, confCount);
+		m.Confirmations = $"{confCount} / {confReq}";
 
         m.TransactionId = onChainPaymentData.TransactionId;
         m.ReceivedTime = payment.ReceivedTime;
-		m.TransactionLink = TransactionLinkProviders.GetTransactionLink(m.Crypto, onChainPaymentData.TransactionId);
+		if (onChainPaymentData.TransactionId != null)
+			m.TransactionLink = TransactionLinkProviders.GetTransactionLink(m.PaymentMethodId, onChainPaymentData.TransactionId);
+		m.Currency = payment.Currency;
         return m;
 	}).Where(c => c != null).ToList();
 }
@@ -43,7 +42,7 @@
         <table class="table table-hover">
             <thead>
             <tr>
-                <th class="w-75px">Crypto</th>
+                <th class="w-75px">Payment Method</th>
                 <th class="w-175px">Destination</th>
                 <th class="text-nowrap">Payment Proof</th>
                 <th class="text-end">Confirmations</th>
@@ -54,12 +53,12 @@
             @foreach (var payment in payments)
             {
                 <tr >
-                    <td>@payment.Crypto</td>
+                    <td>@payment.PaymentMethodId</td>
                     <td><vc:truncate-center text="@payment.DepositAddress" classes="truncate-center-id" /></td>
                     <td><vc:truncate-center text="@payment.TransactionId" link="@payment.TransactionLink" classes="truncate-center-id" /></td>
                     <td class="text-end">@payment.Confirmations</td>
                     <td class="payment-value text-end text-nowrap">
-                        <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Amount, payment.Crypto)</span>
+                        <span data-sensitive class="text-success">@DisplayFormatter.Currency(payment.Amount, payment.Currency)</span>
                     </td>
                 </tr>
             }

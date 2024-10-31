@@ -7,9 +7,9 @@
     <nav aria-label="breadcrumb">
         <ol class="breadcrumb">
             <li class="breadcrumb-item">
-                <a asp-action="Services">Services</a>
+                <a asp-action="Services" text-translate="true">Services</a>
             </li>
-            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
         </ol>
         <h2 text-translate="true">@ViewData["Title"]</h2>
     </nav>
@@ -19,13 +19,11 @@
 @if (Model.ShowQR)
 {
     <div class="alert alert-warning alert-dismissible" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
-        <div>
-            <span><b>CONFIDENTIAL:</b> This QR Code is confidential, close this window as soon as you don't need it anymore.<br /></span>
-            <span>A malicious actor with access to this QR Code could steal the funds on your lightning wallet.</span>
-        </div>
+        <span text-translate="true">CONFIDENTIAL: This QR Code is confidential, close this window as soon as you don't need it anymore.</span>
+        <span text-translate="true">A malicious actor with access to this QR Code could steal the funds on your lightning wallet.</span>
     </div>
 }
 
@@ -36,17 +34,15 @@
             <div asp-validation-summary="All"></div>
         }
         <div class="form-group">
-            <h5>Browser connection</h5>
+            <h5 text-translate="true">Browser connection</h5>
             <p>
                 <span>You can go to @Model.WalletName from your browser by <a href="@Model.ServiceLink" rel="noreferrer noopener">clicking here</a><br/></span>
             </p>
         </div>
 
         <div class="form-group">
-            <h5>QR Code connection</h5>
-            <p>
-                <span>You can use QR Code to connect to your @Model.WalletName from your mobile.<br/></span>
-            </p>
+            <h5 text-translate="true">QR Code connection</h5>
+            <p>@StringLocalizer["You can use QR Code to connect to your {0} from your mobile.", Model.WalletName]</p>
         </div>
         <div class="form-group">
             @if (!Model.ShowQR)
@@ -54,7 +50,7 @@
                 <div class="form-group">
                     <form method="get">
                         <input type="hidden" asp-for="ShowQR" value="true"/>
-                        <button type="submit" class="btn btn-primary">Show Confidential QR Code</button>
+                        <button type="submit" class="btn btn-primary" text-translate="true">Show Confidential QR Code</button>
                     </form>
                 </div>
             }

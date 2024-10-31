@@ -51,13 +51,13 @@
 <partial name="_StatusMessage" />
 
 <div class="alert alert-warning alert-dismissible mb-4" role="alert">
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
         <vc:icon symbol="close" />
     </button>
-    <h5 class="alert-heading">Important notice about plugins</h5> 
+    <h5 class="alert-heading" text-translate="true">Important notice about plugins</h5> 
     <p class="mb-0">
-        Plugins are developed by third parties. They need to be updated and maintained regularly in addition to BTCPay Server. Use plugins at your own risk.
-        <a href="#warning-details" data-bs-toggle="collapse" class="alert-link">Read more</a>
+        <span text-translate="true">Plugins are developed by third parties. They need to be updated and maintained regularly in addition to BTCPay Server. Use plugins at your own risk.</span>
+        <a href="#warning-details" data-bs-toggle="collapse" class="alert-link" text-translate="true">Read more</a>
     </p>
     <div class="collapse" id="warning-details">
         <p class="my-3"><strong>Use at Your Own Risk:</strong> Plugins in this store are developed by independent third parties. These plugins have not undergone review by the BTCPay Server team.</p>
@@ -68,13 +68,28 @@
     </div>
 </div>
 
+@if (Model.Commands.Any())
+{
+	<div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
+        <span text-translate="true">You need to restart BTCPay Server in order to update your active plugins.</span>
+		@if (Model.CanShowRestart)
+		{
+			<form method="post" asp-action="Maintenance" class="mt-2">
+				<button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance" text-translate="true">Restart now</button>
+			</form>
+		}
+	</div>
+}
 @if (Model.Disabled.Any())
 {
     <div class="alert alert-danger mb-4 d-flex align-items-center justify-content-between">
-        Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.
+        <span text-translate="true">Some plugins were disabled due to fatal errors. They may be incompatible with this version of BTCPay Server.</span>
+		<form asp-action="UnInstallAllDisabledPlugin" class="mt-2">
+			<button type="submit" name="command" value="soft-restart" class="btn btn-danger" text-translate="true">Uninstall all disabled plugins</button>
+		</form>
     </div>
     <div class="mb-5">
-        <h3 class="mb-4">Disabled Plugins</h3>
+        <h3 class="mb-4" text-translate="true">Disabled Plugins</h3>
         <ul class="list-group list-group-flush d-inline-block">
             @foreach (var (plugin, version) in Model.Disabled)
             {
@@ -87,26 +102,23 @@
                                 <span>(@version)</span>
                             }
                         </span>
-                        <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
-                            <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
-                        </form>
+						@{
+							var uninstalled = Model.Commands.Any(c => c.plugin == plugin && c.command == "delete");
+						}
+						<form asp-action="UnInstallPlugin" asp-route-plugin="@plugin">
+							@if (uninstalled)
+							{
+								<button type="submit" class="btn btn-sm btn-outline-danger" disabled text-translate="true">Marked for deletion</button>
+							}
+							else
+							{
+								<button type="submit" class="btn btn-sm btn-outline-danger" text-translate="true">Uninstall</button>
+							}
+						</form>
                     </div>
                 </li>
             }
         </ul>
-    </div>
-}
-
-@if (Model.Commands.Any())
-{
-    <div class="alert alert-info mb-4 d-flex align-items-center justify-content-between">
-        You need to restart BTCPay Server in order to update your active plugins.
-        @if (Model.CanShowRestart)
-        {
-            <form method="post" asp-action="Maintenance" class="mt-2">
-                <button type="submit" name="command" value="soft-restart" class="btn btn-info" asp-action="Maintenance">Restart now</button>
-            </form>
-        }
     </div>
 }
 
@@ -142,15 +154,15 @@
                                 @if (updateAvailable && x != null)
                                 {
                                     <div class="badge bg-info">
-                                        @x.Version available
+                                        @x.Version <span text-translate="true">available</span>
                                     </div>
                                 }
                             </h5>
                             @if (updateAvailable)
                             {
                                 <span class="nav version-switch mt-n1" role="tablist">
-                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 show active">Show current info</a>
-                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link text-info p-0">Show update info</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-current" class="nav-link text-info p-0 show active" text-translate="true">Show current info</a>
+                                    <a data-bs-toggle="tab" href="#@tabId-update" class="nav-link text-info p-0" text-translate="true">Show update info</a>
                                 </span>
                             }
                         </div>
@@ -160,7 +172,7 @@
                                 <p class="card-text">@plugin.Description</p>
                                 @if (plugin.Dependencies.Any())
                                 {
-                                    <h6 class="text-muted fw-semibold">Dependencies</h6>
+                                    <h6 class="text-muted fw-semibold" text-translate="true">Dependencies</h6>
                                     <ul class="list-group list-group-flush">
                                         @foreach (var dependency in plugin.Dependencies)
                                         {
@@ -184,7 +196,7 @@
                                     <p class="card-text">@x.Description</p>
                                     @if (x.Dependencies.Any())
                                     {
-                                        <h6 class="text-muted fw-semibold">Dependencies</h6>
+                                        <h6 class="text-muted fw-semibold" text-translate="true">Dependencies</h6>
                                         <ul class="list-group list-group-flush">
                                             @foreach (var dependency in x.Dependencies)
                                             {
@@ -205,14 +217,14 @@
 
                             @if (plugin != null)
                             {
-                                <h6 class="text-muted fw-semibold mt-4">Resources</h6>
+                                <h6 class="text-muted fw-semibold mt-4" text-translate="true">Resources</h6>
                                 <ul class="list-group list-group-flush list-unstyled">
                                     @if (downloadInfo?.Source is not null)
                                     {
                                         <li>
                                             <a href="@downloadInfo.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
                                                 <vc:icon symbol="social-github" />
-                                                <span style="margin-left:.4rem">Sources</span>
+                                                <span style="margin-left:.4rem" text-translate="true">Sources</span>
                                             </a>
                                         </li>
                                     }
@@ -221,7 +233,7 @@
                                         <li>
                                             <a href="@downloadInfo.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">
                                                 <vc:icon symbol="docs" />
-                                                <span>Documentation</span>
+                                                <span text-translate="true">Documentation</span>
                                             </a>
                                         </li>
                                     }
@@ -230,7 +242,7 @@
                                         <li>
                                             <span rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-danger" target="_blank">
                                                 <vc:icon symbol="docs" />
-                                                <span>No documentation</span>
+                                                <span text-translate="true">No documentation</span>
                                             </span>
                                         </li>
                                     }
@@ -266,26 +278,27 @@
                                 if (PluginManager.DependenciesMet(x.Dependencies, installed))
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                        <button type="submit" class="btn btn-secondary">Update</button>
+                                        <button type="submit" class="btn btn-secondary" text-translate="true">Update</button>
                                     </form>
                                 }
                                 else
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@x.Version" asp-route-update="true" class="me-3">
-                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary">Schedule update</button>
+                                        <button title="Schedule upgrade for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-secondary" text-translate="true">Schedule update</button>
                                     </form>
                                 }
                             }
                             @if (DependentOn(plugin.Identifier))
                             {
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="tooltip" title="This plugin cannot be uninstalled as it is depended on by other plugins.">
-                                    Uninstall <vc:icon symbol="warning"/>
+                                    <span text-translate="true">Uninstall</span>
+                                    <vc:icon symbol="warning"/>
                                 </button>
                             }
                             else
                             {
                                 <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
-                                    <button type="submit" class="btn btn-outline-danger">Uninstall</button>
+                                    <button type="submit" class="btn btn-outline-danger" text-translate="true">Uninstall</button>
                                 </form>
                             }
                         }
@@ -296,7 +309,45 @@
     </div>
 }
 
-@if (availableAndNotInstalled.Any())
+<form method="get" asp-action="ListPlugins" class="row mb-4" id="searchForm">
+    <div class="col-12 col-lg-6">
+        <div class="input-group">
+            <input type="text" name="search" class="form-control" placeholder="@StringLocalizer["Search…"]"
+                   value="@ViewContext.HttpContext.Request.Query["search"]" />
+            <button type="submit" class="btn btn-primary">
+                <vc:icon symbol="actions-search" />
+            </button>
+        </div>
+    </div>
+</form>
+<script>
+    // if we search using form, scroll to it
+    document.addEventListener("DOMContentLoaded", function() {
+        const searchForm = document.getElementById('searchForm');
+
+        // Set session storage flag on form submit
+        searchForm.addEventListener('submit', function() {
+            sessionStorage.setItem('formSubmitted', 'true');
+        });
+
+        // Check session storage to see if form was submitted, and scroll + clear it
+        if (sessionStorage.getItem('formSubmitted') === 'true') {
+            sessionStorage.removeItem('formSubmitted');
+            if (searchForm) {
+                searchForm.scrollIntoView();
+            }
+        }
+    });
+
+</script>
+
+@if (!availableAndNotInstalled.Any())
+{
+    <div class="row mb-4">
+        <div class="col mb-4" style="margin-left:10px;" text-translate="true">No plugins found</div>
+    </div>
+}
+else 
 {
     <h3 class="mb-4">Available Plugins</h3>
     <div class="row mb-4">
@@ -324,21 +375,24 @@
                             @plugin.Version
                             @if (disabled is { } && disabled != plugin.Version)
                             {
-                                <div class="badge bg-light">Disabled (@disabled)</div>
+                                <div class="badge bg-light"><span text-translate="true">Disabled</span> (@disabled)</div>
                             }
                             else if (disabled is { } && disabled == plugin.Version)
                             {
-                                <div class="badge bg-light">Disabled</div>
+                                <div class="badge bg-light" text-translate="true">Disabled</div>
                             }
                             else if (recommended)
                             {
-                                <div class="badge bg-light text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">Recommended <vc:icon symbol="info" /></div>
+                                <div class="badge bg-light text-nowrap" data-bs-toggle="tooltip" title="This plugin has been recommended to be installed by your deployment method.">
+                                    <span text-translate="true">Recommended</span>
+                                    <vc:icon symbol="info" />
+                                </div>
                             }
                         </h5>
                         <p class="card-text">@plugin.Description</p>
                         @if (plugin.Dependencies?.Any() is true)
                         {
-                            <h6 class="text-muted fw-semibold">Dependencies</h6>
+                            <h6 class="text-muted fw-semibold" text-translate="true">Dependencies</h6>
                             <ul class="list-group list-group-flush">
                                 @foreach (var dependency in plugin.Dependencies)
                                 {
@@ -355,7 +409,7 @@
                             </ul>
                             if(!PluginManager.DependenciesMet(plugin.Dependencies, installed))
                             {
-                                <div class="text-warning py-2 ">
+                                <div class="text-warning py-2" text-translate="true">
                                     Dependencies not met.
                                 </div>
                             }
@@ -363,14 +417,14 @@
 
                         @if (plugin != null)
                         {
-                            <h6 class="text-muted fw-semibold mt-4">Resources</h6>
+                            <h6 class="text-muted fw-semibold mt-4" text-translate="true">Resources</h6>
                             <ul class="list-group list-group-flush list-unstyled">
                                 @if (plugin.Source is not null)
                                 {
                                     <li>
                                         <a href="@plugin.Source" rel="noreferrer noopener" class="d-flex align-items-center" target="_blank">
                                             <vc:icon symbol="social-github" />
-                                            <span style="margin-left:.4rem">Sources</span>
+                                            <span style="margin-left:.4rem" text-translate="true">Sources</span>
                                         </a>
                                     </li>
                                 }
@@ -379,7 +433,7 @@
                                     <li>
                                         <a href="@plugin.Documentation" rel="noreferrer noopener" class="d-flex align-items-center gap-2" target="_blank">
                                             <vc:icon symbol="docs" />
-                                            <span>Documentation</span>
+                                            <span text-translate="true">Documentation</span>
                                         </a>
                                     </li>
                                 }
@@ -388,7 +442,7 @@
                                     <li>
                                         <span rel="noreferrer noopener" class="d-flex align-items-center gap-2 text-danger" target="_blank">
                                             <vc:icon symbol="docs" />
-                                            <span>No documentation</span>
+                                            <span text-translate="true">No documentation</span>
                                         </span>
                                     </li>
                                 }
@@ -415,27 +469,27 @@
                                 @if (disabled is null)
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
-                                        <button type="submit" class="btn btn-primary">Install</button>
+                                        <button type="submit" class="btn btn-primary" text-translate="true">Install</button>
                                     </form>
                                 }
                                 else if (disabled != plugin.Version)
                                 {
                                     <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version" asp-route-update="true">
-                                        <button type="submit" class="btn btn-primary">Update</button>
+                                        <button type="submit" class="btn btn-primary" text-translate="true">Update</button>
                                     </form>
                                 }
                             }
                             else
                             {
                                 <form asp-action="InstallPlugin" asp-route-plugin="@plugin.Identifier" asp-route-version="@plugin.Version">
-                                    <button title="Schedule install for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-primary">Schedule install</button>
+                                    <button title="Schedule install for when the dependencies have been met to ensure a smooth update" data-bs-toggle="tooltip" type="submit" class="btn btn-primary" text-translate="true">Schedule install</button>
                                 </form>
                             }
                         }
                         @if (disabled is not null && pendingAction is null)
                         {
                             <form asp-action="UnInstallPlugin" asp-route-plugin="@plugin.Identifier">
-                                <button type="submit" class="btn btn-sm btn-outline-danger">Uninstall</button>
+                                <button type="submit" class="btn btn-sm btn-outline-danger" text-translate="true">Uninstall</button>
                             </form>
                         }
                     </div>
@@ -446,22 +500,22 @@
 }
 
 <div class="mb-4">
-    <h3 class="mb-4">Upload Plugin</h3>
-    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload">
+    <h3 class="mb-4" text-translate="true">Upload Plugin</h3>
+    <button class="btn btn-secondary mb-4" type="button" data-bs-toggle="collapse" data-bs-target="#manual-upload" text-translate="true">
         Upload Plugin
     </button>
     <div class="row collapse" id="manual-upload">
         <div class="col col-xl-6 mb-4">
             <div class="card">
                 <div class="card-body">
-                    <h4 class="card-title">Add plugin manually</h4>
+                    <h4 class="card-title" text-translate="true">Add plugin manually</h4>
                     <div class="alert alert-warning my-3">
-                        <h6 class="me-1">This is an extremely dangerous operation!</h6>
-                        Only upload plugins from trusted sources.
+                        <h6 class="me-1" text-translate="true">This is an extremely dangerous operation!</h6>
+                        <span text-translate="true">Only upload plugins from trusted sources.</span>
                     </div>
                     <form method="post" enctype="multipart/form-data" asp-action="UploadPlugin">
                         <input type="file" class="form-control mb-3" required name="files" accept=".btcpay" id="files">
-                        <button class="btn btn-primary" type="submit">Upload</button>
+                        <button class="btn btn-primary" type="submit" text-translate="true">Upload</button>
                     </form>
                 </div>
             </div>

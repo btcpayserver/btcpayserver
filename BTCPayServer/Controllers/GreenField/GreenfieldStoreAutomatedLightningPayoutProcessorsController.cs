@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
-                        PayoutMethodIds = paymentMethodId is null ? null : new[] { paymentMethodId }
+                        PayoutMethods = paymentMethodId is null ? null : new[] { paymentMethodId }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -59,7 +59,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 PayoutMethodId = data.PayoutMethodId,
                 IntervalSeconds = blob.Interval,
-                CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
             };
         }
@@ -68,7 +67,6 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return new LightningAutomatedPayoutBlob() { 
                 Interval = data.IntervalSeconds, 
-                CancelPayoutAfterFailures = data.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = data.ProcessNewPayoutsInstantly
             };
         }
@@ -88,7 +86,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
-                        PayoutMethodIds = new[] { pmi }
+                        PayoutMethods = new[] { pmi }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();

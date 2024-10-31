@@ -1,6 +1,6 @@
 @model BTCPayServer.Models.ServerViewModels.DynamicDnsViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, "Dynamic DNS Service");
+    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Dynamic DNS Service"]);
 }
 
 @section PageFootContent {
@@ -15,17 +15,17 @@
         <nav aria-label="breadcrumb">
             <ol class="breadcrumb">
                 <li class="breadcrumb-item">
-                    <a asp-action="Services">Services</a>
+                    <a asp-action="Services" text-translate="true">Services</a>
                 </li>
                 <li class="breadcrumb-item">
-                    <a asp-action="DynamicDnsService">Dynamic DNS Settings</a>
+                    <a asp-action="DynamicDnsService" text-translate="true">Dynamic DNS Settings</a>
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
             <h2>
                 <span>@ViewData["Title"]</span>
                 <small>
-                    <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
+                    <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                         <vc:icon symbol="info" />
                     </a>
                 </small>
@@ -45,9 +45,9 @@
                 <input type="hidden" asp-for="Modify"/>
                 <div class="form-group">
                     <label asp-for="Settings.ServiceUrl" class="form-label"></label>
-                    <input id="ServiceUrl" asp-for="Settings.ServiceUrl" class="form-control" placeholder="Url"/>
+                    <input id="ServiceUrl" asp-for="Settings.ServiceUrl" class="form-control" placeholder="@StringLocalizer["Url"]"/>
                     <div class="form-text">
-                        Well-known Dynamic DNS providers are:
+                        <span text-translate="true">Well-known Dynamic DNS providers are:</span>
                         @for (var i = 0; i < Model.KnownServices.Length; i++)
                         {
                             <a href="#" class="serviceSettings" data-url="@Model.KnownServices[i].Url">@Model.KnownServices[i].Name</a>
@@ -59,9 +59,9 @@
                     <label asp-for="Settings.Hostname" class="form-label"></label>
                     @if (Model.Modify)
                     {
-                        <input asp-for="Settings.Hostname" class="form-control" readonly placeholder="Hostname"/>
+                        <input asp-for="Settings.Hostname" class="form-control" readonly placeholder="@StringLocalizer["Hostname"]"/>
                         <div class="form-text">
-                            <span>The DNS record has been refreshed: </span>
+                            <span text-translate="true">The DNS record has been refreshed:</span>
                             @if (Model.LastUpdated != null)
                             {
                                 <span>@Model.LastUpdated</span>
@@ -70,17 +70,17 @@
                     }
                     else
                     {
-                        <input asp-for="Settings.Hostname" class="form-control" placeholder="Hostname"/>
+                        <input asp-for="Settings.Hostname" class="form-control" placeholder="@StringLocalizer["Hostname"]"/>
                         <span asp-validation-for="Settings.Hostname" class="text-danger"></span>
                     }
                 </div>
                 <div class="form-group">
                     <label asp-for="Settings.Login" class="form-label"></label>
-                    <input asp-for="Settings.Login" class="form-control" placeholder="Login"/>
+                    <input asp-for="Settings.Login" class="form-control" placeholder="@StringLocalizer["Login"]"/>
                 </div>
                 <div class="form-group">
                     <label asp-for="Settings.Password" class="form-label"></label>
-                    <input asp-for="Settings.Password" class="form-control" placeholder="Password"/>
+                    <input asp-for="Settings.Password" class="form-control" placeholder="@StringLocalizer["Password"]"/>
                 </div>
                 @if (Model.Modify)
                 {

@@ -2,7 +2,7 @@
 @model BTCPayServer.Controllers.ShowLightningNodeInfoViewModel
 @{
     Layout = null;
-    ViewData["Title"] = $"{Model.StoreName} – {Model.CryptoCode} Lightning Node";
+    ViewData["Title"] = $"{Model.StoreName} – {StringLocalizer["{0} Lightning Node", Model.CryptoCode]}";
     ViewData["StoreBranding"] = Model.StoreBranding;
 }
 <!DOCTYPE html>
@@ -19,12 +19,11 @@
                 <partial name="_StoreHeader" model="(Model.StoreName, Model.StoreBranding)" />
                 <section class="tile">
                     <h2 class="h4 card-subtitle text-center text-secondary mt-1 mb-3" id="LightningNodeTitle">
-                        <span>@Model.CryptoCode</span>
-                        Lightning Node
+                        @StringLocalizer["{0} Lightning Node", Model.CryptoCode]
                     </h2>
                     <h4 class="d-flex align-items-center justify-content-center gap-2 my-4">
                         <span class="btcpay-status btcpay-status--@(Model.Available ? "enabled" : "disabled")" style="margin-top:.1rem;"></span>
-                        <span id="LightningNodeStatus">@(Model.Available ? "Online" : "Unavailable")</span>
+                        <span id="LightningNodeStatus">@(Model.Available ? StringLocalizer["Online"] : StringLocalizer["Unavailable"])</span>
                     </h4>
                     @if (Model.Available)
                     {
@@ -70,7 +69,7 @@
                         }
                         else
                         {
-                            <p class="text-center mt-4">No public address available.</p>
+                            <p class="text-center mt-4" text-translate="true">No public address available.</p>
                         }
                     }
                 </section>

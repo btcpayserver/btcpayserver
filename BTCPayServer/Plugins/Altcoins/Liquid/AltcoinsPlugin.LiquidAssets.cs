@@ -2,6 +2,7 @@ using System.Threading;
 using BTCPayServer.Hosting;
 using BTCPayServer.Payments;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
@@ -29,39 +30,21 @@ public partial class AltcoinsPlugin
             DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainName),
             CoinType = ChainName == ChainName.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
             SupportRBF = true,
-            SupportLightning = false
+            SupportLightning = false,
+            SupportPayJoin = false,
+            VaultSupported = false,
+            ReadonlyWallet = true
         }.SetDefaultElectrumMapping(ChainName);
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
-        selectedChains.Add("LBTC");
-    }
-
-    private void InitETB(IServiceCollection services, SelectedChains selectedChains, NBXplorer.NBXplorerNetwork nbxplorerNetwork)
-    {
-        var network = new ElementsBTCPayNetwork()
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId("USDt"), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+        services.AddCurrencyData(new CurrencyData()
         {
-            CryptoCode = "ETB",
-            NetworkCryptoCode = "LBTC",
-            ShowSyncSummary = false,
-            DefaultRateRules = new[]
-                    {
-
-                    "ETB_X = ETB_BTC * BTC_X",
-                    "ETB_BTC = bitpay(ETB_BTC)"
-                },
-            Divisibility = 2,
-            AssetId = new uint256("aa775044c32a7df391902b3659f46dfe004ccb2644ce2ddc7dba31e889391caf"),
-            DisplayName = "Ethiopian Birr",
-            NBXplorerNetwork = nbxplorerNetwork,
-            CryptoImagePath = "imlegacy/etb.png",
-            DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainName),
-            CoinType = ChainName == ChainName.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
-            SupportRBF = true,
-            SupportLightning = false
-        }.SetDefaultElectrumMapping(ChainName);
-
-        services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+            Code = "USDt",
+            Name = "USDt",
+            Divisibility = 8,
+            Symbol = null,
+            Crypto = true
+        });
         selectedChains.Add("LBTC");
     }
 
@@ -86,11 +69,14 @@ public partial class AltcoinsPlugin
             CryptoImagePath = "imlegacy/lcad.png",
             DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainName),
             CoinType = ChainName == ChainName.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
-            SupportRBF = true,
-            SupportLightning = false
+            SupportRBF = true,            
+            SupportLightning = false,
+            SupportPayJoin = false,
+            VaultSupported = false,
+            ReadonlyWallet = true
         }.SetDefaultElectrumMapping(ChainName);
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId("LCAD"), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
         selectedChains.Add("LBTC");
     }
 

@@ -80,6 +80,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
             context.Prompt.Destination = address.Address;
             context.Prompt.PaymentMethodFee = MoneroMoney.Convert(feeRatePerByte * 100);
             context.Prompt.Details = JObject.FromObject(details, Serializer);
+            context.TrackedDestinations.Add(address.Address);
         }
         private MoneroPaymentPromptDetails ParsePaymentMethodConfig(JToken config)
         {
@@ -100,22 +101,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.Payments
 
         public MoneroLikeOnChainPaymentMethodDetails ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
         {
-            return ParsePaymentPromptDetails(details);
+            return details.ToObject<MoneroLikeOnChainPaymentMethodDetails>(Serializer);
         }
         object IPaymentMethodHandler.ParsePaymentPromptDetails(Newtonsoft.Json.Linq.JToken details)
         {
-            return details.ToObject<MoneroLikeOnChainPaymentMethodDetails>(Serializer);
-        }
-
-        public CheckoutUIPaymentMethodSettings GetCheckoutUISettings()
-        {
-            return new CheckoutUIPaymentMethodSettings
-            {
-                ExtensionPartial = "Bitcoin/BitcoinLikeMethodCheckout",
-                CheckoutBodyVueComponentName = "BitcoinLikeMethodCheckout",
-                CheckoutHeaderVueComponentName = "BitcoinLikeMethodCheckoutHeader",
-                NoScriptPartialName = "Bitcoin/BitcoinLikeMethodCheckoutNoScript"
-            };
+            return ParsePaymentPromptDetails(details);
         }
 
         public MoneroLikePaymentData ParsePaymentDetails(JToken details)

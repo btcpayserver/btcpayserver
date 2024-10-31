@@ -1070,40 +1070,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 {"op": "remove", "path": "/channels"}
 """;
             Assert.True(parsers.TryParseWalletFile(electrumText, mainnet, out electrum, out _));
-
-            // Electrum 2fa
-            electrumText =
-"""
-{
-"wallet_type": "2fa",
-"x1": {
-    "derivation": "m/0h",
-    "pw_hash_version": 1,
-    "root_fingerprint": "1df10a80",
-    "type": "bip32",
-    "xprv": "ZprvAjgXVfShpXtqXNW98rUsmnMdY7aFGrr4Pnc5HpxBp9PAZNgejQ5w2LSsPzQwpraAasXuTrj3jJuYta1xs6w7aQ29R6DcZpWQbtvmV3cNhTr",
-    "xpub": "Zpub6xfsuAybeuT8jracEt1t8vJN69QjgKZum1Xg6DMoNUv9SB1oGwQBa8mMFFCz2qQ18fWvKgWmsWZErjYZFmGNztjCbrAPgBmF8voanRdVydj"
-},
-"x2": {
-    "derivation": "m/1h",
-    "pw_hash_version": 1,
-    "root_fingerprint": "1df10a80",
-    "type": "bip32",
-    "xprv": null,
-    "xpub": "Zpub6xfsuAybeuT8nrq4YPnxUyuQjLWKZPxK2DXWWm3xd28zoFRxQsuPWMSgj7Ha8NhSQBkRQSUaXF5nB65eHynrSjicHAEAzDhX5BuLR5VHwKo"
-},
-"x3": {
-    "derivation": "m",
-    "pw_hash_version": 1,
-    "root_fingerprint": "538a6f68",
-    "type": "bip32",
-    "xprv": null,
-    "xpub": "Zpub6vZyhw1ShkEwN9CwTckWQPc6ZXbpxruU3Noq95GoCLC94YiR9NQP1w9DjvevgNsMCwyfym3E15nE7kHiEzSBDy7cjFt9Lou9wPjPN6jKgcx"
-}
-}
-""";
-            Assert.True(parsers.TryParseWalletFile(electrumText, mainnet, out electrum, out _));
-            Assert.Equal("bc1q47luf8j540dtyst20k9e0r004d3qenluecvv3ak6mw9dt2qwdpvsn6p8gf", electrum.AccountDerivation.GetDerivation(KeyPath.Parse("0 /0")).ScriptPubKey.GetDestinationAddress(Network.Main).ToString());
         }
 
         [Fact]

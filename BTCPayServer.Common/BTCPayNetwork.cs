@@ -67,7 +67,7 @@ namespace BTCPayServer
         public BTCPayNetwork SetDefaultElectrumMapping(ChainName chainName)
         {
             //https://github.com/spesmilo/electrum/blob/11733d6bc271646a00b69ff07657119598874da4/electrum/constants.py
-            /*ElectrumMapping = chainName == ChainName.Mainnet
+            ElectrumMapping = chainName == ChainName.Mainnet
                     ? new Dictionary<uint, DerivationType>()
                     {
                         {0x0488b21eU, DerivationType.Legacy }, // xpub
@@ -79,24 +79,6 @@ namespace BTCPayServer
                         {0x043587cfU, DerivationType.Legacy}, // tpub
                         {0x044a5262U, DerivationType.SegwitP2SH}, // upub
                         {0x045f1cf6U, DerivationType.Segwit} // vpub
-                    };*/
-
-            ElectrumMapping = chainName == ChainName.Mainnet
-                    ? new Dictionary<uint, DerivationType>()
-                    {
-                        { 0x0488b21eU, DerivationType.Legacy }, // xpub
-                        { 0x049d7cb2U, DerivationType.SegwitP2SH }, // ypub
-                        { 0x04b24746U, DerivationType.Segwit }, // zpub
-                        { 0x0295b43fU, DerivationType.SegwitP2SH }, // Ypub (add this for 2FA)
-                        { 0x02aa7ed3U, DerivationType.Segwit } // Zpub (add this for 2FA)
-                    }
-                    : new Dictionary<uint, DerivationType>()
-                    {
-                        { 0x043587cfU, DerivationType.Legacy }, // tpub
-                        { 0x044a5262U, DerivationType.SegwitP2SH }, // upub
-                        { 0x045f1cf6U, DerivationType.Segwit }, // vpub
-                        { 0x024289efU, DerivationType.SegwitP2SH }, // Upub (add this for 2FA)
-                        { 0x02575483U, DerivationType.Segwit } // Vpub (add this for 2FA)
                     };
             if (!NBitcoinNetwork.Consensus.SupportSegwit)
             {

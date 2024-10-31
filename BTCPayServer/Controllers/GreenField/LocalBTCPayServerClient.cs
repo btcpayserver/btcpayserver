@@ -14,6 +14,7 @@ using BTCPayServer.Controllers.GreenField;
 using BTCPayServer.Data;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
+using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -830,10 +831,12 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         public override async Task<InvoicePaymentMethodDataModel[]> GetInvoicePaymentMethods(string storeId,
-            string invoiceId, CancellationToken token = default)
+            string invoiceId,
+            bool onlyAccountedPayments = true, bool includeSensitive = false,
+            CancellationToken token = default)
         {
             return GetFromActionResult<InvoicePaymentMethodDataModel[]>(
-                await GetController<GreenfieldInvoiceController>().GetInvoicePaymentMethods(storeId, invoiceId));
+                await GetController<GreenfieldInvoiceController>().GetInvoicePaymentMethods(storeId, invoiceId, onlyAccountedPayments, includeSensitive));
         }
 
         public override async Task ArchiveInvoice(string storeId, string invoiceId, CancellationToken token = default)
@@ -937,17 +940,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<GenerateOnChainWalletResponse>(
                 await GetController<GreenfieldStoreOnChainPaymentMethodsController>().GenerateOnChainWallet(storeId, Payments.PaymentMethodId.Parse(paymentMethodId),
-                    new GenerateWalletRequest()
-                    {
-                        Passphrase = request.Passphrase,
-                        AccountNumber = request.AccountNumber,
-                        ExistingMnemonic = request.ExistingMnemonic?.ToString(),
-                        WordCount = request.WordCount,
-                        WordList = request.WordList,
-                        SavePrivateKeys = request.SavePrivateKeys,
-                        ScriptPubKeyType = request.ScriptPubKeyType,
-                        ImportKeysToRPC = request.ImportKeysToRPC
-                    }));
+                    request));
         }
 
         public override async Task SendEmail(string storeId, SendEmailRequest request,
@@ -1150,6 +1143,18 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<AppBaseData[]>(
                 await GetController<GreenfieldAppsController>().GetAllApps());
+        }
+
+        public override async Task<AppSalesStats> GetAppSales(string appId, int numberOfDays = 7, CancellationToken token = default)
+        {
+            return GetFromActionResult<AppSalesStats>(
+                await GetController<GreenfieldAppsController>().GetAppSales(appId, numberOfDays));
+        }
+
+        public override async Task<List<AppItemStats>> GetAppTopItems(string appId, int offset = 0, int count = 10, CancellationToken token = default)
+        {
+            return GetFromActionResult<List<AppItemStats>>(
+                await GetController<GreenfieldAppsController>().GetAppTopItems(appId, offset, count));
         }
 
         public override async Task DeleteApp(string appId, CancellationToken token = default)

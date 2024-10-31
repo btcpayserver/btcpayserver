@@ -67,7 +67,7 @@ namespace BTCPayServer.Services.Reporting
             var conn = ctx.Database.GetDbConnection();
             var rows = await conn.QueryAsync(
             """
-            SELECT i."Created", i."Id" AS "InvoiceId", p."State", p."PayoutMethodId", p."Currency" AS "PayoutCurrency", pp."Id" AS "PullPaymentId", pp."Blob" AS "ppBlob", p."Blob" AS "pBlob" FROM "Invoices" i
+            SELECT i."Created", i."Id" AS "InvoiceId", p."State", p."PayoutMethodId", p."Currency" AS "PayoutCurrency", p."OriginalAmount", pp."Id" AS "PullPaymentId", pp."Limit", pp."Currency" AS "PPCurrency" FROM "Invoices" i
             JOIN "Refunds" r ON r."InvoiceDataId"= i."Id"
             JOIN "PullPayments" pp ON r."PullPaymentDataId"=pp."Id"
             LEFT JOIN "Payouts" p ON p."PullPaymentDataId"=pp."Id"
@@ -78,43 +78,23 @@ namespace BTCPayServer.Services.Reporting
             """, new { start = queryContext.From, end = queryContext.To, storeId = queryContext.StoreId });
             foreach (var r in rows)
             {
-                PullPaymentBlob ppBlob = GetPullPaymentBlob(r);
-                PayoutBlob? pBlob = GetPayoutBlob(r);
-
                 if ((string)r.PullPaymentId != currentRow?.PullPaymentId)
                 {
                     AddRow(queryContext, currentRow);
-                    currentRow = new(r.Created, r.InvoiceId, r.PullPaymentId, ppBlob.Currency, ppBlob.Limit);
+                    currentRow = new(r.Created, r.InvoiceId, r.PullPaymentId, r.PPCurrency, r.Limit);
                 }
-                if (pBlob is null)
+                if (r.OriginalAmount is null)
                     continue;
+                decimal originalAmount = (decimal)r.OriginalAmount;
                 var state = Enum.Parse<PayoutState>((string)r.State);
                 if (state == PayoutState.Cancelled)
                     continue;
                 if (state is PayoutState.Completed)
-                    currentRow.Completed += pBlob.Amount;
+                    currentRow.Completed += originalAmount;
                 else
-                    currentRow.Awaiting += pBlob.Amount;
+                    currentRow.Awaiting += originalAmount;
             }
             AddRow(queryContext, currentRow);
-        }
-
-        private PayoutBlob? GetPayoutBlob(dynamic r)
-        {
-            if (r.pBlob is null)
-                return null;
-            Data.PayoutData p = new Data.PayoutData();
-            p.PayoutMethodId = r.PayoutMethodId;
-            p.Currency = (string)r.PayoutCurrency;
-            p.Blob = (string)r.pBlob;
-            return p.GetBlob(_serializerSettings);
-        }
-
-        private static PullPaymentBlob GetPullPaymentBlob(dynamic r)
-        {
-            Data.PullPaymentData pp = new Data.PullPaymentData();
-            pp.Blob = (string)r.ppBlob;
-            return pp.GetBlob();
         }
 
         private void AddRow(QueryContext queryContext, RefundRow? currentRow)

@@ -11,12 +11,14 @@ using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments.PayJoin;
+using BTCPayServer.Plugins.Altcoins;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.Altcoins;
 using NBitcoin.RPC;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
@@ -144,6 +146,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     Logs.PayServer.LogInformation($"{network.CryptoCode}: {paymentCount} payments happened while offline");
 
                     Logs.PayServer.LogInformation($"Connected to WebSocket of NBXplorer ({network.CryptoCode})");
+                    var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
                     while (!_Cts.IsCancellationRequested)
                     {
                         var newEvent = await session.NextEventAsync(_Cts.Token).ConfigureAwait(false);
@@ -151,7 +154,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         {
                             case NBXplorer.Models.NewBlockEvent evt:
                                 await UpdatePaymentStates(wallet);
-                                _Aggregator.Publish(new Events.NewBlockEvent() { CryptoCode = evt.CryptoCode });
+                                _Aggregator.Publish(new Events.NewBlockEvent() { PaymentMethodId = pmi });
                                 break;
                             case NBXplorer.Models.NewTransactionEvent evt:
                                 if (evt.DerivationStrategy != null)
@@ -162,23 +165,26 @@ namespace BTCPayServer.Payments.Bitcoin
                                         break;
                                     foreach (var output in validOutputs)
                                     {
+                                        if (!output.matchedOutput.Value.IsCompatible(network))
+                                            continue;
                                         var key = network.GetTrackedDestination(output.Item1.ScriptPubKey);
-                                        var invoice = (await _InvoiceRepository.GetInvoicesFromAddresses(new[] { key }))
-                                            .FirstOrDefault();
+                                        var invoice = await _InvoiceRepository.GetInvoiceFromAddress(pmi, key);
                                         if (invoice != null)
                                         {
                                             var address = output.matchedOutput.Address ?? network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy,
                                                 output.Item1.KeyPath, output.Item1.ScriptPubKey);
-                                            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
                                             var handler = _handlers[pmi];
-                                            var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath);
+                                            var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath)
+                                            {
+                                                AssetId = output.matchedOutput.Value.GetAssetId(network)
+                                            };
 
                                             var paymentData = new Data.PaymentData()
                                             {
                                                 Id = output.outPoint.ToString(),
                                                 Created = DateTimeOffset.UtcNow,
                                                 Status = IsSettled(invoice, details) ? PaymentStatus.Settled : PaymentStatus.Processing,
-                                                Amount = ((Money)output.matchedOutput.Value).ToDecimal(MoneyUnit.BTC),
+                                                Amount = output.matchedOutput.Value.GetValue(network),
                                                 Currency = network.CryptoCode
                                             }.Set(invoice, handler, details);
 
@@ -186,7 +192,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 .GetPayments(false).Any(c => c.Id == paymentData.Id && c.PaymentMethodId == pmi);
                                             if (!alreadyExist)
                                             {
-                                                
+
                                                 var prompt = invoice.GetPaymentPrompt(pmi);
                                                 var payment = await _paymentService.AddPayment(paymentData, [output.outPoint.Hash.ToString()]);
                                                 if (payment != null)
@@ -198,13 +204,12 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 await UpdatePaymentStates(wallet, invoice.Id);
                                             }
                                         }
-
                                     }
                                 }
 
                                 _Aggregator.Publish(new NewOnChainTransactionEvent()
                                 {
-                                    CryptoCode = wallet.Network.CryptoCode,
+                                    PaymentMethodId = pmi,
                                     NewTransactionEvent = evt
                                 });
 
@@ -237,7 +242,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         async Task UpdatePaymentStates(BTCPayWallet wallet)
         {
-            var invoices = await _InvoiceRepository.GetPendingInvoices(skipNoPaymentInvoices: true);
+            var invoices = await _InvoiceRepository.GetMonitoredInvoices(PaymentTypes.CHAIN.GetPaymentMethodId(wallet.Network.CryptoCode));
             await Task.WhenAll(invoices.Select(i => UpdatePaymentStates(wallet, i)).ToArray());
         }
         async Task<InvoiceEntity> UpdatePaymentStates(BTCPayWallet wallet, string invoiceId, bool fireEvents = true)
@@ -348,10 +353,6 @@ namespace BTCPayServer.Payments.Bitcoin
                     paymentEntitiesByPrevOut.TryAdd(prevout, payment);
                 }
 
-                // if needed add invoice back to pending to track number of confirmations
-                if (paymentData.ConfirmationCount < wallet.Network.MaxTrackedConfirmation)
-                    await _InvoiceRepository.AddPendingInvoiceIfNotPresent(invoice.Id);
-
                 if (updated)
                     updatedPaymentEntities.Add(payment);
             }
@@ -372,32 +373,25 @@ namespace BTCPayServer.Payments.Bitcoin
             return invoice;
         }
 
-        public static bool IsSettled(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+        public static int ConfirmationRequired(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+        => (invoice, paymentData) switch
         {
-            if (invoice.SpeedPolicy == SpeedPolicy.HighSpeed)
-            {
-                return paymentData.ConfirmationCount >= 1 || !paymentData.RBF;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.MediumSpeed)
-            {
-                return paymentData.ConfirmationCount >= 1;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.LowMediumSpeed)
-            {
-                return paymentData.ConfirmationCount >= 2;
-            }
-            else if (invoice.SpeedPolicy == SpeedPolicy.LowSpeed)
-            {
-                return paymentData.ConfirmationCount >= 6;
-            }
-            return false;
-        }
+            ({ SpeedPolicy: SpeedPolicy.HighSpeed }, { RBF: true }) => 1,
+            ({ SpeedPolicy: SpeedPolicy.HighSpeed }, _) => 0,
+            ({ SpeedPolicy: SpeedPolicy.MediumSpeed }, _) => 1,
+            ({ SpeedPolicy: SpeedPolicy.LowMediumSpeed }, _) => 2,
+            ({ SpeedPolicy: SpeedPolicy.LowSpeed }, _) => 6,
+            _ => 6,
+        };
+
+        static bool IsSettled(InvoiceEntity invoice, BitcoinLikePaymentData paymentData)
+            => ConfirmationRequired(invoice, paymentData) <= paymentData.ConfirmationCount;
 
         private async Task<int> FindPaymentViaPolling(BTCPayWallet wallet, BTCPayNetwork network)
         {
             var handler = _handlers.GetBitcoinHandler(wallet.Network);
             int totalPayment = 0;
-            var invoices = await _InvoiceRepository.GetPendingInvoices(true);
+            var invoices = await _InvoiceRepository.GetMonitoredInvoices(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode));
             var coinsPerDerivationStrategy =
                 new Dictionary<DerivationStrategyBase, ReceivedCoin[]>();
             foreach (var i in invoices)
@@ -417,10 +411,11 @@ namespace BTCPayServer.Payments.Bitcoin
                     coins = await wallet.GetUnspentCoins(strategy);
                     coinsPerDerivationStrategy.Add(strategy, coins);
                 }
-                coins = coins.Where(c => invoice.AvailableAddressHashes.Contains(c.ScriptPubKey.Hash.ToString() + cryptoId))
-                             .ToArray();
+                coins = coins.Where(c => invoice.Addresses.Contains((cryptoId, network.GetTrackedDestination(c.ScriptPubKey)))).ToArray();
                 foreach (var coin in coins.Where(c => !alreadyAccounted.Contains(c.OutPoint)))
                 {
+                    if (!coin.Value.IsCompatible(network))
+                        continue;
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);
 
                     var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
@@ -430,9 +425,12 @@ namespace BTCPayServer.Payments.Bitcoin
                         Id = coin.OutPoint.ToString(),
                         Created = DateTimeOffset.UtcNow,
                         Status = PaymentStatus.Processing,
-                        Amount = ((Money)coin.Value).ToDecimal(MoneyUnit.BTC),
+                        Amount = coin.Value.GetValue(network),
                         Currency = network.CryptoCode
-                    }.Set(invoice, handler, new BitcoinLikePaymentData(coin.OutPoint, transaction?.Transaction is null ? true : transaction.Transaction.RBF, coin.KeyPath));
+                    }.Set(invoice, handler, new BitcoinLikePaymentData(coin.OutPoint, transaction?.Transaction is null ? true : transaction.Transaction.RBF, coin.KeyPath)
+                    {
+                        AssetId = coin.Value.GetAssetId(network)
+                    });
 
                     var payment = await _paymentService.AddPayment(paymentData, [coin.OutPoint.Hash.ToString()]).ConfigureAwait(false);
                     alreadyAccounted.Add(coin.OutPoint);

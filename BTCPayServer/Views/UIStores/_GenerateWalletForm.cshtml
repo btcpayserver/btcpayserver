@@ -23,29 +23,29 @@
     @if (isImport)
     {
         <div class="form-group">
-            <label asp-for="ExistingMnemonic" class="form-label">Wallet Recovery Seed</label>
+            <label asp-for="ExistingMnemonic" class="form-label" text-translate="true">Wallet Recovery Seed</label>
             <textarea asp-for="ExistingMnemonic" class="form-control font-monospace py-2" rows="2" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
             <span asp-validation-for="ExistingMnemonic" class="text-danger"></span>
         </div>
     }
 
     <div class="form-group">
-        <label asp-for="ScriptPubKeyType" class="form-label">Address type</label>
+        <label asp-for="ScriptPubKeyType" class="form-label" text-translate="true">Address type</label>
         <select class="form-select w-auto" asp-for="ScriptPubKeyType">
             @if (ViewData["SupportSegwit"] is true)
             {
-                <option value="@ScriptPubKeyType.Segwit">Segwit (Recommended)</option>
-                <option value="@ScriptPubKeyType.SegwitP2SH">Segwit wrapped (Compatible with old wallets)</option>
-                <option value="@ScriptPubKeyType.Legacy">Legacy (Not recommended)</option>
+                <option value="@ScriptPubKeyType.Segwit" text-translate="true">Segwit (Recommended)</option>
+                <option value="@ScriptPubKeyType.SegwitP2SH" text-translate="true">Segwit wrapped (Compatible with old wallets)</option>
+                <option value="@ScriptPubKeyType.Legacy" text-translate="true">Legacy (Not recommended)</option>
             }
             else
             {
-                <option value="@ScriptPubKeyType.Legacy">Legacy</option>
+                <option value="@ScriptPubKeyType.Legacy" text-translate="true">Legacy</option>
             }
 
             @if (ViewData["SupportTaproot"] is true)
             {
-                <option value="@ScriptPubKeyType.TaprootBIP86">Taproot (For advanced users)</option>
+                <option value="@ScriptPubKeyType.TaprootBIP86" text-translate="true">Taproot (For advanced users)</option>
             }
         </select>
         <span asp-validation-for="ScriptPubKeyType" class="text-danger"></span>
@@ -57,12 +57,9 @@
             <label class="d-flex align-items-center">
                 <input type="checkbox" asp-for="SavePrivateKeys" class="btcpay-toggle me-3" />
                 <div>
-                    <label asp-for="SavePrivateKeys" class="form-check-label">Is hot wallet</label>
+                    <label asp-for="SavePrivateKeys" class="form-check-label" text-translate="true">Is hot wallet</label>
                     <span asp-validation-for="SavePrivateKeys" class="text-danger"></span>
-                    <p class="text-muted pt-2 mb-0">
-                        If checked, each private key associated with an address generated will be stored as metadata
-                        and would be accessible to anyone with admin access to your server. Enable at your own risk!
-                    </p>
+                    <p class="text-muted pt-2 mb-0" text-translate="true">If checked, each private key associated with an address generated will be stored as metadata and would be accessible to anyone with admin access to your server. Enable at your own risk!</p>
                 </div>
             </label>
         </div>
@@ -77,11 +74,10 @@
                 <label class="d-flex align-items-center">
                     <input type="checkbox" asp-for="PayJoinEnabled" class="btcpay-toggle me-3" />
                     <div>
-                        <span>Enable PayJoin</span>
+                        <span text-translate="true">Enable PayJoin</span>
                         <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
                         <p class="text-muted pt-2 mb-0">
-                            PayJoin enhances the privacy for you and your customers.
-                            Enabling it gives your customers the option to use PayJoin during checkout.
+                            <span text-translate="true">PayJoin enhances the privacy for you and your customers. Enabling it gives your customers the option to use PayJoin during checkout.</span>
                             <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener">
                                 <vc:icon symbol="info" />
                             </a>
@@ -95,25 +91,25 @@
     <div class="mb-4">
         <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
             <vc:icon symbol="caret-down"/>
-            <span class="ms-1">Advanced settings</span>
+            <span class="ms-1" text-translate="true">Advanced settings</span>
         </button>
         <div id="AdvancedSettings" class="collapse @(string.IsNullOrEmpty(Model.Passphrase) && !Model.ImportKeysToRPC ? "" : "show")">
             <div class="pt-3">
                 @if (isImport) // hide account option when creating a wallet
                 {
                     <div class="form-group">
-                        <label asp-for="AccountNumber" class="form-label">Account</label>
+                        <label asp-for="AccountNumber" class="form-label" text-translate="true">Account</label>
                         <input asp-for="AccountNumber" class="form-control" style="max-width:10ch" min="0" step="1">
                         <span asp-validation-for="AccountNumber" class="text-danger"></span>
                     </div>
                 }
                 <div class="form-group">
-                    <label asp-for="Passphrase" class="form-label">Optional passphrase (BIP39)</label>
+                    <label asp-for="Passphrase" class="form-label" text-translate="true">Optional passphrase (BIP39)</label>
                     <input type="text" asp-for="Passphrase" class="form-control" autocomplete="off"/>
                     <span asp-validation-for="Passphrase" class="text-danger"></span>
                 </div>
                 <div class="form-group">
-                    <label for="passphrase_conf" class="form-label">Confirm passphrase</label>
+                    <label for="passphrase_conf" class="form-label" text-translate="true">Confirm passphrase</label>
                     <input type="text" name="passphrase_conf" id="passphrase_conf" class="form-control"/>
                     <span class="text-danger field-validation-valid" id="passphrase_conf_validation"></span>
                 </div>
@@ -124,13 +120,13 @@
                         <label class="d-flex align-items-center">
                             <input type="checkbox" asp-for="ImportKeysToRPC" class="btcpay-toggle me-3"/>
                             <div>
-                                <label asp-for="ImportKeysToRPC" class="form-check-label">Import keys to RPC</label>
+                                <label asp-for="ImportKeysToRPC" class="form-check-label" text-translate="true">Import keys to RPC</label>
                                 <span asp-validation-for="ImportKeysToRPC" class="text-danger"></span>
                                 <p class="text-muted pt-2 mb-0">
-                                    Each address generated will be imported into the node wallet and you can view your balance through the node.
+                                    <span text-translate="true">Each address generated will be imported into the node wallet and you can view your balance through the node.</span>
                                     @if (isImport || isHotWallet)
                                     {
-                                        <span>When this is enabled for a hot wallet, you are also able to use the node wallet to spend.</span>
+                                        <span text-translate="true">When this is enabled for a hot wallet, you are also able to use the node wallet to spend.</span>
                                     }
                                 </p>
                             </div>
@@ -147,7 +143,7 @@
             <input type="hidden" asp-for="AdditionalOptions[dictKeys.Key]" />
         }
     }
-    <button type="submit" class="btn btn-primary" id="Continue">@(isImport ? "Continue" : "Create")</button>
+    <button type="submit" class="btn btn-primary" id="Continue">@(isImport ? StringLocalizer["Continue"] : StringLocalizer["Create"])</button>
 </form>
 
 <script>
@@ -157,7 +153,7 @@
         if ($form.elements["passphrase_conf"].value !== $form.elements["Passphrase"].value) {
             const $validation = document.getElementById("passphrase_conf_validation");
             $validation.classList.remove("field-validation-valid");
-            $validation.innerText = "Invalid passphrase confirmation";
+            $validation.innerText = @StringLocalizer["Invalid passphrase confirmation"];
             event.preventDefault();
         }
     });

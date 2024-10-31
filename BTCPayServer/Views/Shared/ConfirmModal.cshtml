@@ -4,15 +4,15 @@
 	string actionUrl = null;
 	if (Model.ActionName is not null)
 	{
-		var controllerName = Model.ControllerName ?? ((Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor)this.Url.ActionContext.ActionDescriptor).ControllerName;
-		actionUrl = linkGenerator.GetPathByAction(Model.ActionName, controllerName, pathBase: this.Context.Request.PathBase);
+		var controllerName = Model.ControllerName ?? ((Microsoft.AspNetCore.Mvc.Controllers.ControllerActionDescriptor)Url.ActionContext.ActionDescriptor).ControllerName;
+		actionUrl = linkGenerator.GetPathByAction(Model.ActionName, controllerName, pathBase: Context.Request.PathBase);
 	}
 }
 <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content">
         <div class="modal-header">
             <h4 class="modal-title" id="ConfirmTitle">@Model.Title</h4>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
                 <vc:icon symbol="close" />
             </button>
         </div>

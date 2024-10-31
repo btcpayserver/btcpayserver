@@ -13,6 +13,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBitcoin.DataEncoders;
@@ -370,6 +371,45 @@ namespace BTCPayServer.Services.Invoices
             get;
             set;
         } = new Dictionary<string, decimal>();
+
+#nullable enable
+        public PaymentMethodId? GetDefaultPaymentMethodId(Data.StoreData store, BTCPayNetworkProvider networkProvider, HashSet<PaymentMethodId>? authorized = null)
+        {
+            PaymentMethodId? paymentMethodId = null;
+            PaymentMethodId? invoicePaymentId = DefaultPaymentMethod;
+            PaymentMethodId? storePaymentId = store.GetDefaultPaymentId();
+            authorized ??= GetPaymentPrompts().Select(p => p.PaymentMethodId).ToHashSet();
+            if (invoicePaymentId is not null)
+            {
+                if (authorized.Contains(invoicePaymentId))
+                    paymentMethodId = invoicePaymentId;
+            }
+            if (paymentMethodId is null && storePaymentId is not null)
+            {
+                if (authorized.Contains(storePaymentId))
+                    paymentMethodId = storePaymentId;
+            }
+            if (paymentMethodId is null && invoicePaymentId is not null)
+            {
+                paymentMethodId = invoicePaymentId.FindNearest(authorized);
+            }
+            if (paymentMethodId is null && storePaymentId is not null)
+            {
+                paymentMethodId = storePaymentId.FindNearest(authorized);
+            }
+            if (paymentMethodId is null)
+            {
+                var defaultBTC = PaymentTypes.CHAIN.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
+                var defaultLNURLPay = PaymentTypes.LNURL.GetPaymentMethodId(networkProvider.DefaultNetwork.CryptoCode);
+                paymentMethodId = authorized.FirstOrDefault(e => e == defaultBTC) ??
+                                  authorized.FirstOrDefault(e => e == defaultLNURLPay) ??
+                                  authorized.FirstOrDefault();
+            }
+
+            return paymentMethodId;
+        }
+#nullable restore
+
         public void UpdateTotals()
         {
             PaidAmount = new Amounts()
@@ -494,7 +534,7 @@ namespace BTCPayServer.Services.Invoices
         public DateTimeOffset MonitoringExpiration { get; set; }
 
         [JsonIgnore]
-        public HashSet<string> AvailableAddressHashes { get; set; }
+        public HashSet<(PaymentMethodId PaymentMethodId, string Address)> Addresses { get; set; }
         [JsonProperty]
         public bool ExtendedNotifications { get; set; }
 
@@ -521,11 +561,11 @@ namespace BTCPayServer.Services.Invoices
             return DateTimeOffset.UtcNow > ExpirationTime;
         }
 
-        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions)
+        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions, CurrencyNameTable currencyNameTable)
         {
-            return EntityToDTO(bitpayExtensions, null);
+            return EntityToDTO(bitpayExtensions, null, currencyNameTable);
         }
-        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions, IUrlHelper urlHelper)
+        public InvoiceResponse EntityToDTO(IDictionary<PaymentMethodId, IPaymentMethodBitpayAPIExtension> bitpayExtensions, IUrlHelper urlHelper, CurrencyNameTable currencyNameTable)
         {
             ServerUrl = ServerUrl ?? "";
             InvoiceResponse dto = new InvoiceResponse
@@ -608,8 +648,11 @@ namespace BTCPayServer.Services.Invoices
                 // is for legacy compatibility with the Bitpay API
                 var paymentCode = GetPaymentCode(info.Currency, paymentId);
                 dto.PaymentCodes.Add(paymentCode, cryptoInfo.PaymentUrls);
-                dto.PaymentSubtotals.Add(paymentCode, accounting.ToSmallestUnit(subtotalPrice));
-                dto.PaymentTotals.Add(paymentCode, accounting.ToSmallestUnit(accounting.TotalDue));
+                if (info.Currency is not null && currencyNameTable.GetCurrencyData(info.Currency, true)?.Divisibility is int divisibility)
+                {
+                    dto.PaymentSubtotals.Add(paymentCode, BitcoinPaymentMethodBitpayAPIExtension.ToSmallestUnit(divisibility, subtotalPrice));
+                    dto.PaymentTotals.Add(paymentCode, BitcoinPaymentMethodBitpayAPIExtension.ToSmallestUnit(divisibility, accounting.TotalDue));
+                }
                 dto.SupportedTransactionCurrencies.TryAdd(cryptoCode, new InvoiceSupportedTransactionCurrency()
                 {
                     Enabled = true
@@ -810,7 +853,6 @@ namespace BTCPayServer.Services.Invoices
 
     public class PaymentMethodAccounting
     {
-        public int Divisibility { get; set; }
         /// <summary>Total amount of this invoice</summary>
         public decimal TotalDue { get; set; }
 
@@ -850,23 +892,9 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         public decimal PaymentMethodFee { get; set; }
         /// <summary>
-        /// Amount of fee already paid in the invoice's currency
-        /// </summary>
-        public decimal PaymentMethodFeeAlreadyPaid { get; set; }
-        /// <summary>
         /// Minimum required to be paid in order to accept invoice as paid
         /// </summary>
         public decimal MinimumTotalDue { get; set; }
-
-        public decimal ToSmallestUnit(decimal v)
-        {
-            for (int i = 0; i < Divisibility; i++)
-            {
-                v *= 10.0m;
-            }
-            return v;
-        }
-        public string ShowMoney(decimal v) => MoneyExtensions.ShowMoney(v, Divisibility);
     }
 
     public class PaymentPrompt
@@ -881,9 +909,41 @@ namespace BTCPayServer.Services.Invoices
         public string Currency { get; set; }
         [JsonIgnore]
         public decimal Rate => Currency is null ? throw new InvalidOperationException("Currency of the payment prompt isn't set") : ParentEntity.GetInvoiceRate(Currency);
+        /// <summary>
+        /// The maximum divisibility supported by the underlying payment method
+        /// </summary>
         public int Divisibility { get; set; }
+        /// <summary>
+        /// The divisibility to use when calculating the amount to pay.
+        /// If null, it will use the <see cref="Divisibility"/>.
+        /// </summary>
+        public int? RateDivisibility { get; set; }
+        /// <summary>
+        /// Total additional fee imposed by this specific payment method.
+        /// It includes the <see cref="TweakFee"/>.
+        /// </summary>
         [JsonConverter(typeof(NumericStringJsonConverter))]
         public decimal PaymentMethodFee { get; set; }
+        /// <summary>
+        /// An additional fee, hidden from UI, meant to be used when a payment method has a service provider which
+        /// have a different way of converting the invoice's amount into the currency of the payment method.
+        /// This fee can avoid under/over payments when this case happens.
+        /// 
+        /// You need to increment it with <see cref="AddTweakFee(decimal)"/> so that the tweak fee is also added to the <see cref="PaymentMethodFee"/>.
+        /// </summary>
+        [JsonConverter(typeof(NumericStringJsonConverter))]
+        public decimal TweakFee { get; set; }
+        /// <summary>
+        /// A fee, hidden from UI, meant to be used when a payment method has a service provider which
+        /// have a different way of converting the invoice's amount into the currency of the payment method.
+        /// This fee can avoid under/over payments when this case happens.
+        /// </summary>
+        /// <param name="value"></param>
+        public void AddTweakFee(decimal value)
+        {
+            TweakFee += value;
+            PaymentMethodFee += value;
+        }
         public string Destination { get; set; }
         public JToken Details { get; set; }
 
@@ -896,26 +956,25 @@ namespace BTCPayServer.Services.Invoices
             accounting.TxRequired = accounting.TxCount;
             var grossDue = i.Price + i.PaidFee;
             var rate = Rate;
+            var divisibility = RateDivisibility ?? Divisibility;
             if (i.MinimumNetDue > 0.0m)
             {
                 accounting.TxRequired++;
                 grossDue += rate * PaymentMethodFee;
             }
-            accounting.Divisibility = Divisibility;
-            accounting.TotalDue = Coins(grossDue / rate, Divisibility);
-            accounting.Paid = Coins(i.PaidAmount.Gross / rate, Divisibility);
-            accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), Divisibility);
+            accounting.TotalDue = Coins(grossDue / rate, divisibility);
+            accounting.Paid = Coins(i.PaidAmount.Gross / rate, divisibility);
+            accounting.PaymentMethodPaid = Coins(thisPaymentMethodPayments.Sum(p => p.PaidAmount.Gross), divisibility);
 
             // This one deal with the fact where it might looks like a slight over payment due to the dust of another payment method.
             // So if we detect the NetDue is zero, just cap dueUncapped to 0
             var dueUncapped = i.NetDue == 0.0m ? 0.0m : grossDue - i.PaidAmount.Gross;
-            accounting.DueUncapped = Coins(dueUncapped / rate, Divisibility);
+            accounting.DueUncapped = Coins(dueUncapped / rate, divisibility);
             accounting.Due = Max(accounting.DueUncapped, 0.0m);
 
-            accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, Divisibility);
-            accounting.PaymentMethodFeeAlreadyPaid = Coins(i.PaidFee / rate, Divisibility);
+            accounting.PaymentMethodFee = Coins((grossDue - i.Price) / rate, divisibility);
 
-            accounting.MinimumTotalDue = Max(Smallest(Divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, Divisibility));
+            accounting.MinimumTotalDue = Max(Smallest(divisibility), Coins((grossDue * (1.0m - ((decimal)i.PaymentTolerance / 100.0m))) / rate, divisibility));
             return accounting;
         }
 
@@ -1000,13 +1059,5 @@ namespace BTCPayServer.Services.Invoices
                 Net = PaidAmount.Net * Rate
             };
         }
-    }
-    /// <summary>
-    /// A record of a payment
-    /// </summary>
-    public interface CryptoPaymentData
-    {
-
-        string GetPaymentProof();
     }
 }

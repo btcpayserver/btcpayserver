@@ -15,36 +15,13 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using BTCPayServer.Migrations;
 using Newtonsoft.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.ModelBinding.Binders;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace BTCPayServer.Data
 {
-    public partial class InvoiceData
+    public partial class InvoiceData : MigrationInterceptor.IHasMigration
     {
-        /// <summary>
-        /// We have a migration running in the background that will migrate the data from the old blob to the new blob
-        /// Meanwhile, we need to make sure that invoices which haven't been migrated yet are migrated on the fly.
-        /// </summary>
-        public class MigrationInterceptor : IMaterializationInterceptor
-        {
-            public static readonly MigrationInterceptor Instance = new MigrationInterceptor();
-            public object InitializedInstance(MaterializationInterceptionData materializationData, object entity)
-            {
-                if (entity is InvoiceData invoiceData && invoiceData.Currency is null)
-                {
-                    invoiceData.Migrate();
-                }
-                else if (entity is PaymentData paymentData && paymentData.Currency is null)
-                {
-                    paymentData.Migrate();
-                }
-                else if (entity is PayoutData payoutData && payoutData.Currency is null)
-                {
-                    payoutData.Migrate();
-                }
-                return entity;
-            }
-        }
-
         static HashSet<string> superflousProperties = new HashSet<string>()
         {
             "availableAddressHashes",
@@ -78,13 +55,14 @@ namespace BTCPayServer.Data
         };
 
 #pragma warning disable CS0618 // Type or member is obsolete
-        public void Migrate()
+        public bool TryMigrate()
         {
             if (Currency is not null)
-                return;
+                return false;
             if (Blob is not (null or { Length: 0 }))
             {
                 Blob2 = MigrationExtensions.Unzip(Blob);
+                Blob2 = MigrationExtensions.SanitizeJSON(Blob2);
                 Blob = null;
             }
             var blob = JObject.Parse(Blob2);
@@ -232,11 +210,10 @@ namespace BTCPayServer.Data
             }
 
             blob.ConvertNumberToString("price");
-            Currency = blob["currency"].Value<string>();
+            Currency = blob["currency"].Value<string>().ToUpperInvariant();
             var isTopup = blob["type"]?.Value<string>() is "TopUp";
             var amount = decimal.Parse(blob["price"].Value<string>(), CultureInfo.InvariantCulture);
             Amount = isTopup && amount == 0 ? null : decimal.Parse(blob["price"].Value<string>(), CultureInfo.InvariantCulture);
-            CustomerEmail = null;
             foreach (var prop in superflousProperties)
                 blob.Property(prop)?.Remove();
             if (blob["speedPolicy"] is JValue { Type: JTokenType.Integer, Value: 0 or 0L })
@@ -373,7 +350,11 @@ namespace BTCPayServer.Data
             };
             blob["version"] = 3;
             Blob2 = blob.ToString(Formatting.None);
+            return true;
         }
+
+        [NotMapped]
+        public bool Migrated { get; set; }
         static string[] detailsRemoveDefault =
             [
                 "paymentMethodFeeRate",

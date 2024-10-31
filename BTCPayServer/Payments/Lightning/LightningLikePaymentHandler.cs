@@ -21,9 +21,9 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Lightning
 {
-    public interface ILightningPaymentHandler : IHasNetwork
+    public interface ILightningPaymentHandler : IHasNetwork, IPaymentMethodHandler
     {
-        LightningPaymentData ParsePaymentDetails(JToken details);
+        new LightningPaymentData ParsePaymentDetails(JToken details);
     }
     public class LightningLikePaymentHandler : IPaymentMethodHandler, ILightningPaymentHandler
     {
@@ -62,6 +62,7 @@ namespace BTCPayServer.Payments.Lightning
             context.Prompt.Currency = _Network.CryptoCode;
             context.Prompt.PaymentMethodFee = 0m;
             context.Prompt.Divisibility = 11;
+            context.Prompt.RateDivisibility = 8;
             return Task.CompletedTask;
         }
 
@@ -70,7 +71,7 @@ namespace BTCPayServer.Payments.Lightning
         public IOptions<LightningNetworkOptions> Options { get; }
 
         public BTCPayNetwork Network => _Network;
-
+        static LightMoney OneSat = LightMoney.FromUnit(1.0m, LightMoneyUnit.Satoshi);
         public async Task ConfigurePrompt(PaymentMethodContext context)
         {
             if (context.InvoiceEntity.Type == InvoiceType.TopUp)
@@ -89,15 +90,7 @@ namespace BTCPayServer.Payments.Lightning
             var nodeInfo = GetNodeInfo(config, context.Logs, preferOnion);
 
             var invoice = context.InvoiceEntity;
-            decimal due = Extensions.RoundUp(invoice.Price / paymentPrompt.Rate, _Network.Divisibility);
-            try
-            {
-                due = paymentPrompt.Calculate().Due;
-            }
-            catch (Exception)
-            {
-                // ignored
-            }
+            decimal due = paymentPrompt.Calculate().Due;
             var client = config.CreateLightningClient(_Network, Options.Value, _lightningClientFactory);
             var expiry = invoice.ExpirationTime - DateTimeOffset.UtcNow;
             if (expiry < TimeSpan.Zero)
@@ -116,6 +109,12 @@ namespace BTCPayServer.Payments.Lightning
                     var request = new CreateInvoiceParams(new LightMoney(due, LightMoneyUnit.BTC), description, expiry);
                     request.PrivateRouteHints = storeBlob.LightningPrivateRouteHints;
                     lightningInvoice = await client.CreateInvoice(request, cts.Token);
+                    var diff = request.Amount - lightningInvoice.Amount;
+                    if (diff != LightMoney.Zero)
+                    {
+                        // Some providers doesn't round up to msat. So we tweak the fees so the due match the BOLT11's amount.
+                        paymentPrompt.AddTweakFee(-diff.ToUnit(LightMoneyUnit.BTC));
+                    }
                 }
                 catch (OperationCanceledException) when (cts.IsCancellationRequested)
                 {

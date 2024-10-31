@@ -35,7 +35,6 @@ using StoreData = BTCPayServer.Data.StoreData;
 public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 {
     public string Currency { get; }
-    private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
     private readonly PaymentMethodHandlerDictionary _paymentHandlers;
     private readonly ExplorerClientProvider _explorerClientProvider;
     private readonly BTCPayNetworkJsonSerializerSettings _jsonSerializerSettings;
@@ -65,7 +64,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
         EventAggregator eventAggregator,
         TransactionLinkProviders transactionLinkProviders)
     {
-        _btcPayNetworkProvider = btcPayNetworkProvider;
         PayoutMethodId = payoutMethodId;
         PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode);
         Network = network;
@@ -126,7 +124,6 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
         var payoutMethodId = payout.GetPayoutMethodId();
         if (payoutMethodId is null)
             return null;
-        var cryptoCode = Network.CryptoCode;
         ParseProofType(payout.Proof, out var raw, out var proofType);
         if (proofType == PayoutTransactionOnChainBlob.Type)
         {
@@ -135,7 +132,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                 JsonSerializer.Create(_jsonSerializerSettings.GetSerializer(payoutMethodId)));
             if (res == null)
                 return null;
-            res.LinkTemplate = _transactionLinkProviders.GetBlockExplorerLink(cryptoCode);
+            res.LinkTemplate = _transactionLinkProviders.GetBlockExplorerLink(PaymentTypes.CHAIN.GetPaymentMethodId(Network.CryptoCode));
             return res;
         }
         return raw.ToObject<ManualPayoutProof>();
@@ -175,12 +172,14 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
 
     public async Task BackgroundCheck(object o)
     {
-        if (o is NewOnChainTransactionEvent newTransaction && newTransaction.NewTransactionEvent.TrackedSource is AddressTrackedSource addressTrackedSource)
+        if (o is NewOnChainTransactionEvent newTransaction && newTransaction.NewTransactionEvent.TrackedSource is AddressTrackedSource addressTrackedSource
+            && newTransaction.PaymentMethodId == PaymentMethodId)
         {
             await UpdatePayoutsAwaitingForPayment(newTransaction, addressTrackedSource);
         }
 
-        if (o is NewBlockEvent || o is NewOnChainTransactionEvent)
+        if ((o is NewBlockEvent nbe && nbe.PaymentMethodId == PaymentMethodId) || 
+            (o is NewOnChainTransactionEvent nct && nct.PaymentMethodId == PaymentMethodId))
         {
             await UpdatePayoutsInProgress();
         }
@@ -238,7 +237,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
                     }
                     await context.SaveChangesAsync();
                 }
-                return new StatusMessageModel()
+                return new StatusMessageModel
                 {
                     Message = "Payout payments have been marked confirmed",
                     Severity = StatusMessageModel.StatusSeverity.Success
@@ -305,13 +304,13 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             switch (claim.destination)
             {
                 case UriClaimDestination uriClaimDestination:
-                    uriClaimDestination.BitcoinUrl.Amount = new Money(blob.CryptoAmount.Value, MoneyUnit.BTC);
+                    uriClaimDestination.BitcoinUrl.Amount = new Money(payout.Amount.Value, MoneyUnit.BTC);
                     var newUri = new UriBuilder(uriClaimDestination.BitcoinUrl.Uri);
                     BTCPayServerClient.AppendPayloadToQuery(newUri, new KeyValuePair<string, object>("payout", payout.Id));
                     bip21.Add(newUri.Uri.ToString());
                     break;
                 case AddressClaimDestination addressClaimDestination:
-                    var bip21New = Network.GenerateBIP21(addressClaimDestination.Address.ToString(), blob.CryptoAmount.Value);
+                    var bip21New = Network.GenerateBIP21(addressClaimDestination.Address.ToString(), payout.Amount.Value);
                     bip21New.QueryParams.Add("payout", payout.Id);
                     bip21.Add(bip21New.ToString());
                     break;
@@ -417,40 +416,38 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
     {
         try
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(newTransaction.CryptoCode);
             var destinationSum =
-                newTransaction.NewTransactionEvent.Outputs.Sum(output => output.Value.GetValue(network));
+                newTransaction.NewTransactionEvent.Outputs.Sum(output => output.Value.GetValue(Network));
             var destination = addressTrackedSource.Address.ToString();
-            var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(newTransaction.CryptoCode);
+            
 
             await using var ctx = _dbContextFactory.CreateContext();
-            var payouts = await ctx.Payouts
+            var payout = await ctx.Payouts
                 .Include(o => o.StoreData)
                 .Include(o => o.PullPaymentData)
                 .Where(p => p.State == PayoutState.AwaitingPayment)
-                .Where(p => p.PayoutMethodId == paymentMethodId.ToString())
+                .Where(p => p.PayoutMethodId == PaymentMethodId.ToString())
 #pragma warning disable CA1307 // Specify StringComparison
-                .Where(p => destination.Equals(p.Destination))
+                .Where(p => destination.Equals(p.DedupId))
 #pragma warning restore CA1307 // Specify StringComparison
-                .ToListAsync();
-            var payoutByDestination = payouts.ToDictionary(p => p.Destination);
+                .FirstOrDefaultAsync();
 
-            if (!payoutByDestination.TryGetValue(destination, out var payout))
+            if (payout is null)
                 return;
             var payoutBlob = payout.GetBlob(_jsonSerializerSettings);
-            if (payoutBlob.CryptoAmount is null ||
+            if (payout.Amount is null ||
                 // The round up here is not strictly necessary, this is temporary to fix existing payout before we
                 // were properly roundup the crypto amount
                 destinationSum !=
-                BTCPayServer.Extensions.RoundUp(payoutBlob.CryptoAmount.Value, network.Divisibility))
+                BTCPayServer.Extensions.RoundUp(payout.Amount.Value, Network.Divisibility))
                 return;
 
             var derivationSchemeSettings = payout.StoreData
-                .GetDerivationSchemeSettings(_paymentHandlers, newTransaction.CryptoCode)?.AccountDerivation;
+                .GetDerivationSchemeSettings(_paymentHandlers, Network.CryptoCode)?.AccountDerivation;
             if (derivationSchemeSettings is null)
                 return;
 
-            var storeWalletMatched = (await _explorerClientProvider.GetExplorerClient(newTransaction.CryptoCode)
+            var storeWalletMatched = (await _explorerClientProvider.GetExplorerClient(Network.CryptoCode)
                 .GetTransactionAsync(derivationSchemeSettings,
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash));
             //if the wallet related to the store of the payout does not have the tx: it has been paid externally
@@ -465,7 +462,7 @@ public class BitcoinLikePayoutHandler : IPayoutHandler, IHasNetwork
             {
                 payout.State = PayoutState.InProgress;
                 await WalletRepository.AddWalletTransactionAttachment(
-                    new WalletId(payout.StoreDataId, newTransaction.CryptoCode),
+                    new WalletId(payout.StoreDataId, Network.CryptoCode),
                     newTransaction.NewTransactionEvent.TransactionData.TransactionHash,
                     Attachment.Payout(payout.PullPaymentDataId, payout.Id));
             }

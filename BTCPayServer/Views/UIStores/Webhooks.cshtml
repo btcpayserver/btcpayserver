@@ -3,9 +3,8 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WebhooksViewModel
 @{
-    ViewData.SetActivePage(StoreNavPages.Webhooks, "Webhooks", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Webhooks, StringLocalizer["Webhooks"], Context.GetStoreData().Id);
 }
-
 
 <div class="sticky-header">
     <h2 text-translate="true">@ViewData["Title"]</h2>
@@ -14,7 +13,7 @@
     </a>
 </div>
 <partial name="_StatusMessage" />
-<p>Webhooks allow BTCPay Server to send HTTP events related to your store to another server.</p>
+<p text-translate="true">Webhooks allow BTCPay Server to send HTTP events related to your store to another server.</p>
 
 <div class="row">
     <div class="col-xl-8 col-xxl-constrain">
@@ -24,9 +23,9 @@
                 <table class="table table-hover">
                     <thead>
                         <tr>
-                            <th>Status</th>
-                            <th>Url</th>
-                            <th class="actions-col" permission="@Policies.CanModifyStoreSettings">Actions</th>
+                            <th text-translate="true">Status</th>
+                            <th text-translate="true">Url</th>
+                            <th class="actions-col" permission="@Policies.CanModifyStoreSettings" text-translate="true">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -38,7 +37,7 @@
                                     {
                                         <span id="delivery-status-icon"
                                               data-bs-toggle="tooltip"
-                                              title="@(wh.LastDeliveryTimeStamp == null ? "No deliveries for this webhook yet" : "Last delivery " + @wh.LastDeliveryTimeStamp?.ToTimeAgo())">
+                                              title="@(wh.LastDeliveryTimeStamp == null ? StringLocalizer["No deliveries for this webhook yet"] : StringLocalizer["Last delivery {0}", wh.LastDeliveryTimeStamp.Value.ToTimeAgo()])">
                                             <vc:icon symbol="checkmark" css-class="text-success" />
                                         </span>
                                     }
@@ -54,20 +53,20 @@
                                 </td>
                                 <td class="d-block text-break">@wh.Url</td>
                                 <td class="actions-col text-md-nowrap" permission="@Policies.CanModifyStoreSettings">
-                                    <a asp-action="TestWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Test</a> -
-                                    <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id">Modify</a> -
-                                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE">Delete</a>
+                                    <a asp-action="TestWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" text-translate="true">Test</a> -
+                                    <a asp-action="ModifyWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" text-translate="true">Modify</a> -
+                                    <a asp-action="DeleteWebhook" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-webhookId="@wh.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-confirm-input="DELETE" text-translate="true">Delete</a>
                                 </td>
                             </tr>
                         }
                     </tbody>
                 </table>
             </div>
-            <partial name="_Confirm" model="@(new ConfirmModel("Delete Webhook", "This webhook will be removed from this store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+            <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete Webhook"], StringLocalizer["This webhook will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
         }
         else
         {
-            <p class="text-secondary mt-3">
+            <p class="text-secondary mt-3" text-translate="true">
                 There are no webhooks yet.
             </p>
         }

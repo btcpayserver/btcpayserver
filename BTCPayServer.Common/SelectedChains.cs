@@ -12,17 +12,12 @@ namespace BTCPayServer
     {
         HashSet<string> chains = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         bool all = false;
-        public SelectedChains(IConfiguration configuration, Logs logs)
+        public SelectedChains(IConfiguration configuration)
         {
             foreach (var chain in (configuration["chains"] ?? "btc")
                 .Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.ToUpperInvariant()))
             {
-                if (new[] { "ETH", "USDT20", "FAU" }.Contains(chain, StringComparer.OrdinalIgnoreCase))
-                {
-                    logs.Configuration.LogWarning($"'{chain}' is not anymore supported, please remove it from 'chains'");
-                    continue;
-                }
                 if (chain == "*")
                 {
                     all = true;

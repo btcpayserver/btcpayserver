@@ -94,6 +94,8 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetNotificationSettings()
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+                return NotFound();
             var model = GetNotificationSettingsData(user);
             return Ok(model);
         }
@@ -103,6 +105,8 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateNotificationSettings(UpdateNotificationSettingsRequest request)
         {
             var user = await _userManager.GetUserAsync(User);
+            if (user is null)
+                return NotFound();
             if (request.Disabled.Contains("all"))
             {
                 user.DisabledNotifications = "all";

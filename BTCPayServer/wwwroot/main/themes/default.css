@@ -241,7 +241,7 @@
   --btcpay-toggle-bg: var(--btcpay-neutral-500);
   --btcpay-toggle-bg-hover: var(--btcpay-neutral-600);
   --btcpay-toggle-bg-active: var(--btcpay-primary);
-  --btcpay-toggle-bg-active-hover: var(--btcpay-primary-600);
+  --btcpay-toggle-bg-active-hover: var(--btcpay-primary-bg-active);
 
   --btcpay-footer-bg: var(--btcpay-body-bg);
   --btcpay-footer-text: var(--btcpay-body-text-muted);

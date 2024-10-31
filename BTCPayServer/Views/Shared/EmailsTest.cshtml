@@ -1,13 +1,13 @@
 @model BTCPayServer.Models.EmailsViewModel
 
-<h3 class="my-3">Testing</h3>
+<h3 class="my-3" text-translate="true">Testing</h3>
 <div class="row">
     <div class="col-xl-10 col-xxl-constrain">
         <div class="form-group">
-            <label asp-for="TestEmail" class="form-label">To test your settings, enter an email address</label>
-            <input asp-for="TestEmail" placeholder="Firstname Lastname <email@example.com>" class="form-control" />
+            <label asp-for="TestEmail" class="form-label" text-translate="true">To test your settings, enter an email address</label>
+            <input asp-for="TestEmail" placeholder="@StringLocalizer["Firstname Lastname <email@example.com>"]" class="form-control" />
             <span asp-validation-for="TestEmail" class="text-danger"></span>
         </div>
-        <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test">Send Test Email</button>
+        <button type="submit" class="btn btn-secondary mt-2" name="command" value="Test" id="Test" text-translate="true">Send Test Email</button>
     </div>
 </div>

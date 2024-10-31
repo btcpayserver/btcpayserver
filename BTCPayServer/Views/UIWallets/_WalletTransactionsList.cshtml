@@ -21,10 +21,8 @@
                 exclude-types="false"
                 display-inline="true"/>
         </td>
-        <td class="smMaxWidth text-truncate@(transaction.IsConfirmed ? "" : " unconf")">
-            <a href="@transaction.Link" target="_blank" rel="noreferrer noopener">
-                @transaction.Id
-            </a>
+        <td>
+            <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
         </td>
         <td class="amount-col">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")">@transaction.Balance</span>
@@ -41,7 +39,7 @@
                             <textarea name="addcomment" maxlength="200" rows="2" cols="20" class="form-control form-control-sm p-1">@transaction.Comment</textarea>
                         </div>
                         <div class="p-2">
-                            <button type="submit" class="btn btn-primary btn-sm w-100">Save comment</button>
+                            <button type="submit" class="btn btn-primary btn-sm w-100" text-translate="true">Save comment</button>
                         </div>
                     </form>
                 </div>

@@ -2688,7 +2688,7 @@ textarea.form-control-lg {
   text-align: center;
   white-space: nowrap;
   background-color: var(--btcpay-form-bg-addon);
-  border: var(--btcpay-border-width) solid var(--btcpay-form-border);
+  border: var(--btcpay-border-width) solid var(--btcpay-form-bg-addon);
   border-radius: var(--btcpay-border-radius);
 }
 
@@ -12267,8 +12267,18 @@ ul:not([class]) li {
 
 .accordion-button .icon {
   --icon-size: 1.5rem;
+  margin-top: -.0575em;
+  margin-bottom: -.0575em;
   margin-left: auto;
   transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
+}
+
+.accordion-button span {
+    color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1));
+}
+
+.accordion-button:hover span {
+    --btcpay-body-link-rgb: var(--btcpay-body-link-accent-rgb);
 }
 
 .accordion-button:not(.collapsed) .icon {
@@ -12840,7 +12850,7 @@ input[type='number'].hide-number-spin {
   cursor: pointer;
 }
 
-.btcpay-toggle:hover {
+.btcpay-toggle:not(:disabled):hover {
   background: var(--btcpay-toggle-bg-hover);
 }
 
@@ -12855,8 +12865,8 @@ input.btcpay-toggle:checked,
   background: var(--btcpay-toggle-bg-active);
 }
 
-input.btcpay-toggle:checked:hover,
-.btcpay-toggle.btcpay-toggle--active:hover {
+input.btcpay-toggle:not(:disabled):checked:hover,
+.btcpay-toggle.btcpay-toggle--active:not(:disabled):hover {
   background: var(--btcpay-toggle-bg-active-hover);
 }
 

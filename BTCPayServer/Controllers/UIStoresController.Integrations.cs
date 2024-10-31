@@ -67,7 +67,7 @@ public partial class UIStoresController
         if (webhook is null)
             return NotFound();
 
-        return View("Confirm", new ConfirmModel("Delete webhook", "This webhook will be removed from this store. Are you sure?", "Delete"));
+        return View("Confirm", new ConfirmModel(StringLocalizer["Delete webhook"], StringLocalizer["This webhook will be removed from this store. Are you sure?"], StringLocalizer["Delete"]));
     }
 
     [HttpPost("{storeId}/webhooks/{webhookId}/remove")]
@@ -79,7 +79,7 @@ public partial class UIStoresController
             return NotFound();
 
         await _storeRepo.DeleteWebhook(CurrentStore.Id, webhookId);
-        TempData[WellKnownTempData.SuccessMessage] = "Webhook successfully deleted";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Webhook successfully deleted"].Value;
         return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
     }
 
@@ -91,7 +91,7 @@ public partial class UIStoresController
             return View(nameof(ModifyWebhook), viewModel);
 
         await _storeRepo.CreateWebhook(CurrentStore.Id, viewModel.CreateBlob());
-        TempData[WellKnownTempData.SuccessMessage] = "The webhook has been created";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The webhook has been created"].Value;
         return RedirectToAction(nameof(Webhooks), new { storeId });
     }
 
@@ -123,7 +123,7 @@ public partial class UIStoresController
             return View(nameof(ModifyWebhook), viewModel);
 
         await _storeRepo.UpdateWebhook(CurrentStore.Id, webhookId, viewModel.CreateBlob());
-        TempData[WellKnownTempData.SuccessMessage] = "The webhook has been updated";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The webhook has been updated"].Value;
         return RedirectToAction(nameof(Webhooks), new { storeId = CurrentStore.Id });
     }
 
@@ -146,11 +146,11 @@ public partial class UIStoresController
 
         if (result.Success)
         {
-            TempData[WellKnownTempData.SuccessMessage] = $"{viewModel.Type} event delivered successfully! Delivery ID is {result.DeliveryId}";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["{0} event delivered successfully! Delivery ID is {1}", viewModel.Type, result.DeliveryId!].Value;
         }
         else
         {
-            TempData[WellKnownTempData.ErrorMessage] = $"{viewModel.Type} event could not be delivered. Error message received: {(result.ErrorMessage ?? "unknown")}";
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["{0} event could not be delivered. Error message received: {1}", viewModel.Type, result.ErrorMessage ?? StringLocalizer["unknown"].Value].Value;
         }
 
         return View(nameof(TestWebhook));
@@ -168,7 +168,7 @@ public partial class UIStoresController
         if (newDeliveryId is null)
             return NotFound();
 
-        TempData[WellKnownTempData.SuccessMessage] = "Successfully planned a redelivery";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Successfully planned a redelivery"].Value;
         return RedirectToAction(nameof(ModifyWebhook),
             new
             {

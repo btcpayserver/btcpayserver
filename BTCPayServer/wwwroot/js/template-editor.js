@@ -250,17 +250,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, new Set()));
             },
             itemChanged() {
-                return this.selectedItem && this.selectedItemInitial && (
-                    this.selectedItem.id !== this.selectedItemInitial.id ||
-                    this.selectedItem.title !== this.selectedItemInitial.title ||
-                    this.selectedItem.price !== this.selectedItemInitial.price ||
-                    this.selectedItem.image !== this.selectedItemInitial.image ||
-                    this.selectedItem.disabled !== this.selectedItemInitial.disabled ||
-                    this.selectedItem.inventory !== this.selectedItemInitial.inventory ||
-                    this.selectedItem.priceType !== this.selectedItemInitial.priceType ||
-                    this.selectedItem.categories !== this.selectedItemInitial.categories ||
-                    this.selectedItem.description !== this.selectedItemInitial.description
-                )
+                return (!this.selectedItem && this.selectedItemInitial) ||
+                    (!this.selectedItem && this.selectedItemInitial) ||
+                    (JSON.stringify(this.selectedItem) !== JSON.stringify(this.selectedItemInitial))
+                
             }
         },
         methods: {
@@ -298,11 +291,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.items.splice(newIndex, 0, this.items.splice(oldIndex, 1)[0])
             },
             showOffcanvas() {
-                if (window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
+                if (this.editorOffcanvas && window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
                     this.editorOffcanvas.show();
             },
             hideOffcanvas() {
-                this.editorOffcanvas.hide();
+                if (this.editorOffcanvas)
+                    this.editorOffcanvas.hide();
             }
         },
         mounted() {

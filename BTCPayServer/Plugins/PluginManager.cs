@@ -67,17 +67,20 @@ namespace BTCPayServer.Plugins
             void LoadPluginsFromAssemblies(Assembly systemAssembly1, HashSet<string> exclude, HashSet<string> loadedPluginIdentifiers1,
                 List<IBTCPayServerPlugin> btcPayServerPlugins)
             {
+                var excludedAssemblies = "System.Private.CoreLib,testhost,System.Runtime,Microsoft.TestPlatform.CoreUtilities,System.Diagnostics.Tracing,System.Diagnostics.Debug,System.Runtime.Extensions,System.Diagnostics.Process,System.ComponentModel.Primitives,Microsoft.TestPlatform.PlatformAbstractions,System.Collections,Microsoft.TestPlatform.CrossPlatEngine,netstandard,Microsoft.TestPlatform.CommunicationUtilities,Microsoft.VisualStudio.TestPlatform.ObjectModel,Microsoft.VisualStudio.TestPlatform.Common,Newtonsoft.Json,System.Runtime.Serialization.Formatters,System.Collections.Concurrent,System.Diagnostics.TraceSource,System.Threading,System.IO.FileSystem,System.Runtime.InteropServices,System.Memory,Microsoft.Win32.Primitives,System.Threading.ThreadPool,System.Net.Primitives,System.Collections.NonGeneric,System.Net.Sockets,System.Private.Uri,System.Threading.Overlapped,System.Runtime.Intrinsics,System.Linq.Expressions,System.Runtime.Numerics,System.Linq,System.ComponentModel.TypeConverter,System.ObjectModel,System.Runtime.Serialization.Primitives,System.Data.Common,System.Xml.ReaderWriter,System.Private.Xml,System.ComponentModel,System.Reflection.Emit.ILGeneration,System.Reflection.Emit.Lightweight,System.Reflection.Primitives,Anonymously Hosted DynamicMethods Assembly,System.Runtime.Loader,System.Reflection.Metadata,System.IO.MemoryMappedFiles,System.Collections.Immutable,System.Text.Encoding.Extensions,xunit.runner.visualstudio.testadapter,System.Runtime.Serialization.Json,System.Private.DataContractSerialization,System.Runtime.Serialization.Xml,System.Resources.ResourceManager,xunit.runner.utility.netcoreapp10,xunit.abstractions,System.Text.RegularExpressions,System.Runtime.InteropServices.RuntimeInformation,NuGet.Frameworks,System.Xml.XDocument,System.Private.Xml.Linq,System.Threading.Thread,System.Globalization,System.IO,System.Reflection,System.Reflection.TypeExtensions,xunit.runner.reporters.netcoreapp10,System.Threading.Tasks,System.Net.Http,System.Reflection.Extensions,BTCPayServer.Tests,Microsoft.AspNetCore.Mvc.ViewFeatures,Microsoft.AspNetCore.Mvc.Core,Microsoft.AspNetCore.Mvc.Abstractions,xunit.core,BTCPayServer.Rating,Microsoft.Extensions.Logging.Abstractions,NBitpayClient,NBitcoin,BTCPayServer.Client,BTCPayServer.Data,Microsoft.AspNetCore.Http.Abstractions,BTCPayServer.Abstractions,BTCPayServer.Lightning.Common,Microsoft.EntityFrameworkCore,NBXplorer.Client,BTCPayServer.BIP78.Sender,Microsoft.Extensions.Identity.Stores,LNURL,Renci.SshNet,Microsoft.Extensions.Identity.Core,Newtonsoft.Json.Schema,Microsoft.AspNetCore.Razor.Language,Microsoft.CodeAnalysis.CSharp,Microsoft.CodeAnalysis,xunit.execution.dotnet,Microsoft.Extensions.Configuration.UserSecrets,System.Text.Encoding,BTCPayServer.Common,WebDriver,System.Drawing.Primitives,xunit.assert,Microsoft.Extensions.Configuration.Abstractions,Microsoft.Extensions.DependencyInjection,Microsoft.Extensions.DependencyInjection.Abstractions,Microsoft.Extensions.Configuration,Microsoft.Extensions.Primitives,StandardConfiguration,CommandLine,System.Security.Cryptography.Algorithms,System.Security.Cryptography,System.Security.Cryptography.Primitives,NBitcoin.Altcoins,ExchangeSharp,Microsoft.Extensions.Http,Microsoft.Extensions.Hosting.Abstractions,Microsoft.Extensions.Logging,Microsoft.Extensions.Options,Microsoft.Extensions.Diagnostics,System.Diagnostics.DiagnosticSource,System.Net.Security,System.Net.NameResolution,Microsoft.Extensions.Configuration.FileExtensions,Microsoft.Extensions.Configuration.Json,Microsoft.AspNetCore.Hosting,Microsoft.AspNetCore.Hosting.Abstractions,Microsoft.AspNetCore.Server.Kestrel,Microsoft.Extensions.Features,Microsoft.AspNetCore.Hosting.Server.Abstractions,Microsoft.Extensions.Configuration.EnvironmentVariables,CommandLine.Configuration,Microsoft.Extensions.Configuration.Ini,Microsoft.Extensions.FileProviders.Abstractions,Microsoft.Extensions.FileProviders.Physical,Microsoft.AspNetCore.Server.Kestrel.Transport.Quic,Microsoft.AspNetCore.Server.Kestrel.Transport.NamedPipes,System.Net.Quic,Microsoft.Win32.Registry,Microsoft.AspNetCore.Http,Microsoft.AspNetCore.Razor.Runtime,Microsoft.AspNetCore.Connections.Abstractions,Microsoft.AspNetCore.Server.Kestrel.Transport.Sockets,Microsoft.AspNetCore.Server.Kestrel.Core,Microsoft.Extensions.ObjectPool,NicolasDorier.RateLimits,Microsoft.Extensions.Caching.Memory,Microsoft.AspNetCore.DataProtection,Microsoft.AspNetCore.Identity,Microsoft.AspNetCore.Identity.EntityFrameworkCore,Microsoft.AspNetCore.Authentication.Abstractions,Microsoft.AspNetCore.Authentication.Cookies,Microsoft.AspNetCore.Authentication,Microsoft.AspNetCore.Session,Microsoft.AspNetCore.SignalR,Microsoft.AspNetCore.SignalR.Core,Microsoft.AspNetCore.SignalR.Common,Fido2.Models,Fido2.AspNet,Fido2,Microsoft.AspNetCore.Mvc,Microsoft.AspNetCore.Mvc.Razor,Microsoft.AspNetCore.Mvc.NewtonsoftJson,Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation,Microsoft.AspNetCore.Mvc.DataAnnotations,Microsoft.AspNetCore.Components.Server,Microsoft.AspNetCore.Components.Endpoints,Microsoft.AspNetCore.Routing.Abstractions,Microsoft.Extensions.Caching.Abstractions,Microsoft.AspNetCore.DataProtection.Abstractions,Microsoft.AspNetCore.Cryptography.Internal,Microsoft.AspNetCore.Authentication.Core,System.Security.Claims,Microsoft.Extensions.WebEncoders,System.Text.Encodings.Web,Microsoft.Extensions.Localization.Abstractions,Microsoft.AspNetCore.Mvc.Localization,Npgsql.EntityFrameworkCore.PostgreSQL,Microsoft.AspNetCore.Diagnostics,HtmlSanitizer,Microsoft.AspNetCore.Authorization,Microsoft.AspNetCore.Authorization.Policy,Microsoft.AspNetCore.Cors,System.ComponentModel.Annotations,Serilog,Serilog.Sinks.File,Serilog.Extensions.Logging,Microsoft.Extensions.Configuration.Binder,Microsoft.AspNetCore.Http.Features,TwentyTwenty.Storage,TwentyTwenty.Storage.Azure,Microsoft.AspNetCore.WebSockets,Microsoft.AspNetCore.Http.Connections,Microsoft.AspNetCore.Routing,Microsoft.AspNetCore.SignalR.Protocols.Json,System.Text.Json,McMaster.NETCore.Plugins.Mvc,Microsoft.AspNetCore.Mvc.ApiExplorer,Microsoft.AspNetCore.Mvc.Cors,Microsoft.AspNetCore.Antiforgery,Microsoft.AspNetCore.Components,Microsoft.AspNetCore.Components.Web,Microsoft.JSInterop,Microsoft.AspNetCore.Mvc.TagHelpers,Microsoft.AspNetCore.Razor,Microsoft.AspNetCore.Mvc.RazorPages,Microsoft.AspNetCore.Html.Abstractions,McMaster.NETCore.Plugins,Selenium,Selenium.Support,Selenium.WebDriver,Selenium.WebDriver.ChromeDriver,WebDriver.Support"
+                    .Split(',').ToHashSet();
                 // Load the referenced assembly plugins
                 // All referenced plugins should have at least one plugin with exact same plugin identifier
                 // as the assembly. Except for the system assembly (btcpayserver assembly) which are fake plugins
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
                     var assemblyName = assembly.GetName().Name;
+                    if (excludedAssemblies.Contains(assemblyName))
+                        continue;
                     bool isSystemPlugin = assembly == systemAssembly1;
                     if (!isSystemPlugin && exclude.Contains(assemblyName))
                         continue;
-
-                    foreach (var plugin in GetPluginInstancesFromAssembly(assembly))
+                    foreach (var plugin in GetPluginInstancesFromAssembly(assembly, true))
                     {
                         if (!isSystemPlugin && plugin.Identifier != assemblyName)
                             continue;
@@ -142,15 +145,9 @@ namespace BTCPayServer.Plugins
             }
 
             ReorderPlugins(pluginsFolder, pluginsToLoad);
-
+			var crashedPlugins = new List<string>();
             foreach (var toLoad in pluginsToLoad)
             {
-                // This used to be a standalone plugin but due to popular demand has been made as part of core. If we detect an install, we remove the redundant plugin.
-                if (toLoad.PluginIdentifier == "BTCPayServer.Plugins.NFC")
-                {
-                    QueueCommands(pluginsFolder, ("delete", toLoad.PluginIdentifier));
-                    continue;
-                }
                 if (!loadedPluginIdentifiers.Add(toLoad.PluginIdentifier))
                     continue;
                 try
@@ -171,7 +168,8 @@ namespace BTCPayServer.Plugins
                     if (p == null)
                     {
                         logger.LogError($"The plugin assembly doesn't contain the plugin {toLoad.PluginIdentifier}");
-                    }
+						crashedPlugins.Add(toLoad.PluginIdentifier);
+					}
                     else
                     {
                         mvcBuilder.AddPluginLoader(plugin);
@@ -182,25 +180,13 @@ namespace BTCPayServer.Plugins
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(e,
-                        $"Error when loading plugin {toLoad.PluginIdentifier}");
-                }
+                    logger.LogError(e, $"Error when loading plugin {toLoad.PluginIdentifier}.");
+					crashedPlugins.Add(toLoad.PluginIdentifier);
+				}
             }
 
             foreach (var plugin in plugins)
             {
-                if (plugin.Identifier == "BTCPayServer.Plugins.Prism" && plugin.Version <= new Version("1.1.18"))
-                {
-                    QueueCommands(pluginsFolder, ("disable", plugin.Identifier));
-                    logger.LogWarning("Please update your prism plugin, this version is incompatible");
-                    continue;
-                } 
-                if (plugin.Identifier == "BTCPayServer.Plugins.Wabisabi" && plugin.Version <= new Version("1.0.66"))
-                {
-                    
-                    QueueCommands(pluginsFolder, ("disable", plugin.Identifier));
-                    continue;
-                }
                 try
                 {
                     logger.LogInformation(
@@ -211,11 +197,18 @@ namespace BTCPayServer.Plugins
                 }
                 catch (Exception e)
                 {
-                    logger.LogError(
-                        $"Error when loading plugin {plugin.Identifier} - {plugin.Version}{Environment.NewLine}{e.Message}");
-                }
+                    logger.LogError(e, $"Error when executing plugin {plugin.Identifier} - {plugin.Version}.");
+					crashedPlugins.Add(plugin.Identifier);
+				}
             }
-            return mvcBuilder;
+			if (crashedPlugins.Count > 0)
+			{
+				foreach (var plugin in crashedPlugins)
+					DisablePlugin(pluginsFolder, plugin);
+				var crashedPluginsStr = String.Join(", ", crashedPlugins);
+				throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
+			}
+			return mvcBuilder;
         }
 
         private static void ReorderPlugins(string pluginsFolder, List<(string PluginIdentifier, string PluginFilePath)> pluginsToLoad)
@@ -256,32 +249,29 @@ namespace BTCPayServer.Plugins
             webHostEnvironment.WebRootFileProvider = new CompositeFileProvider(providers);
         }
 
-        private static IEnumerable<IBTCPayServerPlugin> GetPluginInstancesFromAssembly(Assembly assembly)
+        private static IEnumerable<IBTCPayServerPlugin> GetPluginInstancesFromAssembly(Assembly assembly, bool silentlyFails)
         {
-            return GetTypesNotCrash(assembly).Where(type =>
+            return GetTypes(assembly, silentlyFails).Where(type =>
                 typeof(IBTCPayServerPlugin).IsAssignableFrom(type) && type != typeof(PluginService.AvailablePlugin) &&
                 !type.IsAbstract).
                 Select(type => (IBTCPayServerPlugin)Activator.CreateInstance(type, Array.Empty<object>()));
         }
 
-        private static IEnumerable<Type> GetTypesNotCrash(Assembly assembly)
+        private static IEnumerable<Type> GetTypes(Assembly assembly, bool silentlyFails)
         {
             try
             {
-                // Strange crash with selenium
-                if (assembly.FullName.Contains("Selenium", StringComparison.OrdinalIgnoreCase))
-                    return Array.Empty<Type>();
                 return assembly.GetTypes();
             }
-            catch(ReflectionTypeLoadException ex)
+            catch (ReflectionTypeLoadException ex) when (silentlyFails)
             {
-                return ex.Types.Where(t => t is not null).ToArray();
+                return ex.Types;
             }
         }
 
         private static IBTCPayServerPlugin GetPluginInstanceFromAssembly(string pluginIdentifier, Assembly assembly)
         {
-            return GetPluginInstancesFromAssembly(assembly).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
+            return GetPluginInstancesFromAssembly(assembly, false).FirstOrDefault(plugin => plugin.Identifier == pluginIdentifier);
         }
 
         private static bool ExecuteCommands(string pluginsFolder, Dictionary<string, Version> installed = null)

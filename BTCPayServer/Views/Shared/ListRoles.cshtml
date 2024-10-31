@@ -7,9 +7,9 @@
     var storeId = Context.GetRouteValue("storeId") as string;
     var controller = ViewContext.RouteData.Values["controller"].ToString().TrimEnd("Controller", StringComparison.InvariantCultureIgnoreCase);
     if (string.IsNullOrEmpty(storeId))
-        ViewData.SetActivePage(ServerNavPages.Roles);
+        ViewData.SetActivePage(ServerNavPages.Roles, StringLocalizer["Roles"]);
     else
-        ViewData.SetActivePage(StoreNavPages.Roles);
+        ViewData.SetActivePage(StoreNavPages.Roles, StringLocalizer["Roles"]);
     var permission = string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings;
     var nextRoleSortOrder = (string) ViewData["NextRoleSortOrder"];
     var roleSortOrder = nextRoleSortOrder switch
@@ -19,8 +19,8 @@
         _ => null
     };
 
-    const string sortByDesc = "Sort by name descending...";
-    const string sortByAsc = "Sort by name ascending...";
+    var sortByDesc = StringLocalizer["Sort by name descending..."];
+    var sortByAsc = StringLocalizer["Sort by name ascending..."];
     var showInUseColumn = !Model.Roles.Any(r => r.IsUsed is null);
 }
 
@@ -42,17 +42,17 @@
                     asp-route-sortOrder="@(nextRoleSortOrder ?? "asc")"
                     class="text-nowrap"
                     title="@(nextRoleSortOrder == "desc" ? sortByAsc : sortByDesc)">
-                    Role
+                    <span text-translate="true">Role</span>
                     <vc:icon symbol="actions-sort-alpha-@(roleSortOrder ?? nextRoleSortOrder ?? "desc")" />
                 </a>
             </th>
-            <th>Scope</th>
-            <th>Permissions</th>
+            <th text-translate="true">Scope</th>
+            <th text-translate="true">Permissions</th>
             @if (showInUseColumn)
             {
-                <th class="text-center w-75px">In use</th>
+                <th class="text-center w-75px" text-translate="true">In use</th>
             }
-            <th class="actions-col" permission="@permission">Actions</th>
+            <th class="actions-col" permission="@permission" text-translate="true">Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -64,7 +64,7 @@
                         <span>@role.Role</span>
                         @if (Model.DefaultRole == role.Id)
                         {
-                            <span class="badge bg-info">
+                            <span class="badge bg-info" text-translate="true">
                                 Default
                             </span>
                         }
@@ -73,13 +73,13 @@
                 <td>
                     @if (role.IsServerRole)
                     {
-                        <span class="badge bg-dark">
+                        <span class="badge bg-dark" text-translate="true">
                             Server-wide
                         </span>
                     }
                     else
                     {
-                        <span class="badge bg-light">
+                        <span class="badge bg-light" text-translate="true">
                             Store-level
                         </span>
                     }
@@ -89,14 +89,14 @@
                     {
                         <span class="info-note text-warning">
                             <vc:icon symbol="warning"/>
-                            No policies
+                            <span text-translate="true">No policies</span>
                         </span>
                     }
                     else
                     {
                         @foreach (var policy in role.Permissions)
                         {
-                            <code class="d-block text-break">@policy</code>
+                            <code class="d-block text-break">@Policies.DisplayName(policy)</code>
                         }
                     }
                 </td>
@@ -117,10 +117,10 @@
                     <div class="d-inline-flex align-items-center gap-3">
                         @if (role.IsServerRole && Model.DefaultRole != role.Id)
                         {
-                            <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" id="SetDefault">Set as default</a>
+                            <a permission="@Policies.CanModifyServerSettings" asp-action="SetDefaultRole" asp-route-role="@role.Role" asp-controller="UIServer" id="SetDefault" text-translate="true">Set as default</a>
                         }
-                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">Edit</a>
-                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")">Remove</a>
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="CreateOrEditRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Edit</a>
+                        <a permission="@(role.IsServerRole ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings)" asp-action="DeleteRole" asp-route-storeId="@storeId" asp-route-role="@role.Role" asp-controller="@(role.IsServerRole ? "UIServer" : "UIStores")" text-translate="true">Remove</a>
                     </div>
                 </td>
             </tr>

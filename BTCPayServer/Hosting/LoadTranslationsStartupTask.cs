@@ -64,8 +64,8 @@ namespace BTCPayServer.Hosting
                             continue;
                         }
                         var savedHash = dictionary.Metadata.ToObject<DictionaryFileMetadata>().Hash;
-                        var translations = Translations.CreateFromText(File.ReadAllText(file));
-                        var currentHash = new uint256(SHA256.HashData(Encoding.UTF8.GetBytes(translations.ToTextFormat())));
+                        var translations = Translations.CreateFromJson(File.ReadAllText(file));
+                        var currentHash = new uint256(SHA256.HashData(Encoding.UTF8.GetBytes(translations.ToJsonFormat())));
 
                         if (savedHash != currentHash)
                         {

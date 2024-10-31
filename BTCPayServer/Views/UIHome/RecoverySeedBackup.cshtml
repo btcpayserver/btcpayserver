@@ -30,17 +30,13 @@
             <vc:icon symbol="warning" />
         </div>
         <div class="lead text-center">
-            <h1 class="text-center text-warning mb-3">
-                Secure your recovery&nbsp;phrase
+            <h1 class="text-center text-warning mb-3" text-translate="true">
+                Secure your recovery phrase
             </h1>
         </div>
     </div>
     <div class="lead text-center">
-        <p class="mb-0">
-            The combination of words below are called your recovery phrase.
-            The recovery phrase allows you to access and restore your wallet.
-            Write them down on a piece of paper in the exact order:
-        </p>
+        <p class="mb-0" text-translate="true">The combination of words below are called your recovery phrase. The recovery phrase allows you to access and restore your wallet. Write them down on a piece of paper in the exact order:</p>
     </div>
     <ol id="RecoveryPhrase" data-mnemonic="@Model.Mnemonic" class="d-inline-block my-5 mx-auto ps-4">
         @foreach (var word in Model.Words)
@@ -54,41 +50,41 @@
         @if (Model.IsStored)
         {
             <p>
-                <span>The recovery phrase is a backup that allows you to restore your wallet in case of a server crash.</span>
-                <span>If you lose it or write it down incorrectly, you may permanently lose access to your funds.</span>
-                <span>Do not photograph it. Do not store it digitally.</span>
+                <span text-translate="true">The recovery phrase is a backup that allows you to restore your wallet in case of a server crash.</span>
+                <span text-translate="true">If you lose it or write it down incorrectly, you may permanently lose access to your funds.</span>
+                <span text-translate="true">Do not photograph it. Do not store it digitally.</span>
             </p>
             <p class="text-warning">
-                <strong>The recovery phrase will also be stored on the server as a hot wallet.</strong>
+                <strong text-translate="true">The recovery phrase will also be stored on the server as a hot wallet.</strong>
             </p>
         }
         else
         {
             <p>
-                <span>If you lose it or write it down incorrectly, you will permanently lose access to your funds.</span>
-                <span>Do not photograph the recovery phrase, and do not store it digitally.</span>
+                <span text-translate="true">If you lose it or write it down incorrectly, you will permanently lose access to your funds.</span>
+                <span text-translate="true">Do not photograph the recovery phrase, and do not store it digitally.</span>
             </p>
             <br />
             <p class="text-warning">
-                <strong>The recovery phrase will be permanently erased from the server.</strong>
+                <strong text-translate="true">The recovery phrase will be permanently erased from the server.</strong>
             </p>
         }
         @if (!string.IsNullOrEmpty(Model.Passphrase))
         {
-            <p class="mt-3 mb-0">Please make sure to also write down your passphrase.</p>
+            <p class="mt-3 mb-0" text-translate="true">Please make sure to also write down your passphrase.</p>
         }
     </div>
     @if (Model.RequireConfirm)
     {
         <form id="RecoveryConfirmation" action="@Url.EnsureLocal(Model.ReturnUrl, Context.Request)" class="position-relative d-flex align-items-start justify-content-center" style="padding:20px 0 100px" rel="noreferrer noopener">
-            <label class="form-check-label lead order-2" for="confirm">I have written down my recovery phrase and stored it in a secure location</label>
+            <label class="form-check-label lead order-2" for="confirm" text-translate="true">I have written down my recovery phrase and stored it in a secure location</label>
             <input type="checkbox" class="me-3 order-1 form-check-input" id="confirm" style="margin-top:.35rem;flex-shrink:0">
-            <button type="submit" class="btn btn-primary btn-lg px-5 order-3" id="submit">Done</button>
-            <button type="submit" class="btn btn-primary btn-lg px-5 order-3" disabled>Done</button>
+            <button type="submit" class="btn btn-primary btn-lg px-5 order-3" id="submit" text-translate="true">Done</button>
+            <button type="submit" class="btn btn-primary btn-lg px-5 order-3" disabled text-translate="true">Done</button>
         </form>
     }
     else
     {
-        <a href="@Url.EnsureLocal(Model.ReturnUrl, Context.Request)" class="btn btn-primary btn-lg mt-3 px-5 order-3" id="proceed" rel="noreferrer noopener">Done</a>
+        <a href="@Url.EnsureLocal(Model.ReturnUrl, Context.Request)" class="btn btn-primary btn-lg mt-3 px-5 order-3" id="proceed" rel="noreferrer noopener" text-translate="true">Done</a>
     }
 </main>

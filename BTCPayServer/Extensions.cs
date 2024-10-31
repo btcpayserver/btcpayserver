@@ -14,6 +14,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -27,6 +29,7 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Payouts;
 using BTCPayServer.Security;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.Wallets;
@@ -289,6 +292,29 @@ namespace BTCPayServer
             }
         }
 
+#nullable enable
+        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params string[] keyValues)
+        {
+            return services.AddDefaultTranslations(keyValues.Select(k => KeyValuePair.Create<string, string?>(k, string.Empty)).ToArray());
+        }
+        public static IServiceCollection AddDefaultPrettyName(this IServiceCollection services, PaymentMethodId paymentMethodId, string defaultPrettyName)
+        {
+			services.AddSingleton<PrettyNameProvider.UntranslatedPrettyName>(new PrettyNameProvider.UntranslatedPrettyName(paymentMethodId, defaultPrettyName));
+			return services.AddDefaultTranslations(KeyValuePair.Create<string, string?>(PrettyNameProvider.GetTranslationKey(paymentMethodId), defaultPrettyName));
+        }
+        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
+        {
+            services.AddSingleton<IDefaultTranslationProvider>(new InMemoryDefaultTranslationProvider(keyValues));
+            return services;
+        }
+#nullable restore
+        public static IServiceCollection AddUIExtension(this IServiceCollection services, string location, string partialViewName)
+        {
+#pragma warning disable CS0618 // Type or member is obsolete
+            services.AddSingleton<IUIExtension>(new UIExtension(partialViewName, location));
+#pragma warning restore CS0618 // Type or member is obsolete
+            return services;
+        }
         public static IServiceCollection AddReportProvider<T>(this IServiceCollection services)
     where T : ReportProvider
         {
@@ -323,8 +349,8 @@ namespace BTCPayServer
         public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice, BitcoinLikePaymentHandler handler, bool accountedOnly)
         {
             return invoice.GetPayments(accountedOnly)
-                .Where(p => p.PaymentMethodId == handler.PaymentMethodId)
-                .Select(p => handler.ParsePaymentDetails(p.Details));
+                .Select(p => p.GetDetails<BitcoinLikePaymentData>(handler))
+                .Where(p => p is not null);
         }
 
         public static async Task<Dictionary<uint256, TransactionResult>> GetTransactions(this BTCPayWallet client, uint256[] hashes, bool includeOffchain = false, CancellationToken cts = default(CancellationToken))
@@ -410,20 +436,17 @@ namespace BTCPayServer
         }
 
         public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
-        {
-            return handlers.TryGetBitcoinHandler(network.CryptoCode);
-        }
+        => handlers.TryGetBitcoinHandler(network.CryptoCode);
         public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
+         => handlers.TryGetBitcoinHandler(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode));
+        public static BitcoinLikePaymentHandler? TryGetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, PaymentMethodId paymentMethodId)
         {
-            var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
-            if (handlers.TryGetValue(pmi, out var h) && h is BitcoinLikePaymentHandler b)
+            if (handlers.TryGetValue(paymentMethodId, out var h) && h is BitcoinLikePaymentHandler b)
                 return b;
             return null;
         }
         public static BitcoinLikePaymentHandler GetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, BTCPayNetwork network)
-        {
-            return handlers.GetBitcoinHandler(network.CryptoCode);
-        }
+        => handlers.GetBitcoinHandler(network.CryptoCode);
         public static BitcoinLikePaymentHandler GetBitcoinHandler(this PaymentMethodHandlerDictionary handlers, string cryptoCode)
         {
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);

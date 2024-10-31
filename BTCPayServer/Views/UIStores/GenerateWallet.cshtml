@@ -1,9 +1,9 @@
 @model WalletSetupViewModel
 @{
     var isHotWallet = Model.Method == WalletSetupMethod.HotWallet;
-    var type = isHotWallet ? "Hot" : "Watch-Only";
+    var title = isHotWallet ? StringLocalizer["Create {0} Hot Wallet", Model.CryptoCode] : StringLocalizer["Create {0} Watch-Only Wallet", Model.CryptoCode];
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"Create {Model.CryptoCode} {type} Wallet", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, title, $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
     ViewData.Add(nameof(Model.CanUseHotWallet), Model.CanUseHotWallet);
     ViewData.Add(nameof(Model.CanUseRPCImport), Model.CanUseRPCImport);
     ViewData.Add(nameof(Model.SupportSegwit), Model.SupportSegwit);

@@ -65,13 +65,19 @@
         </template>
     </div>
     <div class="keypad">
-        <button v-for="k in keys" :key="k" :disabled="k === '+' && mode !== 'amounts'" v-on:click.prevent="keyPressed(k)" v-on:dblclick.prevent="doubleClick(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">{{ k }}</button>
+        <button v-for="k in keys" :key="k" :disabled="k === '+' && mode !== 'amounts'" v-on:click.prevent="keyPressed(k)" v-on:dblclick.prevent="doubleClick(k)" type="button" class="btn btn-secondary btn-lg" :data-key="k">
+            <template v-if="k === 'C'"><vc:icon symbol="keypad-clear"/></template>
+            <template v-else-if="k === '+'"><vc:icon symbol="keypad-plus"/></template>
+            <template v-else>{{ k }}</template>
+        </button>
     </div>
     <button class="btn btn-lg btn-primary mx-3" type="submit" :disabled="payButtonLoading || totalNumeric <= 0" id="pay-button">
         <div v-if="payButtonLoading" class="spinner-border spinner-border-sm" id="pay-button-spinner" role="status">
-            <span class="visually-hidden">Loading...</span>
+            <span class="visually-hidden" text-translate="true">Loading...</span>
         </div>
-        <template v-else>Charge</template>
+        <template v-else>
+            <span text-translate="true">Charge</span>
+        </template>
     </button>
     <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
     <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
@@ -81,13 +87,13 @@
         <vc:icon symbol="nav-mobile-menu"/>
     </button>
     <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1"  id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
-        <div class="offcanvas-header flex-wrap p-3">
+        <div class="offcanvas-header justify-content-between flex-wrap p-3">
             <h5 class="offcanvas-title" id="offcanvasExampleLabel">Products</h5>
             <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': cart.length > 0, 'btn-outline-secondary': cart.length === 0}" data-bs-dismiss="offcanvas" v-text="cart.length > 0 ? 'Apply' : 'Close'"></button>
             @if (Model.ShowSearch)
             {
                 <div class="w-100 mt-3">
-                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" v-model="searchTerm" v-if="showSearch">
+                    <input id="SearchTerm" class="form-control rounded-pill" placeholder="@StringLocalizer["Search…"]" v-model="searchTerm" v-if="showSearch">
                 </div>
             }
             @if (Model.ShowCategories)
@@ -133,7 +139,14 @@
                                     @if (item.Inventory.HasValue)
                                     {
                                         <span class="badge text-bg-warning inventory" v-text="inventoryText(@index)">
-                                            @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                            @if (item.Inventory > 0)
+                                            {
+                                                <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                            }
+                                            else
+                                            {
+                                                <span text-translate="true">Sold out</span>
+                                            }
                                         </span>
                                     }
                                 </div>

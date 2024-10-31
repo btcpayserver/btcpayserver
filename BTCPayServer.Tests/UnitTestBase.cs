@@ -29,6 +29,11 @@ namespace BTCPayServer.Tests
             BTCPayLogs.Configure(LoggerFactory);
         }
 
+        public DatabaseTester CreateDBTester()
+        {
+            return new DatabaseTester(TestLogs, LoggerFactory);
+        }
+
         public BTCPayNetworkProvider CreateNetworkProvider(ChainName chainName)
         {
             var conf = new ConfigurationRoot(new List<IConfigurationProvider>()
@@ -58,9 +63,9 @@ namespace BTCPayServer.Tests
             var bootstrap = Startup.CreateBootstrap(conf);
             var services = new PluginServiceCollection(new ServiceCollection(), bootstrap);
             var plugins = new List<BaseBTCPayServerPlugin>() { new BitcoinPlugin() };
-#if ALTCOINS
+
             plugins.Add(new BTCPayServer.Plugins.Altcoins.AltcoinsPlugin());
-#endif
+
             foreach (var p in plugins)
             {
                 p.Execute(services);

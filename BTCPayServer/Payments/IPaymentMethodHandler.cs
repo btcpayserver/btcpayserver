@@ -68,6 +68,12 @@ namespace BTCPayServer.Payments
         /// <returns></returns>
         object ParsePaymentPromptDetails(JToken details);
         /// <summary>
+        /// Remove properties from the details which shouldn't appear to non-store owner.
+        /// </summary>
+        /// <param name="details">Prompt details</param>
+        void StripDetailsForNonOwner(object details) { }
+
+        /// <summary>
         /// Parse the configuration of the payment method in the store
         /// </summary>
         /// <param name="config"></param>
@@ -115,9 +121,11 @@ namespace BTCPayServer.Payments
             }
             foreach (var paymentMethodConfig in store.GetPaymentMethodConfigs())
             {
-                var ctx = new PaymentMethodContext(store, storeBlob, paymentMethodConfig.Value, handlers[paymentMethodConfig.Key], invoiceEntity, invoiceLogs);
+                if (!handlers.TryGetValue(paymentMethodConfig.Key, out var handler))
+                    continue;
+                var ctx = new PaymentMethodContext(store, storeBlob, paymentMethodConfig.Value, handler, invoiceEntity, invoiceLogs);
                 PaymentMethodContexts.Add(paymentMethodConfig.Key, ctx);
-                if (excludeFilter.Match(paymentMethodConfig.Key) || !handlers.Support(paymentMethodConfig.Key))
+                if (excludeFilter.Match(paymentMethodConfig.Key))
                     ctx.Status = PaymentMethodContext.ContextStatus.Excluded;
             }
         }
@@ -171,8 +179,13 @@ namespace BTCPayServer.Payments
                 try
                 {
                     var rateResult = await fetching.Value;
-                    Logs.Write($"The rating rule is {rateResult.Rule}", InvoiceEventData.EventSeverity.Info);
-                    Logs.Write($"The evaluated rating rule is {rateResult.EvaluatedRule}", InvoiceEventData.EventSeverity.Info);
+                    string bidLog = rateResult switch
+                    {
+                        RateResult { BidAsk: { } o } => o.Bid.ToString(),
+                        _ => "???"
+                    };
+
+                    Logs.Write($"Rate for {fetching.Key}: {rateResult.Rule} = {rateResult.EvaluatedRule} = {bidLog}", InvoiceEventData.EventSeverity.Info);
                     if (rateResult is RateResult { BidAsk: { } bidAsk })
                     {
                         InvoiceEntity.AddRate(fetching.Key, bidAsk.Bid);
@@ -280,9 +293,9 @@ namespace BTCPayServer.Payments
         /// <summary>
         /// This string can be used to query AddressInvoice to find the invoiceId
         /// </summary>
-        public List<string> TrackedDestinations { get; } = new List<string>();
+        public List<string> TrackedDestinations { get; } = new();
 
-        internal async Task BeforeFetchingRates()
+        public async Task BeforeFetchingRates()
         {
             await Handler.BeforeFetchingRates(this);
             // We need to fetch the rates necessary for the evaluation of the payment method criteria

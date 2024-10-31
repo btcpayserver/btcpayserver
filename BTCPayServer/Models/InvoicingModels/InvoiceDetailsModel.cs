@@ -12,7 +12,7 @@ namespace BTCPayServer.Models.InvoicingModels
 {
     public class OnchainPaymentViewModel
     {
-        public string Crypto { get; set; }
+        public PaymentMethodId PaymentMethodId { get; set; }
         public string Confirmations { get; set; }
         public BitcoinAddress DepositAddress { get; set; }
         public string Amount { get; set; }
@@ -26,6 +26,7 @@ namespace BTCPayServer.Models.InvoicingModels
         public string AdditionalInformation { get; set; }
         public decimal NetworkFee { get; set; }
         public string PaymentProof { get; set; }
+        public string Currency { get; set; }
     }
 
     public class OffChainPaymentViewModel
@@ -135,5 +136,6 @@ namespace BTCPayServer.Models.InvoicingModels
         public bool HasRefund { get; set; }
         public bool StillDue { get; set; }
         public bool HasRates { get; set; }
+        public InvoiceEntity Entity { get; internal set; }
     }
 }

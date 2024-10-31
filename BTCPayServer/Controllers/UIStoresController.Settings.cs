@@ -20,11 +20,11 @@ namespace BTCPayServer.Controllers;
 public partial class UIStoresController
 {
     [HttpGet("{storeId}/settings")]
-    public async Task<IActionResult> GeneralSettings()
+    public async Task<IActionResult> GeneralSettings(string storeId)
     {
         var store = HttpContext.GetStoreData();
-        if (store == null)
-            return NotFound();
+        if (store == null) return NotFound();
+
         var storeBlob = store.GetStoreBlob();
         var vm = new GeneralSettingsViewModel
         {
@@ -34,13 +34,18 @@ public partial class UIStoresController
             LogoUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
             CssUrl = await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
             BrandColor = storeBlob.BrandColor,
+            ApplyBrandColorToBackend = storeBlob.ApplyBrandColorToBackend,
             NetworkFeeMode = storeBlob.NetworkFeeMode,
             AnyoneCanCreateInvoice = storeBlob.AnyoneCanInvoice,
             PaymentTolerance = storeBlob.PaymentTolerance,
             InvoiceExpiration = (int)storeBlob.InvoiceExpiration.TotalMinutes,
             DefaultCurrency = storeBlob.DefaultCurrency,
             BOLT11Expiration = (long)storeBlob.RefundBOLT11Expiration.TotalDays,
-            Archived = store.Archived
+            Archived = store.Archived,
+            MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
+            SpeedPolicy = store.SpeedPolicy,
+            ShowRecommendedFee = storeBlob.ShowRecommendedFee,
+            RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget
         };
 
         return View(vm);
@@ -66,19 +71,29 @@ public partial class UIStoresController
             CurrentStore.StoreWebsite = model.StoreWebsite;
         }
 
+        if (CurrentStore.SpeedPolicy != model.SpeedPolicy)
+        {
+            CurrentStore.SpeedPolicy = model.SpeedPolicy;
+            needUpdate = true;
+        }
+
         var blob = CurrentStore.GetStoreBlob();
         blob.AnyoneCanInvoice = model.AnyoneCanCreateInvoice;
         blob.NetworkFeeMode = model.NetworkFeeMode;
         blob.PaymentTolerance = model.PaymentTolerance;
         blob.DefaultCurrency = model.DefaultCurrency;
+        blob.ShowRecommendedFee = model.ShowRecommendedFee;
+        blob.RecommendedFeeBlockTarget = model.RecommendedFeeBlockTarget;
         blob.InvoiceExpiration = TimeSpan.FromMinutes(model.InvoiceExpiration);
         blob.RefundBOLT11Expiration = TimeSpan.FromDays(model.BOLT11Expiration);
+        blob.MonitoringExpiration = TimeSpan.FromMinutes(model.MonitoringExpiration);
         if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
         {
-            ModelState.AddModelError(nameof(model.BrandColor), "Invalid color");
+            ModelState.AddModelError(nameof(model.BrandColor), StringLocalizer["The brand color needs to be a valid hex color code"]);
             return View(model);
         }
         blob.BrandColor = model.BrandColor;
+        blob.ApplyBrandColorToBackend = model.ApplyBrandColorToBackend && !string.IsNullOrEmpty(model.BrandColor);
 
         var userId = GetUserId();
         if (userId is null)
@@ -88,18 +103,18 @@ public partial class UIStoresController
         {
             if (model.LogoFile.Length > 1_000_000)
             {
-                ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file should be less than 1MB");
+                ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file should be less than {0}", "1MB"]);
             }
             else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
             {
-                ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file needs to be an image"]);
             }
             else
             {
                 var formFile = await model.LogoFile.Bufferize();
                 if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                    ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file needs to be an image"]);
                 }
                 else
                 {
@@ -112,7 +127,7 @@ public partial class UIStoresController
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(model.LogoFile), $"Could not save logo: {e.Message}");
+                        ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["Could not save logo: {0}", e.Message]);
                     }
                 }
             }
@@ -127,15 +142,15 @@ public partial class UIStoresController
         {
             if (model.CssFile.Length > 1_000_000)
             {
-                ModelState.AddModelError(nameof(model.CssFile), "The uploaded file should be less than 1MB");
+                ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["The uploaded file should be less than {0}", "1MB"]);
             }
             else if (!model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
             {
-                ModelState.AddModelError(nameof(model.CssFile), "The uploaded file needs to be a CSS file");
+                ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["The uploaded file needs to be a CSS file"]);
             }
             else if (!model.CssFile.FileName.EndsWith(".css", StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError(nameof(model.CssFile), "The uploaded file needs to be a CSS file");
+                ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["The uploaded file needs to be a CSS file"]);
             }
             else
             {
@@ -147,7 +162,7 @@ public partial class UIStoresController
                 }
                 catch (Exception e)
                 {
-                    ModelState.AddModelError(nameof(model.CssFile), $"Could not save CSS file: {e.Message}");
+                    ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["Could not save CSS file: {0}", e.Message]);
                 }
             }
         }
@@ -196,7 +211,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult DeleteStore(string storeId)
     {
-        return View("Confirm", new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store. Are you sure?", "Delete"));
+        return View("Confirm", new ConfirmModel(StringLocalizer["Delete store"], StringLocalizer["The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store. Are you sure?"], StringLocalizer["Delete"]));
     }
 
     [HttpPost("{storeId}/delete")]
@@ -290,18 +305,18 @@ public partial class UIStoresController
         {
             if (model.SoundFile.Length > 1_000_000)
             {
-                ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file should be less than 1MB");
+                ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["The uploaded sound file should be less than {0}", "1MB"]);
             }
             else if (!model.SoundFile.ContentType.StartsWith("audio/", StringComparison.InvariantCulture))
             {
-                ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file needs to be an audio file");
+                ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["The uploaded sound file needs to be an audio file"]);
             }
             else
             {
                 var formFile = await model.SoundFile.Bufferize();
                 if (!FileTypeDetector.IsAudio(formFile.Buffer, formFile.FileName))
                 {
-                    ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file needs to be an audio file");
+                    ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["The uploaded sound file needs to be an audio file"]);
                 }
                 else
                 {
@@ -315,7 +330,7 @@ public partial class UIStoresController
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(model.SoundFile), $"Could not save sound: {e.Message}");
+                        ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["Could not save sound: {0}", e.Message]);
                     }
                 }
             }
@@ -353,7 +368,12 @@ public partial class UIStoresController
             var existingCriteria = blob.PaymentMethodCriteria.FirstOrDefault(c => c.PaymentMethod == paymentMethodId);
             if (existingCriteria != null)
                 blob.PaymentMethodCriteria.Remove(existingCriteria);
-            CurrencyValue.TryParse(newCriteria.Value, out var cv);
+            if (CurrencyValue.TryParse(newCriteria.Value, out var cv))
+            {
+                var currencyData = _currencyNameTable.GetCurrencyData(cv.Currency, false);
+                if (currencyData is not null)
+                    cv = cv.Round(currencyData.Divisibility);
+            }
             blob.PaymentMethodCriteria.Add(new PaymentMethodCriteria()
             {
                 Above = newCriteria.Type == PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan,

@@ -12,10 +12,8 @@ services:
       args:
         CONFIGURATION_NAME: Release
     environment:
-      TESTS_EXPERIMENTALV2_CONFIRM: "true"
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
       TESTS_HOSTNAME: tests
@@ -150,7 +148,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v24.05
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -178,7 +176,7 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v24.05
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -215,7 +213,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.18.1-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -252,7 +250,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.18.1-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

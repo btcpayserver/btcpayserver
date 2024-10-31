@@ -1,6 +1,7 @@
 #nullable enable
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Hosting;
+using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
@@ -47,7 +48,7 @@ namespace BTCPayServer.Plugins.Bitcoin
             }.SetDefaultElectrumMapping(chainName);
            
             applicationBuilder.AddBTCPayNetwork(network);
-            applicationBuilder.AddTransactionLinkProvider(network.CryptoCode, defaultTransactionLinkProvider);
+            applicationBuilder.AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), defaultTransactionLinkProvider);
         }
     }
 }

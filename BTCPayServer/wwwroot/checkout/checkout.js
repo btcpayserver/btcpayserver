@@ -73,8 +73,8 @@ const PaymentDetails = {
         isActive: Boolean,
         showRecommendedFee: Boolean,
         orderAmount: Number,
-        btcPaid: Number,
-        btcDue: Number
+        paid: Number,
+        due: Number
     },
     methods: {
         asNumber
@@ -92,6 +92,7 @@ function initApp() {
             const srvModel = initialSrvModel;
             return {
                 srvModel,
+                audioContext: new AudioContext(),
                 displayPaymentDetails: false,
                 remainingSeconds: srvModel.expirationSeconds,
                 emailAddressInput: "",
@@ -109,6 +110,7 @@ function initApp() {
                     scanning: false,
                     submitting: false,
                     errorMessage: null,
+                    warningMessage: null,
                     permissionGranted: false,
                     readerAbortController: null
                 }
@@ -128,7 +130,7 @@ function initApp() {
                 return STATUS_PAYABLE.includes(this.srvModel.status);
             },
             isPaidPartial () {
-                return this.btcPaid > 0 && this.btcDue > 0;
+                return this.paid > 0 && this.due > 0;
             },
             showInfo () {
                 return this.showTimer || this.showPaymentDueInfo;
@@ -145,13 +147,13 @@ function initApp() {
             orderAmount () {
                 return this.asNumber(this.srvModel.orderAmount);
             },
-            btcDue () {
-                return this.asNumber(this.srvModel.btcDue);
+            due () {
+                return this.asNumber(this.srvModel.due);
             },
-            btcPaid () {
-                return this.asNumber(this.srvModel.btcPaid);
+            paid () {
+                return this.asNumber(this.srvModel.paid);
             },
-            pmId () {
+            pmId() {
                 return this.paymentMethodId || this.srvModel.paymentMethodId;
             },
             minutesLeft () {
@@ -171,18 +173,21 @@ function initApp() {
                     : null;
             },
             paymentMethodIds () {
-                return this.srvModel.availableCryptos.map(function (c) { return c.paymentMethodId });
+                return this.srvModel.availablePaymentMethods.map(function (c) { return c.paymentMethodId });
             },
-            paymentMethodComponent () {
+            paymentMethodComponent() {
                 return this.isPluginPaymentMethod
                     ? `${this.pmId}Checkout`
-                    : this.srvModel.activated && this.srvModel.uiSettings.checkoutBodyVueComponentName;
+                    : this.srvModel.activated && this.srvModel.checkoutBodyComponentName;
             },
             isPluginPaymentMethod () {
                 return !this.paymentMethodIds.includes(this.pmId);
             },
-            realCryptoCode () {
-                return this.srvModel.cryptoCode.toLowerCase() === 'sats' ? 'BTC' : this.srvModel.cryptoCode;
+            realPaymentMethodCurrency () {
+                return this.srvModel.paymentMethodCurrency.toLowerCase() === 'sats' ? 'BTC' : this.srvModel.paymentMethodCurrency;
+            },
+            displayedPaymentMethods: function () {
+                return this.srvModel?.availablePaymentMethods?.filter(pm => pm.displayed) ?? [];
             }
         },
         watch: {
@@ -345,17 +350,12 @@ function initApp() {
                 return value ? value.replace(/\n/ig, '<br>') : '';
             },
             playSound (soundName) {
-                // sound
-                const sound = this[soundName + 'Sound'];
-                if (sound && !sound.playing) {
-                    const { audioContext, audioBuffer } = sound;
-                    const source = audioContext.createBufferSource();
-                    source.onended = () => { sound.playing = false; };
-                    source.buffer = audioBuffer;
-                    source.connect(audioContext.destination);
-                    source.start();
-                    sound.playing = true;
-                }
+                const audioBuffer = this[soundName + 'Sound'];
+                if (!audioBuffer || this.audioContext.state === 'suspended') return;
+                const source = this.audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(this.audioContext.destination);
+                source.start();
             },
             async celebratePayment (duration) {
                 // sound
@@ -375,12 +375,10 @@ function initApp() {
                 }
             },
             async prepareSound (url) {
-                const audioContext = new AudioContext();
                 const response = await fetch(url)
                 if (!response.ok) return console.error(`Could not load payment sound, HTTP error ${response.status}`);
                 const arrayBuffer = await response.arrayBuffer();
-                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                return { audioContext, audioBuffer, playing: false };
+                return await this.audioContext.decodeAudioData(arrayBuffer);
             },
             async setupNFC () {
                 try {
@@ -402,12 +400,16 @@ function initApp() {
                     };
 
                     await ndef.scan({ signal: this.nfc.readerAbortController.signal })
-                    ndef.onreadingerror = () => this.reportNfcError('Could not read NFC tag')
+                    ndef.onreadingerror = () => this.handleNFCError('Could not read NFC tag')
                     ndef.onreading = async ({ message }) => {
                         const record = message.records[0]
-                        const textDecoder = new TextDecoder('utf-8')
-                        const decoded = textDecoder.decode(record.data)
-                        this.$emit('read-nfc-data', decoded)
+                        if (record && record.data) {
+                            const textDecoder = new TextDecoder('utf-8')
+                            const decoded = textDecoder.decode(record.data)
+                            this.$emit('read-nfc-data', decoded)
+                        } else {
+                            this.handleNFCError('Could not read NFC tag: No data')
+                        }
                     }
 
                     if (inModal) {
@@ -438,11 +440,16 @@ function initApp() {
                 this.playSound('nfcRead');
                 this.$set(this.nfc, 'submitting', true);
                 this.$set(this.nfc, 'errorMessage', null);
+                this.$set(this.nfc, 'warningMessage', null);
             },
-            handleNFCResult() { // child component reports result for handling the data
+            handleNFCResult(message) { // child component reports result for handling the data
                 this.$set(this.nfc, 'submitting', false);
+                if (message) {
+                    this.$set(this.nfc, 'warningMessage', message);
+                }
             },
-            handleNFCError(message) { // internal or via child component reporting failure of handling the data
+            handleNFCError(message) {
+                // internal or via child component reporting failure of handling the data
                 this.playSound('error');
                 this.$set(this.nfc, 'submitting', false);
                 this.$set(this.nfc, 'errorMessage', message);

@@ -22,6 +22,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -58,8 +59,11 @@ public partial class UIStoresController : Controller
         DefaultRulesCollection defaultRules,
         EmailSenderFactory emailSenderFactory,
         WalletFileParsers onChainWalletParsers,
+        UIUserStoresController userStoresController,
         UriResolver uriResolver,
         SettingsRepository settingsRepository,
+        CurrencyNameTable currencyNameTable,
+        IStringLocalizer stringLocalizer,
         EventAggregator eventAggregator)
     {
         _rateFactory = rateFactory;
@@ -81,14 +85,17 @@ public partial class UIStoresController : Controller
         _externalServiceOptions = externalServiceOptions;
         _emailSenderFactory = emailSenderFactory;
         _onChainWalletParsers = onChainWalletParsers;
+        _userStoresController = userStoresController;
         _uriResolver = uriResolver;
         _settingsRepository = settingsRepository;
+        _currencyNameTable = currencyNameTable;
         _eventAggregator = eventAggregator;
         _html = html;
         _defaultRules = defaultRules;
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
         _webhookNotificationManager = webhookNotificationManager;
         _lightningNetworkOptions = lightningNetworkOptions.Value;
+        StringLocalizer = stringLocalizer;
     }
 
     private readonly BTCPayServerOptions _btcpayServerOptions;
@@ -101,6 +108,7 @@ public partial class UIStoresController : Controller
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RateFetcher _rateFactory;
     private readonly SettingsRepository _settingsRepository;
+    private readonly CurrencyNameTable _currencyNameTable;
     private readonly ExplorerClientProvider _explorerProvider;
     private readonly LanguageService _langService;
     private readonly PaymentMethodHandlerDictionary _handlers;
@@ -112,6 +120,7 @@ public partial class UIStoresController : Controller
     private readonly IOptions<ExternalServicesOptions> _externalServiceOptions;
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly WalletFileParsers _onChainWalletParsers;
+    private readonly UIUserStoresController _userStoresController;
     private readonly UriResolver _uriResolver;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;
@@ -120,6 +129,7 @@ public partial class UIStoresController : Controller
     private readonly IDataProtector _dataProtector;
 
     public string? GeneratedPairingCode { get; set; }
+    public IStringLocalizer StringLocalizer { get; }
 
     [TempData]
     private bool StoreNotConfigured { get; set; }

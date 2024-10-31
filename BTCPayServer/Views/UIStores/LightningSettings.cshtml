@@ -3,7 +3,7 @@
 @inject LightningClientFactoryService LightningClientFactoryService
 @inject BTCPayNetworkProvider NetworkProvider
 @{
-    ViewData.SetActivePage(StoreNavPages.LightningSettings, $"{Model.CryptoCode} Lightning Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    ViewData.SetActivePage(StoreNavPages.LightningSettings, StringLocalizer["{0} Lightning Settings", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 <form method="post">
@@ -16,7 +16,7 @@
         <div class="col-xl-8 col-xxl-constrain">
             <div class="mb-5">
                 <div class="text-break mb-3">
-                    <span class="me-3" id="NodeType">@Model.LightningNodeType Node</span>
+                    <span class="me-3" id="NodeType">@StringLocalizer["{0} Node", Model.LightningNodeType]</span>
                     @if (Model.LightningNodeType != LightningNodeType.Internal)
                     {
                         <span class="me-3" id="CustomNodeInfo">
@@ -43,10 +43,11 @@
                        asp-route-cryptoCode="@Model.CryptoCode"
                        asp-route-storeId="@Model.StoreId"
                        target="_blank"
-                       id="PublicNodeInfo">
+                       id="PublicNodeInfo"
+                       text-translate="true">
                         Public Node Info
                     </a>
-                    <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink">
+                    <a asp-controller="UIStores" asp-action="SetupLightningNode" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupLightningNodeLink" text-translate="true">
                         Change connection
                     </a>
                 </div>
@@ -57,7 +58,7 @@
                 </div>
             
                 <div class="text-start">
-                    <h3 class="mt-5 mb-3">Payment</h3>
+                    <h3 class="mt-5 mb-3" text-translate="true">Payment</h3>
                     <div class="form-check my-3">
                         <input asp-for="LightningAmountInSatoshi" type="checkbox" class="form-check-input"/>
                         <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
@@ -77,13 +78,10 @@
                         <label asp-for="LightningDescriptionTemplate" class="form-label"></label>
                         <input asp-for="LightningDescriptionTemplate" class="form-control"/>
                         <span asp-validation-for="LightningDescriptionTemplate" class="text-danger"></span>
-                        <div class="form-text">
-                            Available placeholders:
-                            <code>{StoreName} {ItemDescription} {OrderId}</code>
-                        </div>
+                        <div class="form-text" html-translate="true">Available placeholders: <code>{StoreName} {ItemDescription} {OrderId}</code></div>
                     </div>
                     
-                    <h3 class="mt-5 mb-3" id="ln-url">LNURL</h3>
+                    <h3 class="mt-5 mb-3" id="ln-url" text-translate="true">LNURL</h3>
                     <div class="form-group d-flex align-items-center">
                         <input asp-for="LNURLEnabled" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#LNURLSettings" aria-expanded="@Model.LNURLEnabled" aria-controls="LNURLSettings"/>
                         <label asp-for="LNURLEnabled" class="form-check-label"></label>
@@ -96,7 +94,7 @@
                                 <div>
                                     <label asp-for="LNURLBech32Mode" class="form-check-label"></label>
                                     <span asp-validation-for="LNURLBech32Mode" class="text-danger"></span>
-                                    <div class="form-text">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</div>
+                                    <div class="form-text" text-translate="true">For wallet compatibility: Bech32 encoded (classic) vs. cleartext URL (upcoming)</div>
                                 </div>
                             </label>
                         </div>

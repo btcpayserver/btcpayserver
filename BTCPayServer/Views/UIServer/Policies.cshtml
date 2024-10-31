@@ -34,7 +34,7 @@
         <div class="col-xl-10 col-xxl-constrain">
             <div class="d-flex flex-column">
                 <div class="form-group mb-5">
-                    <h4 class="mb-3">Registration</h4>
+                    <h4 class="mb-3" text-translate="true">Registration</h4>
                     <div class="d-flex gap-3">
                         <input asp-for="EnableRegistration" type="checkbox" class="btcpay-toggle" />
                         <div>
@@ -42,7 +42,7 @@
                             <span asp-validation-for="EnableRegistration" class="text-danger"></span>
                             <div class="info-note mt-2 text-warning" role="alert">
                                 <vc:icon symbol="warning" />
-                                Caution: Enabling public user registration means anyone can register to your server and may expose your BTCPay Server instance to potential security risks from unknown users.
+                                <span text-translate="true">Caution: Enabling public user registration means anyone can register to your server and may expose your BTCPay Server instance to potential security risks from unknown users.</span>
                             </div>
                             <div class="subsettings">
                                 <div class="d-flex my-3">
@@ -61,7 +61,10 @@
                                         <span asp-validation-for="RequiresConfirmedEmail" class="text-danger"></span>
                                         @if (!isEmailConfigured)
                                         {
-                                            <div class="text-secondary">Your email server has not been configured. <a asp-controller="UIServer" asp-action="Emails">Please configure it first.</a></div>
+                                            <div class="text-secondary">
+                                                <span text-translate="true">Your email server has not been configured.</span>
+                                                <a asp-controller="UIServer" asp-action="Emails" text-translate="true">Please configure it first.</a>
+                                            </div>
                                         }
                                     </div>
                                 </div>
@@ -79,7 +82,7 @@
                                         <span asp-validation-for="EnableNonAdminCreateUserApi" class="text-danger"></span>
                                         <div class="info-note mt-2 text-warning" role="alert">
                                             <vc:icon symbol="warning" />
-                                            Caution: Allowing non-admins to have access to API endpoints may expose your BTCPay Server instance to potential security risks from unknown users.
+                                            <span text-translate="true">Caution: Allowing non-admins to have access to API endpoints may expose your BTCPay Server instance to potential security risks from unknown users.</span>
                                         </div>
                                     </div>
                                 </div>
@@ -89,7 +92,7 @@
                 </div>
                 
                 <div class="mb-5">
-                    <h4 class="mb-3">Users</h4>
+                    <h4 class="mb-3" text-translate="true">Users</h4>
                     <div class="d-flex my-3">
                         <input asp-for="AllowLightningInternalNodeForAll" type="checkbox" class="btcpay-toggle me-3"/>
                         <div>
@@ -100,7 +103,7 @@
                             <span asp-validation-for="AllowLightningInternalNodeForAll" class="text-danger"></span>
                             <div class="info-note mt-2 text-warning" role="alert">
                                 <vc:icon symbol="warning"/>
-                                Caution: Enabling this option, may simplify the onboarding for third-parties but carries liabilities and security risks associated with sharing the lightning node with other users.
+                                <span text-translate="true">Caution: Enabling this option, may simplify the onboarding for third-parties but carries liabilities and security risks associated with sharing the lightning node with other users.</span>
                             </div>
                         </div>
                     </div>
@@ -114,7 +117,7 @@
                             <span asp-validation-for="AllowHotWalletForAll" class="text-danger"></span>
                             <div class="info-note mt-2 text-warning" role="alert">
                                 <vc:icon symbol="warning"/>
-                                Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.
+                                <span text-translate="true">Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.</span>
                             </div>
                         </div>
                     </div>
@@ -125,15 +128,26 @@
                             <span asp-validation-for="AllowHotWalletRPCImportForAll" class="text-danger"></span>
                             <div class="info-note mt-2 text-warning" role="alert">
                                 <vc:icon symbol="warning"/>
-                                Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.
+                                <span text-translate="true">Caution: Enabling this option, may simplify the onboarding and spending for third-parties but carries liabilities and security risks associated to storing private keys of third parties on a server.</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="mb-5">
-                    <h4 class="mb-3">Server</h4>
-                    <div class="d-flex my-3">
+                    <h4 class="mb-3" text-translate="true">Server</h4>
+					<div class="form-group">
+						<label asp-for="LangDictionary" class="form-label"></label>
+						<select asp-for="LangDictionary"
+								asp-items="@(new SelectList(ViewBag.LangDictionaries, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.LangDictionary))"
+								class="form-select">
+						</select>
+						<span asp-validation-for="LangDictionary" class="text-danger"></span>
+                        <div class="form-text">
+                            <span text-translate="true">Add or customize translations</span> <a asp-action="ListDictionaries" text-translate="true">here</a>.
+                        </div>
+					</div>
+                    <div class="form-group d-flex">
                         <input asp-for="AllowSearchEngines" type="checkbox" class="btcpay-toggle me-3"/>
                         <div>
                             <label asp-for="AllowSearchEngines" class="form-check-label"></label>
@@ -143,18 +157,9 @@
                             <span asp-validation-for="AllowSearchEngines" class="text-danger"></span>
                         </div>
                     </div>
-					<div class="form-check my-3">
-						<label asp-for="LangDictionary" class="form-label"></label>
-						<select asp-for="LangDictionary"
-								asp-items="@(new SelectList(ViewBag.LangDictionaries, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.LangDictionary))"
-								class="form-select">
-						</select>
-						<span asp-validation-for="LangDictionary" class="text-danger"></span>
-						<div class="form-text">Add or customize translations <a asp-action="ListDictionaries">here</a>.</div>
-					</div>
                     @if (ViewBag.UpdateUrlPresent)
                     {
-                        <div class="d-flex my-3">
+                        <div class="form-group d-flex">
                             <input asp-for="CheckForNewVersions" type="checkbox" class="btcpay-toggle me-3"/>
                             <div>
                                 <label asp-for="CheckForNewVersions" class="form-check-label"></label>
@@ -178,18 +183,18 @@
                     </div> *@
                 </div>
 
-                <h4 class="mb-3">Plugins</h4>
+                <h4 class="mb-3" text-translate="true">Plugins</h4>
                 <div class="form-group">
                     <label asp-for="PluginSource" class="form-label"></label>
                     <input asp-for="PluginSource" placeholder="@PoliciesSettings.DefaultPluginSource" class="form-control"/>
                     <span asp-validation-for="PluginSource" class="text-danger"></span>
                 </div>
-                <div class="d-flex mt-n2">
+                <div class="d-flex">
                     <input asp-for="PluginPreReleases" type="checkbox" class="btcpay-toggle me-3"/>
                     <label asp-for="PluginPreReleases" class="form-check-label"></label>
                 </div>
 
-                <h4 class="mt-5">Customization</h4>
+                <h4 class="mt-5" text-translate="true">Customization</h4>
                 <div class="form-group mb-3">
                     <label asp-for="DefaultCurrency" class="form-label"></label>
                     <input asp-for="DefaultCurrency" placeholder="@StoreBlob.StandardDefaultCurrency" class="form-control" currency-selection />
@@ -199,15 +204,15 @@
                     <select asp-for="RootAppId" asp-items="@(new SelectList(ViewBag.AppsList, nameof(SelectListItem.Value), nameof(SelectListItem.Text), Model.RootAppId))" class="form-select"></select>
                     @if (!Model.DomainToAppMapping.Any())
                     {
-                        <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="btn btn-link px-0">Map specific domains to specific apps</button>
+                        <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="btn btn-link px-0" text-translate="true">Map specific domains to specific apps</button>
                     }
                 </div>
 
                 @if (Model.DomainToAppMapping.Any())
                 {
                     <h5 class="d-flex align-items-center justify-content-between mt-5 gap-3">
-                        Domain to app mapping
-                        <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="d-inline-block btn text-primary btn-link p-0">
+                        <span text-translate="true">Domain to app mapping</span>
+                        <button id="AddDomainButton" type="submit" name="command" value="add-domain" class="d-inline-block btn text-primary btn-link p-0" text-translate="true">
                             Add domain mapping
                         </button>
                     </h5>
@@ -218,8 +223,9 @@
                                 <div class="form-group">
                                     <div class="d-flex align-items-center justify-content-between">
                                         <label asp-for="DomainToAppMapping[index].Domain" class="form-label"></label>
-                                        <button type="submit" title="Remove domain mapping" name="command" value="@($"remove-domain:{index}")" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
-                                            <span class="fa fa-times"></span> Remove Mapping
+                                        <button type="submit" title="@StringLocalizer["Remove domain mapping"]" name="command" value="@($"remove-domain:{index}")" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
+                                            <span class="fa fa-times"></span>
+                                            <span text-translate="true">Remove Mapping</span>
                                         </button>
                                     </div>
                                     <input asp-for="DomainToAppMapping[index].Domain" class="form-control"/>
@@ -238,16 +244,16 @@
                     </div>
                 }
 
-                <h4>Block Explorers</h4>
+                <h4 text-translate="true">Block Explorers</h4>
 
                 @for (var lpi = 0; lpi < linkProviders.Length; lpi++)
                 {
-                    var cryptoCode = linkProviders[lpi].Key;
+                    var pmi = linkProviders[lpi].Key;
                     var defaultLink = linkProviders[lpi].Value.BlockExplorerLinkDefault;
-				    var existingOverride = Model.BlockExplorerLinks?.FirstOrDefault(tuple => tuple.CryptoCode == cryptoCode);
+					var existingOverride = Model.BlockExplorerLinks?.FirstOrDefault(tuple => tuple.PaymentMethodId == pmi);
                     if (existingOverride is null)
                     {
-					    existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { CryptoCode = cryptoCode, Link = null };
+						existingOverride = new PoliciesSettings.BlockExplorerOverrideItem { PaymentMethodId = pmi, Link = null };
                         Model.BlockExplorerLinks ??= new ();
                         Model.BlockExplorerLinks.Add(existingOverride);
                     }
@@ -255,12 +261,12 @@
                     var linkValue = existingOverride.Link ?? defaultLink;
                     <div class="form-group" data-default="@defaultLink">
                         <div class="d-flex flex-wrap align-items-center justify-content-between gap-3">
-						    <label asp-for="BlockExplorerLinks[i].Link" class="form-label">@cryptoCode</label>
-                            <button type="button" class="btn btn-link p-0 only-for-js revert-default" title="Revert to default">
+							<label asp-for="BlockExplorerLinks[i].Link" class="form-label">@pmi</label>
+                            <button type="button" class="btn btn-link p-0 only-for-js revert-default" text-translate="true">
                                 Set to default
                             </button>
                         </div>
-					    <input type="hidden" asp-for="BlockExplorerLinks[i].CryptoCode" value="@cryptoCode" />
+						<input type="hidden" asp-for="BlockExplorerLinks[i].PaymentMethodId" value="@pmi" />
                         <input type="text" class="form-control block-explorer-link" asp-for="BlockExplorerLinks[i].Link" value="@linkValue" rel="noreferrer noopener" />
                     </div>
                 }

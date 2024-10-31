@@ -1,18 +1,10 @@
 #nullable enable
 using System.Collections;
 using System.Collections.Frozen;
-using Dapper;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
-using System;
-using System.Runtime.InteropServices;
 using Newtonsoft.Json.Linq;
-using static System.Net.Mime.MediaTypeNames;
-using YamlDotNet.Core.Tokens;
 
 namespace BTCPayServer.Services
 {
@@ -24,12 +16,12 @@ namespace BTCPayServer.Services
             public record Added(string Key, string Value) : Diff(Key);
             public record Modified(string Key, string NewValue, string OldValue) : Diff(Key);
         }
-        public static bool TryCreateFromText(string text, [MaybeNullWhen(false)] out Translations translations)
+        public static bool TryCreateFromJson(string text, [MaybeNullWhen(false)] out Translations translations)
         {
             translations = null;
             try
             {
-                translations = CreateFromText(text);
+                translations = CreateFromJson(text);
                 return true;
             }
             catch
@@ -49,25 +41,6 @@ namespace BTCPayServer.Services
                     translations.Add((prop.Name, prop.Name));
                 else
                     translations.Add((prop.Name, v));
-            }
-            return new Translations(translations
-                                    .Select(t => KeyValuePair.Create(t.key, t.value)));
-        }
-        public static Translations CreateFromText(string text)
-        {
-            text = (text ?? "").Replace("\r\n", "\n");
-            var translations = new List<(string key, string? value)>();
-            foreach (var line in text.Split("\n", StringSplitOptions.RemoveEmptyEntries))
-            {
-                var splitted = line.Split("=>", StringSplitOptions.RemoveEmptyEntries);
-                if (splitted is [var key, var value])
-                {
-                    translations.Add((key, value));
-                }
-                else if (splitted is [var key2])
-                {
-                    translations.Add((key2, key2));
-                }
             }
             return new Translations(translations
                                     .Select(t => KeyValuePair.Create(t.key, t.value)));
@@ -143,10 +116,6 @@ namespace BTCPayServer.Services
                 obj.Add(record.Key, record.Value);
             }
             return obj.ToString(Newtonsoft.Json.Formatting.Indented);
-        }
-        public string ToTextFormat()
-        {
-            return string.Join('\n', Records.OrderBy(r => r.Key).Select(r => $"{r.Key} => {r.Value}").ToArray());
         }
     }
 }

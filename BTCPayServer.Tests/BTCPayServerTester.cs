@@ -31,12 +31,6 @@ using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.Authentication
 
 namespace BTCPayServer.Tests
 {
-    public enum TestDatabases
-    {
-        Postgres,
-        MySQL,
-    }
-
     public class BTCPayServerTester : IDisposable
     {
         internal readonly string _Directory;
@@ -69,11 +63,6 @@ namespace BTCPayServer.Tests
             set;
         }
 
-        public string MySQL
-        {
-            get; set;
-        }
-
         public string Postgres
         {
             get; set;
@@ -85,11 +74,6 @@ namespace BTCPayServer.Tests
 
         IWebHost _Host;
         public int Port
-        {
-            get; set;
-        }
-
-        public TestDatabases TestDatabase
         {
             get; set;
         }
@@ -164,9 +148,7 @@ namespace BTCPayServer.Tests
             if (!string.IsNullOrEmpty(SSHConnection))
                 config.AppendLine($"sshconnection={SSHConnection}");
 
-            if (TestDatabase == TestDatabases.MySQL && !String.IsNullOrEmpty(MySQL))
-                config.AppendLine($"mysql=" + MySQL);
-            else if (!String.IsNullOrEmpty(Postgres))
+            if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);
 
             if (!string.IsNullOrEmpty(ExplorerPostgres))
@@ -180,6 +162,8 @@ namespace BTCPayServer.Tests
             HttpClient.BaseAddress = ServerUri;
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             var confBuilder = new DefaultConfiguration() { Logger = LoggerProvider.CreateLogger("Console") }.CreateConfigurationBuilder(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", DisableRegistration ? "true" : "false" });
+            // This make sure that tests work outside of this assembly (ie, test project it a plugin)
+            confBuilder.SetBasePath(TestUtils.TestDirectory);
 #if DEBUG
             confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif
@@ -195,7 +179,7 @@ namespace BTCPayServer.Tests
                             l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                             l.SetMinimumLevel(LogLevel.Information)
                             .AddFilter("Microsoft", LogLevel.Error)
-                            .AddFilter("Hangfire", LogLevel.Error)
+                            .AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information)
                             .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
                             .AddProvider(LoggerProvider);
                         });
@@ -283,7 +267,7 @@ namespace BTCPayServer.Tests
 
         private string FindBTCPayServerDirectory()
         {
-            var solutionDirectory = TestUtils.TryGetSolutionDirectoryInfo(Directory.GetCurrentDirectory());
+            var solutionDirectory = TestUtils.TryGetSolutionDirectoryInfo();
             return Path.Combine(solutionDirectory.FullName, "BTCPayServer");
         }
 

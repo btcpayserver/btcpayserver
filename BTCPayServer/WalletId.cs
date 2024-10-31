@@ -27,14 +27,11 @@ namespace BTCPayServer
             ArgumentNullException.ThrowIfNull(cryptoCode);
             StoreId = storeId;
             CryptoCode = cryptoCode;
+            PaymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(CryptoCode);
         }
         public string StoreId { get; }
         public string CryptoCode { get; }
-
-        public PaymentMethodId GetPaymentMethodId()
-        {
-            return PaymentTypes.CHAIN.GetPaymentMethodId(CryptoCode);
-        }
+        public PaymentMethodId PaymentMethodId { get; }
        
         public static WalletId Parse(string id)
         {

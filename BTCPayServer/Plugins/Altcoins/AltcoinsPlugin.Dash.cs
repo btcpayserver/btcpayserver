@@ -33,6 +33,6 @@ public partial class AltcoinsPlugin
                 ? "https://insight.dash.org/insight/tx/{0}"
                 : "https://testnet-insight.dashevo.org/insight/tx/{0}";
         services.AddBTCPayNetwork(network)
-                .AddTransactionLinkProvider(nbxplorerNetwork.CryptoCode, new DefaultTransactionLinkProvider(blockExplorerLink));
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId(nbxplorerNetwork.CryptoCode), new DefaultTransactionLinkProvider(blockExplorerLink));
     }
 }

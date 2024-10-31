@@ -76,10 +76,11 @@ namespace BTCPayServer.PayoutProcessors.OnChain
 		protected override async Task Process(object paymentMethodConfig, List<PayoutData> payouts)
 		{
 			if (paymentMethodConfig is not DerivationSchemeSettings { IsHotWallet: true } config)
-			{
-				return;
-			}
-			if (!_explorerClientProvider.IsAvailable(Network.CryptoCode))
+            {
+                DisableProcessor(payouts);
+                return;
+            }
+            if (!_explorerClientProvider.IsAvailable(Network.CryptoCode))
             {
                 return;
             }
@@ -91,6 +92,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 WellknownMetadataKeys.AccountHDKey);
             if (extKeyStr == null)
             {
+                DisableProcessor(payouts);
                 return;
             }
 
@@ -107,19 +109,16 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 config.AccountDerivation, DerivationFeature.Change, 0, true);
 
             var processorBlob = GetBlob(PayoutProcessorSettings);
-            var payoutToBlobs = payouts.ToDictionary(data => data, data => data.GetBlob(_btcPayNetworkJsonSerializerSettings));
-            if (payoutToBlobs.Sum(pair => pair.Value.CryptoAmount) < processorBlob.Threshold)
-            {
+            if (payouts.Sum(p => p.Amount) < processorBlob.Threshold)
                 return;
-            }
             
             var feeRate = await this._feeProviderFactory.CreateFeeProvider(Network).GetFeeRateAsync(Math.Max(processorBlob.FeeTargetBlock, 1));
 
-            var transfersProcessing = new List<KeyValuePair<PayoutData, PayoutBlob>>();
-            foreach (var transferRequest in payoutToBlobs)
+            var transfersProcessing = new List<PayoutData>();
+            foreach (var payout in payouts)
             {
-                var blob = transferRequest.Value;
-                if (failedAmount.HasValue && blob.CryptoAmount >= failedAmount)
+                var blob = payout.GetBlob(_btcPayNetworkJsonSerializerSettings);
+                if (failedAmount.HasValue && payout.Amount >= failedAmount)
                 {
                     continue;
                 }
@@ -128,6 +127,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     await _bitcoinLikePayoutHandler.ParseClaimDestination(blob.Destination, CancellationToken);
                 if (!string.IsNullOrEmpty(claimDestination.error))
                 {
+                    DisableProcessor([payout]);
                     continue;
                 }
 
@@ -146,19 +146,21 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 }
 
                 txBuilder.Send(bitcoinClaimDestination.Address,
-                    new Money(blob.CryptoAmount.Value, MoneyUnit.BTC));
+                    new Money(payout.Amount.Value, MoneyUnit.BTC));
 
                 try
                 {
                     txBuilder.SetChange(changeAddress.Address);
                     txBuilder.SendEstimatedFees(feeRate);
                     workingTx = txBuilder.BuildTransaction(true);
-                    transfersProcessing.Add(transferRequest);
+                    transfersProcessing.Add(payout);
                 }
                 catch (NotEnoughFundsException)
                 {
-
-                    failedAmount = blob.CryptoAmount;
+					failedAmount = payout.Amount;
+					if (blob.IncrementErrorCount() >= 10)
+						blob.DisableProcessor(OnChainAutomatedPayoutSenderFactory.ProcessorName);
+					payout.SetBlob(blob, _btcPayNetworkJsonSerializerSettings);
                     //keep going, we prioritize withdraws by time but if there is some other we can fit, we should
                 }
             }
@@ -170,8 +172,8 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     var txHash = workingTx.GetHash();
                     foreach (var payoutData in transfersProcessing)
                     {
-                        payoutData.Key.State = PayoutState.InProgress;
-                        _bitcoinLikePayoutHandler.SetProofBlob(payoutData.Key,
+                        payoutData.State = PayoutState.InProgress;
+                        _bitcoinLikePayoutHandler.SetProofBlob(payoutData,
                             new PayoutTransactionOnChainBlob()
                             {
                                 Accounted = true,
@@ -195,7 +197,7 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                     {
                         await WalletRepository.AddWalletTransactionAttachment(walletId,
                             txHash,
-                            Attachment.Payout(payoutData.Key.PullPaymentDataId, payoutData.Key.Id));
+                            Attachment.Payout(payoutData.PullPaymentDataId, payoutData.Id));
                     }
                     await Task.WhenAny(tcs.Task, task);
                 }
@@ -206,6 +208,16 @@ namespace BTCPayServer.PayoutProcessors.OnChain
                 {
                     Logs.PayServer.LogError(e, "Could not finalize and broadcast");
                 }
+            }
+        }
+
+        private void DisableProcessor(List<PayoutData> payouts)
+        {
+            foreach (var payout in payouts)
+            {
+                var b = payout.GetBlob(_btcPayNetworkJsonSerializerSettings);
+                b.DisableProcessor(OnChainAutomatedPayoutSenderFactory.ProcessorName);
+                payout.SetBlob(b, _btcPayNetworkJsonSerializerSettings);
             }
         }
     }

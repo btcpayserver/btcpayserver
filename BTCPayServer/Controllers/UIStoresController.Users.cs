@@ -39,7 +39,7 @@ public partial class UIStoresController
         var roles = await _storeRepo.GetStoreRoles(CurrentStore.Id);
         if (roles.All(role => role.Id != vm.Role))
         {
-            ModelState.AddModelError(nameof(vm.Role), "Invalid role");
+            ModelState.AddModelError(nameof(vm.Role), StringLocalizer["Invalid role"]);
             return View(vm);
         }
             
@@ -116,9 +116,9 @@ public partial class UIStoresController
         var isOwner = user.StoreRole.Id == StoreRoleId.Owner.Id;
         var isLastOwner = isOwner && storeUsers.Count(u => u.StoreRole.Id == StoreRoleId.Owner.Id) == 1;
         if (isLastOwner && roleId != StoreRoleId.Owner)
-            TempData[WellKnownTempData.ErrorMessage] = $"User {user.Email} is the last owner. Their role cannot be changed.";
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["User {0} is the last owner. Their role cannot be changed.", user.Email].Value;
         else if (await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId))
-            TempData[WellKnownTempData.SuccessMessage] = $"The role of {user.Email} has been changed to {vm.Role}.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The role of {0} has been changed to {1}.", user.Email, vm.Role].Value;
         return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
     }
 
@@ -127,9 +127,9 @@ public partial class UIStoresController
     public async Task<IActionResult> DeleteStoreUser(string storeId, string userId)
     {
         if (await _storeRepo.RemoveStoreUser(storeId, userId))
-            TempData[WellKnownTempData.SuccessMessage] = "User removed successfully.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["User removed successfully."].Value;
         else
-            TempData[WellKnownTempData.ErrorMessage] = "Removing this user would result in the store having no owner.";
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Removing this user would result in the store having no owner."].Value;
         return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
     }
 

@@ -133,7 +133,7 @@ namespace BTCPayServer
 
         public string GetTrackedDestination(Script scriptPubKey)
         {
-            return scriptPubKey.Hash.ToString() + "#" + CryptoCode.ToUpperInvariant();
+            return scriptPubKey.Hash.ToString();
         }
     }
 

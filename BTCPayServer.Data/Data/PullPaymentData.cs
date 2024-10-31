@@ -24,6 +24,8 @@ namespace BTCPayServer.Data
         public StoreData StoreData { get; set; }
         [MaxLength(50)]
         public string StoreId { get; set; }
+        public string Currency { get; set; }
+        public decimal Limit { get; set; }
         public DateTimeOffset StartDate { get; set; }
         public DateTimeOffset? EndDate { get; set; }
         public bool Archived { get; set; }

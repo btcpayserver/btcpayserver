@@ -46,5 +46,6 @@ namespace BTCPayServer.Data
         public bool ShowInvoiceStatusChangeHint { get; set; }
         public string ImageUrl { get; set; }
         public string Name { get; set; }
+        public string InvitationToken { get; set; }
     }
 }

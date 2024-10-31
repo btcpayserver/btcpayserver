@@ -43,7 +43,7 @@
                                     <span text-translate="true">Settings</span>
                                 </a>
                             </li>
-                            @if (ViewData.IsActivePage([StoreNavPages.General, StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Roles, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails, StoreNavPages.Forms]))
+                            @if (ViewData.IsPageActive([StoreNavPages.General, StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Roles, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails, StoreNavPages.Forms]))
                             {
                                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Rates))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Rates)" asp-controller="UIStores" asp-action="Rates" asp-route-storeId="@Model.Store.Id" text-translate="true">Rates</a>
@@ -104,16 +104,21 @@
                                             </a>
                                         }
                                     </li>
-                                    @if (ViewData.IsActiveCategory(typeof(WalletsNavPages), scheme.WalletId.ToString()) || ViewData.IsActivePage([WalletsNavPages.Settings], scheme.WalletId.ToString()) || ViewData.IsActivePage([StoreNavPages.OnchainSettings], categoryId))
+                                    @if (ViewData.IsCategoryActive(typeof(WalletsNavPages), scheme.WalletId.ToString()) || ViewData.IsPageActive([WalletsNavPages.Settings], scheme.WalletId.ToString()) || ViewData.IsPageActive([StoreNavPages.OnchainSettings], categoryId))
                                     {
+                                        @if (!scheme.ReadonlyWallet)
+                                        {  
+                                            <li class="nav-item nav-item-sub">
+                                                <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId" text-translate="true">Send</a>
+                                            </li>
+                                        }
+
+                                      
                                         <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId">Send</a>
+                                            <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId" text-translate="true">Receive</a>
                                         </li>
                                         <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId">Receive</a>
-                                        </li>
-                                        <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-Settings" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Settings, scheme.WalletId.ToString()) @ViewData.ActivePageClass(StoreNavPages.OnchainSettings, categoryId)" asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId">Settings</a>
+                                            <a id="WalletNav-Settings" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Settings, scheme.WalletId.ToString()) @ViewData.ActivePageClass(StoreNavPages.OnchainSettings, categoryId)" asp-area="" asp-controller="UIStores" asp-action="WalletSettings" asp-route-cryptoCode="@scheme.WalletId.CryptoCode" asp-route-storeId="@scheme.WalletId.StoreId" text-translate="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="wallet-nav" model="@Model" />
                                     }
@@ -140,10 +145,10 @@
                                             </a>
                                         }
                                     </li>
-                                    @if (ViewData.IsActivePage([StoreNavPages.Lightning, StoreNavPages.LightningSettings], $"{Model.Store.Id}-{scheme.CryptoCode}"))
+                                    @if (ViewData.IsPageActive([StoreNavPages.Lightning, StoreNavPages.LightningSettings], $"{Model.Store.Id}-{scheme.CryptoCode}"))
                                     {
                                         <li class="nav-item nav-item-sub">
-                                            <a id="StoreNav-@(nameof(StoreNavPages.LightningSettings))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.LightningSettings)" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode">Settings</a>
+                                            <a id="StoreNav-@(nameof(StoreNavPages.LightningSettings))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.LightningSettings)" asp-controller="UIStores" asp-action="LightningSettings" asp-route-storeId="@Model.Store.Id" asp-route-cryptoCode="@scheme.CryptoCode" text-translate="true">Settings</a>
                                         </li>
                                         <vc:ui-extension-point location="lightning-nav" model="@Model"/>
                                     }
@@ -290,7 +295,7 @@
                     <span text-translate="true">Server Settings</span>
                 </a>
             </li>
-            @if (ViewData.IsActiveCategory(typeof(ServerNavPages)) && !ViewData.IsActivePage([ServerNavPages.Plugins]))
+            @if (ViewData.IsCategoryActive(typeof(ServerNavPages)) && !ViewData.IsPageActive([ServerNavPages.Plugins]))
             {
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Users" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Users)" asp-action="ListUsers" text-translate="true">Users</a>
@@ -322,8 +327,9 @@
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Files" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Files)" asp-action="Files" text-translate="true">Files</a>
                 </li>
+                
+                <vc:ui-extension-point location="server-nav" model="@Model"/>
             }
-            <vc:ui-extension-point location="server-nav" model="@Model"/>
             <li class="nav-item dropup">
                 <a class="nav-link @ViewData.ActivePageClass(ManageNavPages.Index)" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="nav-account"/>
@@ -379,7 +385,7 @@
                     </li>
                 </ul>
             </li>
-            @if (ViewData.IsActiveCategory(typeof(ManageNavPages)) || ViewData.IsActivePage([ManageNavPages.ChangePassword]))
+            @if (ViewData.IsCategoryActive(typeof(ManageNavPages)) || ViewData.IsPageActive([ManageNavPages.ChangePassword]))
             {
                 <li class="nav-item nav-item-sub">
                     <a id="SectionNav-@ManageNavPages.ChangePassword.ToString()" class="nav-link @ViewData.ActivePageClass(ManageNavPages.ChangePassword)" asp-controller="UIManage" asp-action="ChangePassword" text-translate="true">Password</a>

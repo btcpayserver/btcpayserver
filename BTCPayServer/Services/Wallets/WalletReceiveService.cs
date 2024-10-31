@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Payments;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
@@ -102,11 +103,11 @@ namespace BTCPayServer.Services.Wallets
             _walletReceiveState.AddOrReplace(walletId, information);
         }
 
-        public IEnumerable<KeyValuePair<WalletId, KeyPathInformation>> GetByDerivation(string cryptoCode,
+        public IEnumerable<KeyValuePair<WalletId, KeyPathInformation>> GetByDerivation(PaymentMethodId paymentMethodId,
             DerivationStrategyBase derivationStrategyBase)
         {
             return _walletReceiveState.Where(pair =>
-                pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
+                pair.Key.PaymentMethodId == paymentMethodId &&
                 pair.Value.DerivationStrategy == derivationStrategyBase);
         }
 
@@ -117,7 +118,7 @@ namespace BTCPayServer.Services.Wallets
 
             _leases.Add(_eventAggregator.Subscribe<NewOnChainTransactionEvent>(evt =>
             {
-                var matching = GetByDerivation(evt.CryptoCode, evt.NewTransactionEvent.DerivationStrategy).Where(pair =>
+                var matching = GetByDerivation(evt.PaymentMethodId, evt.NewTransactionEvent.DerivationStrategy).Where(pair =>
                     evt.NewTransactionEvent.Outputs.Any(output => output.ScriptPubKey == pair.Value.ScriptPubKey));
 
                 foreach (var keyValuePair in matching)

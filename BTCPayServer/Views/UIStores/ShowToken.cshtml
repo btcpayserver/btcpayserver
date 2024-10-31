@@ -1,23 +1,23 @@
 ﻿@model BTCPayServer.Security.Bitpay.BitTokenEntity
 @{
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Access Tokens"], Context.GetStoreData().Id);
 }
 <h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
 <div class="row">
     <div class="col-md-8">
-        <h5>Token Information</h5>
+        <h5 text-translate="true">Token Information</h5>
         <table class="table table-hover">
             <tr>
-                <th>Label</th>
+                <th text-translate="true">Label</th>
                 <td>@Model.Label</td>
             </tr>
             <tr>
-                <th>SIN</th>
+                <th text-translate="true">SIN</th>
                 <td>@Model.SIN</td>
             </tr>
             <tr>
-                <th>Token</th>
+                <th text-translate="true">Token</th>
                 <td>@Model.Value</td>
             </tr>
         </table>

@@ -5,20 +5,20 @@
 @if (Model.CanCalculateBalance)
 {
     <p class="lead text-center text-secondary">
-        This transaction will change your balance:
+        <span text-translate="true">This transaction will change your balance:</span>
         <br>
         <span class="text-@(Model.Positive ? "success" : "danger")">@Model.BalanceChange</span>
     </p>
 }
 
 <div id="inputs">
-    <h4 class="mb-n3">Inputs</h4>
+    <h4 class="mb-n3" text-translate="true">Inputs</h4>
     <table class="table">
         <thead>
         <tr>
-            <th>Index</th>
-            <th>Labels</th>
-            <th class="text-end">Amount</th>
+            <th text-translate="true">Index</th>
+            <th text-translate="true">Labels</th>
+            <th text-translate="true" class="text-end">Amount</th>
         </tr>
         </thead>
         <tbody>
@@ -64,13 +64,13 @@
 </div>
 
 <div id="outputs" class="mt-4">
-    <h4 class="mb-n3">Outputs</h4>
+    <h4 class="mb-n3" text-translate="true">Outputs</h4>
     <table class="table">
         <thead>
         <tr>
-            <th>Destination</th>
-            <th>Labels</th>
-            <th class="text-end">Amount</th>
+            <th text-translate="true">Destination</th>
+            <th text-translate="true">Labels</th>
+            <th text-translate="true" class="text-end">Amount</th>
         </tr>
         </thead>
         <tbody>
@@ -109,5 +109,8 @@
 
 @if (Model.FeeRate != null)
 {
-    <p class="text-muted text-end">Transaction fee rate: <b>@Model.FeeRate</b></p>
+    <p class="text-muted text-end">
+        <span text-translate="true">Transaction fee rate:</span>
+        <b>@Model.FeeRate</b>
+    </p>
 }

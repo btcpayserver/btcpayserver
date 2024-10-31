@@ -13,6 +13,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Linq;
 
@@ -22,15 +23,17 @@ namespace BTCPayServer.HostedServices
     {
         private const string TYPE = "pluginupdate";
 
-        internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options) : NotificationHandler<PluginUpdateNotification>
+        internal class Handler(LinkGenerator linkGenerator, BTCPayServerOptions options, IStringLocalizer stringLocalizer) : NotificationHandler<PluginUpdateNotification>
         {
+            private IStringLocalizer StringLocalizer { get; } = stringLocalizer;
+
             public override string NotificationType => TYPE;
 
             public override (string identifier, string name)[] Meta
             {
                 get
                 {
-                    return new (string identifier, string name)[] {(TYPE, "Plugin update")};
+                    return new (string identifier, string name)[] {(TYPE, StringLocalizer["Plugin update"])};
                 }
             }
 
@@ -38,7 +41,7 @@ namespace BTCPayServer.HostedServices
             {
                 vm.Identifier = notification.Identifier;
                 vm.Type = notification.NotificationType;
-                vm.Body = $"New {notification.Name} plugin version {notification.Version} released!";
+                vm.Body = StringLocalizer["New {0} plugin version {1} released!", notification.Name, notification.Version];
                 vm.ActionLink = linkGenerator.GetPathByAction(nameof(UIServerController.ListPlugins),
                     "UIServer",
                     new {plugin = notification.PluginIdentifier}, options.RootPath);
@@ -82,7 +85,7 @@ namespace BTCPayServer.HostedServices
 
             var installedPlugins =
                 pluginService.LoadedPlugins.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-            var remotePlugins = await pluginService.GetRemotePlugins();
+            var remotePlugins = await pluginService.GetRemotePlugins(null);
             //take the latest version of each plugin
             var remotePluginsList = remotePlugins
                 .GroupBy(plugin => plugin.Identifier)

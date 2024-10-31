@@ -45,7 +45,7 @@ namespace BTCPayServer.Tests
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
             // Reset this using `dotnet user-secrets remove RunSeleniumInBrowser`
 
-            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : Directory.GetCurrentDirectory());
+            var chromeDriverPath = config["ChromeDriverDirectory"] ?? (Server.PayTester.InContainer ? "/usr/bin" : TestUtils.TestDirectory);
 
             var options = new ChromeOptions();
             if (!runInBrowser)
@@ -55,6 +55,7 @@ namespace BTCPayServer.Tests
             options.AddArguments($"window-size={windowSize.Width}x{windowSize.Height}");
             options.AddArgument("shm-size=2g");
             options.AddArgument("start-maximized");
+            options.AddArgument("disable-search-engine-choice-screen");
             if (Server.PayTester.InContainer)
             {
                 // Shot in the dark to fix https://stackoverflow.com/questions/53902507/unknown-error-session-deleted-because-of-page-crash-from-unknown-error-cannot
@@ -90,7 +91,15 @@ namespace BTCPayServer.Tests
         {
             if (amount is not null)
             {
-                Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				try
+				{
+					Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				}
+				// Sometimes the element is not available after a window switch... retry
+				catch (StaleElementReferenceException)
+				{
+					Driver.FindElement(By.Id("test-payment-amount")).Clear();
+				}
                 Driver.FindElement(By.Id("test-payment-amount")).SendKeys(amount.ToString());
             }
             Driver.WaitUntilAvailable(By.Id("FakePayment"));
@@ -123,11 +132,11 @@ retry:
         /// Because for some reason, the selenium container can't resolve the tests container domain name
         /// </summary>
         public Uri ServerUri;
-        internal IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
+        public IWebElement FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
         {
             return FindAlertMessage(new[] { severity });
         }
-        internal IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
+        public IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
         {
             var className = string.Join(", ", severity.Select(statusSeverity => $".alert-{StatusMessageModel.ToString(statusSeverity)}"));
             IWebElement el;
@@ -173,13 +182,18 @@ retry:
             Driver.FindElement(By.Id("RegisterButton")).Click();
             Driver.AssertNoError();
             CreatedUser = usr;
+            Password = "123456";
+            IsAdmin = isAdmin;
             return usr;
         }
         string CreatedUser;
 
+        public string Password { get; private set; }
+        public bool IsAdmin { get; private set; }
+
         public TestAccount AsTestAccount()
         {
-            return new TestAccount(Server) { RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser } };
+            return new TestAccount(Server) { StoreId = StoreId, Email = CreatedUser, Password = Password, RegisterDetails = new Models.AccountViewModels.RegisterViewModel() { Password = "123456", Email = CreatedUser }, IsAdmin = IsAdmin };
         }
 
         public (string storeName, string storeId) CreateNewStore(bool keepId = true)
@@ -538,7 +552,6 @@ retry:
         {
             walletId ??= WalletId;
             GoToWallet(walletId, WalletsNavPages.Receive);
-            Driver.FindElement(By.Id("generateButton")).Click();
             var addressStr = Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
             var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
             for (var i = 0; i < coins; i++)

@@ -1,6 +1,6 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -17,14 +17,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "View information about the specified wallet",
@@ -57,7 +50,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/feerate": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -74,14 +67,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "blockTarget",
@@ -124,7 +110,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/address": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/address": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -141,14 +127,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "forceGenerate",
@@ -206,14 +185,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the payment method to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "UnReserve address",
@@ -239,7 +211,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -256,14 +228,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the wallet to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "statusFilter",
@@ -357,14 +322,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the wallet",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "requestBody": {
@@ -415,7 +373,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/transactions/{transactionId}": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/transactions/{transactionId}": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -432,14 +390,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the wallet to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "transactionId",
@@ -496,14 +447,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the wallet to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     },
                     {
                         "name": "transactionId",
@@ -564,7 +508,7 @@
                 ]
             }
         },
-        "/api/v1/stores/{storeId}/payment-methods/onchain/{cryptoCode}/wallet/utxos": {
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/utxos": {
             "get": {
                 "tags": [
                     "Store Wallet (On Chain)"
@@ -581,14 +525,7 @@
                         }
                     },
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The crypto code of the wallet to fetch",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/PaymentMethodId"
                     }
                 ],
                 "description": "Get store on-chain wallet utxos",
@@ -623,10 +560,402 @@
                     }
                 ]
             }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/generate": {
+            "post": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Generate store on-chain wallet",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    }
+                ],
+                "description": "Generate a wallet and update the specified store's payment method to it",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/GenerateOnChainWalletRequest"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "operationId": "StoreOnChainPaymentMethods_GenerateOnChainWallet",
+                "responses": {
+                    "200": {
+                        "description": "updated specified payment method with the generated wallet",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "allOf": [
+                                        {
+                                            "$ref": "#/components/schemas/GenericPaymentMethodData"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "mnemonic": {
+                                                    "$ref": "#/components/schemas/Mnemonic"
+                                                },
+                                                "config": {
+                                                    "$ref": "#/components/schemas/OnChainPaymentMethodBaseData"
+                                                }
+                                            }
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the store payment method",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/preview": {
+            "get": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Preview store on-chain payment method addresses",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "paymentMethodId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The payment method id of the payment method to update",
+                        "schema": {
+                            "type": "string"
+                        },
+                        "example": "BTC-CHAIN"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "description": "From which index to fetch the addresses",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of addresses to preview",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "description": "View addresses of the current payment method of the store",
+                "operationId": "StoreOnChainPaymentMethods_GetOnChainPaymentMethodPreview",
+                "responses": {
+                    "200": {
+                        "description": "specified payment method addresses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainPaymentMethodPreviewResultData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store/payment method"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Store Wallet (On Chain)"
+                ],
+                "summary": "Preview proposed store on-chain payment method addresses",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to fetch",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "$ref": "#/components/parameters/PaymentMethodId"
+                    },
+                    {
+                        "name": "offset",
+                        "in": "query",
+                        "required": false,
+                        "description": "From which index to fetch the addresses",
+                        "schema": {
+                            "type": "number"
+                        }
+                    },
+                    {
+                        "name": "count",
+                        "in": "query",
+                        "required": false,
+                        "description": "Number of addresses to preview",
+                        "schema": {
+                            "type": "number"
+                        }
+                    }
+                ],
+                "description": "View addresses of a proposed payment method of the store",
+                "operationId": "StoreOnChainPaymentMethods_POSTOnChainPaymentMethodPreview",
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "derivationScheme": {
+                                        "type": "string",
+                                        "description": "The derivation scheme",
+                                        "example": "xpub..."
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "specified payment method addresses",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/OnChainPaymentMethodPreviewResultData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to view the specified store"
+                    },
+                    "404": {
+                        "description": "The key is not found for this store"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canviewstoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
         }
     },
     "components": {
         "schemas": {
+            "Mnemonic": {
+                "type": "string",
+                "description": "A BIP39 mnemonic",
+                "example": "quality warfare scatter zone report forest potato local swing solve upon candy garment boost lab"
+            },
+            "OnChainPaymentMethodBaseData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "derivationScheme": {
+                        "type": "string",
+                        "description": "The derivation scheme",
+                        "example": "xpub..."
+                    },
+                    "label": {
+                        "type": "string",
+                        "description": "A label that will be shown in the UI"
+                    },
+                    "accountKeyPath": {
+                        "type": "string",
+                        "description": "The wallet fingerprint followed by the keypath to derive the account key used for signing operation or creating PSBTs",
+                        "example": "abcd82a1/84'/0'/0'"
+                    }
+                }
+            },
+            "OnChainPaymentMethodPreviewResultData": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "addresses": {
+                        "type": "array",
+                        "description": "a list of addresses generated by the derivation scheme",
+                        "items": {
+                            "$ref": "#/components/schemas/OnChainPaymentMethodPreviewResultAddressItem"
+                        }
+                    }
+                }
+            },
+            "OnChainPaymentMethodPreviewResultAddressItem": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "keyPath": {
+                        "type": "string",
+                        "description": "The key path relative to the account key path."
+                    },
+                    "address": {
+                        "type": "string",
+                        "description": "The address generated at the key path"
+                    }
+                }
+            },
+            "GenerateOnChainWalletRequest": {
+                "type": "object",
+                "additionalProperties": false,
+                "properties": {
+                    "label": {
+                        "type": "string",
+                        "description": "A label that will be shown in the UI"
+                    },
+                    "existingMnemonic": {
+                        "$ref": "#/components/schemas/Mnemonic"
+                    },
+                    "passphrase": {
+                        "type": "string",
+                        "description": "A passphrase for the BIP39 mnemonic seed"
+                    },
+                    "accountNumber": {
+                        "type": "number",
+                        "default": 0,
+                        "description": "The account to derive from the BIP39 mnemonic seed"
+                    },
+                    "savePrivateKeys": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to store the seed inside BTCPay Server to enable some additional services. IF `false` AND `existingMnemonic` IS NOT SPECIFIED, BE SURE TO SECURELY STORE THE SEED IN THE RESPONSE!"
+                    },
+                    "importKeysToRPC": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Whether to import all addresses generated via BTCPay Server into the underlying node wallet. (Private keys will also be imported if `savePrivateKeys` is set to true."
+                    },
+                    "wordList": {
+                        "type": "string",
+                        "description": "If `existingMnemonic` is not set, a mnemonic is generated using the specified wordList.",
+                        "default": "English",
+                        "x-enumNames": [
+                            "English",
+                            "Japanese",
+                            "Spanish",
+                            "ChineseSimplified",
+                            "ChineseTraditional",
+                            "French",
+                            "PortugueseBrazil",
+                            "Czech"
+                        ],
+                        "enum": [
+                            "English",
+                            "Japanese",
+                            "Spanish",
+                            "ChineseSimplified",
+                            "ChineseTraditional",
+                            "French",
+                            "PortugueseBrazil",
+                            "Czech"
+                        ]
+                    },
+                    "wordCount": {
+                        "type": "number",
+                        "description": "If `existingMnemonic` is not set, a mnemonic is generated using the specified wordCount.",
+                        "default": 12,
+                        "x-enumNames": [
+                            12,
+                            15,
+                            18,
+                            21,
+                            24
+                        ],
+                        "enum": [
+                            12,
+                            15,
+                            18,
+                            21,
+                            24
+                        ]
+                    },
+                    "scriptPubKeyType": {
+                        "type": "string",
+                        "description": "the type of wallet to generate",
+                        "default": "Segwit",
+                        "x-enumNames": [
+                            "Legacy",
+                            "Segwit",
+                            "SegwitP2SH",
+                            "TaprootBIP86"
+                        ],
+                        "enum": [
+                            "Legacy",
+                            "Segwit",
+                            "SegwitP2SH",
+                            "TaprootBIP86"
+                        ]
+                    }
+                }
+            },
             "OnChainWalletOverviewData": {
                 "type": "object",
                 "additionalProperties": false,
@@ -676,20 +1005,6 @@
                         "type": "string",
                         "format": "BIP21",
                         "description": "a bip21 payment link"
-                    }
-                }
-            },
-            "OnChainPaymentMethodPreviewResultAddressItem": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "keyPath": {
-                        "type": "string",
-                        "description": "The key path relative to the account key path."
-                    },
-                    "address": {
-                        "type": "string",
-                        "description": "The address generated at the key path"
                     }
                 }
             },
@@ -754,7 +1069,7 @@
                     },
                     "timestamp": {
                         "description": "The time of the transaction",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                     },
                     "status": {
                         "allOf": [
@@ -798,7 +1113,7 @@
                     },
                     "timestamp": {
                         "description": "The time of the utxo",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
                     },
                     "keyPath": {
                         "type": "string",

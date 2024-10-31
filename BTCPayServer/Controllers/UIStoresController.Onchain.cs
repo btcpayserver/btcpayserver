@@ -108,7 +108,7 @@ public partial class UIStoresController
 
             if (fileContent is null || !_onChainWalletParsers.TryParseWalletFile(fileContent, network, out strategy, out _))
             {
-                ModelState.AddModelError(nameof(vm.WalletFile), $"Import failed, make sure you import a compatible wallet format");
+                ModelState.AddModelError(nameof(vm.WalletFile), StringLocalizer["Import failed, make sure you import a compatible wallet format"]);
                 return View(vm.ViewName, vm);
             }
         }
@@ -116,7 +116,7 @@ public partial class UIStoresController
         {
             if (!_onChainWalletParsers.TryParseWalletFile(vm.WalletFileContent, network, out strategy, out var error))
             {
-                ModelState.AddModelError(nameof(vm.WalletFileContent), $"QR import failed: {error}");
+                ModelState.AddModelError(nameof(vm.WalletFileContent), StringLocalizer["QR import failed: {0}", error]);
                 return View(vm.ViewName, vm);
             }
         }
@@ -145,7 +145,7 @@ public partial class UIStoresController
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), $"Invalid wallet format: {ex.Message}");
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Invalid wallet format: {0}", ex.Message]);
                 return View(vm.ViewName, vm);
             }
         }
@@ -157,14 +157,14 @@ public partial class UIStoresController
             }
             catch
             {
-                ModelState.AddModelError(nameof(vm.Config), "Config file was not in the correct format");
+                ModelState.AddModelError(nameof(vm.Config), StringLocalizer["Config file was not in the correct format"]);
                 return View(vm.ViewName, vm);
             }
         }
 
         if (strategy is null)
         {
-            ModelState.AddModelError(nameof(vm.DerivationScheme), "Please provide your extended public key");
+            ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Please provide your extended public key"]);
             return View(vm.ViewName, vm);
         }
 
@@ -184,13 +184,13 @@ public partial class UIStoresController
             }
             catch
             {
-                ModelState.AddModelError(nameof(vm.DerivationScheme), "Invalid derivation scheme");
+                ModelState.AddModelError(nameof(vm.DerivationScheme), StringLocalizer["Invalid derivation scheme"]);
                 return View(vm.ViewName, vm);
             }
             await _storeRepo.UpdateStore(store);
             _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
 
-            TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
 
             // This is success case when derivation scheme is added to the store
             return RedirectToAction(nameof(WalletSettings), new { storeId = vm.StoreId, cryptoCode = vm.CryptoCode });
@@ -287,7 +287,7 @@ public partial class UIStoresController
 
         if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
         {
-            ModelState.AddModelError(nameof(request.ExistingMnemonic), "Please provide your existing seed");
+            ModelState.AddModelError(nameof(request.ExistingMnemonic), StringLocalizer["Please provide your existing seed"]);
             return View(vm.ViewName, vm);
         }
 
@@ -305,7 +305,7 @@ public partial class UIStoresController
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Error,
-                Html = $"There was an error generating your wallet: {e.Message}"
+                Message = StringLocalizer["There was an error generating your wallet: {0}", e.Message].Value
             });
             return View(vm.ViewName, vm);
         }
@@ -343,7 +343,7 @@ public partial class UIStoresController
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = "<span class='text-centered'>Your wallet has been generated.</span>"
+                Html = "<span class='text-centered'>" + StringLocalizer["Your wallet has been generated."].Value + "</span>"
             });
             var seedVm = new RecoverySeedBackupViewModel
             {
@@ -363,7 +363,7 @@ public partial class UIStoresController
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Warning,
-            Html = "Please check your addresses and confirm."
+            Message = StringLocalizer["Please check your addresses and confirm."].Value
         });
         return result;
     }
@@ -380,7 +380,7 @@ public partial class UIStoresController
             return checkResult;
         }
 
-        TempData[WellKnownTempData.SuccessMessage] = $"Wallet settings for {network.CryptoCode} have been updated.";
+        TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Wallet settings for {0} have been updated.", network.CryptoCode].Value;
 
         var walletId = new WalletId(storeId, cryptoCode);
         return RedirectToAction(nameof(UIWalletsController.WalletTransactions), "UIWallets", new { walletId });
@@ -437,15 +437,10 @@ public partial class UIStoresController
                 }).ToList(),
             Config = ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
-            MonitoringExpiration = (int)storeBlob.MonitoringExpiration.TotalMinutes,
-            SpeedPolicy = store.SpeedPolicy,
-            ShowRecommendedFee = storeBlob.ShowRecommendedFee,
-            RecommendedFeeBlockTarget = storeBlob.RecommendedFeeBlockTarget,
+            CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = canUseHotWallet,
             CanUseRPCImport = rpcImport,
-            CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
-            StoreName = store.StoreName,
-
+            StoreName = store.StoreName
         };
 
         ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
@@ -473,15 +468,14 @@ public partial class UIStoresController
         var storeBlob = store.GetStoreBlob();
         var excludeFilters = storeBlob.GetExcludedPaymentMethods();
         var currentlyEnabled = !excludeFilters.Match(handler.PaymentMethodId);
-        bool enabledChanged = currentlyEnabled != vm.Enabled;
-        bool needUpdate = enabledChanged;
+        var enabledChanged = currentlyEnabled != vm.Enabled;
+        var payjoinChanged = storeBlob.PayJoinEnabled != vm.PayJoinEnabled;
+        var needUpdate = enabledChanged || payjoinChanged;
         string errorMessage = null;
 
-        if (enabledChanged)
-        {
-            storeBlob.SetExcluded(handler.PaymentMethodId, !vm.Enabled);
-            store.SetStoreBlob(storeBlob);
-        }
+        if (enabledChanged) storeBlob.SetExcluded(handler.PaymentMethodId, !vm.Enabled);
+        if (payjoinChanged && network.SupportPayJoin) storeBlob.PayJoinEnabled = vm.PayJoinEnabled;
+        if (needUpdate) store.SetStoreBlob(storeBlob);
 
         if (derivation.Label != vm.Label)
         {
@@ -538,12 +532,6 @@ public partial class UIStoresController
             }
         }
 
-        if (store.SpeedPolicy != vm.SpeedPolicy)
-        {
-            store.SpeedPolicy = vm.SpeedPolicy;
-            needUpdate = true;
-        }
-
         if (needUpdate)
         {
             store.SetPaymentMethodConfig(handler, derivation);
@@ -558,65 +546,21 @@ public partial class UIStoresController
                     _eventAggregator.Publish(new WalletChangedEvent { WalletId = new WalletId(vm.StoreId, vm.CryptoCode) });
                     successMessage += $" {vm.CryptoCode} on-chain payments are now {(vm.Enabled ? "enabled" : "disabled")} for this store.";
                 }
+                
+                if (payjoinChanged && storeBlob.PayJoinEnabled && network.SupportPayJoin)
+                {
+                    var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
+                    if (config?.IsHotWallet is not true)
+                    {
+                        successMessage += " However, PayJoin will not work, as this isn't a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>.";
+                    }
+                }
 
                 TempData[WellKnownTempData.SuccessMessage] = successMessage;
             }
             else
             {
                 TempData[WellKnownTempData.ErrorMessage] = errorMessage;
-            }
-        }
-
-        return RedirectToAction(nameof(WalletSettings), new { vm.StoreId, vm.CryptoCode });
-    }
-
-    [HttpPost("{storeId}/onchain/{cryptoCode}/settings/payment")]
-    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> UpdatePaymentSettings(WalletSettingsViewModel vm)
-    {
-        var checkResult = IsAvailable(vm.CryptoCode, out var store, out var network);
-        if (checkResult != null)
-        {
-            return checkResult;
-        }
-
-        var derivation = GetExistingDerivationStrategy(vm.CryptoCode, store);
-        if (derivation == null)
-        {
-            return NotFound();
-        }
-
-        bool needUpdate = false;
-        var blob = store.GetStoreBlob();
-        var payjoinChanged = blob.PayJoinEnabled != vm.PayJoinEnabled;
-        blob.MonitoringExpiration = TimeSpan.FromMinutes(vm.MonitoringExpiration);
-        blob.ShowRecommendedFee = vm.ShowRecommendedFee;
-        blob.RecommendedFeeBlockTarget = vm.RecommendedFeeBlockTarget;
-        blob.PayJoinEnabled = vm.PayJoinEnabled;
-
-        if (store.SetStoreBlob(blob))
-        {
-            needUpdate = true;
-        }
-
-        if (needUpdate)
-        {
-            await _storeRepo.UpdateStore(store);
-
-            TempData[WellKnownTempData.SuccessMessage] = "Payment settings successfully updated";
-
-            if (payjoinChanged && blob.PayJoinEnabled && network.SupportPayJoin)
-            {
-                var config = store.GetPaymentMethodConfig<DerivationSchemeSettings>(PaymentTypes.CHAIN.GetPaymentMethodId(network.CryptoCode), _handlers);
-                if (config?.IsHotWallet is not true)
-                {
-                    TempData.Remove(WellKnownTempData.SuccessMessage);
-                    TempData.SetStatusMessageModel(new StatusMessageModel
-                    {
-                        Severity = StatusMessageModel.StatusSeverity.Warning,
-                        Html = "The payment settings were updated successfully. However, PayJoin will not work, as this isn't a <a href='https://docs.btcpayserver.org/HotWallet/' class='alert-link' target='_blank'>hot wallet</a>."
-                    });
-                }
             }
         }
 
@@ -664,7 +608,7 @@ public partial class UIStoresController
         TempData.SetStatusMessageModel(new StatusMessageModel
         {
             Severity = StatusMessageModel.StatusSeverity.Error,
-            Message = "The seed was not found"
+            Message = StringLocalizer["The seed was not found"].Value
         });
 
         return RedirectToAction(nameof(WalletSettings));
@@ -684,9 +628,9 @@ public partial class UIStoresController
 
         return View("Confirm", new ConfirmModel
         {
-            Title = $"Replace {network.CryptoCode} wallet",
+            Title = StringLocalizer["Replace {0} wallet", network.CryptoCode],
             Description = WalletReplaceWarning(derivation.IsHotWallet),
-            Action = "Setup new wallet"
+            Action = StringLocalizer["Setup new wallet"]
         });
     }
 
@@ -723,9 +667,9 @@ public partial class UIStoresController
 
         return View("Confirm", new ConfirmModel
         {
-            Title = $"Remove {network.CryptoCode} wallet",
+            Title = StringLocalizer["Remove {0} wallet", network.CryptoCode],
             Description = WalletRemoveWarning(derivation.IsHotWallet, network.CryptoCode),
-            Action = "Remove"
+            Action = StringLocalizer["Remove"]
         });
     }
 

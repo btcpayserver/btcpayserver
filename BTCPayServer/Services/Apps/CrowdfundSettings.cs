@@ -1,4 +1,6 @@
 using System;
+using BTCPayServer.JsonConverters;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Apps
 {
@@ -27,7 +29,8 @@ namespace BTCPayServer.Services.Apps
         }
 
         public bool EnforceTargetAmount { get; set; }
-        public string MainImageUrl { get; set; }
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri MainImageUrl { get; set; }
         public string NotificationUrl { get; set; }
         public string Tagline { get; set; }
         public string PerksTemplate { get; set; }

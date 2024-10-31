@@ -437,7 +437,7 @@
             "PaymentMethodCriteriaData": {
                 "type": "object",
                 "properties": {
-                    "paymentMethod": {
+                    "paymentMethodId": {
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/PaymentMethodId"
@@ -508,6 +508,11 @@
                         "description": "The brand color of the store in HEX format",
                         "nullable": true,
                         "example": "#F7931A"
+                    },
+                    "applyBrandColorToBackend": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Apply the brand color to the store's backend as well"
                     },
                     "defaultCurrency": {
                         "type": "string",

@@ -5,7 +5,7 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSettingsViewModel
 @{
-	ViewData.SetActivePage(StoreNavPages.OnchainSettings, $"{Model.CryptoCode} Wallet Settings", $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+	ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["{0} Wallet Settings", Model.CryptoCode], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 	Csp.UnsafeEval();
 }
 
@@ -22,38 +22,39 @@
     <div class="col-xl-8 col-xxl-constrain">
         <div class="mb-5">
             <div class="mb-3 d-flex align-items-center">
-                <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? "Hot wallet" : "Watch-only wallet")</span>
+                <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? StringLocalizer["Hot wallet"] : StringLocalizer["Watch-only wallet"])</span>
                 <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
                         Actions
                     </button>
                     <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-                        <a class="dropdown-item" asp-controller="UIWallets" asp-action="WalletRescan" asp-route-walletId="@Model.WalletId" id="Rescan">Rescan wallet for missing transactions</a>
+                        <a class="dropdown-item" asp-controller="UIWallets" asp-action="WalletRescan" asp-route-walletId="@Model.WalletId" id="Rescan" text-translate="true">Rescan wallet for missing transactions</a>
                         <form method="post" asp-controller="UIWallets" asp-action="WalletActions" asp-route-walletId="@Model.WalletId">
-                            <button name="command" type="submit" class="dropdown-item" value="prune">Prune old transactions from history</button>
+                            <button name="command" type="submit" class="dropdown-item" value="prune" text-translate="true">Prune old transactions from history</button>
                             @if (User.IsInRole(Roles.ServerAdmin))
                             {
-                                <button name="command" type="submit" class="dropdown-item" value="clear">Clear all transactions from history</button>
+                                <button name="command" type="submit" class="dropdown-item" value="clear" text-translate="true">Clear all transactions from history</button>
                             }
                         </form>
                         @if (Model.UriScheme == "bitcoin")
                         {
-                            <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "UIWallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden>Register wallet for payment links</button>
+                            <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "UIWallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden text-translate="true">Register wallet for payment links</button>
                         }
                         <div class="dropdown-divider"></div>
                         @if (Model.NBXSeedAvailable)
                         {
-                            <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed">View seed</a>
+                            <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed" text-translate="true">View seed</a>
                         }
                         <a asp-controller="UIStores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
                            id="ChangeWalletLink"
                            class="dropdown-item"
                            data-bs-toggle="modal"
                            data-bs-target="#ConfirmModal"
-                           data-title="Replace @Model.CryptoCode wallet"
+                           data-title="@StringLocalizer["Replace {0} wallet", Model.CryptoCode]"
                            data-description="@ViewData["ReplaceDescription"]"
-                           data-confirm="Setup new wallet"
-                           data-confirm-input="REPLACE">
+                           data-confirm="@StringLocalizer["Setup new wallet"]"
+                           data-confirm-input="@StringLocalizer["REPLACE"]"
+                           text-translate="true">
                             Replace wallet
                         </a>
                         <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
@@ -62,10 +63,11 @@
                                     class="dropdown-item"
                                     data-bs-toggle="modal"
                                     data-bs-target="#ConfirmModal"
-                                    data-title="Remove @Model.CryptoCode wallet"
+                                    data-title="@StringLocalizer["Remove {0} wallet", Model.CryptoCode]"
                                     data-description="@ViewData["RemoveDescription"]"
-                                    data-confirm="Remove"
-                                    data-confirm-input="REMOVE">Remove wallet</button>
+                                    data-confirm="@StringLocalizer["Remove"]"
+                                    data-confirm-input="@StringLocalizer["REMOVE"]"
+                                    text-translate="true">Remove wallet</button>
                         </form>
                     </div>
                 </div>
@@ -77,8 +79,21 @@
                         <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
                         <label asp-for="Enabled" class="form-check-label"></label>
                     </div>
-                    <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
+                    <span asp-validation-for="Enabled" class="text-danger"></span>
                 </div>
+                @if (Model.CanUsePayJoin)
+                {
+                    <div class="form-group mt-n2">
+                        <div class="d-flex align-items-center">
+                            <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-3"/>
+                            <label asp-for="PayJoinEnabled" class="form-check-label me-1"></label>
+                            <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                                <vc:icon symbol="info"/>
+                            </a>
+                        </div>
+                        <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
+                    </div>
+                }
                 <div class="form-group">
                     <label asp-for="Label" class="form-label"></label>
                     <input asp-for="Label" class="form-control" style="max-width:24em;" />
@@ -107,12 +122,12 @@
                 }
                 @for (var i = 0; i < Model.AccountKeys.Count; i++)
                 {
-                    <h4 class="mt-5 mb-3">Account Key @i</h4>
+                    <h4 class="mt-5 mb-3">@StringLocalizer["Account Key"] @i</h4>
                     <div class="form-group">
                         <div class="d-flex align-items-center justify-content-between">
                             <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
-                            <button type="button" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" data-account-key="@i" title="">
-                                <vc:icon symbol="qr-code" /> Show export QR
+                            <button type="button" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" data-account-key="@i">
+                                <vc:icon symbol="qr-code" /> @StringLocalizer["Show export QR"]
                             </button>
                         </div>
                         <div class="input-group" data-clipboard="@Model.AccountKeys[i].AccountKey">
@@ -140,76 +155,18 @@
                         </div>
                     }
                 }
-                <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings">Save Wallet Settings</button>
+                <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings" text-translate="true">Save Wallet Settings</button>
             </form>
             
-            <h3 class="mt-5 mb-4">Payment</h3>
-            <form method="post" asp-action="UpdatePaymentSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
-                @if (Model.CanUsePayJoin)
-                {
-                    <div class="form-group">
-                        <div class="d-flex align-items-center">
-                            <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-3"/>
-                            <label asp-for="PayJoinEnabled" class="form-check-label me-1"></label>
-                            <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener" title="More information...">
-                                <vc:icon symbol="info"/>
-                            </a>
-                        </div>
-                        <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
-                    </div>
-                }
-                <div class="form-group">
-                    <label asp-for="MonitoringExpiration" class="form-label"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info"/>
-                    </a>
-                    <div class="input-group">
-                        <input inputmode="numeric" asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;"/>
-                        <span class="input-group-text">minutes</span>
-                    </div>
-                    <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="SpeedPolicy" class="form-label"></label>
-                    <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="More information...">
-                        <vc:icon symbol="info"/>
-                    </a>
-                    <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0'">
-                        <option value="0">Is unconfirmed</option>
-                        <option value="1">Has at least 1 confirmation</option>
-                        <option value="3">Has at least 2 confirmations</option>
-                        <option value="2">Has at least 6 confirmations</option>
-                    </select>
-                    <p class="info-note my-3 text-warning" id="unconfirmed-warning" role="alert" hidden="@(Model.SpeedPolicy != 0)">
-                        <vc:icon symbol="warning"/>
-                        Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.
-                    </p>
-                    <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
-                </div>
-                <div class="d-flex align-items-center my-3">
-                    <input asp-for="ShowRecommendedFee" type="checkbox" class="btcpay-toggle me-3" />
-                    <div>
-                        <label asp-for="ShowRecommendedFee" class="form-check-label"></label>
-                        <div class="form-text">Fee will be shown for BTC and LTC onchain payments only.</div>
-                    </div>
-                </div>
-                <div class="form-group my-3">
-                    <label asp-for="RecommendedFeeBlockTarget" class="form-label"></label>
-                    <input inputmode="numeric" asp-for="RecommendedFeeBlockTarget" class="form-control" min="1" style="width:8ch" />
-                    <span asp-validation-for="RecommendedFeeBlockTarget" class="text-danger"></span>
-                </div>
-                <button type="submit" class="btn btn-primary mt-2" id="SavePaymentSettings">Save Payment Settings</button>
-            </form>
-            
-            <h3 class="mt-5">Labels</h3>
+            <h3 class="mt-5" text-translate="true">Labels</h3>
             <p>
-                <a asp-controller="UIWallets" asp-action="WalletLabels" asp-route-walletId="@Model.WalletId">Manage labels</a>
+                <a asp-controller="UIWallets" asp-action="WalletLabels" asp-route-walletId="@Model.WalletId" text-translate="true">Manage labels</a>
             </p>
         </div>
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel($"{Model.CryptoCode} wallet", "Change", "Update"))" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["{0} wallet", Model.CryptoCode], StringLocalizer["Change"], "Update"))" />
 <partial name="ShowQR"/>
 
 @section PageFootContent {

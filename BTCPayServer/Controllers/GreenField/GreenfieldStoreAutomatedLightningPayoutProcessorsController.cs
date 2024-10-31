@@ -46,7 +46,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
-                        PayoutMethodIds = paymentMethodId is null ? null : new[] { paymentMethodId }
+                        PayoutMethods = paymentMethodId is null ? null : new[] { paymentMethodId }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -57,9 +57,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var blob = data.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob() ?? new LightningAutomatedPayoutBlob();
             return new LightningAutomatedPayoutSettings()
             {
-                PaymentMethod = data.PaymentMethod,
+                PayoutMethodId = data.PayoutMethodId,
                 IntervalSeconds = blob.Interval,
-                CancelPayoutAfterFailures = blob.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
             };
         }
@@ -68,7 +67,6 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return new LightningAutomatedPayoutBlob() { 
                 Interval = data.IntervalSeconds, 
-                CancelPayoutAfterFailures = data.CancelPayoutAfterFailures,
                 ProcessNewPayoutsInstantly = data.ProcessNewPayoutsInstantly
             };
         }
@@ -88,13 +86,13 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { LightningAutomatedPayoutSenderFactory.ProcessorName },
-                        PayoutMethodIds = new[] { pmi }
+                        PayoutMethods = new[] { pmi }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
             activeProcessor.HasTypedBlob<LightningAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
-            activeProcessor.PaymentMethod = pmi.ToString();
+            activeProcessor.PayoutMethodId = pmi.ToString();
             activeProcessor.Processor = LightningAutomatedPayoutSenderFactory.ProcessorName;
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()

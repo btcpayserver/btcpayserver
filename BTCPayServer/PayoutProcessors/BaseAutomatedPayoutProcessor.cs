@@ -22,6 +22,7 @@ namespace BTCPayServer.PayoutProcessors;
 public class AutomatedPayoutConstants
 {
     public const double MinIntervalMinutes = 1.0;
+    public const double DefaultIntervalMinutes = 60.0;
     public const double MaxIntervalMinutes = 24 * 60; //1 day
     public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
     {
@@ -54,7 +55,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         ApplicationDbContextFactory applicationDbContextFactory,
         PaymentMethodHandlerDictionary paymentHandlers,
         IPluginHookService pluginHookService,
-        EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PaymentMethod}"))
+        EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PayoutMethodId}"))
     {
         PaymentMethodId = paymentMethodId;
         _storeRepository = storeRepository;
@@ -114,8 +115,9 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 new PullPaymentHostedService.PayoutQuery()
                 {
                     States = new[] { PayoutState.AwaitingPayment },
-                    PayoutMethods = new[] { PayoutProcessorSettings.PaymentMethod },
-                    Stores = new[] {PayoutProcessorSettings.StoreId}
+                    PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
+					Processor = PayoutProcessorSettings.Processor,
+					Stores = new[] {PayoutProcessorSettings.StoreId}
                 }, context, CancellationToken);
 
             await _pluginHookService.ApplyAction("before-automated-payout-processing",

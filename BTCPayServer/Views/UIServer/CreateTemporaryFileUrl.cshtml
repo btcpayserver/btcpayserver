@@ -1,13 +1,13 @@
 @using BTCPayServer.Controllers
 @model BTCPayServer.Controllers.UIServerController.CreateTemporaryFileUrlViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, $"Create temporary file link");
+    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["Create temporary file link"]);
 }
 
 <form method="post">
     <div class="sticky-header">
         <h2 text-translate="true">@ViewData["Title"]</h2>
-		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Generate">Generate</button>
+		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Generate" text-translate="true">Generate</button>
     </div>
     <partial name="_StatusMessage" />
 

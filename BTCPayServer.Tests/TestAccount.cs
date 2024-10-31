@@ -146,10 +146,19 @@ namespace BTCPayServer.Tests
         public async Task ModifyPayment(Action<GeneralSettingsViewModel> modify)
         {
             var storeController = GetController<UIStoresController>();
-            var response = await storeController.GeneralSettings();
-            GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model;
+            var response = await storeController.GeneralSettings(StoreId);
+            GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model!;
             modify(settings);
             await storeController.GeneralSettings(settings);
+        }
+
+        public async Task ModifyGeneralSettings(Action<GeneralSettingsViewModel> modify)
+        {
+            var storeController = GetController<UIStoresController>();
+            var response = await storeController.GeneralSettings(StoreId);
+            GeneralSettingsViewModel settings = (GeneralSettingsViewModel)((ViewResult)response).Model!;
+            modify(settings);
+            storeController.GeneralSettings(settings).GetAwaiter().GetResult();
         }
 
         public async Task ModifyOnchainPaymentSettings(Action<WalletSettingsViewModel> modify)
@@ -158,7 +167,6 @@ namespace BTCPayServer.Tests
             var response = await storeController.WalletSettings(StoreId, "BTC");
             WalletSettingsViewModel walletSettings = (WalletSettingsViewModel)((ViewResult)response).Model;
             modify(walletSettings);
-            storeController.UpdatePaymentSettings(walletSettings).GetAwaiter().GetResult();
             storeController.UpdateWalletSettings(walletSettings).GetAwaiter().GetResult();
         }
 
@@ -527,7 +535,7 @@ retry:
         {
             var server = new FakeServer();
             await server.Start();
-            var client = await CreateClient(Policies.CanModifyStoreWebhooks);
+            var client = await CreateClient(Policies.CanModifyWebhooks);
             var wh = await client.CreateWebhook(StoreId, new CreateStoreWebhookRequest()
             {
                 AutomaticRedelivery = false,
@@ -601,9 +609,7 @@ retry:
             var methods = await client.GetInvoicePaymentMethods(StoreId, invoiceId);
             var method = methods.First(m => m.PaymentMethodId == $"{cryptoCode}-LN");
             var bolt11 = method.Destination;
-            TestLogs.LogInformation("PAYING");
             await parent.CustomerLightningD.Pay(bolt11);
-            TestLogs.LogInformation("PAID");
             await WaitInvoicePaid(invoiceId);
         }
 
@@ -669,7 +675,7 @@ retry:
             var db = (NpgsqlConnection)dbContext.Database.GetDbConnection();
             await db.OpenAsync();
             bool isHeader = true;
-            using (var writer = db.BeginTextImport("COPY \"Invoices\" (\"Id\",\"Blob\",\"Created\",\"CustomerEmail\",\"ExceptionStatus\",\"ItemCode\",\"OrderId\",\"Status\",\"StoreDataId\",\"Archived\",\"Blob2\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            using (var writer = db.BeginTextImport("COPY \"Invoices\" (\"Id\",\"Blob\",\"Created\",\"ExceptionStatus\",\"Status\",\"StoreDataId\",\"Archived\",\"Blob2\") FROM STDIN DELIMITER ',' CSV HEADER"))
             {
                 foreach (var invoice in oldInvoices)
                 {
@@ -698,11 +704,13 @@ retry:
                 await writer.FlushAsync();
             }
             isHeader = true;
-            using (var writer = db.BeginTextImport("COPY \"Payments\" (\"Id\",\"Blob\",\"InvoiceDataId\",\"Accounted\",\"Blob2\",\"Type\") FROM STDIN DELIMITER ',' CSV HEADER"))
+            using (var writer = db.BeginTextImport("COPY \"Payments\" (\"Id\",\"Blob\",\"InvoiceDataId\",\"Accounted\",\"Blob2\",\"PaymentMethodId\") FROM STDIN DELIMITER ',' CSV HEADER"))
             {
                 foreach (var invoice in oldPayments)
                 {
                     var localPayment = invoice.Replace("3sgUCCtUBg6S8LJkrbdfAWbsJMqByFLfvSqjG6xKBWEd", storeId);
+                    // Old data could have Type to null.
+                    localPayment += "UNKNOWN";
                     await writer.WriteLineAsync(localPayment);
                 }
                 await writer.FlushAsync();

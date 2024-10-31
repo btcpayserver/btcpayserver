@@ -12,7 +12,7 @@ namespace BTCPayServer.Abstractions.Contracts
 
     public interface ISyncStatus
     {
-        public string CryptoCode { get; set; }
+        public string PaymentMethodId { get; set; }
         public bool Available { get; }
     }
 }

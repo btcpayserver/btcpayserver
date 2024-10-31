@@ -56,7 +56,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
             public decimal? PendingProgressPercentage { get; set; }
             public DateTime LastUpdated { get; set; }
             public Dictionary<string, PaymentStat> PaymentStats { get; set; }
-            public Dictionary<string, PaymentStat> PendingPaymentStats { get; set; }
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }

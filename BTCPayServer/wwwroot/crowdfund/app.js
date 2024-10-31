@@ -111,29 +111,12 @@ app = new Vue({
             return this.srvModel.targetCurrency.toUpperCase();
         },
             paymentStats: function(){
-                var result= [];                
-            var combinedStats = {};
             var keys = Object.keys(this.srvModel.info.paymentStats);
-
+            var result = [];
             for (var i = 0; i < keys.length; i++) {
-                combinedStats[keys[i]] = this.srvModel.info.paymentStats[keys[i]];
-            }
-
-            keys = Object.keys(this.srvModel.info.pendingPaymentStats);
-
-            for (var i = 0; i < keys.length; i++) {
-                    if(combinedStats[keys[i]])
-                        combinedStats[keys[i]].percent += this.srvModel.info.pendingPaymentStats[keys[i]].percent;
-                    else
-                        combinedStats[keys[i]] = this.srvModel.info.pendingPaymentStats[keys[i]];
-            }
-
-            keys = Object.keys(combinedStats);
-
-            for (var i = 0; i < keys.length; i++) {
-                var value = combinedStats[keys[i]].percent.toFixed(2) + '%';
-                    var newItem = {key:keys[i], value: value, label: combinedStats[keys[i]].label};
-                newItem.lightning = combinedStats[keys[i]].isLightning;
+                var value = this.srvModel.info.paymentStats[keys[i]].percent.toFixed(2) + '%';
+                var newItem = { key: keys[i], value: value, label: this.srvModel.info.paymentStats[keys[i]].label};
+                newItem.lightning = this.srvModel.info.paymentStats[keys[i]].isLightning;
                 result.push(newItem);
             }
 

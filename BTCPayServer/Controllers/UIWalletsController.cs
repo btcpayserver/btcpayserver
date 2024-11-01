@@ -158,43 +158,45 @@ namespace BTCPayServer.Controllers
             });
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
-        
+
 
         [HttpGet("{walletId}/pending/{transactionId}")]
-        public async Task<IActionResult> ViewPendingTransaction([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+        public async Task<IActionResult> ViewPendingTransaction(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             string transactionId)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-           var pendingTransaction = await _pendingTransactionService.GetPendingTransaction(walletId.CryptoCode,walletId.StoreId, transactionId);
-           if(pendingTransaction is null)
-               return NotFound();
-           var blob = pendingTransaction.GetBlob();
-           
-           var currentPsbt = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
-           foreach (CollectedSignature collectedSignature in blob.CollectedSignatures)
-           {
-               var psbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
-               currentPsbt = currentPsbt.Combine(psbt);
-               
-           }
-           var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
+            var pendingTransaction =
+                await _pendingTransactionService.GetPendingTransaction(walletId.CryptoCode, walletId.StoreId,
+                    transactionId);
+            if (pendingTransaction is null)
+                return NotFound();
+            var blob = pendingTransaction.GetBlob();
 
-           var vm = new WalletPSBTViewModel()
-           {
-               CryptoCode = network.CryptoCode,
-               SigningContext = new SigningContextModel(currentPsbt)
-               {
-                   PendingTransactionId = transactionId,
-                   PSBT = currentPsbt.ToBase64(),
-               },
-           };
-           await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
-           await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
-           return View("WalletPSBTDecoded", vm);
-           
+            var currentPsbt = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
+            foreach (CollectedSignature collectedSignature in blob.CollectedSignatures)
+            {
+                var psbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
+                currentPsbt = currentPsbt.Combine(psbt);
+
+            }
+
+            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
+
+            var vm = new WalletPSBTViewModel()
+            {
+                CryptoCode = network.CryptoCode,
+                SigningContext = new SigningContextModel(currentPsbt)
+                {
+                    PendingTransactionId = transactionId, PSBT = currentPsbt.ToBase64(),
+                },
+            };
+            await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
+            await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
+            return View("WalletPSBTDecoded", vm);
         }
-        
-        
+
+
         [HttpPost]
         [Route("{walletId}")]
         public async Task<IActionResult> ModifyTransaction(

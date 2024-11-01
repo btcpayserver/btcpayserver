@@ -110,5 +110,10 @@ namespace BTCPayServer
         {
             return ColorTranslator.FromHtml(html);
         }
+
+        public string ToHtml(Color color)
+        {
+            return ColorTranslator.ToHtml(color);
+        }
     }
 }

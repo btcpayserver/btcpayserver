@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json.Linq;
+using Org.BouncyCastle.Asn1;
 
 namespace BTCPayServer.Controllers
 {
@@ -142,13 +143,18 @@ namespace BTCPayServer.Controllers
                                 var derivationSettings = GetDerivationSchemeSettings(walletId);
                                 derivationSettings.RebaseKeyPaths(psbt);
                                 
-                                // TODO: Check if this is multsig, if it is, we need to check the other fingerprints
-                                var signing = derivationSettings.GetSigningAccountKeySettings();
-                                if (signing.GetRootedKeyPath()?.MasterFingerprint != fingerprint)
+                                // if we only have one root fingerprint setup, then check if it matches device
+                                if (derivationSettings.AccountKeySettings.Count(a => a.RootFingerprint != null) <= 1)
                                 {
-                                    await websocketHelper.Send("{ \"error\": \"wrong-wallet\"}", cancellationToken);
-                                    continue;
+                                    var signing = derivationSettings.GetSigningAccountKeySettings();
+                                    if (signing.GetRootedKeyPath()?.MasterFingerprint != fingerprint)
+                                    {
+                                        await websocketHelper.Send("{ \"error\": \"wrong-wallet\"}", cancellationToken);
+                                        continue;
+                                    }
                                 }
+                                
+                                // otherwise, let the device check if it can sign anything
                                 var signableInputs = psbt.Inputs
                                                 .SelectMany(i => i.HDKeyPaths)
                                                 .Where(i => i.Value.MasterFingerprint == fingerprint)

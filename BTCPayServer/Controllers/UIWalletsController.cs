@@ -1033,7 +1033,10 @@ namespace BTCPayServer.Controllers
             {
                 var walletId = WalletId.Parse(this.RouteData.Values["walletId"].ToString());
                 var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
-                await _pendingTransactionService.CollectSignature(walletId.CryptoCode, psbt, false, CancellationToken.None);
+                var pendingTransaction = await _pendingTransactionService.CollectSignature(walletId.CryptoCode, psbt, false, CancellationToken.None);
+                
+                if (pendingTransaction != null)
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
             }
             
             var redirectVm = new PostRedirectViewModel

@@ -19,6 +19,7 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
+using BTCPayServer.Payments.LNURLPay;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Payouts;
@@ -36,12 +37,11 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
-using NBitpayClient;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
-using MarkPayoutRequest = BTCPayServer.HostedServices.MarkPayoutRequest;
 
 namespace BTCPayServer
 {
@@ -63,6 +63,7 @@ namespace BTCPayServer
         private readonly InvoiceActivator _invoiceActivator;
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly PayoutProcessorService _payoutProcessorService;
+        public IStringLocalizer StringLocalizer { get; }
 
         public UILNURLController(InvoiceRepository invoiceRepository,
             EventAggregator eventAggregator,
@@ -77,6 +78,7 @@ namespace BTCPayServer
             PullPaymentHostedService pullPaymentHostedService,
             BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings,
             IPluginHookService pluginHookService,
+            IStringLocalizer stringLocalizer,
             InvoiceActivator invoiceActivator)
         {
             _invoiceRepository = invoiceRepository;
@@ -93,17 +95,18 @@ namespace BTCPayServer
             _btcPayNetworkJsonSerializerSettings = btcPayNetworkJsonSerializerSettings;
             _pluginHookService = pluginHookService;
             _invoiceActivator = invoiceActivator;
+            StringLocalizer = stringLocalizer;
         }
 
         [EnableCors(CorsPolicies.All)]
         [HttpGet("withdraw/pp/{pullPaymentId}")]
         public Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, [FromQuery] string pr, CancellationToken cancellationToken)
         {
-            return GetLNURLForPullPayment(cryptoCode, pullPaymentId, pr, pullPaymentId, cancellationToken);
+            return GetLNURLForPullPayment(cryptoCode, pullPaymentId, pr, pullPaymentId, false, cancellationToken);
         }
 
         [NonAction]
-        internal async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, string k1, CancellationToken cancellationToken)
+        internal async Task<IActionResult> GetLNURLForPullPayment(string cryptoCode, string pullPaymentId, string pr, string k1, bool nonInteractiveOnly, CancellationToken cancellationToken)
         {
             var network = GetNetwork(cryptoCode);
             if (network is null || !network.SupportLightning)
@@ -172,15 +175,25 @@ namespace BTCPayServer
             });
             var processorBlob = processors.FirstOrDefault()?.HasTypedBlob<LightningAutomatedPayoutBlob>().GetBlob();
 			var instantProcessing = processorBlob?.ProcessNewPayoutsInstantly is true;
+            if (nonInteractiveOnly && !instantProcessing)
+            {
+                return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment cancelled: The payer must activate the lightning automated payment process and must check \"Process approved payouts instantly\"." });
+            }
+
 			var interval = processorBlob?.Interval.TotalMinutes;
 			var autoApprove = pp.GetBlob().AutoApproveClaims;
+            if (nonInteractiveOnly && !autoApprove)
+            {
+                return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment cancelled: The payer must activate \"Automatically approve claims\" in the settings of the pull payment." });
+            }
+
 			var claimResponse = await _pullPaymentHostedService.Claim(new ClaimRequest
             {
                 Destination = new BoltInvoiceClaimDestination(pr, result),
                 PayoutMethodId = pmi,
                 PullPaymentId = pullPaymentId,
                 StoreId = pp.StoreId,
-                Value = result.MinimumAmount.ToDecimal(unit),
+                ClaimedAmount = result.MinimumAmount.ToDecimal(unit),
             });
 
             if (claimResponse.Result != ClaimRequest.ClaimResult.Ok)
@@ -302,7 +315,7 @@ namespace BTCPayServer
             {
                 var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out _);
                 if (pmi is null)
-                    return NotFound("LNUrl or LN is disabled");
+                    return NotFound(StringLocalizer["LNURL or LN is disabled"]);
                 var escapedItemId = Extensions.UnescapeBackSlashUriString(itemCode);
                 item = items.FirstOrDefault(item1 =>
                     item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
@@ -400,7 +413,7 @@ namespace BTCPayServer
                 return NotFound("Unknown username");
             
             LNURLPayRequest lnurlRequest;
-            
+
             // Check core and fall back to lookup Lightning Address via plugins
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);
             if (lightningAddressSettings is null)
@@ -423,12 +436,13 @@ namespace BTCPayServer
                     return NotFound("LNURL not available for store");
 
                 var blob = lightningAddressSettings.GetBlob();
-                lnurlRequest = new LNURLPayRequest
+                lnurlRequest = new StoreLNURLPayRequest
                 {
                     Tag = "payRequest",
                     MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
                     MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
-                    CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0
+                    CommentAllowed = lnUrlMethod.LUD12Enabled ? 2000 : 0,
+                    Store = store
                 };
 
                 var lnUrlMetadata = new Dictionary<string, string>
@@ -457,11 +471,11 @@ namespace BTCPayServer
         {
             var lightningAddressSettings = await _lightningAddressService.ResolveByAddress(username);
             if (lightningAddressSettings is null || username is null)
-                return NotFound("Unknown username");
+                return NotFound(StringLocalizer["Unknown username"]);
             var blob = lightningAddressSettings.GetBlob();
             var store = await _storeRepository.FindStore(lightningAddressSettings.StoreDataId);
             if (store is null)
-                return NotFound("Unknown username");
+                return NotFound(StringLocalizer["Unknown username"]);
             var result = await GetLNURLRequest(
                cryptoCode,
                store,
@@ -471,10 +485,11 @@ namespace BTCPayServer
                    Currency = blob?.CurrencyCode,
                    Metadata = blob?.InvoiceMetadata
                },
-               new LNURLPayRequest
+               new StoreLNURLPayRequest
                {
                    MinSendable = blob?.Min is decimal min ? new LightMoney(min, LightMoneyUnit.Satoshi) : null,
                    MaxSendable = blob?.Max is decimal max ? new LightMoney(max, LightMoneyUnit.Satoshi) : null,
+                   Store = store,
                },
                new Dictionary<string, string>
                {
@@ -503,7 +518,7 @@ namespace BTCPayServer
 
 			var blob = store.GetStoreBlob();
             if (!blob.AnyoneCanInvoice)
-                return NotFound("'Anyone can invoice' is turned off");
+                return NotFound(StringLocalizer["'Anyone can invoice' is turned off"]);
             var metadata = new InvoiceMetadata();
             if (!string.IsNullOrEmpty(orderId))
             {
@@ -533,7 +548,7 @@ namespace BTCPayServer
         {
             var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out _);
             if (pmi is null)
-                return NotFound("LNUrl or LN is disabled");
+                return NotFound(StringLocalizer["LNURL or LN is disabled"]);
 
             InvoiceEntity i;
             try
@@ -565,7 +580,7 @@ namespace BTCPayServer
             var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out var lnUrlMethod);
             if (pmi is null)
                 return null;
-            lnurlRequest ??= new LNURLPayRequest();
+            lnurlRequest ??= new StoreLNURLPayRequest{Store = store};
             lnUrlMetadata ??= new Dictionary<string, string>();
 
             var pm = i.GetPaymentPrompt(pmi);
@@ -721,7 +736,7 @@ namespace BTCPayServer
                         new LNURLPayRequest.LNURLPayRequestCallbackResponse.LNURLPayRequestSuccessActionUrl
                         {
                             Tag = "url",
-                            Description = "Thank you for your purchase. Here is your receipt",
+                            Description = StringLocalizer["Thank you for your purchase. Here is your receipt"],
                             Url = _linkGenerator.GetUriByAction(
                                 nameof(UIInvoiceController.InvoiceReceipt),
                                 "UIInvoice",
@@ -833,7 +848,7 @@ namespace BTCPayServer
             {
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
-                    Message = "LNURL is required for lightning addresses but has not yet been enabled.",
+                    Message = StringLocalizer["LNURL is required for lightning addresses but has not yet been enabled."].Value,
                     Severity = StatusMessageModel.StatusSeverity.Error
                 });
                 return RedirectToAction(nameof(UIStoresController.GeneralSettings), "UIStores", new { storeId });
@@ -873,7 +888,7 @@ namespace BTCPayServer
                 if (!string.IsNullOrEmpty(vm.Add.CurrencyCode) &&
                     currencyNameTable.GetCurrencyData(vm.Add.CurrencyCode, false) is null)
                 {
-                    vm.AddModelError(addressVm => addressVm.Add.CurrencyCode, "Currency is invalid", this);
+                    vm.AddModelError(addressVm => addressVm.Add.CurrencyCode, StringLocalizer["Currency is invalid"], this);
                 }
 
                 JObject metadata = null;
@@ -885,7 +900,7 @@ namespace BTCPayServer
                     }
                     catch (Exception)
                     {
-                        vm.AddModelError(addressVm => addressVm.Add.InvoiceMetadata, "Metadata must be a valid json object", this);
+                        vm.AddModelError(addressVm => addressVm.Add.InvoiceMetadata, StringLocalizer["Metadata must be a valid JSON object"], this);
                     }
                 }
                 if (!ModelState.IsValid)
@@ -909,12 +924,12 @@ namespace BTCPayServer
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Message = "Lightning address added successfully."
+                        Message = StringLocalizer["Lightning address added successfully."].Value
                     });
                 }
                 else
                 {
-                    vm.AddModelError(addressVm => addressVm.Add.Username, "Username is already taken", this);
+                    vm.AddModelError(addressVm => addressVm.Add.Username, StringLocalizer["Username is already taken"], this);
 
                     if (!ModelState.IsValid)
                     {
@@ -932,13 +947,13 @@ namespace BTCPayServer
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Message = $"Lightning address {index} removed successfully."
+                        Message = StringLocalizer["Lightning address {0} removed successfully.", index].Value
                     });
                     return RedirectToAction("EditLightningAddress");
                 }
                 else
                 {
-                    vm.AddModelError(addressVm => addressVm.Add.Username, "Username could not be removed", this);
+                    vm.AddModelError(addressVm => addressVm.Add.Username, StringLocalizer["Username could not be removed"], this);
 
                     if (!ModelState.IsValid)
                     {

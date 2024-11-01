@@ -13,6 +13,7 @@ using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 using NicolasDorier.RateLimits;
 
 namespace BTCPayServer.Controllers
@@ -21,16 +22,19 @@ namespace BTCPayServer.Controllers
     {
         public UIPublicController(UIInvoiceController invoiceController,
             StoreRepository storeRepository,
+            IStringLocalizer stringLocalizer,
             LinkGenerator linkGenerator)
         {
             _InvoiceController = invoiceController;
             _StoreRepository = storeRepository;
             _linkGenerator = linkGenerator;
+            StringLocalizer = stringLocalizer;
         }
 
         private readonly UIInvoiceController _InvoiceController;
         private readonly StoreRepository _StoreRepository;
         private readonly LinkGenerator _linkGenerator;
+        public IStringLocalizer StringLocalizer { get; }
 
         [HttpGet]
         [IgnoreAntiforgeryToken]
@@ -50,16 +54,16 @@ namespace BTCPayServer.Controllers
         {
             var store = await _StoreRepository.FindStore(model.StoreId);
             if (store == null)
-                ModelState.AddModelError("Store", "Invalid store");
+                ModelState.AddModelError("Store", StringLocalizer["Invalid store"]);
             else
             {
                 var storeBlob = store.GetStoreBlob();
                 if (!storeBlob.AnyoneCanInvoice)
-                    ModelState.AddModelError("Store", "Store has not enabled Pay Button");
+                    ModelState.AddModelError("Store", StringLocalizer["Store has not enabled Pay Button"]);
             }
 
             if (model == null || (model.Price is decimal v ? v <= 0 : false))
-                ModelState.AddModelError("Price", "Price must be greater than 0");
+                ModelState.AddModelError("Price", StringLocalizer["Price must be greater than 0"]);
 
             if (!ModelState.IsValid)
                 return View();

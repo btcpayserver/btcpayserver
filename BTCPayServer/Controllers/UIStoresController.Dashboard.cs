@@ -146,6 +146,7 @@ public partial class UIStoresController
                     Crypto = network.CryptoCode,
                     PaymentMethodId = handler.PaymentMethodId,
                     WalletSupported = network.WalletSupported,
+                    ReadonlyWallet = network.ReadonlyWallet,
                     Value = value,
                     WalletId = new WalletId(store.Id, network.CryptoCode),
                     Enabled = !excludeFilters.Match(handler.PaymentMethodId) && strategy != null,

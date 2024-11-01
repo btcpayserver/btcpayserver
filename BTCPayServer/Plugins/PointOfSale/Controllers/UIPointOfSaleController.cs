@@ -31,6 +31,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Localization;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitpayClient;
@@ -52,6 +53,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             InvoiceRepository invoiceRepository,
             UIInvoiceController invoiceController,
             FormDataService formDataService,
+            IStringLocalizer stringLocalizer,
             DisplayFormatter displayFormatter)
         {
             _currencies = currencies;
@@ -61,6 +63,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _displayFormatter = displayFormatter;
+            StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
         }
 
@@ -73,6 +76,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
 
         public FormDataService FormDataService { get; }
+        public IStringLocalizer StringLocalizer { get; }
 
         [HttpGet("/")]
         [HttpGet("/apps/{appId}/pos")]
@@ -699,9 +703,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             await _appService.UpdateOrCreateApp(app);
             if (wasHtmlModified)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly.";
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly."].Value;
             } else {
-                TempData[WellKnownTempData.SuccessMessage] = "App updated";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["App updated"].Value;
             }
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }

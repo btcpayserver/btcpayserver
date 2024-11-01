@@ -35,7 +35,8 @@ public partial class UIStoresController
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Warning,
-                    Html = $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
+                    Html = "You need to configure email settings before this feature works." +
+                           $" <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
                 });
             }
         }
@@ -76,11 +77,11 @@ public partial class UIStoresController
                     .Any(s => !MailboxAddressValidator.TryParse(s, out _)))
             {
                 ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
-                    "Invalid mailbox address provided. Valid formats are: 'test@example.com' or 'Firstname Lastname <test@example.com>'");
+                    StringLocalizer["Invalid mailbox address provided. Valid formats are: '{0}' or '{1}'", "test@example.com", "Firstname Lastname <test@example.com>"]);
             }
             else if (!rule.CustomerEmail && string.IsNullOrEmpty(rule.To))
                 ModelState.AddModelError($"{nameof(vm.Rules)}[{i}].{nameof(rule.To)}",
-                    "Either recipient or \"Send the email to the buyer\" is required");
+                    StringLocalizer["Either recipient or \"Send the email to the buyer\" is required"]);
         }
 
         if (!ModelState.IsValid)
@@ -101,7 +102,7 @@ public partial class UIStoresController
         if (store.SetStoreBlob(blob))
         {
             await _storeRepo.UpdateStore(store);
-            message += "Store email rules saved. ";
+            message += StringLocalizer["Store email rules saved."] + " ";
         }
 
         if (command.StartsWith("test", StringComparison.InvariantCultureIgnoreCase))
@@ -122,16 +123,16 @@ public partial class UIStoresController
                         .ToArray();
                         
                     emailSender.SendEmail(recipients.ToArray(), null, null, $"[TEST] {rule.Subject}", rule.Body);
-                    message += "Test email sent — please verify you received it.";
+                    message += StringLocalizer["Test email sent — please verify you received it."];
                 }
                 else
                 {
-                    message += "Complete the email setup to send test emails.";
+                    message += StringLocalizer["Complete the email setup to send test emails."];
                 }
             }
             catch (Exception ex)
             {
-                TempData[WellKnownTempData.ErrorMessage] = message + "Error sending test email: " + ex.Message;
+                TempData[WellKnownTempData.ErrorMessage] = message + StringLocalizer["Error sending test email: {0}", ex.Message].Value;
                 return RedirectToAction("StoreEmails", new { storeId });
             }
         }
@@ -222,14 +223,14 @@ public partial class UIStoresController
                     return View(model);
                 var settings = useCustomSMTP ? model.Settings : model.FallbackSettings;
                 using var client = await settings.CreateSmtpClient();
-                var message = settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{store.StoreName}: Email test", "You received it, the BTCPay Server SMTP settings work.", false);
+                var message = settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{store.StoreName}: Email test", StringLocalizer["You received it, the BTCPay Server SMTP settings work."], false);
                 await client.SendAsync(message);
                 await client.DisconnectAsync(true);
-                TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email sent to {0}. Please verify you received it.", model.TestEmail].Value;
             }
             catch (Exception ex)
             {
-                TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Error: {0}", ex.Message].Value;
             }
             return View(model);
         }
@@ -239,13 +240,13 @@ public partial class UIStoresController
             storeBlob.EmailSettings.Password = null;
             store.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(store);
-            TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
         }
         if (useCustomSMTP)
         {
             if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
-                ModelState.AddModelError("Settings.From", "Invalid email");
+                ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
             }
             if (!ModelState.IsValid)
                 return View(model);
@@ -257,7 +258,7 @@ public partial class UIStoresController
             storeBlob.EmailSettings = model.Settings;
             store.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(store);
-            TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings modified"].Value;
         }
         return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
     }

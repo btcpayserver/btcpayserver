@@ -43,11 +43,11 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button" title="LNURL-Withdraw">
+                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button" title="@StringLocalizer["LNURL-Withdraw"]">
                                             <vc:icon symbol="qr-code" />
                                         </button>
                                     }
-                                    <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
+                                    <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="@StringLocalizer["Enter destination to claim funds"]" required style="font-size:.9rem;height:42px;">
                                     @if (Model.BitcoinOnly)
 									{
 										<span class="input-group-text">BTC</span>
@@ -61,19 +61,19 @@
                                     {
                                         <select class="form-select w-auto" asp-for="SelectedPayoutMethod" asp-items="Model.PayoutMethodIds.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
                                     }
-                                    <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan destination with camera" id="scandestination-button">
+                                    <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan destination with camera"]" id="scandestination-button">
                                         <vc:icon symbol="scan-qr"/>
                                     </button>
                                 </div>
                             </div>
                             <div class="col-12 mb-3 col-sm-6 mb-sm-0 col-lg-3">
                                 <div class="input-group">
-                                    <input type="number" inputmode="decimal" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
+                                    <input type="number" inputmode="decimal" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="@StringLocalizer["Amount"]" required>
                                     <span class="input-group-text px-3">@Model.Currency.ToUpper()</span>
                                 </div>
                             </div>
                             <div class="col-12 col-sm-6 col-lg-3">
-                                <button class="btn btn-lg btn-primary w-100 text-nowrap" type="submit">Claim Funds</button>
+                                <button class="btn btn-lg btn-primary w-100 text-nowrap" type="submit" text-translate="true">Claim Funds</button>
                             </div>
                         </div>
                     </form>
@@ -96,25 +96,26 @@
                                 <h2 class="h4 mb-3">@Model.Title</h2>
                             }
                             <div class="d-flex align-items-center gap-2">
-                                <span class="text-muted text-nowrap">Start Date</span>
-                                <span class="text-nowrap">@Model.StartDate.ToString("g")</span>
+                                <span class="text-muted text-nowrap" text-translate="true">Start Date</span>
+                                <span class="text-nowrap">@Model.StartDate.ToBrowserDate()</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
-                                <span class="text-muted text-nowrap">Last Updated</span>
-                                <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
+                                <span class="text-muted text-nowrap" text-translate="true">Last Updated</span>
+                                <span class="text-nowrap">@Model.LastRefreshed.ToBrowserDate()</span>
                             </div>
                             <div class="d-flex align-items-center only-for-js gap-3 my-3">
-                                <button type="button" class="btn btn-link fw-semibold d-print-none p-0" id="copyLink">
+                                <button type="button" class="btn btn-link fw-semibold d-print-none p-0" id="copyLink" text-translate="true">
                                     Copy Link
                                 </button>
                                 <button type="button" class="btn btn-link fw-semibold d-print-none p-0" page-qr>
-                                    <vc:icon symbol="qr-code" /> Show QR
+                                    <vc:icon symbol="qr-code" />
+                                    <span text-translate="true">Show QR</span>
                                 </button>
                             </div>
                             @if (!string.IsNullOrEmpty(Model.EndsIn))
                             {
                                 <p>
-                                    <span class="text-muted text-nowrap">Ends in</span>
+                                    <span class="text-muted text-nowrap" text-translate="true">Ends in</span>
                                     &nbsp;
                                     <span class="text-nowrap">@Model.EndsIn</span>
                                 </p>
@@ -127,22 +128,22 @@
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-                            <h2 class="h4 mb-3">Payment Details</h2>
+                            <h2 class="h4 mb-3" text-translate="true">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
                                     <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
-                                    <dd class="order-1 order-sm-2 mb-1">Available claim</dd>
+                                    <dd class="order-1 order-sm-2 mb-1" text-translate="true">Available claim</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                     <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected / Model.Amount) * 100)%"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
                                     <dt class="h4 fw-semibold text-nowrap order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountCollected, Model.Currency)</dt>
-                                    <dd class="order-1 order-sm-2 mb-1">Already claimed</dd>
+                                    <dd class="order-1 order-sm-2 mb-1" text-translate="true">Already claimed</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
                                     <dt class="h4 text-sm-end fw-semibold text-nowrap order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.Amount, Model.Currency)</dt>
-                                    <dd class="text-sm-end order-1 order-sm-2 mb-1">Claim limit</dd>
+                                    <dd class="text-sm-end order-1 order-sm-2 mb-1" text-translate="true">Claim limit</dd>
                                 </div>
                             </dl>
                         </div>
@@ -151,17 +152,17 @@
                 <div class="row">
                     <div class="col">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-                            <h2 class="h4 mb-0">Claims</h2>
+                            <h2 class="h4 mb-0" text-translate="true">Claims</h2>
                             @if (Model.Payouts.Any())
                             {
                                 <div class="table-responsive">
                                     <table class="table my-0">
                                         <thead>
                                             <tr class="table-borderless">
-                                                <th class="fw-normal text-secondary" scope="col">Destination</th>
-                                                <th class="fw-normal text-secondary" scope="col">Method</th>
-                                                <th class="fw-normal text-secondary text-end text-nowrap">Amount requested</th>
-                                                <th class="fw-normal text-secondary text-end">Status</th>
+                                                <th class="fw-normal text-secondary" scope="col" text-translate="true">Destination</th>
+                                                <th class="fw-normal text-secondary" scope="col" text-translate="true">Method</th>
+                                                <th class="fw-normal text-secondary text-end text-nowrap" text-translate="true">Amount requested</th>
+                                                <th class="fw-normal text-secondary text-end" text-translate="true">Status</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -191,7 +192,7 @@
                             }
                             else
                             {
-                                <p class="text-muted mt-3 mb-0">No claim made yet.</p>
+                                <p class="text-muted mt-3 mb-0" text-translate="true">No claim made yet.</p>
                             }
                         </div>
                     </div>
@@ -200,24 +201,24 @@
         </main>
         <footer class="store-footer">
             <p permission="@Policies.CanViewStoreSettings">
-                <a asp-action="EditPullPayment" asp-controller="UIPullPayment" asp-route-storeId="@Model.StoreId" asp-route-pullPaymentId="@Model.Id">
+                <a asp-action="EditPullPayment" asp-controller="UIPullPayment" asp-route-storeId="@Model.StoreId" asp-route-pullPaymentId="@Model.Id" text-translate="true">
                     Edit pull payment
                 </a>
             </p>
 			@if (Model.LnurlEndpoint is not null)
 			{
 				<p id="BoltcardActions">
-					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard">
+					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard" text-translate="true">
 						Setup Boltcard
 					</a>
 					<span>&nbsp;|&nbsp;</span>
-					<a id="ResetBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard">
+					<a id="ResetBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard" text-translate="true">
 						Reset Boltcard
 					</a>
 				</p>
 			}
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                Powered by <partial name="_StoreFooterLogo" />
+                <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>
         </footer>
     </div>

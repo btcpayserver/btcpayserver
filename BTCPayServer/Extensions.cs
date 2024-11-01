@@ -293,17 +293,18 @@ namespace BTCPayServer
         }
 
 #nullable enable
-        public static IServiceCollection AddDefaultTransactions(this IServiceCollection services, params string[] keyValues)
+        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params string[] keyValues)
         {
-            return services.AddDefaultTransactions(keyValues.Select(k => KeyValuePair.Create<string, string?>(k, string.Empty)).ToArray());
+            return services.AddDefaultTranslations(keyValues.Select(k => KeyValuePair.Create<string, string?>(k, string.Empty)).ToArray());
         }
         public static IServiceCollection AddDefaultPrettyName(this IServiceCollection services, PaymentMethodId paymentMethodId, string defaultPrettyName)
         {
-            return services.AddDefaultTransactions(KeyValuePair.Create<string, string?>(PrettyNameProvider.GetTranslationKey(paymentMethodId), defaultPrettyName));
+			services.AddSingleton<PrettyNameProvider.UntranslatedPrettyName>(new PrettyNameProvider.UntranslatedPrettyName(paymentMethodId, defaultPrettyName));
+			return services.AddDefaultTranslations(KeyValuePair.Create<string, string?>(PrettyNameProvider.GetTranslationKey(paymentMethodId), defaultPrettyName));
         }
-        public static IServiceCollection AddDefaultTransactions(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
+        public static IServiceCollection AddDefaultTranslations(this IServiceCollection services, params KeyValuePair<string, string?>[] keyValues)
         {
-            services.AddSingleton<IDefaultTransactionProvider>(new InMemoryDefaultTransactionProvider(keyValues));
+            services.AddSingleton<IDefaultTranslationProvider>(new InMemoryDefaultTranslationProvider(keyValues));
             return services;
         }
 #nullable restore

@@ -58,10 +58,10 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = "API Key removed"
+                Message = StringLocalizer["API Key removed"].Value
             });
             return RedirectToAction("APIKeys");
         }
@@ -71,10 +71,10 @@ namespace BTCPayServer.Controllers
         {
             if (!_btcPayServerEnvironment.IsSecure(HttpContext))
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Cannot generate api keys while not on https or tor"
+                    Message = StringLocalizer["Cannot generate API keys while not using HTTPS or Tor"].Value
                 });
                 return RedirectToAction("APIKeys");
             }
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Cannot generate API keys while not on https or using Tor"
+                    Message = StringLocalizer["Cannot generate API keys while not using HTTPS or Tor"].Value
                 });
                 return RedirectToAction("APIKeys");
             }
@@ -199,7 +199,7 @@ namespace BTCPayServer.Controllers
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
+                        Html = StringLocalizer["API key generated!"].Value + $" <code class='alert-link'>{key.Id}</code>"
                     });
 
                     return RedirectToAction("APIKeys", new { key = key.Id });
@@ -242,7 +242,7 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
+                Html = StringLocalizer["API key generated!"].Value + $" <code class='alert-link'>{key.Id}</code>"
             });
             return RedirectToAction("APIKeys");
         }

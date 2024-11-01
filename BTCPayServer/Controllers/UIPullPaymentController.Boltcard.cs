@@ -1,18 +1,15 @@
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Data;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.NTag424;
-using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NBitcoin.DataEncoders;
 using System;
 using System.Net.WebSockets;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Html;
 using static BTCPayServer.BoltcardDataExtensions;
 
 namespace BTCPayServer.Controllers
@@ -23,7 +20,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("pull-payments/{pullPaymentId}/boltcard/{command}")]
         public IActionResult SetupBoltcard(string pullPaymentId, string command)
         {
-            return View(nameof(SetupBoltcard), new SetupBoltcardViewModel()
+            return View(nameof(SetupBoltcard), new SetupBoltcardViewModel
             {
                 ReturnUrl = Url.Action(nameof(ViewPullPayment), "UIPullPayment", new { pullPaymentId }),
                 WebsocketPath = Url.Action(nameof(VaultNFCBridgeConnection), "UIPullPayment", new { pullPaymentId }),
@@ -34,7 +31,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("pull-payments/{pullPaymentId}/boltcard/{command}")]
         public IActionResult SetupBoltcardPost(string pullPaymentId, string command)
         {
-            TempData[WellKnownTempData.SuccessMessage] = "Boltcard is configured";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Boltcard is configured"].Value;
             return RedirectToAction(nameof(ViewPullPayment), new { pullPaymentId });
         }
 
@@ -75,27 +72,27 @@ next:
                         var permission = await vaultClient.AskPermission(VaultServices.NFC, cts.Token);
                         if (permission is null)
                         {
-                            await vaultClient.Show(VaultMessageType.Error, "BTCPay Server Vault does not seem to be running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>.", cts.Token);
+                            await vaultClient.Show(VaultMessageType.Error, StringLocalizer["BTCPay Server Vault does not seem to be running, you can download it on {0}.", new HtmlString("<a href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest/\" class=\"alert-link\" target=\"_blank\" rel=\"noreferrer noopener\">GitHub</a>")], cts.Token);
                             goto next;
                         }
-                        await vaultClient.Show(VaultMessageType.Ok, "BTCPayServer successfully connected to the vault.", cts.Token);
+                        await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["BTCPayServer successfully connected to the vault."], cts.Token);
                         if (permission is false)
                         {
-                            await vaultClient.Show(VaultMessageType.Error, "The user declined access to the vault.", cts.Token);
+                            await vaultClient.Show(VaultMessageType.Error, StringLocalizer["The user declined access to the vault."], cts.Token);
                             goto next;
                         }
-                        await vaultClient.Show(VaultMessageType.Ok, "Access to vault granted by owner.", cts.Token);
+                        await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["Access to vault granted by owner."], cts.Token);
 
-                        await vaultClient.Show(VaultMessageType.Processing, "Waiting for NFC to be presented...", cts.Token);
+                        await vaultClient.Show(VaultMessageType.Processing, StringLocalizer["Waiting for NFC to be presented..."], cts.Token);
                         await transport.WaitForCard(cts.Token);
-                        await vaultClient.Show(VaultMessageType.Ok, "NFC detected.", cts.Token);
+                        await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["NFC detected."], cts.Token);
 
                         var issuerKey = await _settingsRepository.GetIssuerKey(_env);
                         CardOrigin cardOrigin = await GetCardOrigin(pullPaymentId, ntag, issuerKey, cts.Token);
 
                         if (cardOrigin is CardOrigin.OtherIssuer)
                         {
-                            await vaultClient.Show(VaultMessageType.Error, "This card is already configured for another issuer", cts.Token);
+                            await vaultClient.Show(VaultMessageType.Error, StringLocalizer["This card is already configured for another issuer"], cts.Token);
                             goto next;
                         }
 
@@ -103,7 +100,7 @@ next:
                         switch (command)
                         {
                             case "configure-boltcard":
-                                await vaultClient.Show(VaultMessageType.Processing, "Configuring Boltcard...", cts.Token);
+                                await vaultClient.Show(VaultMessageType.Processing, StringLocalizer["Configuring Boltcard..."], cts.Token);
                                 if (cardOrigin is CardOrigin.Blank || cardOrigin is CardOrigin.ThisIssuerReset)
                                 {
                                     await ntag.AuthenticateEV2First(0, AESKey.Default, cts.Token);
@@ -119,35 +116,35 @@ next:
                                         await _dbContextFactory.SetBoltcardResetState(issuerKey, uid);
                                         throw;
                                     }
-                                    await vaultClient.Show(VaultMessageType.Ok, "The card is now configured", cts.Token);
+                                    await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["The card is now configured"], cts.Token);
                                 }
                                 else if (cardOrigin is CardOrigin.ThisIssuer)
                                 {
-                                    await vaultClient.Show(VaultMessageType.Ok, "This card is already properly configured", cts.Token);
+                                    await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["This card is already properly configured"], cts.Token);
                                 }
                                 success = true;
                                 break;
                             case "reset-boltcard":
-                                await vaultClient.Show(VaultMessageType.Processing, "Resetting Boltcard...", cts.Token);
+                                await vaultClient.Show(VaultMessageType.Processing, StringLocalizer["Resetting Boltcard..."], cts.Token);
                                 if (cardOrigin is CardOrigin.Blank)
                                 {
-                                    await vaultClient.Show(VaultMessageType.Ok, "This card is already in a factory state", cts.Token);
+                                    await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["This card is already in a factory state"], cts.Token);
                                 }
                                 else if (cardOrigin is CardOrigin.ThisIssuer thisIssuer)
                                 {
                                     var cardKey = issuerKey.CreatePullPaymentCardKey(thisIssuer.Registration.UId, thisIssuer.Registration.Version, pullPaymentId);
                                     await ntag.ResetCard(issuerKey, cardKey);
                                     await _dbContextFactory.SetBoltcardResetState(issuerKey, thisIssuer.Registration.UId);
-                                    await vaultClient.Show(VaultMessageType.Ok, "Card reset succeed", cts.Token);
+                                    await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["Card reset succeed"], cts.Token);
                                 }
                                 success = true;
                                 break;
                         }
                         if (success)
                         {
-                            await vaultClient.Show(VaultMessageType.Processing, "Please remove the NFC from the card reader", cts.Token);
+                            await vaultClient.Show(VaultMessageType.Processing, StringLocalizer["Please remove the NFC from the card reader"], cts.Token);
                             await transport.WaitForRemoved(cts.Token);
-                            await vaultClient.Show(VaultMessageType.Ok, "Thank you!", cts.Token);
+                            await vaultClient.Show(VaultMessageType.Ok, StringLocalizer["Thank you!"], cts.Token);
                             await vaultClient.SendSimpleMessage("done", cts.Token);
                         }
                     }
@@ -159,7 +156,7 @@ next:
                     {
                         try
                         {
-                            await vaultClient.Show(VaultMessageType.Error, "Unexpected error: " + ex.Message, ex.ToString(), cts.Token);
+                            await vaultClient.Show(VaultMessageType.Error, StringLocalizer["Unexpected error: {0}", ex.Message], ex.ToString(), cts.Token);
                         }
                         catch { }
                     }

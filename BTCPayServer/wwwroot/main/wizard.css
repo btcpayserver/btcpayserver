@@ -40,8 +40,7 @@ body {
 
 #wizard-navbar a .icon,
 #wizard-navbar button .icon {
-    width: 19px;
-    height: 16px;
+    --icon-size: 1.75rem;
 }
 
 #wizard-navbar a:hover::after,

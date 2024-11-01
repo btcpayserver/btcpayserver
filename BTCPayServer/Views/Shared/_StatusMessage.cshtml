@@ -7,7 +7,7 @@
 	<div class="alert alert-@parsedModel.SeverityCSS @(parsedModel.AllowDismiss? "alert-dismissible":"" ) @(ViewData["Margin"] ?? "mb-4") text-break" role="alert" v-pre>
         @if (parsedModel.AllowDismiss)
         {
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                 <vc:icon symbol="close" />
             </button>
         }

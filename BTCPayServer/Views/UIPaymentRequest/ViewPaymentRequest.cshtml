@@ -145,39 +145,39 @@
                             <template v-if="srvModel.allowCustomPaymentAmounts && !srvModel.anyPendingInvoice">
                                 <form v-on:submit="submitCustomAmountForm">
                                     <div class="input-group mb-3">
-                                        <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="Amount" step="any" required />
+                                        <input type="number" class="form-control text-end hide-number-spin" v-model="customAmount" :readonly="!srvModel.allowCustomPaymentAmounts" :max="srvModel.amountDue" placeholder="@StringLocalizer["Amount"]" step="any" required />
                                         <span class="input-group-text">{{currency}}</span>
                                     </div>
                                     <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-bind:class="{ 'btn-disabled': loading }" :disabled="loading" type="submit" id="PayInvoice">
                                         <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
-                                            <span class="visually-hidden">Loading...</span>
+                                            <span class="visually-hidden" text-translate="true">Loading...</span>
                                         </div>
-                                        Pay Invoice
+                                        <span text-translate="true">Pay Invoice</span>
                                     </button>
                                 </form>
                             </template>
                             <template v-else>
                                 <button class="btn btn-primary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-on:click="pay(null)" :disabled="loading" id="PayInvoice">
                                     <div v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
-                                        <span class="visually-hidden">Loading...</span>
+                                        <span class="visually-hidden" text-translate="true">Loading...</span>
                                     </div>
-                                    <span>Pay Invoice</span>
+                                    <span text-translate="true">Pay Invoice</span>
                                 </button>
                                 @if (Model.AllowCustomPaymentAmounts) {
                                     <button class="btn btn-outline-secondary btn-lg w-100 d-flex align-items-center justify-content-center text-nowrap" v-if="srvModel.anyPendingInvoice && !srvModel.pendingInvoiceHasPayments" v-on:click="cancelPayment()" :disabled="loading">
                                         <span v-if="loading" class="spinner-grow spinner-grow-sm me-2" role="status">
-                                            <span class="visually-hidden">Loading...</span>
+                                            <span class="visually-hidden" text-translate="true">Loading...</span>
                                         </span>
-                                        <span>Cancel Invoice</span>
+                                        <span text-translate="true">Cancel Invoice</span>
                                     </button>
                                 }
                             </template>
                         </template>
                         <div class="d-flex flex-column flex-sm-row gap-3 align-items-center justify-content-between">
-                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.print">
+                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.print" text-translate="true">
                                 Print
                             </button>
-                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.copyUrlToClipboard">
+                            <button type="button" class="btn btn-secondary only-for-js w-100" v-on:click="window.copyUrlToClipboard" text-translate="true">
                                 Copy Link
                             </button>
                         </div>
@@ -189,21 +189,21 @@
                             {
                                 <form method="get" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id">
                                     <div class="input-group mb-3">
-                                        <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="Amount" required />
+                                        <input type="number" class="form-control text-end hide-number-spin" name="amount" value="@Model.AmountDue" @if (!Model.AllowCustomPaymentAmounts) { @("readonly") } max="@Model.AmountDue" step="any" placeholder="@StringLocalizer["Amount"]" required />
                                         <span class="input-group-text">@Model.Currency.ToUpper()</span>
                                     </div>
-                                    <button class="btn btn-primary btn-lg w-100 text-nowrap" type="submit" id="PayInvoice">Pay Invoice</button>
+                                    <button class="btn btn-primary btn-lg w-100 text-nowrap" type="submit" id="PayInvoice" text-translate="true">Pay Invoice</button>
                                 </form>
                             }
                             else
                             {
-                                <a class="btn btn-primary btn-lg w-100 text-nowrap" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id" id="PayInvoice">
+                                <a class="btn btn-primary btn-lg w-100 text-nowrap" asp-action="PayPaymentRequest" asp-route-payReqId="@Model.Id" id="PayInvoice" text-translate="true">
                                     Pay Invoice
                                 </a>
                                 if (Model.AnyPendingInvoice && !Model.PendingInvoiceHasPayments && Model.AllowCustomPaymentAmounts)
                                 {
                                     <form method="get" asp-action="CancelUnpaidPendingInvoice" asp-route-payReqId="@Model.Id" class="mt-2 d-print-none">
-                                        <button class="btn btn-outline-secondary btn-lg w-100 text-nowrap" type="submit">Cancel Invoice</button>
+                                        <button class="btn btn-outline-secondary btn-lg w-100 text-nowrap" type="submit" text-translate="true">Cancel Invoice</button>
                                     </form>
                                 }
                             }
@@ -214,24 +214,24 @@
                 @if (!string.IsNullOrEmpty(Model.Description) && Model.Description != "<br>")
                 {
                     <section class="tile">
-                        <h2 class="h4 mb-3">Memo</h2>
+                        <h2 class="h4 mb-3" text-translate="true">Memo</h2>
                         <div id="InvoiceDescription" v-html="srvModel.description">@Safe.Raw(Model.Description)</div>
                     </section>
                 }
             
                 <section class="tile">
-                    <h2 class="h4 mb-3">Payment History</h2>
+                    <h2 class="h4 mb-3" text-translate="true">Payment History</h2>
                     <template v-if="!srvModel.invoices || srvModel.invoices.length == 0">
-                        <p class="text-muted mb-0">No payments have been made yet.</p>
+                        <p class="text-muted mb-0" text-translate="true">No payments have been made yet.</p>
                     </template>
                     <template v-else>
                         <div class="table-responsive my-0">
                             <table v-for="invoice of srvModel.invoices" :key="invoice.id" class="invoice table table-borderless">
                                 <thead>
                                 <tr>
-                                    <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
-                                    <th class="fw-normal text-secondary amount-col w-125px">Amount</th>
-                                    <th class="fw-normal text-secondary text-end w-225px">Status</th>
+                                    <th class="fw-normal text-secondary" scope="col" text-translate="true">Invoice Id</th>
+                                    <th class="fw-normal text-secondary amount-col w-125px" text-translate="true">Amount</th>
+                                    <th class="fw-normal text-secondary text-end w-225px" text-translate="true">Status</th>
                                     <th class="w-50px actions-col"></th>
                                 </tr>
                                 </thead>
@@ -251,9 +251,9 @@
                                         </td>
                                     </tr>
                                     <tr v-collapsible="showDetails(invoice.id)" :id="`invoice_details_${invoice.id}`" v-if="invoice.payments && invoice.payments.length > 0">
-                                        <th class="fw-normal text-secondary">Transaction</th>
-                                        <th class="fw-normal text-secondary amount-col">Paid</th>
-                                        <th class="fw-normal text-secondary text-end">Payment</th>
+                                        <th class="fw-normal text-secondary" text-translate="true">Transaction</th>
+                                        <th class="fw-normal text-secondary amount-col" text-translate="true">Paid</th>
+                                        <th class="fw-normal text-secondary text-end" text-translate="true">Payment</th>
                                     </tr>
                                     <tr v-collapsible="showDetails(invoice.id)" v-for="payment of invoice.payments" :key="`invoice_payment_${payment.id}`">
                                         <td class="text-break"><vc:truncate-center is-vue="true" text="payment.id" link="payment.link" padding="7" classes="truncate-center-id" /></td>
@@ -267,7 +267,7 @@
                     <noscript>
                         @if (Model.Invoices == null || !Model.Invoices.Any())
                         {
-                            <p class="text-muted mb-0">No payments have been made yet.</p>
+                            <p class="text-muted mb-0" text-translate="true">No payments have been made yet.</p>
                         }
                         else
                         {
@@ -277,9 +277,9 @@
                                     <table class="invoice table table-borderless">
                                         <thead>
                                         <tr>
-                                            <th class="fw-normal text-secondary" scope="col">Invoice Id</th>
-                                            <th class="fw-normal text-secondary amount-col w-125px">Amount</th>
-                                            <th class="fw-normal text-secondary text-end">Status</th>
+                                            <th class="fw-normal text-secondary" scope="col" text-translate="true">Invoice Id</th>
+                                            <th class="fw-normal text-secondary amount-col w-125px" text-translate="true">Amount</th>
+                                            <th class="fw-normal text-secondary text-end" text-translate="true">Status</th>
                                         </tr>
                                         </thead>
                                         <tbody>
@@ -293,9 +293,9 @@
                                         @if (invoice.Payments != null && invoice.Payments.Any())
                                         {
                                             <tr>
-                                                <th class="fw-normal text-secondary">Transaction</th>
-                                                <th class="fw-normal text-secondary amount-col">Paid</th>
-                                                <th class="fw-normal text-secondary text-end">Payment</th>
+                                                <th class="fw-normal text-secondary" text-translate="true">Transaction</th>
+                                                <th class="fw-normal text-secondary amount-col" text-translate="true">Paid</th>
+                                                <th class="fw-normal text-secondary text-end" text-translate="true">Payment</th>
                                             </tr>
                                             @foreach (var payment in invoice.Payments)
                                             {
@@ -317,12 +317,12 @@
         </main>
         <footer class="store-footer">
             <p permission="@Policies.CanModifyStoreSettings" class="d-print-none">
-                <a asp-controller="UIPaymentRequest" asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id">
+                <a asp-controller="UIPaymentRequest" asp-action="EditPaymentRequest" asp-route-storeId="@Model.StoreId" asp-route-payReqId="@Model.Id" text-translate="true">
                     Edit payment request
                 </a>
             </p>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                Powered by <partial name="_StoreFooterLogo" />
+                <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>
         </footer>
     </div>

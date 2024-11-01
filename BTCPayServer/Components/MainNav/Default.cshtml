@@ -106,9 +106,14 @@
                                     </li>
                                     @if (ViewData.IsCategoryActive(typeof(WalletsNavPages), scheme.WalletId.ToString()) || ViewData.IsPageActive([WalletsNavPages.Settings], scheme.WalletId.ToString()) || ViewData.IsPageActive([StoreNavPages.OnchainSettings], categoryId))
                                     {
-                                        <li class="nav-item nav-item-sub">
-                                            <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId" text-translate="true">Send</a>
-                                        </li>
+                                        @if (!scheme.ReadonlyWallet)
+                                        {  
+                                            <li class="nav-item nav-item-sub">
+                                                <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId" text-translate="true">Send</a>
+                                            </li>
+                                        }
+
+                                      
                                         <li class="nav-item nav-item-sub">
                                             <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId" text-translate="true">Receive</a>
                                         </li>

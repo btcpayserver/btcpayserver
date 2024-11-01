@@ -36,7 +36,7 @@
     <h2>
         @ViewData["Title"]
         <small>
-            <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="More information...">
+            <a href="https://docs.btcpayserver.org/Apps/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                 <vc:icon symbol="info" />
             </a>
         </small>
@@ -59,7 +59,7 @@
                         class="text-nowrap"
                         title="@(appNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
                     >
-                        Name
+                        <span text-translate="true">Name</span>
                         <vc:icon symbol="actions-sort-alpha-@(appNameSortOrder ?? nextAppNameSortOrder ?? "desc")" />
                     </a>
                 </th>
@@ -72,7 +72,7 @@
                         class="text-nowrap"
                         title="@(appTypeSortOrder == "desc" ? sortByDesc : sortByAsc)"
                     >
-                        App Type
+                        <span text-translate="true">App Type</span>
                         <vc:icon symbol="actions-sort-alpha-@(appTypeSortOrder ?? nextAppTypeSortOrder ?? "desc")" />
                     </a>
                 </th>
@@ -85,7 +85,7 @@
                         class="text-nowrap"
                         title="@(storeNameSortOrder == "desc" ? sortByDesc : sortByAsc)"
                     >
-                        Store
+                        <span text-translate="true">Store</span>
                         <vc:icon symbol="actions-sort-alpha-@(storeNameSortOrder ?? nextStoreNameSortOrder ?? "desc")" />
                     </a>
                 </th>
@@ -103,7 +103,7 @@
                         <span not-permission="@Policies.CanModifyStoreSettings">@app.AppName</span>
                         @if (app.Archived)
                         {
-                            <span class="badge bg-info ms-2">archived</span>
+                            <span class="badge bg-info ms-2" text-translate="true">archived</span>
                         }
                     </td>
                     <td>
@@ -130,7 +130,7 @@
     }
     else
     {
-        <p class="text-secondary mt-3">
+        <p class="text-secondary mt-3" text-translate="true">
             There are no apps yet.
         </p>
     }

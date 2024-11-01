@@ -93,7 +93,6 @@ namespace BTCPayServer.Services.Invoices
             {
                 var dbPayment = dbPayments[payment.Id];
                 var invBlob = _invoiceRepository.ToEntity(dbPayment.InvoiceData);
-                var dbPaymentEntity = dbPayment.GetBlob();
                 var wasConfirmed = dbPayment.Status is PaymentStatus.Settled;
                 if (!wasConfirmed && payment.Status is PaymentStatus.Settled)
                 {

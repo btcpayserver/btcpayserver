@@ -29,7 +29,7 @@
                     <div class="d-flex align-items-baseline gap-1">
                         <h3 class="d-inline-block me-1" data-balance="@Model.TotalOffchain" data-sensitive>@Model.TotalOffchain</h3>
                         <span class="text-secondary fw-semibold text-nowrap">
-                            @ViewLocalizer["<span class=\"currency\">{0}</span> in channels", @Model.CryptoCode]
+                            @ViewLocalizer["<span class=\"currency\">{0}</span> in channels", Model.CryptoCode]
                         </span>
                     </div>
 
@@ -41,7 +41,7 @@
                                     @Model.Balance.OffchainBalance.Opening
                                 </span>
                                 <span class="text-secondary text-nowrap">
-                                    @ViewLocalizer["<span class=\"currency\">{0}</span> opening channels", @Model.CryptoCode]
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> opening channels", Model.CryptoCode]
                                 </span>
                             </div>
                         }
@@ -52,7 +52,7 @@
                                     @Model.Balance.OffchainBalance.Local
                                 </span>
                                 <span class="text-secondary text-nowrap">
-                                    @ViewLocalizer["<span class=\"currency\">{0}</span> local balance", @Model.CryptoCode]
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> local balance", Model.CryptoCode]
                                 </span>
                             </div>
                         }
@@ -63,7 +63,7 @@
                                     @Model.Balance.OffchainBalance.Remote
                                 </span>
                                 <span class="text-secondary text-nowrap">
-                                    @ViewLocalizer["<span class=\"currency\">{0}</span> remote balance", @Model.CryptoCode]
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> remote balance", Model.CryptoCode]
                                 </span>
                             </div>
                         }
@@ -74,7 +74,7 @@
                                     @Model.Balance.OffchainBalance.Closing
                                 </span>
                                 <span class="text-secondary text-nowrap">
-                                    @ViewLocalizer["<span class=\"currency\">{0}</span> closing channels", @Model.CryptoCode]
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> closing channels", Model.CryptoCode]
                                 </span>
                             </div>
                         }
@@ -87,7 +87,7 @@
                     <div class="d-flex align-items-baseline gap-1">
                         <h3 class="d-inline-block me-1" data-balance="@Model.TotalOnchain" data-sensitive>@Model.TotalOnchain</h3>
                         <span class="text-secondary fw-semibold text-nowrap">
-                            @ViewLocalizer["<span class=\"currency\">{0}</span> on-chain", @Model.CryptoCode]
+                            @ViewLocalizer["<span class=\"currency\">{0}</span> on-chain", Model.CryptoCode]
                         </span>
                     </div>
                     <div class="balance-details collapse" id="balanceDetailsOnchain">
@@ -98,7 +98,7 @@
                                     @Model.Balance.OnchainBalance.Confirmed
                                 </span>
                                 <span class="text-secondary text-nowrap">
-                                    @ViewLocalizer["<span class=\"currency\">{0}</span> confirmed", @Model.CryptoCode]
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> confirmed", Model.CryptoCode]
                                 </span>
                             </div>
                         }
@@ -109,7 +109,7 @@
                                     @Model.Balance.OnchainBalance.Unconfirmed
                                 </span>
                                 <span class="text-secondary text-nowrap">
-                                    @ViewLocalizer["<span class=\"currency\">{0}</span> unconfirmed", @Model.CryptoCode]
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> unconfirmed", Model.CryptoCode]
                                 </span>
                             </div>
                         }
@@ -120,7 +120,7 @@
                                     @Model.Balance.OnchainBalance.Reserved
                                 </span>
                                 <span class="text-secondary text-nowrap">
-                                    @ViewLocalizer["<span class=\"currency\">{0}</span> reserved", @Model.CryptoCode]
+                                    @ViewLocalizer["<span class=\"currency\">{0}</span> reserved", Model.CryptoCode]
                                 </span>
                             </div>
                         }

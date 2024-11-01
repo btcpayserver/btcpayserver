@@ -44,7 +44,7 @@ public partial class UIStoresController
         var token = await _tokenRepository.GetToken(tokenId);
         if (token == null || token.StoreId != CurrentStore.Id)
             return NotFound();
-        return View("Confirm", new ConfirmModel("Revoke the token", $"The access token with the label <strong>{_html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
+        return View("Confirm", new ConfirmModel(StringLocalizer["Revoke the token"], $"The access token with the label <strong>{_html.Encode(token.Label)}</strong> will be revoked. Do you wish to continue?", "Revoke"));
     }
 
     [HttpPost("{storeId}/tokens/{tokenId}/revoke")]
@@ -243,14 +243,14 @@ public partial class UIStoresController
             StoreNotConfigured = store.GetPaymentMethodConfigs(_handlers).All(p => excludeFilter.Match(p.Key));
             TempData[WellKnownTempData.SuccessMessage] = "Pairing is successful";
             if (pairingResult == PairingResult.Partial)
-                TempData[WellKnownTempData.SuccessMessage] = "Server initiated pairing code: " + pairingCode;
+                TempData[WellKnownTempData.SuccessMessage] = $"Server initiated pairing code: {pairingCode}";
             return RedirectToAction(nameof(ListTokens), new
             {
                 storeId = store.Id, pairingCode
             });
         }
 
-        TempData[WellKnownTempData.ErrorMessage] = $"Pairing failed ({pairingResult})";
+        TempData[WellKnownTempData.ErrorMessage] = $"Pairing failed: {pairingResult}";
         return RedirectToAction(nameof(ListTokens), new
         {
             storeId = store.Id

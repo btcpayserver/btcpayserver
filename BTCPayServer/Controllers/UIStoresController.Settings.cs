@@ -89,7 +89,7 @@ public partial class UIStoresController
         blob.MonitoringExpiration = TimeSpan.FromMinutes(model.MonitoringExpiration);
         if (!string.IsNullOrEmpty(model.BrandColor) && !ColorPalette.IsValid(model.BrandColor))
         {
-            ModelState.AddModelError(nameof(model.BrandColor), "The brand color needs to be a valid hex color code");
+            ModelState.AddModelError(nameof(model.BrandColor), StringLocalizer["The brand color needs to be a valid hex color code"]);
             return View(model);
         }
         blob.BrandColor = model.BrandColor;
@@ -103,18 +103,18 @@ public partial class UIStoresController
         {
             if (model.LogoFile.Length > 1_000_000)
             {
-                ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file should be less than 1MB");
+                ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file should be less than {0}", "1MB"]);
             }
             else if (!model.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
             {
-                ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file needs to be an image"]);
             }
             else
             {
                 var formFile = await model.LogoFile.Bufferize();
                 if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                 {
-                    ModelState.AddModelError(nameof(model.LogoFile), "The uploaded logo file needs to be an image");
+                    ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["The uploaded logo file needs to be an image"]);
                 }
                 else
                 {
@@ -127,7 +127,7 @@ public partial class UIStoresController
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(model.LogoFile), $"Could not save logo: {e.Message}");
+                        ModelState.AddModelError(nameof(model.LogoFile), StringLocalizer["Could not save logo: {0}", e.Message]);
                     }
                 }
             }
@@ -142,15 +142,15 @@ public partial class UIStoresController
         {
             if (model.CssFile.Length > 1_000_000)
             {
-                ModelState.AddModelError(nameof(model.CssFile), "The uploaded file should be less than 1MB");
+                ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["The uploaded file should be less than {0}", "1MB"]);
             }
             else if (!model.CssFile.ContentType.Equals("text/css", StringComparison.InvariantCulture))
             {
-                ModelState.AddModelError(nameof(model.CssFile), "The uploaded file needs to be a CSS file");
+                ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["The uploaded file needs to be a CSS file"]);
             }
             else if (!model.CssFile.FileName.EndsWith(".css", StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError(nameof(model.CssFile), "The uploaded file needs to be a CSS file");
+                ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["The uploaded file needs to be a CSS file"]);
             }
             else
             {
@@ -162,7 +162,7 @@ public partial class UIStoresController
                 }
                 catch (Exception e)
                 {
-                    ModelState.AddModelError(nameof(model.CssFile), $"Could not save CSS file: {e.Message}");
+                    ModelState.AddModelError(nameof(model.CssFile), StringLocalizer["Could not save CSS file: {0}", e.Message]);
                 }
             }
         }
@@ -211,7 +211,7 @@ public partial class UIStoresController
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public IActionResult DeleteStore(string storeId)
     {
-        return View("Confirm", new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store. Are you sure?", "Delete"));
+        return View("Confirm", new ConfirmModel(StringLocalizer["Delete store"], StringLocalizer["The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store. Are you sure?"], StringLocalizer["Delete"]));
     }
 
     [HttpPost("{storeId}/delete")]
@@ -305,18 +305,18 @@ public partial class UIStoresController
         {
             if (model.SoundFile.Length > 1_000_000)
             {
-                ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file should be less than 1MB");
+                ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["The uploaded sound file should be less than {0}", "1MB"]);
             }
             else if (!model.SoundFile.ContentType.StartsWith("audio/", StringComparison.InvariantCulture))
             {
-                ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file needs to be an audio file");
+                ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["The uploaded sound file needs to be an audio file"]);
             }
             else
             {
                 var formFile = await model.SoundFile.Bufferize();
                 if (!FileTypeDetector.IsAudio(formFile.Buffer, formFile.FileName))
                 {
-                    ModelState.AddModelError(nameof(model.SoundFile), "The uploaded sound file needs to be an audio file");
+                    ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["The uploaded sound file needs to be an audio file"]);
                 }
                 else
                 {
@@ -330,7 +330,7 @@ public partial class UIStoresController
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(model.SoundFile), $"Could not save sound: {e.Message}");
+                        ModelState.AddModelError(nameof(model.SoundFile), StringLocalizer["Could not save sound: {0}", e.Message]);
                     }
                 }
             }

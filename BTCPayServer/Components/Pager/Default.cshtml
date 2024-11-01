@@ -1,3 +1,5 @@
+@using System.Web
+@using BTCPayServer.TagHelpers
 @model BasePagingViewModel
 
 @{
@@ -13,7 +15,7 @@
                 @if (Model.Skip > 0)
                 {
                     <li class="page-item">
-                        <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)">Prev</a>
+                        <a class="page-link" tabindex="-1" href="@NavigatePages(-1, Model.Count)" text-translate="true">Prev</a>
                     </li>
                 }
                 <li class="page-item disabled">
@@ -35,7 +37,7 @@
                 @if ((Model.Total is null && Model.CurrentPageCount >= Model.Count) || (Model.Total is not null && Model.Total.Value > Model.Skip + Model.Count))
                 {
                     <li class="page-item">
-                        <a class="page-link" href="@NavigatePages(1, Model.Count)">Next</a>
+                        <a class="page-link" href="@NavigatePages(1, Model.Count)" text-translate="true">Next</a>
                     </li>
                 }
             </ul>
@@ -45,7 +47,7 @@
         {
             <ul class="pagination ms-auto">
                 <li class="page-item disabled">
-                    <span class="page-link">Page Size</span>
+                    <span class="page-link" text-translate="true">Page Size</span>
                 </li>
                 @foreach (var pageSize in pageSizeOptions)
                 {
@@ -85,10 +87,26 @@
         {
             // merge both, preferring the `query` properties in case of duplicate keys
             query = query.Concat(Model.PaginationQuery)
+                .Where(e => e.Value != null)
                 .GroupBy(e => e.Key)
                 .ToDictionary(g => g.Key, g => g.First().Value);
         }
 
-        return Url.Action(null, query);
+        return ReplaceQueryParameters(query);
+    }
+    
+    string ReplaceQueryParameters(Dictionary<string, object> query)
+    {
+        var uri = new Uri(ViewContext.HttpContext.Request.GetCurrentUrlWithQueryString());
+        var queryParams = HttpUtility.ParseQueryString(uri.Query);
+        foreach (var (key, value) in query)
+        {
+            if (value != null) queryParams[key] = value?.ToString();
+        }
+        var uriBuilder = new UriBuilder(uri)
+        {
+            Query = queryParams.ToString()!
+        };
+        return uriBuilder.ToString();
     }
 }

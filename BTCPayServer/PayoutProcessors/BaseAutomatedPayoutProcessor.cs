@@ -116,7 +116,8 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
                 {
                     States = new[] { PayoutState.AwaitingPayment },
                     PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
-                    Stores = new[] {PayoutProcessorSettings.StoreId}
+					Processor = PayoutProcessorSettings.Processor,
+					Stores = new[] {PayoutProcessorSettings.StoreId}
                 }, context, CancellationToken);
 
             await _pluginHookService.ApplyAction("before-automated-payout-processing",

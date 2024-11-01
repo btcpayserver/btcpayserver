@@ -6,6 +6,5 @@ namespace BTCPayServer.Data
     {
         public string? Id { get; }
         decimal? Amount { get; }
-        bool IsExplicitAmountMinimum => false;
     }
 }

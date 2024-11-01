@@ -8,9 +8,9 @@
                 <h5 class="modal-title">Recent Transactions</h5>
                 <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" v-on:click="loadRecentTransactions" :disabled="recentTransactionsLoading" id="RecentTransactionsRefresh">
                     <vc:icon symbol="actions-refresh"/>
-                    <span v-if="recentTransactionsLoading" class="visually-hidden">Loading...</span>
+                    <span v-if="recentTransactionsLoading" class="visually-hidden" text-translate="true">Loading...</span>
                 </button>
-                <button type="button" class="btn-close py-3" aria-label="Close" v-on:click="hideRecentTransactions">
+                <button type="button" class="btn-close py-3" aria-label="@StringLocalizer["Close"]" v-on:click="hideRecentTransactions">
                     <vc:icon symbol="close"/>
                 </button>
             </div>

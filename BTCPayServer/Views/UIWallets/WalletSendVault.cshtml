@@ -5,7 +5,7 @@
     var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
     var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.Send, "Sign the transaction", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Sign the transaction"], walletId);
 }
 
 @section Navbar {
@@ -22,7 +22,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Using BTCPay Server Vault</p>
+    <p class="lead text-secondary mt-3" text-translate="true">Using BTCPay Server Vault</p>
 </header>
 
 <partial name="LocalhostBrowserSupport" />
@@ -36,7 +36,7 @@
         <partial name="SigningContext" for="SigningContext" />
     </form>
     <div id="vaultPlaceholder"></div>
-    <button id="vault-retry" class="btn btn-primary" style="display:none;" type="button">Retry</button>
+    <button id="vault-retry" class="btn btn-primary" style="display:none;" type="button" text-translate="true">Retry</button>
     <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
 </div>
 

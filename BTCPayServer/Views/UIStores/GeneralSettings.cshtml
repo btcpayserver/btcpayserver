@@ -6,7 +6,7 @@
 @inject IFileService FileService;
 @model GeneralSettingsViewModel
 @{
-	ViewData.SetActivePage(StoreNavPages.General, "General", Context.GetStoreData().Id);
+	ViewData.SetActivePage(StoreNavPages.General, StringLocalizer["General"], Context.GetStoreData().Id);
 	var canUpload = await FileService.IsAvailable();
 }
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
@@ -39,10 +39,7 @@
             </div>
 
             <h3 class="mt-5 mb-3" text-translate="true">Branding</h3>
-            <p>
-                The custom color, logo and CSS are applied on the public/customer-facing pages (Invoice, Payment Request, Pull Payment, etc.).
-                The brand color is used as the accent color for buttons, links, etc. It might get adapted to fit the light/dark color scheme.
-            </p>
+            <p text-translate="true">The custom color, logo and CSS are applied on the public/customer-facing pages (Invoice, Payment Request, Pull Payment, etc.). The brand color is used as the accent color for buttons, links, etc. It might get adapted to fit the light/dark color scheme.</p>
 
             <div>
                 <label asp-for="BrandColor" class="form-label"></label>
@@ -85,7 +82,7 @@
                 else
                 {
                     <input asp-for="LogoFile" type="file" class="form-control" disabled>
-                    <div class="form-text">In order to upload a logo, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                 }
             </div>
             <div class="form-group">
@@ -112,7 +109,7 @@
                 else
                 {
                     <input asp-for="CssFile" type="file" class="form-control" disabled>
-                    <div class="form-text">In order to upload a CSS file, a <a asp-controller="UIServer" asp-action="Files">file storage</a> must be configured.</div>
+                    <div class="form-text">@ViewLocalizer["In order to upload, a {0} must be configured.", Html.ActionLink(StringLocalizer["file storage"], "Files", "UIServer")]</div>
                 }
             </div>
 
@@ -124,7 +121,7 @@
             </div>
             <div class="form-group mt-4">
                 <label asp-for="NetworkFeeMode" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#add-network-fee-to-invoice-vary-with-mining-fees" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 @* For whatever reason wrapping the select with this div fixes this Safari bug: https://github.com/btcpayserver/btcpayserver/issues/3699 *@
@@ -138,23 +135,23 @@
             </div>
             <div class="form-group">
                 <label asp-for="InvoiceExpiration" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#invoice-expires-if-the-full-amount-has-not-been-paid-after-minutes" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
                     <input inputmode="numeric" asp-for="InvoiceExpiration" class="form-control" style="max-width:12ch;"/>
-                    <span class="input-group-text">minutes</span>
+                    <span class="input-group-text" text-translate="true">minutes</span>
                 </div>
                 <span asp-validation-for="InvoiceExpiration" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="PaymentTolerance" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-paid-even-if-the-paid-amount-is-less-than-expected" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
                     <input inputmode="decimal" asp-for="PaymentTolerance" class="form-control" style="max-width:12ch;"/>
-                    <span class="input-group-text">percent</span>
+                    <span class="input-group-text" text-translate="true">percent</span>
                 </div>
                 <span asp-validation-for="PaymentTolerance" class="text-danger"></span>
             </div>
@@ -162,24 +159,24 @@
                 <label asp-for="BOLT11Expiration" class="form-label"></label>
                 <div class="input-group">
                     <input inputmode="numeric" asp-for="BOLT11Expiration" class="form-control" style="max-width:12ch;"/>
-					<span class="input-group-text" text-translate="true">days</span>
+					<span class="input-group-text" text-translate="true" text-translate="true">days</span>
                 </div>
                 <span asp-validation-for="BOLT11Expiration" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="MonitoringExpiration" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#payment-invalid-if-transactions-fails-to-confirm-minutes-after-invoice-expiration" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <div class="input-group">
                     <input inputmode="numeric" asp-for="MonitoringExpiration" class="form-control" style="max-width:10ch;"/>
-                    <span class="input-group-text">minutes</span>
+                    <span class="input-group-text" text-translate="true">minutes</span>
                 </div>
                 <span asp-validation-for="MonitoringExpiration" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="SpeedPolicy" class="form-label"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#consider-the-invoice-confirmed-when-the-payment-transaction" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
                 <select asp-for="SpeedPolicy" class="form-select w-auto" onchange="document.getElementById('unconfirmed-warning').hidden = this.value !== '0'">
@@ -190,14 +187,14 @@
                 </select>
                 <p class="info-note my-3 text-warning" id="unconfirmed-warning" role="alert" hidden="@(Model.SpeedPolicy != 0)">
                     <vc:icon symbol="warning"/>
-                    Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.
+                    <span text-translate="true">Choosing to accept an unconfirmed invoice can lead to double-spending and is strongly discouraged.</span>
                 </p>
                 <span asp-validation-for="SpeedPolicy" class="text-danger"></span>
             </div>
             <div class="form-group d-flex align-items-center">
                 <input asp-for="AnyoneCanCreateInvoice" type="checkbox" class="btcpay-toggle me-3"/>
                 <label asp-for="AnyoneCanCreateInvoice" class="form-check-label me-1"></label>
-                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="More information...">
+                <a href="https://docs.btcpayserver.org/FAQ/Stores/#allow-anyone-to-create-invoice" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
                     <vc:icon symbol="info"/>
                 </a>
             </div>
@@ -227,19 +224,19 @@
             <button type="submit" class="btn btn-outline-secondary" id="btn-archive-toggle">
                 @if (Model.Archived)
                 {
-					<span class="text-nowrap" data-bs-toggle="tooltip" title="Unarchive this store" text-translate="true">Unarchive this store</span>
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Unarchive this store"]" text-translate="true">Unarchive this store</span>
                 }
                 else
                 {
-					<span class="text-nowrap" data-bs-toggle="tooltip" title="Archive this store so that it does not appear in the stores list by default" text-translate="true">Archive this store</span>
+					<span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this store so that it does not appear in the stores list by default"]" text-translate="true">Archive this store</span>
                 }
             </button>
         </form>
-		<a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The store <strong>@Html.Encode(Model.StoreName)</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store." data-confirm-input="DELETE" text-translate="true">Delete this store</a>
+		<a id="DeleteStore" class="btn btn-outline-danger" asp-action="DeleteStore" asp-route-storeId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["The store <strong>{0}</strong> will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", Html.Encode(Model.StoreName)]" data-confirm-input="@StringLocalizer["DELETE"]" text-translate="true">Delete this store</a>
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete store", "The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store.", "Delete"))" permission="@Policies.CanModifyStoreSettings" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete store"], StringLocalizer["The store will be permanently deleted. This action will also delete all invoices, apps and data associated with the store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial"/>

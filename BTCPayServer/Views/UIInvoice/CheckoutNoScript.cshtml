@@ -16,30 +16,30 @@
     <h1>Pay with @Model.StoreName</h1>
     @if (Model.Status == "new")
     {
-		<h1 class="text-danger">This payment method requires javascript.</h1>
+		<h1 class="text-danger" text-translate="true">This payment method requires javascript.</h1>
     }
     else if (Model.Status == "paid" || Model.Status == "complete" || Model.Status == "confirmed")
     {
         <div>
-            <p>This invoice has been paid</p>
+            <p text-translate="true">This invoice has been paid</p>
         </div>
     }
     else if (Model.Status == "expired" || Model.Status == "invalid")
     {
         <div>
-            <p>This invoice has expired</p>
+            <p text-translate="true">This invoice has expired</p>
         </div>
     }
     else
     {
         <div>
-            <p>Non-supported state of invoice</p>
+            <p text-translate="true">Non-supported state of invoice</p>
         </div>
     }
 
     <hr />
     <p>
-        <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId">Go back to Javascript enabled invoice</a>
+        <a asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId" text-translate="true">Go back to Javascript enabled invoice</a>
     </p>
     @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-noscript-end", model = Model })
 </body>

@@ -607,6 +607,12 @@ namespace BTCPayServer.Controllers
                         {
                             return LocalRedirect(vm.ReturnUrl);
                         }
+
+                        if (vm.SigningContext.PendingTransactionId is not null)
+                        {
+                            await _pendingTransactionService.Broadcasted(walletId.CryptoCode, walletId.StoreId,
+                                vm.SigningContext.PendingTransactionId);
+                        }
                         return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }
                 case "analyze-psbt":

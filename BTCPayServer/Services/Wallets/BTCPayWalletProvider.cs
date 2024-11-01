@@ -274,6 +274,20 @@ namespace BTCPayServer.Services.Wallets
             pt.State = PendingTransactionState.Cancelled;
             await ctx.SaveChangesAsync();
         }
+
+        public async Task Broadcasted(string cryptoCode, string storeId, string transactionId)
+        {
+            await using var ctx = _dbContextFactory.CreateContext();
+            var pt = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
+                p.CryptoCode == cryptoCode && p.StoreId == storeId && p.TransactionId == transactionId &&
+                (p.State == PendingTransactionState.Pending || p.State == PendingTransactionState.Signed));
+            
+            if (pt is null)
+                return;
+            
+            pt.State = PendingTransactionState.Broadcast;
+            await ctx.SaveChangesAsync();
+        }
     }
 
    

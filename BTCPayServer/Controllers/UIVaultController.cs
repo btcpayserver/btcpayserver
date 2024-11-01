@@ -12,6 +12,7 @@ using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
@@ -27,11 +28,14 @@ namespace BTCPayServer.Controllers
     {
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly IAuthorizationService _authorizationService;
+        private readonly BTCPayWalletProvider _btcPayWalletProvider;
 
-        public UIVaultController(PaymentMethodHandlerDictionary handlers, IAuthorizationService authorizationService)
+        public UIVaultController(PaymentMethodHandlerDictionary handlers, IAuthorizationService authorizationService, 
+            BTCPayWalletProvider btcPayWalletProvider)
         {
             _handlers = handlers;
             _authorizationService = authorizationService;
+            _btcPayWalletProvider = btcPayWalletProvider;
         }
 
         [Route("{cryptoCode}/xpub")]
@@ -168,6 +172,16 @@ namespace BTCPayServer.Controllers
                                         continue;
                                     }
                                 }
+
+                                // we're adding all coins to the PSBT, in case non witness UTXOs are needed
+                                var wallet = _btcPayWalletProvider.GetWallet(cryptoCode);
+                                foreach (var input in psbt.Inputs)
+                                {
+                                    var txid = input.PrevOut.Hash;
+                                    var tx = await wallet.GetTransactionAsync(txid, false, cancellationToken);
+                                    input.NonWitnessUtxo = tx?.Transaction;
+                                }
+                                
                                 try
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);

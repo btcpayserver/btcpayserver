@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -11,6 +12,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -54,7 +56,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             UIInvoiceController invoiceController,
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
-            DisplayFormatter displayFormatter)
+            DisplayFormatter displayFormatter,
+            Safe safe)
         {
             _currencies = currencies;
             _appService = appService;
@@ -65,6 +68,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _displayFormatter = displayFormatter;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
+            _safe = safe;
         }
 
         private readonly CurrencyNameTable _currencies;
@@ -74,6 +78,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly Safe _safe;
 
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
@@ -691,7 +696,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
                 Language = vm.Language,
-                HtmlMetaTags = SanitizeHtml(vm.HtmlMetaTags, out wasHtmlModified),
+                HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out wasHtmlModified),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
@@ -732,37 +737,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             }
             return currency.Trim().ToUpperInvariant();
         }
-
-        private string SanitizeHtml(string inputHtml, out bool bHtmlModified)
-        {
-            var sanitizer = new HtmlSanitizer();
-            bool isHtmlModified = false;
-
-            sanitizer.AllowedTags.Clear(); 
-            sanitizer.AllowedTags.Add("meta");
-
-            sanitizer.AllowedAttributes.Clear();
-            sanitizer.AllowedAttributes.Add("name");  
-            sanitizer.AllowedAttributes.Add("http-equiv"); 
-            sanitizer.AllowedAttributes.Add("content");   
-            sanitizer.AllowedAttributes.Add("value");   
-            sanitizer.AllowedAttributes.Add("property");
-
-            sanitizer.AllowDataAttributes = false;
-
-            sanitizer.RemovingTag += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingAtRule += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingAttribute += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingComment += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingCssClass += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingStyle += (sender, e) => isHtmlModified = true;
-
-            var sRet = sanitizer.Sanitize(inputHtml);
-            bHtmlModified = isHtmlModified;
-
-            return sRet;
-        }
-
 
         private StoreData GetCurrentStore() => HttpContext.GetStoreData();
 

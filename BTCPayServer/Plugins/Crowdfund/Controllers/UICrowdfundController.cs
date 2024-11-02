@@ -8,6 +8,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -53,7 +54,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             UserManager<ApplicationUser> userManager,
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
-            CrowdfundAppType app)
+            CrowdfundAppType app,
+            Safe safe)
         {
             _currencies = currencies;
             _appService = appService;
@@ -66,6 +68,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             _invoiceController = invoiceController;
             FormDataService = formDataService;
             StringLocalizer = stringLocalizer;
+            _safe = safe;
         }
 
         private readonly EventAggregator _eventAggregator;
@@ -77,6 +80,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
         private readonly UIInvoiceController _invoiceController;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly CrowdfundAppType _app;
+        private readonly Safe _safe;
 
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
@@ -548,7 +552,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
                 EnforceTargetAmount = vm.EnforceTargetAmount,
                 StartDate = vm.StartDate?.ToUniversalTime(),
                 TargetCurrency = vm.TargetCurrency,
-                HtmlMetaTags= SanitizeHtml(vm.HtmlMetaTags, out wasHtmlModified),
+                HtmlMetaTags= _safe.RawMeta(vm.HtmlMetaTags, out wasHtmlModified),
                 Language = vm.Language,
                 Description = vm.Description,
                 EndDate = vm.EndDate?.ToUniversalTime(),
@@ -618,38 +622,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             }
             return currency.Trim().ToUpperInvariant();
         }
-
-
-        private string SanitizeHtml(string inputHtml, out bool bHtmlModified)
-        {
-            var sanitizer = new HtmlSanitizer();
-            bool isHtmlModified = false;
-
-            sanitizer.AllowedTags.Clear();
-            sanitizer.AllowedTags.Add("meta");
-
-            sanitizer.AllowedAttributes.Clear();
-            sanitizer.AllowedAttributes.Add("name");
-            sanitizer.AllowedAttributes.Add("http-equiv");
-            sanitizer.AllowedAttributes.Add("content");
-            sanitizer.AllowedAttributes.Add("value");
-            sanitizer.AllowedAttributes.Add("property");
-
-            sanitizer.AllowDataAttributes = false;
-
-            sanitizer.RemovingTag += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingAtRule += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingAttribute += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingComment += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingCssClass += (sender, e) => isHtmlModified = true;
-            sanitizer.RemovingStyle += (sender, e) => isHtmlModified = true;
-
-            var sRet = sanitizer.Sanitize(inputHtml);
-            bHtmlModified = isHtmlModified;
-
-            return sRet;
-        }
-
 
         private AppData GetCurrentApp() => HttpContext.GetAppData();
 

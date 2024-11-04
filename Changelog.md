@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.13.6
+
+* Fix: Wrong manifest downloaded when installing plugin on old btcpay (Ported on 1.13.x)
+
 ## 1.13.5
 
 ### Bug fixes

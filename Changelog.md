@@ -2,7 +2,7 @@
 
 ## 1.13.6
 
-* Fix: Wrong manifest downloaded when installing plugin on old btcpay (Ported on 1.13.x)
+* Fix: Wrong manifest downloaded when installing plugin on old btcpay (Ported on 1.13.x) (#6354, #6344)
 
 ## 1.13.5
 

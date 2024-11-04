@@ -1190,6 +1190,13 @@
       "crypto":true
    },
    {
+      "name":"MWEB",
+      "code":"MWEB",
+      "divisibility":8,
+      "symbol":"LTC",
+      "crypto":true
+   },
+   {
       "name":"BTX",
       "code":"BTX",
       "divisibility":8,

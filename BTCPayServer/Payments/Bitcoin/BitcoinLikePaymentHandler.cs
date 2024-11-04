@@ -122,7 +122,7 @@ namespace BTCPayServer.Payments.Bitcoin
 
         public Task BeforeFetchingRates(PaymentMethodContext paymentMethodContext)
         {
-            paymentMethodContext.Prompt.Currency = _Network.CryptoCode;
+            paymentMethodContext.Prompt.Currency = _Network.Currency;
             paymentMethodContext.Prompt.Divisibility = _Network.Divisibility;
             if (paymentMethodContext.Prompt.Activated)
             {
@@ -138,7 +138,7 @@ namespace BTCPayServer.Payments.Bitcoin
                         ? null
                         : _FeeRateProviderFactory.CreateFeeProvider(_Network).GetFeeRateAsync(),
                     ReserveAddress = _WalletProvider.GetWallet(_Network)
-                        .ReserveAddressAsync(store.Id, settings.AccountDerivation, "invoice"),
+                        .ReserveAddressAsync(store.Id, settings, "invoice"),
                     DerivationSchemeSettings = settings
                 };
             }

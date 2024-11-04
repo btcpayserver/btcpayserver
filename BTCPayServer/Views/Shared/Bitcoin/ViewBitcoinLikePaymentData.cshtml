@@ -2,6 +2,7 @@
 @using BTCPayServer.Payments
 @using BTCPayServer.Payments.Bitcoin
 @using BTCPayServer.Services
+@using BTCPayServer.Services.Altcoins.Litecoin
 @using BTCPayServer.Services.Invoices
 @using NBitcoin
 @inject DisplayFormatter DisplayFormatter
@@ -19,7 +20,14 @@
             var m = new OnchainPaymentViewModel();
             var onChainPaymentData = handler.ParsePaymentDetails(payment.Details);
             m.PaymentMethodId = payment.PaymentMethodId;
-            m.DepositAddress = BitcoinAddress.Create(payment.Destination, network.NBitcoinNetwork);
+            try
+            {
+                m.DepositAddress = BitcoinAddress.Create(payment.Destination, network.NBitcoinNetwork);
+            }
+            catch (FormatException)
+            {
+                m.DepositAddress = new BitcoinMwebAddress(payment.Destination, network.NBitcoinNetwork);
+            }
 
             var confReq = NBXplorerListener.ConfirmationRequired(payment.InvoiceEntity, onChainPaymentData);
             var confCount = onChainPaymentData.ConfirmationCount;

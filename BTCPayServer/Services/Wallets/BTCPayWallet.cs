@@ -9,12 +9,18 @@ using BTCPayServer.Logging;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
+using Google.Protobuf;
+using Grpc.Net.Client;
+using GrpcMwebdClient;
+using BTCPayServer.Services.Altcoins.Litecoin;
+using BTCPayServer.Services.Altcoins.Litecoin.Services;
 
 namespace BTCPayServer.Services.Wallets
 {
@@ -48,7 +54,9 @@ namespace BTCPayServer.Services.Wallets
 
         private readonly ExplorerClient _Client;
         private readonly IMemoryCache _MemoryCache;
+        private readonly IServiceProvider _Services;
         public BTCPayWallet(ExplorerClient client, IMemoryCache memoryCache, BTCPayNetwork network,
+            IServiceProvider services,
             WalletRepository walletRepository,
             ApplicationDbContextFactory dbContextFactory, NBXplorerConnectionFactory nbxplorerConnectionFactory, Logs logs)
         {
@@ -57,6 +65,7 @@ namespace BTCPayServer.Services.Wallets
             Logs = logs;
             _Client = client;
             _Network = network;
+            _Services = services;
             WalletRepository = walletRepository;
             _dbContextFactory = dbContextFactory;
             NbxplorerConnectionFactory = nbxplorerConnectionFactory;
@@ -77,10 +86,11 @@ namespace BTCPayServer.Services.Wallets
 
         public TimeSpan CacheSpan { get; private set; } = TimeSpan.FromMinutes(5);
 
-        public async Task<KeyPathInformation> ReserveAddressAsync(string storeId, DerivationStrategyBase derivationStrategy, string generatedBy)
+        public async Task<KeyPathInformation> ReserveAddressAsync(string storeId, DerivationSchemeSettings derivationScheme, string generatedBy)
         {
             if (storeId != null)
                 ArgumentNullException.ThrowIfNull(generatedBy);
+            var derivationStrategy = derivationScheme.AccountDerivation;
             ArgumentNullException.ThrowIfNull(derivationStrategy);
             var pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             // Might happen on some broken install
@@ -89,11 +99,33 @@ namespace BTCPayServer.Services.Wallets
                 await _Client.TrackAsync(derivationStrategy).ConfigureAwait(false);
                 pathInfo = await _Client.GetUnusedAsync(derivationStrategy, DerivationFeature.Deposit, 0, true).ConfigureAwait(false);
             }
+
+            var addressIndex = pathInfo.KeyPath.Indexes.Last() + 1;
+            if (Network.CryptoCode == "MWEB")
+            {
+                using var channel = GrpcChannel.ForAddress("http://localhost:12345");
+                var client = new Rpc.RpcClient(channel);
+                var response = await client.AddressesAsync(new AddressRequest
+                {
+                    FromIndex = addressIndex, ToIndex = addressIndex + 1,
+                    ScanSecret = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebScanKey.PrivateKey.ToBytes()),
+                    SpendPubkey = ByteString.CopyFrom(derivationScheme.GetSigningAccountKeySettings().MwebSpendPubKey.GetPublicKey().ToBytes()),
+                });
+                pathInfo.Address = new BitcoinMwebAddress(response.Address[0], pathInfo.Address.Network);
+
+                var mwebScannerService = _Services.GetRequiredService<MwebScannerService>();
+                if (mwebScannerService.IsAddressUsed(derivationStrategy, response.Address[0]))
+                {
+                    return await ReserveAddressAsync(storeId, derivationScheme, generatedBy);
+                }
+            }
+
             if (storeId != null)
             {
+                var obj = new JObject() { ["generatedBy"] = generatedBy };
+                if (Network.CryptoCode == "MWEB") obj["addressIndex"] = addressIndex;
                 await WalletRepository.EnsureWalletObject(
-                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()),
-                    new JObject() { ["generatedBy"] = generatedBy });
+                    new WalletObjectId(new WalletId(storeId, Network.CryptoCode), WalletObjectData.Types.Address, pathInfo.Address.ToString()), obj);
             }
             return pathInfo;
         }
@@ -221,7 +253,7 @@ namespace BTCPayServer.Services.Wallets
             // * Sometimes we can ask the DB to do the filtering of rows: If that's the case, we should try to filter at the DB level directly as it is the most efficient.
             // * Sometimes we can't query the DB or the given network need to do additional filtering. In such case, we can't really filter at the DB level, and we need to fetch all transactions in memory.
             var needAdditionalFiltering = _Network.FilterValidTransactions(dummy) != dummy;
-            if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering)
+            if (!NbxplorerConnectionFactory.Available || needAdditionalFiltering || Network.CryptoCode == "MWEB")
             {
                 var txs = await FetchTransactions(derivationStrategyBase);
                 var txinfos = txs.UnconfirmedTransactions.Transactions.Concat(txs.ConfirmedTransactions.Transactions)
@@ -291,6 +323,28 @@ namespace BTCPayServer.Services.Wallets
         private async Task<GetTransactionsResponse> FetchTransactions(DerivationStrategyBase derivationStrategyBase)
         {
             var transactions = await _Client.GetTransactionsAsync(derivationStrategyBase);
+            var mwebScannerService = _Services.GetService<MwebScannerService>();
+            if (mwebScannerService != null)
+            {
+                foreach (var coin in await mwebScannerService.GetUnspentCoins(derivationStrategyBase))
+                {
+                    var transaction = new TransactionInformation
+                    {
+                        Confirmations = coin.Confirmations,
+                        TransactionId = coin.OutPoint.Hash,
+                        Timestamp = coin.Timestamp,
+                        BalanceChange = coin.Value,
+                    };
+                    if (coin.Confirmations > 0)
+                    {
+                        transactions.ConfirmedTransactions.Transactions.Add(transaction);
+                    }
+                    else
+                    {
+                        transactions.UnconfirmedTransactions.Transactions.Add(transaction);
+                    }
+                }
+            }
             return FilterValidTransactions(transactions);
         }
 
@@ -340,7 +394,7 @@ namespace BTCPayServer.Services.Wallets
         )
         {
             ArgumentNullException.ThrowIfNull(derivationStrategy);
-            return (await GetUTXOChanges(derivationStrategy, cancellation))
+            var result = (await GetUTXOChanges(derivationStrategy, cancellation))
                           .GetUnspentUTXOs(excludeUnconfirmed)
                           .Select(c => new ReceivedCoin()
                           {
@@ -353,17 +407,45 @@ namespace BTCPayServer.Services.Wallets
                               Confirmations = c.Confirmations,
                               // Some old version of NBX doesn't have Address in this call
                               Address = c.Address ?? c.ScriptPubKey.GetDestinationAddress(Network.NBitcoinNetwork)
-                          }).ToArray();
+                          });
+            var mwebScannerService = _Services.GetService<MwebScannerService>();
+            if (mwebScannerService != null)
+            {
+                result = result.Concat(await mwebScannerService.GetUnspentCoins(derivationStrategy, excludeUnconfirmed));
+            }
+            return result.ToArray();
         }
 
-        public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
+        public async Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
+            var result = await _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
             {
                 var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
                 return result;
             });
+            var mwebScannerService = _Services.GetService<MwebScannerService>();
+            if (mwebScannerService != null)
+            {
+                result = new GetBalanceResponse()
+                {
+                    Unconfirmed = result.Unconfirmed,
+                    Confirmed = result.Confirmed,
+                    Total = result.Total,
+                    Immature = result.Immature,
+                    Available = result.Available,
+                };
+                foreach (var coin in await mwebScannerService.GetUnspentCoins(derivationStrategy))
+                {
+                    if (coin.Confirmations > 0)
+                        result.Confirmed = result.Confirmed.Add(coin.Value);
+                    else
+                        result.Unconfirmed = result.Unconfirmed.Add(coin.Value);
+                    result.Total = result.Total.Add(coin.Value);
+                    result.Available = result.Available.Add(coin.Value);
+                }
+            }
+            return result;
         }
     }
 

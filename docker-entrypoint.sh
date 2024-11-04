@@ -21,4 +21,5 @@ if [ -f "$BTCPAY_SSHAUTHORIZEDKEYS" ] && [[ "$BTCPAY_SSHKEYFILE" ]]; then
     fi
 fi
 
+exec ./mwebd -d "$BTCPAY_DATADIR" -p 127.0.0.1:39388 &
 exec dotnet BTCPayServer.dll

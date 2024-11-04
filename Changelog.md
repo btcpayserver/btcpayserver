@@ -4,7 +4,7 @@
 
 ### Bug fixes
 
-* Fix: Wrong manifest downloaded when installing plugin on old btcpay (Ported on 1.13.x)
+* Fix: Wrong manifest downloaded when installing plugin on old btcpay (Ported on 1.13.x) (#6354, #6344)
 * Resolve pull payment timezone (#6348) @TChukwuleta
 * Fix: Payouts with unknown state should be considered pending @jackstar12
 * Fix: Crowdfund page was crashing from 2.0.0 (#6347, #6342, #6346)
@@ -104,6 +104,10 @@ Please refer to our blog post before upgrading — here are the most noteworthy 
 * Remove period concept from PullPayment (#5963) @NicolasDorier
 * Remove the Altcoins build (#6177) @NicolasDorier
 * Dashboard: Remove View All link for Top Items (#6072) @dennisreimann
+
+## 1.13.6
+
+* Fix: Wrong manifest downloaded when installing plugin on old btcpay (Ported on 1.13.x) (#6354, #6344)
 
 ## 1.13.5
 

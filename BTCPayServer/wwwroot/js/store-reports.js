@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
         fetchStoreReports();
     });
 
-    delegate("click", "#exportCSV", downloadCSV);
+    delegate("click", "[data-action='exportCSV']", downloadCSV);
     
     const $viewNameToggle = document.getElementById("ViewNameToggle")
     delegate("click", ".available-view", function (e) {

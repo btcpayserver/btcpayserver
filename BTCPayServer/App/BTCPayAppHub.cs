@@ -123,6 +123,8 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         _network = btcPayNetworkProvider.BTC;
         _explorerClient =  _explorerClientProvider.GetExplorerClient(btcPayNetworkProvider.BTC);
         
+            
+        // TODO: maybe we can move this to the device master signal, an app can potentially still function with a full node active in theory 
         if (!_connectionFactory.Available || !_nbXplorerDashboard.IsFullySynched(_explorerClient.CryptoCode, out _))
         {
            Dispose();

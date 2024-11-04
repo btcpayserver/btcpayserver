@@ -70,9 +70,11 @@ namespace BTCPayServer.Plugins
             var dest = _dataDirectories.Value.PluginDir;
             var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
             var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
+            var pluginSelector = $"[{Uri.EscapeDataString(pluginIdentifier)}]";
+            version = Uri.EscapeDataString(version);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
-            var url = $"api/v1/plugins/[{Uri.EscapeDataString(pluginIdentifier)}]/versions/{Uri.EscapeDataString(version)}/download";
-            var manifest = (await _pluginBuilderClient.GetPublishedVersions(null, true)).Select(v => v.ManifestInfo.ToObject<AvailablePlugin>()).FirstOrDefault(p => p.Identifier == pluginIdentifier);
+            var url = $"api/v1/plugins/{pluginSelector}/versions/{version}/download";
+            var manifest = (await _pluginBuilderClient.GetPlugin(pluginSelector, version))?.ManifestInfo?.ToObject<AvailablePlugin>();
             await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
             await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);

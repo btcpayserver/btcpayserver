@@ -69,6 +69,7 @@ namespace BTCPayServer.Models.WalletViewModels
 
         public string BackUrl { get; set; }
         public string ReturnUrl { get; set; }
+        public bool IsMultisigOnServer { get; set; }
 
         public class InputSelectionOption
         {

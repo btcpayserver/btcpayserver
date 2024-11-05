@@ -148,7 +148,7 @@ namespace BTCPayServer.Controllers
                                 derivationSettings.RebaseKeyPaths(psbt);
                                 
                                 // if we only have one root fingerprint setup, then check if it matches device
-                                var multisigOnServer = derivationSettings.AccountKeySettings.Count(a => a.RootFingerprint != null) > 1;
+                                var multisigOnServer = derivationSettings.IsMultisigOnServer;
                                 if (!multisigOnServer)
                                 {
                                     var signing = derivationSettings.GetSigningAccountKeySettings();

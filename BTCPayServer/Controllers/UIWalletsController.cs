@@ -519,7 +519,8 @@ namespace BTCPayServer.Controllers
             var model = new WalletSendModel
             {
                 CryptoCode = walletId.CryptoCode,
-                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath
+                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
+                IsMultisigOnServer = paymentMethod.IsMultisigOnServer
             };
             if (bip21?.Any() is true)
             {
@@ -916,6 +917,9 @@ namespace BTCPayServer.Controllers
             };
             switch (command)
             {
+                case "createpending":
+                    var pt = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt);
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, new WalletPSBTViewModel
                     {

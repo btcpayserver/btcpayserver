@@ -226,8 +226,16 @@
         </div>
     </div>
     <div class="d-grid d-sm-flex flex-wrap gap-3 buttons">
-        <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
-        <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary" text-translate="true">Schedule transaction</button>
+        @Html.HiddenFor(a=>a.IsMultisigOnServer)
+        @if (Model.IsMultisigOnServer)
+        {
+            <button type="submit" id="CreatePendingTransaction" name="command" value="createpending" class="btn btn-primary">Create pending transaction</button>
+        }
+        else
+        {
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
+            <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary" text-translate="true">Schedule transaction</button>
+        }
     </div>
 
     <vc:ui-extension-point location="onchain-wallet-send" model="@Model"/>

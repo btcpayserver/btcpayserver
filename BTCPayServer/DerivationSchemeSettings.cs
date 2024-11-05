@@ -102,6 +102,9 @@ namespace BTCPayServer
 
         public string Label { get; set; }
 
+        // TODO: Find better way to check this, maybe provide user selected setting
+        public bool IsMultisigOnServer => AccountKeySettings.Count(a => a.RootFingerprint != null) > 1;
+            
         public override string ToString()
         {
             return AccountDerivation.ToString();

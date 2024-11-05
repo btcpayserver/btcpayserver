@@ -148,7 +148,8 @@ namespace BTCPayServer.Controllers
                                 derivationSettings.RebaseKeyPaths(psbt);
                                 
                                 // if we only have one root fingerprint setup, then check if it matches device
-                                if (derivationSettings.AccountKeySettings.Count(a => a.RootFingerprint != null) <= 1)
+                                var multisigOnServer = derivationSettings.AccountKeySettings.Count(a => a.RootFingerprint != null) > 1;
+                                if (!multisigOnServer)
                                 {
                                     var signing = derivationSettings.GetSigningAccountKeySettings();
                                     if (signing.GetRootedKeyPath()?.MasterFingerprint != fingerprint)
@@ -170,6 +171,17 @@ namespace BTCPayServer.Controllers
                                     {
                                         await websocketHelper.Send("{ \"error\": \"wrong-keypath\"}", cancellationToken);
                                         continue;
+                                    }
+                                    
+                                    if (multisigOnServer)
+                                    {
+                                        var alreadySigned = psbt.Inputs.Any(a =>
+                                            a.PartialSigs.Any(a => a.Key == actualPubKey));
+                                        if (alreadySigned)
+                                        {
+                                            await websocketHelper.Send("{ \"error\": \"already-signed-psbt\"}", cancellationToken);
+                                            continue;
+                                        }
                                     }
                                 }
 

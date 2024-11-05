@@ -1,8 +1,6 @@
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -34,7 +32,8 @@ namespace BTCPayServer.Controllers.Greenfield
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
             LightningClientFactoryService lightningClientFactory, PaymentMethodHandlerDictionary handlers,
             PoliciesSettings policiesSettings,
-            IAuthorizationService authorizationService) : base(policiesSettings, authorizationService, handlers)
+            IAuthorizationService authorizationService,
+            LightningHistogramService lnHistogramService) : base(policiesSettings, authorizationService, handlers, lnHistogramService)
         {
             _lightningNetworkOptions = lightningNetworkOptions;
             _lightningClientFactory = lightningClientFactory;
@@ -56,6 +55,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return base.GetBalance(cryptoCode, cancellationToken);
         }
+        
+        [Authorize(Policy = Policies.CanUseLightningNodeInStore, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/histogram")]
+        public override Task<IActionResult> GetHistogram(string cryptoCode, [FromQuery] HistogramType? type = null, CancellationToken cancellationToken = default)
+        {
+            return base.GetHistogram(cryptoCode, type, cancellationToken);
+        }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -64,6 +70,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return base.ConnectToNode(cryptoCode, request, cancellationToken);
         }
+
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels")]
@@ -71,6 +78,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return base.GetChannels(cryptoCode, cancellationToken);
         }
+
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels")]

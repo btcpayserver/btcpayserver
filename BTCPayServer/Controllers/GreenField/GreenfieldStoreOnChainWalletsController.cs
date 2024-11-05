@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -20,7 +19,6 @@ using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -58,6 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly IFeeProviderFactory _feeProviderFactory;
         private readonly UTXOLocker _utxoLocker;
         private readonly TransactionLinkProviders _transactionLinkProviders;
+        private readonly WalletHistogramService _walletHistogramService;
 
         public GreenfieldStoreOnChainWalletsController(
             IAuthorizationService authorizationService,
@@ -74,6 +73,7 @@ namespace BTCPayServer.Controllers.Greenfield
             WalletReceiveService walletReceiveService,
             IFeeProviderFactory feeProviderFactory,
             UTXOLocker utxoLocker,
+            WalletHistogramService walletHistogramService,
             TransactionLinkProviders transactionLinkProviders
         )
         {
@@ -91,6 +91,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _walletReceiveService = walletReceiveService;
             _feeProviderFactory = feeProviderFactory;
             _utxoLocker = utxoLocker;
+            _walletHistogramService = walletHistogramService;
             _transactionLinkProviders = transactionLinkProviders;
         }
 
@@ -114,6 +115,27 @@ namespace BTCPayServer.Controllers.Greenfield
             });
         }
 
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/histogram")]
+        public async Task<IActionResult> GetOnChainWalletHistogram(string storeId, string paymentMethodId, [FromQuery] string? type = null)
+        {
+            if (IsInvalidWalletRequest(paymentMethodId, out var network, out var derivationScheme, out var actionResult))
+                return actionResult;
+
+            var walletId = new WalletId(storeId, network.CryptoCode);
+            Enum.TryParse<HistogramType>(type, true, out var histType);
+            var data = await _walletHistogramService.GetHistogram(Store, walletId, histType);
+            if (data == null) return this.CreateAPIError(404, "histogram-not-found", "The wallet histogram was not found.");
+
+            return Ok(new HistogramData
+            {
+                Type = data.Type,
+                Balance = data.Balance,
+                Series = data.Series,
+                Labels = data.Labels
+            });
+        }
+        
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate")]
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string paymentMethodId, int? blockTarget = null)

@@ -1,5 +1,3 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -9,7 +7,6 @@ using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
 
 namespace BTCPayServer.Components.StoreRecentInvoices;
 
@@ -35,12 +32,15 @@ public class StoreRecentInvoices : ViewComponent
         _dbContextFactory = dbContextFactory;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreRecentInvoicesViewModel vm)
+    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode, bool initialRendering)
     {
-        if (vm.Store == null)
-            throw new ArgumentNullException(nameof(vm.Store));
-        if (vm.CryptoCode == null)
-            throw new ArgumentNullException(nameof(vm.CryptoCode));
+        var vm = new StoreRecentInvoicesViewModel
+        {
+            StoreId = store.Id,
+            CryptoCode = cryptoCode,
+            InitialRendering = initialRendering
+        };
+
         if (vm.InitialRendering)
             return View(vm);
 
@@ -48,7 +48,7 @@ public class StoreRecentInvoices : ViewComponent
         var invoiceEntities = await _invoiceRepo.GetInvoices(new InvoiceQuery
         {
             UserId = userId,
-            StoreId = new[] { vm.Store.Id },
+            StoreId = [store.Id],
             IncludeArchived = false,
             IncludeRefunds = true,
             Take = 5

@@ -1,16 +1,11 @@
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace BTCPayServer.Components.StoreSelector
 {
@@ -38,13 +33,11 @@ namespace BTCPayServer.Components.StoreSelector
             var archivedCount = stores.Count(s => s.Archived);
             var options = stores
                 .Where(store => !store.Archived)
-                .Select(store =>
-                new StoreSelectorOption
+                .Select(store => new StoreSelectorOption
                 {
                     Text = store.StoreName,
                     Value = store.Id,
-                    Selected = store.Id == currentStore?.Id,
-                    Store = store
+                    Selected = store.Id == currentStore?.Id
                 })
                 .OrderBy(s => s.Text)
                 .ToList();

@@ -5,7 +5,7 @@
 @model StoreUsersViewModel
 @inject StoreRepository StoreRepository
 @{
-    var storeId = Context.GetStoreData().Id;
+    var storeId = Model.StoreId;
     var roles = new SelectList(
         await StoreRepository.GetStoreRoles(storeId),
         nameof(StoreRepository.StoreRole.Id), nameof(StoreRepository.StoreRole.Role),

@@ -3,7 +3,7 @@
 @using System.Text.Json
 @using System.Text.Json.Nodes
 @using BTCPayServer.Client
-@using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Client.Models
 @inject IJSRuntime JS
 @inject IAuthorizationService AuthService
 @inject AuthenticationStateProvider AuthStateProvider
@@ -215,7 +215,7 @@
                                 <div class="d-flex flex-column gap-2">
                                     <h5 class="card-title m-0">@((MarkupString)item.Title)</h5>
                                     <div class="d-flex gap-2 align-items-center">
-                                        @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
+                                        @if (item.PriceType == AppItemPriceType.Topup || item.Price == 0)
                                         {
                                             <span class="fw-semibold badge text-bg-info">@(char.ToUpper(formatted[0]) + formatted[1..])</span>
                                         }
@@ -276,7 +276,7 @@
     [Parameter]
     public IEnumerable<RecentTransaction>? RecentTransactions { get; set; }
     [Parameter]
-    public IEnumerable<ViewPointOfSaleViewModel.Item>? Items { get; set; }
+    public IEnumerable<AppItem>? Items { get; set; }
 
     const int DefaultFontSize = 64;
     static readonly char[] Keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+'];
@@ -571,7 +571,7 @@
         StateHasChanged();
     }
     
-    private bool DisplayItem(ViewPointOfSaleViewModel.Item item)
+    private bool DisplayItem(AppItem item)
     {
         var matchesSearch = string.IsNullOrWhiteSpace(Model.SearchTerm) ||
                             item.Title.ToLowerInvariant().Contains(Model.SearchTerm.ToLowerInvariant()) ||
@@ -580,35 +580,35 @@
         return matchesSearch && matchesCategory;
     }
     
-    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    private string GetItemPriceFormatted(AppItem item)
     {
-        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.PriceType == AppItemPriceType.Topup) return "any amount";
         if (item.Price == 0) return "free";
         var formatted = FormatCurrency(item.Price ?? 0);
-        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+        return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
     }
     
-    private CartItem? ItemInCart(ViewPointOfSaleViewModel.Item item, decimal? amount = null)
+    private CartItem? ItemInCart(AppItem item, decimal? amount = null)
     {
         return Model.Cart.FirstOrDefault(lineItem => lineItem.Id == item.Id && amount == null || lineItem.Price == amount);
     }
     
-    private bool InStock(ViewPointOfSaleViewModel.Item item, int count = 1)
+    private bool InStock(AppItem item, int count = 1)
     {
         return item.Inventory == null || item.Inventory >= GetQuantity(item) + count;
     }
     
-    private string InventoryText(ViewPointOfSaleViewModel.Item item)
+    private string InventoryText(AppItem item)
     {
         var inCart = GetQuantity(item);
         var left = item.Inventory - inCart;
         return left > 0 ? $"{left} left" : "Sold out";
     }
     
-    private CartItem? AddToCart(ViewPointOfSaleViewModel.Item item, int count, decimal? amount = null) {
+    private CartItem? AddToCart(AppItem item, int count, decimal? amount = null) {
         if (!InStock(item)) return null;
         // Check if price is needed
-        var isFixedPrice = item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed;
+        var isFixedPrice = item.PriceType == AppItemPriceType.Fixed;
         if (!isFixedPrice && amount == null) {
             // TODO: Report validation error
         }
@@ -635,11 +635,11 @@
         Model.Cart.Remove(cartItem);
     }
     
-    private int GetQuantity(ViewPointOfSaleViewModel.Item item) {
+    private int GetQuantity(AppItem item) {
         return ItemInCart(item)?.Count ?? 0;
     }
     
-    private void UpdateQuantity(ViewPointOfSaleViewModel.Item item, int count) {
+    private void UpdateQuantity(AppItem item, int count) {
         var cartItem = ItemInCart(item);
         if (cartItem == null)
         {
@@ -660,7 +660,7 @@
         StateHasChanged();
     }
 
-    private string ItemCssClass(ViewPointOfSaleViewModel.Item item)
+    private string ItemCssClass(AppItem item)
     {
         var inStock = InStock(item) ? "posItem--inStock" : null;
         var display = DisplayItem(item) ? "posItem--displayed" : null;

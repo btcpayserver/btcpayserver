@@ -1,7 +1,7 @@
 @using System.Globalization
+@using BTCPayServer.Client.Models
 @using BTCPayServer.Controllers
 @using BTCPayServer.Plugins.PointOfSale
-@using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services.Apps
 @using BTCPayServer.Services.Invoices
 @using Microsoft.AspNetCore.Routing
@@ -40,7 +40,7 @@
     [Parameter]
     public IEnumerable<string>? Categories { get; set; }
     [Parameter]
-    public IEnumerable<ViewPointOfSaleViewModel.Item>? Items { get; set; }
+    public IEnumerable<AppItem>? Items { get; set; }
     
     private IEnumerable<Keypad.RecentTransaction>? RecentTransactions { get; set; }
 

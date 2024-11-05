@@ -3,24 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
-using BTCPayServer.Services.Wallets;
 
 namespace BTCPayServer.Services;
 
 public class LightningHistogramService
 {
-    public async Task<WalletHistogramData> GetHistogram(ILightningClient lightningClient, WalletHistogramType type, CancellationToken cancellationToken)
+    public async Task<HistogramData> GetHistogram(ILightningClient lightningClient, HistogramType type, CancellationToken cancellationToken)
     {
         var (days, pointCount) = type switch
         {
-            WalletHistogramType.Day => (1, 30),
-            WalletHistogramType.Week => (7, 30),
-            WalletHistogramType.Month => (30, 30),
-            WalletHistogramType.YTD => (DateTimeOffset.Now.DayOfYear - 1, 30),
-            WalletHistogramType.Year => (365, 30),
-            WalletHistogramType.TwoYears => (730, 30),
-            _ => throw new ArgumentException($"WalletHistogramType {type} does not exist.")
+            HistogramType.Day => (1, 30),
+            HistogramType.Week => (7, 30),
+            HistogramType.Month => (30, 30),
+            HistogramType.YTD => (DateTimeOffset.Now.DayOfYear - 1, 30),
+            HistogramType.Year => (365, 30),
+            HistogramType.TwoYears => (730, 30),
+            _ => throw new ArgumentException($"HistogramType {type} does not exist.")
         };
         var to = DateTimeOffset.UtcNow;
         var from = to - TimeSpan.FromDays(days);
@@ -61,7 +61,7 @@ public class LightningHistogramService
             // reverse the lists
             series.Reverse();
             labels.Reverse();
-            return new WalletHistogramData
+            return new HistogramData
             {
                 Type = type,
                 Balance = totalBtc,

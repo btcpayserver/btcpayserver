@@ -1,21 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using BTCPayServer.Data;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Invoices;
 using Dapper;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Services.Wallets;
-
-public enum WalletHistogramType
-{
-    Week,
-    Month,
-    YTD,
-    Year,
-    TwoYears,
-    Day
-}
 
 public class WalletHistogramService
 {
@@ -30,7 +21,7 @@ public class WalletHistogramService
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<WalletHistogramData> GetHistogram(StoreData store, WalletId walletId, WalletHistogramType type)
+    public async Task<HistogramData> GetHistogram(StoreData store, WalletId walletId, HistogramType type)
     {
         // https://github.com/dgarage/NBXplorer/blob/master/docs/Postgres-Schema.md
         if (_connectionFactory.Available)
@@ -46,13 +37,13 @@ public class WalletHistogramService
                 var to = DateTimeOffset.UtcNow;
                 var (days, pointCount) = type switch
                 {
-                    WalletHistogramType.Day => (1, 30),
-                    WalletHistogramType.Week => (7, 30),
-                    WalletHistogramType.Month => (30, 30),
-                    WalletHistogramType.YTD => (DateTimeOffset.Now.DayOfYear - 1, 30),
-                    WalletHistogramType.Year => (365, 30),
-                    WalletHistogramType.TwoYears => (730, 30),
-                    _ => throw new ArgumentException($"WalletHistogramType {type} does not exist.")
+                    HistogramType.Day => (1, 30),
+                    HistogramType.Week => (7, 30),
+                    HistogramType.Month => (30, 30),
+                    HistogramType.YTD => (DateTimeOffset.Now.DayOfYear - 1, 30),
+                    HistogramType.Year => (365, 30),
+                    HistogramType.TwoYears => (730, 30),
+                    _ => throw new ArgumentException($"HistogramType {type} does not exist.")
                 };
                 var from = to - TimeSpan.FromDays(days);
                 var interval = TimeSpan.FromTicks((to - from).Ticks / pointCount);
@@ -71,7 +62,7 @@ public class WalletHistogramService
                     labels.Add((DateTimeOffset)r.date);
                 }
                 series[^1] = balance;
-                return new WalletHistogramData
+                return new HistogramData
                 {
                     Series = series,
                     Labels = labels,
@@ -83,12 +74,4 @@ public class WalletHistogramService
 
         return null;
     }
-}
-
-public class WalletHistogramData
-{
-    public WalletHistogramType Type { get; set; }
-    public List<decimal> Series { get; set; }
-    public List<DateTimeOffset> Labels { get; set; }
-    public decimal Balance { get; set; }
 }

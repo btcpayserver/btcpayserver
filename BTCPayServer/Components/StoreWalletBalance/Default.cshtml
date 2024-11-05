@@ -1,5 +1,7 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
 @using BTCPayServer.Payments
-@using BTCPayServer.Services.Wallets
+@using BTCPayServer.TagHelpers
 @model BTCPayServer.Components.StoreWalletBalance.StoreWalletBalanceViewModel
 <div id="StoreWalletBalance-@Model.Store.Id" class="widget store-wallet-balance">
     <div class="d-flex gap-3 align-items-center justify-content-between mb-2">
@@ -25,11 +27,11 @@
         @if (Model.Series != null)
         {
             <div class="btn-group only-for-js mt-1" role="group" aria-label="Period">
-                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodWeek-@Model.Store.Id" value="@WalletHistogramType.Week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
+                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodWeek-@Model.Store.Id" value="@HistogramType.Week" @(Model.Type == HistogramType.Week ? "checked" : "")>
                 <label class="btn btn-link" for="StoreWalletBalancePeriodWeek-@Model.Store.Id">1W</label>
-                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodMonth-@Model.Store.Id" value="@WalletHistogramType.Month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
+                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodMonth-@Model.Store.Id" value="@HistogramType.Month" @(Model.Type == HistogramType.Month ? "checked" : "")>
                 <label class="btn btn-link" for="StoreWalletBalancePeriodMonth-@Model.Store.Id">1M</label>
-                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodYear-@Model.Store.Id" value="@WalletHistogramType.Year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
+                <input type="radio" class="btn-check" name="StoreWalletBalancePeriod-@Model.Store.Id" id="StoreWalletBalancePeriodYear-@Model.Store.Id" value="@HistogramType.Year" @(Model.Type == HistogramType.Year ? "checked" : "")>
                 <label class="btn btn-link" for="StoreWalletBalancePeriodYear-@Model.Store.Id">1Y</label>
             </div>
         }
@@ -62,7 +64,7 @@
             let rate = null;
 
             const id = `StoreWalletBalance-${storeId}`;
-            const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = WalletHistogramType.Week }));
+            const baseUrl = @Safe.Json(Url.Action("WalletHistogram", "UIWallets", new { walletId = Model.WalletId, type = HistogramType.Week }));
             const valueTransform = value => rate ? DashboardUtils.displayCurrency(value, rate, defaultCurrency, divisibility) : value
             const labelCount = 6
             const tooltip = Chartist.plugins.tooltip2({

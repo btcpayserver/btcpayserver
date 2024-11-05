@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using BTCPayServer.Data;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Wallets;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreWalletBalance;
 
@@ -14,7 +14,7 @@ public class StoreWalletBalanceViewModel
     public CurrencyData CurrencyData { get; set; }
     public StoreData Store { get; set; }
     public WalletId WalletId { get; set; }
-    public WalletHistogramType Type { get; set; }
+    public HistogramType Type { get; set; }
     public IList<DateTimeOffset> Labels { get; set; }
     public IList<decimal> Series { get; set; }
 }

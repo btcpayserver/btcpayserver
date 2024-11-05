@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using BTCPayServer.Data;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Wallets;
 using NBitcoin;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreLightningBalance;
 
@@ -20,7 +20,7 @@ public class StoreLightningBalanceViewModel
     public LightningNodeBalance Balance { get; set; }
     public string ProblemDescription { get; set; }
     public bool InitialRendering { get; set; } = true;
-    public WalletHistogramType Type { get; set; }
+    public HistogramType Type { get; set; }
     public IList<DateTimeOffset> Labels { get; set; }
     public IList<decimal> Series { get; set; }
     public string DataUrl { get; set; }

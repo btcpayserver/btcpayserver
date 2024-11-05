@@ -2,6 +2,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -16,12 +17,13 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreLightningBalance;
 
 public class StoreLightningBalance : ViewComponent
 {
-    private const WalletHistogramType DefaultType = WalletHistogramType.Week;
+    private const HistogramType DefaultType = HistogramType.Week;
 
     private readonly StoreRepository _storeRepo;
     private readonly CurrencyNameTable _currencies;

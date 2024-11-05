@@ -1,5 +1,8 @@
 @using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
 @using BTCPayServer.Services.Wallets
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
 @if (!Model.InitialRendering && Model.Balance == null)
 {
@@ -141,11 +144,11 @@
             @if (Model.Series != null)
             {
                 <div class="btn-group only-for-js mt-1" role="group" aria-label="Period">
-                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodWeek-@Model.StoreId" value="@WalletHistogramType.Week" @(Model.Type == WalletHistogramType.Week ? "checked" : "")>
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodWeek-@Model.StoreId" value="@HistogramType.Week" @(Model.Type == HistogramType.Week ? "checked" : "")>
                     <label class="btn btn-link" for="StoreLightningBalancePeriodWeek-@Model.StoreId">1W</label>
-                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodMonth-@Model.StoreId" value="@WalletHistogramType.Month" @(Model.Type == WalletHistogramType.Month ? "checked" : "")>
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodMonth-@Model.StoreId" value="@HistogramType.Month" @(Model.Type == HistogramType.Month ? "checked" : "")>
                     <label class="btn btn-link" for="StoreLightningBalancePeriodMonth-@Model.StoreId">1M</label>
-                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodYear-@Model.StoreId" value="@WalletHistogramType.Year" @(Model.Type == WalletHistogramType.Year ? "checked" : "")>
+                    <input type="radio" class="btn-check" name="StoreLightningBalancePeriod-@Model.StoreId" id="StoreLightningBalancePeriodYear-@Model.StoreId" value="@HistogramType.Year" @(Model.Type == HistogramType.Year ? "checked" : "")>
                     <label class="btn btn-link" for="StoreLightningBalancePeriodYear-@Model.StoreId">1Y</label>
                 </div>
             }

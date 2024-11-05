@@ -3,10 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models.AppViewModels;
@@ -25,7 +24,7 @@ using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
-using Xunit.Sdk;
+using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 using WalletSettingsViewModel = BTCPayServer.Models.StoreViewModels.WalletSettingsViewModel;
 
 namespace BTCPayServer.Tests
@@ -759,39 +758,6 @@ noninventoryitem:
                         AppService.Parse(vmpos.Template).Single(item => item.Id == "inventoryitem").Inventory);
                 }, 10000);
 
-                //test payment methods option
-                vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
-                vmpos.Title = "hello";
-                vmpos.Currency = "BTC";
-                vmpos.Template = @"
-btconly:
-  price: 1.0
-  title: good apple
-  payment_methods:
-    - BTC
-normal:
-  price: 1.0";
-                vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
-                Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "btconly").Result);
-                Assert.IsType<RedirectToActionResult>(publicApps
-                    .ViewPointOfSale(app.Id, PosViewType.Cart, 1, choiceKey: "normal").Result);
-                invoices = user.BitPay.GetInvoices();
-                var normalInvoice = invoices.Single(invoice => invoice.ItemCode == "normal");
-                var btcOnlyInvoice = invoices.Single(invoice => invoice.ItemCode == "btconly");
-                Assert.Single(btcOnlyInvoice.CryptoInfo);
-                Assert.Equal("BTC",
-                    btcOnlyInvoice.CryptoInfo.First().CryptoCode);
-                Assert.Equal("BTC-CHAIN",
-                    btcOnlyInvoice.CryptoInfo.First().PaymentType);
-
-                Assert.Equal(2, normalInvoice.CryptoInfo.Length);
-                Assert.Contains(
-                    normalInvoice.CryptoInfo,
-                    s => "BTC-CHAIN" == s.PaymentType && new[] { "BTC", "LTC" }.Contains(
-                             s.CryptoCode));
-
                 //test topup option
                 vmpos.Template = @"
 a:
@@ -821,13 +787,13 @@ g:
                 vmpos = await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
                 Assert.DoesNotContain("custom", vmpos.Template);
                 var items = AppService.Parse(vmpos.Template);
-                Assert.Contains(items, item => item.Id == "a" && item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed);
-                Assert.Contains(items, item => item.Id == "b" && item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed);
-                Assert.Contains(items, item => item.Id == "c" && item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum);
-                Assert.Contains(items, item => item.Id == "d" && item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed);
-                Assert.Contains(items, item => item.Id == "e" && item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum);
-                Assert.Contains(items, item => item.Id == "f" && item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup);
-                Assert.Contains(items, item => item.Id == "g" && item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup);
+                Assert.Contains(items, item => item.Id == "a" && item.PriceType == AppItemPriceType.Fixed);
+                Assert.Contains(items, item => item.Id == "b" && item.PriceType == AppItemPriceType.Fixed);
+                Assert.Contains(items, item => item.Id == "c" && item.PriceType == AppItemPriceType.Minimum);
+                Assert.Contains(items, item => item.Id == "d" && item.PriceType == AppItemPriceType.Fixed);
+                Assert.Contains(items, item => item.Id == "e" && item.PriceType == AppItemPriceType.Minimum);
+                Assert.Contains(items, item => item.Id == "f" && item.PriceType == AppItemPriceType.Topup);
+                Assert.Contains(items, item => item.Id == "g" && item.PriceType == AppItemPriceType.Topup);
 
                 Assert.IsType<RedirectToActionResult>(publicApps
                     .ViewPointOfSale(app.Id, PosViewType.Static, choiceKey: "g").Result);

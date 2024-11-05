@@ -224,108 +224,91 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
 
         var proofBlob = new PayoutLightningBlob { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
         PayResponse pay = null;
+        Exception exception = null;
         try
         {
-            Exception exception = null;
-            try
-            {
-                pay = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
-                    new PayInvoiceParams()
-                    {
-                        Amount = new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC)
-                    }, cancellationToken);
-
-                if (pay?.Result is PayResult.CouldNotFindRoute)
+            pay = await lightningClient.Pay(bolt11PaymentRequest.ToString(),
+                new PayInvoiceParams()
                 {
-                    // Payment failed for sure... we can try again later!
-                    payoutData.State = PayoutState.AwaitingPayment;
-                    return new ResultVM
-                    {
-                        PayoutId = payoutData.Id,
-                        Result = PayResult.CouldNotFindRoute,
-                        Message = $"Unable to find a route for the payment, check your channel liquidity",
-                        Destination = payoutBlob.Destination
-                    };
-                }
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
+                    Amount = new LightMoney((decimal)payoutData.Amount, LightMoneyUnit.BTC)
+                }, cancellationToken);
 
-            LightningPayment payment = null;
-            try
+            if (pay?.Result is PayResult.CouldNotFindRoute)
             {
-                payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(), cancellationToken);
-            }
-            catch (Exception ex)
-            {
-                exception = ex;
-            }
-            if (payment is null)
-            {
-                payoutData.State = PayoutState.Cancelled;
-                var exceptionMessage = "";
-                if (exception is not null)
-                    exceptionMessage = $" ({exception.Message})";
-				if (exceptionMessage == "")
-					exceptionMessage = $" ({pay?.ErrorDetail})";
-				return new ResultVM
+                // Payment failed for sure... we can try again later!
+                payoutData.State = PayoutState.AwaitingPayment;
+                return new ResultVM
                 {
                     PayoutId = payoutData.Id,
-                    Result = PayResult.Error,
-                    Message = $"Unable to confirm the payment of the invoice" + exceptionMessage,
+                    Result = PayResult.CouldNotFindRoute,
+                    Message = $"Unable to find a route for the payment, check your channel liquidity",
                     Destination = payoutBlob.Destination
                 };
             }
-            if (payment.Preimage is not null)
-                proofBlob.Preimage = payment.Preimage;
-
-            if (payment.Status == LightningPaymentStatus.Complete)
-            {
-                payoutData.State = PayoutState.Completed;
-                payoutData.SetProofBlob(proofBlob, null);
-                return new ResultVM
-                {
-                    PayoutId = payoutData.Id,
-                    Result = PayResult.Ok,
-                    Destination = payoutBlob.Destination,
-                    Message = payment.AmountSent != null
-                        ? $"Paid out {payment.AmountSent.ToDecimal(LightMoneyUnit.BTC)} {payoutData.Currency}"
-                        : "Paid out"
-                };
-            }
-            else if (payment.Status == LightningPaymentStatus.Failed)
-            {
-                payoutData.State = PayoutState.AwaitingPayment;
-                string reason = "";
-                if (pay?.ErrorDetail is string err)
-                    reason = $" ({err})";
-                return new ResultVM
-                {
-                    PayoutId = payoutData.Id,
-                    Result = PayResult.Error,
-                    Destination = payoutBlob.Destination,
-                    Message = $"The payment failed{reason}"
-                };
-            }
-            else
-            {
-                // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
-                payoutData.State = PayoutState.InProgress;
-                payoutData.SetProofBlob(proofBlob, null);
-                return new ResultVM
-                {
-                    PayoutId = payoutData.Id,
-                    Result = PayResult.Ok,
-                    Destination = payoutBlob.Destination,
-                    Message = "The payment has been initiated but is still in-flight."
-                };
-            }
         }
-        catch (OperationCanceledException)
+        catch (Exception ex)
         {
-            // Timeout, potentially caused by hold invoices
+            exception = ex;
+        }
+
+        LightningPayment payment = null;
+        try
+        {
+            payment = await lightningClient.GetPayment(bolt11PaymentRequest.PaymentHash.ToString(), cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            exception = ex;
+        }
+        if (payment is null)
+        {
+            payoutData.State = PayoutState.Cancelled;
+            var exceptionMessage = "";
+            if (exception is not null)
+                exceptionMessage = $" ({exception.Message})";
+            if (exceptionMessage == "")
+                exceptionMessage = $" ({pay?.ErrorDetail})";
+            return new ResultVM
+            {
+                PayoutId = payoutData.Id,
+                Result = PayResult.Error,
+                Message = $"Unable to confirm the payment of the invoice" + exceptionMessage,
+                Destination = payoutBlob.Destination
+            };
+        }
+        if (payment.Preimage is not null)
+            proofBlob.Preimage = payment.Preimage;
+
+        if (payment.Status == LightningPaymentStatus.Complete)
+        {
+            payoutData.State = PayoutState.Completed;
+            payoutData.SetProofBlob(proofBlob, null);
+            return new ResultVM
+            {
+                PayoutId = payoutData.Id,
+                Result = PayResult.Ok,
+                Destination = payoutBlob.Destination,
+                Message = payment.AmountSent != null
+                    ? $"Paid out {payment.AmountSent.ToDecimal(LightMoneyUnit.BTC)} {payoutData.Currency}"
+                    : "Paid out"
+            };
+        }
+        else if (payment.Status == LightningPaymentStatus.Failed)
+        {
+            payoutData.State = PayoutState.AwaitingPayment;
+            string reason = "";
+            if (pay?.ErrorDetail is string err)
+                reason = $" ({err})";
+            return new ResultVM
+            {
+                PayoutId = payoutData.Id,
+                Result = PayResult.Error,
+                Destination = payoutBlob.Destination,
+                Message = $"The payment failed{reason}"
+            };
+        }
+        else
+        {
             // Payment will be saved as pending, the LightningPendingPayoutListener will handle settling/cancelling
             payoutData.State = PayoutState.InProgress;
             payoutData.SetProofBlob(proofBlob, null);
@@ -334,7 +317,7 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 PayoutId = payoutData.Id,
                 Result = PayResult.Ok,
                 Destination = payoutBlob.Destination,
-                Message = "The payment timed out. We will verify if it completed later."
+                Message = "The payment has been initiated but is still in-flight."
             };
         }
     }

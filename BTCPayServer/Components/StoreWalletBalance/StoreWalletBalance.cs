@@ -49,7 +49,7 @@ public class StoreWalletBalance : ViewComponent
 
         var vm = new StoreWalletBalanceViewModel
         {
-            Store = store,
+            StoreId = store.Id,
             CryptoCode = cryptoCode,
             CurrencyData = _currencies.GetCurrencyData(defaultCurrency, true),
             DefaultCurrency = defaultCurrency,
@@ -73,6 +73,10 @@ public class StoreWalletBalance : ViewComponent
             {
                 var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
                 vm.Balance = balance.Available.GetValue(network);
+            }
+            else
+            {
+                vm.MissingWalletConfig = true;
             }
         }
 

@@ -1,6 +1,5 @@
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Client.Models
-@using BTCPayServer.Services.Wallets
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Components.StoreLightningBalance.StoreLightningBalanceViewModel
@@ -170,16 +169,16 @@
         </div>
         <script src="~/Components/StoreLightningBalance/Default.cshtml.js" asp-append-version="true"></script>
         <script>
-        (async () => {
-            const url = @Safe.Json(Model.DataUrl);
-            const storeId = @Safe.Json(Model.StoreId);
-            const response = await fetch(url);
-            if (response.ok) {
-                document.getElementById(`StoreLightningBalance-${storeId}`).outerHTML = await response.text();
-                const data = document.querySelector(`#StoreLightningBalance-${storeId} template`);
-                if (data) window.storeLightningBalance.dataLoaded(JSON.parse(data.innerHTML));
-            }
-        })();
-    </script>
+            (async () => {
+                const url = @Safe.Json(Model.DataUrl);
+                const storeId = @Safe.Json(Model.StoreId);
+                const response = await fetch(url);
+                if (response.ok) {
+                    document.getElementById(`StoreLightningBalance-${storeId}`).outerHTML = await response.text();
+                    const data = document.querySelector(`#StoreLightningBalance-${storeId} template`);
+                    if (data) window.storeLightningBalance.dataLoaded(JSON.parse(data.innerHTML));
+                }
+            })();
+        </script>
     }
 </div>

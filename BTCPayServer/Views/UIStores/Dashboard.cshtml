@@ -81,7 +81,7 @@
         <vc:store-numbers vm="@(new StoreNumbersViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
         @if (Model.LightningEnabled)
         {
-            <vc:store-lightning-balance vm="@(new StoreLightningBalanceViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
+            <vc:store-lightning-balance store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
             <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel { Store = store, CryptoCode = Model.CryptoCode })" permission="@Policies.CanModifyServerSettings" />
         }
         @if (Model.WalletEnabled)

@@ -95,12 +95,7 @@ public partial class UIStoresController
         if (store == null)
             return NotFound();
 
-        return ViewComponent("StoreLightningBalance", new StoreLightningBalanceViewModel
-        {
-            Store = store,
-            CryptoCode = cryptoCode,
-            InitialRendering = false
-        });
+        return ViewComponent("StoreLightningBalance", new { Store = store, CryptoCode = cryptoCode });
     }
 
     [HttpGet("{storeId}/lightning/{cryptoCode}/dashboard/balance/{type}")]

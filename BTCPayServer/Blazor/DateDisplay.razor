@@ -21,7 +21,7 @@
     public DateDisplayFormat Format { get; set; }
 
     [Parameter(CaptureUnmatchedValues = true)]
-    public Dictionary<string, object>? InputAttributes { get; set; }
+    public Dictionary<string, object> InputAttributes { get; set; }
 
     private static string ToTimeAgo(DateTimeOffset date) => ToTimeAgo(DateTimeOffset.UtcNow - date);
 

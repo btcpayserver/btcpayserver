@@ -98,7 +98,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
 					try
 					{
 						if (proof is not null)
-							payment = await client.GetPayment(proof.Id, CancellationToken);
+							payment = await client.GetPayment(proof.PaymentHash, CancellationToken);
 					}
 					catch
 					{

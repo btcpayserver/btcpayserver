@@ -97,11 +97,11 @@
                             }
                             <div class="d-flex align-items-center gap-2">
                                 <span class="text-muted text-nowrap" text-translate="true">Start Date</span>
-                                <span class="text-nowrap">@Model.StartDate.ToString("g")</span>
+                                <span class="text-nowrap">@Model.StartDate.ToBrowserDate()</span>
                             </div>
                             <div class="d-flex align-items-center gap-2">
                                 <span class="text-muted text-nowrap" text-translate="true">Last Updated</span>
-                                <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
+                                <span class="text-nowrap">@Model.LastRefreshed.ToBrowserDate()</span>
                             </div>
                             <div class="d-flex align-items-center only-for-js gap-3 my-3">
                                 <button type="button" class="btn btn-link fw-semibold d-print-none p-0" id="copyLink" text-translate="true">

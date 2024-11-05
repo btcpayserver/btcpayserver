@@ -1,9 +1,9 @@
-@using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
 @using BTCPayServer.Client
 @using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
 @inject DisplayFormatter DisplayFormatter
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
@@ -21,12 +21,12 @@
     <script src="~/pos/cart.js" asp-append-version="true"></script>
 }
 @functions {
-    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    private string GetItemPriceFormatted(AppItem item)
     {
-        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.PriceType == AppItemPriceType.Topup) return "any amount";
         if (item.Price == 0) return "free";
         var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+        return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
     }
 }
 
@@ -73,7 +73,7 @@
                         var formatted = GetItemPriceFormatted(item);
                         var inStock = item.Inventory is null or > 0;
                         var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
-                            ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
+                            ? item.PriceType == AppItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
                             : item.BuyButtonText;
                         buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
                         var categories = new JArray(item.Categories ?? new object[] { });
@@ -86,7 +86,7 @@
                                 <div class="card-body d-flex flex-column gap-2 mb-auto">
                                     <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                                     <div class="d-flex gap-2 align-items-center">
-                                        @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
+                                        @if (item.PriceType == AppItemPriceType.Topup || item.Price == 0)
                                         {
                                             <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
                                         }
@@ -116,7 +116,7 @@
                                 @if (inStock)
                                 {
                                     <form class="card-footer">
-                                        @if (item.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Fixed)
+                                        @if (item.PriceType != AppItemPriceType.Fixed)
                                         {
                                             <div class="input-group mb-2">
                                                 <span class="input-group-text">@Model.CurrencySymbol</span>

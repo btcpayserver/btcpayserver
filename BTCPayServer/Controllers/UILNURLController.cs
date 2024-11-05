@@ -26,7 +26,6 @@ using BTCPayServer.Payouts;
 using BTCPayServer.Plugins;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -290,7 +289,7 @@ namespace BTCPayServer
                 return NotFound();
             }
 
-            ViewPointOfSaleViewModel.Item[] items;
+            AppItem[] items;
             string currencyCode;
             PointOfSaleSettings posS = null;
             switch (app.AppType)
@@ -310,7 +309,7 @@ namespace BTCPayServer
                     return NotFound();
             }
 
-            ViewPointOfSaleViewModel.Item item = null;
+            AppItem item = null;
             if (!string.IsNullOrEmpty(itemCode))
             {
                 var pmi = GetLNUrlPaymentMethodId(cryptoCode, store, out _);
@@ -321,13 +320,8 @@ namespace BTCPayServer
                     item1.Id.Equals(itemCode, StringComparison.InvariantCultureIgnoreCase) ||
                     item1.Id.Equals(escapedItemId, StringComparison.InvariantCultureIgnoreCase));
 
-                if (item is null ||
-                    item.Inventory <= 0 ||
-                    (item.PaymentMethods?.Any() is true &&
-                     item.PaymentMethods?.Any(s => PaymentMethodId.Parse(s) == pmi) is false))
-                {
+                if (item is null || item.Inventory <= 0)
                     return NotFound();
-                }
             }
             else if (app.AppType == PointOfSaleAppType.AppType && posS?.ShowCustomAmount is not true)
             {
@@ -336,7 +330,7 @@ namespace BTCPayServer
 
             var createInvoice = new CreateInvoiceRequest
             {
-                Amount =  item?.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? null : item?.Price,
+                Amount =  item?.PriceType == AppItemPriceType.Topup ? null : item?.Price,
                 Currency = currencyCode,
                 Checkout = new InvoiceDataBase.CheckoutOptions
                 {
@@ -350,7 +344,7 @@ namespace BTCPayServer
                 AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
             };
 
-            var allowOverpay = item?.PriceType is not ViewPointOfSaleViewModel.ItemPriceType.Fixed;
+            var allowOverpay = item?.PriceType is not AppItemPriceType.Fixed;
             var invoiceMetadata = new InvoiceMetadata { OrderId = AppService.GetRandomOrderId() };
             if (item != null)
             {

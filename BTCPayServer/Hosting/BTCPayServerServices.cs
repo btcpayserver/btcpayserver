@@ -173,6 +173,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<UserService>();
             services.TryAddSingleton<UriResolver>();
             services.TryAddSingleton<WalletHistogramService>();
+            services.TryAddSingleton<LightningHistogramService>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>

@@ -1,5 +1,4 @@
 #nullable enable
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -64,7 +63,9 @@ public partial class UIStoresController : Controller
         SettingsRepository settingsRepository,
         CurrencyNameTable currencyNameTable,
         IStringLocalizer stringLocalizer,
-        EventAggregator eventAggregator)
+        EventAggregator eventAggregator,
+        LightningHistogramService lnHistogramService,
+        LightningClientFactoryService lightningClientFactory)
     {
         _rateFactory = rateFactory;
         _storeRepo = storeRepo;
@@ -95,6 +96,8 @@ public partial class UIStoresController : Controller
         _dataProtector = dataProtector.CreateProtector("ConfigProtector");
         _webhookNotificationManager = webhookNotificationManager;
         _lightningNetworkOptions = lightningNetworkOptions.Value;
+        _lnHistogramService = lnHistogramService;
+        _lightningClientFactory = lightningClientFactory;
         StringLocalizer = stringLocalizer;
     }
 
@@ -127,6 +130,8 @@ public partial class UIStoresController : Controller
     private readonly WebhookSender _webhookNotificationManager;
     private readonly LightningNetworkOptions _lightningNetworkOptions;
     private readonly IDataProtector _dataProtector;
+    private readonly LightningHistogramService _lnHistogramService;
+    private readonly LightningClientFactoryService _lightningClientFactory;
 
     public string? GeneratedPairingCode { get; set; }
     public IStringLocalizer StringLocalizer { get; }

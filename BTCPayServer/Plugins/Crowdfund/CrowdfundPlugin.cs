@@ -228,8 +228,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                     ProgressPercentage = (currentPayments.TotalCurrency / settings.TargetAmount) * 100,
                     PendingProgressPercentage = (pendingPayments.TotalCurrency / settings.TargetAmount) * 100,
                     LastUpdated = DateTime.UtcNow,
-                    PaymentStats = GetPaymentStats(currentPayments),
-                    PendingPaymentStats = GetPaymentStats(pendingPayments),
+                    PaymentStats = GetPaymentStats(currentPayments, pendingPayments),
                     LastResetDate = lastResetDate,
                     NextResetDate = nextResetDate,
                     CurrentPendingAmount = pendingPayments.TotalCurrency,
@@ -244,17 +243,21 @@ namespace BTCPayServer.Plugins.Crowdfund
             return vm;
         }
 
-        private Dictionary<string, PaymentStat> GetPaymentStats(InvoiceStatistics stats)
+        private Dictionary<string, PaymentStat> GetPaymentStats(InvoiceStatistics stats, InvoiceStatistics pendingSats)
         {
             var r = new Dictionary<string, PaymentStat>();
-            var total = stats.Select(s => s.Value.CurrencyValue).Sum();
-            foreach (var kv in stats)
+            var allStats = stats.Concat(pendingSats);
+            var total = allStats
+                        .Select(s => s.Value.CurrencyValue).Sum();
+            foreach (var kv in allStats
+                                    .GroupBy(k => k.Key, k => k.Value)
+                                    .Select(g => (g.Key, CurrencyValue: g.Sum(s => s.CurrencyValue))))
             {
                 var pmi = PaymentMethodId.Parse(kv.Key);
                 r.TryAdd(kv.Key, new PaymentStat()
                 {
                     Label = _prettyNameProvider.PrettyName(pmi),
-                    Percent = (kv.Value.CurrencyValue / total) * 100.0m,
+                    Percent = (kv.CurrencyValue / total) * 100.0m,
                     // Note that the LNURL will have the same LN
                     IsLightning = pmi == PaymentTypes.LN.GetPaymentMethodId(kv.Key)
                 });

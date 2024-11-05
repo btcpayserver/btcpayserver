@@ -1,11 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
+using BTCPayServer.Client.Models;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Models;
-using BTCPayServer.Services.Apps;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -24,7 +22,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         
         public class Item
         {
-           
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string Description { get; set; }
             public string Id { get; set; }
@@ -45,8 +42,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
             public string[] PaymentMethods { get; set; }
             public bool Disabled { get; set; } = false;
-            
-            [JsonExtensionData] public Dictionary<string, JToken> AdditionalData { get; set; }
+            [JsonExtensionData]
+            public Dictionary<string, JToken> AdditionalData { get; set; }
         }
 
         public StoreBrandingViewModel StoreBranding { get; set; }
@@ -61,8 +58,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public bool EnableTips { get; set; }
         public string Step { get; set; }
         public string Title { get; set; }
-        Item[] _Items;
-        public Item[] Items
+        AppItem[] _Items;
+        public AppItem[] Items
         {
             get
             {

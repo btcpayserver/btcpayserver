@@ -1,4 +1,5 @@
-@using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Client.Models
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Plugins.Crowdfund.Models.ContributeToCrowdfund
 
 @{ var vm = Model.ViewCrowdfundViewModel; }
@@ -32,16 +33,16 @@
                             <span>@item.Price.Value</span>
                             <span>@vm.TargetCurrency</span>
 
-                            if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum)
+                            if (item.PriceType == AppItemPriceType.Minimum)
                             {
                                 @Safe.Raw(StringLocalizer["or more"])
                             }
                         }
-                        else if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup )
+                        else if (item.PriceType == AppItemPriceType.Topup)
                         {
                             @Safe.Raw(StringLocalizer["Any amount"])
                         }
-                        else if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed)
+                        else if (item.PriceType == AppItemPriceType.Fixed)
                         {
                             @Safe.Raw(StringLocalizer["Free"])
                         }

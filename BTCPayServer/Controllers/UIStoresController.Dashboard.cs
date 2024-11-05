@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
@@ -78,8 +77,7 @@ public partial class UIStoresController
         if (store == null)
             return NotFound();
 
-        var vm = new StoreLightningBalanceViewModel { Store = store, CryptoCode = cryptoCode };
-        return ViewComponent("StoreLightningBalance", new { vm });
+        return ViewComponent("StoreLightningBalance", new { Store = store, CryptoCode = cryptoCode });
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]

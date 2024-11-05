@@ -745,9 +745,9 @@ namespace BTCPayServer.Tests
             await user.RegisterDerivationSchemeAsync("BTC");
             var client = await user.CreateClient();
 
-            var item1 = new ViewPointOfSaleViewModel.Item { Id = "item1", Title = "Item 1", Price = 1, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed };
-            var item2 = new ViewPointOfSaleViewModel.Item { Id = "item2", Title = "Item 2", Price = 2, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed };
-            var item3 = new ViewPointOfSaleViewModel.Item { Id = "item3", Title = "Item 3", Price = 3, PriceType = ViewPointOfSaleViewModel.ItemPriceType.Fixed };
+            var item1 = new AppItem { Id = "item1", Title = "Item 1", Price = 1, PriceType = AppItemPriceType.Fixed };
+            var item2 = new AppItem { Id = "item2", Title = "Item 2", Price = 2, PriceType = AppItemPriceType.Fixed };
+            var item3 = new AppItem { Id = "item3", Title = "Item 3", Price = 3, PriceType = AppItemPriceType.Fixed };
             var posItems = AppService.SerializeTemplate([item1, item2, item3]);
             var posApp = await client.CreatePointOfSaleApp(user.StoreId, new PointOfSaleAppRequest { AppName = "test pos", Template = posItems, });
             var crowdfundApp = await client.CreateCrowdfundApp(user.StoreId, new CrowdfundAppRequest { AppName = "test crowdfund" });
@@ -3001,6 +3001,19 @@ namespace BTCPayServer.Tests
             var info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
+            
+            // balance
+            var balance = await client.GetLightningNodeBalance(user.StoreId, "BTC");
+            Assert.True(LightMoney.Satoshis(1000) <= balance.OffchainBalance.Local);
+
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var localBalance = balance.OffchainBalance.Local.ToDecimal(LightMoneyUnit.BTC);
+                var histogram = await client.GetLightningNodeHistogram(user.StoreId, "BTC");
+                Assert.Equal(histogram.Balance, histogram.Series.Last());
+                Assert.Equal(localBalance, histogram.Balance);
+                Assert.Equal(localBalance, histogram.Series.Last());
+            });
 
             // As admin, can use the internal node through our store.
             await user.MakeAdmin(true);
@@ -3023,6 +3036,10 @@ namespace BTCPayServer.Tests
             client = await guest.CreateClient(Policies.CanUseLightningNodeInStore);
             // Can use lightning node is only granted to store's owner
             await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeInfo(user.StoreId, "BTC"));
+
+            // balance and histogram should not be accessible with view only clients
+            await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeBalance(user.StoreId, "BTC"));
+            await AssertPermissionError("btcpay.store.canuselightningnode", () => client.GetLightningNodeHistogram(user.StoreId, "BTC"));
         }
 
         [Fact(Timeout = 60 * 20 * 1000)]
@@ -3538,8 +3555,7 @@ namespace BTCPayServer.Tests
             });
             var overview = await client.ShowOnChainWalletOverview(walletId.StoreId, walletId.CryptoCode);
             Assert.Equal(0m, overview.Balance);
-
-
+            
             var fee = await client.GetOnChainFeeRate(walletId.StoreId, walletId.CryptoCode);
             Assert.NotNull(fee.FeeRate);
 
@@ -3584,6 +3600,17 @@ namespace BTCPayServer.Tests
             Assert.Equal(txhash, utxo.Outpoint.Hash);
             overview = await client.ShowOnChainWalletOverview(walletId.StoreId, walletId.CryptoCode);
             Assert.Equal(0.01m, overview.Balance);
+
+            // histogram should not be accessible with view only clients
+            await AssertHttpError(403, async () =>
+            {
+                await viewOnlyClient.GetOnChainWalletHistogram(walletId.StoreId, walletId.CryptoCode);
+            });
+            var histogram = await client.GetOnChainWalletHistogram(walletId.StoreId, walletId.CryptoCode);
+            Assert.Equal(histogram.Balance, histogram.Series.Last());
+            Assert.Equal(0.01m, histogram.Balance);
+            Assert.Equal(0.01m, histogram.Series.Last());
+            Assert.Equal(0, histogram.Series.First());
 
             //the simplest request:
             var nodeAddress = await tester.ExplorerNode.GetNewAddressAsync();

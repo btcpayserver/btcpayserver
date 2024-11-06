@@ -120,7 +120,6 @@ namespace BTCPayServer.Hosting
                 NBitcoin.JsonConverters.Serializer.RegisterFrontConverters(
                     options.PayloadSerializerSettings);
                 options.PayloadSerializerSettings.Converters.Add(new BTCPayServer.Lightning.JsonConverters.LightMoneyJsonConverter());
-
             });
             services.AddFido2(options =>
                 {

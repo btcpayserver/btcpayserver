@@ -5,8 +5,7 @@ namespace BTCPayServer.Models.StoreViewModels
     public enum LightningNodeType
     {
         Internal,
-        Custom,
-        BTCPayApp
+        Custom
     }
 
     public class LightningNodeViewModel

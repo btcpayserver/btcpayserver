@@ -2,19 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Migrations;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
-using static BTCPayServer.Services.Stores.StoreRepository;
 
 namespace BTCPayServer.Services.Stores
 {
@@ -63,8 +60,6 @@ namespace BTCPayServer.Services.Stores
         {
             public string Id { get; set; }
             public string Email { get; set; }
-            public string Name { get; set; }
-            public string ImageUrl { get; set; }
             public StoreRole StoreRole { get; set; }
             public UserBlob UserBlob { get; set; }
         }

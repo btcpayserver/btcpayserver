@@ -68,7 +68,7 @@
 .chartist-tooltip--right .chartist-tooltip-inner::before {
     left: auto;
     right: 0.75em;
-}*/
+}
 
 /* Adds a small point transition (line charts) when the point is active */
 .ct-chart[data-charttooltip-id] .ct-point {

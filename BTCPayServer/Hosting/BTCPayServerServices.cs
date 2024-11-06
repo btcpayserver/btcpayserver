@@ -402,8 +402,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
-
-
             services.AddSingleton<IHostedService, NBXplorerListener>();
 
             services.AddUIExtension("store-integrations-nav", "LNURL/LightningAddressNav");
@@ -517,7 +515,6 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
                         client.DefaultRequestHeaders.UserAgent.Add(userAgent);
                     });
             }
-
 
             return services;
         }

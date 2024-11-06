@@ -24,14 +24,13 @@
     <link rel="stylesheet" href="~/vendor/chartist/chartist-plugin-tooltip.css" asp-append-version="true">
     <script src="~/vendor/chartist/chartist.min.js" asp-append-version="true"></script>
     <script src="~/vendor/chartist/chartist-plugin-tooltip.js" asp-append-version="true"></script>
-
     <script>
         const DashboardUtils = {
             toDefaultCurrency(amount, rate) {
                 return Math.round((amount * rate) * 100) / 100;
             },
-            displayCurrency(amount, rate, currency, divisibility) {
-                const value = rate ? DashboardUtils.toDefaultCurrency(amount, rate) : amount;
+            displayDefaultCurrency(amount, rate, currency, divisibility) {
+                const value = DashboardUtils.toDefaultCurrency(amount, rate);
                 const locale = currency === 'USD' ? 'en-US' : navigator.language;
                 const isSats = currency === 'SATS';
                 if (isSats) currency = 'BTC';

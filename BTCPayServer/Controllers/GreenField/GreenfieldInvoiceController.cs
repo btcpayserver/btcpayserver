@@ -171,7 +171,7 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/stores/{storeId}/invoices")]
         public async Task<IActionResult> CreateInvoice(string storeId, CreateInvoiceRequest request)
         {
-             var store = HttpContext.GetStoreData()!;
+            var store = HttpContext.GetStoreData()!;
             if (request.Amount < 0.0m)
             {
                 ModelState.AddModelError(nameof(request.Amount), "The amount should be 0 or more.");
@@ -601,7 +601,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 statuses.Add(InvoiceStatus.Settled);
             }
-
             if (state.CanMarkInvalid())
             {
                 statuses.Add(InvoiceStatus.Invalid);
@@ -624,7 +623,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Archived = entity.Archived,
                 Metadata = entity.Metadata.ToJObject(),
                 AvailableStatusesForManualMarking = statuses.ToArray(),
-                Checkout = new CreateInvoiceRequest.CheckoutOptions()
+                Checkout = new InvoiceDataBase.CheckoutOptions
                 {
                     Expiration = entity.ExpirationTime - entity.InvoiceTime,
                     Monitoring = entity.MonitoringExpiration - entity.ExpirationTime,

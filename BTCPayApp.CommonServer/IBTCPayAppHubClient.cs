@@ -119,7 +119,6 @@ public class AppHandshakeResponse
     public string[] IdentifiersAcknowledged { get; set; }
 }
 
-
 public class PairRequest
 {
     public Dictionary<string, string?> Derivations { get; set; } = new();

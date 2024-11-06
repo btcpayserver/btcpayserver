@@ -3,15 +3,16 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using Newtonsoft.Json.Linq
 @using BTCPayServer.Client
+@using BTCPayServer.Client.Models
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @functions {
-    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    private string GetItemPriceFormatted(AppItem item)
     {
-        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.PriceType == AppItemPriceType.Topup) return "any amount";
         if (item.Price == 0) return "free";
         var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+        return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
     }
 }
 <form id="app" method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" v-on:submit="handleFormSubmit" class="d-flex flex-column gap-4 my-auto" v-cloak>
@@ -115,7 +116,7 @@
                     var item = Model.Items[index];
                     var formatted = GetItemPriceFormatted(item);
                     var inStock = item.Inventory is null or > 0;
-                    var displayed = item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed && inStock ? "true" : "false";
+                    var displayed = item.PriceType == AppItemPriceType.Fixed && inStock ? "true" : "false";
                     var categories = new JArray(item.Categories ?? new object[] { });
                     <div class="posItem p-3" :class="{ 'posItem--inStock': inStock(@index), 'posItem--displayed': @displayed }" data-index="@index" data-search="@Safe.RawEncode(item.Title + " " + item.Description)" data-categories='@Safe.Json(categories)' v-show="@displayed">
                         <div class="d-flex align-items-start w-100 gap-3">
@@ -128,7 +129,7 @@
                             <div class="d-flex flex-column gap-2">
                                 <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                                 <div class="d-flex gap-2 align-items-center">
-                                    @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
+                                    @if (item.PriceType == AppItemPriceType.Topup || item.Price == 0)
                                     {
                                         <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
                                     }

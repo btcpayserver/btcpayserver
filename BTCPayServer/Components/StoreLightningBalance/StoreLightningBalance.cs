@@ -3,6 +3,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Lightning;
@@ -12,16 +13,16 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreLightningBalance;
 
 public class StoreLightningBalance : ViewComponent
 {
-    private const WalletHistogramType DefaultType = WalletHistogramType.Week;
+    private const HistogramType DefaultType = HistogramType.Week;
 
     private readonly StoreRepository _storeRepo;
     private readonly CurrencyNameTable _currencies;
@@ -58,24 +59,25 @@ public class StoreLightningBalance : ViewComponent
         _lnHistogramService = lnHistogramService;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreLightningBalanceViewModel vm)
+    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode, bool initialRendering)
     {
-        if (vm.Store == null)
-            throw new ArgumentNullException(nameof(vm.Store));
-        if (vm.CryptoCode == null)
-            throw new ArgumentNullException(nameof(vm.CryptoCode));
+        var defaultCurrency = store.GetStoreBlob().DefaultCurrency;
+        var vm = new StoreLightningBalanceViewModel
+        {
+            StoreId = store.Id,
+            CryptoCode = cryptoCode,
+            InitialRendering = initialRendering,
+            DefaultCurrency = defaultCurrency,
+            CurrencyData = _currencies.GetCurrencyData(defaultCurrency, true),
+            DataUrl = Url.Action("LightningBalanceDashboard", "UIStores", new { storeId = store.Id, cryptoCode })
+        };
 
-        vm.DefaultCurrency = vm.Store.GetStoreBlob().DefaultCurrency;
-        vm.CurrencyData = _currencies.GetCurrencyData(vm.DefaultCurrency, true);
-        vm.DataUrl = Url.Action("LightningBalanceDashboard", "UIStores",
-            new { storeId = vm.Store.Id, cryptoCode = vm.CryptoCode });
-        vm.StoreId = vm.Store.Id;
         if (vm.InitialRendering)
             return View(vm);
         
         try
         {
-            var lightningClient = await GetLightningClient(vm.Store, vm.CryptoCode);
+            var lightningClient = await GetLightningClient(store, vm.CryptoCode);
             
             // balance
             using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(10));
@@ -109,12 +111,10 @@ public class StoreLightningBalance : ViewComponent
             // general error
             vm.ProblemDescription = "Could not fetch Lightning balance.";
         }
-        // unset store to prevent circular reference in JSON 
-        vm.Store = null;
         return View(vm);
     }
 
-    private async Task<ILightningClient> GetLightningClient(StoreData store, string cryptoCode )
+    private async Task<ILightningClient> GetLightningClient(StoreData store, string cryptoCode)
     {
         var network = _networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
         var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);

@@ -3,7 +3,7 @@ if (!window.storeLightningBalance) {
         dataLoaded (model) {
             const { storeId, cryptoCode, defaultCurrency, currencyData: { divisibility } }  = model;
             const id = `StoreLightningBalance-${storeId}`;
-            const valueTransform = value => rate ? DashboardUtils.displayCurrency(value, rate, defaultCurrency, divisibility) : value
+            const valueTransform = value => rate ? DashboardUtils.displayDefaultCurrency(value, rate, defaultCurrency, divisibility) : value
             const labelCount = 6
             const tooltip = Chartist.plugins.tooltip2({
                 template: '<div class="chartist-tooltip-value">{{value}}</div><div class="chartist-tooltip-line"></div>',
@@ -20,9 +20,7 @@ if (!window.storeLightningBalance) {
             const chartOpts = {
                 fullWidth: true,
                 showArea: true,
-                //lineSmooth: false,
                 axisY: {
-                    //labelInterpolationFnc: valueTransform,
                     showLabel: false,
                     offset: 0
                 },
@@ -56,20 +54,6 @@ if (!window.storeLightningBalance) {
                     labels: labels,
                     series: [series]
                 }, renderOpts);
-
-                // prevent y-axis labels from getting cut off
-                /*
-                window.setTimeout(() => {
-                    const yLabels = [...document.querySelectorAll('.ct-label.ct-vertical.ct-start')];
-                    if (yLabels) {
-                        const width = Math.max(...(yLabels.map(l => l.innerText.length * 7.5)));
-                        const opts = Object.assign({}, renderOpts, {
-                            axisY: Object.assign({}, renderOpts.axisY, { offset: width })
-                        });
-                        chart.update(null, opts);
-                    }
-                }, 0)
-                */
             };
 
             const update = async type => {
@@ -82,7 +66,8 @@ if (!window.storeLightningBalance) {
             };
 
             render(data);
-            window.requestAnimationFrame(() => {
+
+            function addEventListeners() {
                 delegate('change', `#${id} [name="StoreLightningBalancePeriod-${storeId}"]`, async e => {
                     const type = e.target.value;
                     await update(type);
@@ -97,7 +82,13 @@ if (!window.storeLightningBalance) {
                         render(data);
                     }
                 });
-            })
+            }
+
+            if (document.readyState === "loading") {
+                window.addEventListener("DOMContentLoaded", addEventListeners);
+            } else {
+                addEventListeners();
+            }
         }
     };
 }

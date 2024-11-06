@@ -177,9 +177,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             string title;
             decimal? price;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
-            ViewPointOfSaleViewModel.Item choice = null;
+            AppItem choice = null;
             List<PosCartItem> cartItems = null;
-            ViewPointOfSaleViewModel.Item[] choices = null;
+            AppItem[] choices = null;
             if (!string.IsNullOrEmpty(choiceKey))
             {
                 choices = AppService.Parse(settings.Template, false);
@@ -187,7 +187,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 if (choice == null)
                     return NotFound();
                 title = choice.Title;
-                if (choice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup)
+                if (choice.PriceType == AppItemPriceType.Topup)
                 {
                     price = null;
                 }
@@ -201,12 +201,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 if (choice.Inventory is <= 0)
                 {
                     return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-                }
-
-                if (choice?.PaymentMethods?.Any() is true)
-                {
-                    paymentMethods = choice?.PaymentMethods.ToDictionary(s => s,
-                        s => new InvoiceSupportedTransactionCurrency() { Enabled = true });
                 }
             }
             else
@@ -240,7 +234,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             }
                         }
 
-                        var expectedCartItemPrice = itemChoice.PriceType != ViewPointOfSaleViewModel.ItemPriceType.Topup
+                        var expectedCartItemPrice = itemChoice.PriceType != AppItemPriceType.Topup
                             ? itemChoice.Price ?? 0
                             : 0;
                         
@@ -374,7 +368,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                     var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                     var ident = selectedChoice.Title ?? selectedChoice.Id;
-                                    var key = selectedChoice.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
+                                    var key = selectedChoice.PriceType == AppItemPriceType.Fixed ? ident : $"{ident} ({singlePrice})";
                                     cartData.Add(key, $"{cartItem.Count} x {singlePrice} = {totalPrice}");
                                 }
 

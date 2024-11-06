@@ -122,13 +122,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return actionResult;
 
             var walletId = new WalletId(storeId, network.CryptoCode);
-            Enum.TryParse<WalletHistogramType>(type, true, out var histType);
+            Enum.TryParse<HistogramType>(type, true, out var histType);
             var data = await _walletHistogramService.GetHistogram(Store, walletId, histType);
             if (data == null) return this.CreateAPIError(404, "histogram-not-found", "The wallet histogram was not found.");
 
             return Ok(new HistogramData
             {
-                Type = Enum.Parse<HistogramType>(data.Type.ToString(), true),
+                Type = data.Type,
                 Balance = data.Balance,
                 Series = data.Series,
                 Labels = data.Labels

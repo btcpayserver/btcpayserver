@@ -7,6 +7,7 @@ using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Components.StoreLightningBalance;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -15,10 +16,11 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Services.Wallets;
+using BTCPayServer.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers;
 
@@ -94,17 +96,12 @@ public partial class UIStoresController
         if (store == null)
             return NotFound();
 
-        return ViewComponent("StoreLightningBalance", new StoreLightningBalanceViewModel
-        {
-            Store = store,
-            CryptoCode = cryptoCode,
-            InitialRendering = false
-        });
+        return ViewComponent("StoreLightningBalance", new { Store = store, CryptoCode = cryptoCode });
     }
 
     [HttpGet("{storeId}/lightning/{cryptoCode}/dashboard/balance/{type}")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
-    public async Task<IActionResult> LightningBalanceDashboard(string storeId, string cryptoCode, WalletHistogramType type)
+    public async Task<IActionResult> LightningBalanceDashboard(string storeId, string cryptoCode, HistogramType type)
     {
         var store = HttpContext.GetStoreData();
         if (store == null)

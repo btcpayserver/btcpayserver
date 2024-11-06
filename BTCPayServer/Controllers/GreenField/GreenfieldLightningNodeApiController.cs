@@ -94,14 +94,14 @@ namespace BTCPayServer.Controllers.Greenfield
         
         public virtual async Task<IActionResult> GetHistogram(string cryptoCode, HistogramType? type = null, CancellationToken cancellationToken = default)
         {
-            Enum.TryParse<WalletHistogramType>(type.ToString(), true, out var histType);
+            Enum.TryParse<HistogramType>(type.ToString(), true, out var histType);
             var lightningClient = await GetLightningClient(cryptoCode, true);
             var data = await _lnHistogramService.GetHistogram(lightningClient, histType, cancellationToken);
             if (data == null) return this.CreateAPIError(404, "histogram-not-found", "The lightning histogram was not found.");
 
             return Ok(new HistogramData
             {
-                Type = Enum.Parse<HistogramType>(data.Type.ToString(), true),
+                Type = data.Type,
                 Balance = data.Balance,
                 Series = data.Series,
                 Labels = data.Labels

@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Models;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Plugins.Crowdfund.Models
@@ -26,7 +26,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public CrowdfundInfo Info { get; set; }
         public string Tagline { get; set; }
         public StoreBrandingViewModel StoreBranding { get; set; }
-        public ViewPointOfSaleViewModel.Item[] Perks { get; set; }
+        public AppItem[] Perks { get; set; }
         public bool SimpleDisplay { get; set; }
         public bool DisqusEnabled { get; set; }
         public bool SoundsEnabled { get; set; }
@@ -56,7 +56,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
             public decimal? PendingProgressPercentage { get; set; }
             public DateTime LastUpdated { get; set; }
             public Dictionary<string, PaymentStat> PaymentStats { get; set; }
-            public Dictionary<string, PaymentStat> PendingPaymentStats { get; set; }
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }

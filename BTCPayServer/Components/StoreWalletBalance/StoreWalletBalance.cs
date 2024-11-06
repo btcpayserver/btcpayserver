@@ -2,18 +2,20 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Mvc;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreWalletBalance;
 
 public class StoreWalletBalance : ViewComponent
 {
-    private const WalletHistogramType DefaultType = WalletHistogramType.Week;
+    private const HistogramType DefaultType = HistogramType.Week;
 
     private readonly StoreRepository _storeRepo;
     private readonly CurrencyNameTable _currencies;
@@ -47,7 +49,7 @@ public class StoreWalletBalance : ViewComponent
 
         var vm = new StoreWalletBalanceViewModel
         {
-            Store = store,
+            StoreId = store.Id,
             CryptoCode = cryptoCode,
             CurrencyData = _currencies.GetCurrencyData(defaultCurrency, true),
             DefaultCurrency = defaultCurrency,
@@ -71,6 +73,10 @@ public class StoreWalletBalance : ViewComponent
             {
                 var balance = await wallet.GetBalance(derivation.AccountDerivation, cts.Token);
                 vm.Balance = balance.Available.GetValue(network);
+            }
+            else
+            {
+                vm.MissingWalletConfig = true;
             }
         }
 

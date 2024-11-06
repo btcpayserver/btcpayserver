@@ -11,7 +11,6 @@ using BTCPayServer.Events;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -96,7 +95,7 @@ namespace BTCPayServer.Services.Apps
             return await salesType.GetItemStats(appData, paidInvoices);
         }
 
-        public static Task<AppSalesStats> GetSalesStatswithPOSItems(ViewPointOfSaleViewModel.Item[] items,
+        public static Task<AppSalesStats> GetSalesStatswithPOSItems(AppItem[] items,
             InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var series = paidInvoices
@@ -146,7 +145,7 @@ namespace BTCPayServer.Services.Apps
             public DateTime Date { get; set; }
         }
 
-        public static Func<List<InvoiceStatsItem>, InvoiceEntity, List<InvoiceStatsItem>> AggregateInvoiceEntitiesForStats(ViewPointOfSaleViewModel.Item[] items)
+        public static Func<List<InvoiceStatsItem>, InvoiceEntity, List<InvoiceStatsItem>> AggregateInvoiceEntitiesForStats(AppItem[] items)
         {
             return (res, e) =>
             {
@@ -347,14 +346,14 @@ namespace BTCPayServer.Services.Apps
             return _storeRepository.FindStore(app.StoreDataId);
         }
 
-        public static string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
+        public static string SerializeTemplate(AppItem[] items)
         {
                return JsonConvert.SerializeObject(items, Formatting.Indented, _defaultSerializer);
         }
-        public static ViewPointOfSaleViewModel.Item[] Parse(string template, bool includeDisabled = true, bool throws = false)
+        public static AppItem[] Parse(string template, bool includeDisabled = true, bool throws = false)
         {
             if (string.IsNullOrWhiteSpace(template)) return [];
-            var allItems = JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)!;
+            var allItems = JsonConvert.DeserializeObject<AppItem[]>(template, _defaultSerializer)!;
             // ensure all items have an id, which is also unique
             var itemsWithoutId = allItems.Where(i => string.IsNullOrEmpty(i.Id)).ToList();
             if (itemsWithoutId.Any() && throws) throw new ArgumentException($"Missing ID for item \"{itemsWithoutId.First().Title}\".");

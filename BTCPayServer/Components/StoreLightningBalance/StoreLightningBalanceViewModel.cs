@@ -4,7 +4,6 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services.Rates;
 using NBitcoin;
-using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreLightningBalance;
 

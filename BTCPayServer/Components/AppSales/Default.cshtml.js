@@ -45,7 +45,6 @@ if (!window.appSales) {
             
             function addEventListeners() {
                 delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
-                    console.log("CHANGED", id)
                     const type = e.target.value;
                     await update(type);
                 });

@@ -194,10 +194,13 @@ public class BTCPayAppState : IHostedService
     {
         var ev = new ServerEvent("store-created") {StoreId = arg.StoreId};
 
-        foreach (var su in arg.StoreUsers)
+        if (arg.StoreUsers?.Any() is true)
         {
-            var cIds = Connections.Where(pair => pair.Value.UserId == su.UserId).Select(pair => pair.Key).ToArray();
-            await AddToGroup(arg.StoreId, cIds);
+            foreach (var su in arg.StoreUsers)
+            {
+                var cIds = Connections.Where(pair => pair.Value.UserId == su.UserId).Select(pair => pair.Key).ToArray();
+                await AddToGroup(arg.StoreId, cIds);
+            }
         }
 
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);

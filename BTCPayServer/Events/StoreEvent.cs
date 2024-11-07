@@ -10,7 +10,7 @@ public class StoreEvent(StoreData store, string? detail = null)
     public string StoreId { get; } = store.Id;
     public string? Detail { get; } = detail;
 
-    public IEnumerable<StoreUser> StoreUsers { get; } = store.UserStores.Select(userStore => new StoreUser
+    public IEnumerable<StoreUser>? StoreUsers { get; } = store.UserStores?.Select(userStore => new StoreUser
     {
         UserId = userStore.ApplicationUserId,
         RoleId = userStore.StoreRoleId
@@ -23,7 +23,7 @@ public class StoreEvent(StoreData store, string? detail = null)
 
     public class StoreUser
     {
-        public string UserId { get; set; } = null!;
+        public string UserId { get; init; } = null!;
         public string RoleId { get; set; } = null!;
     }
 }

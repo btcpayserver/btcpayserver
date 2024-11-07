@@ -385,10 +385,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("ConfirmPassword")).SendKeys("123456");
             s.ClickPagePrimary();
             Assert.Contains("Account successfully created.", s.FindAlertMessage().Text);
-            
-            s.Driver.FindElement(By.Id("Email")).SendKeys(usr);
-            s.Driver.FindElement(By.Id("Password")).SendKeys("123456");
-            s.Driver.FindElement(By.Id("LoginButton")).Click();
 
             // We should be logged in now
             s.GoToHome();

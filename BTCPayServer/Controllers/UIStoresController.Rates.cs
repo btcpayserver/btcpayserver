@@ -15,7 +15,6 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services.Rates;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using static BTCPayServer.Lightning.Eclair.Models.ChannelResponse;
 
 namespace BTCPayServer.Controllers;
 

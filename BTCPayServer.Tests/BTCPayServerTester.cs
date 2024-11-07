@@ -27,7 +27,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
-using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
+using AuthenticationSchemes = BTCPayApp.CommonServer.AuthenticationSchemes;
 
 namespace BTCPayServer.Tests
 {

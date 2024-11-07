@@ -1,26 +1,9 @@
 #nullable enable
 using System;
-using Dapper;
-using System.Linq;
-using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Controllers.GreenField;
-using BTCPayServer.Data;
-using BTCPayServer.Filters;
-using BTCPayServer.Models.StoreReportsViewModels;
-using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Services;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using System.Threading;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using NBitcoin.DataEncoders;
-using System.Net;
 
 namespace BTCPayServer.Controllers;
 

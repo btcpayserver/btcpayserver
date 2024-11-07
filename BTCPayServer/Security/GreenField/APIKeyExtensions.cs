@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using BTCPayApp.CommonServer;
-using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;

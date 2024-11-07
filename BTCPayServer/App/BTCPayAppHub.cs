@@ -5,14 +5,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
-using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using Dapper;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -25,7 +21,6 @@ using NBXplorer.Models;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Controllers;
-
 
 public class GetBlockchainInfoResponse
 {

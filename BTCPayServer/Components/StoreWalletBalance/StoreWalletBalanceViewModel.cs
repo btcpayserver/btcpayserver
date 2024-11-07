@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services.Rates;
-using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Components.StoreWalletBalance;
 

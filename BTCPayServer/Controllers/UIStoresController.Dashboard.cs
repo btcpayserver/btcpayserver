@@ -6,10 +6,6 @@ using System.Text;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
-using BTCPayServer.Components.StoreLightningBalance;
-using BTCPayServer.Components.StoreNumbers;
-using BTCPayServer.Components.StoreRecentInvoices;
-using BTCPayServer.Components.StoreRecentTransactions;
 using BTCPayServer.Data;
 using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments.Bitcoin;
@@ -74,10 +70,9 @@ public partial class UIStoresController
     public IActionResult LightningBalance(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();
-        if (store == null)
-            return NotFound();
-
-        return ViewComponent("StoreLightningBalance", new { Store = store, CryptoCode = cryptoCode });
+        return store != null
+             ? ViewComponent("StoreLightningBalance", new { Store = store, CryptoCode = cryptoCode })
+             : NotFound();
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/numbers")]
@@ -85,11 +80,9 @@ public partial class UIStoresController
     public IActionResult StoreNumbers(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();
-        if (store == null)
-            return NotFound();
-
-        var vm = new StoreNumbersViewModel { Store = store, CryptoCode = cryptoCode };
-        return ViewComponent("StoreNumbers", new { vm });
+        return store != null
+            ? ViewComponent("StoreNumbers", new { Store = store, CryptoCode = cryptoCode })
+            : NotFound();
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-transactions")]
@@ -97,11 +90,9 @@ public partial class UIStoresController
     public IActionResult RecentTransactions(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();
-        if (store == null)
-            return NotFound();
-
-        var vm = new StoreRecentTransactionsViewModel { Store = store, CryptoCode = cryptoCode };
-        return ViewComponent("StoreRecentTransactions", new { vm });
+        return store != null
+            ? ViewComponent("StoreRecentTransactions", new { Store = store, CryptoCode = cryptoCode })
+            : NotFound();
     }
 
     [HttpGet("{storeId}/dashboard/{cryptoCode}/recent-invoices")]
@@ -109,11 +100,9 @@ public partial class UIStoresController
     public IActionResult RecentInvoices(string storeId, string cryptoCode)
     {
         var store = HttpContext.GetStoreData();
-        if (store == null)
-            return NotFound();
-
-        var vm = new StoreRecentInvoicesViewModel { Store = store, CryptoCode = cryptoCode };
-        return ViewComponent("StoreRecentInvoices", new { vm });
+        return store != null
+            ? ViewComponent("StoreRecentInvoices", new { Store = store, CryptoCode = cryptoCode })
+            : NotFound();
     }
 
     internal void AddPaymentMethods(StoreData store, StoreBlob storeBlob,

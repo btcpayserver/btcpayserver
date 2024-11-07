@@ -1,10 +1,8 @@
-using BTCPayServer.Data;
-
 namespace BTCPayServer.Components.StoreNumbers;
 
 public class StoreNumbersViewModel
 {
-    public StoreData Store { get; set; }
+    public string StoreId { get; set; }
     public WalletId WalletId { get; set; }
     public int PayoutsPending { get; set; }
     public int TimeframeDays { get; set; } = 7;

@@ -78,4 +78,14 @@ public partial class BTCPayServerClient
         if (appId == null) throw new ArgumentNullException(nameof(appId));
         await SendHttpRequest($"api/v1/apps/{appId}", null, HttpMethod.Delete, token);
     }
+
+    public virtual async Task<FileData> UploadAppItemImage(string appId, string filePath, string mimeType, CancellationToken token = default)
+    {
+        return await UploadFileRequest<FileData>($"api/v1/apps/{appId}/image", filePath, mimeType, "file", HttpMethod.Post, token);
+    }
+
+    public virtual async Task DeleteAppItemImage(string appId, string fileId, CancellationToken token = default)
+    {
+        await SendHttpRequest($"api/v1/apps/{appId}/image/{fileId}", null, HttpMethod.Delete, token);
+    }
 }

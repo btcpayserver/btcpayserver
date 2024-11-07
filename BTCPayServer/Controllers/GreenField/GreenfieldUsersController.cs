@@ -7,6 +7,7 @@ using System.Xml.Linq;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -233,27 +234,24 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpPost("~/api/v1/users/me/picture")]
         public async Task<IActionResult> UploadCurrentUserProfilePicture(IFormFile? file)
         {
+            var user = await _userManager.GetUserAsync(User);
+            if (user is null) return this.UserNotFound();
+            
+            UploadImageResultModel? upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
-            else if (file.Length > 1_000_000)
-                ModelState.AddModelError(nameof(file), "The uploaded image file should be less than 1MB");
-            else if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
-                ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
-            else if (!file.FileName.IsValidFileName())
-                ModelState.AddModelError(nameof(file.FileName), "Invalid filename");
             else
             {
-                var formFile = await file.Bufferize();
-                if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
-                    ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+                upload = await _fileService.UploadImage(file, user.Id);
+                if (!upload.Success)
+                    ModelState.AddModelError(nameof(file), upload.Response);
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
             try
             {
-                var user = await _userManager.GetUserAsync(User);
-                var storedFile = await _fileService.AddFile(file!, user!.Id);
+                var storedFile = upload!.StoredFile!;
                 var blob = user.GetBlob() ?? new UserBlob();
                 var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
                 blob.ImageUrl = fileIdUri.ToString();
@@ -274,10 +272,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> DeleteCurrentUserProfilePicture()
         {
             var user = await _userManager.GetUserAsync(User);
-            if (user is null)
-            {
-                return this.UserNotFound();
-            }
+            if (user is null) return this.UserNotFound();
             
             var blob = user.GetBlob() ?? new UserBlob();
             if (!string.IsNullOrEmpty(blob.ImageUrl))

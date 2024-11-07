@@ -78,17 +78,17 @@
                 </div>
             </div>
         }
-        <vc:store-numbers vm="@(new StoreNumbersViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
+        <vc:store-numbers store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
         @if (Model.LightningEnabled)
         {
             <vc:store-lightning-balance store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
-            <vc:store-lightning-services vm="@(new StoreLightningServicesViewModel { Store = store, CryptoCode = Model.CryptoCode })" permission="@Policies.CanModifyServerSettings" />
+            <vc:store-lightning-services store="store" crypto-code="@Model.CryptoCode" permission="@Policies.CanModifyServerSettings" />
         }
         @if (Model.WalletEnabled)
         {
-            <vc:store-recent-transactions vm="@(new StoreRecentTransactionsViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
+            <vc:store-recent-transactions store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
         }
-        <vc:store-recent-invoices vm="@(new StoreRecentInvoicesViewModel { Store = store, CryptoCode = Model.CryptoCode, InitialRendering = true })" />
+        <vc:store-recent-invoices store="store" crypto-code="@Model.CryptoCode" initial-rendering="true" />
         @foreach (var app in Model.Apps)
         {
             <vc:app-sales app-id="@app.Id" app-type="@app.AppType" />

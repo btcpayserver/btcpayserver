@@ -1,27 +1,16 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Data;
-using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
-using BTCPayServer.Services.Stores;
 using BTCPayServer.Services.Wallets;
-using Dapper;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using NBitcoin;
-using NBXplorer;
-using NBXplorer.Client;
-using static BTCPayServer.Components.StoreRecentTransactions.StoreRecentTransactionsViewModel;
 
 namespace BTCPayServer.Components.StoreRecentTransactions;
 
@@ -47,26 +36,27 @@ public class StoreRecentTransactions : ViewComponent
         _transactionLinkProviders = transactionLinkProviders;
     }
 
-    public async Task<IViewComponentResult> InvokeAsync(StoreRecentTransactionsViewModel vm)
+    public async Task<IViewComponentResult> InvokeAsync(StoreData store, string cryptoCode, bool initialRendering)
     {
-        if (vm.Store == null)
-            throw new ArgumentNullException(nameof(vm.Store));
-        if (vm.CryptoCode == null)
-            throw new ArgumentNullException(nameof(vm.CryptoCode));
-
-        vm.WalletId = new WalletId(vm.Store.Id, vm.CryptoCode);
+        var vm = new StoreRecentTransactionsViewModel
+        {
+            StoreId = store.Id,
+            CryptoCode = cryptoCode,
+            InitialRendering = initialRendering,
+            WalletId = new WalletId(store.Id, cryptoCode)
+        };
 
         if (vm.InitialRendering)
             return View(vm);
 
-        var derivationSettings = vm.Store.GetDerivationSchemeSettings(_handlers, vm.CryptoCode);
+        var derivationSettings = store.GetDerivationSchemeSettings(_handlers, vm.CryptoCode);
         var transactions = new List<StoreRecentTransactionViewModel>();
         if (derivationSettings?.AccountDerivation is not null)
         {
             var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(vm.CryptoCode);
             var network = ((IHasNetwork)_handlers[pmi]).Network;
             var wallet = _walletProvider.GetWallet(network);
-            var allTransactions = await wallet.FetchTransactionHistory(derivationSettings.AccountDerivation, 0, 5, TimeSpan.FromDays(31.0), cancellationToken: this.HttpContext.RequestAborted);
+            var allTransactions = await wallet.FetchTransactionHistory(derivationSettings.AccountDerivation, 0, 5, TimeSpan.FromDays(31.0), cancellationToken: HttpContext.RequestAborted);
             var walletTransactionsInfo = await _walletRepository.GetWalletTransactionsInfo(vm.WalletId, allTransactions.Select(t => t.TransactionId.ToString()).ToArray());
             
             transactions = allTransactions

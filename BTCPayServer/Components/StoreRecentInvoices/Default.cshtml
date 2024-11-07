@@ -1,15 +1,14 @@
 @using BTCPayServer.Client.Models
 @using BTCPayServer.Services
-@using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Components.StoreRecentInvoices.StoreRecentInvoicesViewModel
 
-<div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.Store.Id">
+<div class="widget store-recent-invoices" id="StoreRecentInvoices-@Model.StoreId">
     <header>
         <h3 text-translate="true">Recent Invoices</h3>
         @if (Model.Invoices.Any())
         {
-            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.Store.Id" text-translate="true">View All</a>
+            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" text-translate="true">View All</a>
         }
     </header>
     @if (Model.InitialRendering)
@@ -21,8 +20,8 @@
         </div>
         <script>
             (async () => {
-                const url = @Safe.Json(Url.Action("RecentInvoices", "UIStores", new { storeId = Model.Store.Id, cryptoCode = Model.CryptoCode }));
-                const storeId = @Safe.Json(Model.Store.Id);
+                const url = @Safe.Json(Url.Action("RecentInvoices", "UIStores", new { storeId = Model.StoreId, cryptoCode = Model.CryptoCode }));
+                const storeId = @Safe.Json(Model.StoreId);
                 const response = await fetch(url);
                 if (response.ok) {
                     document.getElementById(`StoreRecentInvoices-${storeId}`).outerHTML = await response.text();
@@ -68,7 +67,7 @@
         <p class="text-secondary my-3" text-translate="true">
             There are no recent invoices.
         </p>
-        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.Store.Id" class="fw-semibold" text-translate="true">
+        <a asp-controller="UIInvoice" asp-action="CreateInvoice" asp-route-storeId="@Model.StoreId" class="fw-semibold" text-translate="true">
             Create Invoice
         </a>
     }

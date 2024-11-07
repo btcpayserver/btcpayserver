@@ -6,6 +6,7 @@ using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -264,27 +265,22 @@ namespace BTCPayServer.Controllers.Greenfield
             var app = await _appService.GetApp(appId, null, includeArchived: true);
             var userId = _userManager.GetUserId(User);
             if (app == null || userId == null) return AppNotFound();
-            
+
+            UploadImageResultModel? upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
-            else if (file.Length > 500_000)
-                ModelState.AddModelError(nameof(file), "The uploaded image file should be less than 0.5MB");
-            else if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
-                ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
-            else if (!file.FileName.IsValidFileName())
-                ModelState.AddModelError(nameof(file.FileName), "Invalid filename");
             else
             {
-                var formFile = await file.Bufferize();
-                if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
-                    ModelState.AddModelError(nameof(file), "The uploaded file needs to be an image");
+                upload = await _fileService.UploadImage(file, userId, 500_000);
+                if (!upload.Success)
+                    ModelState.AddModelError(nameof(file), upload.Response);
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
             
             try
             {
-                var storedFile = await _fileService.AddFile(file!, userId);
+                var storedFile = upload!.StoredFile!;
                 var fileData = new FileData
                 {
                     Id = storedFile.Id,

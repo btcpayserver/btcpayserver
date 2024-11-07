@@ -1,12 +1,8 @@
 ﻿using System;
 using System.Linq;
-using System.Security.Cryptography;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
-using BTCPayApp.VSS;
-using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.App.BackupStorage;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
@@ -16,8 +12,8 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
 using Microsoft.Extensions.Logging;
+using VSS;
 using VSSProto;
 
 namespace BTCPayServer.App.API;

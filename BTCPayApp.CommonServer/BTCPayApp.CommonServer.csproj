@@ -12,5 +12,6 @@
 
     <ItemGroup>
       <PackageReference Include="Microsoft.AspNetCore.Authorization" Version="8.0.8" />
+      <PackageReference Include="VSS" Version="1.0.1" />
     </ItemGroup>
 </Project>

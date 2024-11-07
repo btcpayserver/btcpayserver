@@ -1,12 +1,10 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text.RegularExpressions;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
 using BTCPayServer.Abstractions.Contracts;
@@ -18,6 +16,7 @@ using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.Storage.Services
@@ -29,11 +28,13 @@ namespace BTCPayServer.Storage.Services
         private readonly SettingsRepository _settingsRepository;
         private readonly IOptions<DataDirectories> _dataDirectories;
         private readonly IHttpClientFactory _httpClientFactory;
+        private IStringLocalizer StringLocalizer { get; }
 
         public FileService(StoredFileRepository fileRepository,
             SettingsRepository settingsRepository,
             IEnumerable<IStorageProviderService> providers,
             IHttpClientFactory httpClientFactory,
+            IStringLocalizer stringLocalizer,
             IOptions<DataDirectories> dataDirectories)
         {
             _fileRepository = fileRepository;
@@ -41,6 +42,7 @@ namespace BTCPayServer.Storage.Services
             _settingsRepository = settingsRepository;
             _httpClientFactory = httpClientFactory;
             _dataDirectories = dataDirectories;
+            StringLocalizer = stringLocalizer;
         }
 
         public async Task<bool> IsAvailable()
@@ -56,32 +58,32 @@ namespace BTCPayServer.Storage.Services
             if (file.Length > maxFileSizeInBytes)
             {
                 result.Success = false;
-                result.Response = $"The uploaded image file should be less than {maxFileSizeInBytes / 1_000_000}MB";
+                result.Response = StringLocalizer["The uploaded file should be less than {0}", $"{maxFileSizeInBytes / 1_000_000}MB"].Value;
                 return result;
             }
             if (!file.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
             {
                 result.Success = false;
-                result.Response = "The uploaded file needs to be an image (based on content type)";
+                result.Response = StringLocalizer["The uploaded file needs to be an image"].Value;
                 return result;
             }
             var formFile = await file.Bufferize();
             if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
             {
                 result.Success = false;
-                result.Response = "The uploaded file needs to be an image (based on file content)";
+                result.Response = StringLocalizer["The uploaded file needs to be an image"].Value;
                 return result;
             }
             try
             {
                 result.StoredFile = await AddFile(formFile, userId);
                 result.Success = true;
-                result.Response = "Image uploaded successfully";
+                result.Response = StringLocalizer["Image uploaded successfully"].Value;
             }
             catch (Exception e)
             {
                 result.Success = false;
-                result.Response = $"Could not save image: {e.Message}";
+                result.Response = StringLocalizer["Could not save image: {0}", e.Message].Value;
             }
 
             return result;
@@ -170,7 +172,7 @@ namespace BTCPayServer.Storage.Services
 
         private IStorageProviderService GetProvider(StorageSettings storageSettings)
         {
-            return _providers.First((service) => service.StorageProvider().Equals(storageSettings.Provider));
+            return _providers.First(service => service.StorageProvider().Equals(storageSettings.Provider));
         }
 
         private static string GetContentType(string filePath)

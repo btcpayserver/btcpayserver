@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
@@ -156,39 +157,24 @@ namespace BTCPayServer.Controllers
                 blob.Name = model.Name;
                 needUpdate = true;
             }
-            
+
             if (model.ImageFile != null)
             {
-                if (model.ImageFile.Length > 1_000_000)
-                {
-                    ModelState.AddModelError(nameof(model.ImageFile), "The uploaded image file should be less than 1MB");
-                }
-                else if (!model.ImageFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
-                {
-                    ModelState.AddModelError(nameof(model.ImageFile), "The uploaded file needs to be an image");
-                }
+                var imageUpload = await _fileService.UploadImage(model.ImageFile, user.Id);
+                if (!imageUpload.Success)
+                    ModelState.AddModelError(nameof(model.ImageFile), imageUpload.Response);
                 else
                 {
-                    var formFile = await model.ImageFile.Bufferize();
-                    if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
+                    try
                     {
-                        ModelState.AddModelError(nameof(model.ImageFile), "The uploaded file needs to be an image");
+                        var storedFile = imageUpload.StoredFile!;
+                        var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                        blob.ImageUrl = fileIdUri.ToString();
+                        needUpdate = true;
                     }
-                    else
+                    catch (Exception e)
                     {
-                        model.ImageFile = formFile;
-                        // add new image
-                        try
-                        {
-                            var storedFile = await _fileService.AddFile(model.ImageFile, user.Id);
-                            var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
-                            blob.ImageUrl = fileIdUri.ToString();
-                            needUpdate = true;
-                        }
-                        catch (Exception e)
-                        {
-                            ModelState.AddModelError(nameof(model.ImageFile), $"Could not save image: {e.Message}");
-                        }
+                        ModelState.AddModelError(nameof(model.ImageFile), $"Could not save image: {e.Message}");
                     }
                 }
             }

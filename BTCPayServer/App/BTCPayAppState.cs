@@ -49,9 +49,8 @@ public class BTCPayAppState : IHostedService
     private readonly EventAggregator _eventAggregator;
     private readonly IServiceProvider _serviceProvider;
     private CompositeDisposable? _compositeDisposable;
-    public ExplorerClient ExplorerClient { get; private set; }
-
-    private DerivationSchemeParser _derivationSchemeParser;
+    private ExplorerClient? ExplorerClient { get; set; }
+    private DerivationSchemeParser? _derivationSchemeParser;
 
 
     public ConcurrentDictionary<string, ConnectedInstance> Connections { get; set; } = new();

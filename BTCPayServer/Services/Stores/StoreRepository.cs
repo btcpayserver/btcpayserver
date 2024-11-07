@@ -586,7 +586,8 @@ retry:
             try
             {
                 await ctx.SaveChangesAsync();
-                _eventAggregator.Publish(new StoreRemovedEvent(store));
+                if (store != null)
+                    _eventAggregator.Publish(new StoreRemovedEvent(store));
             }
             catch (DbUpdateException ex) when (IsDeadlock(ex) && retry < 5)
             {

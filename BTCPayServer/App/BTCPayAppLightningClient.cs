@@ -176,18 +176,18 @@ public class BTCPayAppLightningClient : ILightningClient
         return await Pay(bolt11, new PayInvoiceParams(), cancellation);
     }
 
-    public async Task<OpenChannelResponse> OpenChannel(OpenChannelRequest openChannelRequest,
+    public Task<OpenChannelResponse> OpenChannel(OpenChannelRequest openChannelRequest,
         CancellationToken cancellation = new CancellationToken())
     {
         throw new NotImplementedException();
     }
 
-    public async Task<BitcoinAddress> GetDepositAddress(CancellationToken cancellation = new CancellationToken())
+    public Task<BitcoinAddress> GetDepositAddress(CancellationToken cancellation = new CancellationToken())
     {
         throw new NotImplementedException();
     }
 
-    public async Task<ConnectionResult> ConnectTo(NodeInfo nodeInfo,
+    public Task<ConnectionResult> ConnectTo(NodeInfo nodeInfo,
         CancellationToken cancellation = new CancellationToken())
     {
         throw new NotImplementedException();
@@ -198,7 +198,7 @@ public class BTCPayAppLightningClient : ILightningClient
         await HubClient.CancelInvoice(_key, uint256.Parse(invoiceId));
     }
 
-    public async Task<LightningChannel[]> ListChannels(CancellationToken cancellation = new CancellationToken())
+    public Task<LightningChannel[]> ListChannels(CancellationToken cancellation = new CancellationToken())
     {
         throw new NotImplementedException();
     }

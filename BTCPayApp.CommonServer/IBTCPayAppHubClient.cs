@@ -71,52 +71,52 @@ public record TxResp(long Confirmations, long? Height, decimal BalanceChange, Da
 
 public class TransactionDetectedRequest
 {
-    public string Identifier { get; set; }
-    public string TxId { get; set; }
-    public string[] SpentScripts { get; set; }
-    public string[] ReceivedScripts { get; set; }
+    public string? Identifier { get; set; }
+    public string? TxId { get; set; }
+    public string[]? SpentScripts { get; set; }
+    public string[]? ReceivedScripts { get; set; }
     public bool Confirmed { get; set; }
 }
 
 public class CoinResponse
 {
-    public string Identifier{ get; set; }
+    public string? Identifier{ get; set; }
     public bool Confirmed { get; set; }
-    public string Script { get; set; }
-    public string Outpoint { get; set; }
+    public string? Script { get; set; }
+    public string? Outpoint { get; set; }
     public decimal Value { get; set; }
-    public string Path { get; set; }
+    public string? Path { get; set; }
 }
 
 public class TxInfoResponse
 {
-    public Dictionary<string,TransactionResponse> Txs { get; set; }
-    public Dictionary<string,string> BlockHeaders { get; set; }
-    public Dictionary<string,int> BlockHeghts { get; set; }
+    public Dictionary<string,TransactionResponse>? Txs { get; set; }
+    public Dictionary<string,string>? BlockHeaders { get; set; }
+    public Dictionary<string,int>? BlockHeghts { get; set; }
 }
 
 public class TransactionResponse
 {
     public string? BlockHash { get; set; }
-    public string Transaction { get; set; }
+    public string? Transaction { get; set; }
 }
 
 public class BestBlockResponse
 {
     public required string BlockHash { get; set; }
     public required int BlockHeight { get; set; }
-    public string BlockHeader { get; set; }
+    public string? BlockHeader { get; set; }
 }
 
 public class AppHandshake
 {
-    public string[] Identifiers { get; set; }
+    public string[]? Identifiers { get; set; }
 }
 
 public class AppHandshakeResponse
 {
     //response about identifiers being tracked successfully
-    public string[] IdentifiersAcknowledged { get; set; }
+    public string[]? IdentifiersAcknowledged { get; set; }
 }
 
 public class PairRequest

@@ -53,7 +53,7 @@ public class GetBlockchainInfoResponse
     }
     [JsonProperty("bestblockhash")]
     [JsonConverter(typeof(NBitcoin.JsonConverters.UInt256JsonConverter))]
-    public uint256 BestBlockHash { get; set; }
+    public uint256? BestBlockHash { get; set; }
 }
 
 

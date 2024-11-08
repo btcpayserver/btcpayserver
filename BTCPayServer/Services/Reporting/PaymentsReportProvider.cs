@@ -135,8 +135,8 @@ public class PaymentsReportProvider : ReportProvider
                 values.Add(payment.PaymentMethodFee);
 
                 var prompt = invoice.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
-                var consumerdLightningAddress = prompt is null || handler is not LNURLPayPaymentHandler lnurlHandler ? null : lnurlHandler.ParsePaymentPromptDetails(prompt.Details).ConsumedLightningAddress;
-                values.Add(consumerdLightningAddress);
+                var consumedLightningAddress = prompt is null || handler is not LNURLPayPaymentHandler lnurlHandler ? null : lnurlHandler.ParsePaymentPromptDetails(prompt.Details).ConsumedLightningAddress;
+                values.Add(consumedLightningAddress);
                 values.Add(invoice.Currency);
                 if (invoice.TryGetRate(payment.Currency, out var rate))
                 {

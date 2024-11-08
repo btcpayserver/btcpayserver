@@ -70,6 +70,7 @@ public partial class UIStoresController
                     Kind = UserRegisteredEventKind.Invite,
                     User = user,
                     InvitedByUser = currentUser,
+                    SendInvitationEmail = true,
                     CallbackUrlGenerated = tcs
                 });
                     

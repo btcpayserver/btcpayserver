@@ -192,7 +192,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return new ResultVM
             {
                 PayoutId = payoutData.Id,
-                Result = PayResult.Error,
+                Success = false,
                 Destination = blob.Destination,
                 Message = message
             };
@@ -216,7 +216,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             public string PayoutId { get; set; }
             public string Destination { get; set; }
-            public PayResult Result { get; set; }
+            public bool? Success { get; set; }
             public string Message { get; set; }
         }
 

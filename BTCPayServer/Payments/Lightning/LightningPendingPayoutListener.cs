@@ -100,25 +100,25 @@ public class LightningPendingPayoutListener : BaseAsyncService
 						if (proof is not null)
 							payment = await client.GetPayment(proof.PaymentHash, CancellationToken);
 					}
-					catch
+					catch (OperationCanceledException)
 					{
+                        // Do not mark as cancelled if the operation was cancelled.
+                        // This can happen with Nostr GetPayment if the connection to relay is too slow.
+                        continue;
 					}
-					if (payment is null)
-					{
-						payoutData.State = PayoutState.Cancelled;
-						continue;
-					}
-					switch (payment.Status)
-					{
-						case LightningPaymentStatus.Complete:
-							payoutData.State = PayoutState.Completed;
-							proof.Preimage = payment.Preimage;
-							payoutData.SetProofBlob(proof, null);
-							break;
-						case LightningPaymentStatus.Failed:
-							payoutData.State = PayoutState.Cancelled;
-							break;
-					}
+                    payoutData.State = payment?.Status switch
+                    {
+                        LightningPaymentStatus.Complete => PayoutState.Completed,
+                        LightningPaymentStatus.Failed => PayoutState.Cancelled,
+                        LightningPaymentStatus.Unknown or LightningPaymentStatus.Pending => PayoutState.InProgress,
+                        _ => PayoutState.Cancelled
+                    };
+
+                    if (payment is { Status: LightningPaymentStatus.Complete })
+                    {
+                        proof.Preimage = payment.Preimage;
+                        payoutData.SetProofBlob(proof, null);
+                    }
 				}
 
                 foreach (PayoutData payoutData in payoutByStoreByPaymentMethod)

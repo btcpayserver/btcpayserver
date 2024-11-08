@@ -1,5 +1,16 @@
 # Changelog
 
+## 2.0.2
+
+If you are using the Nostr or Blink plugin, consider this release **security-critical**.
+
+Without it, an attacker with access to a pull payment could drain the Lightning wallet without limit.
+
+### Bug fixes
+
+* Fix: Payouts were incorrectly marked as canceled even after successful completion (#6365) @NicolasDorier
+* Fix: Unable to export csv/xml from Reports (#6356 #6357) @dennisreimann
+
 ## 2.0.1
 
 ### Bug fixes

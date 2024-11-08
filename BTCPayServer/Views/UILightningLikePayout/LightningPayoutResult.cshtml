@@ -8,9 +8,9 @@
 <h2 class="mt-1 mb-4" text-translate="true">@ViewData["Title"]</h2>
 @foreach (var item in Model)
 {
-    <div class="alert alert-@(item.Result == PayResult.Ok ? "success" : "danger") mb-3" role="alert">
+    <div class="alert alert-@(item.Success is true ? "success" : "danger") mb-3" role="alert">
         <h5 class="alert-heading">
-            @(item.Result == PayResult.Ok ? "Sent" : "Failed")
+            @(item.Success is true ? "Sent" : "Failed")
             @if (!string.IsNullOrEmpty(item.Message))
             {
                 <span>- @item.Message</span>

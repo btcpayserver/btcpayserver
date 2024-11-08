@@ -255,15 +255,15 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 					if (error.name === 'StreamApiNotSupportedError') {
 						this.noStreamApiSupport = true;
 					} else if (error.name === 'NotAllowedError') {
-						this.errorMessage = @StringLocalizer["A permission to the camera is needed to scan the QR code. Please grant the browser access and then retry."]
+						this.errorMessage = @Safe.Json(StringLocalizer["A permission to the camera is needed to scan the QR code. Please grant the browser access and then retry."])
 					} else if (error.name === 'NotFoundError') {
-						this.errorMessage = @StringLocalizer["A camera was not detected on your device."]
+						this.errorMessage = @Safe.Json(StringLocalizer["A camera was not detected on your device."])
 					} else if (error.name === 'NotSupportedError') {
-						this.errorMessage = @StringLocalizer["This page is served in non-secure context (HTTPS, localhost or file://)"]
+						this.errorMessage = @Safe.Json(StringLocalizer["This page is served in non-secure context (HTTPS, localhost or file://)"])
 					} else if (error.name === 'NotReadableError') {
-						this.errorMessage = @StringLocalizer["Could not access your camera. Is it already in use?"]
+						this.errorMessage = @Safe.Json(StringLocalizer["Could not access your camera. Is it already in use?"])
 					} else if (error.name === 'OverconstrainedError') {
-						this.errorMessage = @StringLocalizer["Constraints do not match any installed camera."]
+						this.errorMessage = @Safe.Json(StringLocalizer["Constraints do not match any installed camera."])
 					} else {
 						this.errorMessage = 'UNKNOWN ERROR: ' + error.message
 					}

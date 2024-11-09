@@ -1,9 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.ModelBinders;

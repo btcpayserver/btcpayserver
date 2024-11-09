@@ -1,9 +1,8 @@
 using System;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Client;
 using BTCPayServer.Components.AppSales;
-using BTCPayServer.Components.AppTopItems;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 

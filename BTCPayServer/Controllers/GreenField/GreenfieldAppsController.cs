@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
@@ -20,7 +20,6 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Newtonsoft.Json;
 using CrowdfundResetEvery = BTCPayServer.Client.Models.CrowdfundResetEvery;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
 
@@ -264,7 +263,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var app = await _appService.GetApp(appId, null, includeArchived: true);
             var userId = _userManager.GetUserId(User);
             if (app == null || userId == null) return AppNotFound();
-            
+
             UploadImageResultModel? upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
@@ -284,6 +283,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     Id = storedFile.Id,
                     UserId = storedFile.ApplicationUserId,
+                    Uri = new UnresolvedUri.FileIdUri(storedFile.Id).ToString(),
                     Url = await _fileService.GetFileUrl(Request.GetAbsoluteRootUri(), storedFile.Id),
                     OriginalName = storedFile.FileName,
                     StorageName = storedFile.StorageFileName,

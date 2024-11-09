@@ -1,6 +1,8 @@
-using BTCPayServer.Abstractions.Constants;
+using System;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Security.Bitpay;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Security
 {

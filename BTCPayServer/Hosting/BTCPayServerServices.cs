@@ -69,6 +69,7 @@ using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
+using BTCPayApp.CommonServer;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
 using Microsoft.Extensions.Localization;

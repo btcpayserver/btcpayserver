@@ -251,7 +251,9 @@ namespace BTCPayServer.Plugins.Crowdfund
                         .Select(s => s.Value.CurrencyValue).Sum();
             foreach (var kv in allStats
                                     .GroupBy(k => k.Key, k => k.Value)
-                                    .Select(g => (g.Key, CurrencyValue: g.Sum(s => s.CurrencyValue))))
+                                    .Select(g => (g.Key,
+                                                 PaymentCurrency: g.Select(s => s.Currency).First(),
+                                                 CurrencyValue: g.Sum(s => s.CurrencyValue))))
             {
                 var pmi = PaymentMethodId.Parse(kv.Key);
                 r.TryAdd(kv.Key, new PaymentStat()
@@ -259,7 +261,7 @@ namespace BTCPayServer.Plugins.Crowdfund
                     Label = _prettyNameProvider.PrettyName(pmi),
                     Percent = (kv.CurrencyValue / total) * 100.0m,
                     // Note that the LNURL will have the same LN
-                    IsLightning = pmi == PaymentTypes.LN.GetPaymentMethodId(kv.Key)
+                    IsLightning = pmi == PaymentTypes.LN.GetPaymentMethodId(kv.PaymentCurrency)
                 });
             }
             return r;

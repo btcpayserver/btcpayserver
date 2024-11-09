@@ -225,6 +225,10 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         var proofBlob = new PayoutLightningBlob { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
         string errorReason = null;
         string preimage = null;
+        // If success:
+        // * Is null, we don't know the status. The payout should become pending. (LightningPendingPayoutListener will monitor the situation)
+        // * Is true, we knew the transfer was done. The payout should be completed.
+        // * Is false, we knew it didn't happen. The payout can be retried.
         bool? success = null;
         LightMoney amountSent = null;
 

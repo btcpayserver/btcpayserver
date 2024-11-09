@@ -873,7 +873,7 @@ retry:
                 .GroupBy(p => p.GroupKey)
                 .ToDictionary(p => p.Key, p => new InvoiceStatistics.Contribution
                 {
-                    Currency = p.Key,
+                    Currency = p.Select(p => p.Currency).First(),
                     Settled = p.All(v => v.Settled),
                     Divisibility = p.Max(p => p.Divisibility),
                     Value = p.Select(v => v.Value).Sum(),

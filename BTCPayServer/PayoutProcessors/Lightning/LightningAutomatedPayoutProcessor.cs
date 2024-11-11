@@ -241,7 +241,8 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 }, cancellationToken);
             if (pay is { Result: PayResult.CouldNotFindRoute })
             {
-                errorReason ??= $"Unable to find a route for the payment, check your channel liquidity";
+                var err = pay.ErrorDetail is null ? "" : $" ({pay.ErrorDetail})";
+                errorReason ??= $"Unable to find a route for the payment, check your channel liquidity{err}";
                 success = false;
             }
             else if (pay is { Result: PayResult.Error })

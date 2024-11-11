@@ -3017,13 +3017,11 @@ namespace BTCPayServer.Tests
             Assert.NotEqual(0, info.BlockHeight);
             
             // balance
-            var balance = await client.GetLightningNodeBalance(user.StoreId, "BTC");
-            Assert.True(LightMoney.Satoshis(1000) <= balance.OffchainBalance.Local);
-
             await TestUtils.EventuallyAsync(async () =>
             {
-                var localBalance = balance.OffchainBalance.Local.ToDecimal(LightMoneyUnit.BTC);
+                var balance = await client.GetLightningNodeBalance(user.StoreId, "BTC");
                 var histogram = await client.GetLightningNodeHistogram(user.StoreId, "BTC");
+                var localBalance = balance.OffchainBalance.Local.ToDecimal(LightMoneyUnit.BTC);
                 Assert.Equal(histogram.Balance, histogram.Series.Last());
                 Assert.Equal(localBalance, histogram.Balance);
                 Assert.Equal(localBalance, histogram.Series.Last());

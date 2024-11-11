@@ -151,13 +151,10 @@ namespace BTCPayServer.Plugins.Crowdfund
             }
 
             var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, appData, lastResetDate);
-            var completeInvoices = invoices.Where(IsComplete).ToArray();
-            var pendingInvoices = invoices.Where(IsPending).ToArray();
-            var paidInvoices = invoices.Where(IsPaid).ToArray();
+            
+            var currentPayments = _invoiceRepository.GetContributionsByPaymentMethodId(settings.TargetCurrency, invoices, !settings.EnforceTargetAmount);
 
-            var pendingPayments = _invoiceRepository.GetContributionsByPaymentMethodId(settings.TargetCurrency, pendingInvoices, !settings.EnforceTargetAmount);
-            var currentPayments = _invoiceRepository.GetContributionsByPaymentMethodId(settings.TargetCurrency, completeInvoices, !settings.EnforceTargetAmount);
-
+            var paidInvoices = invoices.Where(e => e.Status is InvoiceStatus.Settled or InvoiceStatus.Processing).ToArray();
             var perkCount = paidInvoices
                 .Where(entity => !string.IsNullOrEmpty(entity.Metadata.ItemCode))
                 .GroupBy(entity => entity.Metadata.ItemCode)
@@ -225,14 +222,14 @@ namespace BTCPayServer.Plugins.Crowdfund
                 Info = new ViewCrowdfundViewModel.CrowdfundInfo
                 {
                     TotalContributors = paidInvoices.Length,
-                    ProgressPercentage = (currentPayments.TotalCurrency / settings.TargetAmount) * 100,
-                    PendingProgressPercentage = (pendingPayments.TotalCurrency / settings.TargetAmount) * 100,
+                    ProgressPercentage = (currentPayments.TotalSettled / settings.TargetAmount) * 100,
+                    PendingProgressPercentage = (currentPayments.TotalProcessing / settings.TargetAmount) * 100,
                     LastUpdated = DateTime.UtcNow,
-                    PaymentStats = GetPaymentStats(currentPayments, pendingPayments),
+                    PaymentStats = GetPaymentStats(currentPayments),
                     LastResetDate = lastResetDate,
                     NextResetDate = nextResetDate,
-                    CurrentPendingAmount = pendingPayments.TotalCurrency,
-                    CurrentAmount = currentPayments.TotalCurrency
+                    CurrentPendingAmount = currentPayments.TotalProcessing,
+                    CurrentAmount = currentPayments.TotalSettled
                 }
             };
             var httpContext = _httpContextAccessor.HttpContext;
@@ -243,29 +240,18 @@ namespace BTCPayServer.Plugins.Crowdfund
             return vm;
         }
 
-        private Dictionary<string, PaymentStat> GetPaymentStats(InvoiceStatistics stats, InvoiceStatistics pendingSats)
-        {
-            var r = new Dictionary<string, PaymentStat>();
-            var allStats = stats.Concat(pendingSats);
-            var total = allStats
-                        .Select(s => s.Value.CurrencyValue).Sum();
-            foreach (var kv in allStats
-                                    .GroupBy(k => k.Key, k => k.Value)
-                                    .Select(g => (g.Key,
-                                                 PaymentCurrency: g.Select(s => s.Currency).First(),
-                                                 CurrencyValue: g.Sum(s => s.CurrencyValue))))
-            {
-                var pmi = PaymentMethodId.Parse(kv.Key);
-                r.TryAdd(kv.Key, new PaymentStat()
+        private Dictionary<string, PaymentStat> GetPaymentStats(InvoiceStatistics stats)
+        => stats.Total is 0.0m ? new Dictionary<string, PaymentStat>() : stats.ToDictionary(kv => kv.Key, kv =>
                 {
-                    Label = _prettyNameProvider.PrettyName(pmi),
-                    Percent = (kv.CurrencyValue / total) * 100.0m,
-                    // Note that the LNURL will have the same LN
-                    IsLightning = pmi == PaymentTypes.LN.GetPaymentMethodId(kv.PaymentCurrency)
+                    var pmi = PaymentMethodId.Parse(kv.Key);
+                    return new PaymentStat()
+                    {
+                        Label = _prettyNameProvider.PrettyName(pmi),
+                        Percent = (kv.Value.CurrencyValue / stats.Total) * 100.0m,
+                        // Note that the LNURL will have the same LN
+                        IsLightning = pmi == PaymentTypes.LN.GetPaymentMethodId(kv.Value.Currency)
+                    };
                 });
-            }
-            return r;
-        }
 
         public override Task SetDefaultSettings(AppData appData, string defaultCurrency)
         {
@@ -278,21 +264,6 @@ namespace BTCPayServer.Plugins.Crowdfund
         {
             return Task.FromResult(_linkGenerator.GetPathByAction(nameof(UICrowdfundController.ViewCrowdfund),
                 "UICrowdfund", new { appId = app.Id }, _options.Value.RootPath)!);
-        }
-
-        private static bool IsPaid(InvoiceEntity entity)
-        {
-            return entity.Status == InvoiceStatus.Settled || entity.Status == InvoiceStatus.Processing;
-        }
-
-        private static bool IsPending(InvoiceEntity entity)
-        {
-            return entity.Status != InvoiceStatus.Settled;
-        }
-
-        private static bool IsComplete(InvoiceEntity entity)
-        {
-            return entity.Status == InvoiceStatus.Settled;
         }
     }
 }

@@ -81,11 +81,11 @@
         </template>
     </button>
     <partial name="PointOfSale/Public/RecentTransactions" model="Model"/>
-    <button type="button" class="btn btn-link p-1" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
-        <vc:icon symbol="nav-invoice"/>
+    <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" permission="@Policies.CanViewInvoices">
+        <vc:icon symbol="nav-transactions"/>
     </button>
-    <button type="button" class="btn btn-link p-1" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList" v-if="showItems">
-        <vc:icon symbol="nav-mobile-menu"/>
+    <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList" v-if="showItems">
+        <vc:icon symbol="nav-products"/>
     </button>
     <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1"  id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle" v-if="showItems">
         <div class="offcanvas-header justify-content-between flex-wrap p-3">

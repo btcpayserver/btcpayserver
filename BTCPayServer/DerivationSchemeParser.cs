@@ -100,6 +100,7 @@ namespace BTCPayServer
         {
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
+            str = str.Replace("\r\n","").Replace("\n", "");
             HashSet<string> hintedLabels = new HashSet<string>();
             if (!Network.Consensus.SupportSegwit)
             {

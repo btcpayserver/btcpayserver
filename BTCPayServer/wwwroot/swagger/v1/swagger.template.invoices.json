@@ -1226,9 +1226,10 @@
                         "type": "number",
                         "format": "double",
                         "nullable": true,
-                        "minimum": 0,
-                        "maximum": 100,
-                        "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Defaults to the store's settings. (The default store settings is 100)"
+                        "minimum": 0.0,
+                        "maximum": 100.0,
+                        "default": 0.0,
+                        "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Defaults to the store's settings. (The default store settings is 0)"
                     },
                     "redirectURL": {
                         "type": "string",

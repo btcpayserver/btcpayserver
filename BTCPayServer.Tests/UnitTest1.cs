@@ -3250,8 +3250,14 @@ namespace BTCPayServer.Tests
             var date2018 = new DateTimeOffset(2018, 1, 1, 0, 0, 0, TimeSpan.Zero);
             report = await GetReport(acc, new() { ViewName = "Payments", TimePeriod = new TimePeriod() { From = date2018, To = date2018 + TimeSpan.FromDays(365) } });
             var invoiceIdIndex = report.GetIndex("InvoiceId");
+            var invoiceCurrencyAmountIndex = report.GetIndex("InvoiceCurrencyAmount");
+            var rateIndex = report.GetIndex("Rate");
             var oldPaymentsCount = report.Data.Count(d => d[invoiceIdIndex].Value<string>() == "Q7RqoHLngK9svM4MgRyi9y");
             Assert.Equal(9, oldPaymentsCount); // 11 payments, but 2 unaccounted
+            Assert.Single(report.Data, d =>
+            d[invoiceIdIndex].Value<string>() == "Q7RqoHLngK9svM4MgRyi9y" &&
+            GetAmount(rateIndex, d) == 6596.35m &&
+            GetAmount(invoiceCurrencyAmountIndex, d) == 1.18m);
 
             var addr = await tester.ExplorerNode.GetNewAddressAsync();
             // Two invoices get refunded
@@ -3273,9 +3279,9 @@ namespace BTCPayServer.Tests
                     var d = Assert.Single(report.Data.Where(d => d[report.GetIndex("InvoiceId")].Value<string>() == inv.Id));
                     Assert.Equal(fullyPaid, (bool)d[fullyPaidIndex]);
                     Assert.Equal(currency, d[currencyIndex].Value<string>());
-                    Assert.Equal(completed, (((JObject)d[completedIndex])["v"]).Value<decimal>());
-                    Assert.Equal(awaiting, (((JObject)d[awaitingIndex])["v"]).Value<decimal>());
-                    Assert.Equal(limit, (((JObject)d[limitIndex])["v"]).Value<decimal>());
+                    Assert.Equal(completed, GetAmount(completedIndex, d));
+                    Assert.Equal(awaiting, GetAmount(awaitingIndex, d));
+                    Assert.Equal(limit, GetAmount(limitIndex, d));
                 }
 
                 await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
@@ -3294,6 +3300,12 @@ namespace BTCPayServer.Tests
                     await AssertData("USD", awaiting: 0.0m, limit: 10.0m, completed: 0.0m, fullyPaid: false);
                 }
             }
+        }
+
+        private static decimal GetAmount(int idx, JArray d)
+        {
+            var jobj = (JObject)d[idx];
+            return Math.Round(jobj["v"].Value<decimal>(), jobj["d"].Value<int>());
         }
 
         private async Task<StoreReportResponse> GetReport(TestAccount acc, StoreReportRequest req)

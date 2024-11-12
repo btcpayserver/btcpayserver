@@ -117,6 +117,9 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 break;
         }
 
+        if (result.Success is false && blob.NonInteractiveOnly)
+            payoutData.State = PayoutState.Cancelled;
+
         bool updateBlob = false;
 		if (result.Success is false && payoutData.State == PayoutState.AwaitingPayment)
 		{
@@ -225,6 +228,10 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
         var proofBlob = new PayoutLightningBlob { PaymentHash = bolt11PaymentRequest.PaymentHash.ToString() };
         string errorReason = null;
         string preimage = null;
+        // If success:
+        // * Is null, we don't know the status. The payout should become pending. (LightningPendingPayoutListener will monitor the situation)
+        // * Is true, we knew the transfer was done. The payout should be completed.
+        // * Is false, we knew it didn't happen. The payout can be retried.
         bool? success = null;
         LightMoney amountSent = null;
 
@@ -237,7 +244,8 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 }, cancellationToken);
             if (pay is { Result: PayResult.CouldNotFindRoute })
             {
-                errorReason ??= $"Unable to find a route for the payment, check your channel liquidity";
+                var err = pay.ErrorDetail is null ? "" : $" ({pay.ErrorDetail})";
+                errorReason ??= $"Unable to find a route for the payment, check your channel liquidity{err}";
                 success = false;
             }
             else if (pay is { Result: PayResult.Error })

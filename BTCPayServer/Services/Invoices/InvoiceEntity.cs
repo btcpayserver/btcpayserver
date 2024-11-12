@@ -326,7 +326,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public bool TryGetRate(string currency, out decimal rate)
         {
-            return TryGetRate(new CurrencyPair(Currency, currency), out rate);
+            return TryGetRate(new CurrencyPair(currency, Currency), out rate);
         }
         public bool TryGetRate(CurrencyPair pair, out decimal rate)
         {

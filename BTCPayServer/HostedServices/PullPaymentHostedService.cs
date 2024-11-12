@@ -709,11 +709,12 @@ namespace BTCPayServer.HostedServices
                     DedupId = req.ClaimRequest.Destination.Id,
                     StoreDataId = req.ClaimRequest.StoreId ?? pp?.StoreId,
                     Currency = payoutHandler.Currency,
-                    OriginalCurrency = pp?.Currency ?? payoutHandler.Currency
+                    OriginalCurrency = pp?.Currency ?? payoutHandler.Currency,
                 };
                 var payoutBlob = new PayoutBlob()
                 {
                     Destination = req.ClaimRequest.Destination.ToString(),
+                    NonInteractiveOnly = req.ClaimRequest.NonInteractiveOnly,
                     Metadata = req.ClaimRequest.Metadata ?? new JObject(),
                 };
                 payout.OriginalAmount = claimed;
@@ -1067,6 +1068,7 @@ namespace BTCPayServer.HostedServices
         public IClaimDestination Destination { get; set; }
         public string StoreId { get; set; }
         public bool? PreApprove { get; set; }
+        public bool NonInteractiveOnly { get; set; }
         public JObject Metadata { get; set; }
     }
 

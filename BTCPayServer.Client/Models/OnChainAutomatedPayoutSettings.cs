@@ -7,10 +7,6 @@ namespace BTCPayServer.Client.Models;
 public class OnChainAutomatedPayoutSettings
 {
     public string PayoutMethodId { get; set; }
-
-    [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
-    public TimeSpan IntervalSeconds { get; set; }
-
     public int? FeeBlockTarget { get; set; }
     [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
     public decimal Threshold { get; set; }

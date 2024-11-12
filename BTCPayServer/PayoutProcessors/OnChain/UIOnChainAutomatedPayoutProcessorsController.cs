@@ -140,7 +140,6 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         public OnChainTransferViewModel(OnChainAutomatedPayoutBlob blob)
         {
             ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly;
-            IntervalMinutes = blob.Interval.TotalMinutes;
             FeeTargetBlock = blob.FeeTargetBlock;
             Threshold = blob.Threshold;
         }
@@ -152,16 +151,12 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         public int FeeTargetBlock { get; set; }
         public decimal Threshold { get; set; }
 
-        [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]
-        public double IntervalMinutes { get; set; }
-
         public OnChainAutomatedPayoutBlob ToBlob()
         {
             return new OnChainAutomatedPayoutBlob
             {
                 ProcessNewPayoutsInstantly = ProcessNewPayoutsInstantly,
                 FeeTargetBlock = FeeTargetBlock,
-                Interval = TimeSpan.FromMinutes(IntervalMinutes),
                 Threshold = Threshold
             };
         }

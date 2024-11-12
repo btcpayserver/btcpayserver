@@ -45,7 +45,7 @@ namespace BTCPayServer.Data
 
         public static PayoutBlob GetBlob(this PayoutData data, BTCPayNetworkJsonSerializerSettings serializers)
         {
-            var result =  JsonConvert.DeserializeObject<PayoutBlob>(data.Blob, serializers.GetSerializer(data.GetPayoutMethodId()));
+            var result =  JsonConvert.DeserializeObject<PayoutBlob>(data.Blob, serializers?.GetSerializer(data.GetPayoutMethodId()));
             result.Metadata ??= new JObject();
             return result;
         }

@@ -60,7 +60,6 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 FeeBlockTarget = blob.FeeTargetBlock,
                 PayoutMethodId = data.PayoutMethodId,
-                IntervalSeconds = blob.Interval,
                 Threshold = blob.Threshold,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
             };
@@ -71,7 +70,6 @@ namespace BTCPayServer.Controllers.Greenfield
             return new OnChainAutomatedPayoutBlob()
             {
                 FeeTargetBlock = data.FeeBlockTarget ?? 1,
-                Interval = data.IntervalSeconds,
                 Threshold = data.Threshold,
                 ProcessNewPayoutsInstantly = data.ProcessNewPayoutsInstantly
             };
@@ -82,7 +80,6 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStoreOnchainAutomatedPayoutProcessor(
             string storeId, string paymentMethod, OnChainAutomatedPayoutSettings request)
         {
-            AutomatedPayoutConstants.ValidateInterval(ModelState, request.IntervalSeconds, nameof(request.IntervalSeconds));
             if (request.FeeBlockTarget is int t && (t < 1 || t > 1000))
                 ModelState.AddModelError(nameof(request.FeeBlockTarget), "The feeBlockTarget should be between 1 and 1000");
             if (!ModelState.IsValid)

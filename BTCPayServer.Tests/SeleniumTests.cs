@@ -2492,8 +2492,7 @@ namespace BTCPayServer.Tests
 			var account = await s.AsTestAccount().CreateClient();
 			await account.UpdateStoreLightningAutomatedPayoutProcessors(s.StoreId, "BTC-LN", new()
 			{
-				ProcessNewPayoutsInstantly = true,
-				IntervalSeconds = TimeSpan.FromSeconds(60)
+				ProcessNewPayoutsInstantly = true
 			});
 			// Now it should process to complete
 			await TestUtils.EventuallyAsync(async () =>

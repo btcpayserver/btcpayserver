@@ -4241,8 +4241,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(payout.Metadata.ToString(), new JObject().ToString()); //empty
             Assert.Empty(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork"));
             await adminClient.UpdateStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork",
-                new LightningAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(600) });
-            Assert.Equal(600, Assert.Single(await adminClient.GetStoreLightningAutomatedPayoutProcessors(admin.StoreId, "BTC_LightningNetwork")).IntervalSeconds.TotalSeconds);
+                new LightningAutomatedPayoutSettings());
             await TestUtils.EventuallyAsync(async () =>
             {
                 var payoutC =
@@ -4397,8 +4396,8 @@ namespace BTCPayServer.Tests
             Assert.Empty(await adminClient.GetPayoutProcessors(admin.StoreId));
 
             await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
-                new OnChainAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(3600) });
-            Assert.Equal(3600, Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
+                new OnChainAutomatedPayoutSettings());
+            Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
 
             var tpGen = Assert.Single(await adminClient.GetPayoutProcessors(admin.StoreId));
             Assert.Equal("BTC-CHAIN", Assert.Single(tpGen.PayoutMethods));
@@ -4424,8 +4423,8 @@ namespace BTCPayServer.Tests
                 Assert.Equal(3, payouts.Length);
             });
             await adminClient.UpdateStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC",
-                new OnChainAutomatedPayoutSettings() { IntervalSeconds = TimeSpan.FromSeconds(600), FeeBlockTarget = 1000 });
-            Assert.Equal(600, Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC")).IntervalSeconds.TotalSeconds);
+                new OnChainAutomatedPayoutSettings() { FeeBlockTarget = 1000 });
+            Assert.Single(await adminClient.GetStoreOnChainAutomatedPayoutProcessors(admin.StoreId, "BTC"));
 
             await TestUtils.EventuallyAsync(async () =>
             {
@@ -4455,8 +4454,6 @@ namespace BTCPayServer.Tests
             Assert.Equal(0m, settings.Threshold);
 
             //let's use the ProcessNewPayoutsInstantly so that it will trigger instantly
-
-            settings.IntervalSeconds = TimeSpan.FromDays(1);
             settings.ProcessNewPayoutsInstantly = true;
 
             await tester.WaitForEvent<NewOnChainTransactionEvent>(async () =>

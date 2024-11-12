@@ -545,14 +545,6 @@
                 "type": "object",
                 "additionalProperties": false,
                 "properties": {
-                    "intervalSeconds": {
-                        "description": "How often should the processor run",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/TimeSpanSeconds"
-                            }
-                        ]
-                    },
                     "cancelPayoutAfterFailures": {
                         "description": "How many failures should the processor tolerate before cancelling the payout",
                         "type": "number",
@@ -571,14 +563,6 @@
                 "properties": {
                     "payoutMethodId": {
                         "$ref": "#/components/schemas/PayoutMethodId"
-                    },
-                    "intervalSeconds": {
-                        "description": "How often should the processor run",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/TimeSpanSeconds"
-                            }
-                        ]
                     },
                     "cancelPayoutAfterFailures": {
                         "description": "How many failures should the processor tolerate before cancelling the payout",
@@ -600,14 +584,6 @@
                         "type": "number",
                         "description": "How many blocks should the fee rate calculation target to confirm in. Set to 1 if not provided",
                         "nullable": true
-                    },
-                    "intervalSeconds": {
-                        "description": "How often should the processor run",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/TimeSpanSeconds"
-                            }
-                        ]
                     },
                     "threshold": {
                         "type": "string",
@@ -633,14 +609,6 @@
                     "feeTargetBlock": {
                         "type": "number",
                         "description": "How many blocks should the fee rate calculation target to confirm in."
-                    },
-                    "intervalSeconds": {
-                        "description": "How often should the processor run",
-                        "allOf": [
-                            {
-                                "$ref": "#/components/schemas/TimeSpanSeconds"
-                            }
-                        ]
                     },
                     "threshold": {
                         "type": "string",

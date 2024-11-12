@@ -1,9 +1,11 @@
 #nullable  enable
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Amazon;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -14,29 +16,13 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
+using static BTCPayServer.PayoutProcessors.PayoutProcessorService;
 using PayoutData = BTCPayServer.Data.PayoutData;
 using PayoutProcessorData = BTCPayServer.Data.PayoutProcessorData;
 
 namespace BTCPayServer.PayoutProcessors;
 
-public class AutomatedPayoutConstants
-{
-    public const double MinIntervalMinutes = 1.0;
-    public const double DefaultIntervalMinutes = 60.0;
-    public const double MaxIntervalMinutes = 24 * 60; //1 day
-    public static void ValidateInterval(ModelStateDictionary modelState, TimeSpan timeSpan, string parameterName)
-    {
-        if (timeSpan < TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes))
-        {
-            modelState.AddModelError(parameterName, $"The minimum interval is {MinIntervalMinutes * 60} seconds");
-        }
-        if (timeSpan > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
-        {
-            modelState.AddModelError(parameterName, $"The maximum interval is {MaxIntervalMinutes * 60} seconds");
-        }
-    }
-}
-public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T : AutomatedPayoutBlob, new()
+public abstract class BaseAutomatedPayoutProcessor<T> : EventHostedServiceBase where T : AutomatedPayoutBlob, new()
 {
     protected readonly StoreRepository _storeRepository;
     protected readonly PayoutProcessorData PayoutProcessorSettings;
@@ -45,7 +31,6 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
     protected readonly PayoutMethodId PayoutMethodId;
     protected readonly PaymentMethodId PaymentMethodId;
     private readonly IPluginHookService _pluginHookService;
-    protected readonly EventAggregator _eventAggregator;
 
     protected BaseAutomatedPayoutProcessor(
         PaymentMethodId paymentMethodId,
@@ -55,7 +40,7 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         ApplicationDbContextFactory applicationDbContextFactory,
         PaymentMethodHandlerDictionary paymentHandlers,
         IPluginHookService pluginHookService,
-        EventAggregator eventAggregator) : base(logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PayoutMethodId}"))
+        EventAggregator eventAggregator) : base(eventAggregator, logger.CreateLogger($"{payoutProcessorSettings.Processor}:{payoutProcessorSettings.StoreId}:{payoutProcessorSettings.PayoutMethodId}"))
     {
         PaymentMethodId = paymentMethodId;
         _storeRepository = storeRepository;
@@ -64,37 +49,17 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         _applicationDbContextFactory = applicationDbContextFactory;
         _paymentHandlers = paymentHandlers;
         _pluginHookService = pluginHookService;
-        _eventAggregator = eventAggregator;
-        this.NoLogsOnExit = true;
     }
 
-    internal override Task[] InitializeTasks()
+    protected override void SubscribeToEvents()
     {
-        _subscription = _eventAggregator.SubscribeAsync<PayoutEvent>(OnPayoutEvent);
-        return new[] { CreateLoopTask(Act) };
-    }
-    
-
-    public override Task StopAsync(CancellationToken cancellationToken)
-    {
-        _subscription?.Dispose();
-        return base.StopAsync(cancellationToken);
-    }
-
-    private Task OnPayoutEvent(PayoutEvent arg)
-    {
-        if (arg.Type == PayoutEvent.PayoutEventType.Approved && 
-            PayoutProcessorSettings.StoreId == arg.Payout.StoreDataId &&
-            arg.Payout.GetPayoutMethodId() == PayoutMethodId &&
-            GetBlob(PayoutProcessorSettings).ProcessNewPayoutsInstantly)
-        {
-            SkipInterval();
-        }
-        return Task.CompletedTask;
+        this.Subscribe<PayoutEvent>();
+        this.Subscribe<PayoutProcessorService.AwaitingPayoutsEvent>();
+        this.Subscribe<PayoutProcessorService.PollProcessorEvent>();
     }
 
     protected virtual Task Process(object paymentMethodConfig, List<PayoutData> payouts) =>
-        throw  new NotImplementedException();
+        throw new NotImplementedException();
 
     protected virtual async Task<bool> ProcessShouldSave(object paymentMethodConfig, List<PayoutData> payouts)
     {
@@ -102,37 +67,67 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
         return true;
     }
 
-	private async Task Act()
+    protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
     {
+        PullPaymentHostedService.PayoutQuery query = new PullPaymentHostedService.PayoutQuery()
+        {
+            States = new[] { PayoutState.AwaitingPayment },
+            PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
+            Processor = PayoutProcessorSettings.Processor,
+            Stores = new[] { PayoutProcessorSettings.StoreId }
+        };
+        List<PayoutData> payouts = new();
+        if (evt is PayoutEvent pe)
+        {
+            if (!ProcessInstantly(pe))
+                return;
+            payouts.Add(pe.Payout);
+        }
+        else if (evt is PayoutProcessorService.AwaitingPayoutsEvent ape)
+        {
+            if (!ape.PayoutsByStoreId.TryGetValue(PayoutProcessorSettings.StoreId, out var p))
+                return;
+            payouts = p;
+        }
+        else if (evt is PayoutProcessorService.PollProcessorEvent poll)
+        {
+            if (poll.ProcessorId != PayoutProcessorSettings.Id)
+                return;
+            await using var context = _applicationDbContextFactory.CreateContext();
+            payouts = await PullPaymentHostedService.GetPayouts(
+            new PullPaymentHostedService.PayoutQuery()
+            {
+                States = new[] { PayoutState.AwaitingPayment },
+                PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
+                Processor = PayoutProcessorSettings.Processor,
+                Stores = new[] { PayoutProcessorSettings.StoreId }
+            }, context, CancellationToken);
+        }
+        payouts = payouts
+            .Where(p => p.GetBlob(null).DisabledProcessors?.Contains(PayoutProcessorSettings.Processor) is not true)
+            .ToList();
+        if (payouts.Count == 0)
+            return;
         var store = await _storeRepository.FindStore(PayoutProcessorSettings.StoreId);
         var paymentMethod = store?.GetPaymentMethodConfig(PaymentMethodId, _paymentHandlers, true);
-
         var blob = GetBlob(PayoutProcessorSettings);
         if (paymentMethod is not null)
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            var payouts = await PullPaymentHostedService.GetPayouts(
-                new PullPaymentHostedService.PayoutQuery()
-                {
-                    States = new[] { PayoutState.AwaitingPayment },
-                    PayoutMethods = new[] { PayoutProcessorSettings.PayoutMethodId },
-					Processor = PayoutProcessorSettings.Processor,
-					Stores = new[] {PayoutProcessorSettings.StoreId}
-                }, context, CancellationToken);
+            foreach (var payout in payouts)
+                context.Payouts.Attach(payout);
 
             await _pluginHookService.ApplyAction("before-automated-payout-processing",
                 new BeforePayoutActionData(store, PayoutProcessorSettings, payouts));
             if (payouts.Any())
             {
-                Logs.PayServer.LogInformation(
-                    $"{payouts.Count} found to process. Starting (and after will sleep for {blob.Interval})");
                 if (await ProcessShouldSave(paymentMethod, payouts))
                 {
                     await context.SaveChangesAsync();
-                
+
                     foreach (var payoutData in payouts.Where(payoutData => payoutData.State != PayoutState.AwaitingPayment))
                     {
-						_eventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payoutData));
+                        EventAggregator.Publish(new PayoutEvent(PayoutEvent.PayoutEventType.Updated, payoutData));
                     }
                 }
 
@@ -142,35 +137,13 @@ public abstract class BaseAutomatedPayoutProcessor<T> : BaseAsyncService where T
             await _pluginHookService.ApplyAction("after-automated-payout-processing",
                 new AfterPayoutActionData(store, PayoutProcessorSettings, payouts));
         }
-
-        // Clip interval
-        if (blob.Interval < TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes))
-            blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MinIntervalMinutes);
-        if (blob.Interval > TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes))
-            blob.Interval = TimeSpan.FromMinutes(AutomatedPayoutConstants.MaxIntervalMinutes);
-        try
-        {
-            using var cts = CancellationTokenSource.CreateLinkedTokenSource(CancellationToken, _timerCTs.Token);
-            await Task.Delay(blob.Interval, cts.Token);
-        }
-        catch (TaskCanceledException)
-        {
-        }
     }
 
-    private CancellationTokenSource _timerCTs = new CancellationTokenSource();
-    private IEventAggregatorSubscription? _subscription;
-
-    private readonly object _intervalLock = new object();
-
-    public void SkipInterval()
-    {
-        lock (_intervalLock)
-        {
-            _timerCTs.Cancel();
-            _timerCTs = new CancellationTokenSource();
-        }
-    }
+    private bool ProcessInstantly(PayoutEvent evt) =>
+        evt is { Type: PayoutEvent.PayoutEventType.Approved } pe
+                && PayoutProcessorSettings.StoreId == pe.Payout.StoreDataId
+                && pe.Payout.GetPayoutMethodId() == PayoutMethodId
+                && GetBlob(PayoutProcessorSettings).ProcessNewPayoutsInstantly;
 
     public static T GetBlob(PayoutProcessorData payoutProcesserSettings)
     {

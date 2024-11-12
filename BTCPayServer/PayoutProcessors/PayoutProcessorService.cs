@@ -27,7 +27,7 @@ public class PayoutProcessorUpdated
     }
 }
 
-public class PayoutProcessorService : EventHostedServiceBase
+public class PayoutProcessorService : EventHostedServiceBase, IPeriodicTask
 {
     private readonly ApplicationDbContextFactory _applicationDbContextFactory;
     private readonly IEnumerable<IPayoutProcessorFactory> _payoutProcessorFactories;
@@ -113,13 +113,15 @@ public class PayoutProcessorService : EventHostedServiceBase
         base.SubscribeToEvents();
         Subscribe<PayoutProcessorUpdated>();
     }
-
+    bool started = false;
     public override async Task StartAsync(CancellationToken cancellationToken)
     {
         await base.StartAsync(cancellationToken);
         var activeProcessors = await GetProcessors(new PayoutProcessorQuery());
         var tasks = activeProcessors.Select(data => StartOrUpdateProcessor(data, cancellationToken));
         await Task.WhenAll(tasks);
+        started = true;
+        _ = Do(CancellationToken);
     }
 
     private async Task StopProcessor(string id, CancellationToken cancellationToken)
@@ -183,6 +185,7 @@ public class PayoutProcessorService : EventHostedServiceBase
             else
             {
                 await AddOrUpdateProcessor(processorUpdated.Data);
+                this.EventAggregator.Publish(new PollProcessorEvent(processorUpdated.Data.Id));
             }
 
             processorUpdated.Processed?.SetResult();
@@ -193,7 +196,32 @@ public class PayoutProcessorService : EventHostedServiceBase
     {
         foreach (var data in await GetProcessors(payoutProcessorQuery))
         {
-            await StartOrUpdateProcessor(data, default);
+            EventAggregator.Publish(new PollProcessorEvent(data.Id));
         }
+    }
+
+    public async Task Do(CancellationToken cancellationToken)
+    {
+        if (!started)
+            return;
+        await using var context = _applicationDbContextFactory.CreateContext();
+        var payouts = await PullPaymentHostedService.GetPayouts(
+                new PullPaymentHostedService.PayoutQuery()
+                {
+                    States = new[] { BTCPayServer.Client.Models.PayoutState.AwaitingPayment },
+                }, context, cancellationToken);
+        EventAggregator.Publish<AwaitingPayoutsEvent>(new(payouts));
+    }
+    public record PollProcessorEvent(string ProcessorId);
+    public class AwaitingPayoutsEvent
+    {
+        public AwaitingPayoutsEvent(List<Data.PayoutData> payoutData)
+        {
+            Payouts = payoutData;
+            PayoutsByStoreId = Payouts.GroupBy(p => p.StoreDataId).ToDictionary(p => p.Key, p => p.ToList());
+        }
+
+        public List<Data.PayoutData> Payouts { get; }
+        public Dictionary<string, List<PayoutData>> PayoutsByStoreId { get; }
     }
 }

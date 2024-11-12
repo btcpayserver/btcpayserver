@@ -58,7 +58,6 @@ namespace BTCPayServer.Controllers.Greenfield
             return new LightningAutomatedPayoutSettings()
             {
                 PayoutMethodId = data.PayoutMethodId,
-                IntervalSeconds = blob.Interval,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
             };
         }
@@ -66,7 +65,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private static LightningAutomatedPayoutBlob FromModel(LightningAutomatedPayoutSettings data)
         {
             return new LightningAutomatedPayoutBlob() { 
-                Interval = data.IntervalSeconds, 
                 ProcessNewPayoutsInstantly = data.ProcessNewPayoutsInstantly
             };
         }
@@ -76,7 +74,6 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> UpdateStoreLightningAutomatedPayoutProcessor(
             string storeId, string payoutMethodId, LightningAutomatedPayoutSettings request)
         {
-            AutomatedPayoutConstants.ValidateInterval(ModelState, request.IntervalSeconds, nameof(request.IntervalSeconds));
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
             var pmi = PayoutMethodId.Parse(payoutMethodId);

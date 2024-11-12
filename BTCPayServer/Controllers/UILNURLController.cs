@@ -179,7 +179,6 @@ namespace BTCPayServer
                 return BadRequest(new LNUrlStatusResponse { Status = "ERROR", Reason = "Payment cancelled: The payer must activate the lightning automated payment process and must check \"Process approved payouts instantly\"." });
             }
 
-			var interval = processorBlob?.Interval.TotalMinutes;
 			var autoApprove = pp.GetBlob().AutoApproveClaims;
             if (nonInteractiveOnly && !autoApprove)
             {
@@ -232,9 +231,9 @@ namespace BTCPayServer
 				}
 				else
 				{
-					var message = interval switch
+					var message = processorBlob switch
 					{
-						double intervalMinutes => $"The payment will be sent after {intervalMinutes} minutes.",
+						{ } => "The payment will be sent later.",
 						null => "The sender needs to send the payment manually. (Or activate the lightning automated payment processor)"
 					};
 					return Ok(new LNUrlStatusResponse

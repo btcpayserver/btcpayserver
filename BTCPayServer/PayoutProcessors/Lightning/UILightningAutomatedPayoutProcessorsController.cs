@@ -128,20 +128,15 @@ public class UILightningAutomatedPayoutProcessorsController : Controller
 
         public LightningTransferViewModel(LightningAutomatedPayoutBlob blob)
         {
-            IntervalMinutes = blob.Interval.TotalMinutes;
             ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly;
         }
         [Display(Name = "Process approved payouts instantly")]
         public bool ProcessNewPayoutsInstantly { get; set; }
 
-        [Range(AutomatedPayoutConstants.MinIntervalMinutes, AutomatedPayoutConstants.MaxIntervalMinutes)]
-        public double IntervalMinutes { get; set; }
-
         public LightningAutomatedPayoutBlob ToBlob()
         {
             return new LightningAutomatedPayoutBlob {
                 ProcessNewPayoutsInstantly = ProcessNewPayoutsInstantly,
-                Interval = TimeSpan.FromMinutes(IntervalMinutes), 
             };
         }
     }

@@ -26,6 +26,9 @@
   <a href="https://twitter.com/intent/follow?screen_name=btcpayserver">
     <img src="https://img.shields.io/twitter/follow/btcpayserver.svg?label=Follow%20@btcpayserver"/>
   </a>
+  <a href="https://gurubase.io/g/btcpay-server">
+    <img src="https://img.shields.io/badge/Gurubase-Ask%20BTCPay%20Server%20Guru-006BFF"/>
+  </a>
 </p>
 
 <div align="center">

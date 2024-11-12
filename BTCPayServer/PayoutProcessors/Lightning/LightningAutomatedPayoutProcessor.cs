@@ -117,6 +117,9 @@ public class LightningAutomatedPayoutProcessor : BaseAutomatedPayoutProcessor<Li
                 break;
         }
 
+        if (result.Success is false && blob.NonInteractiveOnly)
+            payoutData.State = PayoutState.Cancelled;
+
         bool updateBlob = false;
 		if (result.Success is false && payoutData.State == PayoutState.AwaitingPayment)
 		{

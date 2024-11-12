@@ -27,7 +27,8 @@ namespace BTCPayServer.Data
 
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public int? ErrorCount { get; set; }
-
+        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
+        public bool NonInteractiveOnly { get; set; }
         public int IncrementErrorCount()
         {
             if (ErrorCount is { } c)

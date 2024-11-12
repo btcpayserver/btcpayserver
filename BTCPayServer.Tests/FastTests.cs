@@ -868,6 +868,10 @@ namespace BTCPayServer.Tests
             Assert.IsType<MultisigDerivationStrategy>(((P2WSHDerivationStrategy)strategyBase).Inner);
             Assert.Equal(expected, strategyBase.ToString());
 
+            var expectedWithNewLines = "2-of-tpubDDXgATYzdQkHHhZZCMcNJj8BGDENvzMVou5v9NdxiP4rxDLj33nS233dGFW4htpVZSJ6zds9eVqAV9RyRHHiKtwQKX8eR4n4KN3Dwmj7A3h-\r\ntpubDC8a54NFtQtMQAZ97VhoU9V6jVTvi9w4Y5SaAXJSBYETKg3AoX5CCKndznhPWxJUBToPCpT44s86QbKdGpKAnSjcMTGW4kE6UQ8vpBjcybW-tpubDChjnP9LXNrJp43biqjY7FH93wgRRNrNxB4Q8pH7PPRy8UPcH2S6V46WGVJ47zVGF7SyBJNCpnaogsFbsybVQckGtVhCkng3EtFn8qmxptS";
+            strategyBase = parser.Parse(expectedWithNewLines);
+            Assert.Equal(expected, strategyBase.ToString());
+
             var inner = (MultisigDerivationStrategy)((P2WSHDerivationStrategy)strategyBase).Inner;
             Assert.False(inner.IsLegacy);
             Assert.Equal(3, inner.Keys.Count);

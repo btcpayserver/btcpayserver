@@ -1,0 +1,2040 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "NBXplorer API",
+    "description": "NBXplorer is a multi-cryptocurrency lightweight block explorer that does not index the whole blockchain. \nInstead, it listens to transactions and blocks from a trusted full node and indexes only addresses and \ntransactions that belong to tracked DerivationSchemes.\n",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/v1",
+      "description": "Base API path"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    },
+    "schemas": {
+      "Balance": {
+        "type": "object",
+        "properties": {
+          "unconfirmed": {
+            "type": "integer",
+            "description": "How the confirmed balance would be updated once all unconfirmed transactions are confirmed"
+          },
+          "confirmed": {
+            "type": "integer",
+            "description": "The balance of all funds in confirmed transactions"
+          },
+          "available": {
+            "type": "integer",
+            "description": "The total spendable balance (total - immature)"
+          },
+          "immature": {
+            "type": "integer",
+            "description": "The total unspendable funds"
+          },
+          "total": {
+            "type": "integer",
+            "description": "The total of funds owned (confirmed + unconfirmed)"
+          }
+        }
+      },
+      "TransactionResponse": {
+        "type": "object",
+        "properties": {
+          "blockHash": {
+            "type": "string",
+            "description": "The hash of the block containing this transaction"
+          },
+          "confirmations": {
+            "type": "integer",
+            "description": "Number of confirmations"
+          },
+          "height": {
+            "type": "integer",
+            "description": "Block height"
+          },
+          "transactionId": {
+            "type": "string",
+            "description": "Transaction ID"
+          },
+          "transaction": {
+            "type": "string",
+            "description": "Raw transaction hex"
+          },
+          "outputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionOutput"
+            }
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TransactionInput"
+            }
+          },
+          "timestamp": {
+            "type": "integer",
+            "description": "Transaction timestamp"
+          },
+          "balanceChange": {
+            "type": "integer",
+            "description": "Net balance change for the wallet"
+          },
+          "replaceable": {
+            "type": "boolean",
+            "description": "Whether the transaction can be replaced via RBF"
+          },
+          "replacing": {
+            "type": "string",
+            "nullable": true,
+            "description": "Transaction ID being replaced by this transaction"
+          },
+          "replacedBy": {
+            "type": "string",
+            "nullable": true,
+            "description": "Transaction ID that replaced this transaction"
+          }
+        }
+      },
+      "TransactionOutput": {
+        "type": "object",
+        "properties": {
+          "keyPath": {
+            "type": "string",
+            "description": "Derivation path for the output"
+          },
+          "scriptPubKey": {
+            "type": "string",
+            "description": "Output script"
+          },
+          "index": {
+            "type": "integer",
+            "description": "Output index"
+          },
+          "value": {
+            "type": "integer",
+            "description": "Output amount in satoshis"
+          }
+        }
+      },
+      "TransactionInput": {
+        "type": "object",
+        "properties": {
+          "inputIndex": {
+            "type": "integer",
+            "description": "Input index in the transaction"
+          },
+          "transactionId": {
+            "type": "string",
+            "description": "Transaction ID being spent"
+          },
+          "scriptPubKey": {
+            "type": "string",
+            "description": "Input script"
+          },
+          "index": {
+            "type": "integer",
+            "description": "Input index"
+          },
+          "value": {
+            "type": "integer",
+            "description": "Input amount in satoshis"
+          },
+          "address": {
+            "type": "string",
+            "description": "Input address"
+          }
+        }
+      },
+      "UnusedAddress": {
+        "type": "object",
+        "properties": {
+          "trackedSource": {
+            "type": "string"
+          },
+          "feature": {
+            "type": "string"
+          },
+          "derivationStrategy": {
+            "type": "string"
+          },
+          "keyPath": {
+            "type": "string"
+          },
+          "scriptPubKey": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "redeem": {
+            "type": "string",
+            "description": "Segwit redeem script if applicable"
+          }
+        }
+      },
+      "UTXO": {
+        "type": "object",
+        "properties": {
+          "feature": {
+            "type": "string"
+          },
+          "outpoint": {
+            "type": "string"
+          },
+          "index": {
+            "type": "integer"
+          },
+          "transactionHash": {
+            "type": "string"
+          },
+          "scriptPubKey": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "value": {
+            "type": "integer"
+          },
+          "keyPath": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "integer"
+          },
+          "confirmations": {
+            "type": "integer"
+          }
+        }
+      },
+      "PSBTRequest": {
+        "type": "object",
+        "properties": {
+          "seed": {
+            "type": "integer"
+          },
+          "rbf": {
+            "type": "boolean",
+            "default": true
+          },
+          "version": {
+            "type": "integer",
+            "default": 1
+          },
+          "timeLock": {
+            "type": "integer"
+          },
+          "includeGlobalXPub": {
+            "type": "boolean",
+            "default": false
+          },
+          "destinations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "destination": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "integer"
+                },
+                "substractFees": {
+                  "type": "boolean"
+                },
+                "sweepAll": {
+                  "type": "boolean"
+                }
+              }
+            }
+          },
+          "feePreference": {
+            "type": "object",
+            "properties": {
+              "explicitFeeRate": {
+                "type": "integer"
+              },
+              "explicitFee": {
+                "type": "integer"
+              },
+              "blockTarget": {
+                "type": "integer"
+              },
+              "fallbackFeeRate": {
+                "type": "integer"
+              }
+            }
+          }
+        }
+      },
+      "Group": {
+        "type": "object",
+        "properties": {
+          "trackedSource": {
+            "type": "string"
+          },
+          "groupId": {
+            "type": "string"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "trackedSource": {
+                  "type": "string"
+                },
+                "cryptoCode": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      },
+      "WalletGenerationRequest": {
+        "type": "object",
+        "properties": {
+          "accountNumber": {
+            "type": "integer",
+            "default": 0
+          },
+          "wordList": {
+            "type": "string",
+            "enum": [
+              "English",
+              "French",
+              "Japanese",
+              "Spanish",
+              "ChineseSimplified"
+            ],
+            "default": "English"
+          },
+          "existingMnemonic": {
+            "type": "string"
+          },
+          "wordCount": {
+            "type": "integer",
+            "default": 12
+          },
+          "scriptPubKeyType": {
+            "type": "string",
+            "enum": [
+              "Legacy",
+              "Segwit",
+              "SegwitP2SH",
+              "Taproot"
+            ]
+          },
+          "passphrase": {
+            "type": "string"
+          },
+          "importKeysToRPC": {
+            "type": "boolean",
+            "default": false
+          },
+          "savePrivateKeys": {
+            "type": "boolean"
+          },
+          "additionalOptions": {
+            "type": "object"
+          }
+        }
+      },
+      "WalletGenerationResponse": {
+        "type": "object",
+        "properties": {
+          "mnemonic": {
+            "type": "string"
+          },
+          "passphrase": {
+            "type": "string"
+          },
+          "wordList": {
+            "type": "string"
+          },
+          "wordCount": {
+            "type": "integer"
+          },
+          "masterHDKey": {
+            "type": "string"
+          },
+          "accountHDKey": {
+            "type": "string"
+          },
+          "accountKeyPath": {
+            "type": "string"
+          },
+          "accountDescriptor": {
+            "type": "string"
+          },
+          "derivationScheme": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}": {
+      "post": {
+        "summary": "Track a derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "derivationOptions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "feature": {
+                          "type": "string",
+                          "enum": [
+                            "Deposit"
+                          ]
+                        },
+                        "minAddresses": {
+                          "type": "integer"
+                        },
+                        "maxAddresses": {
+                          "type": "integer"
+                        }
+                      }
+                    }
+                  },
+                  "wait": {
+                    "type": "boolean",
+                    "default": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully tracked derivation scheme"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/addresses/unused": {
+      "get": {
+        "summary": "Get a new unused address",
+        "description": "Get a new unused address from the derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The cryptocurrency code (e.g., BTC)"
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The derivation scheme to get an address from"
+          },
+          {
+            "name": "feature",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "enum": [
+                "Deposit",
+                "Change",
+                "Direct",
+                "Custom"
+              ],
+              "default": "Deposit"
+            },
+            "description": "Type of address to generate:\n* Deposit - get a deposit address (0/x)\n* Change - get a change address (1/x)\n* Direct - get x\n* Custom - use customKeyPathTemplate if configured\n"
+          },
+          {
+            "name": "skip",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "How many addresses to skip (useful for getting multiple unused addresses)"
+          },
+          {
+            "name": "reserve",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": false
+            },
+            "description": "Mark the returned address as used"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Unused address information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnusedAddress"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Strategy not found"
+          },
+          "404": {
+            "description": "Crypto code not supported or not found"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations": {
+      "post": {
+        "summary": "Generate a wallet",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WalletGenerationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Wallet generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WalletGenerationResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/addresses/{address}": {
+      "post": {
+        "summary": "Track an address",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "address",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully tracked address"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/balance": {
+      "get": {
+        "summary": "Get balance of tracked derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Balance information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Balance"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/transactions": {
+      "post": {
+        "summary": "Broadcast a transaction",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "testMempoolAccept",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/octet-stream": {
+              "schema": {
+                "type": "string",
+                "format": "binary"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Transaction broadcast result",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "rpcCode": {
+                      "type": "integer"
+                    },
+                    "rpcCodeMessage": {
+                      "type": "string"
+                    },
+                    "rpcMessage": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RPC unavailable or not supported"
+          },
+          "404": {
+            "description": "Crypto code not supported"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/transactions/{txId}": {
+      "get": {
+        "summary": "Get transaction details",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "txId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeTransaction",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransactionResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Transaction not found"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/transactions": {
+      "get": {
+        "summary": "Get transactions for derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "includeTransaction",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Transaction list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "height": {
+                      "type": "integer"
+                    },
+                    "confirmedTransactions": {
+                      "type": "object",
+                      "properties": {
+                        "transactions": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TransactionResponse"
+                          }
+                        }
+                      }
+                    },
+                    "unconfirmedTransactions": {
+                      "type": "object",
+                      "properties": {
+                        "transactions": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/TransactionResponse"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/utxos": {
+      "get": {
+        "summary": "Get UTXOs of tracked derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "UTXO list",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "trackedSource": {
+                      "type": "string"
+                    },
+                    "derivationStrategy": {
+                      "type": "string"
+                    },
+                    "currentHeight": {
+                      "type": "integer"
+                    },
+                    "unconfirmed": {
+                      "type": "object",
+                      "properties": {
+                        "utxOs": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/UTXO"
+                          }
+                        },
+                        "spentOutpoints": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "hasChanges": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "confirmed": {
+                      "type": "object",
+                      "properties": {
+                        "utxOs": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/UTXO"
+                          }
+                        },
+                        "spentOutpoints": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          }
+                        },
+                        "hasChanges": {
+                          "type": "boolean"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/rescan": {
+      "post": {
+        "summary": "Rescan specific transactions",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "transactions": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "blockId": {
+                          "type": "string"
+                        },
+                        "transactionId": {
+                          "type": "string"
+                        },
+                        "transaction": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Rescan initiated"
+          },
+          "400": {
+            "description": "RPC unavailable"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/psbt/update": {
+      "post": {
+        "summary": "Update Partially Signed Bitcoin Transaction",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "psbt": {
+                    "type": "string"
+                  },
+                  "derivationScheme": {
+                    "type": "string"
+                  },
+                  "includeGlobalXPub": {
+                    "type": "boolean"
+                  },
+                  "rebaseKeyPaths": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "accountKey": {
+                          "type": "string"
+                        },
+                        "accountKeyPath": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Updated PSBT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "psbt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Health check endpoint",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "System is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/connect": {
+      "get": {
+        "summary": "Connect to websocket for notifications",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "101": {
+            "description": "Switching protocols to websocket"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/events": {
+      "get": {
+        "summary": "Query event stream",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "lastEventId",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 0
+            }
+          },
+          {
+            "name": "longPolling",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Event stream",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "eventId": {
+                        "type": "integer"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "newblock",
+                          "newtransaction"
+                        ]
+                      },
+                      "data": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/events/latest": {
+      "get": {
+        "summary": "Query event stream from most recent",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "schema": {
+              "type": "integer",
+              "default": 10
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Latest events",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "eventId": {
+                        "type": "integer"
+                      },
+                      "type": {
+                        "type": "string"
+                      },
+                      "data": {
+                        "type": "object"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups": {
+      "post": {
+        "summary": "Create a new empty group",
+        "responses": {
+          "200": {
+            "description": "Group created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}": {
+      "get": {
+        "summary": "Get group information",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Group information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/groups/{groupId}/children": {
+      "post": {
+        "summary": "Add children to a group",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "trackedSource": {
+                      "type": "string"
+                    },
+                    "cryptoCode": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Children added successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove children from a group",
+        "description": "Note: This endpoint accepts a request body with DELETE method, which is non-standard \nbut matches the actual API implementation.\n",
+        "parameters": [
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "x-codegen-request-body-name": "children",
+        "x-body-required": true,
+        "x-request-body": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "trackedSource": {
+                      "type": "string",
+                      "description": "The tracked source identifier"
+                    },
+                    "cryptoCode": {
+                      "type": "string",
+                      "description": "The cryptocurrency code (e.g., BTC)"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Children removed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Group"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/groups/{groupId}/addresses": {
+      "post": {
+        "summary": "Add addresses to group",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "groupId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Addresses added successfully"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/metadata/{key}": {
+      "post": {
+        "summary": "Attach metadata to a derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Metadata attached successfully"
+          }
+        }
+      },
+      "get": {
+        "summary": "Retrieve metadata from a derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Key not found"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Remove metadata from a derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "key",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Metadata removed successfully"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/fees/{blockCount}": {
+      "get": {
+        "summary": "Get fee rate",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "blockCount",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Fee rate information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "feeRate": {
+                      "type": "number"
+                    },
+                    "blockCount": {
+                      "type": "integer"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Fee estimation unavailable"
+          },
+          "404": {
+            "description": "Crypto code not supported"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/status": {
+      "get": {
+        "summary": "Get connection status to the chain",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Connection status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "bitcoinStatus": {
+                      "type": "object",
+                      "properties": {
+                        "blocks": {
+                          "type": "integer"
+                        },
+                        "headers": {
+                          "type": "integer"
+                        },
+                        "verificationProgress": {
+                          "type": "number"
+                        },
+                        "isSynched": {
+                          "type": "boolean"
+                        }
+                      }
+                    },
+                    "isFullySynched": {
+                      "type": "boolean"
+                    },
+                    "chainHeight": {
+                      "type": "integer"
+                    },
+                    "networkType": {
+                      "type": "string"
+                    },
+                    "cryptoCode": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/scripts/{script}": {
+      "get": {
+        "summary": "Get scriptPubKey information of a Derivation Scheme",
+        "description": "Get information about a specific scriptPubKey for a derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The cryptocurrency code (e.g., BTC)"
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The derivation scheme to query"
+          },
+          {
+            "name": "script",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The scriptPubKey to get information about"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "ScriptPubKey information",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "trackedSource": {
+                      "type": "string",
+                      "description": "The tracked source identifier",
+                      "example": "DERIVATIONSCHEME:tpubD6NzVbkrYhZ4WcPozSqALNCrJEt4C45sPDhEBBuokoCeDgjX6YTs4QVvhD9kao6f2uZLqZF4qcXprYyRqooSXr1uPp1KPH1o4m6aw9nxbiA"
+                    },
+                    "feature": {
+                      "type": "string",
+                      "description": "The feature type (e.g., Deposit)",
+                      "example": "Deposit"
+                    },
+                    "derivationStrategy": {
+                      "type": "string",
+                      "description": "The derivation strategy",
+                      "example": "tpubD6NzVbkrYhZ4WcPozSqALNCrJEt4C45sPDhEBBuokoCeDgjX6YTs4QVvhD9kao6f2uZLqZF4qcXprYyRqooSXr1uPp1KPH1o4m6aw9nxbiA"
+                    },
+                    "keyPath": {
+                      "type": "string",
+                      "description": "The derivation path",
+                      "example": "0/0"
+                    },
+                    "scriptPubKey": {
+                      "type": "string",
+                      "description": "The scriptPubKey",
+                      "example": "001460c25d29559774803f262acf5ee5c922eff52ccd"
+                    },
+                    "address": {
+                      "type": "string",
+                      "description": "The derived address",
+                      "example": "tb1qvrp96224ja6gq0ex9t84aewfythl2txdkpdmu0"
+                    }
+                  }
+                },
+                "example": {
+                  "trackedSource": "DERIVATIONSCHEME:tpubD6NzVbkrYhZ4WcPozSqALNCrJEt4C45sPDhEBBuokoCeDgjX6YTs4QVvhD9kao6f2uZLqZF4qcXprYyRqooSXr1uPp1KPH1o4m6aw9nxbiA",
+                  "feature": "Deposit",
+                  "derivationStrategy": "tpubD6NzVbkrYhZ4WcPozSqALNCrJEt4C45sPDhEBBuokoCeDgjX6YTs4QVvhD9kao6f2uZLqZF4qcXprYyRqooSXr1uPp1KPH1o4m6aw9nxbiA",
+                  "keyPath": "0/0",
+                  "scriptPubKey": "001460c25d29559774803f262acf5ee5c922eff52ccd",
+                  "address": "tb1qvrp96224ja6gq0ex9t84aewfythl2txdkpdmu0"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Cryptocurrency not supported",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "cryptoCode-not-supported"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/utxos/scan": {
+      "post": {
+        "summary": "Scan UTXO Set",
+        "description": "Scan the UTXO Set for outputs belonging to the derivation scheme. \nThe scan is split into batches to conserve RAM, scanning the whole UTXO set sequentially.\nThree branches are scanned: 0/x, 1/x and x.\nIf a UTXO in one branch is found at a specific x, all addresses inferior to index x will be considered used.\n",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The cryptocurrency code (e.g., BTC)"
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The derivation scheme to scan"
+          },
+          {
+            "name": "batchSize",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 1000
+            },
+            "description": "The number of addresses scanned at once per derivation scheme branch"
+          },
+          {
+            "name": "gapLimit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10000
+            },
+            "description": "If no UTXO are detected in this interval, the scan stops"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 0
+            },
+            "description": "The first address index to check"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scan request queued"
+          },
+          "405": {
+            "description": "ScanUTXOSet not supported",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "scanutxoset-not-suported"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "ScanUTXOSet already in progress",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "scanutxoset-in-progress"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "RPC unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "rpc-unavailable"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/utxos/scan/status": {
+      "get": {
+        "summary": "Get UTXO scan status",
+        "description": "Get the status of a UTXO scan. Results are kept for 24 hours after completion.\n",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The cryptocurrency code (e.g., BTC)"
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The derivation scheme that was scanned"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Scan status",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "queuedAt": {
+                      "type": "integer",
+                      "description": "Unix timestamp when the scan was queued"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "Queued",
+                        "Pending",
+                        "Complete",
+                        "Error"
+                      ],
+                      "description": "Current state of the scan"
+                    },
+                    "progress": {
+                      "type": "object",
+                      "properties": {
+                        "startedAt": {
+                          "type": "integer",
+                          "description": "Unix timestamp when scan started"
+                        },
+                        "completedAt": {
+                          "type": "integer",
+                          "nullable": true,
+                          "description": "Unix timestamp when scan completed"
+                        },
+                        "found": {
+                          "type": "integer",
+                          "description": "Number of UTXOs found"
+                        },
+                        "batchNumber": {
+                          "type": "integer"
+                        },
+                        "remainingBatches": {
+                          "type": "integer"
+                        },
+                        "currentBatchProgress": {
+                          "type": "integer"
+                        },
+                        "remainingSeconds": {
+                          "type": "integer"
+                        },
+                        "overallProgress": {
+                          "type": "integer"
+                        },
+                        "from": {
+                          "type": "integer"
+                        },
+                        "count": {
+                          "type": "integer"
+                        },
+                        "totalSearched": {
+                          "type": "integer"
+                        },
+                        "totalSizeOfUTXOSet": {
+                          "type": "integer",
+                          "nullable": true,
+                          "description": "Only set when scan is complete"
+                        },
+                        "highestKeyIndexFound": {
+                          "type": "object",
+                          "properties": {
+                            "change": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "deposit": {
+                              "type": "integer",
+                              "nullable": true
+                            },
+                            "direct": {
+                              "type": "integer",
+                              "nullable": true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                },
+                "example": {
+                  "error": null,
+                  "queuedAt": 1540439841,
+                  "status": "Pending",
+                  "progress": {
+                    "startedAt": 1540439841,
+                    "completedAt": null,
+                    "found": 2,
+                    "batchNumber": 9,
+                    "remainingBatches": 1,
+                    "currentBatchProgress": 50,
+                    "remainingSeconds": 10,
+                    "overallProgress": 91,
+                    "from": 900,
+                    "count": 100,
+                    "totalSearched": 2700,
+                    "totalSizeOfUTXOSet": null,
+                    "highestKeyIndexFound": {
+                      "change": null,
+                      "deposit": 51,
+                      "direct": null
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scan information not found (older than 24H)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "enum": [
+                    "scanutxoset-info-not-found"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/utxos/wipe": {
+      "post": {
+        "summary": "Wipe derivation scheme transactions",
+        "description": "Wipe all the transactions from a derivation scheme",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The cryptocurrency code (e.g., BTC)"
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The derivation scheme whose transactions should be wiped"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successfully wiped all transactions"
+          }
+        }
+      }
+    },
+    "/cryptos/{cryptoCode}/derivations/{derivationScheme}/prune": {
+      "post": {
+        "summary": "Manual pruning",
+        "description": "Manually prune transactions from a derivation scheme. \nThis can be used to remove old transactions whose UTXOs have been spent.\n",
+        "parameters": [
+          {
+            "name": "cryptoCode",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The cryptocurrency code (e.g., BTC)"
+          },
+          {
+            "name": "derivationScheme",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "The derivation scheme to prune"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "daysToKeep": {
+                    "type": "number",
+                    "format": "double",
+                    "default": 1.0,
+                    "description": "The number of days of history to keep"
+                  }
+                },
+                "example": {
+                  "daysToKeep": 1.0
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successfully pruned transactions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalPruned": {
+                      "type": "integer",
+                      "description": "The number of transactions pruned from the derivation scheme"
+                    }
+                  }
+                },
+                "example": {
+                  "totalPruned": 10
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

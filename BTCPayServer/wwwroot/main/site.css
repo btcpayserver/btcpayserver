@@ -29,7 +29,6 @@
 
 /* Iframe context */
 [data-within-iframe] #StoreLink,
-[data-within-iframe] #RecentTransactionsToggle,
 [data-within-iframe] .store-footer {
     display: none;
 }

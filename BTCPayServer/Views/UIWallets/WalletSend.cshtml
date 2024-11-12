@@ -1,4 +1,3 @@
-@inject BTCPayServer.Security.ContentSecurityPolicies csp
 @using Microsoft.AspNetCore.Mvc.ModelBinding
 @using BTCPayServer.Controllers
 @using BTCPayServer.Services
@@ -12,7 +11,7 @@
 	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
 	Layout = "_LayoutWizard";
 	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Send {0}", Model.CryptoCode], walletId);
-	csp.Add("worker-src", "blob:");
+	Csp.Add("worker-src", "blob:");
 	Csp.UnsafeEval();
 }
 

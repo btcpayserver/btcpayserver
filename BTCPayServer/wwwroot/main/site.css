@@ -942,6 +942,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     margin: 0;
     padding: 1px var(--btcpay-space-s);
     text-align: left;
+    word-break: break-word;
 }
 
 .transaction-label a {

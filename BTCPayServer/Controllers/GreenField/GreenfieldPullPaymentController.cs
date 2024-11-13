@@ -131,26 +131,20 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.BOLT11Expiration), $"The BOLT11 expiration should be positive");
             }
-            PayoutMethodId?[]? payoutMethods = null;
-            if (request.PayoutMethods is { } payoutMethodsStr)
+
+            var supported = _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
+            request.PayoutMethods ??= supported.Select(s => s.ToString()).ToArray();
+            for (int i = 0; i < request.PayoutMethods.Length; i++)
             {
-                payoutMethods = payoutMethodsStr.Select(s =>
+                var pmi = request.PayoutMethods[i] is string pm ? PayoutMethodId.TryParse(pm) : null;
+                if (pmi is null || !supported.Contains(pmi))
                 {
-                    PayoutMethodId.TryParse(s, out var pmi);
-                    return pmi;
-                }).ToArray();
-                var supported =  _payoutHandlers.GetSupportedPayoutMethods(HttpContext.GetStoreData());
-                for (int i = 0; i < payoutMethods.Length; i++)
-                {
-                    if (!supported.Contains(payoutMethods[i]))
-                    {
-                        request.AddModelError(paymentRequest => paymentRequest.PayoutMethods[i], "Invalid or unsupported payment method", this);
-                    }
+                    request.AddModelError(paymentRequest => paymentRequest.PayoutMethods[i], "Invalid or unsupported payment method", this);
                 }
             }
-            else
+            if (request.PayoutMethods.Length is 0)
             {
-                ModelState.AddModelError(nameof(request.PayoutMethods), "This field is required");
+                ModelState.AddModelError(nameof(request.PayoutMethods), "At least one payout method is required");
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);

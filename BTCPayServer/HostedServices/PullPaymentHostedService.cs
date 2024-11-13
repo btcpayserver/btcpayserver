@@ -112,6 +112,8 @@ namespace BTCPayServer.HostedServices
         }
         public Task<string> CreatePullPayment(string storeId, CreatePullPaymentRequest request)
         {
+            if (request.PayoutMethods.Length == 0)
+                throw new InvalidOperationException("request.PayoutMethods should have at least one payout method");
             return CreatePullPayment(new CreatePullPayment()
             {
                 StartsAt = request.StartsAt,

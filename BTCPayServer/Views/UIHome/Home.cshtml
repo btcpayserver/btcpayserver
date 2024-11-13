@@ -1,5 +1,4 @@
 @using BTCPayServer.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model HomeViewModel;
 @inject SettingsRepository SettingsRepository
 @{
@@ -9,7 +8,7 @@
 
 <partial name="_StatusMessage" />
 
-<h2 text-translate="true">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h2>
+<h2>@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h2>
 
 @if (!Model.HasStore)
 {

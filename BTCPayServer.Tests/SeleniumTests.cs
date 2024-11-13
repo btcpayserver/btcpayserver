@@ -3779,7 +3779,7 @@ retry:
             (_, string posId) = s.CreateApp("PointOfSale");
             (_, string crowdfundId) = s.CreateApp("Crowdfund");
             
-            string GetStorePath(string subPath) => $"/stores/{storeId}/{subPath}";
+            string GetStorePath(string subPath) => $"/stores/{storeId}" + (string.IsNullOrEmpty(subPath) ? "" : $"/{subPath}");
 
             // Owner access
             s.AssertPageAccess(true, GetStorePath(""));

@@ -6,15 +6,13 @@
 #PosKeypad .alert {
     margin-top: var(--btcpay-space-xl);
 }
-
 button[data-bs-toggle] {
     position: absolute;
-    top: 1.75rem;
     z-index: 1;
+    top: 1.5rem;
+    height: 3.25em !important;
+    width: 3.25em !important;
     color: var(--btcpay-header-link);
-}
-button[data-bs-toggle]:hover {
-    color: var(--btcpay-header-link-accent);
 }
 button[data-bs-toggle] .icon {
     --icon-size: 1.75em;

@@ -13,7 +13,6 @@ namespace BTCPayServer.Plugins.PayButton.Models
         [ModelBinder(BinderType = typeof(InvariantDecimalModelBinder))]
         public decimal? Price { get; set; }
         public string InvoiceId { get; set; }
-        [Required]
         public string Currency { get; set; }
         public string DefaultPaymentMethod { get; set; }
         public PaymentMethodOptionViewModel.Format[] PaymentMethods { get; set; }

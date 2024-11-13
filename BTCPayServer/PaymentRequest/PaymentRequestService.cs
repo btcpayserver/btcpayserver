@@ -66,12 +66,10 @@ namespace BTCPayServer.PaymentRequest
             {
                 var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
-                var allSettled = contributions.All(i => i.Value.Settled);
-                var isPaid = contributions.TotalCurrency >= blob.Amount;
 
-                if (isPaid)
+                if (contributions.Total >= blob.Amount)
                 {
-                    currentStatus = allSettled
+                    currentStatus = contributions.TotalSettled >= blob.Amount
                         ? Client.Models.PaymentRequestData.PaymentRequestStatus.Completed
                         : Client.Models.PaymentRequestData.PaymentRequestStatus.Processing;
                 }
@@ -99,7 +97,7 @@ namespace BTCPayServer.PaymentRequest
             var blob = pr.GetBlob();
             var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(id);
             var paymentStats = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
-            var amountDue = blob.Amount - paymentStats.TotalCurrency;
+            var amountDue = blob.Amount - paymentStats.Total;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
                 .FirstOrDefault(entity => entity.Status == InvoiceStatus.New);
             
@@ -107,8 +105,8 @@ namespace BTCPayServer.PaymentRequest
             {
                 Archived = pr.Archived,
                 AmountFormatted = _displayFormatter.Currency(blob.Amount, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
-                AmountCollected = paymentStats.TotalCurrency,
-                AmountCollectedFormatted = _displayFormatter.Currency(paymentStats.TotalCurrency, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                AmountCollected = paymentStats.Total,
+                AmountCollectedFormatted = _displayFormatter.Currency(paymentStats.Total, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                 AmountDue = amountDue,
                 AmountDueFormatted = _displayFormatter.Currency(amountDue, blob.Currency, DisplayFormatter.CurrencyFormat.Symbol),
                 CurrencyData = _currencies.GetCurrencyData(blob.Currency, true),

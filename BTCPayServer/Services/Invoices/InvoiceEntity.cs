@@ -830,14 +830,6 @@ namespace BTCPayServer.Services.Invoices
                 Status == InvoiceStatus.Invalid;
         }
 
-        public bool IsSettled()
-        {
-            return
-                   Status == InvoiceStatus.Settled ||
-                   (Status == InvoiceStatus.Expired &&
-                    ExceptionStatus is InvoiceExceptionStatus.PaidLate or InvoiceExceptionStatus.PaidOver);
-        }
-
         public override string ToString()
         {
             return Status + ExceptionStatus switch

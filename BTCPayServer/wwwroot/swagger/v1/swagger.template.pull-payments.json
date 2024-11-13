@@ -225,11 +225,12 @@
                                     },
                                     "payoutMethods": {
                                         "type": "array",
-                                        "description": "The list of supported payout methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
+                                        "description": "The list of supported payout methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint. If `null`, all available payout methods will be supported.",
                                         "items": {
                                             "type": "string",
                                             "example": "BTC"
-                                        }
+                                        },
+                                        "nullable": true
                                     }
                                 }
                             }

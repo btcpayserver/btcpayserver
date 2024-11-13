@@ -379,7 +379,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (network.ReadonlyWallet)
             {
                 return this.CreateAPIError(503, "not-available",
-                    $"{network.CryptoCode} sending services are not currently available");
+                    $"This network only support read-only features");
             }
 
             //This API is only meant for hot wallet usage for now. We can expand later when we allow PSBT manipulation.
@@ -573,8 +573,11 @@ namespace BTCPayServer.Controllers.Greenfield
                     WellknownMetadataKeys.MasterHDKey);
             if (!derivationScheme.IsHotWallet || signingKeyStr is null)
             {
-                return this.CreateAPIError(503, "not-available",
-                    $"{network.CryptoCode} sending services are not currently available");
+                var reason = !derivationScheme.IsHotWallet ? 
+                    "You cannot send from a cold wallet" :
+                    "NBXplorer doesn't have the seed of the wallet";
+
+                return this.CreateAPIError(503, "not-available", reason);
             }
 
             var signingKey = ExtKey.Parse(signingKeyStr, network.NBitcoinNetwork);

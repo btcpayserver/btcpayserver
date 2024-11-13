@@ -5,7 +5,6 @@
 }
 
 <h3 class="mb-3">@ViewData["Title"]</h3>
-
 @if (!Model.Ok)
 {
     <div class="row">
@@ -74,7 +73,7 @@ else if (!Model.Progress.HasValue)
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
-                <span>@StringLocalizer["The previous scan completed and found <b>{0}</b> UTXOs in <b>{1}</b> (The total UTXO set size is {2})", Model.LastSuccess.Found, Model.TimeOfScan, Model.LastSuccess.TotalSizeOfUTXOSet.Value]</span>
+                <span>@ViewLocalizer["The previous scan completed and found <b>{0}</b> UTXOs in <b>{1}</b> (The total UTXO set size is {2})", Model.LastSuccess.Found, Model.TimeOfScan, Model.LastSuccess.TotalSizeOfUTXOSet.Value]</span>
             </div>
         }
         <div class="col-lg-8">

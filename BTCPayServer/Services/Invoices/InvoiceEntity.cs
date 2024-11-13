@@ -326,7 +326,7 @@ namespace BTCPayServer.Services.Invoices
         }
         public bool TryGetRate(string currency, out decimal rate)
         {
-            return TryGetRate(new CurrencyPair(Currency, currency), out rate);
+            return TryGetRate(new CurrencyPair(currency, Currency), out rate);
         }
         public bool TryGetRate(CurrencyPair pair, out decimal rate)
         {
@@ -828,14 +828,6 @@ namespace BTCPayServer.Services.Invoices
                 ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
                 ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
                 Status == InvoiceStatus.Invalid;
-        }
-
-        public bool IsSettled()
-        {
-            return
-                   Status == InvoiceStatus.Settled ||
-                   (Status == InvoiceStatus.Expired &&
-                    ExceptionStatus is InvoiceExceptionStatus.PaidLate or InvoiceExceptionStatus.PaidOver);
         }
 
         public override string ToString()

@@ -45,31 +45,31 @@
                             </li>
                             @if (ViewData.IsPageActive([StoreNavPages.General, StoreNavPages.Rates, StoreNavPages.CheckoutAppearance, StoreNavPages.Tokens, StoreNavPages.Users, StoreNavPages.Roles, StoreNavPages.Webhooks, StoreNavPages.PayoutProcessors, StoreNavPages.Emails, StoreNavPages.Forms]))
                             {
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Rates))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Rates)" asp-controller="UIStores" asp-action="Rates" asp-route-storeId="@Model.Store.Id" text-translate="true">Rates</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.CheckoutAppearance))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.CheckoutAppearance)" asp-controller="UIStores" asp-action="CheckoutAppearance" asp-route-storeId="@Model.Store.Id" text-translate="true">Checkout Appearance</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Tokens))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Tokens)" asp-controller="UIStores" asp-action="ListTokens" asp-route-storeId="@Model.Store.Id" text-translate="true">Access Tokens</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Users))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Users)" asp-controller="UIStores" asp-action="StoreUsers" asp-route-storeId="@Model.Store.Id" text-translate="true">Users</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Roles))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Roles)" asp-controller="UIStores" asp-action="ListRoles" asp-route-storeId="@Model.Store.Id" text-translate="true">Roles</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Webhooks))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Webhooks)" asp-controller="UIStores" asp-action="Webhooks" asp-route-storeId="@Model.Store.Id" text-translate="true">Webhooks</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.PayoutProcessors))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.PayoutProcessors)" asp-controller="UIPayoutProcessors" asp-action="ConfigureStorePayoutProcessors" asp-route-storeId="@Model.Store.Id" text-translate="true">Payout Processors</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Emails))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Emails)" asp-controller="UIStores" asp-action="StoreEmailSettings" asp-route-storeId="@Model.Store.Id" text-translate="true">Emails</a>
                                 </li>
-                                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyStoreSettings">
+                                <li class="nav-item nav-item-sub" permission="@Policies.CanViewStoreSettings">
                                     <a id="StoreNav-@(nameof(StoreNavPages.Forms))" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Forms)" asp-controller="UIForms" asp-action="FormsList" asp-route-storeId="@Model.Store.Id" text-translate="true">Forms</a>
                                 </li>
                             }

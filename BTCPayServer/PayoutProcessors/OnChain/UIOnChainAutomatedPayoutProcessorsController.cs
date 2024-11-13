@@ -30,12 +30,14 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         EventAggregator eventAggregator,
         PaymentMethodHandlerDictionary handlers,
         OnChainAutomatedPayoutSenderFactory onChainAutomatedPayoutSenderFactory,
+        IStringLocalizer stringLocalizer,
         PayoutProcessorService payoutProcessorService)
     {
         _eventAggregator = eventAggregator;
         _handlers = handlers;
         _onChainAutomatedPayoutSenderFactory = onChainAutomatedPayoutSenderFactory;
         _payoutProcessorService = payoutProcessorService;
+        StringLocalizer = stringLocalizer;
     }
     PayoutMethodId GetPayoutMethod(string cryptoCode) => PayoutTypes.CHAIN.GetPayoutMethodId(cryptoCode);
     [HttpGet("~/stores/{storeId}/payout-processors/onchain-automated/{cryptocode}")]

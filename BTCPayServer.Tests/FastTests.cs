@@ -868,6 +868,13 @@ namespace BTCPayServer.Tests
             Assert.IsType<MultisigDerivationStrategy>(((P2WSHDerivationStrategy)strategyBase).Inner);
             Assert.Equal(expected, strategyBase.ToString());
 
+            foreach (var space in new[] { "\r\n", " ", "\t" })
+            {
+                var expectedWithNewLines = $"2-of-tpubDDXgATYzdQkHHhZZCMcNJj8BGDENvzMVou5v9NdxiP4rxDLj33nS233dGFW4htpVZSJ6zds9eVqAV9RyRHHiKtwQKX8eR4n4KN3Dwmj7A3h-{space}tpubDC8a54NFtQtMQAZ97VhoU9V6jVTvi9w4Y5SaAXJSBYETKg3AoX5CCKndznhPWxJUBToPCpT44s86QbKdGpKAnSjcMTGW4kE6UQ8vpBjcybW-tpubDChjnP9LXNrJp43biqjY7FH93wgRRNrNxB4Q8pH7PPRy8UPcH2S6V46WGVJ47zVGF7SyBJNCpnaogsFbsybVQckGtVhCkng3EtFn8qmxptS";
+                strategyBase = parser.Parse(expectedWithNewLines);
+                Assert.Equal(expected, strategyBase.ToString());
+            }
+
             var inner = (MultisigDerivationStrategy)((P2WSHDerivationStrategy)strategyBase).Inner;
             Assert.False(inner.IsLegacy);
             Assert.Equal(3, inner.Keys.Count);
@@ -884,7 +891,7 @@ namespace BTCPayServer.Tests
             Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
 
             // Failure cases
-            Assert.Throws<FormatException>(() => { parser.Parse("xpub 661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw"); }); // invalid format because of space
+            Assert.Throws<FormatException>(() => { parser.Parse("xpubZ661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw"); });
             Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("invalid"); }); // invalid in general
             Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("wpkh([8b60afd1/49h/0h/0h]xpub661MyMwAFXkMnyoBjyHndD3QwRbcGVBsTGeNZN6QGVHcfz4MPzBUxjSevweNFQx7SqmMHLdSA4FteGsRrEriu4pnVZMZWnruFFAYZATtcDw/0/*)#9x4vkw48"); }); // invalid checksum
         }

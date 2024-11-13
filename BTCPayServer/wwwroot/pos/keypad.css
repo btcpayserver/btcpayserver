@@ -6,7 +6,6 @@
 #PosKeypad .alert {
     margin-top: var(--btcpay-space-xl);
 }
-
 button[data-bs-toggle] {
     position: absolute;
     z-index: 1;

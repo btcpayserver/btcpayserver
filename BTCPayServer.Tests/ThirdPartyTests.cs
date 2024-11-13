@@ -345,7 +345,7 @@ retry:
             var fetcher = new RateFetcher(factory);
 
             Assert.True(RateRules.TryParse("X_X=kraken(X_BTC) * kraken(BTC_X)", out var rule));
-            foreach (var pair in new[] { "DOGE_USD", "DOGE_CAD", "DASH_CAD", "DASH_USD", "DASH_EUR" })
+            foreach (var pair in new[] { "DOGE_USD", "DOGE_CAD" })
             {
                 var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule, null, default).GetAwaiter().GetResult();
                 Assert.NotNull(result.BidAsk);

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text.RegularExpressions;
 using NBitcoin;
 using NBitcoin.Scripting;
 using NBXplorer.DerivationStrategy;
@@ -100,6 +101,7 @@ namespace BTCPayServer
         {
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
+            str = Regex.Replace(str, @"\s+", "");
             HashSet<string> hintedLabels = new HashSet<string>();
             if (!Network.Consensus.SupportSegwit)
             {

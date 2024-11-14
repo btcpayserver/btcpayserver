@@ -1,5 +1,44 @@
 # Changelog
 
+## 2.0.3
+
+If you are using Boltcards, we advise you to update to this release.
+
+### New features
+
+* Greenfield: Histograms: Add Lightning data and API endpoints (#6217) @dennisreimann
+* Greenfield: Add image upload for app items (#6226 #6075) @dennisreimann
+
+### Bug fixes
+
+* Fix: Getting notifications via API would crash @NicolasDorier
+* Boltcard would get bricked during reset from the balance view with wrong card (#6400) @NicolasDorier
+* UI: Fix escaped HTML tags in UTXO rescan message (#6399 #6398) @dennisreimann
+* UI: Allow text break in labels to avoid horizontal scrolling (#6366) @dennisreimann
+* UI: Fix missing navigation links for store managers (#6368) @dennisreimann
+* Fix: Incorrect calculation for crowdfund and payment request status (#6381 #6371) @NicolasDorier
+* Fix: Pay button shouldn't throw exception if currency isn't specific (#6324 #6395) @NicolasDorier
+* UI: Do not escape apostrophe in custom server name (#6391 #6352) @dennisreimann
+* UI: Fix close icon in create store wizard @dennisreimann
+* Fix: Pull payment could get stuck in Pending mode (#6259 #6394) @NicolasDorier
+* Fix: Activating the automated payout processor in the UI would crash @NicolasDorier
+* Fix: Newline during import of multisig xpub results in different addresses for wallet (#6328 #6386) @NicolasDorier
+* Fix: WalletCamera for Address scanning doesn't work (#6373 #6370) @dennisreimann
+* Fix: InvoiceCurrencyAmount and Rate columns in reports displays 0.00 (#6385 #6364 #6384) @NicolasDorier
+* Fix: center qr code (#6362 #6361) @jackstar12
+* Fix: Do not automatically retry of payouts if they are non interactive (Boltcard) (#6382 #6377) @NicolasDorier
+* Fix: The lightning symbol was missing in the payment stats (#6376) @NicolasDorier
+* Store: Fix missing invitation email when adding new user (#6372 #6369) @dennisreimann
+
+### Improvements
+
+* Greenfield: Create payoutMethods is now optional for creating a pull payment (#6396 #6147) @NicolasDorier
+* POS: Update button icons (#6390) @dennisreimann
+* Improve error messages for on-chain related greenfield operations (#6393 #6261 #6248) @NicolasDorier
+* Docs: Improve invoice paymentTolerance API docs (#6383 #6378) @dennisreimann
+* Add an additional Lightning implementation-specific error message if a payout payment fails due to no route found @NicolasDorier
+* UI: Improve brand color adjustment (#6351) @dennisreimann
+
 ## 2.0.2
 
 If you are using the Nostr or Blink plugin, consider this release **security-critical**.
@@ -115,6 +154,17 @@ Please refer to our blog post before upgrading — here are the most noteworthy 
 * Remove period concept from PullPayment (#5963) @NicolasDorier
 * Remove the Altcoins build (#6177) @NicolasDorier
 * Dashboard: Remove View All link for Top Items (#6072) @dennisreimann
+
+## 1.13.7
+
+If you are using Boltcards, we advise you to update to this release.
+
+### Bug fixes
+
+* Boltcard would get bricked during reset from the balance view with wrong card (#6400) @NicolasDorier
+* Fix: Newline during import of multisig xpub results in different addresses for wallet (#6328 #6386) @NicolasDorier
+* Fix: Pay button shouldn't throw exception if currency isn't specific (#6324 #6395) @NicolasDorier
+* UI: Allow text break in labels to avoid horizontal scrolling (#6366) @dennisreimann
 
 ## 1.13.6
 

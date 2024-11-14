@@ -377,7 +377,7 @@ retry:
                 }
 
             }
-            defaultTranslatedKeys = defaultTranslatedKeys.Select(d => d.Trim()).Distinct().OrderBy(o => o).ToList();
+            defaultTranslatedKeys = defaultTranslatedKeys.Select(d => d.Trim().Replace("\r\n", "\n")).Distinct().OrderBy(o => o).ToList();
             JObject obj = new JObject();
             foreach (var v in defaultTranslatedKeys)
             {

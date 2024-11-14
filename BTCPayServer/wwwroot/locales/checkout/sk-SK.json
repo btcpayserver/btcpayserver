@@ -40,6 +40,6 @@
   "payment_received": "Platba prijatá",
   "payment_received_body": "Vaša platba bola prijatá a spracováva sa.",
   "payment_received_confirmations": "Akonáhle tvoja platba na blockchain-e {{cryptoCode}} získa {{requiredConfirmations}} potvrdení, tvoja faktúra bude vyrovnána.",
-  "invoice_paidpartial_body": "Faktúra je platná len {{minutes}} minút. Táto faktúra vypršala s čiastočnou platbou. Kontaktujte nás, aby sme mohli splniť vašu objednávku.",
+  "invoice_paidpartial_body": "Faktúra je platná iba {{minutes}} minút.\n\nPlatnosť tejto faktúry skončila čiastočnou platbou. Kontaktujte nás, aby sme mohli zrealizovať vašu objednávku.",
   "contact_us": "Kontaktujte nás"
 }

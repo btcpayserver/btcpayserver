@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Body = entity.Body,
                 StoreId = entity.StoreId,
                 Seen = entity.Seen,
-                Link = string.IsNullOrEmpty(entity.ActionLink) ? null : new Uri(entity.ActionLink)
+                Link = entity.ActionLink
             };
         }
 

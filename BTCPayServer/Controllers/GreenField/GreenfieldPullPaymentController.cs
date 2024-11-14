@@ -199,6 +199,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (pp is null)
                 return PullPaymentNotFound();
             var issuerKey = await _settingsRepository.GetIssuerKey(_env);
+            BoltcardPICCData? picc = null;
 
             // LNURLW is used by deeplinks
             if (request?.LNURLW is not null)
@@ -214,11 +215,12 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW should contains a 'p=' parameter");
                     return this.CreateValidationError(ModelState);
                 }
-                if (issuerKey.TryDecrypt(p) is not BoltcardPICCData picc)
+                if (issuerKey.TryDecrypt(p) is not BoltcardPICCData o)
                 {
                     ModelState.AddModelError(nameof(request.LNURLW), "The LNURLW 'p=' parameter cannot be decrypted");
                     return this.CreateValidationError(ModelState);
                 }
+                picc = o;
                 request.UID = picc.Uid;
             }
 
@@ -240,8 +242,54 @@ namespace BTCPayServer.Controllers.Greenfield
                 _ => request.OnExisting
             };
 
-            var version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
-            var keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
+            BoltcardKeys keys;
+            int version;
+
+            var registration = await _dbContextFactory.GetBoltcardRegistration(issuerKey, request.UID);
+            if (request.OnExisting is OnExistingBehavior.UpdateVersion ||
+                (request.OnExisting is null && registration?.PullPaymentId is null))
+            {
+                version = await _dbContextFactory.LinkBoltcardToPullPayment(pullPaymentId, issuerKey, request.UID, request.OnExisting);
+                keys = issuerKey.CreatePullPaymentCardKey(request.UID, version, pullPaymentId).DeriveBoltcardKeys(issuerKey);
+            }
+            else
+            {
+                if (registration?.PullPaymentId is null)
+                {
+                    ModelState.AddModelError(nameof(request.UID), "This card isn't registered");
+                    return this.CreateValidationError(ModelState);
+                }
+                if (pullPaymentId != registration.PullPaymentId)
+                {
+                    ModelState.AddModelError(nameof(request.UID), "This card is registered on a different pull payment");
+                    return this.CreateValidationError(ModelState);
+                }
+                var ppId = registration.PullPaymentId;
+                version = registration.Version;
+                int retryCount = 0;
+retry:
+                keys = issuerKey.CreatePullPaymentCardKey(request!.UID, version, ppId).DeriveBoltcardKeys(issuerKey);
+
+                // The server version may be higher than the card.
+                // If that is the case, let's try a few versions until we find the right one
+                // by checking c.
+                if (request?.LNURLW is { } lnurlw &&
+                    ExtractC(lnurlw) is string c &&
+                    picc is not null)
+                {
+                    if (!keys.AuthenticationKey.CheckSunMac(c, picc))
+                    {
+                        retryCount++;
+                        version--;
+                        if (version < 0 || retryCount > 5)
+                        {
+                            ModelState.AddModelError(nameof(request.UID), "Unable to get keys of this card, it might be caused by a version mismatch");
+                            return this.CreateValidationError(ModelState);
+                        }
+                        goto retry;
+                    }
+                }
+            }
 
             var boltcardUrl = Url.Action(nameof(UIBoltcardController.GetWithdrawRequest), "UIBoltcard");
             boltcardUrl = Request.GetAbsoluteUri(boltcardUrl);
@@ -260,7 +308,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(resp);
         }
 
-        private string? ExtractP(string? url)
+        public static string? Extract(string? url, string param, int size)
         {
             if (url is null || !Uri.TryCreate(url, UriKind.Absolute, out var uri))
                 return null;
@@ -268,11 +316,13 @@ namespace BTCPayServer.Controllers.Greenfield
             if (num == -1)
                 return null;
             string input = uri.AbsoluteUri.Substring(num);
-            Match match = Regex.Match(input, "p=([a-f0-9A-F]{32})");
+            Match match = Regex.Match(input, param + "=([a-f0-9A-F]{" + size + "})");
             if (!match.Success)
                 return null;
             return match.Groups[1].Value;
         }
+        public static string? ExtractP(string? url) => Extract(url, "p", 32);
+        public static string? ExtractC(string? url) => Extract(url, "c", 16);
 
         [HttpGet("~/api/v1/pull-payments/{pullPaymentId}")]
         [AllowAnonymous]

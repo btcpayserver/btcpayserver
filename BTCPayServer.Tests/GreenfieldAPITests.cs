@@ -1117,7 +1117,8 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain(null, card1keys);
             var card2 = await client.RegisterBoltcard(test4.Id, new RegisterBoltcardRequest()
             {
-                UID = uid
+                UID = uid,
+                OnExisting = OnExistingBehavior.UpdateVersion
             });
             Assert.Equal(1, card2.Version);
             Assert.StartsWith("lnurlw://", card2.LNURLW);

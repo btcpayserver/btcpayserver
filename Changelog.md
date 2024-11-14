@@ -10,6 +10,8 @@ If you are using Boltcards, we advise you to update to this release.
 * Greenfield: Add image upload for app items (#6226 #6075) @dennisreimann
 
 ### Bug fixes
+
+* Fix: Getting notifications via API would crash @NicolasDorier
 * Boltcard would get bricked during reset from the balance view with wrong card (#6400) @NicolasDorier
 * UI: Fix escaped HTML tags in UTXO rescan message (#6399 #6398) @dennisreimann
 * UI: Allow text break in labels to avoid horizontal scrolling (#6366) @dennisreimann

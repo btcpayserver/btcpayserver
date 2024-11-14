@@ -37,7 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.23" />
+    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.24" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.4" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />

@@ -11,6 +11,8 @@
   "pay_in_wallet": "Maksa lompakosta",
   "pay_by_nfc": "Maksa NFC:llä",
   "pay_by_lnurl": "Maksa LNURL-Withdraw:n avulla",
+  "scanning_nfc": "Skannataan NFC...",
+  "submitting_nfc": "Lähetetään NFC...",
   "invoice_id": "Laskun tunniste",
   "order_id": "Tilauksen tunniste",
   "total_price": "Kokonaishinta",
@@ -26,6 +28,9 @@
   "address": "Osoite",
   "lightning": "Salama",
   "payment_link": "Maksulinkki",
+  "payment_received": "Maksu vastaanotettu",
+  "payment_received_body": "Maksusi on vastaanotettu ja sitä käsitellään parhaillaan",
+  "payment_received_confirmations": "Kun maksusi on vastaanotettu {{requiredConfirmations}} vahvistuksella {{cryptoCode}} lohkoketjussa, laskusi suoritetaan.",
   "invoice_paid": "Lasku maksettu.",
   "invoice_expired": "Lasku vanhentunut",
   "invoice_expired_body": "Lasku on voimassa vain {{minutes}} minuuttia. Palaa kauppaan {{storeName}}, jos haluat lähettää maksun uudelleen.",
@@ -34,12 +39,5 @@
   "copy": "Kopioi",
   "copy_confirm": "Kopioitu",
   "powered_by": "Toimittaa",
-  "conversion_body": "Tämän palvelun tarjoaa 3:s osapuoli. Huomioithan, että emme pysty kontrolloimaan miten nämä palveluntarjoajat käsittelevät varojasi. Lasku merkitään maksetuksi, vasta kun varat on vastaanotettu {{cryptoCode}} lohkoketjussa.",
-  "scanning_nfc": "Skannataan NFC...",
-  "submitting_nfc": "Lähetetään NFC...",
-  "payment_received": "Maksu vastaanotettu",
-  "payment_received_body": "Maksusi on vastaanotettu ja sitä käsitellään parhaillaan",
-  "payment_received_confirmations": "Kun maksusi on vastaanotettu {{requiredConfirmations}} vahvistuksella {{cryptoCode}} lohkoketjussa, laskusi suoritetaan.",
-  "invoice_paidpartial_body": "Lasku on voimassa vain {{minutes}} minuuttia. Tämä lasku vanhentui osittaisen maksun vuoksi. Ole yhteydessä meihin, jotta voimme täyttää tilauksesi.",
-  "contact_us": "Ota yhteyttä meille"
+  "conversion_body": "Tämän palvelun tarjoaa 3:s osapuoli. Huomioithan, että emme pysty kontrolloimaan miten nämä palveluntarjoajat käsittelevät varojasi. Lasku merkitään maksetuksi, vasta kun varat on vastaanotettu {{cryptoCode}} lohkoketjussa."
 }

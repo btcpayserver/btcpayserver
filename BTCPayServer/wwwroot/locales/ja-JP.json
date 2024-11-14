@@ -11,6 +11,8 @@
   "pay_in_wallet": "ウォレットで支払う",
   "pay_by_nfc": "NFCで支払う",
   "pay_by_lnurl": "LNURL-Withdrawで支払う",
+  "scanning_nfc": "NFCをスキャンしています…",
+  "submitting_nfc": "NFCを送信しています…",
   "invoice_id": "お支払い ID",
   "order_id": "ご注文 ID",
   "total_price": "合計金額",
@@ -26,6 +28,9 @@
   "address": "アドレス",
   "lightning": "Lightning (ライトニング)",
   "payment_link": "支払いリンク",
+  "payment_received": "支払いが受領されました",
+  "payment_received_body": "お支払いを受け付けました。現在処理中です",
+  "payment_received_confirmations": "{{cryptoCode}}ブロックチェーン上で{{requiredConfirmations}}回の承認が完了すると、支払いが完了し、請求書が決済されます。",
   "invoice_paid": "請求書支払済み",
   "invoice_expired": "請求書の有効期限が切れました",
   "invoice_expired_body": "請求書は{{minutes}}分間のみ有効です。再度支払いを行う場合は{{storeName}}に戻ってください。",
@@ -34,12 +39,5 @@
   "copy": "コピー",
   "copy_confirm": "コピーしました",
   "powered_by": "Powered by (提供元)",
-  "conversion_body": "ただし、この変換は第三者サービスによるものですので、お店が受け付けている通貨で着金するまでの間の処理に関しては何の保証もいたしません。変換後に受付中の通貨 ({{cryptoCode}}) がお店に着金してから支払い済みとなりますのでご了承ください。",
-  "scanning_nfc": "NFCをスキャンしています…",
-  "submitting_nfc": "NFCを送信しています…",
-  "payment_received": "支払いが受領されました",
-  "payment_received_body": "お支払いを受け付けました。現在処理中です",
-  "payment_received_confirmations": "{{cryptoCode}}ブロックチェーン上で{{requiredConfirmations}}回の承認が完了すると、支払いが完了し、請求書が決済されます。",
-  "invoice_paidpartial_body": "請求書は{{minutes}}分間のみ有効です。この請求書は一部支払いで期限切れになりました。ご注文を完了できるように、お問い合わせください。",
-  "contact_us": "お問い合わせください"
+  "conversion_body": "ただし、この変換は第三者サービスによるものですので、お店が受け付けている通貨で着金するまでの間の処理に関しては何の保証もいたしません。変換後に受付中の通貨 ({{cryptoCode}}) がお店に着金してから支払い済みとなりますのでご了承ください。"
 }

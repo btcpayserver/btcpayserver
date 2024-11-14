@@ -636,7 +636,7 @@ namespace BTCPayServer.Services
   "Generate {0} Wallet": "",
   "Generate a brand-new wallet to use": "",
   "Generate a new api key to use BTCPay through its API.": "",
-  "Generate a QR code of the extended public key in your wallet (see instructions for supported wallets below).\r\n    Allow the browser access to your camera and hold the code to the camera when the scan prompt appears.": "",
+  "Generate a QR code of the extended public key in your wallet (see instructions for supported wallets below).\n    Allow the browser access to your camera and hold the code to the camera when the scan prompt appears.": "",
   "Generate another address": "",
   "Generate API Key": "",
   "Generate Key": "",

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.13.7
+
+If you are using Boltcards, we advise you to update to this release.
+
+### Bug fixes
+
+* Boltcard would get bricked during reset from the balance view with wrong card (#6400) @NicolasDorier
+* Fix: Newline during import of multisig xpub results in different addresses for wallet (#6328 #6386) @NicolasDorier
+* Fix: Pay button shouldn't throw exception if currency isn't specific (#6324 #6395) @NicolasDorier
+* UI: Allow text break in labels to avoid horizontal scrolling (#6366) @dennisreimann
+
 ## 1.13.6
 
 * Fix: Wrong manifest downloaded when installing plugin on old btcpay (Ported on 1.13.x) (#6354, #6344)

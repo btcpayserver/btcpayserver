@@ -1,4 +1,4 @@
-@using System.Text.RegularExpressions
+﻿@using System.Text.RegularExpressions
 @using System.Globalization
 @using System.Text.Json
 @using System.Text.Json.Nodes
@@ -9,8 +9,8 @@
 @inject AuthenticationStateProvider AuthStateProvider
 
 <div class="d-flex flex-column gap-4">
-    <input type="hidden" name="amount" value="@GetTotal()">
-    <input type="hidden" name="tip" value="@GetTip()">
+    <input type="hidden" name="amount" value="@GetTotal().ToString(CultureInfo.InvariantCulture)">
+    <input type="hidden" name="tip" value="@GetTip().ToString(CultureInfo.InvariantCulture)">
     <input type="hidden" name="discount" value="@GetDiscountPercent()">
     <input type="hidden" name="posdata" value="@GetData()">
     <div class="d-flex flex-column align-items-center px-4 mb-auto" @ref="_keypadTop">
@@ -109,7 +109,7 @@
             <span>Charge</span>
         }
     </button>
-    
+
     @if (CanAccessRecentTransactions)
     {
         <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" @onclick="HandleLoadRecentTransactions">
@@ -137,7 +137,7 @@
                             <div class="list-group list-group-flush">
                                 @foreach (var t in RecentTransactions)
                                 {
-                                    <a href="@t.Url" class="list-group-item list-group-item-action d-flex align-items-center gap-3 pe-1 py-3">
+                                    <a href="@t.Url" class="list-group-item list-group-item-action d-flex align-items-center gap-3 pe-2 ps-3 py-3" @onclick="@(_ => OnClickRecentTransaction(t))">
                                         <div class="d-flex align-items-baseline justify-content-between flex-wrap flex-grow-1 gap-2">
                                             <span class="flex-grow-1">
                                                 <DateDisplay DateTimeOffset="@t.Date"/>
@@ -167,7 +167,7 @@
             </div>
         </div>
     }
-    
+
     @if (IsItemlistEnabled && Items?.Any() is true)
     {
         <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList">
@@ -330,18 +330,18 @@
         public decimal Price { get; init; }
         public int Count { get; set; }
     }
-    
+
     protected override async Task OnInitializedAsync()
     {
         await base.OnInitializedAsync();
-        
+
         CurrencySymbol = CurrencyInfo?.CurrencySymbol ?? CurrencyCode;
         CurrencyDivisibility = CurrencyInfo?.CurrencyDecimalDigits ?? 0;
 
         // check authorization
         var authState = await AuthStateProvider.GetAuthenticationStateAsync();
         if (authState.User.Identity?.IsAuthenticated is not true) return;
-        
+
         CanAccessRecentTransactions = LoadRecentTransactions.HasDelegate &&
             (await AuthService.AuthorizeAsync(authState.User, StoreId, Policies.CanViewInvoices)).Succeeded;
     }
@@ -499,7 +499,7 @@
             ? Math.Round(amount * (Model.DiscountPercent.Value / 100.0m), CurrencyDivisibility)
             : 0;
     }
-    
+
     private int GetDiscountPercent()
     {
         return Model.DiscountPercent ?? 0;
@@ -570,7 +570,7 @@
 
         StateHasChanged();
     }
-    
+
     private bool DisplayItem(AppItem item)
     {
         var matchesSearch = string.IsNullOrWhiteSpace(Model.SearchTerm) ||
@@ -579,7 +579,7 @@
         var matchesCategory = Model.SelectedCategory == "All" || item.Categories?.Contains(Model.SelectedCategory) is true;
         return matchesSearch && matchesCategory;
     }
-    
+
     private string GetItemPriceFormatted(AppItem item)
     {
         if (item.PriceType == AppItemPriceType.Topup) return "any amount";
@@ -587,24 +587,24 @@
         var formatted = FormatCurrency(item.Price ?? 0);
         return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
     }
-    
+
     private CartItem? ItemInCart(AppItem item, decimal? amount = null)
     {
         return Model.Cart.FirstOrDefault(lineItem => lineItem.Id == item.Id && amount == null || lineItem.Price == amount);
     }
-    
+
     private bool InStock(AppItem item, int count = 1)
     {
         return item.Inventory == null || item.Inventory >= GetQuantity(item) + count;
     }
-    
+
     private string InventoryText(AppItem item)
     {
         var inCart = GetQuantity(item);
         var left = item.Inventory - inCart;
         return left > 0 ? $"{left} left" : "Sold out";
     }
-    
+
     private CartItem? AddToCart(AppItem item, int count, decimal? amount = null) {
         if (!InStock(item)) return null;
         // Check if price is needed
@@ -634,11 +634,11 @@
     private void RemoveFromCart(CartItem cartItem) {
         Model.Cart.Remove(cartItem);
     }
-    
+
     private int GetQuantity(AppItem item) {
         return ItemInCart(item)?.Count ?? 0;
     }
-    
+
     private void UpdateQuantity(AppItem item, int count) {
         var cartItem = ItemInCart(item);
         if (cartItem == null)
@@ -660,11 +660,15 @@
         StateHasChanged();
     }
 
+    private async Task OnClickRecentTransaction(RecentTransaction t)
+    {
+        await JS.InvokeVoidAsync("Interop.closeModal", "#RecentTransactions");
+    }
+
     private string ItemCssClass(AppItem item)
     {
         var inStock = InStock(item) ? "posItem--inStock" : null;
         var display = DisplayItem(item) ? "posItem--displayed" : null;
         return $"posItem p-3 {inStock} {display}".Trim();
     }
-
 }

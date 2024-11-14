@@ -125,9 +125,8 @@
 .quantities .btn:hover span {
     background: var(--btcpay-light-bg-hover);
 }
-.quantities .icon {
-    width: 1rem;
-    height: 1rem;
+.quantities .btn .icon {
+    --icon-size: 1rem;
 }
 .tile.card {
     --btcpay-card-cap-bg: transparent;

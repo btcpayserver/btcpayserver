@@ -1,4 +1,3 @@
-
 /* modes */
 #ModeTabs {
     min-height: 2.75rem;
@@ -77,6 +76,42 @@ button[data-bs-toggle] .icon {
     max-height: var(--image-size);
     object-fit: scale-down;
     border-radius: var(--btcpay-border-radius);
+}
+#PosItems .posItem {
+    display: none;
+    position: relative;
+}
+#PosItems .posItem.posItem--inStock {
+    cursor: pointer;
+}
+#PosItems .posItem--displayed {
+    display: flex;
+}
+#PosItems .quantities .btn {
+    --btcpay-btn-disabled-opacity: .3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    background: none;
+    border: transparent;
+    padding: 0;
+}
+#PosItems .quantities .btn span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--btcpay-light);
+}
+#PosItems .quantities .btn:hover span {
+    background: var(--btcpay-light-bg-hover);
+}
+#PosItems .quantities .btn ::deep .icon {
+    --icon-size: 1rem;
 }
 
 #RecentTransactionsRefresh[disabled] .icon {

@@ -314,7 +314,7 @@
                         }
                     },
                     {
-                        "$ref": "#/components/parameters/PaymentMethodId"
+                        "$ref": "#/components/parameters/PayoutMethodId"
                     }
                 ],
                 "description": "Update configured store Lightning automated payout processors",

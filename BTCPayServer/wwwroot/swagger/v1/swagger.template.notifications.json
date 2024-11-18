@@ -255,7 +255,7 @@
                 ],
                 "summary": "Update notification settings",
                 "description": "Updates the current user's notification settings",
-                "operationId": "Notifications_UpdateNotification",
+                "operationId": "Notifications_UpdateNotificationSettings",
                 "responses": {
                     "200": {
                         "description": "The current user's notification settings",

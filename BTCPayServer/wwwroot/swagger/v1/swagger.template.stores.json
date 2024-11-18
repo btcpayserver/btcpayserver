@@ -262,6 +262,17 @@
                 ],
                 "summary": "Uploads a logo for the store",
                 "description": "Uploads a logo for the store",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "multipart/form-data": {
@@ -311,6 +322,17 @@
                 "summary": "Deletes the store logo",
                 "description": "Delete the store's logo",
                 "operationId": "Stores_DeleteStoreLogo",
+                "parameters": [
+                    {
+                        "name": "storeId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The store to remove",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Store logo deleted successfully"
@@ -438,6 +460,7 @@
                 "type": "object",
                 "properties": {
                     "paymentMethodId": {
+                        "type": "string",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/PaymentMethodId"
@@ -568,6 +591,7 @@
                         "description": "If true, then no authentication is needed to create invoices on this store."
                     },
                     "receipt": {
+                        "type": "object",
                         "nullable": true,
                         "description": "Additional settings to customize the public receipt",
                         "allOf": [
@@ -658,7 +682,7 @@
                         "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "paymentMethodCriteria": {
-                        "type": "array",
+                        "type": "object",
                         "nullable": true,
                         "items": {
                             "$ref": "#/components/schemas/PaymentMethodCriteriaData"

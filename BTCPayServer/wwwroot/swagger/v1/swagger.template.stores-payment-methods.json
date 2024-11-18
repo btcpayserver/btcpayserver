@@ -295,7 +295,7 @@
                 "example": "BTC-CHAIN"
             },
             "PayoutMethodId": {
-                "name": "paymentMethodId",
+                "name": "payoutMethodId",
                 "in": "path",
                 "required": true,
                 "description": "The payout method id",

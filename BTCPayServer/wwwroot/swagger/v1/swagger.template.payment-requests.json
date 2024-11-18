@@ -406,6 +406,7 @@
                                 "nullable": false
                             },
                             "createdTime": {
+                                "type": "number",
                                 "description": "The creation date of the payment request",
                                 "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ],
                                 "nullable": false
@@ -450,6 +451,7 @@
                         "format": "html"
                     },
                     "expiryDate": {
+                        "type": "number",
                         "description": "The expiry date of the payment request",
                         "nullable": true,
                         "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]

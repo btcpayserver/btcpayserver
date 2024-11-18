@@ -352,6 +352,17 @@
                 ],
                 "summary": "Uploads an image for a app item",
                 "description": "Uploads an image for a app item",
+                "parameters": [
+                    {
+                        "name": "appId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The app ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "multipart/form-data": {
@@ -403,6 +414,26 @@
                 "summary": "Deletes the app item image",
                 "description": "Deletes the app item image",
                 "operationId": "App_DeleteAppItemImage",
+                "parameters": [
+                    {
+                        "name": "appId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The app ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The file ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "App item image deleted successfully"

@@ -342,7 +342,11 @@
                     },
                     "createdTime": {
                         "description": "The creation time of the notification",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "seen": {
                         "type": "boolean",
@@ -360,7 +364,10 @@
                             "type": "string"
                         },
                         "description": "List of the notification type identifiers, which should be disabled. Can also be a single item 'all'.",
-                        "example": ["newversion", "pluginupdate"],
+                        "example": [
+                            "newversion",
+                            "pluginupdate"
+                        ],
                         "nullable": false
                     }
                 }

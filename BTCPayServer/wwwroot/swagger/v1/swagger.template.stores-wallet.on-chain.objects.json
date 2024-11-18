@@ -24,7 +24,9 @@
                         "in": "query",
                         "required": false,
                         "description": "The type of object to fetch",
-                        "schema": { "type": "string" },
+                        "schema": {
+                            "type": "string"
+                        },
                         "example": "tx"
                     },
                     {
@@ -34,7 +36,9 @@
                         "description": "The ids of objects to fetch, if used, type should be specified",
                         "schema": {
                             "type": "array",
-                            "items": { "type": "string" }
+                            "items": {
+                                "type": "string"
+                            }
                         },
                         "example": "03abcde..."
                     },

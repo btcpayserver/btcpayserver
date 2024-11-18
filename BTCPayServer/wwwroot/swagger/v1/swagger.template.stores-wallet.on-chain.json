@@ -1119,7 +1119,11 @@
                     },
                     "timestamp": {
                         "description": "The time of the transaction",
-                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "status": {
                         "allOf": [
@@ -1163,7 +1167,11 @@
                     },
                     "timestamp": {
                         "description": "The time of the utxo",
-                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "keyPath": {
                         "type": "string",

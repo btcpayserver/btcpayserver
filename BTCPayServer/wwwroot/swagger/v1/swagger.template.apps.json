@@ -589,76 +589,76 @@
                 }
             ],
             "get": {
-              "tags": [
-                "Apps"
-              ],
-              "operationId": "Apps_GetAllAppsForStore",
-              "summary": "Get basic app data for all apps for a store",
-              "description": "Returns basic app data for all apps for a store",
-              "responses": {
-                  "200": {
-                      "description": "Array of basic app data object",
-                      "content": {
-                        "application/json": {
-                          "schema": {
-                              "type": "array",
-                              "items": {
-                                  "$ref": "#/components/schemas/AppBaseData"
-                              }
-                          }
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAllAppsForStore",
+                "summary": "Get basic app data for all apps for a store",
+                "description": "Returns basic app data for all apps for a store",
+                "responses": {
+                    "200": {
+                        "description": "Array of basic app data object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppBaseData"
+                                    }
+                                }
+                            }
                         }
-                      }
-                  },
-                  "403": {
-                      "description": "If you are authenticated but forbidden to get the data"
-                  }
-              },
-              "security": [
-                  {
-                      "API_Key": [
-                          "btcpay.store.canmodifystoresettings"
-                      ],
-                      "Basic": []
-                  }
-              ]
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/apps": {
-          "get": {
-            "tags": [
-              "Apps"
-            ],
-            "operationId": "Apps_GetAllApps",
-            "summary": "Get basic app data for all apps for all stores for a user",
-            "description": "Returns basic app data for all apps for all stores",
-            "responses": {
-                "200": {
-                    "description": "Array of basic app data object",
-                    "content": {
-                      "application/json": {
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/AppBaseData"
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAllApps",
+                "summary": "Get basic app data for all apps for all stores for a user",
+                "description": "Returns basic app data for all apps for all stores",
+                "responses": {
+                    "200": {
+                        "description": "Array of basic app data object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppBaseData"
+                                    }
+                                }
                             }
                         }
-                      }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
                     }
                 },
-                "403": {
-                    "description": "If you are authenticated but forbidden to get the data"
-                }
-            },
-            "security": [
-                {
-                    "API_Key": [
-                        "btcpay.store.canmodifystoresettings"
-                    ],
-                    "Basic": []
-                }
-            ]
-          }
-      }
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
     },
     "components": {
         "schemas": {
@@ -807,7 +807,11 @@
                                 "items": {
                                     "type": "number"
                                 },
-                                "default": [15,18,20],
+                                "default": [
+                                    15,
+                                    18,
+                                    20
+                                ],
                                 "nullable": true
                             },
                             "notificationUrl": {
@@ -931,14 +935,22 @@
                             "startDate": {
                                 "type": "number",
                                 "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
                                 "example": 768658369,
                                 "nullable": true
                             },
                             "endDate": {
                                 "type": "number",
                                 "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
                                 "example": 771336769,
                                 "nullable": true
                             },
@@ -1022,7 +1034,9 @@
                                 "items": {
                                     "type": "string"
                                 },
-                                "example": ["https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"],
+                                "example": [
+                                    "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"
+                                ],
                                 "nullable": true
                             },
                             "animationColors": {
@@ -1031,7 +1045,11 @@
                                 "items": {
                                     "type": "string"
                                 },
-                                "example": ["#FF0000", "#00FF00", "#0000FF"],
+                                "example": [
+                                    "#FF0000",
+                                    "#00FF00",
+                                    "#0000FF"
+                                ],
                                 "nullable": true
                             },
                             "formId": {

@@ -12,7 +12,9 @@
                         "in": "path",
                         "required": true,
                         "description": "The store to query",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "description": "View information about the existing payment requests",
@@ -59,7 +61,9 @@
                         "in": "path",
                         "required": true,
                         "description": "The store to query",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "description": "Create a new payment request",
@@ -121,14 +125,18 @@
                         "in": "path",
                         "required": true,
                         "description": "The store to fetch",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
                         "name": "paymentRequestId",
                         "in": "path",
                         "required": true,
                         "description": "The payment request to fetch",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "description": "View information about the specified payment request",
@@ -173,14 +181,18 @@
                         "in": "path",
                         "required": true,
                         "description": "The store the payment request belongs to",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
                         "name": "paymentRequestId",
                         "in": "path",
                         "required": true,
                         "description": "The payment request to remove",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -206,7 +218,9 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "btcpay.store.canmodifypaymentrequests" ],
+                        "API_Key": [
+                            "btcpay.store.canmodifypaymentrequests"
+                        ],
                         "Basic": []
                     }
                 ]
@@ -222,14 +236,18 @@
                         "in": "path",
                         "required": true,
                         "description": "The store to query",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
                         "name": "paymentRequestId",
                         "in": "path",
                         "required": true,
                         "description": "The payment request to update",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "description": "Update a payment request",
@@ -291,14 +309,18 @@
                         "in": "path",
                         "required": true,
                         "description": "The store to fetch",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     },
                     {
                         "name": "paymentRequestId",
                         "in": "path",
                         "required": true,
                         "description": "The payment request to create",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "operationId": "PaymentRequests_Pay",
@@ -324,7 +346,7 @@
                                         "type": "boolean",
                                         "nullable": true,
                                         "default": false,
-                                        "description":  "If `true`, this endpoint will not necessarily create a new invoice, and instead attempt to give back a pending one for this payment request."
+                                        "description": "If `true`, this endpoint will not necessarily create a new invoice, and instead attempt to give back a pending one for this payment request."
                                     }
                                 }
                             }
@@ -401,14 +423,22 @@
                             },
                             "status": {
                                 "type": "string",
-                                "enum": [ "Pending", "Completed", "Expired" ],
+                                "enum": [
+                                    "Pending",
+                                    "Completed",
+                                    "Expired"
+                                ],
                                 "description": "The status of the payment request",
                                 "nullable": false
                             },
                             "createdTime": {
                                 "type": "number",
                                 "description": "The creation date of the payment request",
-                                "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ],
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
                                 "nullable": false
                             }
                         }
@@ -454,7 +484,11 @@
                         "type": "number",
                         "description": "The expiry date of the payment request",
                         "nullable": true,
-                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "allowCustomPaymentAmounts": {
                         "type": "boolean",

@@ -63,6 +63,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
                     }
                 },
                 "security": [

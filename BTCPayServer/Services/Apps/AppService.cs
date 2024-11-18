@@ -486,7 +486,7 @@ retry:
         }
 #nullable enable
         
-        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<PosCartItem> cartItems)
+        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<AppCartItem> cartItems)
         {
             cartItems = null;
             if (posData is null)
@@ -495,12 +495,13 @@ retry:
                 return false;
             try
             {
-                cartItems = new List<PosCartItem>();
+                cartItems = [];
                 foreach (var o in cartObject.OfType<JObject>())
                 {
                     var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
                     if (id == null)
                         continue;
+                    var title = o.GetValue("title", StringComparison.InvariantCulture)?.ToString();
                     var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
                     var price = o.GetValue("price") switch
                     {
@@ -511,7 +512,7 @@ retry:
                     };
                     if (int.TryParse(countStr, out var count))
                     {
-                        cartItems.Add(new PosCartItem { Id = id, Count = count, Price = price });
+                        cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
                     }
                 }
                 return true;
@@ -540,13 +541,5 @@ retry:
             var appType = GetAppType(app.AppType);
             return await appType?.ViewLink(app)!;
         }
-#nullable restore
-    }
-
-    public class PosCartItem
-    {
-        public string Id { get; set; }
-        public int Count { get; set; }
-        public decimal Price { get; set; }
     }
 }

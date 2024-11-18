@@ -16,172 +16,172 @@
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
     <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 }
-<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
-<partial name="_StatusMessage" />
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <div class="mb-5">
-            <div class="mb-3 d-flex align-items-center">
-                <span title="@Model.Source" data-bs-toggle="tooltip" class="me-3">@(Model.IsHotWallet ? StringLocalizer["Hot wallet"] : StringLocalizer["Watch-only wallet"])</span>
-                <div class="dropdown">
-                    <button class="btn btn-secondary dropdown-toggle" type="button" id="ActionsDropdownToggle" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false" text-translate="true">
-                        Actions
-                    </button>
-                    <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
-                        <a class="dropdown-item" asp-controller="UIWallets" asp-action="WalletRescan" asp-route-walletId="@Model.WalletId" id="Rescan" text-translate="true">Rescan wallet for missing transactions</a>
-                        <form method="post" asp-controller="UIWallets" asp-action="WalletActions" asp-route-walletId="@Model.WalletId">
-                            <button name="command" type="submit" class="dropdown-item" value="prune" text-translate="true">Prune old transactions from history</button>
-                            @if (User.IsInRole(Roles.ServerAdmin))
-                            {
-                                <button name="command" type="submit" class="dropdown-item" value="clear" text-translate="true">Clear all transactions from history</button>
-                            }
-                        </form>
-                        @if (Model.UriScheme == "bitcoin")
-                        {
-                            <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "UIWallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden text-translate="true">Register wallet for payment links</button>
-                        }
-                        <div class="dropdown-divider"></div>
-                        @if (Model.NBXSeedAvailable)
-                        {
-                            <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed" text-translate="true">View seed</a>
-                        }
-                        <a asp-controller="UIStores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
-                           id="ChangeWalletLink"
-                           class="dropdown-item"
-                           data-bs-toggle="modal"
-                           data-bs-target="#ConfirmModal"
-                           data-title="@StringLocalizer["Replace {0} wallet", Model.CryptoCode]"
-                           data-description="@ViewData["ReplaceDescription"]"
-                           data-confirm="@StringLocalizer["Setup new wallet"]"
-                           data-confirm-input="@StringLocalizer["REPLACE"]"
-                           text-translate="true">
-                            Replace wallet
-                        </a>
-                        <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
-                            <button type="submit"
-                                    id="Delete"
-                                    class="dropdown-item"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#ConfirmModal"
-                                    data-title="@StringLocalizer["Remove {0} wallet", Model.CryptoCode]"
-                                    data-description="@ViewData["RemoveDescription"]"
-                                    data-confirm="@StringLocalizer["Remove"]"
-                                    data-confirm-input="@StringLocalizer["REMOVE"]"
-                                    text-translate="true">Remove wallet</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-            
-            <form method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
-                <div class="form-group my-4">
-                    <div class="d-flex align-items-center">
-                        <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
-                        <label asp-for="Enabled" class="form-check-label"></label>
-                    </div>
-                    <span asp-validation-for="Enabled" class="text-danger"></span>
-                </div>
-                @if (Model.CanUsePayJoin)
-                {
-                    <div class="form-group mt-n2">
-                        <div class="d-flex align-items-center">
-                            <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-3"/>
-                            <label asp-for="PayJoinEnabled" class="form-check-label me-1"></label>
-                            <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
-                                <vc:icon symbol="info"/>
-                            </a>
-                        </div>
-                        <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
-                    </div>
-                }
-                @if (Model.CanSetupMultiSig)
-                {
-                    <div class="form-group my-4">
-                        <div class="d-flex align-items-center">
-                            <input asp-for="IsMultiSigOnServer" type="checkbox" class="btcpay-toggle me-3"/>
-                            <label asp-for="IsMultiSigOnServer" class="form-check-label"></label>
-                        </div>
-                        <span asp-validation-for="IsMultiSigOnServer" class="text-danger"></span>
-                    </div>
-                    <div class="form-group my-4">
-                        <div class="d-flex align-items-center">
-                            <input asp-for="ForceNonWitnessUtxo" type="checkbox" class="btcpay-toggle me-3"/>
-                            <label asp-for="ForceNonWitnessUtxo" class="form-check-label"></label>
-                        </div>
-                        <span asp-validation-for="ForceNonWitnessUtxo" class="text-danger"></span>
-                    </div>
-                }
-                <div class="form-group">
-                    <label asp-for="Label" class="form-label"></label>
-                    <input asp-for="Label" class="form-control" style="max-width:24em;" />
-                    <span asp-validation-for="Label" class="text-danger"></span>
-                </div>
-                <div class="form-group">
-                    <label asp-for="DerivationScheme" class="form-label"></label>
-                    <div class="input-group" data-clipboard="@Model.DerivationScheme">
-                        <input asp-for="DerivationScheme" class="form-control" readonly />
-                        <button type="button" class="btn btn-outline-secondary px-3">
-                            <vc:icon symbol="actions-copy" />
-                        </button>
-                    </div>
-                </div>
-                @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
-                {
-                    <div class="form-group">
-                        <label asp-for="DerivationSchemeInput" class="form-label"></label>
-                        <div class="input-group" data-clipboard="@Model.DerivationSchemeInput">
-                            <input asp-for="DerivationSchemeInput" class="form-control" readonly/>
-                            <button type="button" class="btn btn-outline-secondary px-3">
-                                <vc:icon symbol="actions-copy" />
-                            </button>
-                        </div>
-                    </div>
-                }
-                @for (var i = 0; i < Model.AccountKeys.Count; i++)
-                {
-                    <h4 class="mt-5 mb-3">@StringLocalizer["Account Key"] @i</h4>
-                    <div class="form-group">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
-                            <button type="button" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" data-account-key="@i">
-                                <vc:icon symbol="qr-code" /> @StringLocalizer["Show export QR"]
-                            </button>
-                        </div>
-                        <div class="input-group" data-clipboard="@Model.AccountKeys[i].AccountKey">
-                            <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly/>
-                            <button type="button" class="btn btn-outline-secondary px-3">
-                                <vc:icon symbol="actions-copy" />
-                            </button>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <div class="form-group col-auto">
-                            <label asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-label"></label>
-                            <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;" />
-                        </div>
-                        <div class="form-group col-auto">
-                            <label asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-label"></label>
-                            <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
-                        </div>
-                    </div>
-                    @if (!Model.IsMultiSigOnServer)
+
+<div class="sticky-header">
+    <h2 text-translate="true">@ViewData["Title"]</h2>
+    <div>
+        <div class="dropdown">
+            <button class="btn btn-secondary dropdown-toggle"
+                    type="button" id="ActionsDropdownToggle"
+                    data-bs-toggle="dropdown"
+                    aria-haspopup="true" aria-expanded="false" text-translate="true">
+                Actions
+            </button>
+
+            <!-- Modal For Actions DropDownToggle, need to be outside of form -->
+            <div class="dropdown-menu" aria-labelledby="ActionsDropdownToggle">
+                <a class="dropdown-item" asp-controller="UIWallets" asp-action="WalletRescan" asp-route-walletId="@Model.WalletId" id="Rescan" text-translate="true">Rescan wallet for missing transactions</a>
+                <form method="post" asp-controller="UIWallets" asp-action="WalletActions" asp-route-walletId="@Model.WalletId">
+                    <button name="command" type="submit" class="dropdown-item" value="prune" text-translate="true">Prune old transactions from history</button>
+                    @if (User.IsInRole(Roles.ServerAdmin))
                     {
-                        <div class="form-check">
-                            <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey"/>
-                            <label asp-for="SelectedSigningKey" class="form-check-label"></label>
-                        </div>
+                        <button name="command" type="submit" class="dropdown-item" value="clear" text-translate="true">Clear all transactions from history</button>
                     }
+                </form>
+                @if (Model.UriScheme == "bitcoin")
+                {
+                    <button type="button" class="dropdown-item" id="RegisterWallet" data-store="@Model.StoreName" data-scheme="@Model.UriScheme" data-url="@Url.Action("WalletSend", "UIWallets", new {walletId = Model.WalletId, bip21 = "%s"})" hidden text-translate="true">Register wallet for payment links</button>
                 }
-                <button type="submit" class="btn btn-primary mt-2" id="SaveWalletSettings" text-translate="true">Save Wallet Settings</button>
-            </form>
-            
-            <h3 class="mt-5" text-translate="true">Labels</h3>
-            <p>
-                <a asp-controller="UIWallets" asp-action="WalletLabels" asp-route-walletId="@Model.WalletId" text-translate="true">Manage labels</a>
-            </p>
+                <div class="dropdown-divider"></div>
+                @if (Model.NBXSeedAvailable)
+                {
+                    <a asp-action="WalletSeed" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="dropdown-item" id="ViewSeed" text-translate="true">View seed</a>
+                }
+                <a asp-controller="UIStores" asp-action="ReplaceWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode"
+                   id="ChangeWalletLink"
+                   class="dropdown-item"
+                   data-bs-toggle="modal"
+                   data-bs-target="#ConfirmModal"
+                   data-title="@StringLocalizer["Replace {0} wallet", Model.CryptoCode]"
+                   data-description="@ViewData["ReplaceDescription"]"
+                   data-confirm="@StringLocalizer["Setup new wallet"]"
+                   data-confirm-input="@StringLocalizer["REPLACE"]"
+                   text-translate="true">
+                    Replace wallet
+                </a>
+                <form method="get" asp-action="DeleteWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" class="d-inline">
+                    <button type="submit"
+                            id="Delete"
+                            class="dropdown-item"
+                            data-bs-toggle="modal"
+                            data-bs-target="#ConfirmModal"
+                            data-title="@StringLocalizer["Remove {0} wallet", Model.CryptoCode]"
+                            data-description="@ViewData["RemoveDescription"]"
+                            data-confirm="@StringLocalizer["Remove"]"
+                            data-confirm-input="@StringLocalizer["REMOVE"]"
+                            text-translate="true">Remove wallet</button>
+                </form>
+            </div>
         </div>
+        
+        <a class="btn btn-secondary" asp-controller="UIWallets" asp-action="WalletLabels"
+           asp-route-walletId="@Model.WalletId" text-translate="true">Manage labels</a>
+
+        <button type="submit" class="btn btn-primary" id="SaveWalletSettings" form="walletSettingsForm" text-translate="true">Save Wallet Settings</button>
     </div>
 </div>
+
+<partial name="_StatusMessage" />
+<form id="walletSettingsForm" method="post" asp-action="UpdateWalletSettings" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+    <div class="form-group my-4">
+        <div class="d-flex align-items-center">
+            <input asp-for="Enabled" type="checkbox" class="btcpay-toggle me-3"/>
+            <label asp-for="Enabled" class="form-check-label"></label>
+        </div>
+        <span asp-validation-for="Enabled" class="text-danger"></span>
+    </div>
+    @if (Model.CanUsePayJoin)
+    {
+        <div class="form-group mt-n2">
+            <div class="d-flex align-items-center">
+                <input asp-for="PayJoinEnabled" type="checkbox" class="btcpay-toggle me-3"/>
+                <label asp-for="PayJoinEnabled" class="form-check-label me-1"></label>
+                <a href="https://docs.btcpayserver.org/Payjoin/" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                    <vc:icon symbol="info"/>
+                </a>
+            </div>
+            <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
+        </div>
+    }
+    @if (Model.CanSetupMultiSig)
+    {
+        <div class="form-group my-4">
+            <div class="d-flex align-items-center">
+                <input asp-for="IsMultiSigOnServer" type="checkbox" class="btcpay-toggle me-3"/>
+                <label asp-for="IsMultiSigOnServer" class="form-check-label"></label>
+            </div>
+            <span asp-validation-for="IsMultiSigOnServer" class="text-danger"></span>
+        </div>
+        <div class="form-group my-4">
+            <div class="d-flex align-items-center">
+                <input asp-for="ForceNonWitnessUtxo" type="checkbox" class="btcpay-toggle me-3"/>
+                <label asp-for="ForceNonWitnessUtxo" class="form-check-label"></label>
+            </div>
+            <span asp-validation-for="ForceNonWitnessUtxo" class="text-danger"></span>
+        </div>
+    }
+    <div class="form-group">
+        <label asp-for="Label" class="form-label"></label>
+        <input asp-for="Label" class="form-control" style="max-width:24em;" />
+        <span asp-validation-for="Label" class="text-danger"></span>
+    </div>
+    <div class="form-group">
+        <label asp-for="DerivationScheme" class="form-label"></label>
+        <div class="input-group" data-clipboard="@Model.DerivationScheme">
+            <input asp-for="DerivationScheme" class="form-control" readonly />
+            <button type="button" class="btn btn-outline-secondary px-3">
+                <vc:icon symbol="actions-copy" />
+            </button>
+        </div>
+    </div>
+    @if (!string.IsNullOrEmpty(Model.DerivationSchemeInput) && Model.DerivationSchemeInput != Model.DerivationScheme)
+    {
+        <div class="form-group">
+            <label asp-for="DerivationSchemeInput" class="form-label"></label>
+            <div class="input-group" data-clipboard="@Model.DerivationSchemeInput">
+                <input asp-for="DerivationSchemeInput" class="form-control" readonly/>
+                <button type="button" class="btn btn-outline-secondary px-3">
+                    <vc:icon symbol="actions-copy" />
+                </button>
+            </div>
+        </div>
+    }
+    @for (var i = 0; i < Model.AccountKeys.Count; i++)
+    {
+        <h4 class="mt-5 mb-3">@StringLocalizer["Account Key"] @i</h4>
+        <div class="form-group">
+            <div class="d-flex align-items-center justify-content-between">
+                <label asp-for="@Model.AccountKeys[i].AccountKey" class="form-label"></label>
+                <button type="button" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" data-account-key="@i">
+                    <vc:icon symbol="qr-code" /> @StringLocalizer["Show export QR"]
+                </button>
+            </div>
+            <div class="input-group" data-clipboard="@Model.AccountKeys[i].AccountKey">
+                <input asp-for="@Model.AccountKeys[i].AccountKey" class="form-control" readonly />
+                <button type="button" class="btn btn-outline-secondary px-3">
+                    <vc:icon symbol="actions-copy" />
+                </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="form-group col-auto">
+                <label asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-label"></label>
+                <input asp-for="@Model.AccountKeys[i].MasterFingerprint" class="form-control" style="max-width:16ch;" />
+            </div>
+            <div class="form-group col-auto">
+                <label asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-label"></label>
+                <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
+            </div>
+        </div>
+        @if (!Model.IsMultiSigOnServer)
+        {
+            <div class="form-check">
+                <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey" />
+                <label asp-for="SelectedSigningKey" class="form-check-label"></label>
+            </div>
+        }
+    }
+</form>
 
 <partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["{0} wallet", Model.CryptoCode], StringLocalizer["Change"], "Update"))" />
 <partial name="ShowQR"/>

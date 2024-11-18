@@ -101,10 +101,16 @@ namespace BTCPayServer
         }
 
         public string Label { get; set; }
-
-        // TODO: Find better way to check this, maybe provide user selected setting
-        public bool IsMultisigOnServer => AccountKeySettings.Count(a => a.RootFingerprint != null) > 1;
-            
+        
+        #region MultiSig related settings
+        //public bool IsMultiSig => AccountKeys.Count > 1;
+        public bool IsMultiSigOnServer { get; set; }
+        
+        // some hardware devices like Jade require sending full input transactions if there are multiple inputs
+        // https://github.com/Blockstream/Jade/blob/0d6ce77bf23ef2b5dc43cdae3967b4207e8cad52/main/process/sign_tx.c#L586
+        public bool ForceNonWitnessUtxo { get; set; }
+        #endregion    
+        
         public override string ToString()
         {
             return AccountDerivation.ToString();
@@ -139,6 +145,21 @@ namespace BTCPayServer
         public bool IsFullySetup()
         {
             return AccountKeyPath != null && RootFingerprint is HDFingerprint;
+        }
+    }
+
+
+    public class DerivationSchemeSettingsFactory
+    {
+        public DerivationSchemeSettings Create(string label, bool isMultiSigOnServer, bool forceNonWitnessUtxo, 
+            DerivationStrategyBase derivationStrategy, BTCPayNetwork network)
+        {
+            return new DerivationSchemeSettings(derivationStrategy, network)
+            {
+                Label = label,
+                IsMultiSigOnServer = isMultiSigOnServer,
+                ForceNonWitnessUtxo = forceNonWitnessUtxo
+            };
         }
     }
 }

@@ -168,7 +168,7 @@ namespace BTCPayServer.Controllers
                                         continue;
                                     }
                                     
-                                    var multisigOnServer = derivationSettings.IsMultisigOnServer;
+                                    var multisigOnServer = derivationSettings.IsMultiSigOnServer;
                                     if (multisigOnServer)
                                     {
                                         var alreadySigned = psbt.Inputs.Any(a =>
@@ -181,15 +181,18 @@ namespace BTCPayServer.Controllers
                                     }
                                 }
 
-                                // we're adding all coins to the PSBT, in case non witness UTXOs are needed
-                                var wallet = _btcPayWalletProvider.GetWallet(cryptoCode);
-                                foreach (var input in psbt.Inputs)
+                                // sometimes we need to send the full transaction to the device
+                                if (derivationSettings.ForceNonWitnessUtxo)
                                 {
-                                    var txid = input.PrevOut.Hash;
-                                    var tx = await wallet.GetTransactionAsync(txid, false, cancellationToken);
-                                    input.NonWitnessUtxo = tx?.Transaction;
+                                    var wallet = _btcPayWalletProvider.GetWallet(cryptoCode);
+                                    foreach (var input in psbt.Inputs)
+                                    {
+                                        var txid = input.PrevOut.Hash;
+                                        var tx = await wallet.GetTransactionAsync(txid, false, cancellationToken);
+                                        input.NonWitnessUtxo = tx?.Transaction;
+                                    }
                                 }
-                                
+
                                 try
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);

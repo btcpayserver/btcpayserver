@@ -440,7 +440,10 @@ public partial class UIStoresController
             CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = canUseHotWallet,
             CanUseRPCImport = rpcImport,
-            StoreName = store.StoreName
+            StoreName = store.StoreName,
+            CanSetupMultiSig = derivation.AccountKeySettings.Length > 1,
+            IsMultiSigOnServer = derivation.IsMultiSigOnServer,
+            ForceNonWitnessUtxo = derivation.ForceNonWitnessUtxo
         };
 
         ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
@@ -477,10 +480,14 @@ public partial class UIStoresController
         if (payjoinChanged && network.SupportPayJoin) storeBlob.PayJoinEnabled = vm.PayJoinEnabled;
         if (needUpdate) store.SetStoreBlob(storeBlob);
 
-        if (derivation.Label != vm.Label)
+        if (derivation.Label != vm.Label ||
+            derivation.IsMultiSigOnServer != vm.IsMultiSigOnServer ||
+            derivation.ForceNonWitnessUtxo != vm.ForceNonWitnessUtxo)
         {
             needUpdate = true;
             derivation.Label = vm.Label;
+            derivation.IsMultiSigOnServer = vm.IsMultiSigOnServer;
+            derivation.ForceNonWitnessUtxo = vm.ForceNonWitnessUtxo;
         }
 
         var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)

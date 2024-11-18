@@ -94,6 +94,23 @@
                         <span asp-validation-for="PayJoinEnabled" class="text-danger"></span>
                     </div>
                 }
+                @if (Model.CanSetupMultiSig)
+                {
+                    <div class="form-group my-4">
+                        <div class="d-flex align-items-center">
+                            <input asp-for="IsMultiSigOnServer" type="checkbox" class="btcpay-toggle me-3"/>
+                            <label asp-for="IsMultiSigOnServer" class="form-check-label"></label>
+                        </div>
+                        <span asp-validation-for="IsMultiSigOnServer" class="text-danger"></span>
+                    </div>
+                    <div class="form-group my-4">
+                        <div class="d-flex align-items-center">
+                            <input asp-for="ForceNonWitnessUtxo" type="checkbox" class="btcpay-toggle me-3"/>
+                            <label asp-for="ForceNonWitnessUtxo" class="form-check-label"></label>
+                        </div>
+                        <span asp-validation-for="ForceNonWitnessUtxo" class="text-danger"></span>
+                    </div>
+                }
                 <div class="form-group">
                     <label asp-for="Label" class="form-label"></label>
                     <input asp-for="Label" class="form-control" style="max-width:24em;" />
@@ -147,7 +164,7 @@
                             <input asp-for="@Model.AccountKeys[i].AccountKeyPath" class="form-control" style="max-width:16ch;" />
                         </div>
                     </div>
-                    @if (Model.IsMultiSig)
+                    @if (!Model.IsMultiSigOnServer)
                     {
                         <div class="form-check">
                             <input asp-for="SelectedSigningKey" class="form-check-input" type="radio" value="@Model.AccountKeys[i].AccountKey"/>

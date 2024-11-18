@@ -520,7 +520,7 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = walletId.CryptoCode,
                 ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
-                IsMultisigOnServer = paymentMethod.IsMultisigOnServer
+                IsMultisigOnServer = paymentMethod.IsMultiSigOnServer
             };
             if (bip21?.Any() is true)
             {

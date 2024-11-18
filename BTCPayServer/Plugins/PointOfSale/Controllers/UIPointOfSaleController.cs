@@ -255,8 +255,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var posFormId = settings.FormId;
-            var formData = await FormDataService.GetForm(posFormId);
-
+            
+            // skip forms feature for JSON requests (from the app)
+            var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
+            var formData = wantsJson ? null : await FormDataService.GetForm(posFormId);
             JObject formResponseJObject = null;
             switch (formData)
             {
@@ -402,14 +404,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         meta.Merge(formResponseJObject);
                         entity.Metadata = InvoiceMetadata.FromJObject(meta);
                     });
+                var data = new { invoiceId = invoice.Id };
+                if (wantsJson)
+                    return Json(data);
                 if (price is 0 && storeBlob.ReceiptOptions?.Enabled is true)
-                {
-                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", new { invoiceId = invoice.Id });
-                }
-                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Id });
+                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", data);
+                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
             }
             catch (BitpayHttpException e)
             {
+                if (wantsJson) return Json(new { error = e.Message });
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),

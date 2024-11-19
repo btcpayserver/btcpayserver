@@ -67,16 +67,14 @@ namespace BTCPayServer.PaymentRequest
                 var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _invoiceRepository.GetContributionsByPaymentMethodId(blob.Currency, invoices, true);
 
-                if (contributions.Total >= blob.Amount)
-                {
-                    currentStatus = contributions.TotalSettled >= blob.Amount
-                        ? Client.Models.PaymentRequestData.PaymentRequestStatus.Completed
-                        : Client.Models.PaymentRequestData.PaymentRequestStatus.Processing;
-                }
-                else
-                {
-                    currentStatus = Client.Models.PaymentRequestData.PaymentRequestStatus.Pending;
-                }
+                currentStatus =
+                    (PaidEnough: contributions.Total >= blob.Amount,
+                    SettledEnough: contributions.TotalSettled >= blob.Amount) switch
+                    {
+                        { SettledEnough: true } => Client.Models.PaymentRequestData.PaymentRequestStatus.Completed,
+                        { PaidEnough: true } => Client.Models.PaymentRequestData.PaymentRequestStatus.Processing,
+                        _ => Client.Models.PaymentRequestData.PaymentRequestStatus.Pending
+                    };
             }
 
             if (currentStatus != pr.Status)
@@ -100,7 +98,7 @@ namespace BTCPayServer.PaymentRequest
             var amountDue = blob.Amount - paymentStats.Total;
             var pendingInvoice = invoices.OrderByDescending(entity => entity.InvoiceTime)
                 .FirstOrDefault(entity => entity.Status == InvoiceStatus.New);
-            
+
             return new ViewPaymentRequestViewModel(pr)
             {
                 Archived = pr.Archived,
@@ -121,8 +119,7 @@ namespace BTCPayServer.PaymentRequest
                     var state = entity.GetInvoiceState();
                     var payments = ViewPaymentRequestViewModel.PaymentRequestInvoicePayment.GetViewModels(entity, _displayFormatter, _transactionLinkProviders, _handlers);
 
-                    if (state.Status == InvoiceStatus.Invalid ||
-                        state.Status == InvoiceStatus.Expired && !payments.Any())
+                    if (state.Status is InvoiceStatus.Invalid or InvoiceStatus.Expired && payments.Count is 0)
                         return null;
 
                     return new ViewPaymentRequestViewModel.PaymentRequestInvoice

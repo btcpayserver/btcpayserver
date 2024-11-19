@@ -267,9 +267,9 @@ namespace BTCPayServer.Services.Invoices
         }
         public const int InternalTagSupport_Version = 1;
         public const int GreenfieldInvoices_Version = 2;
-		public const int LeanInvoices_Version = 3;
-		public const int Lastest_Version = 3;
-		public int Version { get; set; }
+        public const int LeanInvoices_Version = 3;
+        public const int Lastest_Version = 3;
+        public int Version { get; set; }
         [JsonIgnore]
         public string Id { get; set; }
         [JsonIgnore]
@@ -349,7 +349,7 @@ namespace BTCPayServer.Services.Invoices
             ArgumentNullException.ThrowIfNull(pair);
 #pragma warning disable CS0618 // Type or member is obsolete
             if (pair.Right == Currency && Rates.TryGetValue(pair.Left, out var rate)) // Fast lane
-                    return rate;
+                return rate;
 #pragma warning restore CS0618 // Type or member is obsolete
             var rule = GetRateRules().GetRuleFor(pair);
             rule.Reevaluate();
@@ -802,33 +802,40 @@ namespace BTCPayServer.Services.Invoices
     }
     public record InvoiceState(InvoiceStatus Status, InvoiceExceptionStatus ExceptionStatus)
     {
-        public InvoiceState(string status, string exceptionStatus):
+        public InvoiceState(string status, string exceptionStatus) :
             this(Enum.Parse<InvoiceStatus>(status), exceptionStatus switch { "None" or "" or null => InvoiceExceptionStatus.None, _ => Enum.Parse<InvoiceExceptionStatus>(exceptionStatus) })
         {
         }
 
-        public bool CanMarkComplete()
+        public bool CanMarkComplete() => (Status, ExceptionStatus) is
         {
-            return Status is InvoiceStatus.New or InvoiceStatus.Processing or InvoiceStatus.Expired or InvoiceStatus.Invalid ||
-                   (Status != InvoiceStatus.Settled && ExceptionStatus == InvoiceExceptionStatus.Marked);
+            Status: InvoiceStatus.New or InvoiceStatus.Processing or InvoiceStatus.Expired or InvoiceStatus.Invalid
         }
+        or
+        {
+            Status: not InvoiceStatus.Settled,
+            ExceptionStatus: InvoiceExceptionStatus.Marked
+        };
 
-        public bool CanMarkInvalid()
+        public bool CanMarkInvalid() => (Status, ExceptionStatus) is
         {
-            return Status is InvoiceStatus.New or InvoiceStatus.Processing or InvoiceStatus.Expired ||
-                   (Status != InvoiceStatus.Invalid && ExceptionStatus == InvoiceExceptionStatus.Marked);
+            Status: InvoiceStatus.New or InvoiceStatus.Processing or InvoiceStatus.Expired
         }
+        or
+        {
+            Status: not InvoiceStatus.Invalid,
+            ExceptionStatus: InvoiceExceptionStatus.Marked
+        };
 
-        public bool CanRefund()
+        public bool CanRefund() => (Status, ExceptionStatus) is
         {
-            return
-                Status == InvoiceStatus.Settled ||
-                (Status == InvoiceStatus.Expired &&
-                (ExceptionStatus == InvoiceExceptionStatus.PaidLate ||
-                ExceptionStatus == InvoiceExceptionStatus.PaidOver ||
-                ExceptionStatus == InvoiceExceptionStatus.PaidPartial)) ||
-                Status == InvoiceStatus.Invalid;
+            Status: InvoiceStatus.Settled or InvoiceStatus.Invalid
         }
+        or
+        {
+            Status: InvoiceStatus.Expired,
+            ExceptionStatus: InvoiceExceptionStatus.PaidLate or InvoiceExceptionStatus.PaidOver or InvoiceExceptionStatus.PaidPartial
+        };
 
         public override string ToString()
         {

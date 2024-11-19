@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayApp.CommonServer;
 using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.PointOfSale;
@@ -32,7 +33,7 @@ public partial class AppApiController
     [AllowAnonymous]
     [HttpPost("register")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<Results<Ok<AccessTokenResponse>, Ok<SignupResult>, EmptyHttpResult, ProblemHttpResult>> Register(SignupRequest signup)
+    public async Task<Results<Ok<AccessTokenResponse>, Ok<ApplicationUserData>, EmptyHttpResult, ProblemHttpResult>> Register(CreateApplicationUserRequest signup)
     {
         var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
         if (policies.LockSubscription)
@@ -77,9 +78,9 @@ public partial class AppApiController
                 });
 
                 SignInResult? signInResult = null;
+                var requiresApproval = policies.RequiresUserApproval && !user.Approved;
                 var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
-                var requiresUserApproval = policies.RequiresUserApproval && !user.Approved;
-                if (!requiresConfirmedEmail && !requiresUserApproval)
+                if (!requiresConfirmedEmail && !requiresApproval)
                 {
                     signInManager.AuthenticationScheme = Scheme;
                     signInResult = await signInManager.PasswordSignInAsync(signup.Email, signup.Password, true, true);
@@ -90,11 +91,11 @@ public partial class AppApiController
                     _logger.LogInformation("User {Email} logged in", user.Email);
                     return TypedResults.Empty;
                 }
-                var response = new SignupResult
+                var response = new ApplicationUserData
                 {
                     Email = user.Email,
-                    RequiresConfirmedEmail = requiresConfirmedEmail,
-                    RequiresUserApproval = requiresUserApproval
+                    RequiresApproval = requiresApproval,
+                    RequiresEmailConfirmation = requiresConfirmedEmail
                 };
                 return TypedResults.Ok(response);
             }

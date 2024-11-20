@@ -33,6 +33,15 @@
                 "schema": {
                     "$ref": "#/components/schemas/StoreId"
                 }
+            },
+            "InvoiceId": {
+                "name": "invoiceId",
+                "in": "path",
+                "required": true,
+                "description": "The invoice ID",
+                "schema": {
+                    "type": "string"
+                }
             }
         },
         "schemas": {

@@ -158,13 +158,7 @@
         "/i/{invoiceId}": {
             "parameters": [
                 {
-                    "name": "invoiceId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The invoice id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/InvoiceId"
                 },
                 {
                     "name": "lang",

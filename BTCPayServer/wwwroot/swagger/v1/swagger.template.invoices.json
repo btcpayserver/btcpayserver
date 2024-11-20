@@ -191,13 +191,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "View information about the specified invoice",
@@ -241,13 +235,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to remove",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "responses": {
@@ -292,13 +280,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "responses": {
@@ -360,13 +342,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     },
                     {
                         "name": "onlyAccountedPayments",
@@ -434,13 +410,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "Mark an invoice as invalid or settled.",
@@ -501,13 +471,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "Unarchive an invoice",
@@ -558,13 +522,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -611,13 +569,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to refund",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "Refund invoice",

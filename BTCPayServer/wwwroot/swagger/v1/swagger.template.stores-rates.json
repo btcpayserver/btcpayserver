@@ -7,18 +7,15 @@
                 ],
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "currencyPair",
                         "description": "The currency pairs to fetch rates for",
-                        "example": [ "BTC_USD", "BTC_EUR" ],
+                        "example": [
+                            "BTC_USD",
+                            "BTC_EUR"
+                        ],
                         "in": "query",
                         "style": "form",
                         "explode": true,
@@ -35,7 +32,6 @@
                 "summary": "Get rates",
                 "description": "Get rates on the store",
                 "operationId": "Stores_GetStoreRates",
-                
                 "responses": {
                     "200": {
                         "description": "The settings were executed and a preview was returned",

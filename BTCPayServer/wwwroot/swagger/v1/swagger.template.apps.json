@@ -3,13 +3,7 @@
         "/api/v1/stores/{storeId}/apps/pos": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "post": {
@@ -66,13 +60,7 @@
         "/api/v1/apps/pos/{appId}": {
             "parameters": [
                 {
-                    "name": "appId",
-                    "in": "path",
-                    "required": true,
-                    "description": "App ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/AppId"
                 }
             ],
             "put": {
@@ -161,13 +149,7 @@
         "/api/v1/apps/crowdfund/{appId}": {
             "parameters": [
                 {
-                    "name": "appId",
-                    "in": "path",
-                    "required": true,
-                    "description": "Crowdfund app ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/AppId"
                 }
             ],
             "get": {
@@ -206,13 +188,7 @@
         "/api/v1/stores/{storeId}/apps/crowdfund": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "post": {
@@ -276,13 +252,7 @@
                 "description": "Returns basic app data shared between all types of apps",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     }
                 ],
                 "responses": {
@@ -318,13 +288,7 @@
                 "description": "Deletes apps with specified ID",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     }
                 ],
                 "responses": {
@@ -352,6 +316,11 @@
                 ],
                 "summary": "Uploads an image for a app item",
                 "description": "Uploads an image for a app item",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "multipart/form-data": {
@@ -403,6 +372,20 @@
                 "summary": "Deletes the app item image",
                 "description": "Deletes the app item image",
                 "operationId": "App_DeleteAppItemImage",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/AppId"
+                    },
+                    {
+                        "name": "fileId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The file ID",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "App item image deleted successfully"
@@ -431,13 +414,7 @@
                 "description": "Returns sales statistics for the app",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     },
                     {
                         "name": "numberOfDays",
@@ -486,13 +463,7 @@
                 "description": "Returns top items statistics for the app",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     },
                     {
                         "name": "count",
@@ -548,82 +519,93 @@
         "/api/v1/stores/{storeId}/apps": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "get": {
-              "tags": [
-                "Apps"
-              ],
-              "operationId": "Apps_GetAllAppsForStore",
-              "summary": "Get basic app data for all apps for a store",
-              "description": "Returns basic app data for all apps for a store",
-              "responses": {
-                  "200": {
-                      "description": "Array of basic app data object",
-                      "content": {
-                        "application/json": {
-                          "schema": {
-                              "type": "array",
-                              "items": {
-                                  "$ref": "#/components/schemas/AppBaseData"
-                              }
-                          }
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAllAppsForStore",
+                "summary": "Get basic app data for all apps for a store",
+                "description": "Returns basic app data for all apps for a store",
+                "responses": {
+                    "200": {
+                        "description": "Array of basic app data object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppBaseData"
+                                    }
+                                }
+                            }
                         }
-                      }
-                  }
-              },
-              "security": [
-                  {
-                      "API_Key": [
-                          "btcpay.store.canmodifystoresettings"
-                      ],
-                      "Basic": []
-                  }
-              ]
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
             }
         },
         "/api/v1/apps": {
-          "get": {
-            "tags": [
-              "Apps"
-            ],
-            "operationId": "Apps_GetAllApps",
-            "summary": "Get basic app data for all apps for all stores for a user",
-            "description": "Returns basic app data for all apps for all stores",
-            "responses": {
-                "200": {
-                    "description": "Array of basic app data object",
-                    "content": {
-                      "application/json": {
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/AppBaseData"
+            "get": {
+                "tags": [
+                    "Apps"
+                ],
+                "operationId": "Apps_GetAllApps",
+                "summary": "Get basic app data for all apps for all stores for a user",
+                "description": "Returns basic app data for all apps for all stores",
+                "responses": {
+                    "200": {
+                        "description": "Array of basic app data object",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "array",
+                                    "items": {
+                                        "$ref": "#/components/schemas/AppBaseData"
+                                    }
+                                }
                             }
                         }
-                      }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
                     }
-                }
-            },
-            "security": [
-                {
-                    "API_Key": [
-                        "btcpay.store.canmodifystoresettings"
-                    ],
-                    "Basic": []
-                }
-            ]
-          }
-      }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
     },
     "components": {
+        "parameters": {
+            "AppId": {
+                "name": "appId",
+                "in": "path",
+                "required": true,
+                "description": "App ID",
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
         "schemas": {
             "AppBaseData": {
                 "type": "object",
@@ -639,9 +621,12 @@
                         "example": "my test app"
                     },
                     "storeId": {
-                        "type": "string",
                         "description": "Id of the store to which the app belongs",
-                        "example": "9CiNzKoANXxmk5ayZngSXrHTiVvvgCrwrpFQd4m2K776"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StoreId"
+                            }
+                        ]
                     },
                     "created": {
                         "type": "integer",
@@ -770,7 +755,11 @@
                                 "items": {
                                     "type": "number"
                                 },
-                                "default": [15,18,20],
+                                "default": [
+                                    15,
+                                    18,
+                                    20
+                                ],
                                 "nullable": true
                             },
                             "notificationUrl": {
@@ -894,14 +883,22 @@
                             "startDate": {
                                 "type": "number",
                                 "description": "UNIX timestamp for crowdfund start time (https://www.unixtimestamp.com/)",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
                                 "example": 768658369,
                                 "nullable": true
                             },
                             "endDate": {
                                 "type": "number",
                                 "description": "UNIX timestamp for crowdfund end time (https://www.unixtimestamp.com/)",
-                                "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}],
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ],
                                 "example": 771336769,
                                 "nullable": true
                             },
@@ -985,7 +982,9 @@
                                 "items": {
                                     "type": "string"
                                 },
-                                "example": ["https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"],
+                                "example": [
+                                    "https://github.com/ClaudiuHKS/AdvancedQuakeSounds/raw/master/sound/AQS/doublekill.wav"
+                                ],
                                 "nullable": true
                             },
                             "animationColors": {
@@ -994,7 +993,11 @@
                                 "items": {
                                     "type": "string"
                                 },
-                                "example": ["#FF0000", "#00FF00", "#0000FF"],
+                                "example": [
+                                    "#FF0000",
+                                    "#00FF00",
+                                    "#0000FF"
+                                ],
                                 "nullable": true
                             },
                             "formId": {

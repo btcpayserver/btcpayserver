@@ -8,13 +8,7 @@
                 "summary": "Get store rate settings",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View rate settings of the specified store",
@@ -52,13 +46,7 @@
                 ],
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "summary": "Update store rate settings",
@@ -118,13 +106,7 @@
                 ],
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "currencyPair",

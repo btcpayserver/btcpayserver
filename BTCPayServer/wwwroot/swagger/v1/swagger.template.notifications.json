@@ -63,6 +63,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
                     }
                 },
                 "security": [
@@ -255,7 +258,7 @@
                 ],
                 "summary": "Update notification settings",
                 "description": "Updates the current user's notification settings",
-                "operationId": "Notifications_UpdateNotification",
+                "operationId": "Notifications_UpdateNotificationSettings",
                 "responses": {
                     "200": {
                         "description": "The current user's notification settings",
@@ -327,6 +330,11 @@
                         "description": "The html body of the notifications"
                     },
                     "storeId": {
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StoreId"
+                            }
+                        ],
                         "type": "string",
                         "nullable": true,
                         "description": "If related to a store, the store id of the notification"
@@ -338,8 +346,12 @@
                         "description": "The link of the notification"
                     },
                     "createdTime": {
-                        "description": "The creation time of the notification",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ],
+                        "description": "The creation time of the notification"
                     },
                     "seen": {
                         "type": "boolean",
@@ -357,7 +369,10 @@
                             "type": "string"
                         },
                         "description": "List of the notification type identifiers, which should be disabled. Can also be a single item 'all'.",
-                        "example": ["newversion", "pluginupdate"],
+                        "example": [
+                            "newversion",
+                            "pluginupdate"
+                        ],
                         "nullable": false
                     }
                 }

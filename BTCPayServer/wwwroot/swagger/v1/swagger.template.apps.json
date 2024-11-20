@@ -60,13 +60,7 @@
         "/api/v1/apps/pos/{appId}": {
             "parameters": [
                 {
-                    "name": "appId",
-                    "in": "path",
-                    "required": true,
-                    "description": "App ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/AppId"
                 }
             ],
             "put": {
@@ -155,13 +149,7 @@
         "/api/v1/apps/crowdfund/{appId}": {
             "parameters": [
                 {
-                    "name": "appId",
-                    "in": "path",
-                    "required": true,
-                    "description": "Crowdfund app ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/AppId"
                 }
             ],
             "get": {
@@ -264,13 +252,7 @@
                 "description": "Returns basic app data shared between all types of apps",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     }
                 ],
                 "responses": {
@@ -306,13 +288,7 @@
                 "description": "Deletes apps with specified ID",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                    "$ref": "#/components/parameters/AppId"
                     }
                 ],
                 "responses": {
@@ -342,13 +318,7 @@
                 "description": "Uploads an image for a app item",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     }
                 ],
                 "requestBody": {
@@ -404,13 +374,7 @@
                 "operationId": "App_DeleteAppItemImage",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     },
                     {
                         "name": "fileId",
@@ -450,13 +414,7 @@
                 "description": "Returns sales statistics for the app",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     },
                     {
                         "name": "numberOfDays",
@@ -505,13 +463,7 @@
                 "description": "Returns top items statistics for the app",
                 "parameters": [
                     {
-                        "name": "appId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The app ID",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/AppId"
                     },
                     {
                         "name": "count",
@@ -643,6 +595,17 @@
         }
     },
     "components": {
+        "parameters": {
+            "AppId": {
+                "name": "appId",
+                "in": "path",
+                "required": true,
+                "description": "App ID",
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
         "schemas": {
             "AppBaseData": {
                 "type": "object",

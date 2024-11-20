@@ -94,13 +94,7 @@
                     "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 }
             ],
             "get": {
@@ -214,13 +208,7 @@
                     "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 }
             ],
             "get": {
@@ -272,22 +260,10 @@
                     "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 },
                 {
-                    "name": "deliveryId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The id of the delivery",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/DeliveryId"
                 }
             ],
             "get": {
@@ -328,22 +304,10 @@
                     "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 },
                 {
-                    "name": "deliveryId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The id of the delivery",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/DeliveryId"
                 }
             ],
             "get": {
@@ -388,22 +352,10 @@
                     "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 },
                 {
-                    "name": "deliveryId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The id of the delivery",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/DeliveryId"
                 }
             ],
             "post": {
@@ -443,6 +395,26 @@
         }
     },
     "components": {
+        "parameters": {
+            "WebhookId": {
+                "name": "webhookId",
+                "in": "path",
+                "required": true,
+                "description": "The webhook id",
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "DeliveryId": {
+                "name": "deliveryId",
+                "in": "path",
+                "required": true,
+                "description": "The id of the delivery",
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
         "schemas": {
             "WebhookDeliveryList": {
                 "type": "array",

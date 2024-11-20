@@ -3,13 +3,7 @@
         "/api/v1/stores/{storeId}/webhooks": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "get": {
@@ -97,13 +91,7 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "webhookId",
@@ -223,13 +211,7 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "webhookId",
@@ -287,13 +269,7 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "webhookId",
@@ -349,13 +325,7 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "webhookId",
@@ -415,13 +385,7 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "webhookId",

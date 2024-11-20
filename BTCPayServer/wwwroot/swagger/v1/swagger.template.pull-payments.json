@@ -116,13 +116,7 @@
         "/api/v1/stores/{storeId}/pull-payments": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "get": {
@@ -317,13 +311,7 @@
         "/api/v1/stores/{storeId}/pull-payments/{pullPaymentId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "pullPaymentId",
@@ -555,13 +543,7 @@
         "/api/v1/stores/{storeId}/payouts": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "post": {
@@ -668,13 +650,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",
@@ -817,13 +793,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",
@@ -883,13 +853,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}/mark": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",

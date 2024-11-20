@@ -330,14 +330,14 @@
                         "description": "The html body of the notifications"
                     },
                     "storeId": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "If related to a store, the store id of the notification",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/StoreId"
                             }
-                        ]
+                        ],
+                        "type": "string",
+                        "nullable": true,
+                        "description": "If related to a store, the store id of the notification"
                     },
                     "link": {
                         "type": "string",
@@ -346,12 +346,12 @@
                         "description": "The link of the notification"
                     },
                     "createdTime": {
-                        "description": "The creation time of the notification",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/UnixTimestamp"
                             }
-                        ]
+                        ],
+                        "description": "The creation time of the notification"
                     },
                     "seen": {
                         "type": "boolean",

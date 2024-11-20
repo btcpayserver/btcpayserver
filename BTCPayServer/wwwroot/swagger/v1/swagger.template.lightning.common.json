@@ -45,7 +45,11 @@
                     },
                     "expiry": {
                         "description": "Expiration time in seconds",
-                        "allOf": [ {"$ref": "#/components/schemas/TimeSpanSeconds"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     },
                     "privateRouteHints": {
                         "type": "boolean",
@@ -117,7 +121,11 @@
                         "type": "number",
                         "description": "The unix timestamp when the payment got created",
                         "nullable": true,
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "totalAmount": {
                         "type": "string",
@@ -149,11 +157,19 @@
                         "type": "number",
                         "description": "The unix timestamp when the invoice got paid",
                         "nullable": true,
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "expiresAt": {
                         "description": "The unix timestamp when the invoice expires",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "amount": {
                         "type": "string",

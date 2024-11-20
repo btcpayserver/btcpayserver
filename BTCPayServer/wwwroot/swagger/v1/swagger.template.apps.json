@@ -288,7 +288,7 @@
                 "description": "Deletes apps with specified ID",
                 "parameters": [
                     {
-                    "$ref": "#/components/parameters/AppId"
+                        "$ref": "#/components/parameters/AppId"
                     }
                 ],
                 "responses": {

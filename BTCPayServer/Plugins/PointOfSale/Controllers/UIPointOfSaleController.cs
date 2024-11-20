@@ -53,7 +53,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             UIInvoiceController invoiceController,
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
-            DisplayFormatter displayFormatter)
+            DisplayFormatter displayFormatter,
+            IRateLimitService rateLimitService,
+            IAuthorizationService authorizationService)
         {
             _currencies = currencies;
             _appService = appService;
@@ -62,6 +64,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _displayFormatter = displayFormatter;
+            _rateLimitService = rateLimitService;
+            _authorizationService = authorizationService;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
         }
@@ -73,6 +77,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly IRateLimitService _rateLimitService;
+        private readonly IAuthorizationService _authorizationService;
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
 
@@ -135,7 +141,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(PointOfSaleAppType.AppType)]
-        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType = null,
@@ -152,6 +157,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string formResponse = null,
                                                         CancellationToken cancellationToken = default)
         {
+            if (!(await _authorizationService.AuthorizeAsync(HttpContext.User, appId, Policies.CanViewInvoices)).Succeeded &&
+                !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, HttpContext.Connection.RemoteIpAddress.ToString(), HttpContext.RequestAborted))
+            {
+                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+            }
+            
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
 
             // not allowing negative tips or discounts

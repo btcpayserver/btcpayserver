@@ -3,13 +3,7 @@
         "/api/v1/stores/{storeId}/apps/pos": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "post": {
@@ -206,13 +200,7 @@
         "/api/v1/stores/{storeId}/apps/crowdfund": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "post": {
@@ -579,13 +567,7 @@
         "/api/v1/stores/{storeId}/apps": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "get": {
@@ -676,9 +658,12 @@
                         "example": "my test app"
                     },
                     "storeId": {
-                        "type": "string",
                         "description": "Id of the store to which the app belongs",
-                        "example": "9CiNzKoANXxmk5ayZngSXrHTiVvvgCrwrpFQd4m2K776"
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StoreId"
+                            }
+                        ]
                     },
                     "created": {
                         "type": "integer",

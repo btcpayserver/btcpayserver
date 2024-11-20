@@ -7,13 +7,7 @@
                 ],
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "currencyPair",

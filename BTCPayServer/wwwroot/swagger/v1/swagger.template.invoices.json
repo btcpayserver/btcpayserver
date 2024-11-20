@@ -8,13 +8,7 @@
                 "summary": "Get invoices",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "orderId",
@@ -136,13 +130,7 @@
                 "summary": "Create a new invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Create a new invoice",
@@ -200,13 +188,7 @@
                 "summary": "Get invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -256,13 +238,7 @@
                 "operationId": "Invoices_ArchiveInvoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the invoice belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -313,13 +289,7 @@
                 "operationId": "Invoices_UpdateInvoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the invoice belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -387,13 +357,7 @@
                 "summary": "Get invoice payment methods",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -467,13 +431,7 @@
                 "summary": "Mark invoice status",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -540,13 +498,7 @@
                 "summary": "Unarchive invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -603,13 +555,7 @@
                 "summary": "Activate Payment Method",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -662,13 +608,7 @@
                 "summary": "Refund invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "invoiceId",
@@ -892,8 +832,12 @@
                                 "description": "The identifier of the invoice"
                             },
                             "storeId": {
-                                "type": "string",
-                                "description": "The store identifier that the invoice belongs to"
+                                "description": "The store identifier that the invoice belongs to",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/StoreId"
+                                    }
+                                ]
                             },
                             "amount": {
                                 "type": "string",

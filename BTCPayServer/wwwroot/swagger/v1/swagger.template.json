@@ -24,6 +24,17 @@
         "url": "https://docs.btcpayserver.org/Development/GreenFieldExample/"
     },
     "components": {
+        "parameters": {
+            "StoreId": {
+                "name": "storeId",
+                "in": "path",
+                "required": true,
+                "description": "The store ID",
+                "schema": {
+                    "$ref": "#/components/schemas/StoreId"
+                }
+            }
+        },
         "schemas": {
             "ValidationProblemDetails": {
                 "type": "array",
@@ -105,6 +116,11 @@
                 ],
                 "format": "minutes",
                 "description": "A span of times in minutes"
+            },
+            "StoreId": {
+                "type": "string",
+                "description": "Store ID of the item",
+                "example": "9CiNzKoANXxmk5ayZngSXrHTiVvvgCrwrpFQd4m2K776"
             },
             "PaymentMethodId": {
                 "type": "string",

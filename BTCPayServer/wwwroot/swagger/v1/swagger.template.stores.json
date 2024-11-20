@@ -101,13 +101,7 @@
                 "summary": "Get store",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the specified store",
@@ -359,13 +353,7 @@
                 "summary": "Get store's roles",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the specified store's roles",

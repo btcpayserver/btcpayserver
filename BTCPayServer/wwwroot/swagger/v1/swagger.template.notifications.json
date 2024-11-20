@@ -332,7 +332,12 @@
                     "storeId": {
                         "type": "string",
                         "nullable": true,
-                        "description": "If related to a store, the store id of the notification"
+                        "description": "If related to a store, the store id of the notification",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/StoreId"
+                            }
+                        ]
                     },
                     "link": {
                         "type": "string",

@@ -8,13 +8,7 @@
                 "summary": "Get payment requests",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the existing payment requests",
@@ -57,13 +51,7 @@
                 "summary": "Create a new payment request",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Create a new payment request",
@@ -121,13 +109,7 @@
                 "summary": "Get payment request",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "paymentRequestId",
@@ -177,13 +159,7 @@
                 "operationId": "PaymentRequests_ArchivePaymentRequest",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the payment request belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "paymentRequestId",
@@ -232,13 +208,7 @@
                 "summary": "Update payment request",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "paymentRequestId",
@@ -305,13 +275,7 @@
                 "summary": "Create a new invoice for the payment request",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "paymentRequestId",
@@ -419,7 +383,13 @@
                             },
                             "storeId": {
                                 "type": "string",
-                                "description": "The store identifier that the payment request belongs to"
+                                "nullable": false,
+                                "description": "The store identifier that the payment request belongs to",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/StoreId"
+                                    }
+                                ]
                             },
                             "status": {
                                 "type": "string",

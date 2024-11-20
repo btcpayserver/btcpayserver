@@ -686,7 +686,12 @@
                             "storeId": {
                                 "type": "string",
                                 "description": "The store id of the invoice's event",
-                                "nullable": false
+                                "nullable": false,
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/StoreId"
+                                    }
+                                ]
                             },
                             "invoiceId": {
                                 "type": "string",

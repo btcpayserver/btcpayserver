@@ -18,13 +18,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the lightning node",
@@ -75,13 +69,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View balance of the lightning node",
@@ -132,13 +120,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View balance histogram of the lightning node",
@@ -189,13 +171,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Connect to another lightning node.",
@@ -269,13 +245,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the current channels of the lightning node",
@@ -324,13 +294,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Open a channel with another lightning node. You should connect to that node first.",
@@ -405,13 +369,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Get an on-chain deposit address for the lightning node ",
@@ -462,13 +420,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "paymentHash",
@@ -528,13 +480,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "id",
@@ -594,13 +540,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Pay a lightning invoice. In case the payment response times out, the status will be reported as pending and the final status can be resolved using the [Get payment](#operation/StoreLightningNodeApi_GetPayment) endpoint. The default wait time for payment responses is 30 seconds — it might take longer if multiple routes are tried or a hold invoice is getting paid.",
@@ -691,13 +631,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "pendingOnly",
@@ -788,13 +722,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Create a lightning invoice.",
@@ -865,13 +793,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "includePending",

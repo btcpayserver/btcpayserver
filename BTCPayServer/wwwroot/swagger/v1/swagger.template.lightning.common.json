@@ -1,5 +1,17 @@
 {
     "components": {
+        "parameters": {
+            "CryptoCode": {
+                "name": "cryptoCode",
+                "in": "path",
+                "required": true,
+                "description": "The cryptoCode of the lightning-node to query",
+                "schema": {
+                    "type": "string"
+                },
+                "example": "BTC"
+            }
+        },
         "schemas": {
             "ConnectToNodeRequest": {
                 "type": "object",

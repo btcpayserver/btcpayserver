@@ -3,9 +3,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
-using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Security;
+using BTCPayServer.Client.App.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
@@ -246,8 +246,9 @@ public partial class AppApiController
             }
         }
 
-        var response = new AcceptInviteResult(user.Email!)
+        var response = new AcceptInviteResult
         {
+            Email = user.Email!,
             EmailHasBeenConfirmed = emailHasBeenConfirmed,
             RequiresUserApproval = requiresUserApproval,
             PasswordSetCode = passwordSetCode

@@ -7,7 +7,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Client;

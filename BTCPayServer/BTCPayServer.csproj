@@ -61,9 +61,6 @@
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
-  </ItemGroup>
-
-	<ItemGroup>
     <PackageReference Include="TwentyTwenty.Storage" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.12.1" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
@@ -72,6 +69,7 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.6" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.7" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.65.0"/>
+    <PackageReference Include="VSS" Version="1.0.1" />
   </ItemGroup>
 
 	<ItemGroup>
@@ -92,7 +90,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <ProjectReference Include="..\BTCPayApp.CommonServer\BTCPayApp.CommonServer.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Abstractions\BTCPayServer.Abstractions.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
 	  <ProjectReference Include="..\BTCPayServer.Data\BTCPayServer.Data.csproj" />

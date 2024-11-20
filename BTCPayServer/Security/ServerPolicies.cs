@@ -1,7 +1,7 @@
 using BTCPayServer.Client;
 using Microsoft.AspNetCore.Authorization;
 
-namespace BTCPayApp.CommonServer
+namespace BTCPayServer.Security
 {
     public static class ServerPolicies
     {

@@ -69,13 +69,11 @@ using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.WalletFileParsing;
 using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
-using BTCPayApp.CommonServer;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
 using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
-using System.Reflection;
 
 namespace BTCPayServer.Hosting
 {

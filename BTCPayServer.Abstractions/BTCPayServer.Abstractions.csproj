@@ -36,7 +36,6 @@
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\BTCPayApp.CommonServer\BTCPayApp.CommonServer.csproj" />
     <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />
   </ItemGroup>
 </Project>

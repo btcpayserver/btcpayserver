@@ -1,7 +1,7 @@
 using System;
 using Microsoft.AspNetCore.Authorization;
 
-namespace BTCPayApp.CommonServer
+namespace BTCPayServer.Security
 {
     public class PolicyRequirement : IAuthorizationRequirement
     {

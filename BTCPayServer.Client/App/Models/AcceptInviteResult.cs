@@ -1,8 +1,9 @@
-namespace BTCPayApp.CommonServer.Models;
+#nullable enable
+namespace BTCPayServer.Client.App.Models;
 
-public class AcceptInviteResult(string email)
+public class AcceptInviteResult
 {
-    public string Email { get; init; } = email;
+    public string? Email { get; set; }
     public bool? RequiresUserApproval { get; set; }
     public bool? EmailHasBeenConfirmed { get; set; }
     public string? PasswordSetCode { get; set; }

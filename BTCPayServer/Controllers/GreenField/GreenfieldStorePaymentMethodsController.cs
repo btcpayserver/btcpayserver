@@ -1,7 +1,6 @@
 #nullable enable
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
@@ -11,6 +10,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Security;
 using StoreData = BTCPayServer.Data.StoreData;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;

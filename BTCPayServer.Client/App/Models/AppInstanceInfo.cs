@@ -1,4 +1,5 @@
-namespace BTCPayApp.CommonServer.Models;
+#nullable enable
+namespace BTCPayServer.Client.App.Models;
 
 public class AppInstanceInfo
 {

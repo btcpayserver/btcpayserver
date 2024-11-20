@@ -6,8 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
 using BTCPayServer.App.BackupStorage;
+using BTCPayServer.Client.App;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Lightning;
@@ -165,34 +165,37 @@ public class BTCPayAppState : IHostedService
 
     private async Task UserUpdatedEvent(UserUpdatedEvent arg)
     {
-        var ev = new ServerEvent("user-updated") {UserId = arg.User.Id, Detail = arg.Detail};
+        var ev = new ServerEvent { Type = "user-updated", UserId = arg.User.Id, Detail = arg.Detail };
         await _hubContext.Clients.Group(arg.User.Id).NotifyServerEvent(ev);
     }
 
     private async Task UserDeletedEvent(UserDeletedEvent arg)
     {
-        var ev = new ServerEvent("user-deleted") {UserId = arg.User.Id};
+        var ev = new ServerEvent { Type = "user-deleted", UserId = arg.User.Id };
         await _hubContext.Clients.Group(arg.User.Id).NotifyServerEvent(ev);
     }
 
     private async Task InvoiceChangedEvent(InvoiceEvent arg)
     {
-        var ev = new ServerEvent("invoice-updated")
+        var ev = new ServerEvent
         {
-            StoreId = arg.Invoice.StoreId, InvoiceId = arg.InvoiceId, Detail = arg.Invoice.Status.ToString()
+            Type = "invoice-updated",
+            StoreId = arg.Invoice.StoreId,
+            InvoiceId = arg.InvoiceId,
+            Detail = arg.Invoice.Status.ToString()
         };
         await _hubContext.Clients.Group(arg.Invoice.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task UserNotificationsUpdatedEvent(UserNotificationsUpdatedEvent arg)
     {
-        var ev = new ServerEvent("notifications-updated") {UserId = arg.UserId};
+        var ev = new ServerEvent { Type = "notifications-updated", UserId = arg.UserId };
         await _hubContext.Clients.Group(arg.UserId).NotifyServerEvent(ev);
     }
 
     private async Task StoreCreatedEvent(StoreCreatedEvent arg)
     {
-        var ev = new ServerEvent("store-created") {StoreId = arg.StoreId};
+        var ev = new ServerEvent { Type = "store-created", StoreId = arg.StoreId };
 
         if (arg.StoreUsers?.Any() is true)
         {
@@ -208,13 +211,13 @@ public class BTCPayAppState : IHostedService
 
     private async Task StoreUpdatedEvent(StoreUpdatedEvent arg)
     {
-        var ev = new ServerEvent("store-updated") {StoreId = arg.StoreId, Detail = arg.Detail};
+        var ev = new ServerEvent { Type ="store-updated", StoreId = arg.StoreId, Detail = arg.Detail };
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task StoreRemovedEvent(StoreRemovedEvent arg)
     {
-        var ev = new ServerEvent("store-removed") {StoreId = arg.StoreId};
+        var ev = new ServerEvent { Type = "store-removed", StoreId = arg.StoreId};
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
@@ -222,22 +225,19 @@ public class BTCPayAppState : IHostedService
     {
         var cIds = Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray();
         await AddToGroup(arg.StoreId, cIds);
-        var ev = new ServerEvent("user-store-added") {StoreId = arg.StoreId, UserId = arg.UserId, Detail = arg.Detail};
+        var ev = new ServerEvent { Type = "user-store-added", StoreId = arg.StoreId, UserId = arg.UserId, Detail = arg.Detail };
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
     }
 
     private async Task StoreUserUpdatedEvent(UserStoreUpdatedEvent arg)
     {
-        var ev = new ServerEvent("user-store-updated")
-        {
-            StoreId = arg.StoreId, UserId = arg.UserId, Detail = arg.Detail
-        };
+        var ev = new ServerEvent { Type = "user-store-updated", StoreId = arg.StoreId, UserId = arg.UserId, Detail = arg.Detail };
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
     }
 
     private async Task StoreUserRemovedEvent(UserStoreRemovedEvent arg)
     {
-        var ev = new ServerEvent("user-store-removed") {StoreId = arg.StoreId, UserId = arg.UserId};
+        var ev = new ServerEvent { Type = "user-store-removed", StoreId = arg.StoreId, UserId = arg.UserId };
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
 
         await RemoveFromGroup(arg.StoreId,
@@ -246,19 +246,19 @@ public class BTCPayAppState : IHostedService
 
     private async Task AppCreatedEvent(AppCreatedEvent arg)
     {
-        var ev = new ServerEvent("app-created") {StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail};
+        var ev = new ServerEvent { Type = "app-created", StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail };
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task AppUpdatedEvent(AppUpdatedEvent arg)
     {
-        var ev = new ServerEvent("app-updated") {StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail};
+        var ev = new ServerEvent { Type = "app-updated", StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail };
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task AppDeletedEvent(AppDeletedEvent arg)
     {
-        var ev = new ServerEvent("app-deleted") {StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail};
+        var ev = new ServerEvent { Type = "app-deleted", StoreId = arg.StoreId, AppId = arg.AppId, Detail = arg.Detail };
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 

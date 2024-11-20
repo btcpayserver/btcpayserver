@@ -2,7 +2,7 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer.Models;
+using BTCPayServer.Client.App.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Mvc;

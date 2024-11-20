@@ -1,9 +1,9 @@
 ﻿#nullable enable
 using System;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
-using BTCPayApp.CommonServer.Models;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Security;
+using BTCPayServer.Client.App.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;

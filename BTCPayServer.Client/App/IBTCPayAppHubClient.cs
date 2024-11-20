@@ -1,11 +1,12 @@
-﻿using System;
+﻿#nullable enable
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using NBitcoin;
 
-namespace BTCPayApp.CommonServer;
+namespace BTCPayServer.Client.App;
 
 //methods available on the hub in the client
 public interface IBTCPayAppHubClient
@@ -39,30 +40,43 @@ public interface IBTCPayAppHubServer
     Task<bool> BroadcastTransaction(string tx);
     Task<decimal> GetFeeRate(int blockTarget);
     Task<BestBlockResponse> GetBestBlock();
-    
     Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string identifier, string[] txIds, string[] outpoints);
     Task<string> DeriveScript(string identifier);
     Task TrackScripts(string identifier, string[] scripts);
     Task<string> UpdatePsbt(string[] identifiers, string psbt);
     Task<CoinResponse[]> GetUTXOs(string[] identifiers);
     Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
-
     Task SendInvoiceUpdate(LightningInvoice lightningInvoice);
     Task<long?> GetCurrentMaster();
 }
 
-public class ServerEvent(string type)
+public class ServerEvent
 {
-    public string Type { get; } = type;
-    public string? StoreId { get; init; }
-    public string? UserId { get; init; }
-    public string? AppId { get; init; }
-    public string? InvoiceId { get; init; }
+    public string? Type { get; set; }
+    public string? StoreId { get; set; }
+    public string? UserId { get; set; }
+    public string? AppId { get; set; }
+    public string? InvoiceId { get; set; }
     public string? Detail { get; set; }
 }
 
-public record TxResp(long Confirmations, long? Height, decimal BalanceChange, DateTimeOffset Timestamp, string TransactionId)
+public record TxResp
 {
+    public TxResp(long confirmations, long? height, decimal balanceChange, DateTimeOffset timestamp, string transactionId)
+    {
+        Confirmations = confirmations;
+        Height = height;
+        BalanceChange = balanceChange;
+        Timestamp = timestamp;
+        TransactionId = transactionId;
+    }
+
+    public long Confirmations { get; set; }
+    public long? Height { get; set; }
+    public decimal BalanceChange { get; set; }
+    public DateTimeOffset Timestamp { get; set; }
+    public string TransactionId { get; set; }
+    
     public override string ToString()
     {
         return $"{{ Confirmations = {Confirmations}, Height = {Height}, BalanceChange = {BalanceChange}, Timestamp = {Timestamp}, TransactionId = {TransactionId} }}";
@@ -103,8 +117,8 @@ public class TransactionResponse
 
 public class BestBlockResponse
 {
-    public required string BlockHash { get; set; }
-    public required int BlockHeight { get; set; }
+    public string? BlockHash { get; set; }
+    public int BlockHeight { get; set; }
     public string? BlockHeader { get; set; }
 }
 

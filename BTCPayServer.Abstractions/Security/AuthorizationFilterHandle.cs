@@ -1,4 +1,3 @@
-using BTCPayApp.CommonServer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 

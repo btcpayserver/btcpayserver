@@ -2,7 +2,7 @@
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
+using BTCPayServer.Abstractions.Security;
 using BTCPayServer.App.BackupStorage;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;

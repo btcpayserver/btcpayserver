@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Security;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Apps;

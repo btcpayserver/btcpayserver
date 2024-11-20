@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using BTCPayApp.CommonServer;
+using BTCPayServer.Client.App;
 using BTCPayServer.Controllers;
 using BTCPayServer.Lightning;
 using Microsoft.AspNetCore.SignalR;

@@ -11,7 +11,7 @@ using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading;
-using BTCPayApp.CommonServer;
+using BTCPayServer.Abstractions.Security;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers;

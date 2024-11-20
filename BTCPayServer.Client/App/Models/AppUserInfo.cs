@@ -1,6 +1,7 @@
+#nullable enable
 using System.Collections.Generic;
 
-namespace BTCPayApp.CommonServer.Models;
+namespace BTCPayServer.Client.App.Models;
 
 public class AppUserInfo
 {

@@ -1,7 +1,8 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
+using BTCPayServer.Abstractions.Security;
 using BTCPayServer.Client;
+using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;

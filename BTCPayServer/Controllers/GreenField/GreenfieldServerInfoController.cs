@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
-using BTCPayApp.CommonServer;
 using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Security;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;

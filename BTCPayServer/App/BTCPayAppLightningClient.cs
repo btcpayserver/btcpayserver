@@ -3,7 +3,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using BTCPayApp.CommonServer;
+using BTCPayServer.Client.App;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Lightning;

@@ -1,8 +1,9 @@
+#nullable enable
 using System.Collections.Generic;
 using System.Linq;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayApp.CommonServer;
+namespace BTCPayServer.Client;
 
 public static class PosDataParser
 {

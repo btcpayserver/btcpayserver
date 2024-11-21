@@ -5,6 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Logging;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
@@ -45,19 +46,18 @@ namespace BTCPayServer.Services
             ArgumentNullException.ThrowIfNull(transaction);
             ArgumentNullException.ThrowIfNull(network);
             using var db = _dbContextFactory.CreateContext();
-            db.PlannedTransactions.Add(new PlannedTransaction()
-            {
-                Id = $"{network.CryptoCode}-{transaction.GetHash()}",
-                BroadcastAt = broadcastTime,
-                Blob = transaction.ToBytes()
-            });
-            try
-            {
-                await db.SaveChangesAsync();
-            }
-            catch (DbUpdateException)
-            {
-            }
+            var conn = db.Database.GetDbConnection();
+            await conn.ExecuteAsync(
+                """
+                INSERT INTO "PlannedTransactions"("Id", "BroadcastAt", "Blob") VALUES(@Id, @BroadcastAt, @Blob)
+                ON CONFLICT DO NOTHING
+                """,
+                new
+                {
+                    Id = $"{network.CryptoCode}-{transaction.GetHash()}",
+                    BroadcastAt = broadcastTime,
+                    Blob = transaction.ToBytes()
+                });
         }
 
         public async Task<int> ProcessAll(CancellationToken cancellationToken = default)

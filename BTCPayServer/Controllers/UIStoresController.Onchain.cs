@@ -443,7 +443,7 @@ public partial class UIStoresController
             StoreName = store.StoreName,
             CanSetupMultiSig = derivation.AccountKeySettings.Length > 1,
             IsMultiSigOnServer = derivation.IsMultiSigOnServer,
-            ForceNonWitnessUtxo = derivation.ForceNonWitnessUtxo
+            DefaultIncludeNonWitnessUtxo = derivation.DefaultIncludeNonWitnessUtxo
         };
 
         ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
@@ -482,12 +482,12 @@ public partial class UIStoresController
 
         if (derivation.Label != vm.Label ||
             derivation.IsMultiSigOnServer != vm.IsMultiSigOnServer ||
-            derivation.ForceNonWitnessUtxo != vm.ForceNonWitnessUtxo)
+            derivation.DefaultIncludeNonWitnessUtxo != vm.DefaultIncludeNonWitnessUtxo)
         {
             needUpdate = true;
             derivation.Label = vm.Label;
             derivation.IsMultiSigOnServer = vm.IsMultiSigOnServer;
-            derivation.ForceNonWitnessUtxo = vm.ForceNonWitnessUtxo;
+            derivation.DefaultIncludeNonWitnessUtxo = vm.DefaultIncludeNonWitnessUtxo;
         }
 
         var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)

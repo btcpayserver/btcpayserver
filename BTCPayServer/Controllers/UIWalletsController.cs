@@ -1023,7 +1023,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletSendVault([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             WalletSendVaultModel model)
         {
-            return await RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
+            return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
             {
                 SigningContext = model.SigningContext,
                 ReturnUrl = model.ReturnUrl,
@@ -1031,11 +1031,10 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private async Task<IActionResult> RedirectToWalletPSBTReady(WalletPSBTReadyViewModel vm)
+        private async Task<IActionResult> RedirectToWalletPSBTReady(WalletId walletId, WalletPSBTReadyViewModel vm)
         {
             if (vm.SigningContext.PendingTransactionId is not null)
             {
-                var walletId = WalletId.Parse(this.RouteData.Values["walletId"].ToString());
                 var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
                 var pendingTransaction = await _pendingTransactionService.CollectSignature(walletId.CryptoCode, psbt, false, CancellationToken.None);
                 
@@ -1201,7 +1200,7 @@ namespace BTCPayServer.Controllers
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
             viewModel.SigningContext ??= new();
             viewModel.SigningContext.PSBT = psbt?.ToBase64();
-            return await RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
+            return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
             {
                 SigningKey = signingKey.GetWif(network.NBitcoinNetwork).ToString(),
                 SigningKeyPath = rootedKeyPath?.ToString(),

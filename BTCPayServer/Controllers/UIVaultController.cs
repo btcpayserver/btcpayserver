@@ -12,13 +12,11 @@ using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
 using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Asn1;
 
 namespace BTCPayServer.Controllers
 {
@@ -28,14 +26,11 @@ namespace BTCPayServer.Controllers
     {
         private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly IAuthorizationService _authorizationService;
-        private readonly BTCPayWalletProvider _btcPayWalletProvider;
 
-        public UIVaultController(PaymentMethodHandlerDictionary handlers, IAuthorizationService authorizationService, 
-            BTCPayWalletProvider btcPayWalletProvider)
+        public UIVaultController(PaymentMethodHandlerDictionary handlers, IAuthorizationService authorizationService)
         {
             _handlers = handlers;
             _authorizationService = authorizationService;
-            _btcPayWalletProvider = btcPayWalletProvider;
         }
 
         [Route("{cryptoCode}/xpub")]
@@ -181,23 +176,11 @@ namespace BTCPayServer.Controllers
                                     }
                                 }
 
-                                // sometimes we need to send the full transaction to the device
-                                if (derivationSettings.ForceNonWitnessUtxo)
-                                {
-                                    var wallet = _btcPayWalletProvider.GetWallet(cryptoCode);
-                                    foreach (var input in psbt.Inputs)
-                                    {
-                                        var txid = input.PrevOut.Hash;
-                                        var tx = await wallet.GetTransactionAsync(txid, false, cancellationToken);
-                                        input.NonWitnessUtxo = tx?.Transaction;
-                                    }
-                                }
-
                                 try
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);
                                 }
-                                catch (Hwi.HwiException hwiex)
+                                catch (HwiException)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"user-reject\"}", cancellationToken);
                                     continue;

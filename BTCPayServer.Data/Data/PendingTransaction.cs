@@ -32,23 +32,12 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
 
             builder.Entity<PendingTransaction>().HasKey(transaction => new {transaction.CryptoCode, transaction.TransactionId});
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<PendingTransaction>()
-                    .Property(o => o.Blob2)
-                    .HasColumnType("JSONB"); 
-                builder.Entity<PendingTransaction>()
-                    .Property(o => o.OutpointsUsed)
-                    .HasColumnType("text[]");
-            }
-            else
-            {
-                builder.Entity<PendingTransaction>()
-                    .Property(e => e.OutpointsUsed)
-                    .HasConversion(
-                        v => string.Join(',', v),
-                        v => v.Split(',', StringSplitOptions.RemoveEmptyEntries));
-            }
+            builder.Entity<PendingTransaction>()
+                .Property(o => o.Blob2)
+                .HasColumnType("JSONB"); 
+            builder.Entity<PendingTransaction>()
+                .Property(o => o.OutpointsUsed)
+                .HasColumnType("text[]");
         }
     }
     public enum PendingTransactionState

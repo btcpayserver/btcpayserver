@@ -28,7 +28,7 @@ namespace BTCPayServer.Controllers
         public async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
-            CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
+            CreatePSBTRequest psbtRequest = new();
             if (sendModel.InputSelection)
             {
                 psbtRequest.IncludeOnlyOutpoints = sendModel.SelectedInputs?.Select(OutPoint.Parse)?.ToList() ?? new List<OutPoint>();
@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers
                 psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
             }
             psbtRequest.RBF = network.SupportRBF ? true : null;
-            psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO;
+            psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO || derivationSettings.ForceNonWitnessUtxo;
 
             psbtRequest.FeePreference = new FeePreference();
             if (sendModel.FeeSatoshiPerByte is decimal v &&
@@ -291,7 +291,7 @@ namespace BTCPayServer.Controllers
                     });
 
                 case "broadcast":
-                    return await RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
+                    return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
                     {
                         SigningContext = new SigningContextModel(psbt),
                         ReturnUrl = vm.ReturnUrl,

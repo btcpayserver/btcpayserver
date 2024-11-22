@@ -310,6 +310,9 @@ namespace BTCPayServer.Controllers
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
+            
+            model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
+            
             model.Labels.AddRange(
                 (await WalletRepository.GetWalletLabels(walletId))
                 .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));

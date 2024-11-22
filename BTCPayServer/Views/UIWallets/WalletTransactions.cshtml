@@ -4,9 +4,6 @@
 @using BTCPayServer.Components.WalletNav
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Html
-@using BTCPayServer.Services.Wallets
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model ListTransactionsViewModel
 
@@ -176,12 +173,7 @@
 </div>
 <div style="clear:both"></div>
 
-@inject PendingTransactionService PendingTransactionService
-@{
-    var wId = WalletId.Parse(walletId);
-    var pendingTransactions = await PendingTransactionService.GetPendingTransactions(wId.CryptoCode, wId.StoreId);
-}
-@if (pendingTransactions.Any())
+@if (Model.PendingTransactions?.Any() == true)
 {
     <div class="table-responsive-md">
         <table class="table table-hover ">
@@ -200,7 +192,7 @@
                 Actions
             </th>
             </thead>
-            @foreach (var pendingTransaction in pendingTransactions)
+            @foreach (var pendingTransaction in Model.PendingTransactions)
             {
                 <tr>
                     <td>

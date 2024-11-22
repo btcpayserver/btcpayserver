@@ -36,8 +36,8 @@ namespace BTCPayServer.Models.StoreViewModels
         
         // some hardware devices like Jade require sending full input transactions if there are multiple inputs
         // https://github.com/Blockstream/Jade/blob/0d6ce77bf23ef2b5dc43cdae3967b4207e8cad52/main/process/sign_tx.c#L586
-        [Display(Name = "Force NonWitness Utxo in PSBTs")]
-        public bool ForceNonWitnessUtxo { get; set; }
+        [Display(Name = "Default Include NonWitness Utxo in PSBTs")]
+        public bool DefaultIncludeNonWitnessUtxo { get; set; }
         #endregion
     }
 

@@ -1,11 +1,14 @@
 ﻿using System;
+using BTCPayServer.Data;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace BTCPayServer.Migrations
 {
-    /// <inheritdoc />
+    [DbContext(typeof(ApplicationDbContext))]
+    [Migration("20241029163147_AddingPendingTransactionsTable")]
     public partial class AddingPendingTransactionsTable : Migration
     {
         /// <inheritdoc />

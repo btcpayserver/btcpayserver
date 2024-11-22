@@ -350,21 +350,25 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.Name = request.Name;
             blob.ImageUrl = request.ImageUrl;
             user.SetBlob(blob);
-            var passwordValidation = await this._passwordValidator.ValidateAsync(_userManager, user, request.Password);
-            if (!passwordValidation.Succeeded)
+            var hasPassword = !string.IsNullOrEmpty(request.Password);
+            if (hasPassword)
             {
-                foreach (var error in passwordValidation.Errors)
+                var passwordValidation = await _passwordValidator.ValidateAsync(_userManager, user, request.Password);
+                if (!passwordValidation.Succeeded)
                 {
-                    ModelState.AddModelError(nameof(request.Password), error.Description);
+                    foreach (var error in passwordValidation.Errors)
+                    {
+                        ModelState.AddModelError(nameof(request.Password), error.Description);
+                    }
+                    return this.CreateValidationError(ModelState);
                 }
-                return this.CreateValidationError(ModelState);
             }
             if (!isAdmin)
             {
                 if (!await _throttleService.Throttle(ZoneLimits.Register, this.HttpContext.Connection.RemoteIpAddress, cancellationToken))
                     return new TooManyRequestsResult(ZoneLimits.Register);
             }
-            var identityResult = await _userManager.CreateAsync(user, request.Password);
+            var identityResult = hasPassword ? await _userManager.CreateAsync(user, request.Password) : await _userManager.CreateAsync(user);
             if (!identityResult.Succeeded)
             {
                 foreach (var error in identityResult.Errors)

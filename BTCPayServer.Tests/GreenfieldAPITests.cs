@@ -999,7 +999,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("ServerAdmin", admin.Roles);
             Assert.NotNull(admin.Created);
             Assert.True((DateTimeOffset.Now - admin.Created).Value.Seconds < 10);
-
+            
             // Creating a new user without proper creds is now impossible (unauthorized) 
             // Because if registration are locked and that an admin exists, we don't accept unauthenticated connection
             var ex = await AssertAPIError("unauthenticated",
@@ -1051,7 +1051,14 @@ namespace BTCPayServer.Tests
                 Password = "afewfoiewiou",
                 IsAdministrator = true
             });
+            
+            // Create user without password
+            await adminClient.CreateUser(new CreateApplicationUserRequest
+            {
+                Email = "nopassword@gmail.com"
+            });
 
+            // Regular user
             var user1Acc = tester.NewAccount();
             user1Acc.UserId = user1.Id;
             user1Acc.IsAdmin = false;

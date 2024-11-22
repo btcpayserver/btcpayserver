@@ -147,19 +147,4 @@ namespace BTCPayServer
             return AccountKeyPath != null && RootFingerprint is HDFingerprint;
         }
     }
-
-
-    public class DerivationSchemeSettingsFactory
-    {
-        public DerivationSchemeSettings Create(string label, bool isMultiSigOnServer, bool forceNonWitnessUtxo, 
-            DerivationStrategyBase derivationStrategy, BTCPayNetwork network)
-        {
-            return new DerivationSchemeSettings(derivationStrategy, network)
-            {
-                Label = label,
-                IsMultiSigOnServer = isMultiSigOnServer,
-                ForceNonWitnessUtxo = forceNonWitnessUtxo
-            };
-        }
-    }
 }

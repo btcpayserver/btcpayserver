@@ -4175,6 +4175,11 @@ namespace BTCPayServer.Tests
             Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
             Assert.True((await unapprovedUserApiKeyClient.GetCurrentUser()).Approved);
             Assert.True((await unapprovedUserBasicAuthClient.GetCurrentUser()).Approved);
+            var err = await AssertAPIError("invalid-state", async () =>
+            {
+                await adminClient.ApproveUser(unapprovedUser.UserId, true, CancellationToken.None);
+            });
+            Assert.Equal("User is already approved", err.APIError.Message);
 
             // un-approve
             Assert.True(await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None));
@@ -4187,6 +4192,11 @@ namespace BTCPayServer.Tests
             {
                 await unapprovedUserBasicAuthClient.GetCurrentUser();
             });
+            err = await AssertAPIError("invalid-state", async () =>
+            {
+                await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None);
+            });
+            Assert.Equal("User is already unapproved", err.APIError.Message);
 
             // reset policies to not require approval
             await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = false });
@@ -4203,10 +4213,11 @@ namespace BTCPayServer.Tests
             Assert.Single(await adminClient.GetNotifications(false));
 
             // try unapproving user which does not have the RequiresApproval flag
-            await AssertAPIError("invalid-state", async () =>
+            err = await AssertAPIError("invalid-state", async () =>
             {
                 await adminClient.ApproveUser(newUser.UserId, false, CancellationToken.None);
             });
+            Assert.Equal("Unapproving user failed: No approval required", err.APIError.Message);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

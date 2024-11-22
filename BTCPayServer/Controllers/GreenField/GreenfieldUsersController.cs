@@ -112,14 +112,13 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.UserNotFound();
             }
 
-            var success = false;
             if (user.RequiresApproval)
             {
-                success = await _userService.SetUserApproval(user.Id, request.Approved, Request.GetAbsoluteRootUri());
+                return await _userService.SetUserApproval(user.Id, request.Approved, Request.GetAbsoluteRootUri())
+                    ? Ok()
+                    : this.CreateAPIError("invalid-state", $"User is already {(request.Approved ? "approved" : "unapproved")}");
             }
-
-            return success ? Ok() : this.CreateAPIError("invalid-state",
-                $"{(request.Approved ? "Approving" : "Unapproving")} user failed");
+            return this.CreateAPIError("invalid-state", $"{(request.Approved ? "Approving" : "Unapproving")} user failed: No approval required");
         }
 
         [Authorize(Policy = Policies.CanViewUsers, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]

@@ -41,31 +41,28 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> RemoveStoreUser(string storeId, string idOrEmail)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return StoreNotFound();
-            }
+            if (store == null) return StoreNotFound();
 
-            var userId = await _userManager.FindByIdOrEmail(idOrEmail);
-            if (userId != null && await _storeRepository.RemoveStoreUser(storeId, idOrEmail))
-            {
-                return Ok();
-            }
-
-            return this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
+            var user = await _userManager.FindByIdOrEmail(idOrEmail);
+            if (user == null) return UserNotFound();
+            
+            return await _storeRepository.RemoveStoreUser(storeId, user.Id)
+                ? Ok()
+                : this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/users")]
-        public async Task<IActionResult> AddStoreUser(string storeId, StoreUserData request)
+        [HttpPut("~/api/v1/stores/{storeId}/users/{idOrEmail?}")]
+        public async Task<IActionResult> AddOrUpdateStoreUser(string storeId, StoreUserData request, string idOrEmail = null)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return StoreNotFound();
-            }
-            StoreRoleId roleId = null;
+            if (store == null) return StoreNotFound();
 
+            var user = await _userManager.FindByIdOrEmail(idOrEmail ?? request.UserId);
+            if (user == null) return UserNotFound();
+            
+            StoreRoleId roleId = null;
             if (request.Role is not null)
             {
                 roleId = await _storeRepository.ResolveStoreRoleId(storeId, request.Role);
@@ -76,21 +73,27 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            if (await _storeRepository.AddStoreUser(storeId, request.UserId, roleId))
-            {
-                return Ok();
-            }
-
-            return this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
+            var result = string.IsNullOrEmpty(idOrEmail)
+                ? await _storeRepository.AddStoreUser(storeId, user.Id, roleId)
+                : await _storeRepository.AddOrUpdateStoreUser(storeId, user.Id, roleId);
+            return result
+                ? Ok()
+                : this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
         }
 
         private IEnumerable<StoreUserData> FromModel(Data.StoreData data)
         {
             return data.UserStores.Select(store => new StoreUserData() { UserId = store.ApplicationUserId, Role = store.StoreRoleId });
         }
+
         private IActionResult StoreNotFound()
         {
             return this.CreateAPIError(404, "store-not-found", "The store was not found");
+        }
+
+        private IActionResult UserNotFound()
+        {
+            return this.CreateAPIError(404, "user-not-found", "The user was not found");
         }
     }
 }

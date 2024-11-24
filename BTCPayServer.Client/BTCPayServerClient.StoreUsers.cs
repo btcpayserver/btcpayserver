@@ -29,4 +29,10 @@ public partial class BTCPayServerClient
         if (request == null) throw new ArgumentNullException(nameof(request));
         await SendHttpRequest<StoreUserData>($"api/v1/stores/{storeId}/users", request, HttpMethod.Post, token);
     }
+
+    public virtual async Task UpdateStoreUser(string storeId, string userId, StoreUserData request, CancellationToken token = default)
+    {
+        if (request == null) throw new ArgumentNullException(nameof(request));
+        await SendHttpRequest<StoreUserData>($"api/v1/stores/{storeId}/users/{userId}", request, HttpMethod.Put, token);
+    }
 }

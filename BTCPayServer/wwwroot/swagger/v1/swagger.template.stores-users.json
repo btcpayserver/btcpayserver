@@ -175,13 +175,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The user's id or email",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "responses": {

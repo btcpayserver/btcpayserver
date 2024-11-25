@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Security;
 using System.Text;
@@ -11,7 +10,6 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -20,40 +18,28 @@ using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.JsonConverters;
-using BTCPayServer.Lightning;
-using BTCPayServer.Logging;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
-using BTCPayServer.Payments.Lightning;
-using BTCPayServer.Plugins;
-using BTCPayServer.Plugins.Bitcoin;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Labels;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Validation;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitcoin.DataEncoders;
 using NBitcoin.Scripting.Parser;
-using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Newtonsoft.Json.Serialization;
 using Xunit;
 using Xunit.Abstractions;
-using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Tests
 {
@@ -1671,7 +1657,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
             testCases.ForEach(tuple =>
             {
-                Assert.Equal(tuple.expectedOutput, UIInvoiceController.PosDataParser.ParsePosData(string.IsNullOrEmpty(tuple.input) ? null : JToken.Parse(tuple.input)));
+                Assert.Equal(tuple.expectedOutput, PosDataParser.ParsePosData(string.IsNullOrEmpty(tuple.input) ? null : JToken.Parse(tuple.input)));
             });
         }
         [Fact]

@@ -6,7 +6,6 @@ using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Hosting;
 using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Plugins.Crowdfund.Models;
 using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;

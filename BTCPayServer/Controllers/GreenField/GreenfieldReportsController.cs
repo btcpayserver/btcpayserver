@@ -7,13 +7,13 @@ using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Authorization;
-using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Client;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using System.Linq;
 using System.Threading;
+using BTCPayServer.Abstractions.Constants;
 
 namespace BTCPayServer.Controllers.GreenField;
 

@@ -177,7 +177,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             decimal? price;
             Dictionary<string, InvoiceSupportedTransactionCurrency> paymentMethods = null;
             AppItem choice = null;
-            List<PosCartItem> cartItems = null;
+            List<AppCartItem> cartItems = null;
             AppItem[] choices = null;
             if (!string.IsNullOrEmpty(choiceKey))
             {
@@ -361,7 +361,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                     .Where(item => posCartItems.Any(cartItem => cartItem.Id == item.Id))
                                     .ToDictionary(item => item.Id);
                                 var cartData = new JObject();
-                                foreach (PosCartItem cartItem in posCartItems)
+                                foreach (AppCartItem cartItem in posCartItems)
                                 {
                                     if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice)) continue;
                                     var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);

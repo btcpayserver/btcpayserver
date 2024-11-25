@@ -19,7 +19,6 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
@@ -44,7 +43,7 @@ using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.Authentication
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = BTCPayServer.Client.Policies.CanModifyServerSettings,
+    [Authorize(Policy = Client.Policies.CanModifyServerSettings,
                AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public partial class UIServerController : Controller
     {

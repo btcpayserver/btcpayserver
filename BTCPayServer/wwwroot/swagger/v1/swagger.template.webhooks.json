@@ -3,13 +3,7 @@
         "/api/v1/stores/{storeId}/webhooks": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "get": {
@@ -97,22 +91,10 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 }
             ],
             "get": {
@@ -223,22 +205,10 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 }
             ],
             "get": {
@@ -287,31 +257,13 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 },
                 {
-                    "name": "deliveryId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The id of the delivery",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/DeliveryId"
                 }
             ],
             "get": {
@@ -349,31 +301,13 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/request": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 },
                 {
-                    "name": "deliveryId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The id of the delivery",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/DeliveryId"
                 }
             ],
             "get": {
@@ -415,31 +349,13 @@
         "/api/v1/stores/{storeId}/webhooks/{webhookId}/deliveries/{deliveryId}/redeliver": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
-                    "name": "webhookId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The webhook id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/WebhookId"
                 },
                 {
-                    "name": "deliveryId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The id of the delivery",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/DeliveryId"
                 }
             ],
             "post": {
@@ -479,6 +395,26 @@
         }
     },
     "components": {
+        "parameters": {
+            "WebhookId": {
+                "name": "webhookId",
+                "in": "path",
+                "required": true,
+                "description": "The webhook id",
+                "schema": {
+                    "type": "string"
+                }
+            },
+            "DeliveryId": {
+                "name": "deliveryId",
+                "in": "path",
+                "required": true,
+                "description": "The id of the delivery",
+                "schema": {
+                    "type": "string"
+                }
+            }
+        },
         "schemas": {
             "WebhookDeliveryList": {
                 "type": "array",
@@ -495,6 +431,7 @@
                         "nullable": false
                     },
                     "timestamp": {
+                        "type": "number",
                         "nullable": false,
                         "description": "Timestamp of when the delivery got broadcasted",
                         "allOf": [
@@ -685,7 +622,12 @@
                             "storeId": {
                                 "type": "string",
                                 "description": "The store id of the invoice's event",
-                                "nullable": false
+                                "nullable": false,
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/StoreId"
+                                    }
+                                ]
                             },
                             "invoiceId": {
                                 "type": "string",
@@ -785,6 +727,7 @@
                                         "$ref": "#/components/schemas/PaymentMethodId"
                                     }
                                 ],
+                                "type": "string",
                                 "description": "What payment method was used for this payment",
                                 "nullable": false
                             },

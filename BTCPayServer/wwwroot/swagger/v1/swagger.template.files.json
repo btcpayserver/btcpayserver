@@ -202,6 +202,7 @@
                         "nullable": true
                     },
                     "created": {
+                        "type": "number",
                         "nullable": true,
                         "description": "The creation date of the file as a unix timestamp",
                         "allOf": [

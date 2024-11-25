@@ -505,7 +505,7 @@ namespace BTCPayServer.Plugins
                     case { } xx when xx.StartsWith(">"):
                         return installed[plugin] > parsedV;
                     case { } xx when xx.StartsWith("<"):
-                        return installed[plugin] >= parsedV;
+                        return installed[plugin] < parsedV;
                     case { } xx when xx.StartsWith("^"):
                         return installed[plugin] >= parsedV && installed[plugin].Major == parsedV.Major;
                     case { } xx when xx.StartsWith("~"):

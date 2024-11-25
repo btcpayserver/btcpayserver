@@ -8,13 +8,7 @@
                 "summary": "Get store on-chain wallet objects",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -24,7 +18,9 @@
                         "in": "query",
                         "required": false,
                         "description": "The type of object to fetch",
-                        "schema": { "type": "string" },
+                        "schema": {
+                            "type": "string"
+                        },
                         "example": "tx"
                     },
                     {
@@ -34,7 +30,9 @@
                         "description": "The ids of objects to fetch, if used, type should be specified",
                         "schema": {
                             "type": "array",
-                            "items": { "type": "string" }
+                            "items": {
+                                "type": "string"
+                            }
                         },
                         "example": "03abcde..."
                     },
@@ -88,13 +86,7 @@
                 "summary": "Add/Update store on-chain wallet objects",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -148,13 +140,7 @@
                 "summary": "Get store on-chain wallet object",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -226,13 +212,7 @@
                 "summary": "Remove store on-chain wallet objects",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -289,13 +269,7 @@
                 "summary": "Add/Update store on-chain wallet object link",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -362,13 +336,7 @@
                 "summary": "Remove store on-chain wallet object links",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"

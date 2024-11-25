@@ -1,5 +1,17 @@
 {
     "components": {
+        "parameters": {
+            "CryptoCode": {
+                "name": "cryptoCode",
+                "in": "path",
+                "required": true,
+                "description": "The cryptoCode of the lightning-node to query",
+                "schema": {
+                    "type": "string"
+                },
+                "example": "BTC"
+            }
+        },
         "schemas": {
             "ConnectToNodeRequest": {
                 "type": "object",
@@ -33,7 +45,11 @@
                     },
                     "expiry": {
                         "description": "Expiration time in seconds",
-                        "allOf": [ {"$ref": "#/components/schemas/TimeSpanSeconds"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     },
                     "privateRouteHints": {
                         "type": "boolean",
@@ -102,9 +118,14 @@
                         "description": "The payment preimage (available when status is complete)"
                     },
                     "createdAt": {
+                        "type": "number",
                         "description": "The unix timestamp when the payment got created",
                         "nullable": true,
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "totalAmount": {
                         "type": "string",
@@ -133,13 +154,22 @@
                         "nullable": false
                     },
                     "paidAt": {
+                        "type": "number",
                         "description": "The unix timestamp when the invoice got paid",
                         "nullable": true,
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "expiresAt": {
                         "description": "The unix timestamp when the invoice expires",
-                        "allOf": [ {"$ref": "#/components/schemas/UnixTimestamp"}]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "amount": {
                         "type": "string",
@@ -250,6 +280,7 @@
                 "type": "object",
                 "properties": {
                     "onchain": {
+                        "type": "object",
                         "description": "On-chain balance of the Lightning node",
                         "nullable": true,
                         "allOf": [
@@ -259,6 +290,7 @@
                         ]
                     },
                     "offchain": {
+                        "type": "object",
                         "description": "Off-chain balance of the Lightning node",
                         "nullable": true,
                         "allOf": [
@@ -340,6 +372,7 @@
                         "example": "21"
                     },
                     "sendTimeout": {
+                        "type": "number",
                         "nullable": true,
                         "example": 30,
                         "default": 30,

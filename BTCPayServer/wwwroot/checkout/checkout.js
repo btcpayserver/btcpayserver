@@ -92,7 +92,7 @@ function initApp() {
             const srvModel = initialSrvModel;
             return {
                 srvModel,
-                audioContext: new AudioContext(),
+                audioContext: window.AudioContext ? new AudioContext() : null,
                 displayPaymentDetails: false,
                 remainingSeconds: srvModel.expirationSeconds,
                 emailAddressInput: "",
@@ -351,7 +351,7 @@ function initApp() {
             },
             playSound (soundName) {
                 const audioBuffer = this[soundName + 'Sound'];
-                if (!audioBuffer || this.audioContext.state === 'suspended') return;
+                if (!audioBuffer || !this.audioContext || this.audioContext.state === 'suspended') return;
                 const source = this.audioContext.createBufferSource();
                 source.buffer = audioBuffer;
                 source.connect(this.audioContext.destination);
@@ -375,6 +375,7 @@ function initApp() {
                 }
             },
             async prepareSound (url) {
+                if (!this.audioContext) return;
                 const response = await fetch(url)
                 if (!response.ok) return console.error(`Could not load payment sound, HTTP error ${response.status}`);
                 const arrayBuffer = await response.arrayBuffer();

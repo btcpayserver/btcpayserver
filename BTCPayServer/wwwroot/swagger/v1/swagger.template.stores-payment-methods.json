@@ -10,13 +10,7 @@
                 "operationId": "StorePaymentMethods_GetStorePaymentMethods",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "onlyEnabled",
@@ -92,13 +86,7 @@
                 "operationId": "StorePaymentMethods_GetStorePaymentMethod",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "includeConfig",
@@ -163,13 +151,7 @@
                 "operationId": "StorePaymentMethods_UpdateStorePaymentMethod",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -234,13 +216,7 @@
                 "operationId": "StorePaymentMethods_DeleteStorePaymentMethod",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -295,7 +271,7 @@
                 "example": "BTC-CHAIN"
             },
             "PayoutMethodId": {
-                "name": "paymentMethodId",
+                "name": "payoutMethodId",
                 "in": "path",
                 "required": true,
                 "description": "The payout method id",

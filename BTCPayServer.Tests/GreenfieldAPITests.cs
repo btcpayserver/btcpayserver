@@ -999,7 +999,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("ServerAdmin", admin.Roles);
             Assert.NotNull(admin.Created);
             Assert.True((DateTimeOffset.Now - admin.Created).Value.Seconds < 10);
-
+            
             // Creating a new user without proper creds is now impossible (unauthorized) 
             // Because if registration are locked and that an admin exists, we don't accept unauthenticated connection
             var ex = await AssertAPIError("unauthenticated",
@@ -1051,7 +1051,14 @@ namespace BTCPayServer.Tests
                 Password = "afewfoiewiou",
                 IsAdministrator = true
             });
+            
+            // Create user without password
+            await adminClient.CreateUser(new CreateApplicationUserRequest
+            {
+                Email = "nopassword@gmail.com"
+            });
 
+            // Regular user
             var user1Acc = tester.NewAccount();
             user1Acc.UserId = user1.Id;
             user1Acc.IsAdmin = false;
@@ -4168,6 +4175,11 @@ namespace BTCPayServer.Tests
             Assert.True((await adminClient.GetUserByIdOrEmail(unapprovedUser.UserId)).Approved);
             Assert.True((await unapprovedUserApiKeyClient.GetCurrentUser()).Approved);
             Assert.True((await unapprovedUserBasicAuthClient.GetCurrentUser()).Approved);
+            var err = await AssertAPIError("invalid-state", async () =>
+            {
+                await adminClient.ApproveUser(unapprovedUser.UserId, true, CancellationToken.None);
+            });
+            Assert.Equal("User is already approved", err.APIError.Message);
 
             // un-approve
             Assert.True(await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None));
@@ -4180,6 +4192,11 @@ namespace BTCPayServer.Tests
             {
                 await unapprovedUserBasicAuthClient.GetCurrentUser();
             });
+            err = await AssertAPIError("invalid-state", async () =>
+            {
+                await adminClient.ApproveUser(unapprovedUser.UserId, false, CancellationToken.None);
+            });
+            Assert.Equal("User is already unapproved", err.APIError.Message);
 
             // reset policies to not require approval
             await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = false });
@@ -4196,10 +4213,11 @@ namespace BTCPayServer.Tests
             Assert.Single(await adminClient.GetNotifications(false));
 
             // try unapproving user which does not have the RequiresApproval flag
-            await AssertAPIError("invalid-state", async () =>
+            err = await AssertAPIError("invalid-state", async () =>
             {
                 await adminClient.ApproveUser(newUser.UserId, false, CancellationToken.None);
             });
+            Assert.Equal("Unapproving user failed: No approval required", err.APIError.Message);
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

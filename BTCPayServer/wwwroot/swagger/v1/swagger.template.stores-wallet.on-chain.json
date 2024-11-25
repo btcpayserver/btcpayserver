@@ -8,13 +8,7 @@
                 "summary": "Get store on-chain wallet overview",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -58,13 +52,7 @@
                 "summary": "Get store on-chain wallet balance histogram",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -108,13 +96,7 @@
                 "summary": "Get store on-chain wallet fee rate",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -168,13 +150,7 @@
                 "summary": "Get store on-chain wallet address",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -226,13 +202,7 @@
                 "summary": "UnReserve last store on-chain wallet address",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -269,13 +239,7 @@
                 "summary": "Get store on-chain wallet transactions",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -363,13 +327,7 @@
                 "summary": "Create store on-chain wallet transaction",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -431,13 +389,7 @@
                 "summary": "Get store on-chain wallet transaction",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -488,13 +440,7 @@
                 "summary": "Patch store on-chain wallet transaction info",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -566,13 +512,7 @@
                 "summary": "Get store on-chain wallet UTXOS",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -619,13 +559,7 @@
                 "summary": "Generate store on-chain wallet",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -706,13 +640,7 @@
                 "summary": "Preview store on-chain payment method addresses",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "paymentMethodId",
@@ -779,13 +707,7 @@
                 "summary": "Preview proposed store on-chain payment method addresses",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -1119,7 +1041,11 @@
                     },
                     "timestamp": {
                         "description": "The time of the transaction",
-                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "status": {
                         "allOf": [
@@ -1163,7 +1089,11 @@
                     },
                     "timestamp": {
                         "description": "The time of the utxo",
-                        "allOf": [ { "$ref": "#/components/schemas/UnixTimestamp" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/UnixTimestamp"
+                            }
+                        ]
                     },
                     "keyPath": {
                         "type": "string",

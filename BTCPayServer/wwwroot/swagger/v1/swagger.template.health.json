@@ -19,6 +19,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "content": {

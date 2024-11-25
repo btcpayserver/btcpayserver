@@ -101,13 +101,7 @@
                 "summary": "Get store",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the specified store",
@@ -146,13 +140,7 @@
                 "summary": "Update store",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Update the specified store",
@@ -215,13 +203,7 @@
                 "description": "Removes the specified store. If there is another user with access, only your access will be removed.",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to remove",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "responses": {
@@ -262,6 +244,11 @@
                 ],
                 "summary": "Uploads a logo for the store",
                 "description": "Uploads a logo for the store",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
                 "requestBody": {
                     "content": {
                         "multipart/form-data": {
@@ -311,6 +298,11 @@
                 "summary": "Deletes the store logo",
                 "description": "Delete the store's logo",
                 "operationId": "Stores_DeleteStoreLogo",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Store logo deleted successfully"
@@ -337,13 +329,7 @@
                 "summary": "Get store's roles",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the specified store's roles",
@@ -438,6 +424,7 @@
                 "type": "object",
                 "properties": {
                     "paymentMethodId": {
+                        "type": "string",
                         "allOf": [
                             {
                                 "$ref": "#/components/schemas/PaymentMethodId"
@@ -525,21 +512,33 @@
                         "minimum": 60,
                         "maximum": 2073600,
                         "description": "The time after which an invoice is considered expired if not paid. The value will be rounded down to a minute.",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     },
                     "displayExpirationTimer": {
                         "default": 300,
                         "minimum": 60,
                         "maximum": 2073600,
                         "description": "The time left that will trigger the countdown timer on the checkout page to be shown. The value will be rounded down to a minute.",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     },
                     "monitoringExpiration": {
                         "default": 3600,
                         "minimum": 600,
                         "maximum": 2073600,
                         "description": "The time after which an invoice which has been paid but not confirmed will be considered invalid. The value will be rounded down to a minute.",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     },
                     "speedPolicy": {
                         "$ref": "#/components/schemas/SpeedPolicy"
@@ -568,6 +567,7 @@
                         "description": "If true, then no authentication is needed to create invoices on this store."
                     },
                     "receipt": {
+                        "type": "object",
                         "nullable": true,
                         "description": "Additional settings to customize the public receipt",
                         "allOf": [
@@ -658,7 +658,7 @@
                         "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "paymentMethodCriteria": {
-                        "type": "array",
+                        "type": "object",
                         "nullable": true,
                         "items": {
                             "$ref": "#/components/schemas/PaymentMethodCriteriaData"

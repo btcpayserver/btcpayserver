@@ -39,6 +39,7 @@
             }
             else if (Model.ModelWithMinimumData)
             {
+                <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
                 <a class="btn btn-secondary" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@Model.AppId" id="ViewApp" target="_blank" text-translate="true">View</a>
             }
         </div>
@@ -345,7 +346,6 @@
 </form>
 
 <div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
-    <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
     <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.AppId" permission="@Policies.CanModifyStoreSettings">
         <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle">
             @if (Model.Archived)

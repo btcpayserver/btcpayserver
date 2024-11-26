@@ -1,9 +1,6 @@
-#nullable enable
-using BTCPayServer.Data;
-
 namespace BTCPayServer.Events;
 
-public class StoreRemovedEvent(StoreData store, string? detail = null) : StoreEvent(store, detail)
+public class UserStoreRemovedEvent(string storeId, string userId) : UserStoreEvent(storeId, userId)
 {
     protected override string ToString()
     {

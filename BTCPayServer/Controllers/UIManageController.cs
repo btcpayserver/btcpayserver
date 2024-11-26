@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Fido2;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.Greenfield;
@@ -41,6 +41,7 @@ namespace BTCPayServer.Controllers
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
         private readonly IFileService _fileService;
+        private readonly EventAggregator _eventAggregator;
         readonly StoreRepository _StoreRepository;
         public IStringLocalizer StringLocalizer { get; }
 
@@ -60,8 +61,8 @@ namespace BTCPayServer.Controllers
           UriResolver uriResolver,
           IFileService fileService,
           IStringLocalizer stringLocalizer,
-          IHtmlHelper htmlHelper
-          )
+          IHtmlHelper htmlHelper,
+          EventAggregator eventAggregator)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -74,6 +75,7 @@ namespace BTCPayServer.Controllers
             _fido2Service = fido2Service;
             _linkGenerator = linkGenerator;
             Html = htmlHelper;
+            _eventAggregator = eventAggregator;
             _userService = userService;
             _uriResolver = uriResolver;
             _fileService = fileService;
@@ -189,9 +191,9 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            if (needUpdate is true)
+            if (needUpdate && await _userManager.UpdateAsync(user) is { Succeeded: true })
             {
-                needUpdate = await _userManager.UpdateAsync(user) is { Succeeded: true };
+                _eventAggregator.Publish(new UserUpdatedEvent(user));
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your profile has been updated"].Value;
             }
             else
@@ -320,7 +322,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(SetPassword));
         }
 
-        [HttpPost()]
+        [HttpPost]
         public async Task<IActionResult> DeleteUserPost()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -330,11 +332,11 @@ namespace BTCPayServer.Controllers
             }
 
             await _userService.DeleteUserAndAssociatedData(user);
+            _eventAggregator.Publish(new UserDeletedEvent(user));
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account successfully deleted."].Value;
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(UIAccountController.Login), "UIAccount");
         }
-
 
         #region Helpers
 

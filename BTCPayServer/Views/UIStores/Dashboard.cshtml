@@ -109,6 +109,7 @@ else
         </div>
         @if (Model.Network is BTCPayNetwork)
         {
+
             @if (!Model.WalletEnabled)
             {
                 <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" id="SetupGuide-Wallet" class="list-group-item list-group-item-action d-flex align-items-center order-1">
@@ -153,4 +154,3 @@ else
         }
     </div>
 }
-

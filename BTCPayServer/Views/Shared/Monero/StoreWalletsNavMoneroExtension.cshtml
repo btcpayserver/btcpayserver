@@ -1,7 +1,6 @@
 @using BTCPayServer.Services.Altcoins.Monero.Configuration
 @using BTCPayServer.Services.Altcoins.Monero.UI
 @using BTCPayServer.Abstractions.Contracts
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject SignInManager<ApplicationUser> SignInManager;
 @inject MoneroLikeConfiguration MoneroLikeConfiguration;
 @inject IScopeProvider ScopeProvider
@@ -17,7 +16,7 @@
 
     foreach (var item in result.Items)
     {
-        
+
         var isActive = !string.IsNullOrEmpty(storeId) && ViewContext.RouteData.Values.TryGetValue("Controller", out var controller) && controller is not null &&
                        nameof(UIMoneroLikeStoreController).StartsWith(controller.ToString() ?? string.Empty, StringComparison.InvariantCultureIgnoreCase) &&
                        ViewContext.RouteData.Values.TryGetValue("cryptoCode", out var cryptoCode) && cryptoCode is not null && cryptoCode.ToString() == item.CryptoCode;

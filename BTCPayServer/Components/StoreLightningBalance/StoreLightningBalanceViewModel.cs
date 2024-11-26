@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
 using BTCPayServer.Services.Rates;
-using BTCPayServer.Services.Wallets;
 using NBitcoin;
 
 namespace BTCPayServer.Components.StoreLightningBalance;

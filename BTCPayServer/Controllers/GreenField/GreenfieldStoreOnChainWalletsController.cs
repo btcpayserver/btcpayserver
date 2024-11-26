@@ -99,13 +99,14 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet")]
         public async Task<IActionResult> ShowOnChainWalletOverview(string storeId, string paymentMethodId)
         {
-            if (IsInvalidWalletRequest(paymentMethodId, out var network, out var derivationScheme, out var actionResult))
+            if (IsInvalidWalletRequest(paymentMethodId, out var network,
+                    out var derivationScheme, out var actionResult))
                 return actionResult;
 
             var wallet = _btcPayWalletProvider.GetWallet(network);
             var balance = await wallet.GetBalance(derivationScheme.AccountDerivation);
 
-            return Ok(new OnChainWalletOverviewData
+            return Ok(new OnChainWalletOverviewData()
             {
                 Label = derivationScheme.ToPrettyString(),
                 Balance = balance.Total.GetValue(network),
@@ -134,7 +135,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Labels = data.Labels
             });
         }
-        
+
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate")]
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string paymentMethodId, int? blockTarget = null)
@@ -572,7 +573,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     WellknownMetadataKeys.MasterHDKey);
             if (!derivationScheme.IsHotWallet || signingKeyStr is null)
             {
-                var reason = !derivationScheme.IsHotWallet ? 
+                var reason = !derivationScheme.IsHotWallet ?
                     "You cannot send from a cold wallet" :
                     "NBXplorer doesn't have the seed of the wallet";
 

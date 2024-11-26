@@ -1,7 +1,3 @@
-@using BTCPayServer.Controllers
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Components.UIExtensionPoint
-@using BTCPayServer.Components.QRCode
 @model LightningNodeViewModel
 @{
     Layout = "_LayoutWalletSetup.cshtml";
@@ -33,13 +29,13 @@
     <div id="LightningNodeTypeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-3" role="tablist">
         <input asp-for="LightningNodeType" value="@LightningNodeType.Internal" type="radio" id="LightningNodeType-@LightningNodeType.Internal" data-bs-toggle="pill" data-bs-target="#InternalSetup" role="tab" aria-controls="InternalSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Internal ? "true" : "false")" class="@(Model.LightningNodeType == LightningNodeType.Internal ? "active" : "")" disabled="@(!Model.CanUseInternalNode)">
         <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Internal}")" text-translate="true">Use internal node</label>
-        
+
         <input asp-for="LightningNodeType" value="@LightningNodeType.Custom" type="radio" id="LightningNodeType-@LightningNodeType.Custom" data-bs-toggle="pill" data-bs-target="#CustomSetup" role="tab" aria-controls="CustomSetup" aria-selected="@(Model.LightningNodeType == LightningNodeType.Custom ? "true" : "false")" class="@(Model.LightningNodeType == LightningNodeType.Custom ? "active" : "")">
         <label asp-for="LightningNodeType" for="@($"LightningNodeType-{LightningNodeType.Custom}")" text-translate="true">Use custom node</label>
 
         <vc:ui-extension-point location="ln-payment-method-setup-tabhead" model="@Model"/>
     </div>
-    
+
     <div id="LightningNodeTypeTabs" class="tab-content text-start">
         <div id="InternalSetup" class="pt-3 tab-pane fade @(Model.LightningNodeType == LightningNodeType.Internal ? "show active" : "")" role="tabpanel" aria-labelledby="LightningNodeType-@LightningNodeType.Internal">
             @if (Model.CanUseInternalNode)

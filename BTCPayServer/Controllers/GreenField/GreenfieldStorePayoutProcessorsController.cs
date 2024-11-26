@@ -5,7 +5,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
-using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Authorization;

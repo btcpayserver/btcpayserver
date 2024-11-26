@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -7,11 +6,9 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.OnChain;
 using BTCPayServer.Payouts;
-using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;

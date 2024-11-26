@@ -1,15 +1,10 @@
-using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Events;
-using BTCPayServer.HostedServices;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
@@ -20,12 +15,8 @@ using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using NBitcoin;
 using NBXplorer.DerivationStrategy;
-using NBXplorer.Models;
 using Newtonsoft.Json.Linq;
-using Org.BouncyCastle.Asn1.X509.Qualified;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield

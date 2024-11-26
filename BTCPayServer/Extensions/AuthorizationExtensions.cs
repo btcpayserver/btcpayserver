@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Security;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Security;
 using BTCPayServer.Security.Greenfield;

@@ -8,7 +8,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Abstractions.Security;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;

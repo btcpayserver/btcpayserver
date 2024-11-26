@@ -3,7 +3,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Abstractions.Security;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;

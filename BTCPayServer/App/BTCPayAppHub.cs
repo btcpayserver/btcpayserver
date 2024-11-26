@@ -4,7 +4,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Security;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client.App;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;

@@ -11,7 +11,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using AuthenticationSchemes = BTCPayServer.Abstractions.Security.AuthenticationSchemes;
+using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 
 namespace BTCPayServer.Controllers.Greenfield

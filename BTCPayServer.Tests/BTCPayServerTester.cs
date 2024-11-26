@@ -7,7 +7,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Security;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Security;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;

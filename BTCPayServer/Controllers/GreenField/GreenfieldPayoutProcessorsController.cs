@@ -1,7 +1,7 @@
 #nullable enable
 using System.Collections.Generic;
 using System.Linq;
-using BTCPayServer.Abstractions.Security;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.PayoutProcessors;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;

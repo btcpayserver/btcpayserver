@@ -2,19 +2,16 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
-using BTCPayServer.Migrations;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
-using static BTCPayServer.Services.Stores.StoreRepository;
 
 namespace BTCPayServer.Services.Stores
 {
@@ -301,6 +298,7 @@ namespace BTCPayServer.Services.Stores
             try
             {
                 await ctx.SaveChangesAsync();
+                _eventAggregator.Publish(new UserStoreAddedEvent(storeId, userId));
                 return true;
             }
             catch (DbUpdateException)
@@ -316,10 +314,12 @@ namespace BTCPayServer.Services.Stores
             roleId ??= await GetDefaultRole();
             await using var ctx = _ContextFactory.CreateContext();
             var userStore = await ctx.UserStore.FindAsync(userId, storeId);
+            var added = false;
             if (userStore is null)
             {
                 userStore = new UserStore { StoreDataId = storeId, ApplicationUserId = userId };
                 ctx.UserStore.Add(userStore);
+                added = true;
             }
 
             if (userStore.StoreRoleId == roleId.Id)
@@ -329,6 +329,10 @@ namespace BTCPayServer.Services.Stores
             try
             {
                 await ctx.SaveChangesAsync();
+                UserStoreEvent evt = added
+                    ? new UserStoreAddedEvent(storeId, userId, userStore.StoreRoleId)
+                    : new UserStoreUpdatedEvent(storeId, userId, userStore.StoreRoleId);
+                _eventAggregator.Publish(evt);
                 return true;
             }
             catch (DbUpdateException)
@@ -346,14 +350,14 @@ namespace BTCPayServer.Services.Stores
         public async Task CleanUnreachableStores()
         {
             await using var ctx = _ContextFactory.CreateContext();
-            var events = new List<Events.StoreRemovedEvent>();
+            var events = new List<StoreRemovedEvent>();
             foreach (var store in await ctx.Stores.Include(data => data.UserStores)
                          .ThenInclude(store => store.StoreRole).Where(s =>
                              s.UserStores.All(u => !u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)))
                          .ToArrayAsync())
             {
                 ctx.Stores.Remove(store);
-                events.Add(new Events.StoreRemovedEvent(store.Id));
+                events.Add(new StoreRemovedEvent(store));
             }
             await ctx.SaveChangesAsync();
             events.ForEach(e => _eventAggregator.Publish(e));
@@ -370,8 +374,8 @@ namespace BTCPayServer.Services.Stores
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
             await ctx.SaveChangesAsync();
+            _eventAggregator.Publish(new UserStoreRemovedEvent(storeId, userId));
             return true;
-
         }
 
         private async Task DeleteStoreIfOrphan(string storeId)
@@ -384,7 +388,7 @@ namespace BTCPayServer.Services.Stores
                 {
                     ctx.Stores.Remove(store);
                     await ctx.SaveChangesAsync();
-                    _eventAggregator.Publish(new StoreRemovedEvent(store.Id));
+                    _eventAggregator.Publish(new StoreRemovedEvent(store));
                 }
             }
         }
@@ -410,6 +414,8 @@ namespace BTCPayServer.Services.Stores
             ctx.Add(storeData);
             ctx.Add(userStore);
             await ctx.SaveChangesAsync();
+            _eventAggregator.Publish(new UserStoreAddedEvent(storeData.Id, userStore.ApplicationUserId));
+            _eventAggregator.Publish(new StoreCreatedEvent(storeData));
         }
 
         public async Task<WebhookData[]> GetWebhooks(string storeId)
@@ -558,6 +564,7 @@ namespace BTCPayServer.Services.Stores
             {
                 ctx.Entry(existing).CurrentValues.SetValues(store);
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
+                _eventAggregator.Publish(new StoreUpdatedEvent(store));
             }
         }
 
@@ -579,6 +586,8 @@ retry:
             try
             {
                 await ctx.SaveChangesAsync();
+                if (store != null)
+                    _eventAggregator.Publish(new StoreRemovedEvent(store));
             }
             catch (DbUpdateException ex) when (IsDeadlock(ex) && retry < 5)
             {

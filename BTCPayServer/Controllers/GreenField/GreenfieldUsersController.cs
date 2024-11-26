@@ -219,6 +219,10 @@ namespace BTCPayServer.Controllers.Greenfield
                             ModelState.AddModelError(string.Empty, error.Description);
                     }
                 }
+                else
+                {
+                    _eventAggregator.Publish(new UserUpdatedEvent(user));
+                }
             }
 
             if (!ModelState.IsValid)
@@ -255,7 +259,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 blob.ImageUrl = fileIdUri.ToString();
                 user.SetBlob(blob);
                 await _userManager.UpdateAsync(user);
-
+                _eventAggregator.Publish(new UserUpdatedEvent(user));
                 var model = await FromModel(user);
                 return Ok(model);
             }
@@ -280,6 +284,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 blob.ImageUrl = null;
                 user.SetBlob(blob);
                 await _userManager.UpdateAsync(user);
+                _eventAggregator.Publish(new UserUpdatedEvent(user));
             }
             return Ok();
         }
@@ -444,6 +449,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             // Ok, this user is an admin but there are other admins as well so safe to delete
             await _userService.DeleteUserAndAssociatedData(user);
+            _eventAggregator.Publish(new UserDeletedEvent(user));
 
             return Ok();
         }

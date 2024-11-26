@@ -32,14 +32,14 @@
     <div class="sticky-header">
         <h2 text-translate="true">@ViewData["Title"]</h2>
         <div>
-			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
 			@if (Model.Archived)
             {
                 <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true">Unarchive</button>
             }
             else if (Model.ModelWithMinimumData)
             {
-                <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
                 <a class="btn btn-secondary" asp-controller="UICrowdfund" asp-action="ViewCrowdfund" asp-route-appId="@Model.AppId" id="ViewApp" target="_blank" text-translate="true">View</a>
             }
         </div>

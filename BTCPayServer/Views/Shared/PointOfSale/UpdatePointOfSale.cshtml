@@ -32,13 +32,13 @@
         <h2 text-translate="true">@ViewData["Title"]</h2>
         <div>
             <button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
             @if (Model.Archived)
             {
                 <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true">Unarchive</button>
             }
             else
             {
-                <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
                 <div class="btn-group" role="group" aria-label="View Point of Sale">
                     <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank" text-translate="true">View</a>
                     <button type="button" class="btn btn-secondary px-3 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#OpenPosModal">

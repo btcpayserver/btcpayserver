@@ -24,6 +24,7 @@ using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBitcoin.Protocol;
 using NBXplorer;
+using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 
@@ -338,19 +339,27 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable?.Dispose();
         return Task.CompletedTask;
     }
+    
+    private async Task<bool> IsTracked(TrackedSource trackedSource)
+    {
+       
+      
+        return true;
+    }
 
     public async Task<AppHandshakeResponse> Handshake(string contextConnectionId, AppHandshake handshake)
     {
+        var ack = new List<string>();
         foreach (var ts in handshake.Identifiers)
         {
             try
             {
-                if (TrackedSource.TryParse(ts, out var trackedSource, ExplorerClient.Network))
+                if (TrackedSource.TryParse(ts, out var trackedSource, ExplorerClient.Network) && await IsTracked(trackedSource))
                 {
-                    ExplorerClient.Track(trackedSource);
+                    ack.Add(ts);
+                    await AddToGroup(ts, contextConnectionId);
                 }
 
-                await AddToGroup(ts, contextConnectionId);
             }
             catch (Exception e)
             {
@@ -359,9 +368,7 @@ public class BTCPayAppState : IHostedService
             }
         }
 
-        //TODO: Check if the provided identifiers are already tracked on the server
-        //TODO: Maybe also introduce a checkpoint to make sure nothing is missed, but this may be somethign to handle alongside VSS
-        return new AppHandshakeResponse() {IdentifiersAcknowledged = handshake.Identifiers};
+        return new AppHandshakeResponse() {IdentifiersAcknowledged = ack.ToArray()};
     }
 
     public async Task<Dictionary<string, string>> Pair(string contextConnectionId, PairRequest request)

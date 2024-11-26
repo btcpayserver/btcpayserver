@@ -285,9 +285,10 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         return resultPsbt.ToHex();
     }
 
-    public async Task<CoinResponse[]> GetUTXOs(string[] identifiers)
+    public async Task<Dictionary<string, CoinResponse[]>> GetUTXOs(string[] identifiers)
     {
-        var result = new List<CoinResponse>();
+
+        var result = new Dictionary<string, CoinResponse[]>();
         foreach (string identifier in identifiers)
         {
             var ts = TrackedSource.Parse(identifier,_explorerClient.Network);
@@ -296,17 +297,18 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
                 continue;
             }
             var utxos = await _explorerClient.GetUTXOsAsync(ts);
-            result.AddRange(utxos.GetUnspentUTXOs(0).Select(utxo => new CoinResponse()
+            result.Add(identifier, utxos.GetUnspentUTXOs(0).Select(utxo => new CoinResponse()
             {
-                Identifier = identifier,
                 Confirmed = utxo.Confirmations >0,
                 Script = utxo.ScriptPubKey.ToHex(),
                 Outpoint = utxo.Outpoint.ToString(),
                 Value = utxo.Value.GetValue(_network),
                 Path = utxo.KeyPath?.ToString()
-            }));
+            }).ToArray());
+            
         }
-        return result.ToArray();
+
+        return result;
     }
 
     public async Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers)

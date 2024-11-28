@@ -103,34 +103,34 @@ public class BTCPayAppLightningClient : ILightningClient
     public async Task<ILightningInvoiceListener> Listen(CancellationToken cancellation = new CancellationToken())
     {
         await HubClient.StartListen(_key);
-        return new Listener(_appState, _key);
+        return new Listener(_appState, _user);
     }
 
     public class Listener : ILightningInvoiceListener
     {
         private readonly BTCPayAppState _btcPayAppState;
-        private readonly string _key;
+        private readonly string _userId;
         private readonly Channel<LightningInvoice> _channel = Channel.CreateUnbounded<LightningInvoice>();
         private readonly CancellationTokenSource _cts;
 
-        public Listener(BTCPayAppState btcPayAppState, string key)
+        public Listener(BTCPayAppState btcPayAppState, string userId)
         {
             _btcPayAppState = btcPayAppState;
+            _userId = userId;
             btcPayAppState.MasterUserDisconnected += MasterUserDisconnected;
-            _key = key;
             _cts = new CancellationTokenSource();
             _btcPayAppState.OnInvoiceUpdate += BtcPayAppStateOnOnInvoiceUpdate;
         }
 
         private void MasterUserDisconnected(object sender, string e)
         {
-            if (e == _key)
+            if (e == _userId)
                 _channel.Writer.Complete();
         }
 
         private void BtcPayAppStateOnOnInvoiceUpdate(object sender, (string, LightningInvoice) e)
         {
-            if (e.Item1.Equals(_key, StringComparison.InvariantCultureIgnoreCase))
+            if (e.Item1.Equals(_userId, StringComparison.InvariantCultureIgnoreCase))
                 _channel.Writer.TryWrite(e.Item2);
         }
 
@@ -144,6 +144,7 @@ public class BTCPayAppLightningClient : ILightningClient
 
         public async Task<LightningInvoice> WaitInvoice(CancellationToken cancellation)
         {
+            
             return await _channel.Reader.ReadAsync(CancellationTokenSource
                 .CreateLinkedTokenSource(cancellation, _cts.Token).Token);
         }

@@ -43,6 +43,10 @@ namespace BTCPayServer.Services.Apps
         private readonly DisplayFormatter _displayFormatter;
         private readonly StoreRepository _storeRepository;
         public CurrencyNameTable Currencies => _Currencies;
+        private readonly string[] _paidStatuses = [
+            InvoiceStatus.Processing.ToString(),
+            InvoiceStatus.Settled.ToString()
+        ];
 
         public AppService(
             IEnumerable<AppBaseType> apps,
@@ -86,11 +90,7 @@ namespace BTCPayServer.Services.Apps
         {
             if (GetAppType(appData.AppType) is not IHasItemStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
-            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData, null,
-            [
-                InvoiceStatus.Processing.ToString(),
-                InvoiceStatus.Settled.ToString()
-            ]);
+            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData, null, _paidStatuses);
             return await salesType.GetItemStats(appData, paidInvoices);
         }
 
@@ -132,8 +132,7 @@ namespace BTCPayServer.Services.Apps
         {
             if (GetAppType(app.AppType) is not IHasSaleStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
-            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays));
-
+            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays), _paidStatuses);
             return await salesType.GetSalesStats(app, paidInvoices, numberOfDays);
         }
 

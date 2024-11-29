@@ -985,11 +985,10 @@ namespace BTCPayServer.Controllers.Greenfield
             return GetFromActionResult(await GetController<GreenfieldUsersController>().GetUsers());
         }
 
-        public override Task<IEnumerable<StoreUserData>> GetStoreUsers(string storeId,
+        public override async Task<IEnumerable<StoreUserData>> GetStoreUsers(string storeId,
             CancellationToken token = default)
         {
-            return Task.FromResult(
-                GetFromActionResult<IEnumerable<StoreUserData>>(GetController<GreenfieldStoreUsersController>().GetStoreUsers()));
+            return GetFromActionResult<IEnumerable<StoreUserData>>(await GetController<GreenfieldStoreUsersController>().GetStoreUsers());
         }
 
         public override async Task AddStoreUser(string storeId, StoreUserData request,

@@ -3985,7 +3985,12 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
 
-            var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
+            var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings, Policies.CanModifyProfile);
+            await client.UpdateCurrentUser(new UpdateApplicationUserRequest
+            {
+                Name = "The Admin",
+                ImageUrl = "avatar.jpg"
+            });
 
             var roles = await client.GetServerRoles();
             Assert.Equal(4, roles.Count);
@@ -3999,6 +4004,9 @@ namespace BTCPayServer.Tests
             var storeUser = Assert.Single(users);
             Assert.Equal(user.UserId, storeUser.UserId);
             Assert.Equal(ownerRole.Id, storeUser.Role);
+            Assert.Equal(user.Email, storeUser.Email);
+            Assert.Equal("The Admin", storeUser.Name);
+            Assert.Equal("avatar.jpg", storeUser.ImageUrl);
             var manager = tester.NewAccount();
             await manager.GrantAccessAsync();
             var employee = tester.NewAccount();

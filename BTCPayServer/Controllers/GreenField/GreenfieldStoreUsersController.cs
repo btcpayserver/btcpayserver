@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -30,10 +31,10 @@ namespace BTCPayServer.Controllers.Greenfield
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/users")]
-        public IActionResult GetStoreUsers()
+        public async Task<IActionResult> GetStoreUsers()
         {
             var store = HttpContext.GetStoreData();
-            return store == null ? StoreNotFound() : Ok(FromModel(store));
+            return store == null ? StoreNotFound() : Ok(await FromModel(store));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -81,9 +82,24 @@ namespace BTCPayServer.Controllers.Greenfield
                 : this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
         }
 
-        private IEnumerable<StoreUserData> FromModel(Data.StoreData data)
+        private async Task<IEnumerable<StoreUserData>> FromModel(StoreData data)
         {
-            return data.UserStores.Select(store => new StoreUserData() { UserId = store.ApplicationUserId, Role = store.StoreRoleId });
+            var storeUsers = new List<StoreUserData>();
+            foreach (var storeUser in data.UserStores)
+            {
+                var user = await _userManager.FindByIdOrEmail(storeUser.ApplicationUserId);
+                var blob = user?.GetBlob();
+                storeUsers.Add(new StoreUserData
+                {
+                    UserId = storeUser.ApplicationUserId,
+                    Role = storeUser.StoreRoleId,
+                    Email = user?.Email,
+                    Name = blob?.Name,
+                    ImageUrl = blob?.ImageUrl,
+
+                });
+            }
+            return storeUsers;
         }
 
         private IActionResult StoreNotFound()

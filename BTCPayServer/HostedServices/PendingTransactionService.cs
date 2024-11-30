@@ -28,26 +28,28 @@ public class PendingTransactionService(
     
     public Task Do(CancellationToken cancellationToken)
     {
-        return CheckForExpiry(cancellationToken);
+        PushEvent(new CheckForExpiryEvent());
+        return Task.CompletedTask;
     }
 
-    private async Task CheckForExpiry(CancellationToken cancellationToken)
-    {
-        await using var ctx = dbContextFactory.CreateContext();
-        var pendingTransactions = await ctx.PendingTransactions
-            .Where(p => p.Expiry <= DateTimeOffset.UtcNow && p.State == PendingTransactionState.Pending)
-            .ToArrayAsync(cancellationToken: cancellationToken);
-        foreach (var pendingTransaction in pendingTransactions)
-        {
-            pendingTransaction.State = PendingTransactionState.Expired;
-        }
-
-        await ctx.SaveChangesAsync(cancellationToken);
-    }
+    public class CheckForExpiryEvent { } 
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
     {
-        if (evt is NewOnChainTransactionEvent newTransactionEvent)
+        if (evt is CheckForExpiryEvent)
+        {
+            await using var ctx = dbContextFactory.CreateContext();
+            var pendingTransactions = await ctx.PendingTransactions
+                .Where(p => p.Expiry <= DateTimeOffset.UtcNow && p.State == PendingTransactionState.Pending)
+                .ToArrayAsync(cancellationToken: cancellationToken);
+            foreach (var pendingTransaction in pendingTransactions)
+            {
+                pendingTransaction.State = PendingTransactionState.Expired;
+            }
+
+            await ctx.SaveChangesAsync(cancellationToken);
+        }
+        else if (evt is NewOnChainTransactionEvent newTransactionEvent)
         {
             await using var ctx = dbContextFactory.CreateContext();
             var txInputs = newTransactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs

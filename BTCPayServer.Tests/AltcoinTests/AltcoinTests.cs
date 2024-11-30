@@ -440,136 +440,135 @@ namespace BTCPayServer.Tests
         [Trait("Altcoins", "Altcoins")]
         public async Task CanPayWithTwoCurrencies()
         {
-            using (var tester = CreateServerTester())
+            using var tester = CreateServerTester();
+            
+            tester.ActivateLTC();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            user.RegisterDerivationScheme("BTC");
+            // First we try payment with a merchant having only BTC
+            var invoice = await user.BitPay.CreateInvoiceAsync(
+                new Invoice
+                {
+                    Price = 5000.0m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+            var cashCow = tester.ExplorerNode;
+            await cashCow.GenerateAsync(2); // get some money in case
+            var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
+            var firstPayment = Money.Coins(0.04m);
+            await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
+            TestUtils.Eventually(() =>
             {
-                tester.ActivateLTC();
-                await tester.StartAsync();
-                var user = tester.NewAccount();
-                await user.GrantAccessAsync();
-                user.RegisterDerivationScheme("BTC");
-                // First we try payment with a merchant having only BTC
-                var invoice = await user.BitPay.CreateInvoiceAsync(
-                    new Invoice
-                    {
-                        Price = 5000.0m,
-                        Currency = "USD",
-                        PosData = "posData",
-                        OrderId = "orderId",
-                        ItemDesc = "Some description",
-                        FullNotifications = true
-                    }, Facade.Merchant);
+                invoice = user.BitPay.GetInvoice(invoice.Id);
+                Assert.True(invoice.BtcPaid == firstPayment);
+            });
 
-                var cashCow = tester.ExplorerNode;
-                await cashCow.GenerateAsync(2); // get some money in case
-                var invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
-                var firstPayment = Money.Coins(0.04m);
-                await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
-                TestUtils.Eventually(() =>
-                {
-                    invoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.True(invoice.BtcPaid == firstPayment);
-                });
+            Assert.Single(invoice.CryptoInfo); // Only BTC should be presented
 
-                Assert.Single(invoice.CryptoInfo); // Only BTC should be presented
-
-                var controller = tester.PayTester.GetController<UIInvoiceController>(null);
-                var checkout =
-                    (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id, null)
-                        .GetAwaiter().GetResult()).Value;
-                Assert.Single(checkout.AvailablePaymentMethods);
-                Assert.Equal("BTC", checkout.PaymentMethodCurrency);
-
-                Assert.Single(invoice.PaymentCodes);
-                Assert.Single(invoice.SupportedTransactionCurrencies);
-                Assert.Single(invoice.SupportedTransactionCurrencies);
-                Assert.Single(invoice.PaymentSubtotals);
-                Assert.Single(invoice.PaymentTotals);
-                Assert.True(invoice.PaymentCodes.ContainsKey("BTC"));
-                Assert.True(invoice.SupportedTransactionCurrencies.ContainsKey("BTC"));
-                Assert.True(invoice.SupportedTransactionCurrencies["BTC"].Enabled);
-                Assert.True(invoice.PaymentSubtotals.ContainsKey("BTC"));
-                Assert.True(invoice.PaymentTotals.ContainsKey("BTC"));
-                //////////////////////
-
-                // Retry now with LTC enabled
-                user.RegisterDerivationScheme("LTC");
-                invoice = await user.BitPay.CreateInvoiceAsync(
-                    new Invoice
-                    {
-                        Price = 5000.0m,
-                        Currency = "USD",
-                        PosData = "posData",
-                        OrderId = "orderId",
-                        ItemDesc = "Some description",
-                        FullNotifications = true
-                    }, Facade.Merchant);
-
-                cashCow = tester.ExplorerNode;
-                invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
-                firstPayment = Money.Coins(0.04m);
-                await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
-                TestLogs.LogInformation("First payment sent to " + invoiceAddress);
-                TestUtils.Eventually(() =>
-                {
-                    invoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.True(invoice.BtcPaid == firstPayment);
-                });
-
-                cashCow = tester.LTCExplorerNode;
-                var ltcCryptoInfo = invoice.CryptoInfo.FirstOrDefault(c => c.CryptoCode == "LTC");
-                Assert.NotNull(ltcCryptoInfo);
-                invoiceAddress = BitcoinAddress.Create(ltcCryptoInfo.Address, cashCow.Network);
-                var secondPayment = Money.Coins(decimal.Parse(ltcCryptoInfo.Due, CultureInfo.InvariantCulture));
-                await cashCow.GenerateAsync(4); // LTC is not worth a lot, so just to make sure we have money...
-                await cashCow.SendToAddressAsync(invoiceAddress, secondPayment);
-                TestLogs.LogInformation("Second payment sent to " + invoiceAddress);
-                TestUtils.Eventually(() =>
-                {
-                    invoice = user.BitPay.GetInvoice(invoice.Id);
-                    Assert.Equal(Money.Zero, invoice.BtcDue);
-                    var ltcPaid = invoice.CryptoInfo.First(c => c.CryptoCode == "LTC");
-                    Assert.Equal(Money.Zero, ltcPaid.Due);
-                    Assert.Equal(secondPayment, ltcPaid.CryptoPaid);
-                    Assert.Equal("paid", invoice.Status);
-                    Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);
-                });
-
-                controller = tester.PayTester.GetController<UIInvoiceController>(null);
-                checkout = (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC")
+            var controller = tester.PayTester.GetController<UIInvoiceController>(null);
+            var checkout =
+                (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id, null)
                     .GetAwaiter().GetResult()).Value;
-                Assert.Equal(2, checkout.AvailablePaymentMethods.Count);
-                Assert.Equal("LTC", checkout.PaymentMethodCurrency);
+            Assert.Single(checkout.AvailablePaymentMethods);
+            Assert.Equal("BTC", checkout.PaymentMethodCurrency);
 
-                Assert.Equal(2, invoice.PaymentCodes.Count());
-                Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
-                Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
-                Assert.Equal(2, invoice.PaymentSubtotals.Count());
-                Assert.Equal(2, invoice.PaymentTotals.Count());
-                Assert.True(invoice.PaymentCodes.ContainsKey("LTC"));
-                Assert.True(invoice.SupportedTransactionCurrencies.ContainsKey("LTC"));
-                Assert.True(invoice.SupportedTransactionCurrencies["LTC"].Enabled);
-                Assert.True(invoice.PaymentSubtotals.ContainsKey("LTC"));
-                Assert.True(invoice.PaymentTotals.ContainsKey("LTC"));
+            Assert.Single(invoice.PaymentCodes);
+            Assert.Single(invoice.SupportedTransactionCurrencies);
+            Assert.Single(invoice.SupportedTransactionCurrencies);
+            Assert.Single(invoice.PaymentSubtotals);
+            Assert.Single(invoice.PaymentTotals);
+            Assert.True(invoice.PaymentCodes.ContainsKey("BTC"));
+            Assert.True(invoice.SupportedTransactionCurrencies.ContainsKey("BTC"));
+            Assert.True(invoice.SupportedTransactionCurrencies["BTC"].Enabled);
+            Assert.True(invoice.PaymentSubtotals.ContainsKey("BTC"));
+            Assert.True(invoice.PaymentTotals.ContainsKey("BTC"));
+            //////////////////////
 
-                // Check if we can disable LTC
-                invoice = await user.BitPay.CreateInvoiceAsync(
-                    new Invoice
+            // Retry now with LTC enabled
+            user.RegisterDerivationScheme("LTC");
+            invoice = await user.BitPay.CreateInvoiceAsync(
+                new Invoice
+                {
+                    Price = 5000.0m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true
+                }, Facade.Merchant);
+
+            cashCow = tester.ExplorerNode;
+            invoiceAddress = BitcoinAddress.Create(invoice.BitcoinAddress, cashCow.Network);
+            firstPayment = Money.Coins(0.04m);
+            await cashCow.SendToAddressAsync(invoiceAddress, firstPayment);
+            TestLogs.LogInformation("First payment sent to " + invoiceAddress);
+            TestUtils.Eventually(() =>
+            {
+                invoice = user.BitPay.GetInvoice(invoice.Id);
+                Assert.True(invoice.BtcPaid == firstPayment);
+            });
+
+            cashCow = tester.LTCExplorerNode;
+            var ltcCryptoInfo = invoice.CryptoInfo.FirstOrDefault(c => c.CryptoCode == "LTC");
+            Assert.NotNull(ltcCryptoInfo);
+            invoiceAddress = BitcoinAddress.Create(ltcCryptoInfo.Address, cashCow.Network);
+            var secondPayment = Money.Coins(decimal.Parse(ltcCryptoInfo.Due, CultureInfo.InvariantCulture));
+            await cashCow.GenerateAsync(4); // LTC is not worth a lot, so just to make sure we have money...
+            await cashCow.SendToAddressAsync(invoiceAddress, secondPayment);
+            TestLogs.LogInformation("Second payment sent to " + invoiceAddress);
+            TestUtils.Eventually(() =>
+            {
+                invoice = user.BitPay.GetInvoice(invoice.Id);
+                Assert.Equal(Money.Zero, invoice.BtcDue);
+                var ltcPaid = invoice.CryptoInfo.First(c => c.CryptoCode == "LTC");
+                Assert.Equal(Money.Zero, ltcPaid.Due);
+                Assert.Equal(secondPayment, ltcPaid.CryptoPaid);
+                Assert.Equal("paid", invoice.Status);
+                Assert.False((bool)((JValue)invoice.ExceptionStatus).Value);
+            });
+
+            controller = tester.PayTester.GetController<UIInvoiceController>(null);
+            checkout = (Models.InvoicingModels.CheckoutModel)((JsonResult)controller.GetStatus(invoice.Id, "LTC")
+                .GetAwaiter().GetResult()).Value;
+            Assert.Equal(2, checkout.AvailablePaymentMethods.Count);
+            Assert.Equal("LTC", checkout.PaymentMethodCurrency);
+
+            Assert.Equal(2, invoice.PaymentCodes.Count());
+            Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
+            Assert.Equal(2, invoice.SupportedTransactionCurrencies.Count());
+            Assert.Equal(2, invoice.PaymentSubtotals.Count());
+            Assert.Equal(2, invoice.PaymentTotals.Count());
+            Assert.True(invoice.PaymentCodes.ContainsKey("LTC"));
+            Assert.True(invoice.SupportedTransactionCurrencies.ContainsKey("LTC"));
+            Assert.True(invoice.SupportedTransactionCurrencies["LTC"].Enabled);
+            Assert.True(invoice.PaymentSubtotals.ContainsKey("LTC"));
+            Assert.True(invoice.PaymentTotals.ContainsKey("LTC"));
+
+            // Check if we can disable LTC
+            invoice = await user.BitPay.CreateInvoiceAsync(
+                new Invoice
+                {
+                    Price = 5000.0m,
+                    Currency = "USD",
+                    PosData = "posData",
+                    OrderId = "orderId",
+                    ItemDesc = "Some description",
+                    FullNotifications = true,
+                    SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>()
                     {
-                        Price = 5000.0m,
-                        Currency = "USD",
-                        PosData = "posData",
-                        OrderId = "orderId",
-                        ItemDesc = "Some description",
-                        FullNotifications = true,
-                        SupportedTransactionCurrencies = new Dictionary<string, InvoiceSupportedTransactionCurrency>()
-                        {
-                            {"BTC", new InvoiceSupportedTransactionCurrency() {Enabled = true}}
-                        }
-                    }, Facade.Merchant);
+                        {"BTC", new InvoiceSupportedTransactionCurrency() {Enabled = true}}
+                    }
+                }, Facade.Merchant);
 
-                Assert.Single(invoice.CryptoInfo.Where(c => c.CryptoCode == "BTC"));
-                Assert.Empty(invoice.CryptoInfo.Where(c => c.CryptoCode == "LTC"));
-            }
+            Assert.Single(invoice.CryptoInfo, c => c.CryptoCode == "BTC");
+            Assert.DoesNotContain(invoice.CryptoInfo, c => c.CryptoCode == "LTC");
         }
 
         [Fact]
@@ -744,7 +743,7 @@ noninventoryitem:
                 invoices = user.BitPay.GetInvoices();
                 Assert.Equal(2, invoices.Count(invoice => invoice.ItemCode.Equals("noninventoryitem")));
                 var inventoryItemInvoice =
-                    Assert.Single(invoices.Where(invoice => invoice.ItemCode.Equals("inventoryitem")));
+                    Assert.Single(invoices, invoice => invoice.ItemCode.Equals("inventoryitem"));
                 Assert.NotNull(inventoryItemInvoice);
 
                 //let's mark the inventoryitem invoice as invalid, this should return the item to back in stock

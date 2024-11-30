@@ -194,7 +194,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanStoreArbitrarySettingsWithStore()
+        public async Task CanStoreArbitrarySettingsWithStore()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -1099,7 +1099,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
-        public async void CheckCORSSetOnBitpayAPI()
+        public async Task CheckCORSSetOnBitpayAPI()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -1539,7 +1539,7 @@ namespace BTCPayServer.Tests
             // We allow BTC and LN, but not BTC under 5 USD, so only LN should be in the invoice
             var vm = await user.GetController<UIStoresController>().CheckoutAppearance().AssertViewModelAsync<CheckoutAppearanceViewModel>();
             Assert.Equal(2, vm.PaymentMethodCriteria.Count);
-            var criteria = Assert.Single(vm.PaymentMethodCriteria.Where(m => m.PaymentMethod == btcMethod.ToString()));
+            var criteria = Assert.Single(vm.PaymentMethodCriteria, m => m.PaymentMethod == btcMethod.ToString());
             Assert.Equal(btcMethod.ToString(), criteria.PaymentMethod);
             criteria.Value = "5 USD";
             criteria.Type = PaymentMethodCriteriaViewModel.CriteriaType.GreaterThan;
@@ -2421,7 +2421,7 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
-        public async void CheckOnionlocationForNonOnionHtmlRequests()
+        public async Task CheckOnionlocationForNonOnionHtmlRequests()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -3048,7 +3048,7 @@ namespace BTCPayServer.Tests
 
         [Fact]
         [Trait("Integration", "Integration")]
-        public async void CanUseLocalProviderFiles()
+        public async Task CanUseLocalProviderFiles()
         {
             using var tester = CreateServerTester();
             await tester.StartAsync();
@@ -3273,7 +3273,7 @@ namespace BTCPayServer.Tests
                     var fullyPaidIndex = report.GetIndex("FullyPaid");
                     var completedIndex = report.GetIndex("Completed");
                     var limitIndex = report.GetIndex("Limit");
-                    var d = Assert.Single(report.Data.Where(d => d[report.GetIndex("InvoiceId")].Value<string>() == inv.Id));
+                    var d = Assert.Single(report.Data, d => d[report.GetIndex("InvoiceId")].Value<string>() == inv.Id);
                     Assert.Equal(fullyPaid, (bool)d[fullyPaidIndex]);
                     Assert.Equal(currency, d[currencyIndex].Value<string>());
                     Assert.Equal(completed, GetAmount(completedIndex, d));

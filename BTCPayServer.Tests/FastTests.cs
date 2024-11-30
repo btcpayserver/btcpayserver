@@ -174,10 +174,10 @@ namespace BTCPayServer.Tests
         public void CanRandomizeByPercentage()
         {
             var generated = Enumerable.Range(0, 1000).Select(_ => MempoolSpaceFeeProvider.RandomizeByPercentage(100.0m, 10.0m)).ToArray();
-            Assert.Empty(generated.Where(g => g < 90m));
-            Assert.Empty(generated.Where(g => g > 110m));
-            Assert.NotEmpty(generated.Where(g => g < 91m));
-            Assert.NotEmpty(generated.Where(g => g > 109m));
+            Assert.DoesNotContain(generated, g => g < 90m);
+            Assert.DoesNotContain(generated, g => g > 110m);
+            Assert.Contains(generated, g => g < 91m);
+            Assert.Contains(generated, g => g > 109m);
         }
 
         private void CanParseDecimalsCore(string str, decimal expected)
@@ -793,9 +793,9 @@ namespace BTCPayServer.Tests
                 }), BTCPayLogs);
             await tor.Refresh();
 
-            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
-            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
-            Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
+            Assert.Single(tor.Services, t => t.ServiceType == TorServiceType.BTCPayServer);
+            Assert.Single(tor.Services, t => t.ServiceType == TorServiceType.P2P);
+            Assert.Single(tor.Services, t => t.ServiceType == TorServiceType.RPC);
             Assert.True(tor.Services.Count(t => t.ServiceType == TorServiceType.Other) > 1);
 
             tor = new TorServices(CreateNetworkProvider(ChainName.Regtest),
@@ -806,24 +806,24 @@ namespace BTCPayServer.Tests
                 }), BTCPayLogs);
             await Task.WhenAll(tor.StartAsync(CancellationToken.None));
 
-            var btcpayS = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.BTCPayServer));
+            var btcpayS = Assert.Single(tor.Services, t => t.ServiceType == TorServiceType.BTCPayServer);
             Assert.Null(btcpayS.Network);
             Assert.Equal("host.onion", btcpayS.OnionHost);
             Assert.Equal(80, btcpayS.VirtualPort);
 
-            var p2p = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.P2P));
+            var p2p = Assert.Single(tor.Services, t => t.ServiceType == TorServiceType.P2P);
             Assert.NotNull(p2p.Network);
             Assert.Equal("BTC", p2p.Network.CryptoCode);
             Assert.Equal("host2.onion", p2p.OnionHost);
             Assert.Equal(81, p2p.VirtualPort);
 
-            var rpc = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.RPC));
+            var rpc = Assert.Single(tor.Services, t => t.ServiceType == TorServiceType.RPC);
             Assert.NotNull(p2p.Network);
             Assert.Equal("BTC", rpc.Network.CryptoCode);
             Assert.Equal("host3.onion", rpc.OnionHost);
             Assert.Equal(82, rpc.VirtualPort);
 
-            var unknown = Assert.Single(tor.Services.Where(t => t.ServiceType == TorServiceType.Other));
+            var unknown = Assert.Single(tor.Services, t => t.ServiceType == TorServiceType.Other);
             Assert.Null(unknown.Network);
             Assert.Equal("host4.onion", unknown.OnionHost);
             Assert.Equal(83, unknown.VirtualPort);

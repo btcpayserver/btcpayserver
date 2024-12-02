@@ -48,14 +48,14 @@ namespace BTCPayServer.Services
                 return false;
             bool success = false;
             var paymentPrompt = invoice.GetPaymentPrompt(paymentMethodId);
-            var wasAlreadyActivated = paymentPrompt.Activated;
-            if (!paymentPrompt.Activated || forceNew)
+            var wasAlreadyActivated = paymentPrompt?.Activated ?? false;
+            if (!wasAlreadyActivated || forceNew)
             {
                 if (!_handlers.TryGetValue(paymentMethodId, out var handler))
                     return false;
                 InvoiceLogs logs = new InvoiceLogs();
                 var paymentContext = new PaymentMethodContext(store, store.GetStoreBlob(), store.GetPaymentMethodConfig(paymentMethodId), handler, invoice, logs);
-                if (!paymentPrompt.Activated)
+                if (!wasAlreadyActivated)
                     paymentContext.Logs.Write("Activating", InvoiceEventData.EventSeverity.Info);
                 try
                 {
@@ -69,7 +69,7 @@ namespace BTCPayServer.Services
                         _eventAggregator.Publish(new InvoicePaymentMethodActivated(paymentMethodId, invoice));
                         _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
                         if (wasAlreadyActivated)
-                            _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoice.Id, handler.ParsePaymentPromptDetails(paymentPrompt.Details), paymentMethodId));
+                            _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoice.Id, handler.ParsePaymentPromptDetails(paymentContext.Prompt.Details), paymentMethodId));
                         success = true;
                     }
                 }

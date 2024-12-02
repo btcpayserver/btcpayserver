@@ -238,24 +238,26 @@ namespace BTCPayServer.Hosting
             BTCPayServerOptions options,
             IOptions<DataDirectories> dataDirectories,
             ILoggerFactory loggerFactory,
-            IRateLimitService rateLimits)
+            IRateLimitService rateLimits,
+            CompositeDisposable disposables)
         {
             Logs.Configure(loggerFactory);
             Logs.Configuration.LogInformation($"Root Path: {options.RootPath}");
             if (options.RootPath.Equals("/", StringComparison.OrdinalIgnoreCase))
             {
-                ConfigureCore(app, env, prov, dataDirectories, rateLimits);
+                ConfigureCore(app, env, prov, dataDirectories, rateLimits, disposables);
             }
             else
             {
                 app.Map(options.RootPath, appChild =>
                 {
-                    ConfigureCore(appChild, env, prov, dataDirectories, rateLimits);
+                    ConfigureCore(appChild, env, prov, dataDirectories, rateLimits, disposables);
                 });
             }
         }
-        private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, IOptions<DataDirectories> dataDirectories, IRateLimitService rateLimits)
+        private void ConfigureCore(IApplicationBuilder app, IWebHostEnvironment env, IServiceProvider prov, IOptions<DataDirectories> dataDirectories, IRateLimitService rateLimits, CompositeDisposable disposables)
         {
+            RegisterDisposable(env, disposables);
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -315,14 +317,16 @@ namespace BTCPayServer.Hosting
             var componentsFolder = Path.Combine(env.ContentRootPath, "Components");
             if (Directory.Exists(componentsFolder))
             {
+                var pfp = new PhysicalFileProvider(componentsFolder);
+                disposables.Add(pfp);
                 app.UseStaticFiles(new StaticFileOptions()
                 {
-                    FileProvider = new PhysicalFileProvider(componentsFolder),
+                    FileProvider = pfp,
                     RequestPath = "/Components"
                 });
             }
 
-            app.UseProviderStorage(dataDirectories);
+            app.UseProviderStorage(dataDirectories, disposables);
             app.UseAuthentication();
             app.UseAuthorization();
             app.UseSession();
@@ -345,6 +349,14 @@ namespace BTCPayServer.Hosting
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");
             });
             app.UsePlugins();
+        }
+
+        private void RegisterDisposable(IWebHostEnvironment env, CompositeDisposable disposables)
+        {
+            if (env.WebRootFileProvider is IDisposable d)
+                disposables.Add(d);
+            if (env.ContentRootFileProvider is IDisposable d2)
+                disposables.Add(d2);
         }
 
         private static void LongCache(Microsoft.AspNetCore.StaticFiles.StaticFileResponseContext ctx)

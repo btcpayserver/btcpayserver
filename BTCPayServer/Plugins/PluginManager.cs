@@ -24,7 +24,7 @@ namespace BTCPayServer.Plugins
     public static class PluginManager
     {
         public const string BTCPayPluginSuffix = ".btcpay";
-        private static readonly List<Assembly> _pluginAssemblies = new ();
+        private static readonly List<Assembly> _pluginAssemblies = new();
 
         public static bool IsExceptionByPlugin(Exception exception, [MaybeNullWhen(false)] out string pluginName)
         {
@@ -145,7 +145,7 @@ namespace BTCPayServer.Plugins
             }
 
             ReorderPlugins(pluginsFolder, pluginsToLoad);
-			var crashedPlugins = new List<string>();
+            var crashedPlugins = new List<string>();
             foreach (var toLoad in pluginsToLoad)
             {
                 if (!loadedPluginIdentifiers.Add(toLoad.PluginIdentifier))
@@ -168,8 +168,8 @@ namespace BTCPayServer.Plugins
                     if (p == null)
                     {
                         logger.LogError($"The plugin assembly doesn't contain the plugin {toLoad.PluginIdentifier}");
-						crashedPlugins.Add(toLoad.PluginIdentifier);
-					}
+                        crashedPlugins.Add(toLoad.PluginIdentifier);
+                    }
                     else
                     {
                         mvcBuilder.AddPluginLoader(plugin);
@@ -181,8 +181,8 @@ namespace BTCPayServer.Plugins
                 catch (Exception e)
                 {
                     logger.LogError(e, $"Error when loading plugin {toLoad.PluginIdentifier}.");
-					crashedPlugins.Add(toLoad.PluginIdentifier);
-				}
+                    crashedPlugins.Add(toLoad.PluginIdentifier);
+                }
             }
 
             foreach (var plugin in plugins)
@@ -198,17 +198,17 @@ namespace BTCPayServer.Plugins
                 catch (Exception e)
                 {
                     logger.LogError(e, $"Error when executing plugin {plugin.Identifier} - {plugin.Version}.");
-					crashedPlugins.Add(plugin.Identifier);
-				}
+                    crashedPlugins.Add(plugin.Identifier);
+                }
             }
-			if (crashedPlugins.Count > 0)
-			{
-				foreach (var plugin in crashedPlugins)
-					DisablePlugin(pluginsFolder, plugin);
-				var crashedPluginsStr = String.Join(", ", crashedPlugins);
-				throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
-			}
-			return mvcBuilder;
+            if (crashedPlugins.Count > 0)
+            {
+                foreach (var plugin in crashedPlugins)
+                    DisablePlugin(pluginsFolder, plugin);
+                var crashedPluginsStr = String.Join(", ", crashedPlugins);
+                throw new ConfigException($"The following plugin(s) crashed at startup, they will be disabled and the server will restart: {crashedPluginsStr}");
+            }
+            return mvcBuilder;
         }
 
         private static void ReorderPlugins(string pluginsFolder, List<(string PluginIdentifier, string PluginFilePath)> pluginsToLoad)
@@ -246,7 +246,21 @@ namespace BTCPayServer.Plugins
             var webHostEnvironment = applicationBuilder.ApplicationServices.GetService<IWebHostEnvironment>();
             List<IFileProvider> providers = new List<IFileProvider>() { webHostEnvironment.WebRootFileProvider };
             providers.AddRange(assemblies.Select(a => new EmbeddedFileProvider(a)));
-            webHostEnvironment.WebRootFileProvider = new CompositeFileProvider(providers);
+            webHostEnvironment.WebRootFileProvider = new DisposableCompositeFileProvider(providers);
+        }
+        class DisposableCompositeFileProvider : CompositeFileProvider, IDisposable
+        {
+            public DisposableCompositeFileProvider(IEnumerable<IFileProvider> fileProviders) : base(fileProviders)
+            {
+
+            }
+            public void Dispose()
+            {
+                foreach (var fp in this.FileProviders.OfType<IDisposable>())
+                {
+                    fp.Dispose();
+                }
+            }
         }
 
         private static IEnumerable<IBTCPayServerPlugin> GetPluginInstancesFromAssembly(Assembly assembly, bool silentlyFails)
@@ -307,7 +321,7 @@ namespace BTCPayServer.Plugins
                 var manifestFileName = Path.Combine(dirName, plugin + ".json");
                 if (File.Exists(manifestFileName))
                 {
-                    var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+                    var pluginManifest = JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
                     installed.TryAdd(pluginManifest.Identifier, (pluginManifest.Version, pluginManifest.Dependencies, isDisabled));
                 }
                 else if (isDisabled)
@@ -324,8 +338,9 @@ namespace BTCPayServer.Plugins
         {
             var dirName = Path.Combine(pluginsFolder, plugin);
             var manifestFileName = dirName + ".json";
-            if (!File.Exists(manifestFileName)) return true;
-            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
+            if (!File.Exists(manifestFileName))
+                return true;
+            var pluginManifest = JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<PluginService.AvailablePlugin>();
             return DependenciesMet(pluginManifest.Dependencies, installed);
         }
 
@@ -443,7 +458,7 @@ namespace BTCPayServer.Plugins
             if (File.Exists(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix)))
             {
                 File.Delete(Path.Combine(pluginDir, plugin, BTCPayPluginSuffix));
-            } 
+            }
             if (File.Exists(Path.Combine(pluginDir, plugin, ".json")))
             {
                 File.Delete(Path.Combine(pluginDir, plugin, ".json"));

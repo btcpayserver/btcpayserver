@@ -14,6 +14,7 @@ using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin.Logging;
+using NBXplorer;
 
 namespace BTCPayServer.Storage
 {
@@ -28,7 +29,7 @@ namespace BTCPayServer.Storage
             serviceCollection.AddSingleton<IStorageProviderService, FileSystemFileProviderService>();
         }
 
-        public static void UseProviderStorage(this IApplicationBuilder builder, IOptions<DataDirectories> datadirs)
+        public static void UseProviderStorage(this IApplicationBuilder builder, IOptions<DataDirectories> datadirs, CompositeDisposable disposables)
         {
             try
             {
@@ -40,12 +41,13 @@ namespace BTCPayServer.Storage
                 {
                     Directory.CreateDirectory(datadirs.Value.TempDir);
                 }
-
+                var pfp = new PhysicalFileProvider(dirInfo.FullName);
+                disposables.Add(pfp);
                 builder.UseStaticFiles(new StaticFileOptions
                 {
                     ServeUnknownFileTypes = true,
                     RequestPath = new PathString($"/{FileSystemFileProviderService.LocalStorageDirectoryName}"),
-                    FileProvider = new PhysicalFileProvider(dirInfo.FullName),
+                    FileProvider = pfp,
                     OnPrepareResponse = HandleStaticFileResponse()
                 });
             }

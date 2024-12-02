@@ -936,11 +936,16 @@ namespace BTCPayServer.Controllers
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
 
-            if (_paymentModelExtensions.TryGetValue(paymentMethodId, out var extension) &&
-                    _handlers.TryGetValue(paymentMethodId, out var h))
+            // make sure that the selected payment method gets to make the last modifications
+            foreach (var method in model.AvailablePaymentMethods.OrderBy(a => a.PaymentMethodId == paymentMethodId ? 1 : 0))
             {
-                extension.ModifyCheckoutModel(new CheckoutModelContext(model, store, storeBlob, invoice, Url, prompt, h));
+                if (_paymentModelExtensions.TryGetValue(method.PaymentMethodId, out var extension) &&
+                        _handlers.TryGetValue(paymentMethodId, out var h))
+                {
+                    extension.ModifyCheckoutModel(new CheckoutModelContext(model, store, storeBlob, invoice, Url, prompt, h));
+                }
             }
+
             return model;
         }
 

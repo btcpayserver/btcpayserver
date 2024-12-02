@@ -93,16 +93,16 @@ namespace BTCPayServer.Tests
                 Assert.IsType<ViewResult>(response);
 
                 // Get enabled state from settings
-                response = controller.WalletSettings(user.StoreId, cryptoCode).GetAwaiter().GetResult();
+                response = await controller.WalletSettings(user.StoreId, cryptoCode);
                 var onchainSettingsModel = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
                 Assert.NotNull(onchainSettingsModel?.DerivationScheme);
                 Assert.True(onchainSettingsModel.Enabled);
 
                 // Disable wallet
                 onchainSettingsModel.Enabled = false;
-                response = controller.UpdateWalletSettings(onchainSettingsModel).GetAwaiter().GetResult();
+                response = await controller.UpdateWalletSettings(onchainSettingsModel);
                 Assert.IsType<RedirectToActionResult>(response);
-                response = controller.WalletSettings(user.StoreId, cryptoCode).GetAwaiter().GetResult();
+                response = await controller.WalletSettings(user.StoreId, cryptoCode);
                 onchainSettingsModel = (WalletSettingsViewModel)Assert.IsType<ViewResult>(response).Model;
                 Assert.NotNull(onchainSettingsModel?.DerivationScheme);
                 Assert.False(onchainSettingsModel.Enabled);
@@ -124,7 +124,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("LTC", invoice.CryptoInfo[0].CryptoCode);
 
                 // Removing the derivation scheme, should redirect to store page
-                response = controller.ConfirmDeleteWallet(user.StoreId, cryptoCode).GetAwaiter().GetResult();
+                response = await controller.ConfirmDeleteWallet(user.StoreId, cryptoCode);
                 Assert.IsType<RedirectToActionResult>(response);
 
                 // Setting it again should show the confirmation page
@@ -174,7 +174,7 @@ namespace BTCPayServer.Tests
                 Assert.Equal("ElectrumFile", settingsVm.Source);
 
                 // Now let's check that no data has been lost in the process
-                var store = tester.PayTester.StoreRepository.FindStore(storeId).GetAwaiter().GetResult();
+                var store = await tester.PayTester.StoreRepository.FindStore(storeId);
                 var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
                 var pmi = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
                 var onchainBTC = store.GetPaymentMethodConfig<DerivationSchemeSettings>(pmi, handlers);
@@ -206,7 +206,7 @@ namespace BTCPayServer.Tests
                     Assert.Equal("paid", invoice.Status);
                 });
                 var wallet = tester.PayTester.GetController<UIWalletsController>();
-                var psbt = wallet.CreatePSBT(btcNetwork, onchainBTC,
+                var psbt = await wallet.CreatePSBT(btcNetwork, onchainBTC,
                     new WalletSendModel()
                     {
                         Outputs = new List<WalletSendModel.TransactionOutput>
@@ -219,7 +219,7 @@ namespace BTCPayServer.Tests
                             }
                         },
                         FeeSatoshiPerByte = 1
-                    }, default).GetAwaiter().GetResult();
+                    }, default);
 
                 Assert.NotNull(psbt);
 

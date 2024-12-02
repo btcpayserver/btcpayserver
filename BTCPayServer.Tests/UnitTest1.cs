@@ -446,25 +446,25 @@ namespace BTCPayServer.Tests
             Assert.IsType<ViewResult>(storeResponse);
             Assert.IsType<ViewResult>(storeController.SetupLightningNode(user.StoreId, "BTC"));
 
-            storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
+            await storeController.SetupLightningNode(user.StoreId, new LightningNodeViewModel
             {
                 ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true",
                 SkipPortTest = true // We can't test this as the IP can't be resolved by the test host :(
-            }, "test", "BTC").GetAwaiter().GetResult();
+            }, "test", "BTC");
             Assert.False(storeController.TempData.ContainsKey(WellKnownTempData.ErrorMessage));
             storeController.TempData.Clear();
             Assert.True(storeController.ModelState.IsValid);
 
-            Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
+            Assert.IsType<RedirectToActionResult>(await storeController.SetupLightningNode(user.StoreId,
                 new LightningNodeViewModel
                 {
                     ConnectionString = $"type=charge;server={tester.MerchantCharge.Client.Uri.AbsoluteUri};allowinsecure=true"
-                }, "save", "BTC").GetAwaiter().GetResult());
+                }, "save", "BTC"));
 
             // Make sure old connection string format does not work
-            Assert.IsType<RedirectToActionResult>(storeController.SetupLightningNode(user.StoreId,
+            Assert.IsType<RedirectToActionResult>(await storeController.SetupLightningNode(user.StoreId,
                 new LightningNodeViewModel { ConnectionString = tester.MerchantCharge.Client.Uri.AbsoluteUri },
-                "save", "BTC").GetAwaiter().GetResult());
+                "save", "BTC"));
 
             storeResponse = storeController.LightningSettings(user.StoreId, "BTC");
             var storeVm =
@@ -1143,9 +1143,8 @@ namespace BTCPayServer.Tests
 
             // Test request pairing code client side
             var storeController = user.GetController<UIStoresController>();
-            storeController
-                .CreateToken(user.StoreId, new CreateTokenViewModel() { Label = "test2", StoreId = user.StoreId })
-                .GetAwaiter().GetResult();
+            await storeController
+                .CreateToken(user.StoreId, new CreateTokenViewModel() { Label = "test2", StoreId = user.StoreId });
             Assert.NotNull(storeController.GeneratedPairingCode);
 
 
@@ -1169,17 +1168,17 @@ namespace BTCPayServer.Tests
 
             // Can generate API Key
             var repo = tester.PayTester.GetService<TokenRepository>();
-            Assert.Empty(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>()
-                .GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
+            Assert.Empty(await repo.GetLegacyAPIKeys(user.StoreId));
+            Assert.IsType<RedirectToActionResult>(await user.GetController<UIStoresController>()
+                .GenerateAPIKey(user.StoreId));
 
-            var apiKey = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+            var apiKey = Assert.Single(await repo.GetLegacyAPIKeys(user.StoreId));
             ///////
 
             // Generating a new one remove the previous
-            Assert.IsType<RedirectToActionResult>(user.GetController<UIStoresController>()
-                .GenerateAPIKey(user.StoreId).GetAwaiter().GetResult());
-            var apiKey2 = Assert.Single(repo.GetLegacyAPIKeys(user.StoreId).GetAwaiter().GetResult());
+            Assert.IsType<RedirectToActionResult>(await user.GetController<UIStoresController>()
+                .GenerateAPIKey(user.StoreId));
+            var apiKey2 = Assert.Single(await repo.GetLegacyAPIKeys(user.StoreId));
             Assert.NotEqual(apiKey, apiKey2);
             ////////
 
@@ -1193,7 +1192,7 @@ namespace BTCPayServer.Tests
             var invoice = new Invoice() { Price = 5000.0m, Currency = "USD" };
             message.Content = new StringContent(JsonConvert.SerializeObject(invoice), Encoding.UTF8,
                 "application/json");
-            var result = client.SendAsync(message).GetAwaiter().GetResult();
+            var result = await client.SendAsync(message);
             result.EnsureSuccessStatusCode();
             /////////////////////
 
@@ -1207,7 +1206,7 @@ namespace BTCPayServer.Tests
             mess.Headers.Add("x-identity",
                 "04b4d82095947262dd70f94c0a0e005ec3916e3f5f2181c176b8b22a52db22a8c436c4703f43a9e8884104854a11e1eb30df8fdf116e283807a1f1b8fe4c182b99");
             mess.Method = HttpMethod.Get;
-            result = client.SendAsync(mess).GetAwaiter().GetResult();
+            result = await client.SendAsync(mess);
             Assert.Equal(System.Net.HttpStatusCode.Unauthorized, result.StatusCode);
 
             //
@@ -2175,19 +2174,19 @@ namespace BTCPayServer.Tests
             Assert.Equal(0, invoice.CryptoInfo[0].TxCount);
             Assert.True(invoice.MinerFees.ContainsKey("BTC"));
             Assert.Contains(Math.Round(invoice.MinerFees["BTC"].SatoshiPerBytes), new[] { 100.0m, 20.0m });
-            TestUtils.Eventually(() =>
+            await TestUtils.EventuallyAsync(async () =>
             {
-                var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                var textSearchResult = await tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                 {
                     StoreId = new[] { user.StoreId },
                     TextSearch = invoice.OrderId
-                }).GetAwaiter().GetResult();
+                });
                 Assert.Single(textSearchResult);
-                textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                textSearchResult = await tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                 {
                     StoreId = new[] { user.StoreId },
                     TextSearch = invoice.Id
-                }).GetAwaiter().GetResult();
+                });
 
                 Assert.Single(textSearchResult);
             });
@@ -2215,11 +2214,11 @@ namespace BTCPayServer.Tests
             Assert.True(IsMapped(invoice, ctx));
             cashCow.SendToAddress(invoiceAddress, firstPayment);
 
-            var invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
+            var invoiceEntity = await repo.GetInvoice(invoice.Id, true);
 
             Money secondPayment = Money.Zero;
 
-            TestUtils.Eventually(() =>
+            await TestUtils.EventuallyAsync(async () =>
             {
                 var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                 Assert.Equal("new", localInvoice.Status);
@@ -2231,7 +2230,7 @@ namespace BTCPayServer.Tests
                 Assert.True(IsMapped(invoice, ctx));
                 Assert.True(IsMapped(localInvoice, ctx));
 
-                invoiceEntity = repo.GetInvoice(invoice.Id, true).GetAwaiter().GetResult();
+                invoiceEntity = await repo.GetInvoice(invoice.Id, true);
                 invoiceAddress = BitcoinAddress.Create(localInvoice.BitcoinAddress, cashCow.Network);
                 secondPayment = localInvoice.BtcDue;
             });
@@ -2274,18 +2273,18 @@ namespace BTCPayServer.Tests
 
             var txId = await cashCow.SendToAddressAsync(invoiceAddress, invoice.BtcDue + Money.Coins(1));
 
-            TestUtils.Eventually(() =>
+            await TestUtils.EventuallyAsync(async () =>
             {
                 var localInvoice = user.BitPay.GetInvoice(invoice.Id, Facade.Merchant);
                 Assert.Equal("paid", localInvoice.Status);
                 Assert.Equal(Money.Zero, localInvoice.BtcDue);
                 Assert.Equal("paidOver", (string)((JValue)localInvoice.ExceptionStatus).Value);
 
-                var textSearchResult = tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
+                var textSearchResult = await tester.PayTester.InvoiceRepository.GetInvoices(new InvoiceQuery()
                 {
                     StoreId = new[] { user.StoreId },
                     TextSearch = txId.ToString()
-                }).GetAwaiter().GetResult();
+                });
                 Assert.Single(textSearchResult);
             });
 

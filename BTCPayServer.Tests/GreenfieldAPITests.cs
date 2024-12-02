@@ -3985,7 +3985,12 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.GrantAccessAsync(true);
 
-            var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings);
+            var client = await user.CreateClient(Policies.CanModifyStoreSettings, Policies.CanModifyServerSettings, Policies.CanModifyProfile);
+            await client.UpdateCurrentUser(new UpdateApplicationUserRequest
+            {
+                Name = "The Admin",
+                ImageUrl = "avatar.jpg"
+            });
 
             var roles = await client.GetServerRoles();
             Assert.Equal(4, roles.Count);
@@ -3999,6 +4004,9 @@ namespace BTCPayServer.Tests
             var storeUser = Assert.Single(users);
             Assert.Equal(user.UserId, storeUser.UserId);
             Assert.Equal(ownerRole.Id, storeUser.Role);
+            Assert.Equal(user.Email, storeUser.Email);
+            Assert.Equal("The Admin", storeUser.Name);
+            Assert.Equal("avatar.jpg", storeUser.ImageUrl);
             var manager = tester.NewAccount();
             await manager.GrantAccessAsync();
             var employee = tester.NewAccount();
@@ -4029,7 +4037,14 @@ namespace BTCPayServer.Tests
             // add users to store
             await client.AddStoreUser(user.StoreId, new StoreUserData { Role = managerRole.Id, UserId = manager.UserId });
             await client.AddStoreUser(user.StoreId, new StoreUserData { Role = employeeRole.Id, UserId = employee.UserId });
-            await client.AddStoreUser(user.StoreId, new StoreUserData { Role = guestRole.Id, UserId = guest.UserId });
+
+            // add with email
+            await client.AddStoreUser(user.StoreId, new StoreUserData { Role = guestRole.Id, UserId = guest.Email });
+            
+            // test unknown user
+            await AssertAPIError("user-not-found", async () => await client.AddStoreUser(user.StoreId, new StoreUserData { Role = managerRole.Id, UserId = "unknown" }));
+            await AssertAPIError("user-not-found", async () => await client.UpdateStoreUser(user.StoreId, "unknown", new StoreUserData { Role = ownerRole.Id }));
+            await AssertAPIError("user-not-found", async () => await client.RemoveStoreUser(user.StoreId, "unknown"));
 
             //test no access to api for employee
             await AssertPermissionError(Policies.CanViewStoreSettings, async () => await employeeClient.GetStore(user.StoreId));
@@ -4050,9 +4065,14 @@ namespace BTCPayServer.Tests
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             // updates
+            await client.UpdateStoreUser(user.StoreId, employee.UserId, new StoreUserData { Role = ownerRole.Id });
+            await employeeClient.GetStore(user.StoreId);
+            
+            // remove
             await client.RemoveStoreUser(user.StoreId, employee.UserId);
             await AssertHttpError(403, async () => await employeeClient.GetStore(user.StoreId));
 
+            // test duplicate add
             await client.AddStoreUser(user.StoreId, new StoreUserData { Role = ownerRole.Id, UserId = employee.UserId });
             await AssertAPIError("duplicate-store-user-role", async () =>
                  await client.AddStoreUser(user.StoreId, new StoreUserData { Role = ownerRole.Id, UserId = employee.UserId }));

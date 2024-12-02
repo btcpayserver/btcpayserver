@@ -42,6 +42,15 @@
                 "schema": {
                     "type": "string"
                 }
+            },
+            "UserIdOrEmail": {
+                "name": "idOrEmail",
+                "in": "path",
+                "required": true,
+                "description": "The user's id or email",
+                "schema": {
+                    "type": "string"
+                }
             }
         },
         "schemas": {

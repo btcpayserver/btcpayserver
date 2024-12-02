@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
@@ -19,7 +20,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Payments.Lightning;
 
-public class LightningPendingPayoutListener : BaseAsyncService
+public class LightningPendingPayoutListener : IPeriodicTask
 {
     private readonly LightningClientFactoryService _lightningClientFactoryService;
     private readonly PullPaymentHostedService _pullPaymentHostedService;
@@ -28,7 +29,6 @@ public class LightningPendingPayoutListener : BaseAsyncService
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly PayoutMethodHandlerDictionary _payoutHandlers;
     private readonly PaymentMethodHandlerDictionary _handlers;
-    public static int SecondsDelay = 60 * 10;
 
     public LightningPendingPayoutListener(
         LightningClientFactoryService lightningClientFactoryService,
@@ -37,8 +37,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
         IOptions<LightningNetworkOptions> options,
         BTCPayNetworkProvider networkProvider,
         PayoutMethodHandlerDictionary payoutHandlers,
-        PaymentMethodHandlerDictionary handlers,
-        ILogger<LightningPendingPayoutListener> logger) : base(logger)
+        PaymentMethodHandlerDictionary handlers)
     {
         _lightningClientFactoryService = lightningClientFactoryService;
         _pullPaymentHostedService = pullPaymentHostedService;
@@ -50,7 +49,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
         _handlers = handlers;
     }
 
-    private async Task Act()
+    public async Task Do(CancellationToken cancellationToken)
     {
         var networks = _networkProvider.GetAll()
             .OfType<BTCPayNetwork>()
@@ -98,7 +97,7 @@ public class LightningPendingPayoutListener : BaseAsyncService
 					try
 					{
 						if (proof is not null)
-							payment = await client.GetPayment(proof.PaymentHash, CancellationToken);
+							payment = await client.GetPayment(proof.PaymentHash, cancellationToken);
 					}
 					catch (OperationCanceledException)
 					{
@@ -136,12 +135,5 @@ public class LightningPendingPayoutListener : BaseAsyncService
                 }
             }
         }
-
-        await Task.Delay(TimeSpan.FromSeconds(SecondsDelay), CancellationToken);
-    }
-
-    internal override Task[] InitializeTasks()
-    {
-        return new[] { CreateLoopTask(Act) };
     }
 }

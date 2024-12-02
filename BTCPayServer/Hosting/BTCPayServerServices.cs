@@ -74,6 +74,7 @@ using ExchangeSharp;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
 using System.Reflection;
+using NBXplorer;
 
 namespace BTCPayServer.Hosting
 {
@@ -124,8 +125,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<SettingsRepository>();
             services.TryAddSingleton<ISettingsRepository>(provider => provider.GetService<SettingsRepository>());
             services.TryAddSingleton<IStoreRepository>(provider => provider.GetService<StoreRepository>());
-            services.TryAddSingleton<TorServices>();
-            services.AddSingleton<IHostedService>(provider => provider.GetRequiredService<TorServices>());
+            services.AddScheduledTask<TorServices>(TimeSpan.FromSeconds(120));
             services.AddSingleton<ISwaggerProvider, DefaultSwaggerProvider>();
             services.TryAddSingleton<SocketFactory>();
 
@@ -405,7 +405,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
 
             services.AddUIExtension("store-integrations-nav", "LNURL/LightningAddressNav");
             services.AddSingleton<IHostedService, LightningListener>();
-            services.AddSingleton<IHostedService, LightningPendingPayoutListener>();
+            services.AddScheduledTask<LightningPendingPayoutListener>(TimeSpan.FromMinutes(10.0));
 
             services.AddSingleton<PaymentMethodHandlerDictionary>();
 

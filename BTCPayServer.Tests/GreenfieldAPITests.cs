@@ -4225,7 +4225,6 @@ namespace BTCPayServer.Tests
         [Trait("Lightning", "Lightning")]
         public async Task CanUseLNPayoutProcessor()
         {
-            LightningPendingPayoutListener.SecondsDelay = 0;
             using var tester = CreateServerTester();
 
             tester.ActivateLightning();

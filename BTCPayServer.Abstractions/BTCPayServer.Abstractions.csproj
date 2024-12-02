@@ -32,8 +32,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="HtmlSanitizer" Version="8.0.838" />
-    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.6" />
-    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.4" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore" Version="8.0.11" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="8.0.11" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BTCPayServer.Client\BTCPayServer.Client.csproj" />

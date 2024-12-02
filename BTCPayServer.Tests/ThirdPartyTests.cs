@@ -601,7 +601,7 @@ retry:
 
             foreach (var rate in rates)
             {
-                Assert.Single(rates.Where(r => r == rate));
+                Assert.Single(rates, r => r == rate);
             }
         }
 

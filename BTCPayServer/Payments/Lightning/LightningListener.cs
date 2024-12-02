@@ -144,6 +144,8 @@ retry:
             return _memoryCache.GetOrCreateAsync(GetCacheKey(invoiceId), async (cacheEntry) =>
             {
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+                if (invoice is null)
+                    return null;
                 cacheEntry.AbsoluteExpiration = GetExpiration(invoice);
                 return invoice;
             })!;

@@ -47,13 +47,7 @@
                 "description": "Revoke the API key of a target user so that it cannot be used anymore",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The target user's id or email",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     },
                     {
                         "name": "apikey",
@@ -244,13 +238,7 @@
                 "description": "Create a new API Key for a user",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The target user's id or email",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "responses": {

@@ -2,8 +2,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
+using Npgsql;
 
 namespace BTCPayServer.Payments.PayJoin
 {
@@ -14,20 +16,6 @@ namespace BTCPayServer.Payments.PayJoin
         public UTXOLocker(ApplicationDbContextFactory dbContextFactory)
         {
             _dbContextFactory = dbContextFactory;
-        }
-
-        public async Task<bool> TryLock(OutPoint outpoint)
-        {
-            using var ctx = _dbContextFactory.CreateContext();
-            ctx.PayjoinLocks.Add(new PayjoinLock() { Id = outpoint.ToString() });
-            try
-            {
-                return await ctx.SaveChangesAsync() == 1;
-            }
-            catch (DbUpdateException)
-            {
-                return false;
-            }
         }
 
         public async Task<bool> TryUnlock(params OutPoint[] outPoints)
@@ -48,28 +36,32 @@ namespace BTCPayServer.Payments.PayJoin
             }
         }
 
-        public async Task<bool> TryLockInputs(OutPoint[] outPoints)
+
+
+
+
+        private async Task<bool> TryLockInputs(string[] ids)
         {
             using var ctx = _dbContextFactory.CreateContext();
-            foreach (OutPoint outPoint in outPoints)
-            {
-                ctx.PayjoinLocks.Add(new PayjoinLock()
-                {
-                    // Random flag so it does not lock same id
-                    // as the lock utxo
-                    Id = "K-" + outPoint.ToString()
-                });
-            }
-
+            var connection = ctx.Database.GetDbConnection();
             try
             {
-                return await ctx.SaveChangesAsync() == outPoints.Length;
+                await connection.ExecuteAsync("""
+                INSERT INTO "PayjoinLocks"("Id")
+                SELECT * FROM unnest(@ids)
+                """, new { ids });
+                return true;
             }
-            catch (DbUpdateException)
+            catch (Npgsql.PostgresException ex) when (ex.SqlState == PostgresErrorCodes.UniqueViolation)
             {
                 return false;
             }
         }
+
+        public Task<bool> TryLock(OutPoint outpoint)
+            => TryLockInputs([outpoint.ToString()]);
+        public Task<bool> TryLockInputs(OutPoint[] outPoints)
+            => TryLockInputs(outPoints.Select(o => "K-" + o.ToString()).ToArray());
 
         public async Task<HashSet<OutPoint>> FindLocks(OutPoint[] outpoints)
         {

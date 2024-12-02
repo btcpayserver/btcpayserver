@@ -234,7 +234,7 @@ namespace BTCPayServer.Tests
             }
 
             // Kraken emit one request only after first GetRates
-            factory.Providers["kraken"].GetRatesAsync(default).GetAwaiter().GetResult();
+            await factory.Providers["kraken"].GetRatesAsync(default);
 
             var p = new KrakenExchangeRateProvider();
             var rates = await p.GetRatesAsync(default);
@@ -339,7 +339,7 @@ retry:
         }
 
         [Fact]
-        public void CanSolveTheDogesRatesOnKraken()
+        public async Task CanSolveTheDogesRatesOnKraken()
         {
             var factory = FastTests.CreateBTCPayRateFactory();
             var fetcher = new RateFetcher(factory);
@@ -347,7 +347,7 @@ retry:
             Assert.True(RateRules.TryParse("X_X=kraken(X_BTC) * kraken(BTC_X)", out var rule));
             foreach (var pair in new[] { "DOGE_USD", "DOGE_CAD" })
             {
-                var result = fetcher.FetchRate(CurrencyPair.Parse(pair), rule, null, default).GetAwaiter().GetResult();
+                var result = await fetcher.FetchRate(CurrencyPair.Parse(pair), rule, null, default);
                 Assert.NotNull(result.BidAsk);
                 Assert.Empty(result.Errors);
             }
@@ -601,7 +601,7 @@ retry:
 
             foreach (var rate in rates)
             {
-                Assert.Single(rates.Where(r => r == rate));
+                Assert.Single(rates, r => r == rate);
             }
         }
 

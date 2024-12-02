@@ -637,6 +637,36 @@ namespace BTCPayServer.Migrations
                     b.ToTable("PayoutProcessors");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.PendingTransaction", b =>
+                {
+                    b.Property<string>("CryptoCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("TransactionId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("Blob2")
+                        .HasColumnType("JSONB");
+
+                    b.Property<DateTimeOffset?>("Expiry")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string[]>("OutpointsUsed")
+                        .HasColumnType("text[]");
+
+                    b.Property<int>("State")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("StoreId")
+                        .HasColumnType("text");
+
+                    b.HasKey("CryptoCode", "TransactionId");
+
+                    b.HasIndex("StoreId");
+
+                    b.ToTable("PendingTransactions");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.PlannedTransaction", b =>
                 {
                     b.Property<string>("Id")
@@ -1324,6 +1354,16 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Store");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.PendingTransaction", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.StoreData", "Store")
+                        .WithMany("PendingTransactions")
+                        .HasForeignKey("StoreId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Store");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.PullPaymentData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
@@ -1581,6 +1621,8 @@ namespace BTCPayServer.Migrations
                     b.Navigation("PayoutProcessors");
 
                     b.Navigation("Payouts");
+
+                    b.Navigation("PendingTransactions");
 
                     b.Navigation("PullPayments");
 

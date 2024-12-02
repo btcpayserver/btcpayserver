@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
@@ -61,6 +63,7 @@ namespace BTCPayServer.Data
         public DbSet<LightningAddressData> LightningAddresses { get; set; }
         public DbSet<PayoutProcessorData> PayoutProcessors { get; set; }
         public DbSet<FormData> Forms { get; set; }
+        public DbSet<PendingTransaction> PendingTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder builder)
         {
@@ -106,7 +109,7 @@ namespace BTCPayServer.Data
             WebhookData.OnModelCreating(builder, Database);
             FormData.OnModelCreating(builder, Database);
             StoreRole.OnModelCreating(builder, Database);
+            PendingTransaction.OnModelCreating(builder, Database);
         }
     }
-
 }

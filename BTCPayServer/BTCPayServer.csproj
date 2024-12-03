@@ -57,8 +57,8 @@
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.6.9" />
     <PackageReference Include="CsvHelper" Version="32.0.3" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Fido2" Version="2.0.2" />
-    <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
+    <PackageReference Include="Fido2" Version="3.0.1" />
+    <PackageReference Include="Fido2.AspNet" Version="3.0.1" />
     <PackageReference Include="LNURL" Version="0.0.36" />
     <PackageReference Include="MailKit" Version="3.3.0" />
     <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />

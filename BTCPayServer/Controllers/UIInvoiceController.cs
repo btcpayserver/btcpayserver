@@ -33,7 +33,6 @@ using NBitcoin;
 using Newtonsoft.Json.Linq;
 using StoreData = BTCPayServer.Data.StoreData;
 using Serilog.Filters;
-using PeterO.Numbers;
 using BTCPayServer.Payouts;
 using Microsoft.Extensions.Localization;
 

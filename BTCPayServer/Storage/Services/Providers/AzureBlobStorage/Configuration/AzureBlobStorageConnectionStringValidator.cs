@@ -1,6 +1,5 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using Microsoft.WindowsAzure.Storage;
 
 namespace BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration
 {
@@ -10,7 +9,7 @@ namespace BTCPayServer.Storage.Services.Providers.AzureBlobStorage.Configuration
         {
             try
             {
-                CloudStorageAccount.Parse(value as string);
+                new Azure.Storage.Blobs.BlobClient(value as string, "unusedcontainer", "unusedblob");
                 return ValidationResult.Success;
             }
             catch (Exception e)

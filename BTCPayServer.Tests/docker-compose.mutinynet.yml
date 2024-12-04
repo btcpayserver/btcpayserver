@@ -5,46 +5,6 @@ version: "3"
 # The Visual Studio launch setting `Docker-signet` is configured to use this environment.
 services:
 
-  tests:
-    build:
-      context: ..
-      dockerfile: BTCPayServer.Tests/Dockerfile
-      args:
-        CONFIGURATION_NAME: Release
-    environment:
-      TESTS_EXPERIMENTALV2_CONFIRM: "true"
-      TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
-      TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_DB: "Postgres"
-      TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver_mutinynet
-      TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer_mutinynet
-      TESTS_HOSTNAME: tests
-      TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-"false"}
-      TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
-      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
-      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTLND: "http://merchant_lnd:8080/"
-      TESTS_INCONTAINER: "true"
-      TESTS_SSHCONNECTION: "root@sshd:22"
-      TESTS_SSHPASSWORD: ""
-      TESTS_SSHKEYFILE: ""
-      TESTS_SOCKSENDPOINT: "tor:9050"
-    expose:
-      - "80"
-    depends_on:
-      - dev
-      - selenium
-    extra_hosts:
-      - "tests:127.0.0.1"
-    networks:
-      default:
-      custom:
-        ipv4_address: 172.23.0.18
-    volumes:
-      - "sshd_datadir:/root/.ssh"
-      - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
-      - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
-
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev:
     image: alpine:3.7
@@ -252,8 +212,8 @@ services:
         no-rest-tls=1
     ports:
       - "35531:8080"
-      - "53280:10009"
       - "30894:9735"
+      - "53280:10009"
     expose:
       - "8080"
       - "9735"

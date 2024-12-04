@@ -57,7 +57,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.4
+    image: nicolasdorier/nbxplorer:2.5.12
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -110,7 +110,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v24.05
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -139,7 +139,7 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v24.05
+    image: btcpayserver/lightning:v24.08.2
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -177,7 +177,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.18.1-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -215,7 +215,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.18.1-beta
+    image: btcpayserver/lnd:v0.18.3-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"

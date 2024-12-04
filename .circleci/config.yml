@@ -2,7 +2,7 @@ version: 2
 jobs:
   fast_tests:
     machine:
-      image: ubuntu-2004:202111-02
+      image: ubuntu-2004:2024.11.1
     steps:
       - checkout
       - run:
@@ -10,7 +10,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Fast=Fast|ThirdParty=ThirdParty" && ./can-build.sh
   selenium_tests:
     machine:
-      image: ubuntu-2004:202111-02
+      image: ubuntu-2004:2024.11.1
     steps:
       - checkout
       - run:
@@ -18,7 +18,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Selenium=Selenium"
   integration_tests:
     machine:
-      image: ubuntu-2004:202111-02
+      image: ubuntu-2004:2024.11.1
     steps:
       - checkout
       - run:
@@ -26,7 +26,7 @@ jobs:
             cd .circleci && ./run-tests.sh "Integration=Integration"
   trigger_docs_build:
     machine:
-      image: ubuntu-2004:202111-02
+      image: ubuntu-2004:2024.11.1
     steps:
       - run:
           command: |

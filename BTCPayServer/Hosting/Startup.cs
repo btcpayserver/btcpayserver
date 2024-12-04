@@ -127,8 +127,7 @@ namespace BTCPayServer.Hosting
                 })
                 .AddCachedMetadataService(config =>
                 {
-                    //They'll be used in a "first match wins" way in the order registered
-                    config.AddStaticMetadataRepository();
+                    config.AddFidoMetadataRepository();
                 });
             var descriptor = services.Single(descriptor => descriptor.ServiceType == typeof(Fido2Configuration));
             services.Remove(descriptor);
@@ -138,7 +137,7 @@ namespace BTCPayServer.Hosting
                 return new Fido2Configuration()
                 {
                     ServerName = "BTCPay Server",
-                    Origin = $"{httpContext.HttpContext.Request.Scheme}://{httpContext.HttpContext.Request.Host}",
+                    Origins = new[] { $"{httpContext.HttpContext.Request.Scheme}://{httpContext.HttpContext.Request.Host}" }.ToHashSet(),
                     ServerDomain = httpContext.HttpContext.Request.Host.Host
                 };
             });
@@ -146,7 +145,7 @@ namespace BTCPayServer.Hosting
             services.AddSingleton<UserLoginCodeService>();
             services.AddSingleton<LnurlAuthService>();
             services.AddSingleton<LightningAddressService>();
-            services.AddMvc(o =>
+            var mvcBuilder = services.AddMvc(o =>
              {
                  o.Filters.Add(new XFrameOptionsAttribute(XFrameOptionsAttribute.XFrameOptions.Deny));
                  o.Filters.Add(new XContentTypeOptionsAttribute("nosniff"));
@@ -172,10 +171,13 @@ namespace BTCPayServer.Hosting
                 o.PageViewLocationFormats.Add("/{0}.cshtml");
             })
             .AddNewtonsoftJson()
-            .AddRazorRuntimeCompilation()
             .AddPlugins(services, Configuration, LoggerFactory, bootstrapServiceProvider)
             .AddDataAnnotationsLocalization()
             .AddControllersAsServices();
+
+#if !RAZOR_COMPILE_ON_BUILD
+            mvcBuilder.AddRazorRuntimeCompilation();
+#endif
 
             services.AddServerSideBlazor();
 

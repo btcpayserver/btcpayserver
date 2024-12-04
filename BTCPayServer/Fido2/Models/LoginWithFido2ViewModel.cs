@@ -1,4 +1,5 @@
 using Fido2NetLib;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Fido2.Models
 {
@@ -7,7 +8,7 @@ namespace BTCPayServer.Fido2.Models
         public string UserId { get; set; }
 
         public bool RememberMe { get; set; }
-        public AssertionOptions Data { get; set; }
+        public string Data { get; set; }
         public string Response { get; set; }
     }
 }

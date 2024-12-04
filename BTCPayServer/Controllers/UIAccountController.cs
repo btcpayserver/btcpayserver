@@ -273,7 +273,7 @@ namespace BTCPayServer.Controllers
                 }
                 return new LoginWithFido2ViewModel
                 {
-                    Data = r,
+                    Data = System.Text.Json.JsonSerializer.Serialize(r, r.GetType()),
                     UserId = user.Id,
                     RememberMe = rememberMe
                 };
@@ -385,7 +385,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                if (await _fido2Service.CompleteLogin(viewModel.UserId, JObject.Parse(viewModel.Response).ToObject<AuthenticatorAssertionRawResponse>()))
+                if (await _fido2Service.CompleteLogin(viewModel.UserId, System.Text.Json.JsonSerializer.Deserialize<AuthenticatorAssertionRawResponse>(viewModel.Response)))
                 {
                     await _signInManager.SignInAsync(user!, viewModel.RememberMe, "FIDO2");
                     _logger.LogInformation("User {Email} logged in with FIDO2", user.Email);

@@ -1,3 +1,4 @@
+@using Newtonsoft.Json.Linq
 @model BTCPayServer.Fido2.Models.LoginWithFido2ViewModel
 
 <div class="twoFaBox">
@@ -24,7 +25,7 @@
     <script>
         document.getElementById('btn-retry').addEventListener('click', () => window.location.reload())
         // send to server for registering
-        window.makeAssertionOptions = @Safe.Json(Model.Data);
+        window.makeAssertionOptions = @Safe.Json(JObject.Parse(Model.Data));
     </script>
     <script src="~/js/webauthn/helpers.js" asp-append-version="true"></script>
     <script src="~/js/webauthn/login.js" asp-append-version="true"></script>

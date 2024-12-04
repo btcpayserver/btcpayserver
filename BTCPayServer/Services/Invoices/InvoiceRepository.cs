@@ -710,14 +710,15 @@ retry:
                 {
                     exceptionStatusExpression = i => exceptionStatusSet.Contains(i.ExceptionStatus);
                 }
-                (Expression predicate, ParameterExpression parameter) = (statusExpression, exceptionStatusExpression) switch
+                var predicate = (statusExpression, exceptionStatusExpression) switch
                 {
-                    ({ } a, { } b) => ((Expression)Expression.Or(a.Body, b.Body), a.Parameters[0]),
-                    ({ } a, null) => (a.Body, a.Parameters[0]),
-                    (null, { } b) => (b.Body, b.Parameters[0]),
+                    ({ } a, { } b) => (Expression)Expression.Or(a.Body, b.Body),
+                    ({ } a, null) => a.Body,
+                    (null, { } b) => b.Body,
                     _ => throw new NotSupportedException()
                 };
-                var expression = Expression.Lambda<Func<InvoiceData, bool>>(predicate, parameter);
+                var expression = Expression.Lambda<Func<InvoiceData, bool>>(predicate, Expression.Parameter(typeof(InvoiceData), "i"));
+                expression = expression.ReplaceParameterRef();
                 query = query.Where(expression);
             }
 

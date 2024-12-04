@@ -49,8 +49,8 @@ async function registerNewCredential(newCredential) {
         type: newCredential.type,
         extensions: newCredential.getClientExtensionResults(),
         response: {
-            AttestationObject: coerceToBase64Url(attestationObject),
-            clientDataJson: coerceToBase64Url(clientDataJSON)
+            attestationObject: coerceToBase64Url(attestationObject),
+            clientDataJSON: coerceToBase64Url(clientDataJSON)
         }
     };
     

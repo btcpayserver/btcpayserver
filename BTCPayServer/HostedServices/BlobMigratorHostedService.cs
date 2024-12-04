@@ -11,7 +11,6 @@ using BTCPayServer.Services.Invoices;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.WindowsAzure.Storage.Table;
 using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;

@@ -263,7 +263,7 @@ namespace BTCPayServer.Tests
             });
 
             TestLogs.LogInformation("Because UseAllStoreInvoices is true, let's make sure the invoice is tagged");
-            var invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+            var invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
             Assert.True(invoiceEntity.Version >= InvoiceEntity.InternalTagSupport_Version);
             Assert.Contains(AppService.GetAppInternalTag(app.Id), invoiceEntity.InternalTags);
 
@@ -281,7 +281,7 @@ namespace BTCPayServer.Tests
                 TransactionSpeed = "high",
                 FullNotifications = true
             }, Facade.Merchant);
-            invoiceEntity = tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id).GetAwaiter().GetResult();
+            invoiceEntity = await tester.PayTester.InvoiceRepository.GetInvoice(invoice.Id);
             Assert.DoesNotContain(AppService.GetAppInternalTag(app.Id), invoiceEntity.InternalTags);
 
             TestLogs.LogInformation("After turning setting a softcap, let's check that only actual payments are counted");

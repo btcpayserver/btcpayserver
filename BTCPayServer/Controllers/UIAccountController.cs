@@ -273,7 +273,7 @@ namespace BTCPayServer.Controllers
                 }
                 return new LoginWithFido2ViewModel
                 {
-                    Data = r,
+                    Data = System.Text.Json.JsonSerializer.Serialize(r, r.GetType()),
                     UserId = user.Id,
                     RememberMe = rememberMe
                 };
@@ -385,7 +385,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                if (await _fido2Service.CompleteLogin(viewModel.UserId, JObject.Parse(viewModel.Response).ToObject<AuthenticatorAssertionRawResponse>()))
+                if (await _fido2Service.CompleteLogin(viewModel.UserId, System.Text.Json.JsonSerializer.Deserialize<AuthenticatorAssertionRawResponse>(viewModel.Response)))
                 {
                     await _signInManager.SignInAsync(user!, viewModel.RememberMe, "FIDO2");
                     _logger.LogInformation("User {Email} logged in with FIDO2", user.Email);
@@ -650,6 +650,7 @@ namespace BTCPayServer.Controllers
                     if (logon)
                     {
                         await _signInManager.SignInAsync(user, isPersistent: false);
+                        _logger.LogInformation("User {Email} logged in", user.Email);
                         return RedirectToLocal(returnUrl);
                     }
                 }
@@ -793,7 +794,7 @@ namespace BTCPayServer.Controllers
         [HttpPost("/login/set-password")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> SetPassword(SetPasswordViewModel model)
+        public async Task<IActionResult> SetPassword(SetPasswordViewModel model, string returnUrl = null)
         {
             if (!ModelState.IsValid)
             {
@@ -802,9 +803,11 @@ namespace BTCPayServer.Controllers
             
             var user = await _userManager.FindByEmailAsync(model.Email);
             var hasPassword = user != null && await _userManager.HasPasswordAsync(user);
-            if (!UserService.TryCanLogin(user, out _))
+            var needsInitialPassword = user != null && !await _userManager.HasPasswordAsync(user);
+            // Let unapproved users set a password. Otherwise, don't reveal that the user does not exist.
+            if (!UserService.TryCanLogin(user, out var message) && !needsInitialPassword || user == null)
             {
-                // Don't reveal that the user does not exist
+                _logger.LogWarning("User {Email} tried to reset password, but failed: {Message}", user?.Email ?? "(NO EMAIL)", message);
                 return RedirectToAction(nameof(Login));
             }
 
@@ -818,7 +821,19 @@ namespace BTCPayServer.Controllers
                         ? StringLocalizer["Password successfully set."].Value
                         : StringLocalizer["Account successfully created."].Value
                 });
+
                 if (!hasPassword) await FinalizeInvitationIfApplicable(user);
+                
+                // see if we can sign in user after accepting an invitation and setting the password 
+                if (needsInitialPassword && UserService.TryCanLogin(user, out _))
+                {
+                    var signInResult = await _signInManager.PasswordSignInAsync(user.Email!, model.Password, true, true);
+                    if (signInResult.Succeeded)
+                    {
+                        _logger.LogInformation("User {Email} logged in", user.Email);
+                        return RedirectToLocal(returnUrl);
+                    }
+                }
                 return RedirectToAction(nameof(Login));
             }
 

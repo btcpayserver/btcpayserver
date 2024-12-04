@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
@@ -22,14 +23,15 @@ using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Storage.Models;
 using BTCPayServer.Storage.Services.Providers.FileSystemStorage.Configuration;
+using Fido2NetLib.Cbor;
 using Fido2NetLib.Objects;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using PeterO.Cbor;
 using YamlDotNet.RepresentationModel;
+using static BTCPayServer.Fido2.Models.Fido2CredentialBlob;
 using LightningAddressData = BTCPayServer.Data.LightningAddressData;
 
 namespace BTCPayServer.Hosting
@@ -738,9 +740,9 @@ WHERE cte.""Id""=p.""Id""
                 fido2.SetBlob(new Fido2CredentialBlob()
                 {
                     SignatureCounter = (uint)u2FDevice.Counter,
-                    PublicKey = CreatePublicKeyFromU2fRegistrationData(u2FDevice.PublicKey).EncodeToBytes(),
+                    PublicKey = CreatePublicKeyFromU2fRegistrationData(u2FDevice.PublicKey).Encode(),
                     UserHandle = u2FDevice.KeyHandle,
-                    Descriptor = new PublicKeyCredentialDescriptor(u2FDevice.KeyHandle),
+                    Descriptor = new DescriptorClass(u2FDevice.KeyHandle),
                     CredType = "u2f"
                 });
 
@@ -751,27 +753,29 @@ WHERE cte.""Id""=p.""Id""
             await ctx.SaveChangesAsync();
         }
         //from https://github.com/abergs/fido2-net-lib/blob/0fa7bb4b4a1f33f46c5f7ca4ee489b47680d579b/Test/ExistingU2fRegistrationDataTests.cs#L70
-        private static CBORObject CreatePublicKeyFromU2fRegistrationData(byte[] publicKeyData)
+        private static CborMap CreatePublicKeyFromU2fRegistrationData(byte[] publicKeyData)
         {
-            if (publicKeyData.Length != 65)
-            {
-                throw new ArgumentException("u2f public key must be 65 bytes", nameof(publicKeyData));
-            }
             var x = new byte[32];
             var y = new byte[32];
             Buffer.BlockCopy(publicKeyData, 1, x, 0, 32);
             Buffer.BlockCopy(publicKeyData, 33, y, 0, 32);
 
+            var point = new ECPoint
+            {
+                X = x,
+                Y = y,
+            };
 
-            var coseKey = CBORObject.NewMap();
+            var coseKey = new CborMap
+            {
+                { (long)COSE.KeyCommonParameter.KeyType, (long)COSE.KeyType.EC2 },
+                { (long)COSE.KeyCommonParameter.Alg, -7L },
 
-            coseKey.Add(COSE.KeyCommonParameter.KeyType, COSE.KeyType.EC2);
-            coseKey.Add(COSE.KeyCommonParameter.Alg, -7);
+                { (long)COSE.KeyTypeParameter.Crv, (long)COSE.EllipticCurve.P256 },
 
-            coseKey.Add(COSE.KeyTypeParameter.Crv, COSE.EllipticCurve.P256);
-
-            coseKey.Add(COSE.KeyTypeParameter.X, x);
-            coseKey.Add(COSE.KeyTypeParameter.Y, y);
+                { (long)COSE.KeyTypeParameter.X, point.X },
+                { (long)COSE.KeyTypeParameter.Y, point.Y }
+            };
 
             return coseKey;
         }

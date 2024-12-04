@@ -51,7 +51,6 @@
 
   <ItemGroup>
     <PackageReference Include="BTCPayServer.NTag424" Version="1.0.25" />
-    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.4" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
@@ -74,19 +73,17 @@
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
-    <PackageReference Include="TwentyTwenty.Storage" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-  </ItemGroup>
-
-	<ItemGroup>
+    <PackageReference Include="TwentyTwenty.Storage" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.24.2" />
     <PackageReference Condition="'$(RazorCompileOnBuild)' == 'false'" Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
     <PackageReference Include="Grpc.AspNetCore" Version="2.65.0"/>
     <PackageReference Include="VSS" Version="1.0.1" />
+    <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.4" />
   </ItemGroup>
 
 	<ItemGroup>

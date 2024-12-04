@@ -139,7 +139,7 @@
     <div class="tab-content">
         <div class="tab-pane fade show active" id="EditorTabPane" role="tabpanel" aria-labelledby="EditorTabButton" tabindex="0">
             <div class="row align-items-start">
-                <div class="col-12 col-xl-7">
+                <div class="col-12">
                     <items-editor :items="items"
                                   :selected-item="selectedItem"
                                   v-on:add-item="addItem"
@@ -149,13 +149,13 @@
                                   :class="{ 'pt-2': (!items || items.length === 0) }"
                                   class="bg-tile pb-2 rounded" />
                 </div>
-                <div class="col-xl-5 offcanvas-xl offcanvas-end" tabindex="-1" ref="editorOffcanvas">
+                <div class="offcanvas offcanvas-end" tabindex="-1" ref="editorOffcanvas">
                     <div class="offcanvas-header justify-content-between p-3">
                         <h5 class="offcanvas-title" text-translate="true">Edit Item</h5>
                         <button type="button" class="btn btn-sm rounded-pill" :class="{ 'btn-primary': itemChanged, 'btn-outline-secondary': !itemChanged }" v-on:click="hideOffcanvas" v-text="itemChanged ? 'Apply' : 'Close'"></button>
                     </div>
-                    <div class="offcanvas-body p-3 p-xl-0">
-                        <item-editor ref="itemEditor" :item="selectedItem" class="bg-tile w-100 p-xl-4 rounded" />
+                    <div class="offcanvas-body p-3">
+                        <item-editor ref="itemEditor" :item="selectedItem" class="bg-tile w-100 rounded" />
                     </div>
                 </div>
             </div>

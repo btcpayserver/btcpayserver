@@ -838,6 +838,8 @@ namespace BTCPayServer.Tests
             AssertSearchInvoice(acc, false, invoice.Id, "exceptionstatus:paidOver");
             AssertSearchInvoice(acc, true, invoice.Id, "unusual:true");
             AssertSearchInvoice(acc, false, invoice.Id, "unusual:false");
+            AssertSearchInvoice(acc, true, invoice.Id, "status:settled,exceptionstatus:paidPartial");
+            AssertSearchInvoice(acc, true, invoice.Id, "status:settled,status:invalid,exceptionstatus:paidPartial,exceptionstatus:paidOver");
 
             var time = invoice.InvoiceTime;
             AssertSearchInvoice(acc, true, invoice.Id, $"startdate:{time.ToString("yyyy-MM-dd HH:mm:ss")}");

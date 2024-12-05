@@ -298,7 +298,7 @@ namespace BTCPayServer.Services.Stores
             try
             {
                 await ctx.SaveChangesAsync();
-                _eventAggregator.Publish(new UserStoreAddedEvent(storeId, userId));
+                _eventAggregator.Publish(new UserStoreEvent.Added(storeId, userId, roleId.Id));
                 return true;
             }
             catch (DbUpdateException)
@@ -330,8 +330,8 @@ namespace BTCPayServer.Services.Stores
             {
                 await ctx.SaveChangesAsync();
                 UserStoreEvent evt = added
-                    ? new UserStoreAddedEvent(storeId, userId, userStore.StoreRoleId)
-                    : new UserStoreUpdatedEvent(storeId, userId, userStore.StoreRoleId);
+                    ? new UserStoreEvent.Added(storeId, userId, userStore.StoreRoleId)
+                    : new UserStoreEvent.Updated(storeId, userId, userStore.StoreRoleId);
                 _eventAggregator.Publish(evt);
                 return true;
             }
@@ -347,22 +347,6 @@ namespace BTCPayServer.Services.Stores
                 throw new ArgumentException("The roleId doesn't belong to this storeId", nameof(roleId));
         }
 
-        public async Task CleanUnreachableStores()
-        {
-            await using var ctx = _ContextFactory.CreateContext();
-            var events = new List<StoreRemovedEvent>();
-            foreach (var store in await ctx.Stores.Include(data => data.UserStores)
-                         .ThenInclude(store => store.StoreRole).Where(s =>
-                             s.UserStores.All(u => !u.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings)))
-                         .ToArrayAsync())
-            {
-                ctx.Stores.Remove(store);
-                events.Add(new StoreRemovedEvent(store));
-            }
-            await ctx.SaveChangesAsync();
-            events.ForEach(e => _eventAggregator.Publish(e));
-        }
-
         public async Task<bool> RemoveStoreUser(string storeId, string userId)
         {
             await using var ctx = _ContextFactory.CreateContext();
@@ -374,7 +358,7 @@ namespace BTCPayServer.Services.Stores
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
             await ctx.SaveChangesAsync();
-            _eventAggregator.Publish(new UserStoreRemovedEvent(storeId, userId));
+            _eventAggregator.Publish(new UserStoreEvent.Removed(storeId, userId));
             return true;
         }
 
@@ -388,7 +372,7 @@ namespace BTCPayServer.Services.Stores
                 {
                     ctx.Stores.Remove(store);
                     await ctx.SaveChangesAsync();
-                    _eventAggregator.Publish(new StoreRemovedEvent(store));
+                    _eventAggregator.Publish(new StoreEvent.Removed(store));
                 }
             }
         }
@@ -414,8 +398,8 @@ namespace BTCPayServer.Services.Stores
             ctx.Add(storeData);
             ctx.Add(userStore);
             await ctx.SaveChangesAsync();
-            _eventAggregator.Publish(new UserStoreAddedEvent(storeData.Id, userStore.ApplicationUserId));
-            _eventAggregator.Publish(new StoreCreatedEvent(storeData));
+            _eventAggregator.Publish(new UserStoreEvent.Added(storeData.Id, userStore.ApplicationUserId, roleId.Id));
+            _eventAggregator.Publish(new StoreEvent.Created(storeData));
         }
 
         public async Task<WebhookData[]> GetWebhooks(string storeId)
@@ -564,7 +548,7 @@ namespace BTCPayServer.Services.Stores
             {
                 ctx.Entry(existing).CurrentValues.SetValues(store);
                 await ctx.SaveChangesAsync().ConfigureAwait(false);
-                _eventAggregator.Publish(new StoreUpdatedEvent(store));
+                _eventAggregator.Publish(new StoreEvent.Updated(store));
             }
         }
 
@@ -587,7 +571,7 @@ retry:
             {
                 await ctx.SaveChangesAsync();
                 if (store != null)
-                    _eventAggregator.Publish(new StoreRemovedEvent(store));
+                    _eventAggregator.Publish(new StoreEvent.Removed(store));
             }
             catch (DbUpdateException ex) when (IsDeadlock(ex) && retry < 5)
             {

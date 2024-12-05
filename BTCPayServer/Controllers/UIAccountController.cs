@@ -627,10 +627,8 @@ namespace BTCPayServer.Controllers
                         RegisteredAdmin = true;
                     }
 
-                    _eventAggregator.Publish(new UserRegisteredEvent
+                    _eventAggregator.Publish(new UserEvent.Registered(user, Request.GetAbsoluteRootUri())
                     {
-                        RequestUri = Request.GetAbsoluteRootUri(),
-                        User = user,
                         Admin = RegisteredAdmin
                     });
                     RegisteredUserId = user.Id;
@@ -699,11 +697,7 @@ namespace BTCPayServer.Controllers
             var result = await _userManager.ConfirmEmailAsync(user, code);
             if (result.Succeeded)
             {
-                _eventAggregator.Publish(new UserConfirmedEmailEvent
-                {
-                    User = user,
-                    RequestUri = Request.GetAbsoluteRootUri()
-                });
+                _eventAggregator.Publish(new UserEvent.ConfirmedEmail(user, Request.GetAbsoluteRootUri()));
 
                 var hasPassword = await _userManager.HasPasswordAsync(user);
                 if (hasPassword)
@@ -749,11 +743,7 @@ namespace BTCPayServer.Controllers
                     // Don't reveal that the user does not exist or is not confirmed
                     return RedirectToAction(nameof(ForgotPasswordConfirmation));
                 }
-                _eventAggregator.Publish(new UserPasswordResetRequestedEvent
-                {
-                    User = user,
-                    RequestUri = Request.GetAbsoluteRootUri()
-                });
+                _eventAggregator.Publish(new UserEvent.PasswordResetRequested(user, Request.GetAbsoluteRootUri()));
                 return RedirectToAction(nameof(ForgotPasswordConfirmation));
             }
 
@@ -889,11 +879,7 @@ namespace BTCPayServer.Controllers
         private async Task FinalizeInvitationIfApplicable(ApplicationUser user)
         {
             if (!_userManager.HasInvitationToken<ApplicationUser>(user)) return;
-            _eventAggregator.Publish(new UserInviteAcceptedEvent
-            {
-                User = user,
-                RequestUri = Request.GetAbsoluteRootUri()
-            });
+            _eventAggregator.Publish(new UserEvent.InviteAccepted(user, Request.GetAbsoluteRootUri()));
             // unset used token
             await _userManager.UnsetInvitationTokenAsync<ApplicationUser>(user.Id);
         }

@@ -123,7 +123,7 @@ namespace BTCPayServer.Services
             if (succeeded)
             {
                 _logger.LogInformation("User {Email} is now {Status}", user.Email, approved ? "approved" : "unapproved");
-                _eventAggregator.Publish(new UserApprovedEvent { User = user, RequestUri = requestUri });
+                _eventAggregator.Publish(new UserEvent.Approved(user, requestUri));
             }
             else
             {

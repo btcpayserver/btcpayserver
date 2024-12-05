@@ -264,12 +264,8 @@ namespace BTCPayServer.Controllers
                     var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
                     var sendEmail = model.SendInvitationEmail && ViewData["CanSendEmail"] is true;
 
-                    _eventAggregator.Publish(new UserRegisteredEvent
+                    _eventAggregator.Publish(new UserEvent.Invited(user, currentUser, Request.GetAbsoluteRootUri())
                     {
-                        RequestUri = Request.GetAbsoluteRootUri(),
-                        Kind = UserRegisteredEventKind.Invite,
-                        User = user,
-                        InvitedByUser = currentUser,
                         SendInvitationEmail = sendEmail,
                         Admin = model.IsAdmin,
                         CallbackUrlGenerated = tcs

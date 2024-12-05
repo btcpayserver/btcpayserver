@@ -29,11 +29,11 @@ public class UserEventHostedService(
 {
     protected override void SubscribeToEvents()
     {
-        Subscribe<UserRegisteredEvent>();
-        Subscribe<UserApprovedEvent>();
-        Subscribe<UserConfirmedEmailEvent>();
-        Subscribe<UserPasswordResetRequestedEvent>();
-        Subscribe<UserInviteAcceptedEvent>();
+        Subscribe<UserEvent.Registered>();
+        Subscribe<UserEvent.Approved>();
+        Subscribe<UserEvent.ConfirmedEmail>();
+        Subscribe<UserEvent.PasswordResetRequested>();
+        Subscribe<UserEvent.InviteAccepted>();
     }
 
     protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
@@ -46,15 +46,19 @@ public class UserEventHostedService(
         IEmailSender emailSender;
         switch (evt)
         {
-            case UserRegisteredEvent ev:
+            case UserEvent.Registered ev:
                 user = ev.User;
                 uri = ev.RequestUri;
                 host = new HostString(uri.Host, uri.Port);
 
                 // can be either a self-registration or by invite from another user
-                var isInvite = ev.Kind == UserRegisteredEventKind.Invite;
                 var type = ev.Admin ? "admin" : "user";
-                var info = isInvite ? ev.InvitedByUser != null ? $"invited by {ev.InvitedByUser.Email}" : "invited" : "registered";
+                var info = ev switch
+                {
+                    UserEvent.Invited { InvitedByUser: { } invitedBy } => $"invited by {invitedBy.Email}",
+                    UserEvent.Invited => "invited",
+                    _ => "registered"
+                };
                 var requiresApproval = user.RequiresApproval && !user.Approved;
                 var requiresEmailConfirmation = user.RequiresEmailConfirmation && !user.EmailConfirmed;
 
@@ -71,13 +75,13 @@ public class UserEventHostedService(
 
                 // set callback result and send email to user
                 emailSender = await emailSenderFactory.GetEmailSender();
-                if (isInvite)
+                if (ev is UserEvent.Invited invited)
                 {
                     code = await userManager.GenerateInvitationTokenAsync<ApplicationUser>(user.Id);
                     callbackUrl = generator.InvitationLink(user.Id, code, uri.Scheme, host, uri.PathAndQuery);
                     ev.CallbackUrlGenerated?.SetResult(new Uri(callbackUrl));
 
-                    if (ev.SendInvitationEmail)
+                    if (invited.SendInvitationEmail)
                         emailSender.SendInvitation(user.GetMailboxAddress(), callbackUrl);
                 }
                 else if (requiresEmailConfirmation)
@@ -94,7 +98,7 @@ public class UserEventHostedService(
                 }
                 break;
 
-            case UserPasswordResetRequestedEvent pwResetEvent:
+            case UserEvent.PasswordResetRequested pwResetEvent:
                 user = pwResetEvent.User;
                 uri = pwResetEvent.RequestUri;
                 host = new HostString(uri.Host, uri.Port);
@@ -106,7 +110,7 @@ public class UserEventHostedService(
                 emailSender.SendResetPassword(user.GetMailboxAddress(), callbackUrl);
                 break;
 
-            case UserApprovedEvent approvedEvent:
+            case UserEvent.Approved approvedEvent:
                 user = approvedEvent.User;
                 if (!user.Approved) break;
                 uri = approvedEvent.RequestUri;
@@ -116,7 +120,7 @@ public class UserEventHostedService(
                 emailSender.SendApprovalConfirmation(user.GetMailboxAddress(), callbackUrl);
                 break;
 
-            case UserConfirmedEmailEvent confirmedEvent:
+            case UserEvent.ConfirmedEmail confirmedEvent:
                 user = confirmedEvent.User;
                 if (!user.EmailConfirmed) break;
                 uri = confirmedEvent.RequestUri;
@@ -126,7 +130,7 @@ public class UserEventHostedService(
                 await NotifyAdminsAboutUserRequiringApproval(user, uri, confirmedUserInfo);
                 break;
 
-            case UserInviteAcceptedEvent inviteAcceptedEvent:
+            case UserEvent.InviteAccepted inviteAcceptedEvent:
                 user = inviteAcceptedEvent.User;
                 uri = inviteAcceptedEvent.RequestUri;
                 Logs.PayServer.LogInformation("User {Email} accepted the invite", user.Email);

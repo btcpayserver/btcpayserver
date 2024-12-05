@@ -58,22 +58,18 @@ public partial class UIStoresController
                 Created = DateTimeOffset.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user);
-            if (result.Succeeded)
+            var currentUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (currentUser is not null &&
+                (await _userManager.CreateAsync(user)) is { Succeeded: true } result)
             {
 				var invitationEmail = await _emailSenderFactory.IsComplete();
 				var tcs = new TaskCompletionSource<Uri>();
-                var currentUser = await _userManager.GetUserAsync(HttpContext.User);
 
-                _eventAggregator.Publish(new UserRegisteredEvent
-                {
-                    RequestUri = Request.GetAbsoluteRootUri(),
-                    Kind = UserRegisteredEventKind.Invite,
-                    User = user,
-                    InvitedByUser = currentUser,
-                    SendInvitationEmail = invitationEmail,
-                    CallbackUrlGenerated = tcs
-                });
+                _eventAggregator.Publish(new UserEvent.Invited(user, currentUser, Request.GetAbsoluteRootUri())
+				{
+					SendInvitationEmail = true,
+					CallbackUrlGenerated = tcs
+				});
                     
                 var callbackUrl = await tcs.Task;
                 var info = invitationEmail

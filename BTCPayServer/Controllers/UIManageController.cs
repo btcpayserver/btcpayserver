@@ -36,7 +36,7 @@ namespace BTCPayServer.Controllers
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly Fido2Service _fido2Service;
-        private readonly LinkGenerator _linkGenerator;
+        private readonly CallbackGenerator _callbackGenerator;
         private readonly IHtmlHelper Html;
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
@@ -56,7 +56,7 @@ namespace BTCPayServer.Controllers
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
           Fido2Service fido2Service,
-          LinkGenerator linkGenerator,
+          CallbackGenerator callbackGenerator,
           UserService userService,
           UriResolver uriResolver,
           IFileService fileService,
@@ -73,7 +73,7 @@ namespace BTCPayServer.Controllers
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;
             _fido2Service = fido2Service;
-            _linkGenerator = linkGenerator;
+            _callbackGenerator = callbackGenerator;
             Html = htmlHelper;
             _eventAggregator = eventAggregator;
             _userService = userService;
@@ -219,8 +219,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
+            var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user, Request);
             (await _EmailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Verification email sent. Please check your email."].Value;
             return RedirectToAction(nameof(Index));

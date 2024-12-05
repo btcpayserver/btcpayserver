@@ -23,50 +23,9 @@ namespace Microsoft.AspNetCore.Mvc
         }
 #nullable restore
 
-        public static string UserDetailsLink(this LinkGenerator urlHelper, string userId, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(nameof(UIServerController.User), "UIServer",
-                new { userId }, scheme, host, pathbase);
-        }
-        
-        public static string StoreUsersLink(this LinkGenerator urlHelper, string storeId, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(nameof(UIStoresController.StoreUsers), "UIStores",
-                new { storeId }, scheme, host, pathbase);
-        }
-
-        public static string InvitationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(nameof(UIAccountController.AcceptInvite), "UIAccount",
-                new { userId, code }, scheme, host, pathbase);
-        }
-
-        public static string EmailConfirmationLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(nameof(UIAccountController.ConfirmEmail), "UIAccount",
-                new { userId, code }, scheme, host, pathbase);
-        }
-
-        public static string LoginLink(this LinkGenerator urlHelper, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(nameof(UIAccountController.Login), "UIAccount", null , scheme, host, pathbase);
-        }
-
         public static string LoginCodeLink(this LinkGenerator urlHelper, string loginCode, string returnUrl, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(nameof(UIAccountController.LoginUsingCode), "UIAccount", new { loginCode, returnUrl }, scheme, host, pathbase);
-        }
-
-        public static string ResetPasswordLink(this LinkGenerator urlHelper, string userId, string code, string scheme, HostString host, string pathbase)
-        {
-            return urlHelper.GetUriByAction(
-                action: nameof(UIAccountController.SetPassword),
-                controller: "UIAccount",
-                values: new { userId, code },
-                scheme: scheme,
-                host: host,
-                pathBase: pathbase
-            );
         }
 
         public static string PaymentRequestLink(this LinkGenerator urlHelper, string paymentRequestId, string scheme, HostString host, string pathbase)

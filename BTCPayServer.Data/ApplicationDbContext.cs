@@ -1,6 +1,8 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.App.BackupStorage;
+using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
@@ -15,6 +17,7 @@ namespace BTCPayServer.Data
             var builder = new DbContextOptionsBuilder<ApplicationDbContext>();
 			// Same as launchsettings.json, it's connecting to the docker's postgres.
             builder.UseNpgsql("User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=btcpayserver");
+            builder.UsePostgreSqlTriggers();
             return new ApplicationDbContext(builder.Options);
         }
     }
@@ -25,6 +28,8 @@ namespace BTCPayServer.Data
         {
         }
         public DbSet<AddressInvoiceData> AddressInvoices { get; set; }
+        public DbSet<AppStorageItemData> AppStorageItems { get; set; }
+
         public DbSet<APIKeyData> ApiKeys { get; set; }
         public DbSet<AppData> Apps { get; set; }
         public DbSet<StoredFile> Files { get; set; }
@@ -67,7 +72,7 @@ namespace BTCPayServer.Data
             base.OnModelCreating(builder);
 
             // some of the data models don't have OnModelCreating for now, commenting them
-
+            AppStorageItemData.OnModelCreating(builder);
             ApplicationUser.OnModelCreating(builder, Database);
             AddressInvoiceData.OnModelCreating(builder);
             APIKeyData.OnModelCreating(builder, Database);

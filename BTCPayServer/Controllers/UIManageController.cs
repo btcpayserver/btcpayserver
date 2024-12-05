@@ -193,7 +193,7 @@ namespace BTCPayServer.Controllers
 
             if (needUpdate && await _userManager.UpdateAsync(user) is { Succeeded: true })
             {
-                _eventAggregator.Publish(new UserUpdatedEvent(user));
+                _eventAggregator.Publish(new UserEvent.Updated(user));
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your profile has been updated"].Value;
             }
             else
@@ -332,7 +332,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _userService.DeleteUserAndAssociatedData(user);
-            _eventAggregator.Publish(new UserDeletedEvent(user));
+            _eventAggregator.Publish(new UserEvent.Deleted(user));
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account successfully deleted."].Value;
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(UIAccountController.Login), "UIAccount");

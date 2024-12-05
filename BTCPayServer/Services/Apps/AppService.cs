@@ -233,7 +233,7 @@ namespace BTCPayServer.Services.Apps
             await using var ctx = _ContextFactory.CreateContext();
             ctx.Apps.Add(appData);
             ctx.Entry(appData).State = EntityState.Deleted;
-            _eventAggregator.Publish(new AppDeletedEvent(appData));
+            _eventAggregator.Publish(new AppEvent.Deleted(appData));
             return await ctx.SaveChangesAsync() == 1;
         }
 
@@ -242,7 +242,7 @@ namespace BTCPayServer.Services.Apps
             await using var ctx = _ContextFactory.CreateContext();
             appData.Archived = archived;
             ctx.Entry(appData).State = EntityState.Modified;
-            _eventAggregator.Publish(new AppUpdatedEvent(appData));
+            _eventAggregator.Publish(new AppEvent.Updated(appData));
             return await ctx.SaveChangesAsync() == 1;
         }
 
@@ -466,9 +466,9 @@ retry:
             }
             await ctx.SaveChangesAsync();
             if (newApp)
-                _eventAggregator.Publish(new AppCreatedEvent(app));
+                _eventAggregator.Publish(new AppEvent.Created(app));
             else
-                _eventAggregator.Publish(new AppUpdatedEvent(app));
+                _eventAggregator.Publish(new AppEvent.Updated(app));
         }
 
         private static bool TryParseJson(string json, [MaybeNullWhen(false)] out JObject result)

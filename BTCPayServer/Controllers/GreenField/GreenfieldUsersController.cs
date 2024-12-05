@@ -221,7 +221,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 }
                 else
                 {
-                    _eventAggregator.Publish(new UserUpdatedEvent(user));
+                    _eventAggregator.Publish(new UserEvent.Updated(user));
                 }
             }
 
@@ -259,7 +259,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 blob.ImageUrl = fileIdUri.ToString();
                 user.SetBlob(blob);
                 await _userManager.UpdateAsync(user);
-                _eventAggregator.Publish(new UserUpdatedEvent(user));
+                _eventAggregator.Publish(new UserEvent.Updated(user));
                 var model = await FromModel(user);
                 return Ok(model);
             }
@@ -284,7 +284,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 blob.ImageUrl = null;
                 user.SetBlob(blob);
                 await _userManager.UpdateAsync(user);
-                _eventAggregator.Publish(new UserUpdatedEvent(user));
+                _eventAggregator.Publish(new UserEvent.Updated(user));
             }
             return Ok();
         }
@@ -406,17 +406,12 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var currentUser = await _userManager.GetUserAsync(User);
-            var userEvent = new UserRegisteredEvent
+            var userEvent = currentUser switch
             {
-                RequestUri = Request.GetAbsoluteRootUri(),
-                Admin = isNewAdmin,
-                User = user
+                { } invitedBy => new UserEvent.Invited(user, invitedBy, Request.GetAbsoluteRootUri()),
+                _ => new UserEvent.Registered(user, Request.GetAbsoluteRootUri())
             };
-            if (currentUser is not null)
-            {
-                userEvent.Kind = UserRegisteredEventKind.Invite;
-                userEvent.InvitedByUser = currentUser;
-            };
+            userEvent.Admin = isNewAdmin;
             _eventAggregator.Publish(userEvent);
 
             var model = await FromModel(user);
@@ -449,7 +444,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             // Ok, this user is an admin but there are other admins as well so safe to delete
             await _userService.DeleteUserAndAssociatedData(user);
-            _eventAggregator.Publish(new UserDeletedEvent(user));
+            _eventAggregator.Publish(new UserEvent.Deleted(user));
 
             return Ok();
         }

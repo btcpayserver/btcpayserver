@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Services.Altcoins.Monero.Configuration;
 using BTCPayServer.Services.Altcoins.Monero.RPC;
 using BTCPayServer.Services.Altcoins.Monero.RPC.Models;
+using BTCPayServer.Services.Altcoins.Monero.UI;
 using NBitcoin;
 
 namespace BTCPayServer.Services.Altcoins.Monero.Services
@@ -14,6 +15,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
     {
         private readonly MoneroLikeConfiguration _moneroLikeConfiguration;
         private readonly EventAggregator _eventAggregator;
+        private readonly IHttpClientFactory _httpClientFactory;
         public ImmutableDictionary<string, JsonRpcClient> DaemonRpcClients;
         public ImmutableDictionary<string, JsonRpcClient> WalletRpcClients;
 
@@ -26,6 +28,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         {
             _moneroLikeConfiguration = moneroLikeConfiguration;
             _eventAggregator = eventAggregator;
+            _httpClientFactory = httpClientFactory;
             DaemonRpcClients =
                 _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
                     pair => new JsonRpcClient(pair.Value.DaemonRpcUri, pair.Value.Username, pair.Value.Password, httpClientFactory.CreateClient($"{pair.Key}client")));
@@ -45,6 +48,28 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
             return summary.Synced &&
                    summary.WalletAvailable;
         }
+
+        // Method to update DaemonRpcClients and then update the summary
+        public async Task UpdateDaemonRpcClientsAndSummaryAsync(string cryptoCode, DaemonParams daemonParams)
+        {
+            cryptoCode = cryptoCode.ToUpperInvariant();
+
+            if (_moneroLikeConfiguration.MoneroLikeConfigurationItems.TryGetValue(cryptoCode, out MoneroLikeConfigurationItem configItem))
+            {
+                // Update the configuration with new parameters
+                configItem.DaemonRpcUri = daemonParams.address;
+                configItem.Username = daemonParams.username;
+                configItem.Password = daemonParams.password;
+                
+                // Reinitialize the DaemonRpcClients based on the updated configuration
+                DaemonRpcClients = _moneroLikeConfiguration.MoneroLikeConfigurationItems.ToImmutableDictionary(pair => pair.Key,
+                    pair => new JsonRpcClient(pair.Value.DaemonRpcUri, pair.Value.Username, pair.Value.Password, _httpClientFactory.CreateClient($"{pair.Key}client")));
+
+                // Update the summary after updating the DaemonRpcClient
+                await UpdateSummary(cryptoCode);
+            }
+        }
+
 
         public async Task<MoneroLikeSummary> UpdateSummary(string cryptoCode)
         {

@@ -62,7 +62,7 @@
     <PackageReference Include="LNURL" Version="0.0.36" />
     <PackageReference Include="MailKit" Version="4.8.0" />
     <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />
-    <PackageReference Include="QRCoder" Version="1.4.3" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -73,10 +73,6 @@
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
-    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
-  </ItemGroup>
-
-	<ItemGroup>
     <PackageReference Include="TwentyTwenty.Storage" Version="2.24.2" />
     <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.24.2" />
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.24.2" />
@@ -84,6 +80,7 @@
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.24.2" />
     <PackageReference Condition="'$(RazorCompileOnBuild)' == 'false'" Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
 	<ItemGroup>

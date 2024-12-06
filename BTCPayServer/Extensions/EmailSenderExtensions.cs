@@ -1,6 +1,7 @@
 using System.Text.Encodings.Web;
 using BTCPayServer.Services.Mails;
 using MimeKit;
+using QRCoder;
 
 namespace BTCPayServer.Services
 {
@@ -42,7 +43,7 @@ namespace BTCPayServer.Services
         public static void SendInvitation(this IEmailSender emailSender, MailboxAddress address, string link)
         {
             emailSender.SendEmail(address, "Invitation", CreateEmailBody(
-                $"Please complete your account setup by clicking <a href='{HtmlEncoder.Default.Encode(link)}'>this link</a>."));
+                $"<p>Please complete your account setup by clicking <a href='{HtmlEncoder.Default.Encode(link)}'>this link</a>.</p><p>You can also use the BTCPay Server app and scan this QR code when connecting:</p>{GetQrCodeImg(link)}"));
         }
 
         public static void SendNewUserInfo(this IEmailSender emailSender, MailboxAddress address, string newUserInfo, string link)
@@ -55,6 +56,15 @@ namespace BTCPayServer.Services
         {
             emailSender.SendEmail(address, userInfo, CreateEmailBody(
                 $"{userInfo}. You can view the store users here: <a href='{HtmlEncoder.Default.Encode(link)}'>Store users</a>"));
+        }
+
+        private static string GetQrCodeImg(string data)
+        {
+            using var qrGenerator = new QRCodeGenerator();
+            using var qrCodeData = qrGenerator.CreateQrCode(data, QRCodeGenerator.ECCLevel.Q);
+            using var qrCode = new Base64QRCode(qrCodeData);
+            var base64 = qrCode.GetGraphic(20);
+            return $"<img src='data:image/png;base64,{base64}' alt='{data}' width='320' height='320'/>";
         }
     }
 }

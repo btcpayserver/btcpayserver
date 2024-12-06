@@ -425,8 +425,7 @@ namespace BTCPayServer.Controllers
 
         private async Task PrepareCreateUserViewData()
         {
-            var emailSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-            ViewData["CanSendEmail"] = emailSettings.IsComplete();
+            ViewData["CanSendEmail"] = await _emailSenderFactory.IsComplete();
             ViewData["AllowRequestEmailConfirmation"] = _policiesSettings.RequiresConfirmedEmail;
         }
     }

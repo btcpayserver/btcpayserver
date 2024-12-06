@@ -1,7 +1,7 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Services.Mails;
 @model BTCPayServer.Services.PoliciesSettings
-@inject SettingsRepository _SettingsRepository
+@inject EmailSenderFactory EmailSenderFactory
 @inject TransactionLinkProviders TransactionLinkProviders
 @{
     ViewData.SetActivePage(ServerNavPages.Policies);
@@ -47,10 +47,9 @@
                             <div class="subsettings">
                                 <div class="d-flex my-3">
                                     @{
-                                        var emailSettings = (await _SettingsRepository.GetSettingAsync<EmailSettings>()) ?? new EmailSettings();
                                         /* The "|| Model.RequiresConfirmedEmail" check is for the case when a user had checked
                                            the checkbox without first configuring the e-mail settings so that they can uncheck it. */
-                                        var isEmailConfigured = emailSettings.IsComplete() || Model.RequiresConfirmedEmail;
+                                        var isEmailConfigured = await EmailSenderFactory.IsComplete() || Model.RequiresConfirmedEmail;
                                     }
                                     <input asp-for="RequiresConfirmedEmail" type="checkbox" class="btcpay-toggle me-3" disabled="@(isEmailConfigured ? null : "disabled")" />
                                     <div>

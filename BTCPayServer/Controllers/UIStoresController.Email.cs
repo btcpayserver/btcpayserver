@@ -26,22 +26,18 @@ public partial class UIStoresController
         if (store == null)
             return NotFound();
 
-        var blob = store.GetStoreBlob();
-        if (blob.EmailSettings?.IsComplete() is not true && !TempData.HasStatusMessage())
+        var configured = await _emailSenderFactory.IsComplete(store.Id);
+        if (!configured && !TempData.HasStatusMessage())
         {
-            var emailSender = await _emailSenderFactory.GetEmailSender(store.Id) as StoreEmailSender;
-            if (!await IsSetupComplete(emailSender?.FallbackSender))
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Warning,
-                    Html = "You need to configure email settings before this feature works." +
-                           $" <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
-                });
-            }
+                Severity = StatusMessageModel.StatusSeverity.Warning,
+                Html = "You need to configure email settings before this feature works." +
+                          $" <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
+            });
         }
 
-        var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? [] };
+        var vm = new StoreEmailRuleViewModel { Rules = store.GetStoreBlob().EmailRules ?? [] };
         return View(vm);
     }
 
@@ -110,8 +106,7 @@ public partial class UIStoresController
             try
             {
                 var rule = vm.Rules[commandIndex];
-                var emailSender = await _emailSenderFactory.GetEmailSender(store.Id);
-                if (await IsSetupComplete(emailSender))
+                if (await _emailSenderFactory.IsComplete(store.Id))
                 {
                     var recipients = rule.To.Split(",", StringSplitOptions.RemoveEmptyEntries)
                         .Select(o =>
@@ -121,7 +116,8 @@ public partial class UIStoresController
                         })
                         .Where(o => o != null)
                         .ToArray();
-                        
+
+                    var emailSender = await _emailSenderFactory.GetEmailSender(store.Id);
                     emailSender.SendEmail(recipients.ToArray(), null, null, $"[TEST] {rule.Subject}", rule.Body);
                     message += StringLocalizer["Test email sent — please verify you received it."];
                 }
@@ -178,14 +174,12 @@ public partial class UIStoresController
         if (store == null)
             return NotFound();
 
-        var blob = store.GetStoreBlob();
-        var data = blob.EmailSettings ?? new EmailSettings();
-        var fallbackSettings = await _emailSenderFactory.GetEmailSender(store.Id) is StoreEmailSender { FallbackSender: not null } storeSender
-            ? await storeSender.FallbackSender.GetEmailSettings()
+        var emailSender = await _emailSenderFactory.GetEmailSender(store.Id);
+        var data = await emailSender.GetEmailSettings() ?? new EmailSettings();
+        var fallbackSettings = emailSender is StoreEmailSender { FallbackSender: { } fallbackSender }
+            ? await fallbackSender.GetEmailSettings()
             : null;
-        var vm = new EmailsViewModel(data, fallbackSettings);
-            
-        return View(vm);
+        return View(new EmailsViewModel(data, fallbackSettings));
     }
 
     [HttpPost("{storeId}/email-settings")]
@@ -261,10 +255,5 @@ public partial class UIStoresController
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings modified"].Value;
         }
         return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
-    }
-
-    private static async Task<bool> IsSetupComplete(IEmailSender emailSender)
-    {
-        return emailSender is not null && (await emailSender.GetEmailSettings())?.IsComplete() == true;
     }
 }

@@ -42,7 +42,7 @@ namespace BTCPayServer.Controllers
                 psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
             }
             psbtRequest.RBF = network.SupportRBF ? true : null;
-            psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO || derivationSettings.DefaultIncludeNonWitnessUtxo;
+            psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO;
 
             psbtRequest.FeePreference = new FeePreference();
             if (sendModel.FeeSatoshiPerByte is decimal v &&

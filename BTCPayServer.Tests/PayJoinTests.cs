@@ -404,10 +404,10 @@ namespace BTCPayServer.Tests
                 Assert.False(paymentValueRowColumn.Text.Contains("payjoin",
                     StringComparison.InvariantCultureIgnoreCase));
 
-                s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
-                s.Driver.WaitForElement(By.CssSelector("#WalletTransactionsList tr"));
                 TestUtils.Eventually(() =>
                 {
+                    s.GoToWallet(receiverWalletId, WalletsNavPages.Transactions);
+                    s.Driver.WaitForElement(By.CssSelector("#WalletTransactionsList tr"));
                     Assert.Contains("payjoin", s.Driver.PageSource);
                     // Either the invoice id or the payjoin-exposed label, depending on the input having been used
                     Assert.Matches(new Regex($"({invoiceId}|payjoin-exposed)"), s.Driver.PageSource);

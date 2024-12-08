@@ -8,8 +8,8 @@ namespace BTCPayServer.Components.StoreLightningServices;
 
 public class StoreLightningServicesViewModel
 {
+    public string StoreId { get; set; }
     public string CryptoCode { get; set; }
-    public StoreData Store { get; set; }
-    public LightningNodeType LightningNodeType { get; set; }
+    public LightningNodeType? LightningNodeType { get; set; }
     public List<AdditionalServiceViewModel> Services { get; set; }
 }

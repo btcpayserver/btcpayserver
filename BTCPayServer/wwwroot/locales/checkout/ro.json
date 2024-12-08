@@ -8,7 +8,7 @@
   "still_due": "Vă rugăm să trimiteți {{amount}} la adresa de mai jos.",
   "view_details": "Vizualizați Detalii",
   "pay_with": "Platiți cu",
-  "pay_in_wallet": "Plătiți în portofel",
+  "pay_in_wallet": "Plătiți din portofel",
   "pay_by_nfc": "Plătiți prin NFC",
   "pay_by_lnurl": "Plătiți prin LNURL-Withdraw",
   "invoice_id": "Factura cu ID",
@@ -20,7 +20,7 @@
   "amount_due": "Sumă Datorată",
   "recommended_fee": "Taxa recomandată",
   "fee_rate": "{{feeRate}} sat/byte",
-  "network_cost": "Costuri de rețea",
+  "network_cost": "Costuri în rețea",
   "tx_count": "{{count}} tranzacție",
   "qr_text": "Scanați codul QR sau atingeți pentru a copia adresa.",
   "address": "Adresa",
@@ -39,7 +39,7 @@
   "submitting_nfc": "Trimitere NFC...",
   "payment_received": "Plată primită",
   "payment_received_body": "Plata dvs. a fost primită și este acum în curs de procesare",
-  "payment_received_confirmations": "Odată ce plata dumneavoastră primește {{requiredConfirmations}} confirmări pe blockchain-ul {{cryptoCode}}, factura dumneavoastră va fi achitată.",
-  "invoice_paidpartial_body": "O factură este valabilă doar pentru {{minutes}} minute. Această factură a expirat cu plată parțială. Vă rugăm să ne contactați pentru a putea finaliza comanda dumneavoastră.",
+  "payment_received_confirmations": "Odată ce plata dumneavoastră are {{requiredConfirmations}} confirmări pe blockchain-ul {{cryptoCode}}, plata dumneavoastră va fi decontată.",
+  "invoice_paidpartial_body": "O factură este valabilă doar {{minutes}} minute. \n\nAceastă factură a expirat cu o plată parțială. Vă rugăm să ne contactați, pentru a vă putea onora comanda.",
   "contact_us": "Contactați-ne"
 }

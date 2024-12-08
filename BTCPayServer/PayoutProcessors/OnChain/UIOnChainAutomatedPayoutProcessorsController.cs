@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,7 +7,6 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
 using BTCPayServer.Payouts;
 using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
@@ -30,12 +28,14 @@ public class UIOnChainAutomatedPayoutProcessorsController : Controller
         EventAggregator eventAggregator,
         PaymentMethodHandlerDictionary handlers,
         OnChainAutomatedPayoutSenderFactory onChainAutomatedPayoutSenderFactory,
+        IStringLocalizer stringLocalizer,
         PayoutProcessorService payoutProcessorService)
     {
         _eventAggregator = eventAggregator;
         _handlers = handlers;
         _onChainAutomatedPayoutSenderFactory = onChainAutomatedPayoutSenderFactory;
         _payoutProcessorService = payoutProcessorService;
+        StringLocalizer = stringLocalizer;
     }
     PayoutMethodId GetPayoutMethod(string cryptoCode) => PayoutTypes.CHAIN.GetPayoutMethodId(cryptoCode);
     [HttpGet("~/stores/{storeId}/payout-processors/onchain-automated/{cryptocode}")]

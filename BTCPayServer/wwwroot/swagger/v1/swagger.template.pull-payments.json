@@ -20,7 +20,9 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "required": [ "UID" ],
+                                "required": [
+                                    "UID"
+                                ],
                                 "type": "object",
                                 "properties": {
                                     "UID": {
@@ -89,7 +91,6 @@
                                             "description": "The public key K4 of the boltcard",
                                             "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
                                         }
-
                                     }
                                 }
                             }
@@ -115,13 +116,7 @@
         "/api/v1/stores/{storeId}/pull-payments": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The store ID",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "get": {
@@ -150,6 +145,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
                     }
                 },
                 "tags": [
@@ -225,11 +223,12 @@
                                     },
                                     "payoutMethods": {
                                         "type": "array",
-                                        "description": "The list of supported payout methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
+                                        "description": "The list of supported payout methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint. If `null`, all available payout methods will be supported.",
                                         "items": {
                                             "type": "string",
                                             "example": "BTC"
-                                        }
+                                        },
+                                        "nullable": true
                                     }
                                 }
                             }
@@ -312,13 +311,7 @@
         "/api/v1/stores/{storeId}/pull-payments/{pullPaymentId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "pullPaymentId",
@@ -550,13 +543,7 @@
         "/api/v1/stores/{storeId}/payouts": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "post": {
@@ -663,13 +650,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",
@@ -812,13 +793,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",
@@ -878,13 +853,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}/mark": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",

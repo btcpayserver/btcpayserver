@@ -65,5 +65,17 @@ namespace BTCPayServer.Plugins
             var result = await httpClient.GetStringAsync($"api/v1/plugins{queryString}");
             return JsonConvert.DeserializeObject<PublishedVersion[]>(result, serializerSettings) ?? throw new InvalidOperationException();
         }
+        public async Task<PublishedVersion> GetPlugin(string pluginSlug, string version)
+        {
+            try
+            {
+                var result = await httpClient.GetStringAsync($"api/v1/plugins/{pluginSlug}/versions/{version}");
+                return JsonConvert.DeserializeObject<PublishedVersion>(result, serializerSettings);
+            }
+            catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+        }
     }
 }

@@ -40,6 +40,6 @@
   "payment_received": "Zahlung erhalten",
   "payment_received_body": "Ihre Zahlung wurde erhalten und wird nun verarbeitet",
   "payment_received_confirmations": "Sobald Ihre Zahlung {{requiredConfirmations}} Bestätigungen auf der {{cryptoCode}}-Blockchain erhalten hat, wird Ihre Rechnung beglichen sein.",
-  "invoice_paidpartial_body": "Eine Rechnung ist nur für {{minutes}} Minuten gültig. Diese Rechnung ist mit teilweiser Zahlung abgelaufen. Bitte kontaktieren Sie uns, damit wir Ihre Bestellung erfüllen können.",
-  "contact_us": "Kontaktieren Sie uns"
+  "invoice_paidpartial_body": "Eine Rechnung ist nur {{minutes}} Minuten gültig.\n\nDiese Rechnung ist mit einer Teilzahlung abgelaufen. Bitte kontaktiere uns, damit wir deinen Auftrag ausführen können.",
+  "contact_us": "Kontaktiere uns"
 }

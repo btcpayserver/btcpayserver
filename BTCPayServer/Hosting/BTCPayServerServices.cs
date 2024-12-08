@@ -173,6 +173,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<UserService>();
             services.TryAddSingleton<UriResolver>();
             services.TryAddSingleton<WalletHistogramService>();
+            services.TryAddSingleton<LightningHistogramService>();
             services.AddSingleton<ApplicationDbContextFactory>();
             services.AddOptions<BTCPayServerOptions>().Configure(
                 (options) =>
@@ -531,7 +532,8 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
                 { "TRY", "btcturk" },
                 { "UGX", "yadio"},
                 { "RSD", "bitpay"},
-                { "NGN", "bitnob"}
+                { "NGN", "bitnob"},
+                { "NOK", "barebitcoin"}
             })
             {
                 var r = new DefaultRules.Recommendation(rule.Key, rule.Value);
@@ -586,6 +588,8 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddRateProvider<YadioRateProvider>();
             services.AddRateProvider<BtcTurkRateProvider>();
             services.AddRateProvider<FreeCurrencyRatesRateProvider>();
+            services.AddRateProvider<BitmyntRateProvider>();
+            services.AddRateProvider<BareBitcoinRateProvider>();
 
             services.AddSingleton<InvoiceBlobMigratorHostedService>();
             services.AddSingleton<IHostedService, InvoiceBlobMigratorHostedService>(o => o.GetRequiredService<InvoiceBlobMigratorHostedService>());

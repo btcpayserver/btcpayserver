@@ -8,13 +8,7 @@
                 "summary": "Get invoices",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "orderId",
@@ -136,13 +130,7 @@
                 "summary": "Create a new invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Create a new invoice",
@@ -200,22 +188,10 @@
                 "summary": "Get invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "View information about the specified invoice",
@@ -256,22 +232,10 @@
                 "operationId": "Invoices_ArchiveInvoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the invoice belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to remove",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "responses": {
@@ -313,22 +277,10 @@
                 "operationId": "Invoices_UpdateInvoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store the invoice belongs to",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "responses": {
@@ -387,22 +339,10 @@
                 "summary": "Get invoice payment methods",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     },
                     {
                         "name": "onlyAccountedPayments",
@@ -467,22 +407,10 @@
                 "summary": "Mark invoice status",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "Mark an invoice as invalid or settled.",
@@ -540,22 +468,10 @@
                 "summary": "Unarchive invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "Unarchive an invoice",
@@ -603,22 +519,10 @@
                 "summary": "Activate Payment Method",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -662,22 +566,10 @@
                 "summary": "Refund invoice",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "invoiceId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The invoice to refund",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/InvoiceId"
                     }
                 ],
                 "description": "Refund invoice",
@@ -790,6 +682,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "status": {
+                        "type": "string",
                         "nullable": false,
                         "description": "Mark an invoice as completed or invalid.",
                         "allOf": [
@@ -856,6 +749,7 @@
                         "$ref": "#/components/schemas/InvoiceMetadata"
                     },
                     "checkout": {
+                        "type": "object",
                         "nullable": true,
                         "description": "Additional settings to customize the checkout flow",
                         "allOf": [
@@ -865,6 +759,7 @@
                         ]
                     },
                     "receipt": {
+                        "type": "object",
                         "nullable": true,
                         "description": "Additional settings to customize the public receipt",
                         "allOf": [
@@ -889,8 +784,12 @@
                                 "description": "The identifier of the invoice"
                             },
                             "storeId": {
-                                "type": "string",
-                                "description": "The store identifier that the invoice belongs to"
+                                "description": "The store identifier that the invoice belongs to",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/StoreId"
+                                    }
+                                ]
                             },
                             "amount": {
                                 "type": "string",
@@ -1119,6 +1018,7 @@
                         "title": "Receipt information",
                         "properties": {
                             "receiptData": {
+                                "type": "object",
                                 "description": "A custom JSON object that represents information displayed on the receipt page of an invoice.",
                                 "nullable": true
                             }
@@ -1174,6 +1074,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "speedPolicy": {
+                        "type": "string",
                         "nullable": true,
                         "allOf": [
                             {
@@ -1195,6 +1096,7 @@
                                 "$ref": "#/components/schemas/PaymentMethodId"
                             }
                         ],
+                        "type": "string",
                         "nullable": true,
                         "description": "Default payment type for the invoice (e.g., BTC, BTC-LightningNetwork). Default payment method set for the store is used if this parameter is not specified."
                     },
@@ -1204,6 +1106,7 @@
                         "description": "If true, payment methods are enabled individually upon user interaction in the invoice. Default to store's settings'"
                     },
                     "expirationMinutes": {
+                        "type": "number",
                         "nullable": true,
                         "description": "The number of minutes after which an invoice becomes expired. Defaults to the store's settings. (The default store settings is 15)",
                         "allOf": [
@@ -1226,9 +1129,10 @@
                         "type": "number",
                         "format": "double",
                         "nullable": true,
-                        "minimum": 0,
-                        "maximum": 100,
-                        "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Defaults to the store's settings. (The default store settings is 100)"
+                        "minimum": 0.0,
+                        "maximum": 100.0,
+                        "default": 0.0,
+                        "description": "A percentage determining whether to count the invoice as paid when the invoice is paid within the specified margin of error. Defaults to the store's settings. (The default store settings is 0)"
                     },
                     "redirectURL": {
                         "type": "string",

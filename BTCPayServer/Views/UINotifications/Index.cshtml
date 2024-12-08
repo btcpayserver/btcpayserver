@@ -96,14 +96,14 @@
             }
         </button>
         <div class="dropdown-menu" aria-labelledby="StoresOptionsToggle">
-            @foreach (var store in Model.Stores)
+            @foreach (var store in Model.StoreFilterOptions)
             {
                 <a asp-action="Index"
                    asp-route-count="@Model.Count"
                    asp-route-status="@Model.Status"
-                   asp-route-searchTerm="@Model.Search.Toggle("storeid", store.Id)"
-                   class="dropdown-item @(HasArrayFilter("storeid", store.Id) ? "custom-active" : "")">
-                    @store.StoreName
+                   asp-route-searchTerm="@Model.Search.Toggle("storeid", store.Value)"
+                   class="dropdown-item @(store.Selected ? "custom-active" : "")">
+                    @store.Text
                 </a>
             }
         </div>

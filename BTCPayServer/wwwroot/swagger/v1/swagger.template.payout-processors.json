@@ -8,13 +8,7 @@
                 "summary": "Get store configured payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Get store configured payout processors",
@@ -58,13 +52,7 @@
                 "summary": "Remove store configured payout processor",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "processor",
@@ -123,6 +111,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
                     }
                 },
                 "security": [
@@ -141,13 +132,7 @@
                 "summary": "Get configured store onchain automated payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -192,13 +177,7 @@
                 "summary": "Update configured store onchain automated payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PaymentMethodId"
@@ -254,13 +233,7 @@
                 "summary": "Get configured store Lightning automated payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "$ref": "#/components/parameters/PayoutMethodId"
@@ -305,16 +278,10 @@
                 "summary": "Update configured store Lightning automated payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "$ref": "#/components/parameters/PaymentMethodId"
+                        "$ref": "#/components/parameters/PayoutMethodId"
                     }
                 ],
                 "description": "Update configured store Lightning automated payout processors",
@@ -367,13 +334,7 @@
                 "summary": "Get configured store onchain automated payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Get configured store onchain automated payout processors",
@@ -415,13 +376,7 @@
                 "summary": "Update configured store onchain automated payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Update configured store onchain automated payout processors",
@@ -474,13 +429,7 @@
                 "summary": "Get configured store Lightning automated payout processors",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Get configured store Lightning automated payout processors",

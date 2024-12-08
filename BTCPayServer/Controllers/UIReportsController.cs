@@ -11,8 +11,6 @@ using BTCPayServer.Models.StoreReportsViewModels;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
 using System.Threading;
 using Newtonsoft.Json.Linq;
 

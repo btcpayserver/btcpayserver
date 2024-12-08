@@ -32,15 +32,18 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
         private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly LightningHistogramService _lnHistogramService;
 
         protected GreenfieldLightningNodeApiController(
             PoliciesSettings policiesSettings,
             IAuthorizationService authorizationService,
-            PaymentMethodHandlerDictionary handlers)
+            PaymentMethodHandlerDictionary handlers,
+            LightningHistogramService lnHistogramService)
         {
             _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
             _handlers = handlers;
+            _lnHistogramService = lnHistogramService;
         }
 
         public virtual async Task<IActionResult> GetInfo(string cryptoCode, CancellationToken cancellationToken = default)
@@ -84,6 +87,22 @@ namespace BTCPayServer.Controllers.Greenfield
                         Closing = balance.OffchainBalance.Closing,
                     }
                     : null
+            });
+        }
+        
+        public virtual async Task<IActionResult> GetHistogram(string cryptoCode, HistogramType? type = null, CancellationToken cancellationToken = default)
+        {
+            Enum.TryParse<HistogramType>(type.ToString(), true, out var histType);
+            var lightningClient = await GetLightningClient(cryptoCode, true);
+            var data = await _lnHistogramService.GetHistogram(lightningClient, histType, cancellationToken);
+            if (data == null) return this.CreateAPIError(404, "histogram-not-found", "The lightning histogram was not found.");
+
+            return Ok(new HistogramData
+            {
+                Type = data.Type,
+                Balance = data.Balance,
+                Series = data.Series,
+                Labels = data.Labels
             });
         }
 

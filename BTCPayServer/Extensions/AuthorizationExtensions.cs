@@ -3,10 +3,8 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Security;
-using BTCPayServer.Security.Bitpay;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
-using CsvHelper.Configuration.Attributes;
 using Microsoft.AspNetCore.Authorization;
 
 namespace BTCPayServer

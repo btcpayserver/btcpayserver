@@ -43,11 +43,21 @@ namespace BTCPayServer.Controllers
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "UIHome");
 
-            var stores = await _storeRepo.GetStoresByUserId(userId);
-            model.Stores = stores.Where(store => !store.Archived).OrderBy(s => s.StoreName).ToList();
-
             var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
             var fs = new SearchString(searchTerm, timezoneOffset);
+            var storeIds = fs.GetFilterArray("storeid");
+            var stores = await _storeRepo.GetStoresByUserId(userId);
+            model.StoreFilterOptions = stores
+                .Where(store => !store.Archived)
+                .OrderBy(s => s.StoreName)
+                .Select(s => new StoreFilterOption
+                {
+                    Selected = storeIds?.Contains(s.Id) is true,
+                    Text = s.StoreName,
+                    Value = s.Id
+                })
+                .ToList();
+
             model.Search = fs;
 
             var res = await _notificationManager.GetNotifications(new NotificationsQuery
@@ -57,7 +67,7 @@ namespace BTCPayServer.Controllers
                 UserId = userId,
                 SearchText = model.SearchText,
                 Type = fs.GetFilterArray("type"),
-                StoreIds = fs.GetFilterArray("storeid"),
+                StoreIds = storeIds,
                 Seen = model.Status == "Unread" ? false : null
             });
             model.Items = res.Items;

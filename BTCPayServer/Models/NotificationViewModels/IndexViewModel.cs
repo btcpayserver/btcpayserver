@@ -15,6 +15,13 @@ namespace BTCPayServer.Models.NotificationViewModels
 
     public class NotificationIndexViewModel : IndexViewModel
     {
-        public List<StoreData> Stores { get; set; }
+        public List<StoreFilterOption> StoreFilterOptions { get; set; }
+    }
+
+    public class StoreFilterOption
+    {
+        public bool Selected { get; set; }
+        public string Text { get; set; }
+        public string Value { get; set; }
     }
 }

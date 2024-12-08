@@ -1,13 +1,10 @@
-using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
-using BTCPayServer.Plugins.Crowdfund;
-using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices
@@ -32,7 +29,7 @@ namespace BTCPayServer.HostedServices
         {
             if (evt is InvoiceEvent invoiceEvent)
             {
-                List<PosCartItem> cartItems = null;
+                List<AppCartItem> cartItems = null;
                 int deduct;
                 switch (invoiceEvent.Name)
                 {
@@ -52,10 +49,10 @@ namespace BTCPayServer.HostedServices
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
 
-                    var items = cartItems?.ToList() ?? new List<PosCartItem>();
+                    var items = cartItems?.ToList() ?? new List<AppCartItem>();
                     if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
                     {
-                        items.Add(new PosCartItem
+                        items.Add(new AppCartItem
                         {
                             Id = invoiceEvent.Invoice.Metadata.ItemCode,
                             Count = 1,

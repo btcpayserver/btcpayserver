@@ -74,9 +74,8 @@ namespace BTCPayServer.Tests
             tester.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("DELETE");
             tester.Driver.FindElement(By.Id("ConfirmContinue")).Click();
 
-            text = tester.Driver.PageSource;
-            Assert.DoesNotContain("Select-English (Custom)", text);
-            Assert.Contains("English (Custom) deleted", text);
+            Assert.Contains("Dictionary English (Custom) deleted", tester.FindAlertMessage().Text);
+            Assert.DoesNotContain("Select-English (Custom)", tester.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]

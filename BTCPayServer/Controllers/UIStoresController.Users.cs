@@ -61,7 +61,8 @@ public partial class UIStoresController
             var result = await _userManager.CreateAsync(user);
             if (result.Succeeded)
             {
-                var tcs = new TaskCompletionSource<Uri>();
+				var invitationEmail = await _emailSenderFactory.IsComplete();
+				var tcs = new TaskCompletionSource<Uri>();
                 var currentUser = await _userManager.GetUserAsync(HttpContext.User);
 
                 _eventAggregator.Publish(new UserRegisteredEvent
@@ -70,13 +71,13 @@ public partial class UIStoresController
                     Kind = UserRegisteredEventKind.Invite,
                     User = user,
                     InvitedByUser = currentUser,
+                    SendInvitationEmail = invitationEmail,
                     CallbackUrlGenerated = tcs
                 });
                     
                 var callbackUrl = await tcs.Task;
-                var settings = await _settingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
-                var info = settings.IsComplete()
-                    ? "An invitation email has been sent.<br/>You may alternatively"
+                var info = invitationEmail
+					? "An invitation email has been sent.<br/>You may alternatively"
                     : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
                 successInfo = $"{info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>";
             }

@@ -37,11 +37,6 @@
                 <input asp-for="Bucket" class="form-control" />
                 <span asp-validation-for="Bucket" class="text-danger"></span>
             </div>
-            <div class="form-group">
-                <label asp-for="Email" class="form-label"></label>
-                <input asp-for="Email" class="form-control" />
-                <span asp-validation-for="Email" class="text-danger"></span>
-            </div>
 
             <button type="submit" class="btn btn-primary" name="command" value="Save" text-translate="true">Save</button>
             <a asp-action="Storage" asp-route-forceChoice="true" class="ms-2" text-translate="true">Change Storage provider</a>

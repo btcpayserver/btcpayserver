@@ -1,3 +1,4 @@
+#nullable enable
 using System.Threading.Tasks;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
@@ -27,7 +28,7 @@ namespace BTCPayServer.Services.Mails
             _storeRepository = storeRepository;
         }
 
-        public Task<IEmailSender> GetEmailSender(string storeId = null)
+        public Task<IEmailSender> GetEmailSender(string? storeId = null)
         {
             var serverSender = new ServerEmailSender(_settingsRepository, _jobClient, Logs);
             if (string.IsNullOrEmpty(storeId))
@@ -36,5 +37,16 @@ namespace BTCPayServer.Services.Mails
                 !PoliciesSettings.Settings.DisableStoresToUseServerEmailSettings ? serverSender : null, _jobClient,
                 storeId, Logs));
         }
-    }
+
+		public async Task<bool> IsComplete(string? storeId = null)
+		{
+			var settings = await this.GetSettings(storeId);
+			return settings?.IsComplete() is true;
+		}
+		public async Task<EmailSettings?> GetSettings(string? storeId = null)
+		{
+			var sender = await this.GetEmailSender(storeId);
+			return await sender.GetEmailSettings();
+		}
+	}
 }

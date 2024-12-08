@@ -330,13 +330,7 @@
                 "description": "Get 1 user by ID or Email.",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The ID or email of the user to load",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "responses": {
@@ -378,13 +372,7 @@
                 "description": "Delete a user.\n\nMust be an admin to perform this operation.\n\nAttempting to delete the only admin user will not succeed.\n\nAll data associated with the user will be deleted as well if the operation succeeds.",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The ID or email of the user to be deleted",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "responses": {
@@ -421,13 +409,7 @@
                 "description": "Lock or unlock a user.\n\nMust be an admin to perform this operation.\n\nAttempting to lock the only admin user will not succeed.",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The ID of the user to be un/locked",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "requestBody": {
@@ -474,13 +456,7 @@
                 "description": "Approve or unapprove a user.\n\nMust be an admin to perform this operation.\n\nAttempting to (un)approve a user for which this requirement does not exist will not succeed.",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The ID of the user to be un/approved",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "requestBody": {
@@ -561,6 +537,7 @@
                         "description": "True if the instance requires approval to log in"
                     },
                     "created": {
+                        "type": "number",
                         "nullable": true,
                         "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6",
                         "allOf": [

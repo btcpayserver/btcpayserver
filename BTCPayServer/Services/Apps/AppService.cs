@@ -10,7 +10,6 @@ using BTCPayServer.Data;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
-using BTCPayServer.Plugins.PointOfSale.Models;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
@@ -44,6 +43,10 @@ namespace BTCPayServer.Services.Apps
         private readonly DisplayFormatter _displayFormatter;
         private readonly StoreRepository _storeRepository;
         public CurrencyNameTable Currencies => _Currencies;
+        private readonly string[] _paidStatuses = [
+            InvoiceStatus.Processing.ToString(),
+            InvoiceStatus.Settled.ToString()
+        ];
 
         public AppService(
             IEnumerable<AppBaseType> apps,
@@ -87,15 +90,11 @@ namespace BTCPayServer.Services.Apps
         {
             if (GetAppType(appData.AppType) is not IHasItemStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
-            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData, null,
-            [
-                InvoiceStatus.Processing.ToString(),
-                InvoiceStatus.Settled.ToString()
-            ]);
+            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, appData, null, _paidStatuses);
             return await salesType.GetItemStats(appData, paidInvoices);
         }
 
-        public static Task<AppSalesStats> GetSalesStatswithPOSItems(ViewPointOfSaleViewModel.Item[] items,
+        public static Task<AppSalesStats> GetSalesStatswithPOSItems(AppItem[] items,
             InvoiceEntity[] paidInvoices, int numberOfDays)
         {
             var series = paidInvoices
@@ -133,8 +132,7 @@ namespace BTCPayServer.Services.Apps
         {
             if (GetAppType(app.AppType) is not IHasSaleStatsAppType salesType)
                 throw new InvalidOperationException("This app isn't a SalesAppBaseType");
-            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays));
-
+            var paidInvoices = await GetInvoicesForApp(_InvoiceRepository, app, DateTimeOffset.UtcNow - TimeSpan.FromDays(numberOfDays), _paidStatuses);
             return await salesType.GetSalesStats(app, paidInvoices, numberOfDays);
         }
 
@@ -145,7 +143,7 @@ namespace BTCPayServer.Services.Apps
             public DateTime Date { get; set; }
         }
 
-        public static Func<List<InvoiceStatsItem>, InvoiceEntity, List<InvoiceStatsItem>> AggregateInvoiceEntitiesForStats(ViewPointOfSaleViewModel.Item[] items)
+        public static Func<List<InvoiceStatsItem>, InvoiceEntity, List<InvoiceStatsItem>> AggregateInvoiceEntitiesForStats(AppItem[] items)
         {
             return (res, e) =>
             {
@@ -344,14 +342,14 @@ namespace BTCPayServer.Services.Apps
             return _storeRepository.FindStore(app.StoreDataId);
         }
 
-        public static string SerializeTemplate(ViewPointOfSaleViewModel.Item[] items)
+        public static string SerializeTemplate(AppItem[] items)
         {
                return JsonConvert.SerializeObject(items, Formatting.Indented, _defaultSerializer);
         }
-        public static ViewPointOfSaleViewModel.Item[] Parse(string template, bool includeDisabled = true, bool throws = false)
+        public static AppItem[] Parse(string template, bool includeDisabled = true, bool throws = false)
         {
             if (string.IsNullOrWhiteSpace(template)) return [];
-            var allItems = JsonConvert.DeserializeObject<ViewPointOfSaleViewModel.Item[]>(template, _defaultSerializer)!;
+            var allItems = JsonConvert.DeserializeObject<AppItem[]>(template, _defaultSerializer)!;
             // ensure all items have an id, which is also unique
             var itemsWithoutId = allItems.Where(i => string.IsNullOrEmpty(i.Id)).ToList();
             if (itemsWithoutId.Any() && throws) throw new ArgumentException($"Missing ID for item \"{itemsWithoutId.First().Title}\".");
@@ -479,7 +477,7 @@ retry:
         }
 #nullable enable
         
-        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<PosCartItem> cartItems)
+        public static bool TryParsePosCartItems(JObject? posData, [MaybeNullWhen(false)] out List<AppCartItem> cartItems)
         {
             cartItems = null;
             if (posData is null)
@@ -488,12 +486,13 @@ retry:
                 return false;
             try
             {
-                cartItems = new List<PosCartItem>();
+                cartItems = [];
                 foreach (var o in cartObject.OfType<JObject>())
                 {
                     var id = o.GetValue("id", StringComparison.InvariantCulture)?.ToString();
                     if (id == null)
                         continue;
+                    var title = o.GetValue("title", StringComparison.InvariantCulture)?.ToString();
                     var countStr = o.GetValue("count", StringComparison.InvariantCulture)?.ToString() ?? string.Empty;
                     var price = o.GetValue("price") switch
                     {
@@ -504,7 +503,7 @@ retry:
                     };
                     if (int.TryParse(countStr, out var count))
                     {
-                        cartItems.Add(new PosCartItem { Id = id, Count = count, Price = price });
+                        cartItems.Add(new AppCartItem { Id = id, Title = title, Count = count, Price = price });
                     }
                 }
                 return true;
@@ -533,13 +532,5 @@ retry:
             var appType = GetAppType(app.AppType);
             return await appType?.ViewLink(app)!;
         }
-#nullable restore
-    }
-
-    public class PosCartItem
-    {
-        public string Id { get; set; }
-        public int Count { get; set; }
-        public decimal Price { get; set; }
     }
 }

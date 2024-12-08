@@ -7,10 +7,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
-using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Payouts;
@@ -18,13 +15,11 @@ using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
-using LNURL;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
-using NBitcoin;
 
 namespace BTCPayServer.Data.Payouts.LightningLike
 {
@@ -192,7 +187,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
             return new ResultVM
             {
                 PayoutId = payoutData.Id,
-                Result = PayResult.Error,
+                Success = false,
                 Destination = blob.Destination,
                 Message = message
             };
@@ -216,7 +211,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
         {
             public string PayoutId { get; set; }
             public string Destination { get; set; }
-            public PayResult Result { get; set; }
+            public bool? Success { get; set; }
             public string Message { get; set; }
         }
 

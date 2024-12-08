@@ -13,7 +13,6 @@ using BTCPayServer.Services.Rates;
 using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 
 namespace BTCPayServer.Data
 {

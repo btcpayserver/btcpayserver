@@ -11,7 +11,7 @@ namespace BTCPayServer.Client.Models
         public string Body { get; set; }
         public string StoreId { get; set; }
         public bool Seen { get; set; }
-        public Uri Link { get; set; }
+        public string Link { get; set; }
 
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset CreatedTime { get; set; }

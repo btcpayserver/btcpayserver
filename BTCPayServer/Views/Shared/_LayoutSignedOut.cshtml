@@ -1,5 +1,4 @@
 @using BTCPayServer.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Components.MainLogo
 @using System.Text
 @inject SettingsRepository SettingsRepository
@@ -49,7 +48,7 @@
             <vc:main-logo />
         </a>
 
-		<h1 class="h2 mb-3" text-translate="true">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h1>
+		<h1 class="h2 mb-3">@ViewLocalizer["Welcome to {0}", string.IsNullOrWhiteSpace(settings.ServerName) ? "BTCPay Server" : settings.ServerName]</h1>
         @if (ViewBag.ShowLeadText)
         {
             <p class="lead">

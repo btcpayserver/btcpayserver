@@ -307,14 +307,13 @@ namespace BTCPayServer.Controllers
         [HttpGet("{walletId}/histogram/{type}")]
         public async Task<IActionResult> WalletHistogram(
             [ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, WalletHistogramType type)
+            WalletId walletId, HistogramType type)
         {
             var store = GetCurrentStore();
             var data = await _walletHistogramService.GetHistogram(store, walletId, type);
+            if (data == null) return NotFound();
 
-            return data == null
-                ? NotFound()
-                : Json(data);
+            return Json(data);
         }
 
         [HttpGet("{walletId}/receive")]

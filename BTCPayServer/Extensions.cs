@@ -6,6 +6,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Net;
 using System.Net.WebSockets;
 using System.Reflection;
@@ -624,6 +625,23 @@ namespace BTCPayServer
                 .Select(t => t.ToUpperInvariant()).ToHashSet();
             return supportedChains.Contains(cryptoCode.ToUpperInvariant());
         }
+
+        class ParameterReplacer : ExpressionVisitor
+        {
+            private Dictionary<string, ParameterExpression> _Parameters;
+
+            protected override Expression VisitLambda<T>(Expression<T> node)
+            {
+                _Parameters = node.Parameters.ToDictionary(p => p.Name);
+                return base.VisitLambda(node);
+            }
+            protected override Expression VisitParameter(ParameterExpression node)
+            {
+                return _Parameters[node.Name];
+            }
+        }
+        public static TExpr ReplaceParameterRef<TExpr>(this TExpr expression) where TExpr : Expression
+        => (TExpr)new ParameterReplacer().Visit(expression);
 
         public static IActionResult RedirectToRecoverySeedBackup(this Controller controller, RecoverySeedBackupViewModel vm)
         {

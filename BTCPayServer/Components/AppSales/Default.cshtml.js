@@ -42,11 +42,19 @@ if (!window.appSales) {
                     render(data, period);
                 }
             };
+            
+            function addEventListeners() {
+                delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
+                    const type = e.target.value;
+                    await update(type);
+                });
+            }
 
-            delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
-                const type = e.target.value;
-                await update(type);
-            });
+            if (document.readyState === "loading") {
+                window.addEventListener("DOMContentLoaded", addEventListeners);
+            } else {
+                addEventListeners();
+            }
         }
     };
 }

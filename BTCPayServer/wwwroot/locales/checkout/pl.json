@@ -40,6 +40,6 @@
   "payment_received": "Płatność otrzymana",
   "payment_received_body": "Twoja płatność została odebrana i jest teraz przetwarzana",
   "payment_received_confirmations": "Kiedy Twoja płatność otrzyma {{requiredConfirmations}} potwierdzeń na łańcuchu bloków {{cryptoCode}}, Twoja faktura zostanie uregulowana.",
-  "invoice_paidpartial_body": "Faktura jest ważna tylko przez {{minutes}} minut. Ta faktura wygasła z częściową płatnością. Prosimy o kontakt, abyśmy mogli zrealizować Twoje zamówienie.",
+  "invoice_paidpartial_body": "Faktura jest ważna tylko przez {{minutes}} minut.\n\nTa faktura wygasła z częściową płatnością. Prosimy o kontakt, abyśmy mogli zrealizować Twoje zamówienie.",
   "contact_us": "Skontaktuj się z nami"
 }

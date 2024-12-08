@@ -19,7 +19,6 @@ using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Models.ServerViewModels;
 using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Payments;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Mails;
@@ -44,7 +43,7 @@ using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.Authentication
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = BTCPayServer.Client.Policies.CanModifyServerSettings,
+    [Authorize(Policy = Client.Policies.CanModifyServerSettings,
                AuthenticationSchemes = AuthenticationSchemes.Cookie)]
     public partial class UIServerController : Controller
     {
@@ -1108,12 +1107,12 @@ namespace BTCPayServer.Controllers
                     }
                     catch (Exception e)
                     {
-                        ModelState.AddModelError(nameof(vm.CustomThemeFile), $"Could not save theme file: {e.Message}");
+                        ModelState.AddModelError(nameof(vm.CustomThemeFile), StringLocalizer["Could not save CSS file: {0}", e.Message]);
                     }
                 }
                 else
                 {
-                    ModelState.AddModelError(nameof(vm.CustomThemeFile), "The uploaded theme file needs to be a CSS file");
+                    ModelState.AddModelError(nameof(vm.CustomThemeFile), StringLocalizer["The uploaded file needs to be a CSS file"]);
                 }
             }
             else if (RemoveCustomThemeFile && theme.CustomThemeCssUrl is not null)
@@ -1129,18 +1128,18 @@ namespace BTCPayServer.Controllers
             {
                 if (vm.LogoFile.Length > 1_000_000)
                 {
-                    ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file should be less than 1MB");
+                    ModelState.AddModelError(nameof(vm.LogoFile), StringLocalizer["The uploaded file should be less than {0}", "1MB"]);
                 }
                 else if (!vm.LogoFile.ContentType.StartsWith("image/", StringComparison.InvariantCulture))
                 {
-                    ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file needs to be an image");
+                    ModelState.AddModelError(nameof(vm.LogoFile), StringLocalizer["The uploaded file needs to be an image"]);
                 }
                 else
                 {
                     var formFile = await vm.LogoFile.Bufferize();
                     if (!FileTypeDetector.IsPicture(formFile.Buffer, formFile.FileName))
                     {
-                        ModelState.AddModelError(nameof(vm.LogoFile), "The uploaded logo file needs to be an image");
+                        ModelState.AddModelError(nameof(vm.LogoFile), StringLocalizer["The uploaded file needs to be an image"]);
                     }
                     else
                     {
@@ -1155,7 +1154,7 @@ namespace BTCPayServer.Controllers
                         }
                         catch (Exception e)
                         {
-                            ModelState.AddModelError(nameof(vm.LogoFile), $"Could not save logo: {e.Message}");
+                            ModelState.AddModelError(nameof(vm.LogoFile), StringLocalizer["Could not save logo: {0}", e.Message]);
                         }
                     }
                 }
@@ -1200,7 +1199,7 @@ namespace BTCPayServer.Controllers
         [HttpGet("server/emails")]
         public async Task<IActionResult> Emails()
         {
-            var email = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
             var vm = new ServerEmailsViewModel(email)
             {
                 EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings
@@ -1217,7 +1216,7 @@ namespace BTCPayServer.Controllers
                 {
                     if (model.PasswordSet)
                     {
-                        var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+                        var settings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
                         model.Settings.Password = settings.Password;
                     }
                     model.Settings.Validate("Settings.", ModelState);
@@ -1263,7 +1262,7 @@ namespace BTCPayServer.Controllers
                 ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
                 return View(model);
             }
-            var oldSettings = await _SettingsRepository.GetSettingAsync<EmailSettings>() ?? new EmailSettings();
+            var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
             if (new ServerEmailsViewModel(oldSettings).PasswordSet)
             {
                 model.Settings.Password = oldSettings.Password;

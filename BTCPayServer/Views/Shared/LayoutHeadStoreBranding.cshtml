@@ -1,14 +1,17 @@
-@using BTCPayServer.Services
+@using System.Drawing
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model StoreBrandingViewModel
-@inject ThemeSettings Theme
 @if (!string.IsNullOrEmpty(Model.BrandColor))
 {
-    var hasCustomeTheme = Theme.CustomTheme && Theme.CustomThemeCssUrl is not null;
+    const double thresholdLight = 1.5;
+    const double thresholdDark = 2.5;
     var brand = Model.BrandColor;
     var brandColor = ColorPalette.Default.FromHtml(brand);
     var brandRgbValues = $"{brandColor.R}, {brandColor.G}, {brandColor.B}";
-    var brightness = brandColor.GetBrightness();
+    var bgLight = ColorPalette.Default.FromHtml("#F8F9FA");
+    var bgDark = ColorPalette.Default.FromHtml("#0d1117");
+    var brandColorAdjustedForLight = brandColor.GetAdjustedForegroundForBackground(bgLight, -.02, thresholdLight);
+    var brandColorAdjustedForDark = brandColor.GetAdjustedForegroundForBackground(bgDark, .02, thresholdDark);
     var accent = ColorPalette.Default.AdjustBrightness(brand, (float)-.15);
     var accentColor = ColorPalette.Default.FromHtml(accent);
     var accentRgbValues = $"{accentColor.R}, {accentColor.G}, {accentColor.B}";
@@ -28,13 +31,12 @@
             --btcpay-primary-text-active: @complementVar;
         }
     </style>
-    @if (brightness > .5 || (Theme.CustomThemeExtension == ThemeExtension.Dark && brightness < .5))
+    @if (brandColorAdjustedForLight != brandColor)
     {
-        var brandAdjusted = ColorPalette.Default.AdjustBrightness(brand, (float)(.35-brightness));
-        var brandColorAdjusted = ColorPalette.Default.FromHtml(brandAdjusted);
-        var brandRgbValuesAdjusted = $"{brandColorAdjusted.R}, {brandColorAdjusted.G}, {brandColorAdjusted.B}";
-        var accentAdjusted = ColorPalette.Default.AdjustBrightness(brandAdjusted, (float)-.15);
-        var accentColorAdjusted = ColorPalette.Default.FromHtml(accentAdjusted);
+        var brandAdjusted = ColorPalette.Default.ToHtml(brandColorAdjustedForLight);
+        var brandRgbValuesAdjusted = $"{brandColorAdjustedForLight.R}, {brandColorAdjustedForLight.G}, {brandColorAdjustedForLight.B}";
+        var accentColorAdjusted = ColorPalette.Default.AdjustBrightness(brandColorAdjustedForLight, (float)-.15);
+        var accentAdjusted = ColorPalette.Default.ToHtml(accentColorAdjusted);
         var accentRgbValuesAdjusted = $"{accentColorAdjusted.R}, {accentColorAdjusted.G}, {accentColorAdjusted.B}";
         var complementAdjusted = ColorPalette.Default.TextColor(brandAdjusted);
         var complementVarAdjusted = $"var(--btcpay-{(complementAdjusted == "black" ? "black" : "white")})";
@@ -68,16 +70,15 @@
             }
         </style>
     }
-    @if (brightness < .5 && (!hasCustomeTheme || Theme.CustomThemeExtension == ThemeExtension.Dark))
+    @if (brandColorAdjustedForDark != brandColor)
     {
-        var brandAdjusted = ColorPalette.Default.AdjustBrightness(brand, (float)(.5-brightness));
-        var brandColorAdjusted = ColorPalette.Default.FromHtml(brandAdjusted);
-        var brandRgbValuesAdjusted = $"{brandColorAdjusted.R}, {brandColorAdjusted.G}, {brandColorAdjusted.B}";
-        var accentAdjusted = ColorPalette.Default.AdjustBrightness(brandAdjusted, (float).15);
-        var accentColorAdjusted = ColorPalette.Default.FromHtml(accentAdjusted);
+        var brandAdjusted = ColorPalette.Default.ToHtml(brandColorAdjustedForDark);
+        var brandRgbValuesAdjusted = $"{brandColorAdjustedForDark.R}, {brandColorAdjustedForDark.G}, {brandColorAdjustedForDark.B}";
+        var accentColorAdjusted = ColorPalette.Default.AdjustBrightness(brandColorAdjustedForDark, (float).15);
+        var accentAdjusted = ColorPalette.Default.ToHtml(accentColorAdjusted);
         var accentRgbValuesAdjusted = $"{accentColorAdjusted.R}, {accentColorAdjusted.G}, {accentColorAdjusted.B}";
-        var complementAdjusted = ColorPalette.Default.TextColor(brandAdjusted);
-        var complementVarAdjusted = $"var(--btcpay-{(complementAdjusted == "black" ? "black" : "white")})";
+        var complementAdjusted = ColorPalette.Default.TextColor(brandColorAdjustedForDark);
+        var complementVarAdjusted = $"var(--btcpay-{(complementAdjusted == Color.Black ? "black" : "white")})";
         <style>
             :root[data-theme='dark'],
             :root[data-btcpay-theme='dark'] {

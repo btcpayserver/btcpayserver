@@ -9,8 +9,8 @@
                     </button>
                 </div>
                 <div class="modal-body pt-0">
-                    <div class="payment-box m-0">
-                        <div class="qr-container justify-content-start">
+                    <div class="payment-box">
+                        <div class="qr-container">
                             <component v-if="currentFragment" :is="currentMode.href ? 'a': 'div'" class="qr-container d-inline-block" :href="currentMode.href">
                                 <qrcode :value="currentFragment" :options="qrOptions"></qrcode>
                             </component>

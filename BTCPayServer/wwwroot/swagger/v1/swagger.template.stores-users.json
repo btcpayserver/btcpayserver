@@ -8,13 +8,7 @@
                 "summary": "Get store users",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View users of the specified store",
@@ -31,10 +25,10 @@
                         }
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to view the specified store"
+                        "description": "If you are authenticated but forbidden to view the specified store's users"
                     },
                     "404": {
-                        "description": "The key is not found for this store"
+                        "description": "The store could not be found"
                     }
                 },
                 "security": [
@@ -55,13 +49,7 @@
                 "operationId": "Stores_AddStoreUser",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "requestBody": {
@@ -81,7 +69,7 @@
                         "description": "The user was added"
                     },
                     "400": {
-                        "description": "A list of errors that occurred when creating the store",
+                        "description": "A list of errors that occurred when adding the store user",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -91,7 +79,10 @@
                         }
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to add new stores"
+                        "description": "If you are authenticated but forbidden to add new store users"
+                    },
+                    "404": {
+                        "description": "The store or user could not be found"
                     },
                     "409": {
                         "description": "Error code: `duplicate-store-user-role`. Removing this user would result in the store having no owner.",
@@ -115,6 +106,63 @@
             }
         },
         "/api/v1/stores/{storeId}/users/{idOrEmail}": {
+            "put": {
+                "tags": [
+                    "Stores (Users)"
+                ],
+                "summary": "Updates a store user",
+                "description": "Updates a store user",
+                "operationId": "Stores_UpdateStoreUser",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    },
+                    {
+                        "$ref": "#/components/parameters/UserIdOrEmail"
+                    }
+                ],
+                "requestBody": {
+                    "x-name": "request",
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/StoreUserData"
+                            }
+                        }
+                    },
+                    "required": true,
+                    "x-position": 1
+                },
+                "responses": {
+                    "200": {
+                        "description": "The user was updated"
+                    },
+                    "400": {
+                        "description": "A list of errors that occurred when updating the store user",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ValidationProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to update store users"
+                    },
+                    "404": {
+                        "description": "The store or user could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
             "delete": {
                 "tags": [
                     "Stores (Users)"
@@ -124,22 +172,10 @@
                 "description": "Removes the specified store user. If there is no other owner, this endpoint will fail.",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The user's id or email",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "responses": {
@@ -147,7 +183,7 @@
                         "description": "The user has been removed"
                     },
                     "400": {
-                        "description": "A list of errors that occurred when removing the store",
+                        "description": "A list of errors that occurred when removing the store user",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -167,10 +203,10 @@
                         }
                     },
                     "403": {
-                        "description": "If you are authenticated but forbidden to remove the specified store"
+                        "description": "If you are authenticated but forbidden to remove the specified store user"
                     },
                     "404": {
-                        "description": "The key is not found for this store"
+                        "description": "The store or user could not be found"
                     }
                 },
                 "security": [
@@ -204,8 +240,23 @@
                             },
                             "role": {
                                 "type": "string",
-                                "description": "The role of the user. Default roles are `Owner` and `Guest`",
+                                "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest`",
                                 "nullable": false
+                            },
+                            "email": {
+                                "type": "string",
+                                "description": "The email of the user",
+                                "nullable": true
+                            },
+                            "name": {
+                                "type": "string",
+                                "description": "The name of the user",
+                                "nullable": true
+                            },
+                            "imageUrl": {
+                                "type": "string",
+                                "description": "The profile picture URL of the user",
+                                "nullable": true
                             }
                         }
                     }

@@ -2,7 +2,7 @@
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Components.StoreRecentTransactions.StoreRecentTransactionsViewModel
 
-<div class="widget store-recent-transactions" id="StoreRecentTransactions-@Model.Store.Id">
+<div class="widget store-recent-transactions" id="StoreRecentTransactions-@Model.StoreId">
     <header>
         <h3 text-translate="true">Recent Transactions</h3>
         @if (Model.Transactions.Any())
@@ -19,8 +19,8 @@
         </div>
         <script>
             (async () => {
-                const url = @Safe.Json(Url.Action("RecentTransactions", "UIStores", new { storeId = Model.Store.Id, cryptoCode = Model.CryptoCode }));
-                const storeId = @Safe.Json(Model.Store.Id);
+                const url = @Safe.Json(Url.Action("RecentTransactions", "UIStores", new { storeId = Model.StoreId, cryptoCode = Model.CryptoCode }));
+                const storeId = @Safe.Json(Model.StoreId);
                 const response = await fetch(url);
                 if (response.ok) {
                     document.getElementById(`StoreRecentTransactions-${storeId}`).outerHTML = await response.text();

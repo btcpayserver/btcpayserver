@@ -3,11 +3,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -18,13 +16,11 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 
@@ -263,12 +259,21 @@ retry:
         {
             lock (_InstanceListeners)
             {
-                foreach ((_, var instance) in _InstanceListeners.ToArray())
+                foreach (var key in _InstanceListeners.Keys)
                 {
-                    instance.RemoveExpiredInvoices();
-                    if (!instance.Empty)
-                        instance.EnsureListening(_Cts.Token);
+                    CheckConnection(key.Item1, key.Item2);
                 }
+            }
+        }
+
+        public void CheckConnection(string cryptoCode, string connStr)
+        {
+            if (_InstanceListeners.TryGetValue((cryptoCode, connStr), out var instance))
+            {
+                
+                instance.RemoveExpiredInvoices();
+                if (!instance.Empty)
+                    instance.EnsureListening(_Cts.Token);
             }
         }
 

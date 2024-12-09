@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using BTCPayServer.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -12,9 +13,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace BTCPayServer.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240726113051_AppStuff")]
+    partial class AppStuff
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -92,13 +95,10 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Address")
                         .HasColumnType("text");
 
-                    b.Property<string>("PaymentMethodId")
-                        .HasColumnType("text");
-
                     b.Property<string>("InvoiceDataId")
                         .HasColumnType("text");
 
-                    b.HasKey("Address", "PaymentMethodId");
+                    b.HasKey("Address");
 
                     b.HasIndex("InvoiceDataId");
 
@@ -299,7 +299,16 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Currency")
                         .HasColumnType("text");
 
+                    b.Property<string>("CustomerEmail")
+                        .HasColumnType("text");
+
                     b.Property<string>("ExceptionStatus")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ItemCode")
+                        .HasColumnType("text");
+
+                    b.Property<string>("OrderId")
                         .HasColumnType("text");
 
                     b.Property<string>("Status")
@@ -317,6 +326,8 @@ namespace BTCPayServer.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("Created");
+
+                    b.HasIndex("OrderId");
 
                     b.HasIndex("StoreDataId");
 
@@ -511,9 +522,6 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
-                    b.Property<string>("PaymentMethodId")
-                        .HasColumnType("text");
-
                     b.Property<bool?>("Accounted")
                         .HasColumnType("boolean");
 
@@ -538,7 +546,10 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Status")
                         .HasColumnType("text");
 
-                    b.HasKey("Id", "PaymentMethodId");
+                    b.Property<string>("Type")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
 
                     b.HasIndex("InvoiceDataId");
 
@@ -585,11 +596,8 @@ namespace BTCPayServer.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
 
-                    b.Property<decimal?>("Amount")
-                        .HasColumnType("numeric");
-
                     b.Property<string>("Blob")
-                        .HasColumnType("jsonb");
+                        .HasColumnType("JSONB");
 
                     b.Property<string>("Currency")
                         .HasColumnType("text");
@@ -597,13 +605,7 @@ namespace BTCPayServer.Migrations
                     b.Property<DateTimeOffset>("Date")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("DedupId")
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("OriginalAmount")
-                        .HasColumnType("numeric");
-
-                    b.Property<string>("OriginalCurrency")
+                    b.Property<string>("Destination")
                         .HasColumnType("text");
 
                     b.Property<string>("PayoutMethodId")
@@ -633,7 +635,7 @@ namespace BTCPayServer.Migrations
 
                     b.HasIndex("StoreDataId");
 
-                    b.HasIndex("DedupId", "State");
+                    b.HasIndex("Destination", "State");
 
                     b.ToTable("Payouts");
                 });
@@ -650,7 +652,7 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Blob2")
                         .HasColumnType("JSONB");
 
-                    b.Property<string>("PayoutMethodId")
+                    b.Property<string>("PaymentMethod")
                         .HasColumnType("text");
 
                     b.Property<string>("Processor")
@@ -664,6 +666,16 @@ namespace BTCPayServer.Migrations
                     b.HasIndex("StoreId");
 
                     b.ToTable("PayoutProcessors");
+                });
+
+            modelBuilder.Entity("BTCPayServer.Data.PendingInvoiceData", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("PendingInvoices");
                 });
 
             modelBuilder.Entity("BTCPayServer.Data.PlannedTransaction", b =>
@@ -695,14 +707,8 @@ namespace BTCPayServer.Migrations
                     b.Property<string>("Blob")
                         .HasColumnType("JSONB");
 
-                    b.Property<string>("Currency")
-                        .HasColumnType("text");
-
                     b.Property<DateTimeOffset?>("EndDate")
                         .HasColumnType("timestamp with time zone");
-
-                    b.Property<decimal>("Limit")
-                        .HasColumnType("numeric");
 
                     b.Property<DateTimeOffset>("StartDate")
                         .HasColumnType("timestamp with time zone");
@@ -1364,6 +1370,17 @@ namespace BTCPayServer.Migrations
                     b.Navigation("Store");
                 });
 
+            modelBuilder.Entity("BTCPayServer.Data.PendingInvoiceData", b =>
+                {
+                    b.HasOne("BTCPayServer.Data.InvoiceData", "InvoiceData")
+                        .WithMany("PendingInvoices")
+                        .HasForeignKey("Id")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("InvoiceData");
+                });
+
             modelBuilder.Entity("BTCPayServer.Data.PullPaymentData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
@@ -1595,6 +1612,8 @@ namespace BTCPayServer.Migrations
                     b.Navigation("InvoiceSearchData");
 
                     b.Navigation("Payments");
+
+                    b.Navigation("PendingInvoices");
 
                     b.Navigation("Refunds");
                 });

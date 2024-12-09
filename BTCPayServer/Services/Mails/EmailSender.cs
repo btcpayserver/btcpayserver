@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Threading.Tasks;
 using BTCPayServer.Logging;
@@ -28,7 +29,7 @@ namespace BTCPayServer.Services.Mails
             _JobClient.Schedule(async cancellationToken =>
             {
                 var emailSettings = await GetEmailSettings();
-                if (emailSettings?.IsComplete() != true)
+                if (emailSettings?.IsComplete() is not true)
                 {
                     Logs.Configuration.LogWarning("Should have sent email, but email settings are not configured");
                     return;
@@ -42,7 +43,7 @@ namespace BTCPayServer.Services.Mails
             }, TimeSpan.Zero);
         }
 
-        public abstract Task<EmailSettings> GetEmailSettings();
+        public abstract Task<EmailSettings?> GetEmailSettings();
         public abstract Task<string> GetPrefixedSubject(string subject);
     }
 }

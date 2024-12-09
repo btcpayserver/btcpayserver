@@ -95,7 +95,6 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.CssSelector("button[type='submit']")).Click();
 
-            Assert.Contains("Enter your email", s.Driver.PageSource);
             s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
 
@@ -1875,19 +1874,13 @@ namespace BTCPayServer.Tests
                 Assert.Contains("test-label", s.Driver.PageSource);
             });
 
-            // Let's try to remove a label
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                s.Driver.WaitForElement(By.CssSelector("[data-value='test-label']")).Click();
-                await Task.Delay(500);
-                s.Driver.ExecuteJavaScript("document.querySelector('[data-value=\"test-label\"]').nextSibling.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Delete', keyCode: 46}));");
-
-            });
-            TestUtils.Eventually(() =>
-            {
-                s.Driver.Navigate().Refresh();
-                Assert.DoesNotContain("test-label", s.Driver.PageSource);
-            });
+            // Remove a label
+            s.Driver.WaitForElement(By.CssSelector("[data-value='test-label']")).Click();
+            await Task.Delay(500);
+            s.Driver.ExecuteJavaScript("var l=document.querySelector('[data-value=\"test-label\"]');l.click();l.nextSibling.dispatchEvent(new KeyboardEvent('keydown', {'key': 'Delete', keyCode: 8}));");
+            await Task.Delay(500);
+            await s.Driver.Navigate().RefreshAsync();
+            Assert.DoesNotContain("test-label", s.Driver.PageSource);
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("GoBack")));
 
             //send money to addr and ensure it changed

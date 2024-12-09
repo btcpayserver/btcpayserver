@@ -103,11 +103,13 @@ namespace BTCPayServer.Tests
         {
             var compose1 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.yml"));
             var compose2 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.altcoins.yml"));
+            var compose3 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.mutinynet.yml"));
+            var compose4 = File.ReadAllText(Path.Combine(TestUtils.TryGetSolutionDirectoryInfo().FullName, "BTCPayServer.Tests", "docker-compose.testnet.yml"));
 
             List<DockerImage> GetImages(string content)
             {
-                List<DockerImage> images = new List<DockerImage>();
-                foreach (var line in content.Split(new[] { "\n", "\r\n" }, StringSplitOptions.RemoveEmptyEntries))
+                var images = new List<DockerImage>();
+                foreach (var line in content.Split(["\n", "\r\n"], StringSplitOptions.RemoveEmptyEntries))
                 {
                     var l = line.Trim();
                     if (l.StartsWith("image:", StringComparison.OrdinalIgnoreCase))
@@ -120,13 +122,15 @@ namespace BTCPayServer.Tests
 
             var img1 = GetImages(compose1);
             var img2 = GetImages(compose2);
-            var groups = img1.Concat(img2).GroupBy(g => g.Name);
+            var img3 = GetImages(compose3);
+            var img4 = GetImages(compose4);
+            var groups = img1.Concat(img2).Concat(img3).Concat(img4).GroupBy(g => g.Name);
             foreach (var g in groups)
             {
-                var tags = new HashSet<String>(g.Select(o => o.Tag));
+                var tags = new HashSet<string>(g.Select(o => o.Tag));
                 if (tags.Count != 1)
                 {
-                    Assert.Fail($"All docker images '{g.Key}' in docker-compose.yml and docker-compose.altcoins.yml should have the same tags. (Found {string.Join(',', tags)})");
+                    Assert.Fail($"All docker images '{g.Key}' across the docker-compose.yml files should have the same tags. (Found {string.Join(',', tags)})");
                 }
             }
         }

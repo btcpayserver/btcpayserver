@@ -47,6 +47,7 @@ namespace BTCPayServer.Controllers
         readonly ILogger _logger;
 
         public PoliciesSettings PoliciesSettings { get; }
+        public EmailSenderFactory EmailSenderFactory { get; }
         public IStringLocalizer StringLocalizer { get; }
         public Logs Logs { get; }
 
@@ -62,6 +63,7 @@ namespace BTCPayServer.Controllers
             Fido2Service fido2Service,
             UserLoginCodeService userLoginCodeService,
             LnurlAuthService lnurlAuthService,
+			EmailSenderFactory emailSenderFactory,
             LinkGenerator linkGenerator,
             IStringLocalizer stringLocalizer,
             Logs logs)
@@ -75,6 +77,7 @@ namespace BTCPayServer.Controllers
             _btcPayServerEnvironment = btcPayServerEnvironment;
             _fido2Service = fido2Service;
             _lnurlAuthService = lnurlAuthService;
+			EmailSenderFactory = emailSenderFactory;
             _linkGenerator = linkGenerator;
             _userLoginCodeService = userLoginCodeService;
             _eventAggregator = eventAggregator;
@@ -738,8 +741,7 @@ namespace BTCPayServer.Controllers
         [RateLimitsFilter(ZoneLimits.ForgotPassword, Scope = RateLimitsScope.RemoteAddress)]
         public async Task<IActionResult> ForgotPassword(ForgotPasswordViewModel model)
         {
-            var settings = await _SettingsRepository.GetSettingAsync<EmailSettings>();
-            if (ModelState.IsValid && settings?.IsComplete() is true)
+            if (ModelState.IsValid && await EmailSenderFactory.IsComplete())
             {
                 var user = await _userManager.FindByEmailAsync(model.Email);
                 if (!UserService.TryCanLogin(user, out _))

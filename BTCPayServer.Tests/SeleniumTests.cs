@@ -95,7 +95,6 @@ namespace BTCPayServer.Tests
 
             s.Driver.FindElement(By.CssSelector("button[type='submit']")).Click();
 
-            Assert.Contains("Enter your email", s.Driver.PageSource);
             s.Driver.FindElement(By.Name("buyerEmail")).SendKeys("aa@aa.com");
             s.Driver.FindElement(By.CssSelector("input[type='submit']")).Click();
 

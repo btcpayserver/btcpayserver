@@ -53,7 +53,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             UIInvoiceController invoiceController,
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
-            DisplayFormatter displayFormatter)
+            DisplayFormatter displayFormatter,
+            IRateLimitService rateLimitService,
+            IAuthorizationService authorizationService)
         {
             _currencies = currencies;
             _appService = appService;
@@ -62,6 +64,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _displayFormatter = displayFormatter;
+            _rateLimitService = rateLimitService;
+            _authorizationService = authorizationService;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
         }
@@ -73,6 +77,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly IRateLimitService _rateLimitService;
+        private readonly IAuthorizationService _authorizationService;
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
 
@@ -135,7 +141,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(PointOfSaleAppType.AppType)]
-        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType = null,
@@ -152,6 +157,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string formResponse = null,
                                                         CancellationToken cancellationToken = default)
         {
+            if (await Throttle(appId))
+                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
 
             // not allowing negative tips or discounts
@@ -163,7 +171,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
 
             if (app == null)
                 return NotFound();
-            
+
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             var currentView = viewType ?? settings.DefaultView;
@@ -236,7 +244,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         var expectedCartItemPrice = itemChoice.PriceType != AppItemPriceType.Topup
                             ? itemChoice.Price ?? 0
                             : 0;
-                        
+
                         if (cartItem.Price < expectedCartItemPrice)
                             cartItem.Price = expectedCartItemPrice;
 
@@ -245,7 +253,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (customAmount is { } c)
                         price += c;
                     if (discount is { } d)
-                        price -= price * d/100.0m;
+                        price -= price * d / 100.0m;
                     if (tip is { } t)
                         price += t;
                 }
@@ -266,7 +274,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     {
                         var vm = new PostRedirectViewModel
                         {
-                            FormUrl = Url.Action(nameof(POSForm), "UIPointOfSale", new {appId, buyerEmail = email}),
+                            FormUrl = Url.Action(nameof(POSForm), "UIPointOfSale", new { appId, buyerEmail = email }),
                             FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair =>
                                 new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
                         };
@@ -303,7 +311,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         amtField.Value = price?.ToString();
                     }
                     formResponseJObject = FormDataService.GetValues(form);
-                    
+
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
                     if (invoiceRequest.Amount is not null)
                     {
@@ -332,7 +340,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
                         PaymentMethods = paymentMethods?.Where(p => p.Value.Enabled).Select(p => p.Key).ToArray()
                     },
-                    AdditionalSearchTerms = new [] { AppService.GetAppSearchTerm(app) }
+                    AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken, entity =>
@@ -347,7 +355,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         if (choice is not null)
                         {
                             var dict = new Dictionary<string, string> { { "Title", choice.Title } };
-                            if (!string.IsNullOrEmpty(choice.Description)) dict["Description"] = choice.Description;
+                            if (!string.IsNullOrEmpty(choice.Description))
+                                dict["Description"] = choice.Description;
                             receiptData = JObject.FromObject(dict);
                         }
                         else if (jposData is not null)
@@ -363,7 +372,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                 var cartData = new JObject();
                                 foreach (AppCartItem cartItem in posCartItems)
                                 {
-                                    if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice)) continue;
+                                    if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice))
+                                        continue;
                                     var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                     var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                     var ident = selectedChoice.Title ?? selectedChoice.Id;
@@ -375,7 +385,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                 {
                                     for (var i = 0; i < amountsArray.Count; i++)
                                     {
-                                        cartData.Add($"Custom Amount {i+1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                                        cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                                     }
                                 }
                                 receiptData.Add("Cart", cartData);
@@ -418,6 +428,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
         }
+
+        private async Task<bool> Throttle(string appId) =>
+            !(await _authorizationService.AuthorizeAsync(HttpContext.User, appId, Policies.CanViewInvoices)).Succeeded &&
+            HttpContext.Connection?.RemoteIpAddress is not null &&
+            !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, HttpContext.Connection.RemoteIpAddress.ToString(), HttpContext.RequestAborted);
 
         private JObject TryParseJObject(string posData)
         {

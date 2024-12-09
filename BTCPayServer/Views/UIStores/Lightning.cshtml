@@ -19,8 +19,8 @@
                 @try
                 {
                     var client = LightningClientFactoryService.Create(Model.ConnectionString, NetworkProvider.GetNetwork<BTCPayNetwork>(Model.CryptoCode));
-                    <span>@client.GetDisplayName()</span>
-                    var uri = client.GetServerUri();
+					<span>@client.GetDisplayName(Model.ConnectionString)</span>
+					var uri = client.GetServerUri(Model.ConnectionString);
                     if (uri is not null)
                     {
                         <span>(@uri.Host)</span>

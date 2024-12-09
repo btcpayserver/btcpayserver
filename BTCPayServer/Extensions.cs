@@ -217,17 +217,25 @@ namespace BTCPayServer
             return endpoint != null;
         }
 
-        public static Uri GetServerUri(this ILightningClient client)
+        [Obsolete("Use GetServerUri(this ILightningClient client, string connectionString) instead")]
+        public static Uri GetServerUri(this ILightningClient client) => GetServerUri(client, client.ToString());
+        public static Uri GetServerUri(this ILightningClient client, string connectionString)
         {
-            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out _);
-            
+            if (client is IExtendedLightningClient { ServerUri: { } uri })
+                return uri;
+            var kv = client.ExtractValues(connectionString);
             return !kv.TryGetValue("server", out var server) ? null : new Uri(server, UriKind.Absolute);
         }
 
-        public static string GetDisplayName(this ILightningClient client)
+        [Obsolete("Use GetDisplayName(this ILightningClient client, string connectionString) instead")]
+        public static string GetDisplayName(this ILightningClient client) => GetDisplayName(client, client.ToString());
+        public static string GetDisplayName(this ILightningClient client, string connectionString)
         {
-            LightningConnectionStringHelper.ExtractValues(client.ToString(), out var type);
-
+            if (client is IExtendedLightningClient { DisplayName: { } displayName })
+                    return displayName;
+            var kv = client.ExtractValues(connectionString);
+            if (!kv.TryGetValue("type", out var type))
+                return "???";
             var lncType = typeof(LightningConnectionType);
             var fields = lncType.GetFields(BindingFlags.Public | BindingFlags.Static);
             var field = fields.FirstOrDefault(f => f.GetValue(lncType)?.ToString() == type);
@@ -236,9 +244,96 @@ namespace BTCPayServer
             return attr?.Name ?? type;
         }
 
-        public static bool IsSafe(this ILightningClient client)
+        private static bool TryParseLegacy(string str, out Dictionary<string, string> connectionString)
         {
-            var kv = LightningConnectionStringHelper.ExtractValues(client.ToString(), out _);
+            if (str.StartsWith("/"))
+            {
+                str = "unix:" + str;
+            }
+
+            Dictionary<string, string> dictionary = new Dictionary<string, string>();
+            connectionString = null;
+            if (!Uri.TryCreate(str, UriKind.Absolute, out Uri result))
+            {
+                return false;
+            }
+
+            if (!new string[4] { "unix", "tcp", "http", "https" }.Contains(result.Scheme))
+            {
+                return false;
+            }
+
+            if (result.Scheme == "unix")
+            {
+                str = result.AbsoluteUri.Substring("unix:".Length);
+                while (str.Length >= 1 && str[0] == '/')
+                {
+                    str = str.Substring(1);
+                }
+
+                result = new Uri("unix://" + str, UriKind.Absolute);
+                dictionary.Add("type", "clightning");
+            }
+
+            if (result.Scheme == "tcp")
+            {
+                dictionary.Add("type", "clightning");
+            }
+
+            if (result.Scheme == "http" || result.Scheme == "https")
+            {
+                string[] array = result.UserInfo.Split(':');
+                if (string.IsNullOrEmpty(result.UserInfo) || array.Length != 2)
+                {
+                    return false;
+                }
+
+                dictionary.Add("type", "charge");
+                dictionary.Add("username", array[0]);
+                dictionary.Add("password", array[1]);
+                if (result.Scheme == "http")
+                {
+                    dictionary.Add("allowinsecure", "true");
+                }
+            }
+            else if (!string.IsNullOrEmpty(result.UserInfo))
+            {
+                return false;
+            }
+
+            dictionary.Add("server", new UriBuilder(result)
+            {
+                UserName = "",
+                Password = ""
+            }.Uri.ToString());
+            connectionString = dictionary;
+            return true;
+        }
+
+        static Dictionary<string, string> ExtractValues(this ILightningClient client, string connectionString)
+        {
+            ArgumentNullException.ThrowIfNull(connectionString);
+            if (TryParseLegacy(connectionString, out var legacy))
+                return legacy;
+            string[] source = connectionString.Split(new char[1] { ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var kv = new Dictionary<string, string>();
+            foreach (string item in source.Select((string p) => p.Trim()))
+            {
+                int num = item.IndexOf('=');
+                if (num == -1)
+                    continue;
+                string text = item.Substring(0, num).Trim().ToLowerInvariant();
+                string value = item.Substring(num + 1).Trim();
+                kv.TryAdd(text, value);
+            }
+            return kv;
+        }
+
+        [Obsolete("Use IsSafe(this ILightningClient client, string connectionString) instead")]
+        public static bool IsSafe(this ILightningClient client) => IsSafe(client, client.ToString());
+        public static bool IsSafe(this ILightningClient client, string connectionString)
+        {
+            var kv = client.ExtractValues(connectionString);
             if (kv.TryGetValue("cookiefilepath", out _)  ||
                 kv.TryGetValue("macaroondirectorypath", out _)  ||
                 kv.TryGetValue("macaroonfilepath", out _) )
@@ -661,6 +756,9 @@ namespace BTCPayServer
             };
             return controller.View("PostRedirect", redirectVm);
         }
+
+        public static string RemoveUserInfo(this Uri uri)
+        => string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : uri.ToString().Replace(uri.UserInfo, "***");
 
         public static DataDirectories Configure(this DataDirectories dataDirectories, IConfiguration configuration)
         {

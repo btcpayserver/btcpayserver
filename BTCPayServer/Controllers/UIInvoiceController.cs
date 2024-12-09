@@ -69,6 +69,7 @@ namespace BTCPayServer.Controllers
         private readonly UriResolver _uriResolver;
 
         public WebhookSender WebhookNotificationManager { get; }
+        public IEnumerable<IGlobalCheckoutModelExtension> GlobalCheckoutModelExtensions { get; }
         public IStringLocalizer StringLocalizer { get; }
 
         public UIInvoiceController(
@@ -99,6 +100,7 @@ namespace BTCPayServer.Controllers
             IAuthorizationService authorizationService,
             TransactionLinkProviders transactionLinkProviders,
             Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
+            IEnumerable<IGlobalCheckoutModelExtension> globalCheckoutModelExtensions,
             IStringLocalizer stringLocalizer,
             PrettyNameProvider prettyName)
         {
@@ -124,6 +126,7 @@ namespace BTCPayServer.Controllers
             _authorizationService = authorizationService;
             _transactionLinkProviders = transactionLinkProviders;
             _paymentModelExtensions = paymentModelExtensions;
+            GlobalCheckoutModelExtensions = globalCheckoutModelExtensions;
             _prettyName = prettyName;
             _fileService = fileService;
             _uriResolver = uriResolver;

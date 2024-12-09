@@ -430,9 +430,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         }
 
         private async Task<bool> Throttle(string appId) =>
-            HttpContext.Connection is { RemoteIpAddress: { } addr }  &&
-            await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), HttpContext.RequestAborted) &&
-            !(await _authorizationService.AuthorizeAsync(HttpContext.User, appId, Policies.CanViewInvoices)).Succeeded;
+            !(await _authorizationService.AuthorizeAsync(HttpContext.User, appId, Policies.CanViewInvoices)).Succeeded &&
+            HttpContext.Connection is { RemoteIpAddress: { } addr } &&
+            !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), HttpContext.RequestAborted);
 
         private JObject TryParseJObject(string posData)
         {

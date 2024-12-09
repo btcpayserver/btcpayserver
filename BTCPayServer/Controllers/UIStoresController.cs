@@ -59,6 +59,7 @@ public partial class UIStoresController : Controller
         EmailSenderFactory emailSenderFactory,
         WalletFileParsers onChainWalletParsers,
         UIUserStoresController userStoresController,
+        CallbackGenerator callbackGenerator,
         UriResolver uriResolver,
         CurrencyNameTable currencyNameTable,
         IStringLocalizer stringLocalizer,
@@ -86,6 +87,7 @@ public partial class UIStoresController : Controller
         _emailSenderFactory = emailSenderFactory;
         _onChainWalletParsers = onChainWalletParsers;
         _userStoresController = userStoresController;
+        _callbackGenerator = callbackGenerator;
         _uriResolver = uriResolver;
         _currencyNameTable = currencyNameTable;
         _eventAggregator = eventAggregator;
@@ -121,6 +123,7 @@ public partial class UIStoresController : Controller
     private readonly EmailSenderFactory _emailSenderFactory;
     private readonly WalletFileParsers _onChainWalletParsers;
     private readonly UIUserStoresController _userStoresController;
+    private readonly CallbackGenerator _callbackGenerator;
     private readonly UriResolver _uriResolver;
     private readonly EventAggregator _eventAggregator;
     private readonly IHtmlHelper _html;

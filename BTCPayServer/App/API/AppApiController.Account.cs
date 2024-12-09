@@ -70,12 +70,7 @@ public partial class AppApiController
                     await settingsRepository.FirstAdminRegistered(policies, btcpayOptions.UpdateUrl != null, btcpayOptions.DisableRegistration, logs);
                 }
 
-                eventAggregator.Publish(new UserRegisteredEvent
-                {
-                    RequestUri = Request.GetAbsoluteRootUri(),
-                    User = user,
-                    Admin = isFirstAdmin
-                });
+                eventAggregator.Publish(await UserEvent.Registered.Create(user, callbackGenerator, Request));
 
                 SignInResult? signInResult = null;
                 var requiresApproval = policies.RequiresUserApproval && !user.Approved;
@@ -224,12 +219,10 @@ public partial class AppApiController
         bool? emailHasBeenConfirmed = requiresEmailConfirmation ? false : null;
         var requiresSetPassword = !await userManager.HasPasswordAsync(user);
         string? passwordSetCode = requiresSetPassword ? await userManager.GeneratePasswordResetTokenAsync(user) : null;
-            
-        eventAggregator.Publish(new UserInviteAcceptedEvent
-        {
-            User = user,
-            RequestUri = Request.GetAbsoluteRootUri()
-        });
+        
+        // This is a placeholder, the real storeIds will be set by the UserEventHostedService
+        var storeUsersLink = callbackGenerator.StoreUsersLink("{0}", Request);
+        eventAggregator.Publish(new UserEvent.InviteAccepted(user, storeUsersLink));
             
         if (requiresEmailConfirmation)
         {
@@ -238,11 +231,8 @@ public partial class AppApiController
             if (result.Succeeded)
             {
                 emailHasBeenConfirmed = true;
-                eventAggregator.Publish(new UserConfirmedEmailEvent
-                {
-                    User = user,
-                    RequestUri = Request.GetAbsoluteRootUri()
-                });
+                var approvalLink = callbackGenerator.ForApproval(user, Request);
+                eventAggregator.Publish(new UserEvent.ConfirmedEmail(user, approvalLink));
             }
         }
 
@@ -321,11 +311,8 @@ public partial class AppApiController
         var user = await userManager.FindByEmailAsync(resetRequest.Email);
         if (UserService.TryCanLogin(user, out _))
         {
-            eventAggregator.Publish(new UserPasswordResetRequestedEvent
-            {
-                User = user,
-                RequestUri = Request.GetAbsoluteRootUri()
-            });
+            var callbackUri = await callbackGenerator.ForPasswordReset(user, Request);
+            eventAggregator.Publish(new UserEvent.PasswordResetRequested(user, callbackUri));
         }
         return TypedResults.Ok();
     }

@@ -70,8 +70,7 @@ namespace BTCPayServer.Controllers
                         InvitationUrl =
                             string.IsNullOrEmpty(blob?.InvitationToken)
                                 ? null
-                                : _linkGenerator.InvitationLink(u.Id, blob.InvitationToken, Request.Scheme,
-                                    Request.Host, Request.PathBase),
+                                : _callbackGenerator.ForInvitation(u, blob.InvitationToken, Request),
                         EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
                         Approved = u.RequiresApproval ? u.Approved : null,
                         Created = u.Created,
@@ -98,7 +97,7 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Name = blob?.Name,
-                InvitationUrl = string.IsNullOrEmpty(blob?.InvitationToken) ? null : _linkGenerator.InvitationLink(user.Id, blob.InvitationToken, Request.Scheme, Request.Host, Request.PathBase),
+                InvitationUrl = string.IsNullOrEmpty(blob?.InvitationToken) ? null : _callbackGenerator.ForInvitation(user, blob.InvitationToken, Request),
                 ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,
@@ -120,7 +119,8 @@ namespace BTCPayServer.Controllers
 
             if (user.RequiresApproval && viewModel.Approved.HasValue && user.Approved != viewModel.Approved.Value)
             {
-                approvalStatusChanged = await _userService.SetUserApproval(user.Id, viewModel.Approved.Value, Request.GetAbsoluteRootUri());
+                var loginLink = _callbackGenerator.ForLogin(user, Request);
+                approvalStatusChanged = await _userService.SetUserApproval(user.Id, viewModel.Approved.Value, loginLink);
             }
             if (user.RequiresEmailConfirmation && viewModel.EmailConfirmed.HasValue && user.EmailConfirmed != viewModel.EmailConfirmed)
             {
@@ -260,22 +260,13 @@ namespace BTCPayServer.Controllers
                     if (model.IsAdmin && !(await _UserManager.AddToRoleAsync(user, Roles.ServerAdmin)).Succeeded)
                         model.IsAdmin = false;
 
-                    var tcs = new TaskCompletionSource<Uri>();
                     var currentUser = await _UserManager.GetUserAsync(HttpContext.User);
                     var sendEmail = model.SendInvitationEmail && ViewData["CanSendEmail"] is true;
 
-                    _eventAggregator.Publish(new UserRegisteredEvent
-                    {
-                        RequestUri = Request.GetAbsoluteRootUri(),
-                        Kind = UserRegisteredEventKind.Invite,
-                        User = user,
-                        InvitedByUser = currentUser,
-                        SendInvitationEmail = sendEmail,
-                        Admin = model.IsAdmin,
-                        CallbackUrlGenerated = tcs
-                    });
+                    var evt = await UserEvent.Invited.Create(user, currentUser, _callbackGenerator, Request, sendEmail);
+                    _eventAggregator.Publish(evt);
                     
-                    var callbackUrl = await tcs.Task;
+                    
                     var info = sendEmail
                         ? "An invitation email has been sent. You may alternatively"
                         : "An invitation email has not been sent. You need to";
@@ -284,7 +275,7 @@ namespace BTCPayServer.Controllers
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
                         AllowDismiss = false,
-                        Html = $"Account successfully created. {info} share this link with them:<br/>{callbackUrl}"
+                        Html = $"Account successfully created. {info} share this link with them:<br/>{evt.InvitationLink}"
                     });
                     return RedirectToAction(nameof(User), new { userId = user.Id });
                 }
@@ -387,7 +378,8 @@ namespace BTCPayServer.Controllers
             if (user == null)
                 return NotFound();
 
-            await _userService.SetUserApproval(userId, approved, Request.GetAbsoluteRootUri());
+            var loginLink = _callbackGenerator.ForLogin(user, Request);
+            await _userService.SetUserApproval(userId, approved, loginLink);
 
             TempData[WellKnownTempData.SuccessMessage] = approved
                 ? StringLocalizer["User approved"].Value
@@ -414,8 +406,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{userId}'.");
             }
 
-            var code = await _UserManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
+            var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user, Request);
 
             (await _emailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
 

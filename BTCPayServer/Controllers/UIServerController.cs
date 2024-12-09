@@ -64,7 +64,7 @@ namespace BTCPayServer.Controllers
         private readonly StoredFileRepository _StoredFileRepository;
         private readonly IFileService _fileService;
         private readonly IEnumerable<IStorageProviderService> _StorageProviderServices;
-        private readonly LinkGenerator _linkGenerator;
+        private readonly CallbackGenerator _callbackGenerator;
         private readonly UriResolver _uriResolver;
         private readonly EmailSenderFactory _emailSenderFactory;
         private readonly TransactionLinkProviders _transactionLinkProviders;
@@ -90,7 +90,7 @@ namespace BTCPayServer.Controllers
             EventAggregator eventAggregator,
             IOptions<ExternalServicesOptions> externalServiceOptions,
             Logs logs,
-            LinkGenerator linkGenerator,
+            CallbackGenerator callbackGenerator,
             UriResolver uriResolver,
             EmailSenderFactory emailSenderFactory,
             IHostApplicationLifetime applicationLifetime,
@@ -119,7 +119,7 @@ namespace BTCPayServer.Controllers
             _eventAggregator = eventAggregator;
             _externalServiceOptions = externalServiceOptions;
             Logs = logs;
-            _linkGenerator = linkGenerator;
+            _callbackGenerator = callbackGenerator;
             _uriResolver = uriResolver;
             _emailSenderFactory = emailSenderFactory;
             ApplicationLifetime = applicationLifetime;

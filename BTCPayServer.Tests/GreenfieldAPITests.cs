@@ -3829,7 +3829,6 @@ namespace BTCPayServer.Tests
 
             await tester.WaitForEvent<NewBlockEvent>(async () =>
             {
-
                 await tester.ExplorerNode.GenerateAsync(1);
             }, bevent => bevent.PaymentMethodId == PaymentTypes.CHAIN.GetPaymentMethodId("BTC"));
 

@@ -30,6 +30,7 @@ public partial class AppApiController(
     StoreRepository storeRepository,
     AppService appService,
     EventAggregator eventAggregator,
+    CallbackGenerator callbackGenerator,
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,

@@ -2903,6 +2903,16 @@ namespace BTCPayServer.Tests
             // Unauthenticated user can't access recent transactions
             s.GoToUrl(keypadUrl);
             s.Driver.ElementDoesNotExist(By.Id("RecentTransactionsToggle"));
+            
+            // But they can generate invoices
+            s.Driver.FindElement(By.CssSelector(".keypad [data-key='1']")).Click();
+            s.Driver.FindElement(By.CssSelector(".keypad [data-key='2']")).Click();
+            s.Driver.FindElement(By.CssSelector(".keypad [data-key='3']")).Click();
+            s.Driver.FindElement(By.Id("pay-button")).Click();
+            s.Driver.WaitUntilAvailable(By.Id("Checkout"));
+            s.Driver.FindElement(By.Id("DetailsToggle")).Click();
+            s.Driver.WaitForElement(By.Id("PaymentDetails-TotalFiat"));
+            Assert.Contains("1,23 €", s.Driver.FindElement(By.Id("PaymentDetails-TotalFiat")).Text);
         }
 
         [Fact]

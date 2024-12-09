@@ -2,46 +2,8 @@ version: "3"
 
 # Run `docker-compose up dev` for bootstrapping your development environment
 # Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
-# The Visual Studio launch setting `Docker-regtest` is configured to use this environment.
+# The Visual Studio launch setting `Docker-testnet` is configured to use this environment.
 services:
-
-  tests:
-    build:
-      context: ..
-      dockerfile: BTCPayServer.Tests/Dockerfile
-      args:
-        CONFIGURATION_NAME: Release
-    environment:
-      TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
-      TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver
-      TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
-      TESTS_HOSTNAME: tests
-      TESTS_RUN_EXTERNAL_INTEGRATION: ${TESTS_RUN_EXTERNAL_INTEGRATION:-"false"}
-      TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
-      TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
-      TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTLND: "http://merchant_lnd:8080/"
-      TESTS_INCONTAINER: "true"
-      TESTS_SSHCONNECTION: "root@sshd:22"
-      TESTS_SSHPASSWORD: ""
-      TESTS_SSHKEYFILE: ""
-      TESTS_SOCKSENDPOINT: "tor:9050"
-    expose:
-      - "80"
-    depends_on:
-      - dev
-      - selenium
-    extra_hosts:
-      - "tests:127.0.0.1"
-    networks:
-      default:
-      custom:
-        ipv4_address: 172.23.0.18
-    volumes:
-      - "sshd_datadir:/root/.ssh"
-      - "customer_lightningd_datadir:/etc/customer_lightningd_datadir"
-      - "merchant_lightningd_datadir:/etc/merchant_lightningd_datadir"
 
   # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
   dev:
@@ -71,7 +33,7 @@ services:
   devlnd:
     image: btcpayserver/bitcoin:26.0
     environment:
-      BITCOIN_NETWORK: regtest
+      BITCOIN_NETWORK: testnet
       BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |
         deprecatedrpc=signrawtransaction
@@ -95,14 +57,14 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.14
+    image: nicolasdorier/nbxplorer:2.5.12
     restart: unless-stopped
     ports:
       - "32838:32838"
     expose:
       - "32838"
     environment:
-      NBXPLORER_NETWORK: regtest
+      NBXPLORER_NETWORK: testnet
       NBXPLORER_CHAINS: "btc"
       NBXPLORER_BTCRPCURL: http://bitcoind:43782/
       NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
@@ -112,7 +74,7 @@ services:
       NBXPLORER_MINGAPSIZE: 5
       NBXPLORER_MAXGAPSIZE: 10
       NBXPLORER_VERBOSE: 1
-      NBXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
+      NBXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer_testnet
       NBXPLORER_EXPOSERPC: 1
       NBXPLORER_NOAUTH: 1
     depends_on:
@@ -122,7 +84,7 @@ services:
     restart: unless-stopped
     image: btcpayserver/bitcoin:26.0
     environment:
-      BITCOIN_NETWORK: regtest
+      BITCOIN_NETWORK: testnet
       BITCOIN_WALLETDIR: "/data/wallets"
       BITCOIN_EXTRA_ARGS: |-
         rpcuser=ceiwHEbqWI83
@@ -154,7 +116,7 @@ services:
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
-      LIGHTNINGD_NETWORK: "regtest"
+      LIGHTNINGD_NETWORK: "testnet"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
@@ -183,7 +145,7 @@ services:
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
-      LIGHTNINGD_NETWORK: "regtest"
+      LIGHTNINGD_NETWORK: "testnet"
       LIGHTNINGD_OPT: |
         developer
         bitcoin-datadir=/etc/bitcoin
@@ -219,7 +181,7 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_ENVIRONMENT: "regtest"
+      LND_ENVIRONMENT: "testnet"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://merchant_lnd:8080
       LND_EXTRA_ARGS: |
@@ -240,8 +202,8 @@ services:
         no-rest-tls=1
     ports:
       - "35531:8080"
-      - "53280:10009"
       - "30894:9735"
+      - "53280:10009"
     expose:
       - "8080"
       - "9735"
@@ -257,7 +219,7 @@ services:
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
-      LND_ENVIRONMENT: "regtest"
+      LND_ENVIRONMENT: "testnet"
       LND_EXPLORERURL: "http://nbxplorer:32838/"
       LND_REST_LISTEN_HOST: http://customer_lnd:8080
       LND_EXTRA_ARGS: |

@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 using System.Linq;
 using System.Threading;
@@ -133,6 +134,10 @@ public class PendingTransactionService(
         }
 
         var blob = pendingTransaction.GetBlob();
+        if (blob?.PSBT is null)
+        {
+            return null;
+        }
         var originalPsbtWorkingCopy = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
         foreach (var collectedSignature in blob.CollectedSignatures)
         {

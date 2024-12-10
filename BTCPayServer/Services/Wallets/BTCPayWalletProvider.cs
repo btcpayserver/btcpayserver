@@ -1,17 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
-using BTCPayServer.Data;
-using BTCPayServer.Events;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using NBitcoin;
 
 namespace BTCPayServer.Services.Wallets
 {

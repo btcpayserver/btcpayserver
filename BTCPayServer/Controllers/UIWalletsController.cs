@@ -172,13 +172,13 @@ namespace BTCPayServer.Controllers
             if (pendingTransaction is null)
                 return NotFound();
             var blob = pendingTransaction.GetBlob();
-
+            if (blob?.PSBT is null)
+                return NotFound();
             var currentPsbt = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
             foreach (CollectedSignature collectedSignature in blob.CollectedSignatures)
             {
                 var psbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
                 currentPsbt = currentPsbt.Combine(psbt);
-
             }
 
             var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
@@ -523,7 +523,7 @@ namespace BTCPayServer.Controllers
             {
                 CryptoCode = walletId.CryptoCode,
                 ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
-                IsMultisigOnServer = paymentMethod.IsMultiSigOnServer,
+                IsMultiSigOnServer = paymentMethod.IsMultiSigOnServer,
                 AlwaysIncludeNonWitnessUTXO = paymentMethod.DefaultIncludeNonWitnessUtxo
             };
             if (bip21?.Any() is true)

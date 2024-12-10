@@ -101,9 +101,8 @@ namespace BTCPayServer
         }
 
         public string Label { get; set; }
-        
+
         #region MultiSig related settings
-        //public bool IsMultiSig => AccountKeys.Count > 1;
         public bool IsMultiSigOnServer { get; set; }
         
         // some hardware devices like Jade require sending full input transactions if there are multiple inputs

@@ -23,6 +23,7 @@ namespace BTCPayServer.Models.StoreViewModels
         public string DerivationSchemeInput { get; set; }
         [Display(Name = "Is signing key")]
         public string SelectedSigningKey { get; set; }
+        public bool IsMultiSig => AccountKeys.Count > 1;
 
         public List<WalletSettingsAccountKeyViewModel> AccountKeys { get; set; } = new();
         public bool NBXSeedAvailable { get; set; }

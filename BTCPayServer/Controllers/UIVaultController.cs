@@ -163,8 +163,7 @@ namespace BTCPayServer.Controllers
                                         continue;
                                     }
                                     
-                                    var multisigOnServer = derivationSettings.IsMultiSigOnServer;
-                                    if (multisigOnServer)
+                                    if (derivationSettings.IsMultiSigOnServer)
                                     {
                                         var alreadySigned = psbt.Inputs.Any(a =>
                                             a.PartialSigs.Any(a => a.Key == actualPubKey));

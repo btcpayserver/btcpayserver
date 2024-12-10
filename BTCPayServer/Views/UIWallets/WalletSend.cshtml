@@ -226,8 +226,8 @@
         </div>
     </div>
     <div class="d-grid d-sm-flex flex-wrap gap-3 buttons">
-        @Html.HiddenFor(a=>a.IsMultisigOnServer)
-        @if (Model.IsMultisigOnServer)
+        @Html.HiddenFor(a=>a.IsMultiSigOnServer)
+        @if (Model.IsMultiSigOnServer)
         {
             <button type="submit" id="CreatePendingTransaction" name="command" value="createpending" class="btn btn-primary">Create pending transaction</button>
         }

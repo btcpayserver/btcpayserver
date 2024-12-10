@@ -3,6 +3,7 @@
 @{
     Layout = "PointOfSale/Public/_Layout";
 	Csp.UnsafeEval();
+    ViewData.SetBlazorAllowed(true);
 }
 @section PageHeadContent {
     <link href="~/pos/keypad.css" asp-append-version="true" rel="stylesheet" />

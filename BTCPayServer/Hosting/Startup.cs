@@ -341,7 +341,7 @@ namespace BTCPayServer.Hosting
             {
                 AppHub.Register(endpoints);
                 PaymentRequestHub.Register(endpoints);
-                endpoints.MapBlazorHub().RequireAuthorization();
+                endpoints.MapBlazorHub();
                 endpoints.MapRazorPages();
                 endpoints.MapControllers();
                 endpoints.MapControllerRoute("default", "{controller:validate=UIHome}/{action:lowercase=Index}/{id?}");

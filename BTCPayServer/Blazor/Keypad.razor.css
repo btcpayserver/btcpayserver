@@ -41,7 +41,7 @@
 button[data-bs-toggle] {
     position: absolute;
     z-index: 1;
-    top: 1.5rem;
+    top: 0;
     height: 3.25em !important;
     width: 3.25em !important;
     color: var(--btcpay-header-link);

@@ -31,7 +31,8 @@
     <div class="sticky-header">
         <h2 text-translate="true">@ViewData["Title"]</h2>
         <div>
-			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
             @if (Model.Archived)
             {
                 <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true">Unarchive</button>
@@ -57,47 +58,43 @@
     {
         <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
     }
-    <div class="row">
-        <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
-            <div class="row">
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label asp-for="AppName" class="form-label" data-required></label>
-                        <input asp-for="AppName" class="form-control" required />
-                        <span asp-validation-for="AppName" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label asp-for="Title" class="form-label" data-required></label>
-                        <input asp-for="Title" class="form-control" required />
-                        <span asp-validation-for="Title" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
+    <div class="row" style="max-width:540px;">
+        <div class="col-sm-6">
             <div class="form-group">
-                <label asp-for="DefaultView" class="form-label" data-required text-translate="true">Choose Point of Sale Style</label>
-                <div class="btcpay-list-select">
-                    @foreach (var type in Enum.GetValues<PosViewType>())
-                    {
-                        <input type="radio" asp-for="DefaultView" value="@type" id="DefaultView_@type">
-                        <label for="DefaultView_@type" class="btcpay-list-select-item">
-                            <vc:icon symbol="pos-@type.ToString().ToLowerInvariant()" />
-                            @typeof(PosViewType).DisplayName(type.ToString())
-                        </label>
-                    }
-                </div>
+                <label asp-for="AppName" class="form-label" data-required></label>
+                <input asp-for="AppName" class="form-control" required />
+                <span asp-validation-for="AppName" class="text-danger"></span>
             </div>
-            <div class="form-group mb-0">
-                <label asp-for="Currency" class="form-label"></label>
-                <input asp-for="Currency" class="form-control w-auto" currency-selection />
-                <div class="form-text">@StringLocalizer["Uses the store's default currency ({0}) if empty.", Model.StoreDefaultCurrency]</div>
-                <span asp-validation-for="Currency" class="text-danger"></span>
+        </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label asp-for="Title" class="form-label" data-required></label>
+                <input asp-for="Title" class="form-control" required />
+                <span asp-validation-for="Title" class="text-danger"></span>
             </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="DefaultView" class="form-label" data-required text-translate="true">Choose Point of Sale Style</label>
+            <div class="btcpay-list-select">
+                @foreach (var type in Enum.GetValues<PosViewType>())
+                {
+                    <input type="radio" asp-for="DefaultView" value="@type" id="DefaultView_@type">
+                    <label for="DefaultView_@type" class="btcpay-list-select-item">
+                        <vc:icon symbol="pos-@type.ToString().ToLowerInvariant()" />
+                        @typeof(PosViewType).DisplayName(type.ToString())
+                    </label>
+                }
+            </div>
+        </div>
+        <div class="form-group mb-0">
+            <label asp-for="Currency" class="form-label"></label>
+            <input asp-for="Currency" class="form-control w-auto" currency-selection />
+            <div class="form-text">@StringLocalizer["Uses the store's default currency ({0}) if empty.", Model.StoreDefaultCurrency]</div>
+            <span asp-validation-for="Currency" class="text-danger"></span>
         </div>
     </div>
     <div id="description" class="row mt-4">
-        <div class="col-xl-10 col-xxl-constrain">
+        <div class="col-xxl-constrain">
             <div class="form-group mb-0">
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
@@ -293,7 +290,6 @@
 </form>
 
 <div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
-    <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
     <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.Id">
         <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle" permission="@Policies.CanModifyStoreSettings">
             @if (Model.Archived)

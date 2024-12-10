@@ -12,8 +12,4 @@
     <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
   </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug' And '$(RazorCompileOnBuild)' != 'true' And '$(DotNetWatchBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'">
-    <RazorCompileOnBuild>false</RazorCompileOnBuild>
-  </PropertyGroup>
 </Project>

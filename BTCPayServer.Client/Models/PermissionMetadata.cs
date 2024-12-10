@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
@@ -11,17 +10,17 @@ namespace BTCPayServer.Client.Models
         static PermissionMetadata()
         {
             Dictionary<string, PermissionMetadata> nodes = new Dictionary<string, PermissionMetadata>();
-            foreach (var policy in Client.Policies.AllPolicies)
+            foreach (var policy in Policies.AllPolicies)
             {
                 nodes.Add(policy, new PermissionMetadata() { PermissionName = policy });
             }
             foreach (var n in nodes)
             {
-                foreach (var policy in Client.Policies.AllPolicies)
+                foreach (var policy in Policies.AllPolicies)
                 {
                     if (policy.Equals(n.Key, StringComparison.OrdinalIgnoreCase))
                         continue;
-                    if (Client.Permission.Create(n.Key).Contains(Client.Permission.Create(policy)))
+                    if (Permission.Create(n.Key).Contains(Permission.Create(policy)))
                         n.Value.SubPermissions.Add(policy);
                 }
             }

@@ -60,7 +60,6 @@ public partial class UIStoresController : Controller
         WalletFileParsers onChainWalletParsers,
         UIUserStoresController userStoresController,
         UriResolver uriResolver,
-        SettingsRepository settingsRepository,
         CurrencyNameTable currencyNameTable,
         IStringLocalizer stringLocalizer,
         EventAggregator eventAggregator,
@@ -88,7 +87,6 @@ public partial class UIStoresController : Controller
         _onChainWalletParsers = onChainWalletParsers;
         _userStoresController = userStoresController;
         _uriResolver = uriResolver;
-        _settingsRepository = settingsRepository;
         _currencyNameTable = currencyNameTable;
         _eventAggregator = eventAggregator;
         _html = html;
@@ -110,7 +108,6 @@ public partial class UIStoresController : Controller
     private readonly TokenRepository _tokenRepository;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly RateFetcher _rateFactory;
-    private readonly SettingsRepository _settingsRepository;
     private readonly CurrencyNameTable _currencyNameTable;
     private readonly ExplorerClientProvider _explorerProvider;
     private readonly LanguageService _langService;

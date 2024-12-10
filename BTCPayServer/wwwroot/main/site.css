@@ -1073,7 +1073,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     padding-right: 3px;
 }
 
-.truncate-center.form-control-plaintext button.btn .icon {
+.truncate-center.form-control-plaintext .icon {
     --icon-size: 1.25em;
 }
 

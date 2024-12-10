@@ -23,7 +23,6 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using static Org.BouncyCastle.Math.EC.ECCurve;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Payments.Bitcoin

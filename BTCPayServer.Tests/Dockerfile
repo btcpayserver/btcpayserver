@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0.101-bookworm-slim AS builder
+FROM mcr.microsoft.com/dotnet/sdk:8.0.404-bookworm-slim AS builder
 
 RUN apt-get update && apt-get install -y --no-install-recommends chromium-driver \
     && rm -rf /var/lib/apt/lists/*

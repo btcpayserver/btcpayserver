@@ -11,6 +11,7 @@ using Fido2NetLib.Objects;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using Newtonsoft.Json.Linq;
+using static BTCPayServer.Fido2.Models.Fido2CredentialBlob;
 
 namespace BTCPayServer.Fido2
 {
@@ -45,7 +46,7 @@ namespace BTCPayServer.Fido2
             var existingKeys =
                 user.Fido2Credentials
                     .Where(credential => credential.Type == Fido2Credential.CredentialType.FIDO2)
-                    .Select(c => c.GetFido2Blob().Descriptor).ToList();
+                    .Select(c => c.GetFido2Blob().Descriptor?.ToFido2()).ToList();
 
             // 3. Create options
             var authenticatorSelection = new AuthenticatorSelection
@@ -57,14 +58,7 @@ namespace BTCPayServer.Fido2
             var exts = new AuthenticationExtensionsClientInputs()
             {
                 Extensions = true,
-                UserVerificationIndex = true,
-                Location = true,
-                UserVerificationMethod = true,
-                BiometricAuthenticatorPerformanceBounds = new AuthenticatorBiometricPerfBounds
-                {
-                    FAR = float.MaxValue,
-                    FRR = float.MaxValue
-                },
+                UserVerificationMethod = true
             };
 
             var options = _fido2.RequestNewCredential(
@@ -81,7 +75,7 @@ namespace BTCPayServer.Fido2
             try
             {
 
-                var attestationResponse = JObject.Parse(data).ToObject<AuthenticatorAttestationRawResponse>();
+                var attestationResponse = System.Text.Json.JsonSerializer.Deserialize<AuthenticatorAttestationRawResponse>(data);
                 await using var dbContext = _contextFactory.CreateContext();
                 var user = await dbContext.Users.Include(applicationUser => applicationUser.Fido2Credentials)
                     .FirstOrDefaultAsync(applicationUser => applicationUser.Id == userId);
@@ -92,14 +86,14 @@ namespace BTCPayServer.Fido2
 
                 // 2. Verify and make the credentials
                 var success =
-                    await _fido2.MakeNewCredentialAsync(attestationResponse, options, args => Task.FromResult(true));
+                    await _fido2.MakeNewCredentialAsync(attestationResponse, options, (args, cancellation) => Task.FromResult(true));
 
                 // 3. Store the credentials in db
                 var newCredential = new Fido2Credential() { Name = name, ApplicationUserId = userId };
 
                 newCredential.SetBlob(new Fido2CredentialBlob()
                 {
-                    Descriptor = new PublicKeyCredentialDescriptor(success.Result.CredentialId),
+                    Descriptor = new DescriptorClass(success.Result.CredentialId),
                     PublicKey = success.Result.PublicKey,
                     UserHandle = success.Result.User.Id,
                     SignatureCounter = success.Result.Counter,
@@ -158,21 +152,13 @@ namespace BTCPayServer.Fido2
             }
             var existingCredentials = user.Fido2Credentials
                 .Where(credential => credential.Type == Fido2Credential.CredentialType.FIDO2)
-                .Select(c => c.GetFido2Blob().Descriptor)
+                .Select(c => c.GetFido2Blob().Descriptor?.ToFido2())
                 .ToList();
             var exts = new AuthenticationExtensionsClientInputs()
             {
-                SimpleTransactionAuthorization = "FIDO",
-                GenericTransactionAuthorization = new TxAuthGenericArg
-                {
-                    ContentType = "text/plain",
-                    Content = new byte[] { 0x46, 0x49, 0x44, 0x4F }
-                },
-                UserVerificationIndex = true,
-                Location = true,
                 UserVerificationMethod = true,
                 Extensions = true,
-                AppID = _fido2Configuration.Origin
+                AppID = _fido2Configuration.Origins.First()
             };
 
             // 3. Create options
@@ -206,7 +192,7 @@ namespace BTCPayServer.Fido2
 
             // 5. Make the assertion
             var res = await _fido2.MakeAssertionAsync(response, options, credential.Item2.PublicKey,
-                credential.Item2.SignatureCounter, x => Task.FromResult(true));
+                credential.Item2.SignatureCounter, (x, cancellationToken) => Task.FromResult(true));
 
             // 6. Store the updated counter
             credential.Item2.SignatureCounter = res.Counter;

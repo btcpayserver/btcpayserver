@@ -33,16 +33,12 @@
                 : ''
         });
 		delegate('click', '#Presets_InStore', e => {
-			$("#CheckoutV2Settings").addClass('show');
-			$("#ClassicCheckoutSettings").removeClass('show');
 			$("#CheckNFC").removeClass('d-none');
 			$("#PlaySoundOnPayment").prop('checked', true);
 			$("#ShowPayInWalletButton").prop('checked', false);
 			$("#ShowStoreHeader").prop('checked', false);
 		});
 		delegate('click', '#Presets_Online', e => {
-			$("#CheckoutV2Settings").addClass('show');
-			$("#ClassicCheckoutSettings").removeClass('show');
 			$("#CheckNFC").addClass('d-none');
 			$("#PlaySoundOnPayment").prop('checked', false);
 			$("#ShowPayInWalletButton").prop('checked', true);
@@ -135,7 +131,7 @@
             <div id="CheckNFC" class="form-group d-none">
                 <button type="button" class="btn btn-outline-secondary" text-translate="true">Check if NFC is supported and enabled on this device</button>
             </div>
-			<div class="checkout-settings collapse show" id="CheckoutV2Settings">
+			<div class="checkout-settings">
                 <div class="form-group">
                     <label asp-for="DisplayExpirationTimer" class="form-label"></label>
                     <div class="input-group">

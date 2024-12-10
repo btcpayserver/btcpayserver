@@ -7,11 +7,9 @@ using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Validation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using MimeKit;
 
 namespace BTCPayServer.Controllers.GreenField
 {

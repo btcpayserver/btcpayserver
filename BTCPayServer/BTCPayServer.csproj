@@ -8,6 +8,19 @@
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
   </PropertyGroup>
+   
+   <!-- Pre-compiling views should only be done for Release builds without dotnet watch or design time build .-->
+   <!-- Runtime compiling is only useful for debugging with hot reload of the views -->
+   <PropertyGroup Condition="'$(RazorCompileOnBuild)'=='' AND ('$(Configuration)' == 'Debug' OR '$(DotNetWatchBuild)' == 'true' OR '$(DesignTimeBuild)' == 'true')">
+     <RazorCompileOnBuild>false</RazorCompileOnBuild>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(RazorCompileOnBuild)'==''">
+     <RazorCompileOnBuild>true</RazorCompileOnBuild>
+   </PropertyGroup>
+   <PropertyGroup Condition="'$(RazorCompileOnBuild)' == 'true'">
+     <DefineConstants>$(DefineConstants);RAZOR_COMPILE_ON_BUILD</DefineConstants>
+   </PropertyGroup>
+
    <ItemGroup>
      <AssemblyAttribute Condition="'$(GitCommit)' != ''" Include="BTCPayServer.GitCommitAttribute">
        <_Parameter1>$(GitCommit)</_Parameter1>
@@ -37,19 +50,19 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.24" />
+    <PackageReference Include="BTCPayServer.NTag424" Version="1.0.25" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.2" />
     <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
-    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.6.7" />
+    <PackageReference Include="BTCPayServer.Lightning.All" Version="1.6.9" />
     <PackageReference Include="CsvHelper" Version="32.0.3" />
     <PackageReference Include="Dapper" Version="2.1.35" />
-    <PackageReference Include="Fido2" Version="2.0.2" />
-    <PackageReference Include="Fido2.AspNet" Version="2.0.2" />
-    <PackageReference Include="LNURL" Version="0.0.34" />
-    <PackageReference Include="MailKit" Version="3.3.0" />
+    <PackageReference Include="Fido2" Version="3.0.1" />
+    <PackageReference Include="Fido2.AspNet" Version="3.0.1" />
+    <PackageReference Include="LNURL" Version="0.0.36" />
+    <PackageReference Include="MailKit" Version="4.8.0" />
     <PackageReference Include="BTCPayServer.NETCore.Plugins.Mvc" Version="1.4.4" />
-    <PackageReference Include="QRCoder" Version="1.4.3" />
+    <PackageReference Include="QRCoder" Version="1.6.0" />
     <PackageReference Include="System.IO.Pipelines" Version="8.0.0" />
     <PackageReference Include="NBitpayClient" Version="1.0.0.39" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
@@ -60,16 +73,14 @@
     <PackageReference Include="Serilog.AspNetCore" Version="8.0.0" />
     <PackageReference Include="Serilog.Sinks.File" Version="5.0.1-dev-00968" />
     <PackageReference Include="SSH.NET" Version="2023.0.0" />
-  </ItemGroup>
-
-	<ItemGroup>
-    <PackageReference Include="TwentyTwenty.Storage" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.12.1" />
-    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.12.1" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.6" />
-    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.7" />
+    <PackageReference Include="TwentyTwenty.Storage" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Amazon" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.24.2" />
+    <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.24.2" />
+    <PackageReference Condition="'$(RazorCompileOnBuild)' == 'false'" Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
   </ItemGroup>
 
 	<ItemGroup>

@@ -153,6 +153,9 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreEvent.Created>(StoreCreatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreEvent.Updated>(StoreUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreEvent.Removed>(StoreRemovedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreRoleEvent.Added>(StoreRoleAddedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreRoleEvent.Updated>(StoreRoleUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreRoleEvent.Removed>(StoreRoleRemovedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreEvent.Added>(StoreUserAddedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreEvent.Updated>(StoreUserUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreEvent.Removed>(StoreUserRemovedEvent));
@@ -243,6 +246,24 @@ public class BTCPayAppState : IHostedService
 
         await RemoveFromGroup(arg.StoreId,
             Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray());
+    }
+
+    private async Task StoreRoleAddedEvent(StoreRoleEvent.Added arg)
+    {
+        var ev = new ServerEvent { Type = "store-role-added", StoreId = arg.StoreId };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
+    }
+
+    private async Task StoreRoleUpdatedEvent(StoreRoleEvent.Updated arg)
+    {
+        var ev = new ServerEvent { Type = "store-role-updated", StoreId = arg.StoreId };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
+    }
+
+    private async Task StoreRoleRemovedEvent(StoreRoleEvent.Removed arg)
+    {
+        var ev = new ServerEvent { Type = "store-role-removed", StoreId = arg.StoreId };
+        await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
     private async Task AppCreatedEvent(AppEvent.Created arg)

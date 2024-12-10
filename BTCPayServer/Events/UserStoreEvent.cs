@@ -1,5 +1,4 @@
 #nullable enable
-using BTCPayServer.Migrations;
 
 namespace BTCPayServer.Events;
 

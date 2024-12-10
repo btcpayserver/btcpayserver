@@ -154,6 +154,7 @@ namespace BTCPayServer.Services.Stores
                     return "This is the last role that allows to modify store settings, you cannot remove it";
                 ctx.StoreRoles.Remove(match);
                 await ctx.SaveChangesAsync();
+                _eventAggregator.Publish(new StoreRoleEvent.Removed(role.StoreId!, role.Id));
                 return null;
             }
 
@@ -165,15 +166,21 @@ namespace BTCPayServer.Services.Stores
             policies = policies.Where(s => Policies.IsValidPolicy(s) && Policies.IsStorePolicy(s)).ToList();
             await using var ctx = _ContextFactory.CreateContext();
             Data.StoreRole? match = await ctx.StoreRoles.FindAsync(role.Id);
+            var added = false;
             if (match is null)
             {
-                match = new Data.StoreRole() { Id = role.Id, StoreDataId = role.StoreId, Role = role.Role };
+                match = new Data.StoreRole { Id = role.Id, StoreDataId = role.StoreId, Role = role.Role };
                 ctx.StoreRoles.Add(match);
+                added = true;
             }
             match.Permissions = policies;
             try
             {
                 await ctx.SaveChangesAsync();
+                StoreRoleEvent evt = added
+                    ? new StoreRoleEvent.Added(role.StoreId!, role.Id)
+                    : new StoreRoleEvent.Updated(role.StoreId!, role.Id);
+                _eventAggregator.Publish(evt);
             }
             catch (DbUpdateException)
             {

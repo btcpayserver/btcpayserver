@@ -1,4 +1,3 @@
-using System;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
@@ -9,10 +8,7 @@ using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Logging;
 
 namespace BTCPayServer.HostedServices;
@@ -33,6 +29,7 @@ public class UserEventHostedService(
     protected override void SubscribeToEvents()
     {
         Subscribe<UserEvent.Registered>();
+        Subscribe<UserEvent.Invited>();
         Subscribe<UserEvent.Approved>();
         Subscribe<UserEvent.ConfirmedEmail>();
         Subscribe<UserEvent.PasswordResetRequested>();

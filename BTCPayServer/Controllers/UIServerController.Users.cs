@@ -265,12 +265,11 @@ namespace BTCPayServer.Controllers
 
                     var evt = await UserEvent.Invited.Create(user, currentUser, _callbackGenerator, Request, sendEmail);
                     _eventAggregator.Publish(evt);
-                    
-                    
+
                     var info = sendEmail
                         ? "An invitation email has been sent. You may alternatively"
                         : "An invitation email has not been sent. You need to";
-                    
+
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,

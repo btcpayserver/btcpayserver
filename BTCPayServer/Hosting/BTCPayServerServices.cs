@@ -355,6 +355,8 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<StoreRepository>();
             services.TryAddSingleton<PaymentRequestRepository>();
             services.TryAddSingleton<BTCPayWalletProvider>();
+            services.AddSingleton<PendingTransactionService>();
+            services.AddScheduledTask<PendingTransactionService>(TimeSpan.FromMinutes(10));
             services.TryAddSingleton<WalletReceiveService>();
             services.AddSingleton<IHostedService>(provider => provider.GetService<WalletReceiveService>());
 

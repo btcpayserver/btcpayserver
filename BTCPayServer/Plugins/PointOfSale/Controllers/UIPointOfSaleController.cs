@@ -160,17 +160,25 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (await Throttle(appId))
                 return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
 
+            // Distinguish JSON requests coming via the mobile app
+            var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
+
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+            if (app == null)
+                return wantsJson
+                    ? Json(new { error = "App not found" })
+                    : NotFound();
 
             // not allowing negative tips or discounts
             if (tip < 0 || discount < 0)
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return wantsJson
+                    ? Json(new { error = "Negative tip or discount is not allowed" })
+                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
 
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-
-            if (app == null)
-                return NotFound();
+                return wantsJson
+                    ? Json(new { error = "Negative amount is not allowed" })
+                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
 
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
@@ -180,6 +188,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
+
             var jposData = TryParseJObject(posData);
             string title;
             decimal? price;
@@ -235,9 +244,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             switch (itemChoice.Inventory)
                             {
                                 case <= 0:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                                 case { } inventory when inventory < cartItem.Count:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                                    return wantsJson
+                                        ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
+                                        : RedirectToAction(nameof(ViewPointOfSale), new { appId });
                             }
                         }
 
@@ -262,9 +272,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var posFormId = settings.FormId;
-            
+
             // skip forms feature for JSON requests (from the app)
-            var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
             var formData = wantsJson ? null : await FormDataService.GetForm(posFormId);
             JObject formResponseJObject = null;
             switch (formData)

@@ -28,7 +28,7 @@ namespace BTCPayServer.Controllers
         public async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
-            CreatePSBTRequest psbtRequest = new CreatePSBTRequest();
+            CreatePSBTRequest psbtRequest = new();
             if (sendModel.InputSelection)
             {
                 psbtRequest.IncludeOnlyOutpoints = sendModel.SelectedInputs?.Select(OutPoint.Parse)?.ToList() ?? new List<OutPoint>();
@@ -250,6 +250,9 @@ namespace BTCPayServer.Controllers
             }
             switch (command)
             {
+                case "createpending":
+                    var pt = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt);
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, vm);
                 case "decode":
@@ -288,7 +291,7 @@ namespace BTCPayServer.Controllers
                     });
 
                 case "broadcast":
-                    return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
+                    return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
                     {
                         SigningContext = new SigningContextModel(psbt),
                         ReturnUrl = vm.ReturnUrl,
@@ -603,6 +606,12 @@ namespace BTCPayServer.Controllers
                         if (!string.IsNullOrEmpty(vm.ReturnUrl))
                         {
                             return LocalRedirect(vm.ReturnUrl);
+                        }
+
+                        if (vm.SigningContext.PendingTransactionId is not null)
+                        {
+                            await _pendingTransactionService.Broadcasted(walletId.CryptoCode, walletId.StoreId,
+                                vm.SigningContext.PendingTransactionId);
                         }
                         return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }

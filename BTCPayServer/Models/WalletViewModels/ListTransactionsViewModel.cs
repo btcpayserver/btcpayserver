@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using BTCPayServer.Data;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
@@ -20,5 +21,6 @@ namespace BTCPayServer.Models.WalletViewModels
         public List<TransactionViewModel> Transactions { get; set; } = new();
         public override int CurrentPageCount => Transactions.Count;
         public string CryptoCode { get; set; }
+        public PendingTransaction[] PendingTransactions { get; set; }
     }
 }

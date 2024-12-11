@@ -33,7 +33,6 @@ namespace BTCPayServer
 
         public DerivationSchemeSettings()
         {
-
         }
 
         public DerivationSchemeSettings(DerivationStrategyBase derivationStrategy, BTCPayNetwork network)
@@ -48,16 +47,16 @@ namespace BTCPayServer
         }
 
 
-        BitcoinExtPubKey _SigningKey;
+        private BitcoinExtPubKey _signingKey;
         public BitcoinExtPubKey SigningKey
         {
             get
             {
-                return _SigningKey ?? AccountKeySettings?.Select(k => k.AccountKey).FirstOrDefault();
+                return _signingKey ?? AccountKeySettings?.Select(k => k.AccountKey).FirstOrDefault();
             }
             set
             {
-                _SigningKey = value;
+                _signingKey = value;
             }
         }
         public string Source { get; set; }
@@ -84,11 +83,7 @@ namespace BTCPayServer
             return AccountKeySettings.Single(a => a.AccountKey == SigningKey);
         }
 
-        public AccountKeySettings[] AccountKeySettings
-        {
-            get;
-            set;
-        }
+        public AccountKeySettings[] AccountKeySettings { get; set; }
 
         public IEnumerable<NBXplorer.Models.PSBTRebaseKeyRules> GetPSBTRebaseKeyRules()
         {
@@ -107,6 +102,14 @@ namespace BTCPayServer
 
         public string Label { get; set; }
 
+        #region MultiSig related settings
+        public bool IsMultiSigOnServer { get; set; }
+        
+        // some hardware devices like Jade require sending full input transactions if there are multiple inputs
+        // https://github.com/Blockstream/Jade/blob/0d6ce77bf23ef2b5dc43cdae3967b4207e8cad52/main/process/sign_tx.c#L586
+        public bool DefaultIncludeNonWitnessUtxo { get; set; }
+        #endregion    
+        
         public override string ToString()
         {
             return AccountDerivation.ToString();
@@ -114,7 +117,7 @@ namespace BTCPayServer
         public string ToPrettyString()
         {
             return !string.IsNullOrEmpty(Label) ? Label :
-                   !String.IsNullOrEmpty(AccountOriginal) ? AccountOriginal :
+                   !string.IsNullOrEmpty(AccountOriginal) ? AccountOriginal :
                    ToString();
         }
 

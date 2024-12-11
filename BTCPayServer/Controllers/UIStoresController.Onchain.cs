@@ -440,7 +440,10 @@ public partial class UIStoresController
             CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
             CanUseHotWallet = canUseHotWallet,
             CanUseRPCImport = rpcImport,
-            StoreName = store.StoreName
+            StoreName = store.StoreName,
+            CanSetupMultiSig = derivation.AccountKeySettings.Length > 1,
+            IsMultiSigOnServer = derivation.IsMultiSigOnServer,
+            DefaultIncludeNonWitnessUtxo = derivation.DefaultIncludeNonWitnessUtxo
         };
 
         ViewData["ReplaceDescription"] = WalletReplaceWarning(derivation.IsHotWallet);
@@ -477,10 +480,14 @@ public partial class UIStoresController
         if (payjoinChanged && network.SupportPayJoin) storeBlob.PayJoinEnabled = vm.PayJoinEnabled;
         if (needUpdate) store.SetStoreBlob(storeBlob);
 
-        if (derivation.Label != vm.Label)
+        if (derivation.Label != vm.Label ||
+            derivation.IsMultiSigOnServer != vm.IsMultiSigOnServer ||
+            derivation.DefaultIncludeNonWitnessUtxo != vm.DefaultIncludeNonWitnessUtxo)
         {
             needUpdate = true;
             derivation.Label = vm.Label;
+            derivation.IsMultiSigOnServer = vm.IsMultiSigOnServer;
+            derivation.DefaultIncludeNonWitnessUtxo = vm.DefaultIncludeNonWitnessUtxo;
         }
 
         var signingKey = string.IsNullOrEmpty(vm.SelectedSigningKey)
@@ -494,16 +501,14 @@ public partial class UIStoresController
 
         for (int i = 0; i < derivation.AccountKeySettings.Length; i++)
         {
-            KeyPath accountKeyPath;
-            HDFingerprint? rootFingerprint;
-
             try
             {
-                accountKeyPath = string.IsNullOrWhiteSpace(vm.AccountKeys[i].AccountKeyPath)
-                    ? null
-                    : new KeyPath(vm.AccountKeys[i].AccountKeyPath);
+                var strKeyPath = vm.AccountKeys[i].AccountKeyPath;
+                var accountKeyPath = string.IsNullOrWhiteSpace(strKeyPath) ? null : new KeyPath(strKeyPath);
 
-                if (accountKeyPath != null && derivation.AccountKeySettings[i].AccountKeyPath != accountKeyPath)
+                bool pathsDiffer = accountKeyPath != derivation.AccountKeySettings[i].AccountKeyPath;
+
+                if (pathsDiffer)
                 {
                     needUpdate = true;
                     derivation.AccountKeySettings[i].AccountKeyPath = accountKeyPath;
@@ -516,7 +521,7 @@ public partial class UIStoresController
 
             try
             {
-                rootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
+                HDFingerprint? rootFingerprint = string.IsNullOrWhiteSpace(vm.AccountKeys[i].MasterFingerprint)
                     ? null
                     : new HDFingerprint(Encoders.Hex.DecodeData(vm.AccountKeys[i].MasterFingerprint));
 

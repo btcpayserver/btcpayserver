@@ -33,7 +33,9 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -77,9 +79,12 @@ namespace BTCPayServer.Controllers
         private readonly PullPaymentHostedService _pullPaymentHostedService;
         private readonly WalletHistogramService _walletHistogramService;
 
+        private readonly PendingTransactionService _pendingTransactionService;
         readonly CurrencyNameTable _currencyTable;
 
-        public UIWalletsController(StoreRepository repo,
+        public UIWalletsController(
+            PendingTransactionService pendingTransactionService,
+            StoreRepository repo,
                                  WalletRepository walletRepository,
                                  CurrencyNameTable currencyTable,
                                  BTCPayNetworkProvider networkProvider,
@@ -104,6 +109,7 @@ namespace BTCPayServer.Controllers
                                  IStringLocalizer stringLocalizer,
                                  TransactionLinkProviders transactionLinkProviders)
         {
+            _pendingTransactionService = pendingTransactionService;
             _currencyTable = currencyTable;
             _labelService = labelService;
             _defaultRules = defaultRules;
@@ -129,6 +135,67 @@ namespace BTCPayServer.Controllers
             _walletHistogramService = walletHistogramService;
             StringLocalizer = stringLocalizer;
         }
+
+        [HttpGet("{walletId}/pending/{transactionId}/cancel")]
+        public IActionResult CancelPendingTransaction(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            string transactionId)
+        {
+            return View("Confirm", new ConfirmModel("Abort Pending Transaction", 
+                "Proceeding with this action will invalidate Pending Transaction and all accepted signatures.", 
+                "Confirm Abort"));
+        }
+        [HttpPost("{walletId}/pending/{transactionId}/cancel")]
+        public async Task<IActionResult> CancelPendingTransactionConfirmed(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            string transactionId)
+        {
+            await _pendingTransactionService.CancelPendingTransaction(walletId.CryptoCode, walletId.StoreId, transactionId);
+            TempData.SetStatusMessageModel(new StatusMessageModel()
+            {
+                Severity = StatusMessageModel.StatusSeverity.Success,
+                Message = $"Aborted Pending Transaction {transactionId}"
+            });
+            return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
+        }
+
+
+        [HttpGet("{walletId}/pending/{transactionId}")]
+        public async Task<IActionResult> ViewPendingTransaction(
+            [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+            string transactionId)
+        {
+            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
+            var pendingTransaction =
+                await _pendingTransactionService.GetPendingTransaction(walletId.CryptoCode, walletId.StoreId,
+                    transactionId);
+            if (pendingTransaction is null)
+                return NotFound();
+            var blob = pendingTransaction.GetBlob();
+            if (blob?.PSBT is null)
+                return NotFound();
+            var currentPsbt = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
+            foreach (CollectedSignature collectedSignature in blob.CollectedSignatures)
+            {
+                var psbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
+                currentPsbt = currentPsbt.Combine(psbt);
+            }
+
+            var derivationSchemeSettings = GetDerivationSchemeSettings(walletId);
+
+            var vm = new WalletPSBTViewModel()
+            {
+                CryptoCode = network.CryptoCode,
+                SigningContext = new SigningContextModel(currentPsbt)
+                {
+                    PendingTransactionId = transactionId, PSBT = currentPsbt.ToBase64(),
+                },
+            };
+            await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
+            await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
+            return View("WalletPSBTDecoded", vm);
+        }
+
 
         [HttpPost]
         [Route("{walletId}")]
@@ -243,6 +310,9 @@ namespace BTCPayServer.Controllers
             // We can't filter at the database level if we need to apply label filter
             var preFiltering = string.IsNullOrEmpty(labelFilter);
             var model = new ListTransactionsViewModel { Skip = skip, Count = count };
+            
+            model.PendingTransactions = await _pendingTransactionService.GetPendingTransactions(walletId.CryptoCode, walletId.StoreId);
+            
             model.Labels.AddRange(
                 (await WalletRepository.GetWalletLabels(walletId))
                 .Select(c => (c.Label, c.Color, ColorPalette.Default.TextColor(c.Color))));
@@ -452,7 +522,9 @@ namespace BTCPayServer.Controllers
             var model = new WalletSendModel
             {
                 CryptoCode = walletId.CryptoCode,
-                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath
+                ReturnUrl = returnUrl ?? HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath,
+                IsMultiSigOnServer = paymentMethod.IsMultiSigOnServer,
+                AlwaysIncludeNonWitnessUTXO = paymentMethod.DefaultIncludeNonWitnessUtxo
             };
             if (bip21?.Any() is true)
             {
@@ -849,6 +921,9 @@ namespace BTCPayServer.Controllers
             };
             switch (command)
             {
+                case "createpending":
+                    var pt = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt);
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, new WalletPSBTViewModel
                     {
@@ -949,10 +1024,10 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{walletId}/vault")]
-        public IActionResult WalletSendVault([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
+        public async Task<IActionResult> WalletSendVault([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             WalletSendVaultModel model)
         {
-            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
+            return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
             {
                 SigningContext = model.SigningContext,
                 ReturnUrl = model.ReturnUrl,
@@ -960,8 +1035,17 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private IActionResult RedirectToWalletPSBTReady(WalletPSBTReadyViewModel vm)
+        private async Task<IActionResult> RedirectToWalletPSBTReady(WalletId walletId, WalletPSBTReadyViewModel vm)
         {
+            if (vm.SigningContext.PendingTransactionId is not null)
+            {
+                var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
+                var pendingTransaction = await _pendingTransactionService.CollectSignature(walletId.CryptoCode, psbt, false, CancellationToken.None);
+                
+                if (pendingTransaction != null)
+                    return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
+            }
+            
             var redirectVm = new PostRedirectViewModel
             {
                 AspController = "UIWallets",
@@ -1003,6 +1087,7 @@ namespace BTCPayServer.Controllers
             redirectVm.FormParameters.Add("SigningContext.EnforceLowR",
                 signingContext.EnforceLowR?.ToString(CultureInfo.InvariantCulture));
             redirectVm.FormParameters.Add("SigningContext.ChangeAddress", signingContext.ChangeAddress);
+            redirectVm.FormParameters.Add("SigningContext.PendingTransactionId", signingContext.PendingTransactionId);
         }
 
         private IActionResult RedirectToWalletPSBT(WalletPSBTViewModel vm)
@@ -1119,7 +1204,7 @@ namespace BTCPayServer.Controllers
             ModelState.Remove(nameof(viewModel.SigningContext.PSBT));
             viewModel.SigningContext ??= new();
             viewModel.SigningContext.PSBT = psbt?.ToBase64();
-            return RedirectToWalletPSBTReady(new WalletPSBTReadyViewModel
+            return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
             {
                 SigningKey = signingKey.GetWif(network.NBitcoinNetwork).ToString(),
                 SigningKeyPath = rootedKeyPath?.ToString(),

@@ -141,12 +141,15 @@ namespace BTCPayServer.Controllers
                                 var psbt = PSBT.Parse(o["psbt"].Value<string>(), network.NBitcoinNetwork);
                                 var derivationSettings = GetDerivationSchemeSettings(walletId);
                                 derivationSettings.RebaseKeyPaths(psbt);
-                                var signing = derivationSettings.GetSigningAccountKeySettings();
-                                if (signing.GetRootedKeyPath()?.MasterFingerprint != fingerprint)
+                                
+                                // we ensure that the device fingerprint is part of the derivation settings
+                                if (derivationSettings.AccountKeySettings.All(a => a.RootFingerprint != fingerprint))
                                 {
                                     await websocketHelper.Send("{ \"error\": \"wrong-wallet\"}", cancellationToken);
                                     continue;
                                 }
+                                
+                                // otherwise, let the device check if it can sign anything
                                 var signableInputs = psbt.Inputs
                                                 .SelectMany(i => i.HDKeyPaths)
                                                 .Where(i => i.Value.MasterFingerprint == fingerprint)
@@ -159,12 +162,24 @@ namespace BTCPayServer.Controllers
                                         await websocketHelper.Send("{ \"error\": \"wrong-keypath\"}", cancellationToken);
                                         continue;
                                     }
+                                    
+                                    if (derivationSettings.IsMultiSigOnServer)
+                                    {
+                                        var alreadySigned = psbt.Inputs.Any(a =>
+                                            a.PartialSigs.Any(a => a.Key == actualPubKey));
+                                        if (alreadySigned)
+                                        {
+                                            await websocketHelper.Send("{ \"error\": \"already-signed-psbt\"}", cancellationToken);
+                                            continue;
+                                        }
+                                    }
                                 }
+
                                 try
                                 {
                                     psbt = await device.SignPSBTAsync(psbt, cancellationToken);
                                 }
-                                catch (Hwi.HwiException)
+                                catch (HwiException)
                                 {
                                     await websocketHelper.Send("{ \"error\": \"user-reject\"}", cancellationToken);
                                     continue;

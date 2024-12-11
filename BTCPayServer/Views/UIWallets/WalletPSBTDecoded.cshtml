@@ -2,20 +2,20 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletPSBTViewModel
 @{
-	var walletId = Context.GetRouteValue("walletId").ToString();
-	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
-	var isReady = !Model.HasErrors;
-	var isSignable = !isReady;
-	var needsExport = !isSignable && !isReady;
-	Layout = "_LayoutWizard";
+    var walletId = Context.GetRouteValue("walletId").ToString();
+    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new {walletId});
+    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+    var isReady = !Model.HasErrors;
+    var isSignable = !isReady;
+    var needsExport = !isSignable && !isReady;
+    Layout = "_LayoutWizard";
 	ViewData.SetActivePage(WalletsNavPages.PSBT, isReady ? StringLocalizer["Confirm broadcasting this transaction"] : StringLocalizer["Transaction Details"], walletId);
-	Csp.UnsafeEval();
+    Csp.UnsafeEval();
 }
 
 @section PageHeadContent {
     <link rel="stylesheet" href="~/vendor/highlightjs/default.min.css" asp-append-version="true">
-    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true" />
     <style>
         .nav-pills .nav-link.active {
             color: var(--btcpay-secondary-text-active);
@@ -80,7 +80,7 @@
 @section Navbar {
     @if (backUrl != null)
     {
-		<a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
+        <a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
             <vc:icon symbol="back" />
         </a>
     }
@@ -98,17 +98,29 @@
 @if (isSignable)
 {
     <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="my-5">
-        <input type="hidden" asp-for="CryptoCode"/>
-        <input type="hidden" asp-for="NBXSeedAvailable"/>
-        <input type="hidden" asp-for="PSBT"/>
-        <input type="hidden" asp-for="FileName"/>
+        <input type="hidden" asp-for="CryptoCode" />
+        <input type="hidden" asp-for="NBXSeedAvailable" />
+        <input type="hidden" asp-for="PSBT" />
+        <input type="hidden" asp-for="FileName" />
         <input type="hidden" asp-for="ReturnUrl" />
         <input type="hidden" asp-for="BackUrl" />
-        <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center">
+        
+        <partial name="SigningContext" for="SigningContext" />
+        <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-center align-items-sm-center gap-2">
             <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
+            @if (Model.SigningContext.PendingTransactionId is null && !Model.NBXSeedAvailable)
+            {
+                <button type="submit" id="CreatePendingTransaction" name="command" value="createpending" 
+                        class="btn btn-primary">Create pending transaction</button>
+            }
+            else if (Model.SigningContext.PendingTransactionId is not null)
+            {
+                <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
+                   asp-route-transactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
+            }
         </div>
     </form>
-} 
+}
 else if (isReady)
 {
     <form method="post" asp-action="WalletPSBTReady" asp-route-walletId="@walletId" class="my-5">
@@ -141,14 +153,14 @@ else
         <h2 class="accordion-header" id="PSBTOptionsExportHeader">
             <button type="button" class="accordion-button @(needsExport ? "" : "collapsed")" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsExportContent" aria-controls="PSBTOptionsExportContent" aria-expanded="@(needsExport ? "true" : "false")">
                 <span class="h5">Export PSBT @(isReady ? "" : "for signing")</span>
-                <vc:icon symbol="caret-down"/>
+                <vc:icon symbol="caret-down" />
             </button>
         </h2>
         <div id="PSBTOptionsExportContent" class="accordion-collapse collapse @(needsExport ? "show" : "")" aria-labelledby="PSBTOptionsExportHeader" data-bs-parent="#PSBTOptions">
             <div class="accordion-body">
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
-                    <input type="hidden" asp-for="CryptoCode"/>
-                    <input type="hidden" asp-for="PSBT"/>
+                    <input type="hidden" asp-for="CryptoCode" />
+                    <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="ReturnUrl" />
                     <input type="hidden" asp-for="BackUrl" />
                     <div class="d-flex flex-column flex-sm-row flex-wrap align-items-sm-center">
@@ -192,7 +204,7 @@ else
             <h2 class="accordion-header" id="PSBTOptionsImportHeader">
                 <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsImportContent" aria-controls="PSBTOptionsImportContent" aria-expanded="false">
                     <span class="h5" text-translate="true">Provide updated PSBT</span>
-                    <vc:icon symbol="caret-down"/>
+                    <vc:icon symbol="caret-down" />
                 </button>
             </h2>
             <div id="PSBTOptionsImportContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsImportHeader" data-bs-parent="#PSBTOptions">
@@ -221,13 +233,13 @@ else
         <h2 class="accordion-header" id="PSBTOptionsAdvancedHeader">
             <button type="button" class="accordion-button collapsed" data-bs-toggle="collapse" data-bs-target="#PSBTOptionsAdvancedContent" aria-controls="PSBTOptionsAdvancedContent" aria-expanded="false">
                 <span class="h5">Add metadata to PSBT (advanced)</span>
-                <vc:icon symbol="caret-down"/>
+                <vc:icon symbol="caret-down" />
             </button>
         </h2>
         <div id="PSBTOptionsAdvancedContent" class="accordion-collapse collapse" aria-labelledby="PSBTOptionsAdvancedHeader" data-bs-parent="#PSBTOptions">
             <div class="accordion-body">
                 <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" class="mb-2">
-                    <input type="hidden" asp-for="PSBT"/>
+                    <input type="hidden" asp-for="PSBT" />
                     <input type="hidden" asp-for="ReturnUrl" />
                     <input type="hidden" asp-for="BackUrl" />
                     <p class="mb-2">For exporting the signed PSBT and transaction information to a wallet, update the PSBT.</p>
@@ -240,5 +252,5 @@ else
     </div>
 </div>
 
-<partial name="ShowQR"/>
-<partial name="CameraScanner"/>
+<partial name="ShowQR" />
+<partial name="CameraScanner" />

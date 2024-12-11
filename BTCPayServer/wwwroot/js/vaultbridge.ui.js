@@ -50,6 +50,7 @@ var vaultui = (function () {
         signingTransaction: new VaultFeedback("?", "Please review and confirm the transaction on your device...", "ask-signing"),
         reviewAddress: new VaultFeedback("?", "Sending... Please review the address on your device...", "ask-signing"),
         signingRejected: new VaultFeedback("failed", "The user refused to sign the transaction", "user-reject"),
+        alreadySignedPsbt: new VaultFeedback("failed", "This device already signed PSBT.", "already-signed-psbt"),
     };
 
     /**

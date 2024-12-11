@@ -9,6 +9,7 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
@@ -58,28 +59,18 @@ public partial class UIStoresController
                 Created = DateTimeOffset.UtcNow
             };
 
-            var result = await _userManager.CreateAsync(user);
-            if (result.Succeeded)
+            var currentUser = await _userManager.GetUserAsync(HttpContext.User);
+            if (currentUser is not null &&
+                (await _userManager.CreateAsync(user)) is { Succeeded: true } result)
             {
 				var invitationEmail = await _emailSenderFactory.IsComplete();
-				var tcs = new TaskCompletionSource<Uri>();
-                var currentUser = await _userManager.GetUserAsync(HttpContext.User);
+				var evt = await UserEvent.Invited.Create(user, currentUser, _callbackGenerator, Request, invitationEmail);
+                _eventAggregator.Publish(evt);
 
-                _eventAggregator.Publish(new UserRegisteredEvent
-                {
-                    RequestUri = Request.GetAbsoluteRootUri(),
-                    Kind = UserRegisteredEventKind.Invite,
-                    User = user,
-                    InvitedByUser = currentUser,
-                    SendInvitationEmail = invitationEmail,
-                    CallbackUrlGenerated = tcs
-                });
-                    
-                var callbackUrl = await tcs.Task;
                 var info = invitationEmail
 					? "An invitation email has been sent.<br/>You may alternatively"
                     : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
-                successInfo = $"{info} share this link with them: <a class='alert-link' href='{callbackUrl}'>{callbackUrl}</a>";
+                successInfo = $"{info} share this link with them: <a class='alert-link' href='{evt.InvitationLink}'>{evt.InvitationLink}</a>";
             }
             else
             {

@@ -4,9 +4,9 @@ using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Fido2;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.Greenfield;
@@ -36,11 +36,12 @@ namespace BTCPayServer.Controllers
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly Fido2Service _fido2Service;
-        private readonly LinkGenerator _linkGenerator;
+        private readonly CallbackGenerator _callbackGenerator;
         private readonly IHtmlHelper Html;
         private readonly UserService _userService;
         private readonly UriResolver _uriResolver;
         private readonly IFileService _fileService;
+        private readonly EventAggregator _eventAggregator;
         readonly StoreRepository _StoreRepository;
         public IStringLocalizer StringLocalizer { get; }
 
@@ -55,13 +56,13 @@ namespace BTCPayServer.Controllers
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
           Fido2Service fido2Service,
-          LinkGenerator linkGenerator,
+          CallbackGenerator callbackGenerator,
           UserService userService,
           UriResolver uriResolver,
           IFileService fileService,
           IStringLocalizer stringLocalizer,
-          IHtmlHelper htmlHelper
-          )
+          IHtmlHelper htmlHelper,
+          EventAggregator eventAggregator)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -72,8 +73,9 @@ namespace BTCPayServer.Controllers
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;
             _fido2Service = fido2Service;
-            _linkGenerator = linkGenerator;
+            _callbackGenerator = callbackGenerator;
             Html = htmlHelper;
+            _eventAggregator = eventAggregator;
             _userService = userService;
             _uriResolver = uriResolver;
             _fileService = fileService;
@@ -189,9 +191,9 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
 
-            if (needUpdate is true)
+            if (needUpdate && await _userManager.UpdateAsync(user) is { Succeeded: true })
             {
-                needUpdate = await _userManager.UpdateAsync(user) is { Succeeded: true };
+                _eventAggregator.Publish(new UserEvent.Updated(user));
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your profile has been updated"].Value;
             }
             else
@@ -217,8 +219,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
+            var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user, Request);
             (await _EmailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Verification email sent. Please check your email."].Value;
             return RedirectToAction(nameof(Index));
@@ -320,7 +321,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(SetPassword));
         }
 
-        [HttpPost()]
+        [HttpPost]
         public async Task<IActionResult> DeleteUserPost()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -330,11 +331,11 @@ namespace BTCPayServer.Controllers
             }
 
             await _userService.DeleteUserAndAssociatedData(user);
+            _eventAggregator.Publish(new UserEvent.Deleted(user));
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account successfully deleted."].Value;
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(UIAccountController.Login), "UIAccount");
         }
-
 
         #region Helpers
 

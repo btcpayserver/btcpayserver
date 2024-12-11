@@ -156,9 +156,9 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreRoleEvent.Added>(StoreRoleAddedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreRoleEvent.Updated>(StoreRoleUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreRoleEvent.Removed>(StoreRoleRemovedEvent));
-        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreEvent.Added>(StoreUserAddedEvent));
-        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreEvent.Updated>(StoreUserUpdatedEvent));
-        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserStoreEvent.Removed>(StoreUserRemovedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreUserEvent.Added>(StoreUserAddedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreUserEvent.Updated>(StoreUserUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<StoreUserEvent.Removed>(StoreUserRemovedEvent));
         // App events
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppEvent.Created>(AppCreatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppEvent.Updated>(AppUpdatedEvent));
@@ -225,23 +225,23 @@ public class BTCPayAppState : IHostedService
         await _hubContext.Clients.Group(arg.StoreId).NotifyServerEvent(ev);
     }
 
-    private async Task StoreUserAddedEvent(UserStoreEvent.Added arg)
+    private async Task StoreUserAddedEvent(StoreUserEvent.Added arg)
     {
         var cIds = Connections.Where(pair => pair.Value.UserId == arg.UserId).Select(pair => pair.Key).ToArray();
         await AddToGroup(arg.StoreId, cIds);
-        var ev = new ServerEvent { Type = "user-store-added", StoreId = arg.StoreId, UserId = arg.UserId };
+        var ev = new ServerEvent { Type = "store-user-added", StoreId = arg.StoreId, UserId = arg.UserId };
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
     }
 
-    private async Task StoreUserUpdatedEvent(UserStoreEvent.Updated arg)
+    private async Task StoreUserUpdatedEvent(StoreUserEvent.Updated arg)
     {
-        var ev = new ServerEvent { Type = "user-store-updated", StoreId = arg.StoreId, UserId = arg.UserId };
+        var ev = new ServerEvent { Type = "store-user-updated", StoreId = arg.StoreId, UserId = arg.UserId };
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
     }
 
-    private async Task StoreUserRemovedEvent(UserStoreEvent.Removed arg)
+    private async Task StoreUserRemovedEvent(StoreUserEvent.Removed arg)
     {
-        var ev = new ServerEvent { Type = "user-store-removed", StoreId = arg.StoreId, UserId = arg.UserId };
+        var ev = new ServerEvent { Type = "store-user-removed", StoreId = arg.StoreId, UserId = arg.UserId };
         await _hubContext.Clients.Groups(arg.StoreId, arg.UserId).NotifyServerEvent(ev);
 
         await RemoveFromGroup(arg.StoreId,

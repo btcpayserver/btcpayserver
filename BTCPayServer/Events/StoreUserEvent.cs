@@ -2,9 +2,9 @@
 
 namespace BTCPayServer.Events;
 
-public abstract class UserStoreEvent(string storeId, string userId)
+public abstract class StoreUserEvent(string storeId, string userId)
 {
-    public class Added(string storeId, string userId, string roleId) : UserStoreEvent(storeId, userId)
+    public class Added(string storeId, string userId, string roleId) : StoreUserEvent(storeId, userId)
     {
         public string RoleId { get; } = roleId;
         protected override string ToString()
@@ -12,14 +12,14 @@ public abstract class UserStoreEvent(string storeId, string userId)
             return $"{base.ToString()} has been added";
         }
     }
-    public class Removed(string storeId, string userId) : UserStoreEvent(storeId, userId)
+    public class Removed(string storeId, string userId) : StoreUserEvent(storeId, userId)
     {
         protected override string ToString()
         {
             return $"{base.ToString()} has been removed";
         }
     }
-    public class Updated(string storeId, string userId, string roleId) : UserStoreEvent(storeId, userId)
+    public class Updated(string storeId, string userId, string roleId) : StoreUserEvent(storeId, userId)
     {
         public string RoleId { get; } = roleId;
         protected override string ToString()

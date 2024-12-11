@@ -305,7 +305,7 @@ namespace BTCPayServer.Services.Stores
             try
             {
                 await ctx.SaveChangesAsync();
-                _eventAggregator.Publish(new UserStoreEvent.Added(storeId, userId, roleId.Id));
+                _eventAggregator.Publish(new StoreUserEvent.Added(storeId, userId, roleId.Id));
                 return true;
             }
             catch (DbUpdateException)
@@ -336,9 +336,9 @@ namespace BTCPayServer.Services.Stores
             try
             {
                 await ctx.SaveChangesAsync();
-                UserStoreEvent evt = added
-                    ? new UserStoreEvent.Added(storeId, userId, userStore.StoreRoleId)
-                    : new UserStoreEvent.Updated(storeId, userId, userStore.StoreRoleId);
+                StoreUserEvent evt = added
+                    ? new StoreUserEvent.Added(storeId, userId, userStore.StoreRoleId)
+                    : new StoreUserEvent.Updated(storeId, userId, userStore.StoreRoleId);
                 _eventAggregator.Publish(evt);
                 return true;
             }
@@ -365,7 +365,7 @@ namespace BTCPayServer.Services.Stores
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
             await ctx.SaveChangesAsync();
-            _eventAggregator.Publish(new UserStoreEvent.Removed(storeId, userId));
+            _eventAggregator.Publish(new StoreUserEvent.Removed(storeId, userId));
             return true;
         }
 
@@ -405,7 +405,7 @@ namespace BTCPayServer.Services.Stores
             ctx.Add(storeData);
             ctx.Add(userStore);
             await ctx.SaveChangesAsync();
-            _eventAggregator.Publish(new UserStoreEvent.Added(storeData.Id, userStore.ApplicationUserId, roleId.Id));
+            _eventAggregator.Publish(new StoreUserEvent.Added(storeData.Id, userStore.ApplicationUserId, roleId.Id));
             _eventAggregator.Publish(new StoreEvent.Created(storeData));
         }
 

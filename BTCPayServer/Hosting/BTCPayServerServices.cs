@@ -71,6 +71,7 @@ using BTCPayServer.Payments.LNURLPay;
 using System.Collections.Generic;
 using BTCPayServer.Payouts;
 using ExchangeSharp;
+using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 using Microsoft.Extensions.Localization;
 using Microsoft.AspNetCore.Mvc.Localization;
 using System.Reflection;
@@ -99,6 +100,8 @@ namespace BTCPayServer.Hosting
             {
                 var factory = provider.GetRequiredService<ApplicationDbContextFactory>();
                 factory.ConfigureBuilder(o);
+                
+                o.UsePostgreSqlTriggers();
             });
             services.AddHttpClient();
             services.AddHttpClient(nameof(ExplorerClientProvider), httpClient =>
@@ -401,10 +404,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
                 .ConfigurePrimaryHttpMessageHandler<Socks5HttpClientHandler>();
             services.AddSingleton<HostedServices.PullPaymentHostedService>();
             services.AddSingleton<IHostedService, HostedServices.PullPaymentHostedService>(o => o.GetRequiredService<PullPaymentHostedService>());
-
-
             services.AddSingleton<IHostedService, NBXplorerListener>();
-
 
             services.AddUIExtension("store-integrations-nav", "LNURL/LightningAddressNav");
             services.AddSingleton<IHostedService, LightningListener>();

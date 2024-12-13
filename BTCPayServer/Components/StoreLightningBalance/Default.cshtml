@@ -152,13 +152,10 @@
                 </div>
             }
         </div>
-        @if (Model.Series != null)
-        {
-            <div class="ct-chart"></div>
-            <template>
-                @Safe.Json(Model)
-            </template>
-        }
+        <div class="ct-chart"></div>
+        <template>
+            @Safe.Json(Model)
+        </template>
     }
     else
     {

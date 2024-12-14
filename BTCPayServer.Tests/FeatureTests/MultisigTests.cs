@@ -64,6 +64,16 @@ public class MultisigTests : UnitTestBase
         
         // TODO: Add sending of transaction
         // fetch address from receive page
+        s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
+        var address = s.Driver.FindElement(By.Id("Address")).Text;
+        s.Driver.FindElement(By.XPath("//button[@value='fill-wallet']")).Click();
+        s.Driver.FindElement(By.Id("CancelWizard")).Click();
+        
+        s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
+        s.Driver.FindElement(By.Id("Outputs_0__DestinationAddress")).SendKeys(address);
+        s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys("0.1");
+        s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
+        
         // go to send page and generate pending transaction
     }
 }

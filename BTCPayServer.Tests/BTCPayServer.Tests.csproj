@@ -44,9 +44,9 @@
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
     <PackageReference Include="Selenium.Support" Version="4.1.1" />
     <PackageReference Include="Selenium.WebDriver" Version="4.22.0" />
-	<PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="131.0.6778.8700" />
-	<PackageReference Include="xunit" Version="2.9.2" />
-	<PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
+    <PackageReference Include="Selenium.WebDriver.ChromeDriver" Version="128.0.6613.11900" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>

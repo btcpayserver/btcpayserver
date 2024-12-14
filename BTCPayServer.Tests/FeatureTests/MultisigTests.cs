@@ -1,5 +1,6 @@
 using System;
 using System.Text.RegularExpressions;
+using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
@@ -65,15 +66,34 @@ public class MultisigTests : UnitTestBase
         // TODO: Add sending of transaction
         // fetch address from receive page
         s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
-        var address = s.Driver.FindElement(By.Id("Address")).Text;
+        var address = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
         s.Driver.FindElement(By.XPath("//button[@value='fill-wallet']")).Click();
         s.Driver.FindElement(By.Id("CancelWizard")).Click();
         
         s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
         s.Driver.FindElement(By.Id("Outputs_0__DestinationAddress")).SendKeys(address);
-        s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys("0.1");
+        var amount = "0.1";
+        s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys(amount);
         s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
         
-        // go to send page and generate pending transaction
+        s.Driver.WaitForElement(By.XPath("//a[text()='View']")).Click();
+
+        var transactionRow = s.Driver.FindElement(By.XPath($"//tr[td[text()='{address}']]"));
+         Assert.NotNull(transactionRow);
+
+        var signTransactionButton = s.Driver.FindElement(By.Id("SignTransaction"));
+        Assert.NotNull(signTransactionButton);
+
+        var cancelTransactionButton = s.Driver.FindElement(By.XPath("//a[text()='Cancel']"));
+        Assert.NotNull(cancelTransactionButton);
+        cancelTransactionButton.Click();
+        
+        // TODO: In future add signing of PSBT transaction here and check if it is signed
+
+        s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+
+        Assert.Contains("Aborted Pending Transaction", s.FindAlertMessage().Text);
+        
+        s.TestLogs.LogInformation($"Finished MultiSig Flow");
     }
 }

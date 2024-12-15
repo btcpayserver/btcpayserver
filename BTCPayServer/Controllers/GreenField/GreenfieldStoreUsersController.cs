@@ -1,11 +1,11 @@
 using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
@@ -22,11 +22,16 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly UriResolver _uriResolver;
 
-        public GreenfieldStoreUsersController(StoreRepository storeRepository, UserManager<ApplicationUser> userManager)
+        public GreenfieldStoreUsersController(
+            StoreRepository storeRepository,
+            UserManager<ApplicationUser> userManager,
+            UriResolver uriResolver)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;
+            _uriResolver = uriResolver;
         }
 
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -95,8 +100,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     Role = storeUser.StoreRoleId,
                     Email = user?.Email,
                     Name = blob?.Name,
-                    ImageUrl = blob?.ImageUrl,
-
+                    ImageUrl = blob?.ImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl))
                 });
             }
             return storeUsers;

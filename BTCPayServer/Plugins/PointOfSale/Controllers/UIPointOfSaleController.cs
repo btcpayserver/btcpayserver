@@ -152,17 +152,25 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             if (await Throttle(appId))
                 return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
 
+            // Distinguish JSON requests coming via the mobile app
+            var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
+
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+            if (app == null)
+                return wantsJson
+                    ? Json(new { error = "App not found" })
+                    : NotFound();
 
             // not allowing negative tips or discounts
             if (tip < 0 || discount < 0)
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return wantsJson
+                    ? Json(new { error = "Negative tip or discount is not allowed" })
+                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
 
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
-
-            if (app == null)
-                return NotFound();
+                return wantsJson
+                    ? Json(new { error = "Negative amount is not allowed" })
+                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
 
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
@@ -172,6 +180,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
+
             var jposData = TryParseJObject(posData);
             string title;
             decimal? price;
@@ -227,9 +236,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             switch (itemChoice.Inventory)
                             {
                                 case <= 0:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                                 case { } inventory when inventory < cartItem.Count:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                                    return wantsJson
+                                        ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
+                                        : RedirectToAction(nameof(ViewPointOfSale), new { appId });
                             }
                         }
 
@@ -254,8 +264,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var posFormId = settings.FormId;
-            var formData = await FormDataService.GetForm(posFormId);
 
+            // skip forms feature for JSON requests (from the app)
+            var formData = wantsJson ? null : await FormDataService.GetForm(posFormId);
             JObject formResponseJObject = null;
             switch (formData)
             {
@@ -403,14 +414,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         meta.Merge(formResponseJObject);
                         entity.Metadata = InvoiceMetadata.FromJObject(meta);
                     });
+                var data = new { invoiceId = invoice.Id };
+                if (wantsJson)
+                    return Json(data);
                 if (price is 0 && storeBlob.ReceiptOptions?.Enabled is true)
-                {
-                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", new { invoiceId = invoice.Id });
-                }
-                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Id });
+                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", data);
+                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
             }
             catch (BitpayHttpException e)
             {
+                if (wantsJson) return Json(new { error = e.Message });
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),

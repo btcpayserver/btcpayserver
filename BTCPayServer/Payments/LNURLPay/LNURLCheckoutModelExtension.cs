@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using BTCPayServer.Payments.Lightning;
 using NBitcoin;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Payments.LNURLPay
 {
@@ -48,9 +49,19 @@ namespace BTCPayServer.Payments.LNURLPay
             }
             context.Model.CheckoutBodyComponentName = LNCheckoutModelExtension.CheckoutBodyComponentName;
             context.Model.PeerInfo = handler.ParsePaymentPromptDetails(context.Prompt.Details).NodeInfo;
-            if (context.StoreBlob.LightningAmountInSatoshi && context.Model.PaymentMethodCurrency == "BTC")
+            if (context.Model.PaymentMethodCurrency == "BTC")
             {
-                BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, context.Prompt.Rate, _displayFormatter);
+                switch (context.StoreBlob.LightningCurrencyDisplayMode)
+                {
+                    case LightningCurrencyDisplayMode.Satoshis:
+                        BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, context.Prompt.Rate, _displayFormatter);
+                            break;
+                    case LightningCurrencyDisplayMode.BTC:
+                            break;
+                    case LightningCurrencyDisplayMode.Fiat:
+                        BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInFiat(context.Model, context.Prompt.Rate, _displayFormatter);
+                            break;
+                }
             }
         }
     }

@@ -42,6 +42,9 @@ public class DisplayFormatter
             provider = (NumberFormatInfo)provider.Clone();
             provider.CurrencyDecimalDigits = div;
         }
+        provider.CurrencyGroupSeparator = " ";
+        provider.NumberGroupSeparator = " ";
+
         var formatted = value.ToString("C", provider);
 
         // Ensure we are not using the symbol for BTC — we made that design choice consciously.

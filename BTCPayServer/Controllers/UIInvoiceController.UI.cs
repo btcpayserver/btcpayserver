@@ -30,6 +30,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Internal;
 using NBitcoin;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
@@ -1061,9 +1062,10 @@ namespace BTCPayServer.Controllers
             }
             model.Search = fs;
             model.SearchText = fs.TextCombined;
-
-            var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+            var storeUser = (await _StoreRepository.GetStoreUsers(storeId)).FirstOrDefault();
+            var apps = await _appService.GetAllApps(storeUser.Id, false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
+            invoiceQuery.UserId = storeUser.Id;
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;
@@ -1116,7 +1118,6 @@ namespace BTCPayServer.Controllers
             return new InvoiceQuery
             {
                 TextSearch = textSearch,
-                UserId = GetUserId(),
                 Unusual = fs.GetFilterBool("unusual"),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 Status = fs.GetFilterArray("status"),

@@ -239,6 +239,7 @@ public partial class UIStoresController
         vm.ShowPayInWalletButton = storeBlob.ShowPayInWalletButton;
         vm.ShowStoreHeader = storeBlob.ShowStoreHeader;
         vm.LightningAmountInSatoshi = storeBlob.LightningAmountInSatoshi;
+        vm.LightningCurrencyDisplayMode = storeBlob.LightningCurrencyDisplayMode;
         vm.LazyPaymentMethods = storeBlob.LazyPaymentMethods;
         vm.RedirectAutomatically = storeBlob.RedirectAutomatically;
         vm.PaymentSoundUrl = storeBlob.PaymentSoundUrl is null
@@ -373,6 +374,7 @@ public partial class UIStoresController
         blob.PlaySoundOnPayment = model.PlaySoundOnPayment;
         blob.OnChainWithLnInvoiceFallback = model.OnChainWithLnInvoiceFallback;
         blob.LightningAmountInSatoshi = model.LightningAmountInSatoshi;
+        blob.LightningCurrencyDisplayMode = model.LightningCurrencyDisplayMode;
         blob.LazyPaymentMethods = model.LazyPaymentMethods;
         blob.RedirectAutomatically = model.RedirectAutomatically;
         blob.ReceiptOptions = model.ReceiptOptions.ToDTO();

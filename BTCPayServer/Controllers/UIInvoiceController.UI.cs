@@ -1062,10 +1062,10 @@ namespace BTCPayServer.Controllers
             }
             model.Search = fs;
             model.SearchText = fs.TextCombined;
-            var storeUser = (await _StoreRepository.GetStoreUsers(storeId)).FirstOrDefault();
-            var apps = await _appService.GetAllApps(storeUser.Id, false, storeId);
+            string userId = !string.IsNullOrEmpty(storeId) ? (await _StoreRepository.GetStoreUsers(storeId)).First().Id : GetUserId();
+            var apps = await _appService.GetAllApps(userId, false, storeId);
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
-            invoiceQuery.UserId = storeUser.Id;
+            invoiceQuery.UserId = userId;
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
             invoiceQuery.Skip = model.Skip;

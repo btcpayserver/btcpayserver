@@ -104,10 +104,15 @@ public static class HttpRequestExtensions
         return isRelative ? request.GetAbsoluteRoot() + redirectUrl : redirectUrl;
     }
 
+    public static Uri GetAbsoluteUriNoPathBase(this HttpRequest request, string relativeOrAbsolute)
+    {
+        return GetAbsoluteUriNoPathBase(request, new Uri(relativeOrAbsolute, UriKind.RelativeOrAbsolute));
+    }
+
     /// <summary>
     /// Will return an absolute URL. 
-    /// If `relativeOrAsbolute` is absolute, returns it.
-    /// If `relativeOrAsbolute` is relative, send absolute url based on the HOST of this request (without PathBase)
+    /// If `relativeOrAbsolute` is absolute, returns it.
+    /// If `relativeOrAbsolute` is relative, send absolute url based on the HOST of this request (without PathBase)
     /// </summary>
     /// <param name="request"></param>
     /// <param name="relativeOrAbsolte"></param>

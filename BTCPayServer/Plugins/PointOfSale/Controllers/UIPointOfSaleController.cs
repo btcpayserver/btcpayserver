@@ -534,7 +534,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 {
                     var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
                     var redirectUrl =
-                        Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new { appId, viewType }));
+                        Request.GetAbsoluteUriNoPathBase(Url.Action(nameof(ViewPointOfSale), controller, new { appId, viewType })).ToString();
                     formParameters.Add("formResponse", FormDataService.GetValues(form).ToString());
                     return View("PostRedirect", new PostRedirectViewModel
                     {

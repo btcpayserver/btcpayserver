@@ -41,11 +41,15 @@
             async fetchRate(currencyPair) {
                 const storeId = @Safe.Json(Context.GetRouteValue("storeId"));
                 const pathBase = @Safe.Json(Context.Request.PathBase);
-                const response = await fetch(`${pathBase}/api/rates?storeId=${storeId}&currencyPairs=${currencyPair}`);
-                const json = await response.json();
-                const rate = json[0] && json[0].rate;
-                if (rate) return rate;
-                else console.warn(`Fetching rate for ${currencyPair} failed.`);
+                try {
+                    const response = await fetch(`${pathBase}/api/rates?storeId=${storeId}&currencyPairs=${currencyPair}`);
+                    const json = await response.json();
+                    const rate = json[0] && json[0].rate;
+                    if (rate) return rate;
+                    else console.warn(`Fetching rate for ${currencyPair} failed.`);
+                } catch (e) {
+                    console.error(`Fetching rate for ${currencyPair} failed: ${e}`);
+                }
             }
         };
     </script>

@@ -65,6 +65,11 @@ namespace BTCPayServer.Tests
             Assert.Equal($"bitcoin:{address}", clipboard);
             Assert.Equal($"bitcoin:{address.ToUpperInvariant()}", qrValue);
             s.Driver.ElementDoesNotExist(By.Id("Lightning_BTC-CHAIN"));
+            
+            // Contact option
+            var contactLink = s.Driver.FindElement(By.Id("ContactLink"));
+            Assert.Equal("Contact us", contactLink.Text);
+            Assert.Matches(supportUrl.Replace("{InvoiceId}", invoiceId), contactLink.GetAttribute("href"));
 
             // Details should show exchange rate
             s.Driver.ToggleCollapse("PaymentDetails");
@@ -172,9 +177,6 @@ namespace BTCPayServer.Tests
                 Assert.Contains("This invoice expired with partial payment", expiredSection.Text);
                 Assert.DoesNotContain("resubmit a payment", expiredSection.Text);
             });
-            var contactLink = s.Driver.FindElement(By.Id("ContactLink"));
-            Assert.Equal("Contact us", contactLink.Text);
-            Assert.Matches(supportUrl.Replace("{InvoiceId}", invoiceId), contactLink.GetAttribute("href"));
             Assert.True(s.Driver.ElementDoesNotExist(By.Id("ReceiptLink")));
             Assert.Equal(storeUrl, s.Driver.FindElement(By.Id("StoreLink")).GetAttribute("href"));
 

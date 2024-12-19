@@ -222,7 +222,6 @@
                         <p class="text-center mt-3" v-html="replaceNewlines($t(isPaidPartial ? 'invoice_paidpartial_body' : 'invoice_expired_body', { storeName: srvModel.storeName, minutes: srvModel.maxTimeMinutes }))"></p>
                     </div>
                     <div class="buttons" v-if="(isPaidPartial && srvModel.storeSupportUrl) || storeLink || isModal">
-                        <a v-if="isPaidPartial && srvModel.storeSupportUrl" class="btn btn-primary rounded-pill w-100" :href="srvModel.storeSupportUrl" v-t="'contact_us'" id="ContactLink"></a>
                         <a v-if="storeLink" class="btn btn-primary rounded-pill w-100" :href="storeLink" :target="isModal ? '_top' : null" v-html="$t('return_to_store', { storeName: srvModel.storeName })" id="StoreLink"></a>
                         <button v-else-if="isModal" class="btn btn-primary rounded-pill w-100" v-on:click="close" v-t="'Close'"></button>
                     </div>
@@ -234,6 +233,7 @@
             <checkout-cheating invoice-id="@Model.InvoiceId" :due="due" :is-settled="isSettled" :is-processing="isProcessing" :payment-method-id="pmId" :crypto-code="srvModel.paymentMethodCurrency"></checkout-cheating>
         }
         <footer class="store-footer">
+            <a v-if="srvModel.storeSupportUrl" class="mb-4" :href="srvModel.storeSupportUrl" v-t="'contact_us'" id="ContactLink"></a>
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
                 {{$t("powered_by")}} <partial name="_StoreFooterLogo" />
             </a>

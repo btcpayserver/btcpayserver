@@ -3,7 +3,6 @@
 @inject LanguageService LangService
 @inject BTCPayServerEnvironment Env
 @inject IEnumerable<IUIExtension> UiExtensions 
-@inject PaymentMethodHandlerDictionary PaymentMethodHandlerDictionary
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model CheckoutModel
 @{
@@ -12,7 +11,6 @@
     ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
 	var hasPaymentPlugins = UiExtensions.Any(extension => extension.Location == "checkout-payment-method");
-    var checkoutLink = Url.Action("Checkout", new { invoiceId = Model.InvoiceId });
 }
 @functions {
     private string ToJsValue(object value)
@@ -93,16 +91,15 @@
                 <div v-if="displayedPaymentMethods.length > 1 || @Safe.Json(hasPaymentPlugins)" class="mt-3 mb-2">
                     <h6 class="text-center mb-3" v-t="'pay_with'"></h6>
                     <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 pb-2">
-                        <a
-                            v-for="crypto in displayedPaymentMethods"
-                            :href="@ToJsValue(checkoutLink) + '/' + crypto.paymentMethodId"
+                        <a v-for="crypto in displayedPaymentMethods"
+                           asp-action="Checkout" asp-route-invoiceId="@Model.InvoiceId"
                            class="btcpay-pill m-0 payment-method"
-                           :class="{ active: srvModel.paymentMethodId === crypto.paymentMethodId }"
+                           :class="{ active: pmId === crypto.paymentMethodId }"
                            v-on:click.prevent="changePaymentMethod(crypto.paymentMethodId)"
                            v-text="crypto.paymentMethodName">
                         </a>
+                        @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
                     </div>
-                    @await Component.InvokeAsync("UiExtensionPoint", new { location = "checkout-payment-method", model = Model })
                 </div>
 				<component v-if="paymentMethodComponent" :is="paymentMethodComponent"
                            :model="srvModel"
@@ -289,6 +286,7 @@
         </dl>
     </script>
     <script>
+        const checkoutBaseUrl = @Safe.Json(Url.Action("Checkout", new { invoiceId = Model.InvoiceId, paymentMethodId = string.Empty }));
 	    const i18nUrl = @Safe.Json($"{Model.RootPath}misc/translations/checkout/{{{{lng}}}}?v={Env.Version}");
         const statusUrl = @Safe.Json(Url.Action("GetStatus", new { invoiceId = Model.InvoiceId }));
         const statusWsUrl = @Safe.Json(Url.Action("GetStatusWebSocket", new { invoiceId = Model.InvoiceId }));

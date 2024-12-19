@@ -26,7 +26,7 @@ namespace BTCPayServer.Abstractions.Extensions
         }
         public static bool IsBlazorAllowed(this ViewDataDictionary viewData)
         {
-            return viewData["BlazorAllowed"] is not false;
+            return viewData["BlazorAllowed"] is true;
         }
 
         public static void SetActivePage<T>(this ViewDataDictionary viewData, T activePage, string title = null, string activeId = null)

@@ -335,6 +335,7 @@ namespace BTCPayServer.Controllers
             }
             else
             {
+                var store = GetCurrentStore();
                 var pmi = PaymentTypes.CHAIN.GetPaymentMethodId(walletId.CryptoCode);
                 foreach (var tx in transactions)
                 {
@@ -344,6 +345,9 @@ namespace BTCPayServer.Controllers
                     vm.Timestamp = tx.SeenAt;
                     vm.Positive = tx.BalanceChange.GetValue(wallet.Network) >= 0;
                     vm.Balance = tx.BalanceChange.ShowMoney(wallet.Network);
+                    vm.Currency = store.GetStoreBlob().DefaultCurrency;
+                    var rate = await RateFetcher.FetchRate(new Rating.CurrencyPair(walletId.CryptoCode, vm.Currency), store.GetStoreBlob().GetRateRules(_defaultRules), default, cancellationToken);
+                    vm.Price = Math.Round(Decimal.Parse(vm.Balance) * rate.BidAsk.Center, 2);
                     vm.IsConfirmed = tx.Confirmations != 0;
 
                     if (walletTransactionsInfo.TryGetValue(tx.TransactionId.ToString(), out var transactionInfo))

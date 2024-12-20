@@ -27,6 +27,12 @@
         <td class="amount-col">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")">@transaction.Balance</span>
         </td>
+        <td class="currency-col">
+            <span text-translate="true")">@transaction.Currency</span>
+        </td>
+        <td class="price-col">
+            <span text-translate="true" )">@transaction.Price</span>
+        </td>
         <td class="text-end">
             <div class="d-inline-block">
                 <button class="btn btn-link p-0 @(!string.IsNullOrEmpty(transaction.Comment) ? "text-primary" : "text-secondary")" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">

@@ -195,10 +195,6 @@
                     <vc:icon symbol="info" />
                 </a>
             </div>
-            <div class="d-flex my-3">
-                <input asp-for="LightningAmountInSatoshi" type="checkbox" class="btcpay-toggle me-3" />
-                <label asp-for="LightningAmountInSatoshi" class="form-check-label"></label>
-            </div>
             <div class="form-group d-flex align-items-center">
                 <input asp-for="AutoDetectLanguage" type="checkbox" class="btcpay-toggle me-3" />
                 <div>
@@ -210,6 +206,14 @@
                 <label asp-for="DefaultLang" class="form-label"></label>
                 <select asp-for="DefaultLang" asp-items="Model.Languages" class="form-select w-auto"></select>
             </div>
+			<div class="form-group">
+				<label asp-for="LightningCurrencyDisplayMode" class="form-label"></label>
+				<select asp-for="LightningCurrencyDisplayMode" class="form-select w-auto">
+					<option value="BTC" text-translate="true">BTC</option>
+					<option value="Satoshis" text-translate="true">Satoshis</option>
+					<option value="Fiat" text-translate="true">Fiat</option>
+				</select>
+			</div>
             <div class="form-group">
                 <label asp-for="HtmlTitle" class="form-label"></label>
                 <input asp-for="HtmlTitle" class="form-control" />

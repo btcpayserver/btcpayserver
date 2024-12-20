@@ -1,6 +1,7 @@
 
 using System;
 using BTCPayServer;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using Microsoft.AspNetCore.Http;
@@ -11,6 +12,12 @@ namespace Microsoft.AspNetCore.Mvc
     public static class UrlHelperExtensions
     {
 #nullable enable
+        public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller, object? values)
+        => request.GetAbsoluteUriNoPathBase(new Uri(helper.Action(action, controller, values) ?? "", UriKind.Relative));
+        public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, string? controller)
+=> request.GetAbsoluteUriNoPathBase(new Uri(helper.Action(action, controller) ?? "", UriKind.Relative));
+        public static Uri ActionAbsolute(this IUrlHelper helper, HttpRequest request, string? action, object? values)
+=> request.GetAbsoluteUriNoPathBase(new Uri(helper.Action(action, values) ?? "", UriKind.Relative));
         public static string? EnsureLocal(this IUrlHelper helper, string? url, HttpRequest? httpRequest = null)
         {
             if (url is null || helper.IsLocalUrl(url))

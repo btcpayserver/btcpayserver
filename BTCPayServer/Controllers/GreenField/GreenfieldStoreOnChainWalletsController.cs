@@ -171,9 +171,8 @@ namespace BTCPayServer.Controllers.Greenfield
             var allowedPayjoin = derivationScheme.IsHotWallet && Store.GetStoreBlob().PayJoinEnabled;
             if (allowedPayjoin)
             {
-                var endpoint = Request.GetAbsoluteUriNoPathBase(
-                    Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint",
-                        new { network.CryptoCode })).ToString();
+                var endpoint = Url.ActionAbsolute(Request, nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint",
+                        new { network.CryptoCode }).ToString();
                 bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, endpoint);
             }
 

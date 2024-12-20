@@ -7,6 +7,7 @@ using Org.BouncyCastle.Crypto.Modes.Gcm;
 using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Extensions.Localization;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Payments.Lightning
 {
@@ -51,10 +52,21 @@ namespace BTCPayServer.Payments.Lightning
             if (context.Model.InvoiceBitcoinUrl is not null)
                 context.Model.InvoiceBitcoinUrlQR = $"lightning:{context.Model.InvoiceBitcoinUrl.ToUpperInvariant()?.Substring("LIGHTNING:".Length)}";
             context.Model.PeerInfo = handler.ParsePaymentPromptDetails(paymentPrompt.Details).NodeInfo;
-            if (context.StoreBlob.LightningAmountInSatoshi && Network.IsBTC)
-            {
-                BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, paymentPrompt.Rate, _displayFormatter);
-            }
+            if (Network.IsBTC && context.Model.InvoiceCurrency != "BTC")
+            {         
+                switch (context.StoreBlob.LightningCurrencyDisplayMode)
+                {
+                    case LightningCurrencyDisplayMode.Satoshis:
+                        BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInSats(context.Model, context.Prompt.Rate, _displayFormatter);
+                            break;
+                    case LightningCurrencyDisplayMode.BTC:
+                            break;
+                    case LightningCurrencyDisplayMode.Fiat:
+                        BitcoinCheckoutModelExtension.PreparePaymentModelForAmountInFiat(context.Model, context.Prompt.Rate, _displayFormatter);
+                            break;
+                }
+           }
         }
     }
 }
+

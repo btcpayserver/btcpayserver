@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -56,6 +57,9 @@ namespace BTCPayServer.Models.StoreViewModels
 
         [Display(Name = "Default language on checkout")]
         public string DefaultLang { get; set; }
+
+        [Display(Name = "Display Lightning payment amounts in:")]
+        public LightningCurrencyDisplayMode LightningCurrencyDisplayMode { get; set; }
 
         [Display(Name = "Custom sound file for successful payment")]
         public IFormFile SoundFile { get; set; }

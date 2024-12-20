@@ -15,6 +15,8 @@ namespace BTCPayServer.Models.WalletViewModels
             public string Link { get; set; }
             public bool Positive { get; set; }
             public string Balance { get; set; }
+            public string Currency { get; set; }
+            public decimal Price { get; set; }
             public HashSet<TransactionTagModel> Tags { get; set; } = new();
         }
         public HashSet<(string Text, string Color, string TextColor)> Labels { get; set; } = new();

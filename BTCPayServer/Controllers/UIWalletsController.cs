@@ -404,9 +404,8 @@ namespace BTCPayServer.Controllers
             var bip21 = network.GenerateBIP21(address?.ToString(), null);
             if (allowedPayjoin)
             {
-                var endpoint = Request.GetAbsoluteUriNoPathBase(
-                    Url.Action(nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint",
-                        new { cryptoCode = walletId.CryptoCode })).ToString();
+                var endpoint = Url.ActionAbsolute(Request, nameof(PayJoinEndpointController.Submit), "PayJoinEndpoint",
+                        new { cryptoCode = walletId.CryptoCode }).ToString();
                 bip21.QueryParams.Add(PayjoinClient.BIP21EndpointKey, endpoint);
             }
 

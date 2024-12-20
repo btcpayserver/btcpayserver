@@ -697,7 +697,7 @@ namespace BTCPayServer.Controllers
                 var lnConfig = _LnConfigProvider.GetConfig(configKey);
                 if (lnConfig != null)
                 {
-                    model.QRCodeLink = Request.GetAbsoluteUriNoPathBase(Url.Action(nameof(GetLNDConfig), new { configKey })).ToString();
+                    model.QRCodeLink = Url.ActionAbsolute(Request, nameof(GetLNDConfig), new { configKey }).ToString();
                     model.QRCode = $"config={model.QRCodeLink}";
                 }
             }

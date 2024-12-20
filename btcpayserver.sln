@@ -32,6 +32,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.Abstractions",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BTCPayServer.PluginPacker", "BTCPayServer.PluginPacker\BTCPayServer.PluginPacker.csproj", "{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Plugins", "Plugins", "{DDF3EEE4-988F-4E2A-896B-0618834A8E31}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "BTCPayServer.Plugins.FortuneCookie", "..\fortune-cookie\BTCPayServer.Plugins.FortuneCookie\BTCPayServer.Plugins.FortuneCookie.csproj", "{47E36E90-F49D-4BE3-BEA9-CC949824C23F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -138,11 +142,26 @@ Global
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x64.Build.0 = Release|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x86.ActiveCfg = Release|Any CPU
 		{7DC94B25-1CFC-4170-AA41-7BA983E4C0B8}.Release|x86.Build.0 = Release|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Debug|x64.Build.0 = Debug|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Debug|x86.Build.0 = Debug|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Release|x64.ActiveCfg = Release|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Release|x64.Build.0 = Release|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Release|x86.ActiveCfg = Release|Any CPU
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {203A3162-BE45-4721-937D-6804E0E1AFF8}
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{47E36E90-F49D-4BE3-BEA9-CC949824C23F} = {DDF3EEE4-988F-4E2A-896B-0618834A8E31}
 	EndGlobalSection
 EndGlobal

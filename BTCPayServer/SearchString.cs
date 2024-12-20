@@ -11,7 +11,7 @@ namespace BTCPayServer
         private const char ValueSeparator = ':';
         private static readonly string[] StripFilters = ["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate"];
 
-        private readonly string _originalString;
+        private string _originalString;
         private readonly int _timezoneOffset;
 
         public SearchString(string str, int timezoneOffset = 0)
@@ -127,6 +127,8 @@ namespace BTCPayServer
                     return DateTimeOffset.UtcNow.AddDays(-3).AddMinutes(timezoneOffset);
                 case "-7d":
                     return DateTimeOffset.UtcNow.AddDays(-7).AddMinutes(timezoneOffset);
+                case "alltime":
+                    return null; // No filtering by date, so return null
             }
 
             // default parsing logic
@@ -155,5 +157,16 @@ namespace BTCPayServer
             var value = str.Trim().TrimStart(FilterSeparator).TrimEnd(FilterSeparator);
             return string.IsNullOrEmpty(value) ? " " : value;
         }
+
+        // public void ResetFilters()
+        // {
+        //     Filters.Clear();
+
+        //     TextSearch = null; 
+        //     TextFilters = null;
+
+        //     _originalString = string.Empty;
+        // }
+
     }
 }

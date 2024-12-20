@@ -1046,8 +1046,12 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new InvoicesModel());
             var timezoneOffset = model.TimezoneOffset ?? 0;
-            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
+
+            var searchTerm = string.IsNullOrEmpty(model.SearchText)
+                ? model.SearchTerm
+                : $"{model.SearchText},{model.SearchTerm}";
             var fs = new SearchString(searchTerm, timezoneOffset);
+
             string? storeId = model.StoreId;
             var storeIds = new HashSet<string>();
             if (storeId is not null)
@@ -1059,10 +1063,12 @@ namespace BTCPayServer.Controllers
                 foreach (var i in l)
                     storeIds.Add(i);
             }
+
             model.Search = fs;
             model.SearchText = fs.TextCombined;
 
             var apps = await _appService.GetAllApps(GetUserId(), false, storeId);
+
             InvoiceQuery invoiceQuery = GetInvoiceQuery(fs, apps, timezoneOffset);
             invoiceQuery.StoreId = storeIds.ToArray();
             invoiceQuery.Take = model.Count;
@@ -1098,8 +1104,22 @@ namespace BTCPayServer.Controllers
                     HasRefund = invoice.Refunds.Any()
                 });
             }
+
             return View(model);
         }
+
+        // public IActionResult ResetFilters()
+        // {
+
+        //     string defaultStatus = "All";
+        //     string defaultDateRange = "All Time";
+
+        //     return RedirectToAction("ListInvoices", new { 
+        //         storeId = 1,
+        //         status = defaultStatus, 
+        //         dateRange = defaultDateRange
+        //     });
+        // }
 
         private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps, int timezoneOffset = 0)
         {

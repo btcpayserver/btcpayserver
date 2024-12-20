@@ -24,6 +24,9 @@
     
     private bool HasCustomDateFilter() =>
         Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
+
+    private void ResetFilters () => Model.Search.ResetFilters();
+
 }
 
 @section PageHeadContent
@@ -250,6 +253,11 @@
                 {
                     <span text-translate="true">7 Days</span>
                 }
+                else if (HasArrayFilter("startdate", "alltime")) 
+                {
+                    <span text-translate="true">All Time</span>
+                }
+
                 else
                 {
                     <span text-translate="true">Custom</span>
@@ -264,9 +272,19 @@
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-1d")" class="dropdown-item @(HasArrayFilter("startdate", "-1d") ? "custom-active" : "")" text-translate="true">Last 24 hours</a>
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-3d")" class="dropdown-item @(HasArrayFilter("startdate", "-3d") ? "custom-active" : "")" text-translate="true">Last 3 days</a>
             <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "-7d")" class="dropdown-item @(HasArrayFilter("startdate", "-7d") ? "custom-active" : "")" text-translate="true">Last 7 days</a>
+            <a asp-action="ListInvoices" asp-route-storeId="@Model.StoreId" asp-route-count="@Model.Count" asp-route-searchTerm="@Model.Search.Toggle("startdate", "alltime")" class="dropdown-item @(HasArrayFilter("startdate", "alltime") ? "custom-active" : "")" text-translate="true">All Time</a>
             <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
         </div>
     </div>
+
+    <button onclick="ResetFilters()">Clear All Filters</button>
+
+<script>
+    function resetFilters() {
+        statusFilterCount = 0;
+    }
+</script>
+
 </form>
 
 @if (Model.Invoices.Any())

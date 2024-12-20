@@ -178,38 +178,24 @@
     <div class="table-responsive-md">
         <table class="table table-hover ">
             <thead>
-            <th>
-                Id
-            </th>
-            <th>
-                State
-            </th> 
-            <th>
-                Signature count
-            </th>
-
-            <th>
-                Actions
-            </th>
+                <th>Id</th>
+                <th>State</th> 
+                <th>Signature count</th>
+                <th>Actions</th>
             </thead>
             @foreach (var pendingTransaction in Model.PendingTransactions)
             {
                 <tr>
+                    <td>@pendingTransaction.TransactionId</td>
+                    <td>@pendingTransaction.State</td>
+                    <td>@pendingTransaction.GetBlob().CollectedSignatures.Count</td>
                     <td>
-                        @pendingTransaction.TransactionId
+                        <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId"
+                        >@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
+                        -
+                        <a asp-action="CancelPendingTransaction" 
+                           asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">Abort</a>
                     </td>
-                    <td>
-                        @pendingTransaction.State
-                    </td>
-                    <td>
-                        @pendingTransaction.GetBlob().CollectedSignatures.Count
-                    </td>
-                    <td>
-                    <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">
-                        @(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")
-                    </a>-
-                    <a asp-action="CancelPendingTransaction" 
-                       asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">Abort</a>
                 </tr>
             }
         </table>

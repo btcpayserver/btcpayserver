@@ -195,30 +195,17 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps/pos/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPosApp(string appId)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType, includeArchived: true);
-            if (app == null)
-            {
-                return AppNotFound();
-            }
-
-            return Ok(ToPointOfSaleModel(app));
+            return app == null ? AppNotFound() : Ok(ToPointOfSaleModel(app));
         }
 
         [HttpGet("~/api/v1/apps/crowdfund/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, includeArchived: true);
-            if (app == null)
-            {
-                return AppNotFound();
-            }
-
-            var model = await ToCrowdfundModel(app);
-            return Ok(model);
+            return app == null ? AppNotFound() : Ok(await ToCrowdfundModel(app));
         }
 
         [HttpDelete("~/api/v1/apps/{appId}")]

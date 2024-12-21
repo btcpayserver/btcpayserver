@@ -348,7 +348,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         RedirectAutomatically = settings.RedirectAutomatically,
                         RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
                             : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                            : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
+                            : Url.ActionAbsolute(Request, nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType }).ToString(),
                         PaymentMethods = paymentMethods?.Where(p => p.Value.Enabled).Select(p => p.Key).ToArray()
                     },
                     AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
@@ -534,7 +534,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 {
                     var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
                     var redirectUrl =
-                        Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new { appId, viewType }));
+                        Url.ActionAbsolute(Request, nameof(ViewPointOfSale), controller, new { appId, viewType }).ToString();
                     formParameters.Add("formResponse", FormDataService.GetValues(form).ToString());
                     return View("PostRedirect", new PostRedirectViewModel
                     {

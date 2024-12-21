@@ -55,7 +55,7 @@ Vue.component("lnurl-withdraw-checkout", {
     },
     data () {
         return {
-            url: @Safe.Json(Context.Request.GetAbsoluteUri(Url.Action("SubmitLNURLWithdrawForInvoice", "NFC"))),
+				url: @Safe.Json(Url.ActionAbsolute(Context.Request, "SubmitLNURLWithdrawForInvoice", "NFC").ToString()),
             amount: 0,
             submitting: false
         }

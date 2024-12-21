@@ -15,7 +15,7 @@ namespace BTCPayServer.Tests.Mocks
 
         public string Action(UrlActionContext actionContext)
         {
-            return $"{_BaseUrl}mock";
+            return $"/mock";
         }
 
         public string Content(string contentPath)

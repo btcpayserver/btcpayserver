@@ -1069,6 +1069,11 @@ namespace BTCPayServer.Controllers
             invoiceQuery.Skip = model.Skip;
             invoiceQuery.IncludeRefunds = true;
 
+            // Let server admin lookup invoices from users, see #6489
+            if ((await _authorizationService.AuthorizeAsync(User, Policies.CanModifyServerSettings)).Succeeded)
+            {
+                invoiceQuery.UserId = null;
+            }
             var list = await _InvoiceRepository.GetInvoices(invoiceQuery);
 
             // Apps

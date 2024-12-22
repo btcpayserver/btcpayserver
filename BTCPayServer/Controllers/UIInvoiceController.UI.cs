@@ -1116,7 +1116,8 @@ namespace BTCPayServer.Controllers
             return new InvoiceQuery
             {
                 TextSearch = textSearch,
-                UserId = GetUserId(),
+                // Let server admin lookup invoices from users, see #6489
+                UserId = User.IsInRole(Roles.ServerAdmin) ? null : GetUserId(),
                 Unusual = fs.GetFilterBool("unusual"),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 Status = fs.GetFilterArray("status"),

@@ -21,6 +21,8 @@
 @section PageHeadContent {
     <style>
         .tooltip-inner { text-align: left; }
+        .actions-col .btn[data-clipboard] { color: var(--btcpay-body-link); }
+        .actions-col .btn[data-clipboard]:hover { color: var(--btcpay-body-link-accent); }
     </style>
 }
 
@@ -101,7 +103,7 @@
                 </th>
                 <th text-translate="true" scope="col">Name</th>
                 <th text-translate="true" scope="col">Automatically Approved</th>
-                <th text-translate="true" scope="col">Refunded</th>
+                <th text-translate="true" scope="col">Claimed</th>
                 <th scope="col" class="actions-col"></th>
             </tr>
             </thead>
@@ -134,6 +136,12 @@
                     </td>
                     <td class="actions-col">
                         <div class="d-inline-flex align-items-center gap-3">
+                            <button type="button" data-clipboard="@Url.ActionAbsolute(Context.Request, "ViewPullPayment", "UIPullPayment", new { pullPaymentId = pp.Id })"
+                               permission="@Policies.CanViewPullPayments"
+                               class="only-for-js btn btn-link p-0"
+                               text-translate="true">
+                                Copy Link
+                            </button>
                             <a asp-action="ViewPullPayment"
                                permission="@Policies.CanViewPullPayments"
                                asp-controller="UIPullPayment"

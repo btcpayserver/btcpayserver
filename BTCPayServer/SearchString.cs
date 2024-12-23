@@ -11,7 +11,7 @@ namespace BTCPayServer
         private const char ValueSeparator = ':';
         private static readonly string[] StripFilters = ["status", "exceptionstatus", "unusual", "includearchived", "appid", "startdate", "enddate"];
 
-        private string _originalString;
+        private readonly string _originalString;
         private readonly int _timezoneOffset;
 
         public SearchString(string str, int timezoneOffset = 0)

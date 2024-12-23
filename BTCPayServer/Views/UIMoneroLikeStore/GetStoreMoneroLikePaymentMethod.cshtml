@@ -1,5 +1,5 @@
 @using MoneroLikePaymentMethodViewModel = BTCPayServer.Services.Altcoins.Monero.UI.UIMoneroLikeStoreController.MoneroLikePaymentMethodViewModel
-@using MoneroLikeSettlementThresholdChoice = BTCPayServer.Services.Altcoins.Monero.UI.UIMoneroLikeStoreController.MoneroLikeSettlementThresholdChoice;
+@using MoneroLikeSettlementThresholdChoice = BTCPayServer.Services.Altcoins.Monero.UI.UIMoneroLikeStoreController.MoneroLikeSettlementThresholdChoice
 @model MoneroLikePaymentMethodViewModel
 
 @{
@@ -56,12 +56,55 @@
                 </div>
             </form>
         }
+
+        <form asp-action="GetStoreMoneroLikePaymentMethod" method="post">
+            <div class="form-group my-3 d-flex align-items-center">
+                <input type="checkbox" id="useRemoteNode" class="form-check-input me-3" asp-for="UseRemoteNode" onchange="toggleRemoteNodeFields()" />
+                <label for="useRemoteNode" class="form-check-label">Enable Remote Node</label>
+            </div>
+
+            <div id="remoteNodeWarning" class="alert alert-warning" style="display:none;">
+                <strong>Security Warning:</strong> Using a remote node may compromise your privacy. For enhanced security, consider using your own node instead.
+            </div>
+
+            <div id="remoteNodeFields" class="row" style="display:none;">
+                <div class="input-group">
+                    <div class="form-group col-2">
+                        <label asp-for="RemoteNodeProtocol">Protocol</label>
+                        <select asp-for="RemoteNodeProtocol" class="form-control">
+                            <option value="http">HTTP</option>
+                            <option value="https">HTTPS</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group col flex-grow-1">
+                        <label asp-for="RemoteNodeAddress"></label>
+                        <input asp-for="RemoteNodeAddress" class="form-control" placeholder="node.majesticbank.is"/>
+                    </div>
+
+                    <div class="form-group col-2">
+                        <label asp-for="RemoteNodePort"></label>
+                        <input asp-for="RemoteNodePort" class="form-control" type="number" min="0" placeholder="18089" />
+                    </div>
+
+                    <div class="form-group col-auto d-flex align-items-end">
+                        <button type="submit" name="command" value="add-remote-node" class="input-group-text btn btn-secondary">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+
         <form method="post" asp-action="GetStoreMoneroLikePaymentMethod"
               asp-route-storeId="@Context.GetRouteValue("storeId")"
               asp-route-cryptoCode="@Context.GetRouteValue("cryptoCode")"
               class="mt-4" enctype="multipart/form-data">
 
             <input type="hidden" asp-for="CryptoCode"/>
+            <input type="hidden" asp-for="UseRemoteNode"/>
+            <input type="hidden" asp-for="RemoteNodeProtocol"/>
+            <input type="hidden" asp-for="RemoteNodeAddress"/>
+            <input type="hidden" asp-for="RemoteNodePort"/>
+
             @if (!Model.WalletFileFound || Model.Summary.WalletHeight == default)
             {
                 <input type="hidden" asp-for="AccountIndex"/>
@@ -90,8 +133,8 @@
             }
 
             <div class="form-group">
-                <label asp-for="Enabled"></label>
-                <input asp-for="Enabled" type="checkbox" class="form-check"/>
+                <input asp-for="Enabled" type="checkbox" class="form-check-input me-3"/>
+                <label asp-for="Enabled" class="form-check-label"></label>
                 <span asp-validation-for="Enabled" class="text-danger"></span>
             </div>
 
@@ -145,4 +188,24 @@
 
 @section PageFootContent {
     @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        function toggleRemoteNodeFields() {
+            var remoteNodeFields = document.getElementById("remoteNodeFields");
+            var useRemoteNode = document.getElementById("useRemoteNode");
+            var remoteNodeWarning = document.getElementById("remoteNodeWarning");
+
+            if (useRemoteNode.checked) {
+                remoteNodeFields.style.display = "flex";
+                remoteNodeWarning.style.display = "block";
+            } else {
+                remoteNodeFields.style.display = "none";
+                remoteNodeWarning.style.display = "none";
+            }
+        }
+
+        document.getElementById("useRemoteNode").addEventListener("change", toggleRemoteNodeFields);
+
+        // Call this function on page load to ensure the correct state is set
+        toggleRemoteNodeFields();
+    </script>
 }

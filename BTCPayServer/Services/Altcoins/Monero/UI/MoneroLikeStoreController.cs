@@ -124,19 +124,23 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
             {
                 WalletFileFound = System.IO.File.Exists(fileAddress),
                 Enabled =
-                    settings != null &&
-                    !excludeFilters.Match(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode)),
+                                settings != null &&
+                                !excludeFilters.Match(PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode)),
                 Summary = summary,
                 CryptoCode = cryptoCode,
                 AccountIndex = settings?.AccountIndex ?? accountsResponse?.SubaddressAccounts?.FirstOrDefault()?.AccountIndex ?? 0,
                 Accounts = accounts == null ? null : new SelectList(accounts, nameof(SelectListItem.Value),
-                    nameof(SelectListItem.Text)),
+                                nameof(SelectListItem.Text)),
                 SettlementConfirmationThresholdChoice = settlementThresholdChoice,
                 CustomSettlementConfirmationThreshold =
-                    settings != null &&
-                    settlementThresholdChoice is MoneroLikeSettlementThresholdChoice.Custom
-                        ? settings.InvoiceSettledConfirmationThreshold
-                        : null
+                                settings != null &&
+                                settlementThresholdChoice is MoneroLikeSettlementThresholdChoice.Custom
+                                    ? settings.InvoiceSettledConfirmationThreshold
+                                    : null,
+                UseRemoteNode = settings?.UseRemoteNode ?? false,
+                RemoteNodeProtocol = settings?.RemoteNodeProtocol ?? "http",
+                RemoteNodeAddress = settings?.RemoteNodeAddress,
+                RemoteNodePort = settings?.RemoteNodePort
             };
         }
 
@@ -165,7 +169,48 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 return NotFound();
             }
 
-            if (command == "add-account")
+            if (command == "add-remote-node")
+            {
+                if (ModelState.IsValid)
+                {
+                    var uriBuilder = new UriBuilder
+                    {
+                        Scheme = viewModel.RemoteNodeProtocol,
+                        Host = viewModel.RemoteNodeAddress,
+                        Port = viewModel.RemoteNodePort.Value
+                    };
+                    DaemonParams daemonParams = new() 
+                    {
+                        address = uriBuilder.Uri,
+                        trusted = true,
+                        sslSupport = "disabled",
+                        username = "",
+                        password = ""
+                    };
+
+                    try
+                    {
+                        var response = await _MoneroRpcProvider.WalletRpcClients[cryptoCode].SendCommandAsync<dynamic, dynamic>("set_daemon", daemonParams);
+                        if (response?.Error != null)
+                        {
+                            throw new Exception(response.Error.Message);
+                        }
+                        
+                        await _MoneroRpcProvider.UpdateDaemonRpcClientsAndSummaryAsync(cryptoCode, daemonParams);
+
+                        TempData.SetStatusMessageModel(new StatusMessageModel()
+                        {
+                            Severity = StatusMessageModel.StatusSeverity.Success,
+                            Message = $"Remote node {viewModel.RemoteNodeProtocol}://{viewModel.RemoteNodeAddress}:{viewModel.RemoteNodePort} added successfully."
+                        });
+                    }
+                    catch (Exception ex)
+                    {
+                        ModelState.AddModelError(string.Empty, $"Could not set daemon: {ex.Message}");
+                    }
+                }
+            }
+            else if  (command == "add-account")
             {
                 try
                 {
@@ -289,6 +334,10 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                 vm.AccountIndex = viewModel.AccountIndex;
                 vm.SettlementConfirmationThresholdChoice = viewModel.SettlementConfirmationThresholdChoice;
                 vm.CustomSettlementConfirmationThreshold = viewModel.CustomSettlementConfirmationThreshold;
+                vm.UseRemoteNode = viewModel.UseRemoteNode;
+                vm.RemoteNodeProtocol = viewModel.RemoteNodeProtocol;
+                vm.RemoteNodeAddress = viewModel.RemoteNodeAddress;
+                vm.RemoteNodePort = viewModel.RemoteNodePort;
                 return View(vm);
             }
 
@@ -304,7 +353,11 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                     MoneroLikeSettlementThresholdChoice.AtLeastTen => 10,
                     MoneroLikeSettlementThresholdChoice.Custom when viewModel.CustomSettlementConfirmationThreshold is { } custom => custom,
                     _ => null
-                }
+                },
+                UseRemoteNode = viewModel.UseRemoteNode,
+                RemoteNodeProtocol = viewModel.RemoteNodeProtocol,
+                RemoteNodeAddress = viewModel.RemoteNodeAddress,
+                RemoteNodePort = viewModel.RemoteNodePort
             });
 
             blob.SetExcluded(PaymentTypes.CHAIN.GetPaymentMethodId(viewModel.CryptoCode), !viewModel.Enabled);
@@ -350,6 +403,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
             public string NewAccountLabel { get; set; }
             public long AccountIndex { get; set; }
             public bool Enabled { get; set; }
+            public bool UseRemoteNode { get; set; }
 
             public IEnumerable<SelectListItem> Accounts { get; set; }
             public bool WalletFileFound { get; set; }
@@ -363,6 +417,12 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
             public MoneroLikeSettlementThresholdChoice SettlementConfirmationThresholdChoice { get; set; }
             [Display(Name = "Required Confirmations"), Range(0, 100)]
             public long? CustomSettlementConfirmationThreshold { get; set; }
+            [Display(Name = "Remote Node Protocol")]
+            public string RemoteNodeProtocol { get; set; }
+            [Display(Name = "Remote Node Address")]
+            public string RemoteNodeAddress { get; set; }
+            [Display(Name = "Remote Node Port")]
+            public int? RemoteNodePort { get; set; }
 
             public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
             {
@@ -372,6 +432,18 @@ namespace BTCPayServer.Services.Altcoins.Monero.UI
                     yield return new ValidationResult(
                         "You must specify the number of required confirmations when using a custom threshold.",
                         new[] { nameof(CustomSettlementConfirmationThreshold) });
+                }
+                if (UseRemoteNode == true)
+                {
+                    if (string.IsNullOrEmpty(RemoteNodeAddress))
+                    {
+                        yield return new ValidationResult("Please provide an address for the remote node.", [nameof(RemoteNodeAddress)]);
+                    }
+
+                    if (RemoteNodePort == null)
+                    {
+                        yield return new ValidationResult("Please provide a port number for the remote node.", [nameof(RemoteNodePort)]);
+                    }
                 }
             }
         }

@@ -158,15 +158,5 @@ namespace BTCPayServer
             return string.IsNullOrEmpty(value) ? " " : value;
         }
 
-        // public void ResetFilters()
-        // {
-        //     Filters.Clear();
-
-        //     TextSearch = null; 
-        //     TextFilters = null;
-
-        //     _originalString = string.Empty;
-        // }
-
     }
 }

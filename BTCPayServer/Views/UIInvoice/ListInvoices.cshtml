@@ -24,9 +24,6 @@
     
     private bool HasCustomDateFilter() =>
         Model.Search.ContainsFilter("startdate") && Model.Search.ContainsFilter("enddate");
-
-    @* private void ResetFilters () => Model.Search.ResetFilters(); *@
-
 }
 
 @section PageHeadContent
@@ -276,15 +273,6 @@
             <button type="button" class="dropdown-item @(HasCustomDateFilter() ? "custom-active" : "")" data-bs-toggle="modal" data-bs-target="#customRangeModal" text-translate="true">Custom Range</button>
         </div>
     </div>
-
-    <button onclick="ResetFilters()">Clear All Filters</button>
-
-<script>
-    function resetFilters() {
-        statusFilterCount = 0;
-    }
-</script>
-
 </form>
 
 @if (Model.Invoices.Any())

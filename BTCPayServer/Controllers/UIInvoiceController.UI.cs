@@ -1108,19 +1108,6 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
-        // public IActionResult ResetFilters()
-        // {
-
-        //     string defaultStatus = "All";
-        //     string defaultDateRange = "All Time";
-
-        //     return RedirectToAction("ListInvoices", new { 
-        //         storeId = 1,
-        //         status = defaultStatus, 
-        //         dateRange = defaultDateRange
-        //     });
-        // }
-
         private InvoiceQuery GetInvoiceQuery(SearchString fs, ListAppsViewModel.ListAppViewModel[] apps, int timezoneOffset = 0)
         {
             var textSearch = fs.TextSearch;

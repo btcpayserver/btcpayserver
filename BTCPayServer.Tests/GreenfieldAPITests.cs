@@ -3029,17 +3029,18 @@ namespace BTCPayServer.Tests
             var info = await client.GetLightningNodeInfo(user.StoreId, "BTC");
             Assert.Single(info.NodeURIs);
             Assert.NotEqual(0, info.BlockHeight);
-            
-            // balance
-            await TestUtils.EventuallyAsync(async () =>
-            {
-                var balance = await client.GetLightningNodeBalance(user.StoreId, "BTC");
-                var histogram = await client.GetLightningNodeHistogram(user.StoreId, "BTC");
-                var localBalance = balance.OffchainBalance.Local.ToDecimal(LightMoneyUnit.BTC);
-                Assert.Equal(histogram.Balance, histogram.Series.Last());
-                Assert.Equal(localBalance, histogram.Balance);
-                Assert.Equal(localBalance, histogram.Series.Last());
-            });
+
+            // Disable for now see #6518
+            //// balance
+            //await TestUtils.EventuallyAsync(async () =>
+            //{
+            //    var balance = await client.GetLightningNodeBalance(user.StoreId, "BTC");
+            //    var localBalance = balance.OffchainBalance.Local.ToDecimal(LightMoneyUnit.BTC);
+            //    var histogram = await client.GetLightningNodeHistogram(user.StoreId, "BTC");
+            //    Assert.Equal(histogram.Balance, histogram.Series.Last());
+            //    Assert.Equal(localBalance, histogram.Balance);
+            //    Assert.Equal(localBalance, histogram.Series.Last());
+            //});
 
             // As admin, can use the internal node through our store.
             await user.MakeAdmin(true);

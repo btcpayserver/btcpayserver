@@ -27,52 +27,9 @@ public class LightningHistogramService
         var ticks = (to - from).Ticks;
         var interval = TimeSpan.FromTicks(ticks / pointCount);
 
-        try
-        {
-            // general balance
-            var lnBalance = await lightningClient.GetBalance(cancellationToken);
-            var total = lnBalance.OffchainBalance.Local;
-            var totalBtc = total.ToDecimal(LightMoneyUnit.BTC);
-            // prepare transaction data
-            var lnInvoices = await lightningClient.ListInvoices(cancellationToken);
-            var lnPayments = await lightningClient.ListPayments(cancellationToken);
-            var lnTransactions = lnInvoices
-                .Where(inv => inv.Status == LightningInvoiceStatus.Paid && inv.PaidAt >= from)
-                .Select(inv => new LnTx { Amount = inv.Amount.ToDecimal(LightMoneyUnit.BTC), Settled = inv.PaidAt.GetValueOrDefault() })
-                .Concat(lnPayments
-                    .Where(pay => pay.Status == LightningPaymentStatus.Complete && pay.CreatedAt >= from)
-                    .Select(pay => new LnTx { Amount = pay.Amount.ToDecimal(LightMoneyUnit.BTC) * -1, Settled = pay.CreatedAt.GetValueOrDefault() }))
-                .OrderByDescending(tx => tx.Settled)
-                .ToList();
-            // assemble graph data going backwards
-            var series = new List<decimal>(pointCount);
-            var labels = new List<DateTimeOffset>(pointCount);
-            var balance = totalBtc;
-            for (var i = pointCount; i > 0; i--)
-            {
-                var txs = lnTransactions.Where(t =>
-                    t.Settled.Ticks >= from.Ticks + interval.Ticks * i &&
-                    t.Settled.Ticks < from.Ticks + interval.Ticks * (i + 1));
-                var sum = txs.Sum(tx => tx.Amount);
-                balance -= sum;
-                series.Add(balance);
-                labels.Add(from + interval * (i - 1));
-            }
-            // reverse the lists
-            series.Reverse();
-            labels.Reverse();
-            return new HistogramData
-            {
-                Type = type,
-                Balance = totalBtc,
-                Series = series,
-                Labels = labels
-            };
-        }
-        catch (Exception)
-        {
-            return null;
-        }
+        // TODO: We can't just list all invoices and payments, we need to filter them by date
+        // but the client doesn't support that yet so let's just disable this for now. See #6518
+        return null;
     }
 
     private class LnTx

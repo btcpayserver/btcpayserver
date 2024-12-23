@@ -127,6 +127,8 @@ namespace BTCPayServer
                     return DateTimeOffset.UtcNow.AddDays(-3).AddMinutes(timezoneOffset);
                 case "-7d":
                     return DateTimeOffset.UtcNow.AddDays(-7).AddMinutes(timezoneOffset);
+                case "alltime":
+                    return null; // No filtering by date, so return null
             }
 
             // default parsing logic
@@ -155,5 +157,6 @@ namespace BTCPayServer
             var value = str.Trim().TrimStart(FilterSeparator).TrimEnd(FilterSeparator);
             return string.IsNullOrEmpty(value) ? " " : value;
         }
+
     }
 }

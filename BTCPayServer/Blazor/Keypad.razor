@@ -1,0 +1,700 @@
+﻿@using System.Text.RegularExpressions
+@using System.Globalization
+@using System.Text.Json
+@using System.Text.Json.Nodes
+@using BTCPayServer.Client
+@using BTCPayServer.Client.Models
+@inject IJSRuntime JS
+@inject IAuthorizationService AuthService
+@inject AuthenticationStateProvider AuthStateProvider
+
+<div disabled="@IsSubmitting" @attributes="InputAttributes" class="@CssClass">
+    @{ var amount = GetAmount(); }
+    <input type="hidden" name="amount" value="@GetTotal().ToString(CultureInfo.InvariantCulture)">
+    <input type="hidden" name="tip" value="@GetTip()?.ToString(CultureInfo.InvariantCulture)">
+    <input type="hidden" name="discount" value="@GetDiscountPercent()">
+    <input type="hidden" name="posdata" value="@GetData()">
+    <div class="d-flex flex-column align-items-center mb-auto" @ref="_keypadTop">
+        <div class="fw-semibold text-muted" id="Currency">@CurrencyCode</div>
+        <div class="fw-bold lh-sm" id="Amount" style="font-size:@($"{FontSize}px")" @ref="_keypadAmount">@FormatCurrency(GetTotal(), false)</div>
+        <div class="text-muted text-center mt-2" id="Calculation">@Calculation(Model)</div>
+    </div>
+    @if (IsDiscountEnabled || IsTipEnabled)
+    {
+        <div id="ModeTabs" class="tab-content mb-n2">
+            @if (IsDiscountEnabled)
+            {
+                <div class="tab-pane fade @(Mode == InputMode.Discount ? "show active" : "")" role="tabpanel" aria-labelledby="ModeTablist-Discount">
+                    <div class="h4 fw-semibold text-muted text-center" id="Discount">
+                        <span class="h3 text-body me-1">@GetDiscountPercent()%</span> discount
+                    </div>
+                </div>
+            }
+            @if (IsTipEnabled)
+            {
+                <div class="tab-pane fade @(Mode == InputMode.Tip ? "show active" : "")" role="tabpanel" aria-labelledby="ModeTablist-Tip">
+                    <div class="btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2">
+                        @if (CustomTipPercentages != null)
+                        {
+                            <button
+                                id="Tip-Custom"
+                                type="button"
+                                class="btcpay-pill @(Model.TipPercent == null ? "active" : "")"
+                                @onclick="() => Model.TipPercent = null">
+                                @(Model.Tip is > 0 ? FormatCurrency(Model.Tip.Value) : "Custom")
+                            </button>
+                            @foreach(var percentage in CustomTipPercentages)
+                            {
+                                <button
+                                    type="button"
+                                    id="Tip-@percentage"
+                                    class="btcpay-pill @(Model.TipPercent == percentage ? "active" : "")"
+                                    @onclick="() => Model.TipPercent = percentage">
+                                    @percentage%
+                                </button>
+                            }
+                        }
+                        else
+                        {
+                            var tip = GetTip();
+                            <div class="h5 fw-semibold text-muted text-center">
+                                Amount@(tip > 0 ? $": {FormatCurrency(tip.Value)}" : "")
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+        <div id="ModeTablist" class="nav btcpay-pills align-items-center justify-content-center mb-n2 pb-1" role="tablist">
+            @foreach (var mode in GetModes())
+            {
+                <input id="ModeTablist-@mode" name="mode" value="@mode" type="radio" role="tab"
+                       aria-controls="Mode-@mode" aria-selected="@(Mode == mode ? "true" : "false")"
+                       data-bs-toggle="pill" data-bs-target="#Mode-@mode"
+                       checked="@(Mode == mode)"
+                       disabled="@(mode != InputMode.Amount && amount == 0)"
+                       @onclick="() => Mode = mode">
+                <label for="ModeTablist-@mode">@mode</label>
+            }
+        </div>
+    }
+    <div class="keypad">
+        @foreach (var key in Keys)
+        {
+            <button disabled="@(key == '+' && (Mode != InputMode.Amount || amount <= 0))" @onclick="@(_ => KeyPress(key))" @onclick:preventDefault @ondblclick="@(_ => DoublePress(key))" type="button" class="btn btn-secondary btn-lg" data-key="@key">
+                @switch (key)
+                {
+                    case 'C':
+                        <Icon Symbol="keypad-clear" />
+                        break;
+                    case '+':
+                        <Icon Symbol="keypad-plus" />
+                        break;
+                    default:
+                        <span>@key</span>
+                        break;
+                }
+            </button>
+        }
+    </div>
+    <button class="btn btn-lg btn-primary mx-3" type="submit" disabled="@(IsSubmitting || amount == 0)" id="pay-button" @onclick="HandleSubmit">
+        @if (IsSubmitting)
+        {
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        }
+        else
+        {
+            <span>Charge</span>
+        }
+    </button>
+
+    @if (CanAccessRecentTransactions)
+    {
+        <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="modal" data-bs-target="#RecentTransactions" id="RecentTransactionsToggle" @onclick="HandleLoadRecentTransactions">
+            <Icon Symbol="nav-transactions" />
+        </button>
+        <div class="modal" tabindex="-1" id="RecentTransactions" ref="RecentTransactions" data-bs-backdrop="static">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Recent Transactions</h5>
+                        <button type="button" class="btn btn-link px-3 py-0" aria-label="Refresh" @onclick="HandleLoadRecentTransactions" disabled="@IsLoadingRecentTransactions" id="RecentTransactionsRefresh">
+                            <Icon Symbol="actions-refresh" />
+                            @if (IsLoadingRecentTransactions)
+                            {
+                                <span class="visually-hidden">Loading...</span>
+                            }
+                        </button>
+                        <button type="button" class="btn-close py-3" data-bs-dismiss="modal" aria-label="Close">
+                            <Icon Symbol="close" />
+                        </button>
+                    </div>
+                    <div class="modal-body pt-0">
+                        @if (RecentTransactions?.Count() > 0)
+                        {
+                            <div class="list-group list-group-flush">
+                                @foreach (var t in RecentTransactions)
+                                {
+                                    <a href="@t.Url" class="list-group-item list-group-item-action d-flex align-items-center gap-3 pe-2 ps-3 py-3" @onclick="@(_ => OnClickRecentTransaction(t))">
+                                        <div class="d-flex align-items-baseline justify-content-between flex-wrap flex-grow-1 gap-2">
+                                            <span class="flex-grow-1">
+                                                <DateDisplay DateTimeOffset="@t.Date"/>
+                                            </span>
+                                            <span class="flex-grow-1 text-end">
+                                                @FormatCurrency(t.Price)
+                                            </span>
+                                            <div class="badge-container">
+                                                <span class="badge badge-@t.Status.ToLowerInvariant()">@t.Status</span>
+                                            </div>
+                                        </div>
+                                        <Icon Symbol="caret-right" />
+                                    </a>
+                                }
+                            </div>
+                        }
+                        else if (IsLoadingRecentTransactions)
+                        {
+                            <p class="text-muted my-0">Loading...</p>
+                        }
+                        else
+                        {
+                            <p class="text-muted my-0">No transactions, yet.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    @if (IsItemlistEnabled && Items?.Any() is true)
+    {
+        <button type="button" class="btn btn-light rounded-circle" data-bs-toggle="offcanvas" data-bs-target="#ItemsListOffcanvas" id="ItemsListToggle" aria-controls="ItemsList">
+            <Icon Symbol="nav-products"/>
+        </button>
+        <div class="offcanvas offcanvas-end" data-bs-backdrop="static" tabindex="-1" id="ItemsListOffcanvas" aria-labelledby="ItemsListToggle">
+            <div class="offcanvas-header justify-content-between flex-wrap p-3">
+                <h5 class="offcanvas-title" id="offcanvasExampleLabel">Products</h5>
+                <button type="button" class="btn btn-sm rounded-pill @(Model.Cart.Count > 0 ? "btn-primary" : "btn-outline-secondary")" data-bs-dismiss="offcanvas">@(Model.Cart.Count > 0 ? "Apply" : "Close")</button>
+                @if (IsSearchEnabled)
+                {
+                    <div class="w-100 mt-3">
+                        <input id="SearchTerm" class="form-control rounded-pill" placeholder="Search…" type="search" @bind="Model.SearchTerm" @bind:event="oninput" />
+                    </div>
+                }
+                @if (IsCategoriesEnabled && Categories?.Count() > 1)
+                {
+                    <div id="Categories" @ref="_categories" class="w-100 mt-3 btcpay-pills d-flex flex-wrap align-items-center justify-content-center gap-2 @(IsCategoriesScrollable ? "scrollable" : null)">
+                        <nav @ref="_categoriesNav" class="btcpay-pills d-flex align-items-center gap-3">
+                            @foreach (var cat in Categories)
+                            {
+                                <input id="Category-@cat" type="radio" name="category" autocomplete="off"
+                                       value="@cat" @onclick="() => Model.SelectedCategory = cat"
+                                       checked="@(Model.SelectedCategory == cat)">
+                                <label for="Category-@cat" class="btcpay-pill text-nowrap">@cat</label>
+                            }
+                        </nav>
+                    </div>
+                }
+            </div>
+            <div class="offcanvas-body">
+                <div id="PosItems">
+                    @foreach (var item in Items)
+                    {
+                        var formatted = GetItemPriceFormatted(item);
+                        <div class="@ItemCssClass(item)">
+                            <div class="d-flex align-items-start w-100 gap-3">
+                                @if (!string.IsNullOrWhiteSpace(item.Image))
+                                {
+                                    var img = item.Image.Replace("~/", "/");
+                                    <div class="img d-none d-sm-block">
+                                        <img src="@img" alt="@item.Title" asp-append-version="true" />
+                                    </div>
+                                }
+                                <div class="d-flex flex-column gap-2">
+                                    <h5 class="card-title m-0">@((MarkupString)item.Title)</h5>
+                                    <div class="d-flex gap-2 align-items-center">
+                                        @if (item.PriceType == AppItemPriceType.Topup || item.Price == 0)
+                                        {
+                                            <span class="fw-semibold badge text-bg-info">@(char.ToUpper(formatted[0]) + formatted[1..])</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="fw-semibold">@formatted</span>
+                                        }
+                                        @if (item.Inventory.HasValue)
+                                        {
+                                            <span class="badge text-bg-warning inventory">@InventoryText(item)</span>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="d-flex align-items-center gap-2 ms-auto quantities">
+                                    <button type="button" @onclick="() => UpdateQuantity(item, -1)" class="btn btn-minus" disabled="@(GetQuantity(item) <= 0)">
+                                        <span><Icon Symbol="minus" /></span>
+                                    </button>
+                                    <div class="quantity text-center fs-5" style="width:2rem">@GetQuantity(item)</div>
+                                    <button type="button" @onclick="() => UpdateQuantity(item, +1)" class="btn btn-plus" disabled="@(!InStock(item))">
+                                        <span><Icon Symbol="plus" /></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+#nullable enable
+    [Parameter, EditorRequired]
+    public string StoreId { get; set; } = null!;
+    [Parameter, EditorRequired]
+    public string AppId { get; set; } = null!;
+    [Parameter, EditorRequired]
+    public string CurrencyCode { get; set; } = null!;
+    [Parameter]
+    public NumberFormatInfo? CurrencyInfo { get; set; }
+    [Parameter]
+    public bool IsItemlistEnabled { get; set; }
+    [Parameter]
+    public bool IsDiscountEnabled { get; set; }
+    [Parameter]
+    public bool IsTipEnabled { get; set; }
+    [Parameter]
+    public bool IsSearchEnabled { get; set; }
+    [Parameter]
+    public bool IsCategoriesEnabled { get; set; }
+    [Parameter]
+    public int[]? CustomTipPercentages { get; set; }
+    [Parameter]
+    public IEnumerable<string>? Categories { get; set; }
+    [Parameter]
+    public EventCallback LoadRecentTransactions { get; set; }
+    [Parameter]
+    public EventCallback<CreatePosInvoiceRequest> CreateInvoice { get; set; }
+    [Parameter]
+    public IEnumerable<RecentTransaction>? RecentTransactions { get; set; }
+    [Parameter]
+    public IEnumerable<AppItem>? Items { get; set; }
+    [Parameter(CaptureUnmatchedValues = true)]
+    public Dictionary<string, object>? InputAttributes { get; set; }
+
+    const int DefaultFontSize = 64;
+    static readonly char[] Keys = ['1', '2', '3', '4', '5', '6', '7', '8', '9', 'C', '0', '+'];
+    private int FontSize { get; set; } = DefaultFontSize;
+
+    private ElementReference _keypadTop;
+    private ElementReference _keypadAmount;
+    private ElementReference _categories;
+    private ElementReference _categoriesNav;
+    private string CurrencySymbol { get; set; } = null!;
+    private int CurrencyDivisibility { get; set; }
+    private bool IsLoadingRecentTransactions { get; set; }
+    private bool IsSubmitting { get; set; }
+    private bool IsCategoriesScrollable { get; set; }
+    private bool CanAccessRecentTransactions { get; set; }
+    private InputMode Mode { get; set; } = InputMode.Amount;
+    private KeypadModel Model { get; set; } = new ();
+
+    public enum InputMode
+    {
+        Amount,
+        Discount,
+        Tip
+    }
+
+    public class KeypadModel
+    {
+        public List<AppCartItem> Cart { get; } = [];
+        public List<decimal> Amounts { get; } = [0];
+        public int? DiscountAmount { get; set; }
+        public int? DiscountPercent { get; set; }
+        public int? TipPercent { get; set; }
+        public decimal? Tip { get; set; }
+        public string? SearchTerm { get; set; }
+        public string SelectedCategory { get; set; } = "All";
+    }
+
+    public class RecentTransaction
+    {
+        public string Id { get; set; } = null!;
+        public string Status { get; init; } = null!;
+        public decimal Price { get; init; }
+        public string? Url { get; init; }
+        public DateTimeOffset Date { get; init; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+
+        CurrencySymbol = CurrencyInfo?.CurrencySymbol ?? CurrencyCode;
+        CurrencyDivisibility = CurrencyInfo?.CurrencyDecimalDigits ?? 0;
+
+        // check authorization
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        if (authState.User.Identity?.IsAuthenticated is not true) return;
+
+        CanAccessRecentTransactions = LoadRecentTransactions.HasDelegate &&
+            (await AuthService.AuthorizeAsync(authState.User, StoreId, Policies.CanViewInvoices)).Succeeded;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender || !IsCategoriesEnabled || Categories?.Count() <= 1 || _categories.Id == null) return;
+
+        var cat = await JS.InvokeAsync<decimal>("Interop.getWidth", [_categories]);
+        var nav = await JS.InvokeAsync<decimal>("Interop.getWidth", [_categoriesNav]);
+
+        IsCategoriesScrollable = nav > cat;
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private async Task KeyPress(char key)
+    {
+        if (Mode == InputMode.Amount) {
+            var lastIndex = Model.Amounts.Count - 1;
+            var lastAmount = Model.Amounts[lastIndex];
+            if (key == 'C') {
+                if (lastAmount == 0 && lastIndex == 0) {
+                    // clear completely
+                    Clear();
+                } else if (lastAmount == 0) {
+                    // remove latest value
+                    Model.Amounts.RemoveAt(lastIndex);
+                } else {
+                    // clear latest value
+                    Model.Amounts[lastIndex] = 0;
+                }
+            } else if (key == '+') {
+                if (lastAmount > 0) Model.Amounts.Add(0);
+            } else { // Is a digit
+                Model.Amounts[lastIndex] = Math.Min(ApplyKeyToValue(key, lastAmount, CurrencyDivisibility), decimal.MaxValue / 10);
+            }
+        } else {
+            if (key == 'C') {
+                if (Mode == InputMode.Tip)
+                {
+                    Model.Tip = null;
+                    Model.TipPercent = null;
+                }
+                else
+                {
+                    Model.DiscountPercent = null;
+                }
+            } else {
+                var divisibility = Mode == InputMode.Tip ? CurrencyDivisibility : 0;
+                if (Mode == InputMode.Tip)
+                {
+                    Model.Tip = Math.Min(ApplyKeyToValue(key, Model.Tip ?? 0, divisibility), decimal.MaxValue / 10);
+                    Model.TipPercent = null;
+                }
+                else
+                {
+                    var num = (int)ApplyKeyToValue(key, Model.DiscountPercent ?? 0, divisibility);
+                    Model.DiscountPercent = Math.Min(num, 100);
+                }
+            }
+        }
+        await UpdateFontSize();
+    }
+
+    private decimal ApplyKeyToValue(char key, decimal value, int divisibility)
+    {
+        var str = value is 0 ? "" : FormattedInvariant(value, divisibility);
+        str = (str + key).Replace(".", "");
+        if (divisibility > 0)
+        {
+            str = str.PadLeft(divisibility + 1, '0');
+            str = Regex.Replace(str, $"(\\d*)(\\d{{{divisibility}}})", "$1.$2");
+        }
+        return decimal.Parse(str, CultureInfo.InvariantCulture);
+    }
+
+    private void DoublePress(char key)
+    {
+        if (key == 'C') {
+            Clear();
+        }
+    }
+
+    private void Clear()
+    {
+        Model.Cart.Clear();
+        Model.Amounts.Clear();
+        Model.Amounts.Add(0);
+        Model.DiscountPercent = null;
+        Model.TipPercent = null;
+        Model.Tip = null;
+        Mode = InputMode.Amount;
+    }
+
+    private string GetData()
+    {
+        var data = new JsonObject
+        {
+            ["subTotal"] = GetAmount(),
+            ["total"] = GetTotal(),
+            ["cart"] = JsonValue.Create(Model.Cart)
+        };
+
+        // clear empty or zero values
+        var amounts = GetAmounts();
+        if (amounts.Count > 0)
+        {
+            data["amounts"] = JsonValue.Create(amounts);
+        }
+
+        var discount = GetDiscount();
+        if (discount > 0)
+        {
+            data["discountAmount"] = discount;
+        }
+        if (Model.DiscountPercent is > 0)
+        {
+            data["discountPercentage"] = Model.DiscountPercent;
+        }
+
+        var tip = GetTip();
+        if (tip > 0)
+        {
+            data["tip"] = tip;
+        }
+        if (Model.TipPercent != null)
+        {
+            data["tipPercentage"] = Model.TipPercent;
+        }
+        return JsonSerializer.Serialize(data, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+    }
+
+    private List<InputMode> GetModes()
+    {
+        var modes = new List<InputMode> { InputMode.Amount };
+        if (IsDiscountEnabled) modes.Add(InputMode.Discount);
+        if (IsTipEnabled) modes.Add(InputMode.Tip);
+        return modes;
+    }
+
+    private decimal GetAmount()
+    {
+        var amt = Model.Amounts.Count > 0 ? Model.Amounts.Sum() : Model.Amounts.FirstOrDefault();
+        if (Model.Cart.Count > 0) amt += Model.Cart.Sum(item => item.Price * item.Count);
+        return amt;
+    }
+
+    private List<decimal> GetAmounts()
+    {
+        return Model.Amounts.Where(a => a > 0).ToList();
+    }
+
+    private decimal? GetDiscount()
+    {
+        var amount = GetAmount();
+        return amount > 0 && Model.DiscountPercent is > 0
+            ? Math.Round(amount * (Model.DiscountPercent.Value / 100.0m), CurrencyDivisibility)
+            : null;
+    }
+
+    private int GetDiscountPercent()
+    {
+        return Model.DiscountPercent ?? 0;
+    }
+
+    private decimal? GetTip()
+    {
+        if (Model.TipPercent is > 0) {
+            var amount = GetAmount() - (GetDiscount() ?? 0);
+            return Math.Round(amount * (Model.TipPercent.Value / 100.0m), CurrencyDivisibility);
+        }
+        return Model.Tip is > 0 ? Math.Round(Model.Tip.Value, CurrencyDivisibility) : null;
+    }
+
+    private decimal GetTotal()
+    {
+        return GetAmount() - (GetDiscount() ?? 0) + (GetTip() ?? 0);
+    }
+
+    private string? Calculation(KeypadModel model)
+    {
+        if (!model.Tip.HasValue && !(model.DiscountAmount is > 0 || model.DiscountPercent is > 0) && model.Amounts.Count < 2 && model.Cart.Count == 0) return null;
+        var hasAmounts = model.Amounts.Sum() > 0;
+        var hasCart = model.Cart.Count > 0;
+        var calc = "";
+        if (hasCart) calc += string.Join(" + ", model.Cart.Select(item => $"{item.Count} x {item.Title} ({FormatCurrency(item.Price)}) = {FormatCurrency(item.Price * item.Count)}"));
+        if (hasCart && hasAmounts) calc += " + ";
+        if (hasAmounts) calc += string.Join(" + ", model.Amounts.Select(amt => FormatCurrency(amt)));
+        var discount = GetDiscount();
+        if (discount > 0) calc += $" - {FormatCurrency(discount.Value)} ({model.DiscountPercent}%)";
+        var tip = GetTip();
+        if (tip > 0) calc += $" + {FormatCurrency(tip.Value)}";
+        if (model.TipPercent > 0) calc += $" ({model.TipPercent}%)";
+        return calc;
+    }
+
+    private string FormatCurrency(decimal value, bool withSymbol = true)
+    {
+        if (CurrencyCode is "BTC" or "SATS") return FormatCrypto(value, withSymbol);
+        try {
+            var formatted = value.ToString("C", CurrencyInfo);
+            return withSymbol ? formatted : formatted.Replace(CurrencySymbol, "").Trim();
+        }
+        catch (Exception)
+        {
+            return FormatCrypto(value, withSymbol);
+        }
+    }
+
+    private string FormatCrypto(decimal value, bool withSymbol) {
+        var symbol = withSymbol ? $" {CurrencySymbol}" : "";
+        return $"{FormattedInvariant(value, CurrencyDivisibility)}{symbol}";
+    }
+
+    private string FormattedInvariant(decimal value, int divisibility) {
+        return string.Format(CultureInfo.InvariantCulture, $"{{0:0.{new string('0', divisibility)}}}", value);
+    }
+
+    private async Task UpdateFontSize()
+    {
+        var top = await JS.InvokeAsync<decimal>("Interop.getWidth", [_keypadTop]);
+        var amt = await JS.InvokeAsync<decimal>("Interop.getWidth", [_keypadAmount]);
+        var gamma = top / amt;
+
+        FontSize = (int)(top < amt
+            ? Math.Floor(FontSize * gamma)
+            : Math.Min(FontSize * gamma, DefaultFontSize));
+
+        StateHasChanged();
+    }
+
+    private bool DisplayItem(AppItem item)
+    {
+        var matchesSearch = string.IsNullOrWhiteSpace(Model.SearchTerm) ||
+                            item.Title.ToLowerInvariant().Contains(Model.SearchTerm.ToLowerInvariant()) ||
+                            item.Description?.ToLowerInvariant().Contains(Model.SearchTerm.ToLowerInvariant()) is true;
+        var matchesCategory = Model.SelectedCategory == "All" || item.Categories?.Contains(Model.SelectedCategory) is true;
+        return matchesSearch && matchesCategory;
+    }
+
+    private string GetItemPriceFormatted(AppItem item)
+    {
+        if (item.PriceType == AppItemPriceType.Topup) return "any amount";
+        if (item.Price == 0) return "free";
+        var formatted = FormatCurrency(item.Price ?? 0);
+        return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+    }
+
+    private AppCartItem? ItemInCart(AppItem item, decimal? amount = null)
+    {
+        return Model.Cart.FirstOrDefault(lineItem => lineItem.Id == item.Id && amount == null || lineItem.Price == amount);
+    }
+
+    private bool InStock(AppItem item, int count = 1)
+    {
+        return item.Inventory == null || item.Inventory >= GetQuantity(item) + count;
+    }
+
+    private string InventoryText(AppItem item)
+    {
+        var inCart = GetQuantity(item);
+        var left = item.Inventory - inCart;
+        return left > 0 ? $"{left} left" : "Sold out";
+    }
+
+    private AppCartItem? AddToCart(AppItem item, int count, decimal? amount = null) {
+        if (!InStock(item)) return null;
+        // Check if price is needed
+        var isFixedPrice = item.PriceType == AppItemPriceType.Fixed;
+        if (!isFixedPrice && amount == null) {
+            // TODO: Report validation error
+        }
+
+        var price = (item.Price ?? amount)!.Value;
+        var cartItem = ItemInCart(item, amount);
+        if (cartItem == null)
+        {
+            cartItem = new AppCartItem
+            {
+                Id = item.Id,
+                Title = item.Title,
+                Price = price,
+                Count = count
+            };
+            Model.Cart.Add(cartItem);
+        } else {
+            cartItem.Count += count;
+        }
+        return cartItem;
+    }
+
+    private void RemoveFromCart(AppCartItem cartItem) {
+        Model.Cart.Remove(cartItem);
+    }
+
+    private int GetQuantity(AppItem item) {
+        return ItemInCart(item)?.Count ?? 0;
+    }
+
+    private void UpdateQuantity(AppItem item, int count) {
+        var cartItem = ItemInCart(item);
+        if (cartItem == null)
+        {
+            if (count > 0) AddToCart(item, count);
+            return;
+        }
+        if (count < 0 || count > 0 && InStock(item, count)) cartItem.Count += count;
+        if (cartItem.Count <= 0) RemoveFromCart(cartItem);
+    }
+
+    private async Task HandleLoadRecentTransactions()
+    {
+        IsLoadingRecentTransactions = true;
+        StateHasChanged();
+        if (LoadRecentTransactions.HasDelegate)
+            await LoadRecentTransactions.InvokeAsync();
+        IsLoadingRecentTransactions = false;
+        StateHasChanged();
+    }
+
+    private async Task HandleSubmit()
+    {
+        IsSubmitting = true;
+        StateHasChanged();
+        if (CreateInvoice.HasDelegate)
+        {
+            var req = new CreatePosInvoiceRequest
+            {
+                Cart = Model.Cart,
+                DiscountPercent = Model.DiscountPercent,
+                TipPercent = Model.TipPercent,
+                Tip = GetTip(),
+                Amounts = GetAmounts(),
+                DiscountAmount = GetDiscount(),
+                Subtotal = GetAmount(),
+                Total = GetTotal(),
+                PosData = GetData()
+            };
+            await CreateInvoice.InvokeAsync(req);
+        }
+        IsSubmitting = false;
+    }
+
+    private async Task OnClickRecentTransaction(RecentTransaction t)
+    {
+        await JS.InvokeVoidAsync("Interop.closeModal", "#RecentTransactions");
+    }
+
+    private string ItemCssClass(AppItem item)
+    {
+        var inStock = InStock(item) ? "posItem--inStock" : null;
+        var display = DisplayItem(item) ? "posItem--displayed" : null;
+        return $"posItem p-3 {inStock} {display}".Trim();
+    }
+
+    private string CssClass => $"d-flex flex-column gap-4 w-100 {(InputAttributes?.ContainsKey("class") is true ? InputAttributes["class"] : "")}".Trim();
+}

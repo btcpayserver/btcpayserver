@@ -126,7 +126,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     StringComparison.OrdinalIgnoreCase);
                 // model.InvoiceBitcoinUrlQR: bitcoin:BCRT1QXP2QA5DHN...?amount=0.00044007&lightning=LNBCRT4400...
             }
-           
+
 
             if (amountInSats)
             {
@@ -149,6 +149,29 @@ namespace BTCPayServer.Payments.Bitcoin
                 ? null
                 : displayFormatter.Currency(rate / 100_000_000, model.InvoiceCurrency, DisplayFormatter.CurrencyFormat.Symbol);
         }
+        public static void PreparePaymentModelForAmountInFiat(CheckoutModel model, decimal rate, DisplayFormatter displayFormatter)
+        {
 
+            var fiatCulture = new CultureInfo(CultureInfo.InvariantCulture.Name)
+            {
+                NumberFormat = { NumberGroupSeparator = " " }
+            };
+
+            model.PaymentMethodCurrency = model.InvoiceCurrency;
+
+            var dueValue = (Money.Parse(model.Due).ToUnit(MoneyUnit.BTC) * rate);
+            var paidValue = (Money.Parse(model.Paid).ToUnit(MoneyUnit.BTC) * rate);
+            var orderAmountValue = (Money.Parse(model.OrderAmount).ToUnit(MoneyUnit.BTC) * rate);
+     
+            var dueFormatted =  dueValue.ToString("N", fiatCulture);
+            var paidFormatted = paidValue.ToString("N", fiatCulture);
+            var orderAmountFormatted = orderAmountValue.ToString("N", fiatCulture);
+        
+            model.Due = displayFormatter.Currency(dueValue, model.InvoiceCurrency, DisplayFormatter.CurrencyFormat.None);
+            model.Paid = displayFormatter.Currency(paidValue, model.InvoiceCurrency, DisplayFormatter.CurrencyFormat.None);
+            model.OrderAmount = displayFormatter.Currency(orderAmountValue, model.InvoiceCurrency, DisplayFormatter.CurrencyFormat.None);
+            model.Rate = displayFormatter.Currency(rate * 1, model.InvoiceCurrency, DisplayFormatter.CurrencyFormat.Code); 
+            
+        }
     }
 }

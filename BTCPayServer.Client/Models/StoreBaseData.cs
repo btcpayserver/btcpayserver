@@ -38,6 +38,10 @@ namespace BTCPayServer.Client.Models
 
         [JsonConverter(typeof(StringEnumConverter))]
         public SpeedPolicy SpeedPolicy { get; set; }
+
+        [JsonConverter(typeof(StringEnumConverter))]
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public LightningCurrencyDisplayMode LightningCurrencyDisplayMode { get; set; } = LightningCurrencyDisplayMode.BTC;
         public string LightningDescriptionTemplate { get; set; }
         public double PaymentTolerance { get; set; } = 0;
         public bool AnyoneCanCreateInvoice { get; set; }
@@ -104,5 +108,12 @@ namespace BTCPayServer.Client.Models
         MediumSpeed = 1,
         LowSpeed = 2,
         LowMediumSpeed = 3
+    }
+
+    public enum LightningCurrencyDisplayMode
+    {
+        BTC,
+        Satoshis,
+        Fiat
     }
 }

@@ -37,6 +37,8 @@ namespace BTCPayServer.Data
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
+        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
+        public LightningCurrencyDisplayMode LightningCurrencyDisplayMode { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }

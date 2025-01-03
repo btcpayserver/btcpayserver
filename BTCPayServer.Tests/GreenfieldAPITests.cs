@@ -4823,5 +4823,35 @@ clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfi
             await AssertValidationError(new[] { "PreferredSource", "currencyPair" }, () =>
 clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO" }, new[] { "BTC_USD_USD_BTC" }));
         }
+
+        [Fact(Timeout = 60 * 2 * 1000)]
+        [Trait("Integration", "Integration")]
+        public async Task CanUseBearerAuth()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var user = tester.NewAccount();
+            await user.GrantAccessAsync();
+            var userClient = new BTCPayServerClientWithBearerToken(tester.PayTester.ServerUri);
+            /*await AssertAPIError("unauthenticated", async () =>
+            {
+                await userClient.GetCurrentUser();
+            });*/
+            var loginRequest = new BearerLoginRequest
+            {
+                Email = user.RegisterDetails.Email,
+                Password = user.RegisterDetails.Password
+            };
+            var loginResponse = await userClient.Login(loginRequest);
+            Assert.NotNull(loginResponse.AccessToken);
+            Assert.NotNull(loginResponse.RefreshToken);
+            await userClient.GetCurrentUser();
+            
+            // TODO: Failed login
+            
+            // TODO: Login with code
+            
+            // TODO: Logout
+        }
     }
 }

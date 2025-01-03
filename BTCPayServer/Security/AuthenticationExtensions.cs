@@ -1,7 +1,9 @@
 using System;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Security.Bitpay;
+using BTCPayServer.Security.GreenField;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace BTCPayServer.Security
@@ -22,6 +24,12 @@ namespace BTCPayServer.Security
                 options.RefreshTokenExpiration = TimeSpan.FromDays(3.0);
             });
             return builder;
+        }
+
+        public static IServiceCollection AddBearerAuthentication(this IServiceCollection serviceCollection)
+        {
+            serviceCollection.AddSingleton<IAuthorizationHandler, BearerAuthorizationHandler>();
+            return serviceCollection;
         }
     }
 }

@@ -87,7 +87,7 @@ public class BlockHeaders : IEnumerable<RPCBlockHeader>
     }
 }
 
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldBearer)]
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
 public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 {
     private readonly NBXplorerConnectionFactory _connectionFactory;
@@ -118,8 +118,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         _connectionFactory = connectionFactory;
         _network = btcPayNetworkProvider.BTC;
         _explorerClient =  _explorerClientProvider.GetExplorerClient(btcPayNetworkProvider.BTC);
-        
-            
+
         // TODO: maybe we can move this to the device master signal, an app can potentially still function with a full node active in theory 
         if (!_connectionFactory.Available || !_nbXplorerDashboard.IsFullySynched(_explorerClient.CryptoCode, out _))
         {
@@ -140,10 +139,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         }
         var userId = _userManager.GetUserId(Context.User!)!;
         await _appState.Connected(Context.ConnectionId, userId);
-        
-        
-
-        
     }
 
     public override async Task OnDisconnectedAsync(Exception? exception)
@@ -287,7 +282,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public async Task<Dictionary<string, CoinResponse[]>> GetUTXOs(string[] identifiers)
     {
-
         var result = new Dictionary<string, CoinResponse[]>();
         foreach (string identifier in identifiers)
         {
@@ -307,7 +301,6 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
             }).ToArray());
             
         }
-
         return result;
     }
 
@@ -330,12 +323,10 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
                 .Select(tx => new TxResp(tx.Confirmations, tx.Height, tx.BalanceChange.GetValue(_network), tx.Timestamp, tx.TransactionId.ToString())).OrderByDescending(arg => arg.Timestamp);
             result.Add(identifier,items.ToArray());
         }
-
         return result;
     }
     public async Task SendInvoiceUpdate( LightningInvoice lightningInvoice)
     {
-        
         await _appState. InvoiceUpdate(Context.ConnectionId, lightningInvoice);
     }
 

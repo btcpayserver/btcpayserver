@@ -21,7 +21,7 @@ namespace BTCPayServer.App.API;
 [ApiController]
 [ResultOverrideFilter]
 [ProtobufFormatter]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldBearer)]
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldAPIKeys)]
 [Route("vss")]
 public class VSSController : Controller, IVSSAPI
 {

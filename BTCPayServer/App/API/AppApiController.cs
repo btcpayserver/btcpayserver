@@ -5,44 +5,43 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.App.Models;
 using BTCPayServer.Configuration;
+using BTCPayServer.Controllers.Greenfield;
 using BTCPayServer.Data;
 using BTCPayServer.Fido2;
 using BTCPayServer.Logging;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
-using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 
 namespace BTCPayServer.App.API;
 
 [ApiController]
-[Authorize(AuthenticationSchemes = AuthenticationSchemes.GreenfieldBearer)]
+[Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
 [Route("btcpayapp")]
 public partial class AppApiController(
+    IHttpContextAccessor httpContextAccessor,
+    GreenfieldUsersController greenfieldUsersController,
     StoreRepository storeRepository,
     AppService appService,
     EventAggregator eventAggregator,
     CallbackGenerator callbackGenerator,
     SignInManager<ApplicationUser> signInManager,
     UserManager<ApplicationUser> userManager,
-    RoleManager<IdentityRole> roleManager,
-    TimeProvider timeProvider,
+    APIKeyRepository apiKeyRepository,
     SettingsRepository settingsRepository,
     UriResolver uriResolver,
     DefaultRulesCollection defaultRules,
     RateFetcher rateFactory,
     UserLoginCodeService userLoginCodeService,
-    Logs logs,
-    BTCPayServerOptions btcpayOptions,
-    IOptionsMonitor<BearerTokenOptions> bearerTokenOptions)
+    Logs logs)
     : Controller
 {
     private readonly ILogger _logger = logs.PayServer;

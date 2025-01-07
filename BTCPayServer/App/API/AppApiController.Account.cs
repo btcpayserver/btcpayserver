@@ -5,105 +5,67 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client;
 using BTCPayServer.Client.App.Models;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Plugins.PointOfSale;
+using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using Microsoft.AspNetCore.Authentication.BearerToken;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
+using NBitcoin.DataEncoders;
 using NicolasDorier.RateLimits;
+using LoginRequest = BTCPayServer.Client.App.Models.LoginRequest;
 using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
+using ResetPasswordRequest = BTCPayServer.Client.App.Models.ResetPasswordRequest;
 using SignInResult = Microsoft.AspNetCore.Identity.SignInResult;
 
 namespace BTCPayServer.App.API;
 
 public partial class AppApiController
 {
-    private const string Scheme = AuthenticationSchemes.GreenfieldBearer;
-    
     [AllowAnonymous]
     [HttpPost("register")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<Results<Ok<AccessTokenResponse>, Ok<ApplicationUserData>, EmptyHttpResult, ProblemHttpResult>> Register(CreateApplicationUserRequest signup)
+    public async Task<IActionResult> Register(CreateApplicationUserRequest signup)
     {
+        greenfieldUsersController.ControllerContext.HttpContext = httpContextAccessor.HttpContext;
+        var res = await greenfieldUsersController.CreateUser(signup);
+        var user = await userManager.FindByEmailAsync(signup.Email);
+        if (res is not CreatedAtActionResult || user is null) return res;
+
+        SignInResult? signInResult = null;
         var policies = await settingsRepository.GetSettingAsync<PoliciesSettings>() ?? new PoliciesSettings();
-        if (policies.LockSubscription)
-            return TypedResults.Problem("This instance does not allow public user registration", statusCode: 401);
-            
-        var errorMessage = "Invalid signup attempt.";
-        if (ModelState.IsValid)
+        var requiresApproval = policies.RequiresUserApproval && !user.Approved;
+        var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
+        if (!requiresConfirmedEmail && !requiresApproval)
         {
-            var isFirstAdmin = !(await userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();
-            var user = new ApplicationUser
-            {
-                UserName = signup.Email,
-                Email = signup.Email,
-                RequiresEmailConfirmation = policies.RequiresConfirmedEmail,
-                RequiresApproval = policies.RequiresUserApproval,
-                Created = DateTimeOffset.UtcNow,
-                Approved = isFirstAdmin // auto-approve first admin and users created by an admin
-            };
-            
-            var result = await userManager.CreateAsync(user, signup.Password);
-            if (result.Succeeded)
-            {
-                if (isFirstAdmin)
-                {
-                    await roleManager.CreateAsync(new IdentityRole(Roles.ServerAdmin));
-                    await userManager.AddToRoleAsync(user, Roles.ServerAdmin);
-                    var settings = await settingsRepository.GetSettingAsync<ThemeSettings>() ?? new ThemeSettings();
-                    if (settings.FirstRun)
-                    {
-                        settings.FirstRun = false;
-                        await settingsRepository.UpdateSetting(settings);
-                    }
-
-                    await settingsRepository.FirstAdminRegistered(policies, btcpayOptions.UpdateUrl != null, btcpayOptions.DisableRegistration, logs);
-                }
-
-                eventAggregator.Publish(await UserEvent.Registered.Create(user, callbackGenerator, Request));
-
-                SignInResult? signInResult = null;
-                var requiresApproval = policies.RequiresUserApproval && !user.Approved;
-                var requiresConfirmedEmail = policies.RequiresConfirmedEmail && !user.EmailConfirmed;
-                if (!requiresConfirmedEmail && !requiresApproval)
-                {
-                    signInManager.AuthenticationScheme = Scheme;
-                    signInResult = await signInManager.PasswordSignInAsync(signup.Email, signup.Password, true, true);
-                }
-                
-                if (signInResult?.Succeeded is true)
-                {
-                    _logger.LogInformation("User {Email} logged in", user.Email);
-                    return TypedResults.Empty;
-                }
-                var response = new ApplicationUserData
-                {
-                    Email = user.Email,
-                    RequiresApproval = requiresApproval,
-                    RequiresEmailConfirmation = requiresConfirmedEmail
-                };
-                return TypedResults.Ok(response);
-            }
-            errorMessage = result.ToString();
+            signInResult = await signInManager.PasswordSignInAsync(signup.Email, signup.Password, true, true);
         }
-        
-        return TypedResults.Problem(errorMessage, statusCode: 401);
+            
+        if (signInResult?.Succeeded is true)
+        {
+            _logger.LogInformation("User {Email} logged in", user.Email);
+            return await UserAuthenticated(user);
+        }
+        return Ok(new ApplicationUserData
+        {
+            Email = user.Email,
+            RequiresApproval = requiresApproval,
+            RequiresEmailConfirmation = requiresConfirmedEmail
+        });
     }
-    
+
     [AllowAnonymous]
     [HttpPost("login")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> Login(LoginRequest login)
+    public async Task<IActionResult> Login(LoginRequest login)
     {
         var errorMessage = "Invalid login attempt.";
         if (ModelState.IsValid)
@@ -111,11 +73,8 @@ public partial class AppApiController
             // Require the user to pass basic checks (approval, confirmed email, not disabled) before they can log on
             var user = await userManager.FindByEmailAsync(login.Email);
             if (!UserService.TryCanLogin(user, out var message))
-            {
-                return TypedResults.Problem(message, statusCode: 401);
-            }
+                return this.CreateAPIError(401, "unauthenticated", message);
 
-            signInManager.AuthenticationScheme = Scheme;
             var signInResult = await signInManager.PasswordSignInAsync(login.Email, login.Password, true, true);
             if (signInResult.RequiresTwoFactor)
             {
@@ -134,19 +93,18 @@ public partial class AppApiController
             else if (signInResult.Succeeded)
             {
                 _logger.LogInformation("User {Email} logged in", user.Email);
-                return TypedResults.Empty;
+                return await UserAuthenticated(user);
             }
 
             errorMessage = signInResult.ToString();
         }
-
-        return TypedResults.Problem(errorMessage, statusCode: 401);
+        return this.CreateAPIError(401, "unauthenticated", errorMessage);
     }
     
     [AllowAnonymous]
     [HttpPost("login/code")]
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<Results<Ok<AccessTokenResponse>, EmptyHttpResult, ProblemHttpResult>> LoginWithCode([FromBody] string loginCode)
+    public async Task<IActionResult> LoginWithCode([FromBody] string loginCode)
     {
         const string errorMessage = "Invalid login attempt.";
         if (!string.IsNullOrEmpty(loginCode))
@@ -155,47 +113,14 @@ public partial class AppApiController
             var userId = userLoginCodeService.Verify(code);
             var user = userId is null ? null : await userManager.FindByIdAsync(userId);
             if (!UserService.TryCanLogin(user, out var message))
-            {
-                return TypedResults.Problem(message, statusCode: 401);
-            }
+                return this.CreateAPIError(401, "unauthenticated", message);
 
-            signInManager.AuthenticationScheme = Scheme;
             await signInManager.SignInAsync(user, false, "LoginCode");
 
             _logger.LogInformation("User {Email} logged in with a login code", user.Email);
-            return TypedResults.Empty;
+            return await UserAuthenticated(user);
         }
-
-        return TypedResults.Problem(errorMessage, statusCode: 401);
-    }
-
-    [AllowAnonymous]
-    [HttpPost("refresh")]
-    [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<Results<Ok<AccessTokenResponse>, UnauthorizedHttpResult, SignInHttpResult, ChallengeHttpResult>> Refresh(RefreshRequest refresh)
-    {
-        var authenticationTicket = bearerTokenOptions.Get(Scheme).RefreshTokenProtector.Unprotect(refresh.RefreshToken);
-        var expiresUtc = authenticationTicket?.Properties.ExpiresUtc;
-
-        ApplicationUser? user = null;
-        int num;
-        if (expiresUtc.HasValue)
-        {
-            DateTimeOffset valueOrDefault = expiresUtc.GetValueOrDefault();
-            num = timeProvider.GetUtcNow() >= valueOrDefault ? 1 : 0;
-        }
-        else
-            num = 1;
-        bool flag = num != 0;
-        if (!flag)
-        {
-            signInManager.AuthenticationScheme = Scheme;
-            user = await signInManager.ValidateSecurityStampAsync(authenticationTicket?.Principal);
-        }
-        
-        return user != null
-            ? TypedResults.SignIn(await signInManager.CreateUserPrincipalAsync(user), authenticationScheme: Scheme)
-            : TypedResults.Challenge(authenticationSchemes: new[] { Scheme });
+        return this.CreateAPIError(401, "unauthenticated", errorMessage);
     }
     
     [AllowAnonymous]
@@ -203,16 +128,10 @@ public partial class AppApiController
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<IActionResult> AcceptInvite(AcceptInviteRequest invite)
     {
-        if (string.IsNullOrEmpty(invite.UserId) || string.IsNullOrEmpty(invite.Code))
-        {
-            return NotFound();
-        }
+        if (string.IsNullOrEmpty(invite.UserId) || string.IsNullOrEmpty(invite.Code)) return NotFound();
 
         var user = await userManager.FindByInvitationTokenAsync<ApplicationUser>(invite.UserId, Uri.UnescapeDataString(invite.Code));
-        if (user == null)
-        {
-            return NotFound();
-        }
+        if (user == null) return NotFound();
             
         var requiresEmailConfirmation = user is { RequiresEmailConfirmation: true, EmailConfirmed: false };
         var requiresUserApproval = user is { RequiresApproval: true, Approved: false };
@@ -247,16 +166,16 @@ public partial class AppApiController
     }
 
     [HttpPost("logout")]
-    public async Task<IResult> Logout()
+    public async Task<IActionResult> Logout()
     {
         var user = await userManager.GetUserAsync(User);
         if (user != null)
         {
             await signInManager.SignOutAsync();
             _logger.LogInformation("User {Email} logged out", user.Email);
-            return Results.Ok();
+            return Ok();
         }
-        return Results.Unauthorized();
+        return Unauthorized();
     }
 
     [HttpGet("user")]
@@ -306,7 +225,7 @@ public partial class AppApiController
     [AllowAnonymous]
     [HttpPost("forgot-password")]
     [RateLimitsFilter(ZoneLimits.ForgotPassword, Scope = RateLimitsScope.RemoteAddress)]
-    public async Task<IResult> ForgotPassword(ResetPasswordRequest resetRequest)
+    public async Task<IActionResult> ForgotPassword(ResetPasswordRequest resetRequest)
     {
         var user = await userManager.FindByEmailAsync(resetRequest.Email);
         if (UserService.TryCanLogin(user, out _))
@@ -314,12 +233,12 @@ public partial class AppApiController
             var callbackUri = await callbackGenerator.ForPasswordReset(user, Request);
             eventAggregator.Publish(new UserEvent.PasswordResetRequested(user, callbackUri));
         }
-        return TypedResults.Ok();
+        return Ok();
     }
 
     [AllowAnonymous]
     [HttpPost("reset-password")]
-    public async Task<Results<Ok<AccessTokenResponse>, Ok, UnauthorizedHttpResult, EmptyHttpResult, ProblemHttpResult>> SetPassword(ResetPasswordRequest resetRequest)
+    public async Task<IActionResult> SetPassword(ResetPasswordRequest resetRequest)
     {
         var user = await userManager.FindByEmailAsync(resetRequest.Email);
         var needsInitialPassword = user != null && !await userManager.HasPasswordAsync(user);
@@ -327,7 +246,7 @@ public partial class AppApiController
         if (!UserService.TryCanLogin(user, out var message) && !needsInitialPassword || user == null)
         {
             _logger.LogWarning("User {Email} tried to reset password, but failed: {Message}", user?.Email ?? "(NO EMAIL)", message);
-            return TypedResults.Problem("Invalid request", statusCode: 401);
+            return this.CreateAPIError(401, "unauthenticated", "Invalid request");
         }
 
         IdentityResult result;
@@ -340,20 +259,43 @@ public partial class AppApiController
             result = IdentityResult.Failed(userManager.ErrorDescriber.InvalidToken());
         }
         
-        if (!result.Succeeded) return TypedResults.Problem(result.ToString().Split(": ").Last(), statusCode: 401);
+        if (!result.Succeeded) return this.CreateAPIError(401, "unauthenticated", result.ToString().Split(": ").Last());
         
         // see if we can sign in user after accepting an invitation and setting the password 
         if (needsInitialPassword && UserService.TryCanLogin(user, out _))
         {
-            signInManager.AuthenticationScheme = Scheme;
             var signInResult = await signInManager.PasswordSignInAsync(user.Email!, resetRequest.NewPassword, true, true);
             if (signInResult.Succeeded)
             {
                 _logger.LogInformation("User {Email} logged in", user.Email);
-                return TypedResults.Empty;
+                return await UserAuthenticated(user);
             }
         }
         
-        return TypedResults.Ok();
+        return Ok();
+    }
+
+    private async Task<IActionResult> UserAuthenticated(ApplicationUser user)
+    {
+        var identifier = "BTCPay App";
+        var keys = await apiKeyRepository.GetKeys(new APIKeyRepository.APIKeyQuery { UserId = [user.Id] });
+        var key = keys.FirstOrDefault(k => k.GetBlob()?.ApplicationIdentifier == identifier);
+        if (key == null)
+        {
+            key = new APIKeyData
+            {
+                Id = Encoders.Hex.EncodeData(RandomUtils.GetBytes(20)),
+                Type = APIKeyType.Permanent,
+                UserId = user.Id,
+                Label = identifier
+            };
+            key.SetBlob(new APIKeyBlob
+            {
+                ApplicationIdentifier = identifier,
+                Permissions = [Policies.Unrestricted]
+            });
+            await apiKeyRepository.CreateKey(key);
+        }
+        return Ok(new AuthenticationResponse { AccessToken = key.Id });
     }
 }

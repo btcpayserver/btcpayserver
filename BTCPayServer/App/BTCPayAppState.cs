@@ -351,8 +351,9 @@ public class BTCPayAppState : IHostedService
 
     private void OnNewBlock(NewBlockEvent obj)
     {
-        if (obj.CryptoCode != "BTC") return;
-        _hubContext.Clients.All.NewBlock(obj.Hash.ToString());
+        var info = obj.AdditionalInfo as NBXplorer.Models.NewBlockEvent;
+        if (info?.CryptoCode != "BTC" || info.Hash == null) return;
+        _hubContext.Clients.All.NewBlock(info.Hash.ToString());
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -363,8 +364,6 @@ public class BTCPayAppState : IHostedService
     
     private async Task<bool> IsTracked(TrackedSource trackedSource)
     {
-       
-      
         return true;
     }
 

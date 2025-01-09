@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client.App;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
@@ -21,7 +22,7 @@ using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
 
-namespace BTCPayServer.Controllers;
+namespace BTCPayServer.App;
 
 public class GetBlockchainInfoResponse
 {
@@ -57,11 +58,11 @@ public class GetBlockchainInfoResponse
     public uint256? BestBlockHash { get; set; }
 }
 
-
 public record RPCBlockHeader(uint256 Hash, uint256? Previous, int Height, DateTimeOffset Time, uint256 MerkleRoot)
 {
     public SlimChainedBlock ToSlimChainedBlock() => new(Hash, Previous, Height);
 }
+
 public class BlockHeaders : IEnumerable<RPCBlockHeader>
 {
     public readonly Dictionary<uint256, RPCBlockHeader> ByHashes;
@@ -156,23 +157,23 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
 
     public async Task<decimal> GetFeeRate(int blockTarget)
     {
-        _logger.LogInformation($"Getting fee rate for {blockTarget}");
-       
-      var feeProvider =  _feeProviderFactory.CreateFeeProvider( _network);
-      try
-      {
-          return (await feeProvider.GetFeeRateAsync(blockTarget)).SatoshiPerByte;
-      }
-      finally
-      {
-          _logger.LogInformation($"Getting fee rate for {blockTarget} done");
-      }
+        _logger.LogInformation("Getting fee rate for {BlockTarget}", blockTarget);
+        var feeProvider =  _feeProviderFactory.CreateFeeProvider( _network);
+        try
+        {
+            return (await feeProvider.GetFeeRateAsync(blockTarget)).SatoshiPerByte;
+        }
+        finally
+        {
+            _logger.LogInformation("Getting fee rate for {BlockTarget} done", blockTarget);
+        }
     }
 
-    public async Task<BestBlockResponse> GetBestBlock()
+    public async Task<BestBlockResponse?> GetBestBlock()
     {
-        _logger.LogInformation($"Getting best block");
+        _logger.LogInformation("Getting best block");
         var bcInfo = await _explorerClient.RPCClient.GetBlockchainInfoAsyncEx();
+        if (bcInfo?.BestBlockHash is null) return null;
         var bh = await GetBlockHeader(bcInfo.BestBlockHash);
         _logger.LogInformation("Getting best block done");
         return new BestBlockResponse
@@ -193,22 +194,21 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     {
         var cancellationToken = Context.ConnectionAborted;
         var outpoints = outpointsRaw.Select(OutPoint.Parse).ToArray();
-        var ts = TrackedSource.Parse(identifier,_explorerClient.Network);
-      
+
         await using var conn = await _connectionFactory.OpenConnection();
         var txs = await conn.QueryAsync("""
-                                        SELECT txs.blk_height, txs.blk_id, txs.raw FROM txs 
-                                        WHERE code = @code AND 
-                                              (tx_id = ANY(@tx_ids) OR 
-                                               tx_id IN (SELECT DISTINCT(ins.tx_id) 
-                                                         FROM ins
-                                                         INNER JOIN wallets_scripts 
-                                                         ON ins.script = wallets_scripts.script
-                                                         WHERE ins.code = @code 
-                                                         AND wallets_scripts.wallet_id = @wallet_id 
-                                                         AND (ins.spent_tx_id || '-' || ins.spent_idx) = ANY(@outpoints))
-                                              )
-                                        """,
+            SELECT txs.blk_height, txs.blk_id, txs.raw FROM txs 
+            WHERE code = @code AND 
+                  (tx_id = ANY(@tx_ids) OR 
+                   tx_id IN (SELECT DISTINCT(ins.tx_id) 
+                             FROM ins
+                             INNER JOIN wallets_scripts 
+                             ON ins.script = wallets_scripts.script
+                             WHERE ins.code = @code 
+                             AND wallets_scripts.wallet_id = @wallet_id 
+                             AND (ins.spent_tx_id || '-' || ins.spent_idx) = ANY(@outpoints))
+                  )
+            """,
             new
             {
                 code = _explorerClient.CryptoCode,
@@ -223,15 +223,12 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
             Transaction = Transaction.Load((byte[])row.raw, _network.NBitcoinNetwork)
         }).ToArray();
         
- 
         var blocksToFetch = data.Where(row => row.BlockHash is not null).Select(row => (uint256.Parse(row.BlockHash!), row.Height!)).DistinctBy(x => x.Item1).ToArray();
-        
-        
         var batch = _explorerClient.RPCClient.PrepareBatch();
         var headersTask = blocksToFetch.ToDictionary(result => result.Item1, result =>
                 (batch.GetBlockHeaderAsync(result.Item1, cancellationToken), result.Item2! ));
         await batch.SendBatchAsync(cancellationToken);
-        await Task.WhenAll(headersTask.Values.Select(kv => (Task) kv.Item1));
+        await Task.WhenAll(headersTask.Values.Select(Task (kv) => kv.Item1));
         return new TxInfoResponse
         {
             Txs = data.ToDictionary(tx => tx.Transaction.GetHash().ToString(), tx => new TransactionResponse
@@ -247,20 +244,24 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     public async Task<string> DeriveScript(string identifier)
     {
         var cancellationToken = Context.ConnectionAborted;
-        var ts = TrackedSource.Parse(identifier,_explorerClient.Network ) as DerivationSchemeTrackedSource;
-        var kpi = await _explorerClient.GetUnusedAsync(ts.DerivationStrategy, DerivationFeature.Deposit, 0, true, cancellationToken);
+        var ts = TrackedSource.Parse(identifier,_explorerClient.Network) as DerivationSchemeTrackedSource;
+        var kpi = await _explorerClient.GetUnusedAsync(ts!.DerivationStrategy, DerivationFeature.Deposit, 0, true, cancellationToken);
         return kpi.ScriptPubKey.ToHex();
     }
 
     public async Task TrackScripts(string identifier, string[] scripts)
     {
-        _logger.LogInformation($"Tracking {scripts.Length} scripts for {identifier}");
+        _logger.LogInformation("Tracking {ScriptsLength} scripts for {Identifier}", scripts.Length, identifier);
         
-        var ts = TrackedSource.Parse(identifier,_explorerClient.Network ) as GroupTrackedSource;
-        var s = scripts.Select(Script.FromHex).Select(script => script.GetDestinationAddress(_explorerClient.Network.NBitcoinNetwork)).Select(address => address.ToString()).ToArray();
-        await _explorerClient.AddGroupAddressAsync(_explorerClient.CryptoCode,ts.GroupId, s);
+        var ts = TrackedSource.Parse(identifier,_explorerClient.Network) as GroupTrackedSource;
+        var s = scripts
+            .Select(Script.FromHex)
+            .Select(script => script.GetDestinationAddress(_explorerClient.Network.NBitcoinNetwork))
+            .Select(address => address?.ToString())
+            .ToArray();
+        await _explorerClient.AddGroupAddressAsync(_explorerClient.CryptoCode, ts!.GroupId, s);
         
-        _logger.LogInformation($"Tracking {scripts.Length} scripts for {identifier} done ");
+        _logger.LogInformation("Tracking {ScriptsLength} scripts for {Identifier} done ", scripts.Length, identifier);
     }
 
     public async Task<string> UpdatePsbt(string[] identifiers, string psbt)
@@ -310,10 +311,8 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         foreach (string identifier in identifiers)
         {
             var ts = TrackedSource.Parse(identifier,_explorerClient.Network);
-            if (ts is null)
-            {
-                continue;
-            }
+            if (ts is null) continue;
+
             var txs = await _explorerClient.GetTransactionsAsync(ts);
             
             var items = txs.ConfirmedTransactions.Transactions
@@ -327,7 +326,7 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
     }
     public async Task SendInvoiceUpdate( LightningInvoice lightningInvoice)
     {
-        await _appState. InvoiceUpdate(Context.ConnectionId, lightningInvoice);
+        await _appState.InvoiceUpdate(Context.ConnectionId, lightningInvoice);
     }
 
     public async Task<long?> GetCurrentMaster()

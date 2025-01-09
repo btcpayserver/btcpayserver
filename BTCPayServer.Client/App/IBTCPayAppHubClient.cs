@@ -39,7 +39,7 @@ public interface IBTCPayAppHubServer
     Task<AppHandshakeResponse> Handshake(AppHandshake request);
     Task<bool> BroadcastTransaction(string tx);
     Task<decimal> GetFeeRate(int blockTarget);
-    Task<BestBlockResponse> GetBestBlock();
+    Task<BestBlockResponse?> GetBestBlock();
     Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string identifier, string[] txIds, string[] outpoints);
     Task<string> DeriveScript(string identifier);
     Task TrackScripts(string identifier, string[] scripts);

@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.App.Models;
@@ -35,7 +34,7 @@ public partial class AppApiController
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<IActionResult> Register(CreateApplicationUserRequest signup)
     {
-        greenfieldUsersController.ControllerContext.HttpContext = httpContextAccessor.HttpContext;
+        greenfieldUsersController.ControllerContext.HttpContext = httpContextAccessor.HttpContext!;
         var res = await greenfieldUsersController.CreateUser(signup);
         var user = await userManager.FindByEmailAsync(signup.Email);
         if (res is not CreatedAtActionResult || user is null) return res;
@@ -67,38 +66,39 @@ public partial class AppApiController
     [RateLimitsFilter(ZoneLimits.Login, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<IActionResult> Login(LoginRequest login)
     {
-        var errorMessage = "Invalid login attempt.";
-        if (ModelState.IsValid)
+        if (string.IsNullOrEmpty(login.Email))
+            ModelState.AddModelError(nameof(login.Email), "Missing email");
+        if (string.IsNullOrEmpty(login.Password))
+            ModelState.AddModelError(nameof(login.Password), "Missing password");
+        if (!ModelState.IsValid)
+            return this.CreateValidationError(ModelState);
+        
+        // Require the user to pass basic checks (approval, confirmed email, not disabled) before they can log on
+        var user = await userManager.FindByEmailAsync(login.Email!);
+        if (!UserService.TryCanLogin(user, out var message))
+            return this.CreateAPIError(401, "unauthenticated", message);
+
+        var signInResult = await signInManager.PasswordSignInAsync(login.Email!, login.Password!, true, true);
+        if (signInResult.RequiresTwoFactor)
         {
-            // Require the user to pass basic checks (approval, confirmed email, not disabled) before they can log on
-            var user = await userManager.FindByEmailAsync(login.Email);
-            if (!UserService.TryCanLogin(user, out var message))
-                return this.CreateAPIError(401, "unauthenticated", message);
-
-            var signInResult = await signInManager.PasswordSignInAsync(login.Email, login.Password, true, true);
-            if (signInResult.RequiresTwoFactor)
-            {
-                if (!string.IsNullOrEmpty(login.TwoFactorCode))
-                    signInResult = await signInManager.TwoFactorAuthenticatorSignInAsync(login.TwoFactorCode, true, true);
-                else if (!string.IsNullOrEmpty(login.TwoFactorRecoveryCode))
-                    signInResult = await signInManager.TwoFactorRecoveryCodeSignInAsync(login.TwoFactorRecoveryCode);
-            }
-            
-            // TODO: Add FIDO and LNURL Auth
-            
-            if (signInResult.IsLockedOut)
-            {
-                _logger.LogWarning("User {Email} tried to log in, but is locked out", user.Email);
-            }
-            else if (signInResult.Succeeded)
-            {
-                _logger.LogInformation("User {Email} logged in", user.Email);
-                return await UserAuthenticated(user);
-            }
-
-            errorMessage = signInResult.ToString();
+            if (!string.IsNullOrEmpty(login.TwoFactorCode))
+                signInResult = await signInManager.TwoFactorAuthenticatorSignInAsync(login.TwoFactorCode, true, true);
+            else if (!string.IsNullOrEmpty(login.TwoFactorRecoveryCode))
+                signInResult = await signInManager.TwoFactorRecoveryCodeSignInAsync(login.TwoFactorRecoveryCode);
         }
-        return this.CreateAPIError(401, "unauthenticated", errorMessage);
+        
+        // TODO: Add FIDO and LNURL Auth
+        
+        if (signInResult.IsLockedOut)
+        {
+            _logger.LogWarning("User {Email} tried to log in, but is locked out", user.Email);
+        }
+        else if (signInResult.Succeeded)
+        {
+            _logger.LogInformation("User {Email} logged in", user.Email);
+            return await UserAuthenticated(user);
+        }
+        return this.CreateAPIError(401, "unauthenticated", signInResult.ToString());
     }
     
     [AllowAnonymous]

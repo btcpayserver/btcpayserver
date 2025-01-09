@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Configuration;
@@ -33,6 +34,12 @@ namespace BTCPayServer.Plugins
                 !PluginManager.IsExceptionByPlugin(exception, out var pluginName))
                 return ValueTask.FromResult(false);
             _logs.Configuration.LogError(exception, $"Unhandled exception caused by plugin '{pluginName}', disabling it and restarting...");
+
+            if (Debugger.IsAttached)
+            {
+                _logs.Configuration.LogWarning("Debugger attached detected, so we didn't disable the plugin and do not restart the server");
+                return ValueTask.FromResult(false);
+            }
             PluginManager.DisablePlugin(_pluginDir, pluginName);
             _ = Task.Delay(3000).ContinueWith((t) => _applicationLifetime.StopApplication());
             // Returning true here means we will see Error 500 error message.

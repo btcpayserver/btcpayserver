@@ -10,10 +10,8 @@ public class BTCPayAppPlugin : BaseBTCPayServerPlugin
 {
     public override string Identifier => "BTCPay.App";
     public override string Name => "BTCPay App";
-    
 
-    public override void Execute(IApplicationBuilder applicationBuilder,
-        IServiceProvider applicationBuilderApplicationServices)
+    public override void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
     {
         applicationBuilder.UseBTCPayApp();
     }

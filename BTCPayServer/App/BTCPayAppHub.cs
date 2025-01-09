@@ -349,5 +349,3 @@ public class BTCPayAppHub : Hub<IBTCPayAppHubClient>, IBTCPayAppHubServer
         return await _appState.Handshake(Context.ConnectionId, request);
     }
 }
-
-

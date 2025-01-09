@@ -6,7 +6,6 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.App;
 using BTCPayServer.App.BackupStorage;
 using BTCPayServer.Client.App;
 using BTCPayServer.Data;
@@ -23,13 +22,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Protocol;
 using NBXplorer;
-using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using NewBlockEvent = BTCPayServer.Events.NewBlockEvent;
 
-namespace BTCPayServer.Controllers;
+namespace BTCPayServer.App;
 
 public record ConnectedInstance(
     string UserId,
@@ -50,12 +47,38 @@ public class BTCPayAppState : IHostedService
     private readonly BTCPayNetworkProvider _networkProvider;
     private readonly EventAggregator _eventAggregator;
     private readonly IServiceProvider _serviceProvider;
+    private readonly DerivationSchemeParser _derivationSchemeParser;
+    private readonly ExplorerClient _explorerClient;
+    private CancellationTokenSource _cts;
     private CompositeDisposable? _compositeDisposable;
-    private ExplorerClient? ExplorerClient { get; set; }
-    private DerivationSchemeParser? _derivationSchemeParser;
+    internal ConcurrentDictionary<string, ConnectedInstance> Connections { get; set; } = new();
+    private static readonly SemaphoreSlim _lock = new(1, 1);
+    public event EventHandler<(string, LightningInvoice)>? OnInvoiceUpdate;
 
+    public BTCPayAppState(
+        IMemoryCache memoryCache,
+        ApplicationDbContextFactory dbContextFactory,
+        StoreRepository storeRepository,
+        IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext,
+        ILogger<BTCPayAppState> logger,
+        ExplorerClientProvider explorerClientProvider,
+        BTCPayNetworkProvider networkProvider,
+        EventAggregator eventAggregator, IServiceProvider serviceProvider)
+    {
+        _memoryCache = memoryCache;
+        _dbContextFactory = dbContextFactory;
+        _storeRepository = storeRepository;
+        _hubContext = hubContext;
+        _logger = logger;
+        _explorerClientProvider = explorerClientProvider;
+        _networkProvider = networkProvider;
+        _eventAggregator = eventAggregator;
+        _serviceProvider = serviceProvider;
 
-    public ConcurrentDictionary<string, ConnectedInstance> Connections { get; set; } = new();
+        _cts = new CancellationTokenSource();
+        _explorerClient = _explorerClientProvider.GetExplorerClient("BTC");
+        _derivationSchemeParser = new DerivationSchemeParser(_networkProvider.BTC);
+    }
 
     private async Task<long?> GetGracefulDisconnectDeviceIdentifier(string userId)
     {
@@ -66,12 +89,7 @@ public class BTCPayAppState : IHostedService
                     data.Key == "masterDevice").ToListAsync())
                 .ToDictionary(data => data.UserId, data => long.Parse(data.Value));
         });
-        if (dict?.TryGetValue(userId, out var deviceIdentifier) is true)
-        {
-            return deviceIdentifier;
-        }
-
-        return null;
+        return dict?.TryGetValue(userId, out var deviceIdentifier) is true ? deviceIdentifier : null;
     }
 
     private async Task RemoveGracefulDisconnectDeviceIdentifier(string userId)
@@ -99,7 +117,7 @@ public class BTCPayAppState : IHostedService
             data.Key == "masterDevice" && data.UserId == userId);
         if (entity is null)
         {
-            entity = new AppStorageItemData()
+            entity = new AppStorageItemData
             {
                 Key = "masterDevice", UserId = userId, Value = Encoding.UTF8.GetBytes(deviceIdentifier.ToString()),
             };
@@ -109,43 +127,12 @@ public class BTCPayAppState : IHostedService
         }
     }
 
-    private static readonly SemaphoreSlim _lock = new(1, 1);
-
-    private CancellationTokenSource? _cts;
-
-    public event EventHandler<(string, LightningInvoice)>? OnInvoiceUpdate;
-
-    public BTCPayAppState(
-        IMemoryCache memoryCache,
-        ApplicationDbContextFactory dbContextFactory,
-        StoreRepository storeRepository,
-        IHubContext<BTCPayAppHub, IBTCPayAppHubClient> hubContext,
-        ILogger<BTCPayAppState> logger,
-        ExplorerClientProvider explorerClientProvider,
-        BTCPayNetworkProvider networkProvider,
-        EventAggregator eventAggregator, IServiceProvider serviceProvider)
-    {
-        _memoryCache = memoryCache;
-        _dbContextFactory = dbContextFactory;
-        _storeRepository = storeRepository;
-        _hubContext = hubContext;
-        _logger = logger;
-        _explorerClientProvider = explorerClientProvider;
-        _networkProvider = networkProvider;
-        _eventAggregator = eventAggregator;
-        _serviceProvider = serviceProvider;
-    }
-
     public Task StartAsync(CancellationToken cancellationToken)
     {
-        _cts ??= new CancellationTokenSource();
-        ExplorerClient = _explorerClientProvider.GetExplorerClient("BTC");
-        _derivationSchemeParser = new DerivationSchemeParser(_networkProvider.BTC);
         _compositeDisposable = new CompositeDisposable();
         _compositeDisposable.Add(_eventAggregator.Subscribe<NewBlockEvent>(OnNewBlock));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<NewOnChainTransactionEvent>(OnNewTransaction));
-        _compositeDisposable.Add(
-            _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
+        _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(UserNotificationsUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<InvoiceEvent>(InvoiceChangedEvent));
         // User events
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<UserEvent.Updated>(UserUpdatedEvent));
@@ -164,6 +151,8 @@ public class BTCPayAppState : IHostedService
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppEvent.Created>(AppCreatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppEvent.Updated>(AppUpdatedEvent));
         _compositeDisposable.Add(_eventAggregator.SubscribeAsync<AppEvent.Deleted>(AppDeletedEvent));
+        
+        _cts = new CancellationTokenSource();
         _ = UpdateNodeInfo();
         return Task.CompletedTask;
     }
@@ -295,13 +284,13 @@ public class BTCPayAppState : IHostedService
             try
             {
                 var res = await _serviceProvider.GetRequiredService<PaymentMethodHandlerDictionary>()
-                    .GetLightningHandler(ExplorerClient.CryptoCode).GetNodeInfo(
-                        new LightningPaymentMethodConfig()
+                    .GetLightningHandler(_explorerClient.CryptoCode).GetNodeInfo(
+                        new LightningPaymentMethodConfig
                         {
                             InternalNodeRef = LightningPaymentMethodConfig.InternalNode
                         },
                         null,
-                        false, false);
+                        false);
                 if (res.Any())
                 {
                     var newInf = res.First();
@@ -363,19 +352,19 @@ public class BTCPayAppState : IHostedService
         return Task.CompletedTask;
     }
     
-    private async Task<bool> IsTracked(TrackedSource trackedSource)
+    private Task<bool> IsTracked(TrackedSource trackedSource)
     {
-        return true;
+        return Task.FromResult(true);
     }
 
     public async Task<AppHandshakeResponse> Handshake(string contextConnectionId, AppHandshake handshake)
     {
         var ack = new List<string>();
-        foreach (var ts in handshake.Identifiers)
+        foreach (var ts in handshake.Identifiers ?? [])
         {
             try
             {
-                if (TrackedSource.TryParse(ts, out var trackedSource, ExplorerClient.Network) && await IsTracked(trackedSource))
+                if (TrackedSource.TryParse(ts, out var trackedSource, _explorerClient.Network) && await IsTracked(trackedSource))
                 {
                     ack.Add(ts);
                     await AddToGroup(ts, contextConnectionId);
@@ -389,7 +378,7 @@ public class BTCPayAppState : IHostedService
             }
         }
 
-        return new AppHandshakeResponse() {IdentifiersAcknowledged = ack.ToArray()};
+        return new AppHandshakeResponse {IdentifiersAcknowledged = ack.ToArray()};
     }
 
     public async Task<Dictionary<string, string>> Pair(string contextConnectionId, PairRequest request)
@@ -399,7 +388,7 @@ public class BTCPayAppState : IHostedService
         {
             if (derivation.Value is null)
             {
-                var id = await ExplorerClient.CreateGroupAsync();
+                var id = await _explorerClient.CreateGroupAsync();
 
                 result.Add(derivation.Key, id.TrackedSource);
             }
@@ -438,18 +427,16 @@ public class BTCPayAppState : IHostedService
 
             if (connectedInstance.DeviceIdentifier == null)
             {
-                _logger.LogInformation("DeviceMasterSignal called with device identifier {deviceIdentifier}",
+                _logger.LogInformation("DeviceMasterSignal called with device identifier {DeviceIdentifier}",
                     deviceIdentifier);
                 connectedInstance = connectedInstance with {DeviceIdentifier = deviceIdentifier};
                 Connections[contextConnectionId] = connectedInstance;
-                
             }
 
             if (connectedInstance.Master == active)
             {
                 _logger.LogInformation("DeviceMasterSignal called with same active state");
                 result = true;
-                
                 return result;
             }
             else if (active)
@@ -533,7 +520,7 @@ public class BTCPayAppState : IHostedService
             .NotifyNetwork(_networkProvider.BTC.NBitcoinNetwork.ToString());
 
         var groups = (await _storeRepository.GetStoresByUserId(userId)).Select(store => store.Id).ToArray()
-            .Concat(new[] {userId});
+            .Concat([userId]);
 
         foreach (var group in groups)
         {
@@ -580,14 +567,11 @@ public class BTCPayAppState : IHostedService
         }
     }
 
-    public async Task<long?> GetCurrentMaster(string contextConnectionId)
+    public Task<long?> GetCurrentMaster(string contextConnectionId)
     {
-        if (Connections.TryGetValue(contextConnectionId, out var connectedInstance) && connectedInstance.Master)
-        {
-            return connectedInstance.DeviceIdentifier;
-        }
-
-        return null;
+        return Task.FromResult(Connections.TryGetValue(contextConnectionId, out var connectedInstance) && connectedInstance.Master
+            ? connectedInstance.DeviceIdentifier
+            : null);
     }
 
     public async Task<bool> IsMaster(string userId, long deviceIdentifier)

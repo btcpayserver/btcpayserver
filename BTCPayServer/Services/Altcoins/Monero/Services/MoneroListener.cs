@@ -309,7 +309,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                         });
                 return result;
             }
-            catch (JsonRpcClient.JsonRpcApiException e)
+            catch (JsonRpcClient.JsonRpcApiException)
             {
                 return null;
             }

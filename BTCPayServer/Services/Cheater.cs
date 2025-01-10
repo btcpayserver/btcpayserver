@@ -27,11 +27,6 @@ namespace BTCPayServer.Services
             return _prov.GetExplorerClient(cryptoCode)?.RPCClient;
         }
 
-        public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
-        {
-            await _invoiceRepository.UpdateInvoiceExpiry(invoiceId, seconds);
-        }
-
         async Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
             var liquid = _prov.GetNetwork("LBTC");

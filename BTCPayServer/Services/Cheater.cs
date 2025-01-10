@@ -33,7 +33,11 @@ namespace BTCPayServer.Services
             if (liquid is not null)
             {
                 var lbtcrpc = GetCashCow(liquid.CryptoCode);
-                await lbtcrpc.SendCommandAsync("rescanblockchain");
+                try
+                {
+                    await lbtcrpc.SendCommandAsync("rescanblockchain");
+                }
+                catch { goto next; }
                 var elements = _prov.NetworkProviders.GetAll().OfType<Plugins.Altcoins.ElementsBTCPayNetwork>();
                 foreach (Plugins.Altcoins.ElementsBTCPayNetwork element in elements)
                 {
@@ -50,8 +54,12 @@ namespace BTCPayServer.Services
                     }
                 }
             }
-
-            await Task.WhenAll(_prov.GetAll().Select(o => o.Item2.RPCClient.ScanRPCCapabilitiesAsync()));
+            next:
+            try
+            {
+                await Task.WhenAll(_prov.GetAll().Select(o => o.Item2.RPCClient.ScanRPCCapabilitiesAsync()));
+            }
+            catch { }
         }
 
         Task IHostedService.StopAsync(CancellationToken cancellationToken)

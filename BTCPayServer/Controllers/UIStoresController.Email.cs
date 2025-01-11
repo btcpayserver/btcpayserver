@@ -179,7 +179,8 @@ public partial class UIStoresController
         var fallbackSettings = emailSender is StoreEmailSender { FallbackSender: { } fallbackSender }
             ? await fallbackSender.GetEmailSettings()
             : null;
-        return View(new EmailsViewModel(data, fallbackSettings));
+        var settings = data != fallbackSettings ? data : new EmailSettings();
+        return View(new EmailsViewModel(settings, fallbackSettings));
     }
 
     [HttpPost("{storeId}/email-settings")]

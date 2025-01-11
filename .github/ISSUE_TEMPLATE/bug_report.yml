@@ -62,7 +62,7 @@ body:
     id: terms
     attributes:
       label: Are you sure this is a bug report?
-      description: By submitting this report, you agree that this is not a support or a feature request. For general questions please read our [documentation](https://docs.btcpayserver.org). You can ask questions in [discussions](https://github.com/btcpayserver/btcpayserver/discussions) and [on our community chat](https://chat.btcpayserver.org)
+      description: By submitting this report, you agree that this is not a support or a feature request. For general questions please read our [documentation](https://docs.btcpayserver.org). You can ask questions in [discussions](https://github.com/btcpayserver/btcpayserver/discussions) and [on our community chat](https://chat.btcpayserver.org) Beware of scammers we will never direct you to third-party sites for support or ask for sensitive information your private key especially. Ignore any bots and scammers replies to GitHub issues claiming to be support agents
       options:
         - label: I confirm this is a bug report
           required: true

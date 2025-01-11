@@ -1,5 +1,26 @@
 # Changelog
 
+## 2.0.5
+
+### Bug fixes
+
+* Invoices: Allow admin to see users' invoices (#6517) @dennisreimann
+* UI: Fix inconsistent responsiveness of labels (#6508, #6501) @dennisreimann
+* Greenfield: Receipt options from the GetInvoice route were not reflecting the store's settings (#6483) @dennisreimann
+* Checkout: Fix regression affecting the UI of the SideShift, FixedFloat, and Trocador plugins (#6481) @dennisreimann
+* Fix several incorrectly generated links when `BTCPAY_ROOTPATH` is used (#6506)
+
+### Improvements
+
+* Checkout: Add support link to footer (#6511, #6495) @dennisreimann
+* Pull Payment: Add "Copy Link" button to the action column (#6516, #6515) @dennisreimann
+* Greenfield: Remove authorization requirement for PoS data (#6499) @dennisreimann
+* Greenfield: Resolve store user's image URL @dennisreimann
+
+### Feature removed
+
+* Remove the Lightning Balance histogram from the dashboard (too slow on large instances).
+
 ## 2.0.4
 
 ### New features

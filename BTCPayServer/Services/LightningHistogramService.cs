@@ -10,7 +10,7 @@ namespace BTCPayServer.Services;
 
 public class LightningHistogramService
 {
-    public async Task<HistogramData> GetHistogram(ILightningClient lightningClient, HistogramType type, CancellationToken cancellationToken)
+    public Task<HistogramData> GetHistogram(ILightningClient lightningClient, HistogramType type, CancellationToken cancellationToken)
     {
         var (days, pointCount) = type switch
         {
@@ -29,7 +29,7 @@ public class LightningHistogramService
 
         // TODO: We can't just list all invoices and payments, we need to filter them by date
         // but the client doesn't support that yet so let's just disable this for now. See #6518
-        return null;
+        return Task.FromResult<HistogramData>(null);
     }
 
     private class LnTx

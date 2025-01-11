@@ -234,10 +234,7 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         private async Task OnTransactionUpdated(string cryptoCode, string transactionHash)
         {
             var paymentMethodId = PaymentTypes.CHAIN.GetPaymentMethodId(cryptoCode);
-            var transfer = await _moneroRpcProvider.WalletRpcClients[cryptoCode]
-                .SendCommandAsync<GetTransferByTransactionIdRequest, GetTransferByTransactionIdResponse>(
-                    "get_transfer_by_txid",
-                    new GetTransferByTransactionIdRequest() { TransactionId = transactionHash });
+            var transfer = await GetTransferByTxId(cryptoCode, transactionHash, this.CancellationToken);
 
             var paymentsToUpdate = new List<(PaymentEntity Payment, InvoiceEntity invoice)>();
 
@@ -272,6 +269,49 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
                         _eventAggregator.Publish(new Events.InvoiceNeedUpdateEvent(valueTuples.Key.Id));
                     }
                 }
+            }
+        }
+
+        private async Task<GetTransferByTransactionIdResponse> GetTransferByTxId(string cryptoCode,
+            string transactionHash, CancellationToken cancellationToken)
+        {
+            var accounts = await _moneroRpcProvider.WalletRpcClients[cryptoCode].SendCommandAsync<GetAccountsRequest, GetAccountsResponse>("get_accounts", new GetAccountsRequest(), cancellationToken);
+            var accountIndexes = accounts
+                .SubaddressAccounts
+                .Select(a => new long?(a.AccountIndex))
+                .ToList();
+            if (accountIndexes.Count is 0)
+                accountIndexes.Add(null);
+            var req = accountIndexes
+                .Select(i => GetTransferByTxId(cryptoCode, transactionHash, i))
+                .ToArray();
+            foreach (var task in req)
+            {
+                var result = await task;
+                if (result != null)
+                    return result;
+            }
+
+            return null;
+        }
+
+        private async Task<GetTransferByTransactionIdResponse> GetTransferByTxId(string cryptoCode, string transactionHash, long? accountIndex)
+        {
+            try
+            {
+                var result = await _moneroRpcProvider.WalletRpcClients[cryptoCode]
+                    .SendCommandAsync<GetTransferByTransactionIdRequest, GetTransferByTransactionIdResponse>(
+                        "get_transfer_by_txid",
+                        new GetTransferByTransactionIdRequest()
+                        {
+                            TransactionId = transactionHash,
+                            AccountIndex = accountIndex
+                        });
+                return result;
+            }
+            catch (JsonRpcClient.JsonRpcApiException)
+            {
+                return null;
             }
         }
 

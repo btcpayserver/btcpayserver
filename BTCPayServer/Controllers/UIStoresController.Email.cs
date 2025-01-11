@@ -236,7 +236,8 @@ public partial class UIStoresController
             await _storeRepo.UpdateStore(store);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
         }
-        if (useCustomSMTP)
+        var unsetCustomSMTP = !useCustomSMTP && store.GetStoreBlob().EmailSettings is not null;
+        if (useCustomSMTP || unsetCustomSMTP)
         {
             if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
@@ -249,7 +250,7 @@ public partial class UIStoresController
             {
                 model.Settings.Password = storeBlob.EmailSettings.Password;
             }
-            storeBlob.EmailSettings = model.Settings;
+            storeBlob.EmailSettings = unsetCustomSMTP ? null : model.Settings;
             store.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(store);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings modified"].Value;

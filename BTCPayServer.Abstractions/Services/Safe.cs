@@ -2,6 +2,7 @@ using System.Web;
 using Ganss.Xss;
 using Microsoft.AspNetCore.Html;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.VisualBasic;
 
 namespace BTCPayServer.Abstractions.Services
 {
@@ -10,35 +11,13 @@ namespace BTCPayServer.Abstractions.Services
         private readonly IHtmlHelper _htmlHelper;
         private readonly IJsonHelper _jsonHelper;
         private readonly HtmlSanitizer _htmlSanitizer;
-        private readonly HtmlSanitizer _metaSanitizer;
 
-        private bool isHtmlModified;
-
-        public Safe(IHtmlHelper htmlHelper, IJsonHelper jsonHelper, HtmlSanitizer htmlSanitizer, HtmlSanitizer metaSanitizer)
+        public Safe(IHtmlHelper htmlHelper, IJsonHelper jsonHelper, HtmlSanitizer htmlSanitizer)
         {
             _htmlHelper = htmlHelper;
             _jsonHelper = jsonHelper;
             _htmlSanitizer = htmlSanitizer;
 
-            _metaSanitizer = metaSanitizer;
-            _metaSanitizer.AllowedTags.Clear();
-            _metaSanitizer.AllowedTags.Add("meta");
-
-            _metaSanitizer.AllowedAttributes.Clear();
-            _metaSanitizer.AllowedAttributes.Add("name");
-            _metaSanitizer.AllowedAttributes.Add("http-equiv");
-            _metaSanitizer.AllowedAttributes.Add("content");
-            _metaSanitizer.AllowedAttributes.Add("value");
-            _metaSanitizer.AllowedAttributes.Add("property");
-
-            _metaSanitizer.AllowDataAttributes = false;
-
-            _metaSanitizer.RemovingTag += (sender, e) => isHtmlModified = true;
-            _metaSanitizer.RemovingAtRule += (sender, e) => isHtmlModified = true;
-            _metaSanitizer.RemovingAttribute += (sender, e) => isHtmlModified = true;
-            _metaSanitizer.RemovingComment += (sender, e) => isHtmlModified = true;
-            _metaSanitizer.RemovingCssClass += (sender, e) => isHtmlModified = true;
-            _metaSanitizer.RemovingStyle += (sender, e) => isHtmlModified = true;
 
         }
 
@@ -57,12 +36,34 @@ namespace BTCPayServer.Abstractions.Services
             return _htmlHelper.Raw(_jsonHelper.Serialize(model));
         }
 
-        public string RawMeta(string inputHtml, out bool bHtmlModified)
+        public string RawMeta(string inputHtml, out bool isHtmlModified)
         {
-            isHtmlModified = false;
+             bool bHtmlModified;
+             HtmlSanitizer _metaSanitizer = new HtmlSanitizer();
+
+            _metaSanitizer.AllowedTags.Clear();
+            _metaSanitizer.AllowedTags.Add("meta");
+
+            _metaSanitizer.AllowedAttributes.Clear();
+            _metaSanitizer.AllowedAttributes.Add("name");
+            _metaSanitizer.AllowedAttributes.Add("http-equiv");
+            _metaSanitizer.AllowedAttributes.Add("content");
+            _metaSanitizer.AllowedAttributes.Add("value");
+            _metaSanitizer.AllowedAttributes.Add("property");
+
+            _metaSanitizer.AllowDataAttributes = false;
+
+            _metaSanitizer.RemovingTag += (sender, e) => bHtmlModified = true;
+            _metaSanitizer.RemovingAtRule += (sender, e) => bHtmlModified = true;
+            _metaSanitizer.RemovingAttribute += (sender, e) => bHtmlModified = true;
+            _metaSanitizer.RemovingComment += (sender, e) => bHtmlModified = true;
+            _metaSanitizer.RemovingCssClass += (sender, e) => bHtmlModified = true;
+            _metaSanitizer.RemovingStyle += (sender, e) => bHtmlModified = true;
+            
+            bHtmlModified = false;
 
             var sRet = _metaSanitizer.Sanitize(inputHtml);
-            bHtmlModified = isHtmlModified;
+            isHtmlModified = bHtmlModified;
 
             return sRet;
         }

@@ -58,8 +58,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             IStringLocalizer stringLocalizer,
             DisplayFormatter displayFormatter,
             IRateLimitService rateLimitService,
-            IAuthorizationService authorizationService,
-            Safe safe)
+            IAuthorizationService authorizationService)
         {
             _currencies = currencies;
             _appService = appService;
@@ -70,7 +69,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _displayFormatter = displayFormatter;
             _rateLimitService = rateLimitService;
             _authorizationService = authorizationService;
-            _safe = safe;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
         }
@@ -84,7 +82,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
-        private readonly Safe _safe;
 
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
@@ -676,7 +673,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
-            bool wasHtmlModified;
+            bool wasHtmlModified = false;
             var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
@@ -696,7 +693,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
                 Language = vm.Language,
-                HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out wasHtmlModified),
+                //HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out wasHtmlModified),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId

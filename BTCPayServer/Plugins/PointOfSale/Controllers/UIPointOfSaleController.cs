@@ -57,6 +57,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             FormDataService formDataService,
             IStringLocalizer stringLocalizer,
             DisplayFormatter displayFormatter,
+            IRateLimitService rateLimitService,
+            IAuthorizationService authorizationService,
             Safe safe)
         {
             _currencies = currencies;
@@ -66,9 +68,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _invoiceRepository = invoiceRepository;
             _invoiceController = invoiceController;
             _displayFormatter = displayFormatter;
+            _rateLimitService = rateLimitService;
+            _authorizationService = authorizationService;
+            _safe = safe;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
-            _safe = safe;
         }
 
         private readonly CurrencyNameTable _currencies;
@@ -78,6 +82,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly AppService _appService;
         private readonly UIInvoiceController _invoiceController;
         private readonly DisplayFormatter _displayFormatter;
+        private readonly IRateLimitService _rateLimitService;
+        private readonly IAuthorizationService _authorizationService;
         private readonly Safe _safe;
 
         public FormDataService FormDataService { get; }

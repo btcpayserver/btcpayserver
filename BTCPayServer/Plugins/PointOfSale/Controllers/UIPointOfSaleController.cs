@@ -82,7 +82,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
-
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
 

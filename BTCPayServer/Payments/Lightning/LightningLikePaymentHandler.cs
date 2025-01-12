@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -263,7 +264,16 @@ namespace BTCPayServer.Payments.Lightning
                 try
                 {
                     var client = _lightningClientFactory.Create(config.ConnectionString, _Network);
-                    if (!client.IsSafe())
+                    if (client is IExtendedLightningClient vlc)
+                    {
+                        var result = await vlc.Validate();
+                        if (result != ValidationResult.Success)
+                        {
+                            validationContext.ModelState.AddModelError(nameof(config.ConnectionString), result?.ErrorMessage ?? "Invalid connection string");
+                            return;
+                        }
+                    }
+                    if (!client.IsSafe(config.ConnectionString))
                     {
                         var canManage = (await validationContext.AuthorizationService.AuthorizeAsync(validationContext.User, null,
                     new PolicyRequirement(Policies.CanModifyServerSettings))).Succeeded;
@@ -273,6 +283,11 @@ namespace BTCPayServer.Payments.Lightning
                             return;
                         }
                     }
+                }
+                catch (FormatException ex)
+                {
+                    validationContext.ModelState.AddModelError(nameof(config.ConnectionString), ex.Message);
+                    return;
                 }
                 catch
                 {

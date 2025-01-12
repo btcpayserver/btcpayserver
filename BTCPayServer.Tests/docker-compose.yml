@@ -95,7 +95,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.14
+    image: nicolasdorier/nbxplorer:2.5.16
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -166,6 +166,7 @@ services:
         dev-bitcoind-poll=1
     ports:
       - "30992:9835" # api port
+      - "30892:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -194,6 +195,7 @@ services:
         dev-bitcoind-poll=1
     ports:
       - "30993:9835" # api port
+      - "30893:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -213,7 +215,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.18.3-beta
+    image: btcpayserver/lnd:v0.18.4-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -239,6 +241,7 @@ services:
     ports:
       - "35531:8080"
       - "53280:10009"
+      - "30894:9735"
     expose:
       - "8080"
       - "9735"
@@ -250,7 +253,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.18.3-beta
+    image: btcpayserver/lnd:v0.18.4-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -275,6 +278,7 @@ services:
         no-rest-tls=1
     ports:
       - "35532:8080"
+      - "30895:9735"
     expose:
       - "8080"
       - "9735"

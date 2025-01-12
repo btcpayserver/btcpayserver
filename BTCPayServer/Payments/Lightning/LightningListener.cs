@@ -3,11 +3,9 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Channels;
 using System.Threading.Tasks;
-using Amazon.Runtime.Internal;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
@@ -18,13 +16,11 @@ using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
-using NBitpayClient;
 using NBXplorer;
 using Newtonsoft.Json.Linq;
 
@@ -263,12 +259,21 @@ retry:
         {
             lock (_InstanceListeners)
             {
-                foreach ((_, var instance) in _InstanceListeners.ToArray())
+                foreach (var key in _InstanceListeners.Keys)
                 {
-                    instance.RemoveExpiredInvoices();
-                    if (!instance.Empty)
-                        instance.EnsureListening(_Cts.Token);
+                    CheckConnection(key.Item1, key.Item2);
                 }
+            }
+        }
+
+        public void CheckConnection(string cryptoCode, string connStr)
+        {
+            if (_InstanceListeners.TryGetValue((cryptoCode, connStr), out var instance))
+            {
+                
+                instance.RemoveExpiredInvoices();
+                if (!instance.Empty)
+                    instance.EnsureListening(_Cts.Token);
             }
         }
 
@@ -500,27 +505,20 @@ retry:
         public CancellationTokenSource? StopListeningCancellationTokenSource;
         async Task Listen(CancellationToken cancellation)
         {
-            Uri? uri = null;
-            string? logUrl = null;
+            string? uri = null;
             try
             {
                 var lightningClient = _lightningClientFactory.Create(ConnectionString, _network);
                 if(lightningClient is null)
                     return;
-                uri = lightningClient.GetServerUri();
-                logUrl = uri switch
-                {
-                    null when LightningConnectionStringHelper.ExtractValues(ConnectionString, out var type) is not null => type,
-                    null => string.Empty,
-                    _ => string.IsNullOrEmpty(uri.UserInfo) ? uri.ToString() : uri.ToString().Replace(uri.UserInfo, "***")
-                };
-                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Start listening {Uri}", _network.CryptoCode, logUrl);
+                uri = lightningClient.GetServerUri(ConnectionString)?.RemoveUserInfo() ?? "";
+                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Start listening {Uri}", _network.CryptoCode, uri);
                 using var session = await lightningClient.Listen(cancellation);
                 // Just in case the payment arrived after our last poll but before we listened.
                 await PollAllListenedInvoices(cancellation);
                 if (_ErrorAlreadyLogged)
                 {
-                    Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Could reconnect successfully to {Uri}", _network.CryptoCode, logUrl);
+                    Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Could reconnect successfully to {Uri}", _network.CryptoCode, uri);
                 }
                 _ErrorAlreadyLogged = false;
                 while (!_ListenedInvoices.IsEmpty)
@@ -552,12 +550,12 @@ retry:
             catch (Exception ex) when (!cancellation.IsCancellationRequested && !_ErrorAlreadyLogged)
             {
                 _ErrorAlreadyLogged = true;
-                Logs.PayServer.LogError(ex, "{CryptoCode} (Lightning): Error while contacting {Uri}", _network.CryptoCode, logUrl);
-                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Stop listening {Uri}", _network.CryptoCode, logUrl);
+                Logs.PayServer.LogError(ex, "{CryptoCode} (Lightning): Error while contacting {Uri}", _network.CryptoCode, uri);
+                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): Stop listening {Uri}", _network.CryptoCode, uri);
             }
             catch (OperationCanceledException) when (cancellation.IsCancellationRequested) { }
             if (_ListenedInvoices.IsEmpty)
-                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): No more invoice to listen on {Uri}, releasing the connection", _network.CryptoCode, logUrl);
+                Logs.PayServer.LogInformation("{CryptoCode} (Lightning): No more invoice to listen on {Uri}, releasing the connection", _network.CryptoCode, uri);
         }
 
         private uint256? GetPaymentHash(ListenedInvoice listenedInvoice)

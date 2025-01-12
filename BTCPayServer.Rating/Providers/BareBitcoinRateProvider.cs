@@ -10,7 +10,7 @@ namespace BTCPayServer.Services.Rates
     {
         private readonly HttpClient _httpClient;
         
-        public RateSourceInfo RateSourceInfo => new("barebitcoin", "Bare Bitcoin", "https://api.bb.no/price");
+        public RateSourceInfo RateSourceInfo => new("barebitcoin", "Bare Bitcoin", "https://api.bb.no/v1/price/nok");
 
         public BareBitcoinRateProvider(HttpClient httpClient)
         {
@@ -24,16 +24,15 @@ namespace BTCPayServer.Services.Rates
             
             var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
             
-            // Extract market and otc prices
-            var market = jobj["market"].Value<decimal>();
-            var buy = jobj["buy"].Value<decimal>();
-            var sell = jobj["sell"].Value<decimal>();
+            // Extract bid/ask prices from JSON response
+            var bid = (decimal)jobj["bid"];
+            var ask = (decimal)jobj["ask"];
 
             // Create currency pair for BTC/NOK
             var pair = new CurrencyPair("BTC", "NOK");
             
-            // Return single pair rate with sell/buy as bid/ask
-            return new[] { new PairRate(pair, new BidAsk(sell, buy)) };
+            // Return single pair rate with bid/ask
+            return new[] { new PairRate(pair, new BidAsk(bid, ask)) };
         }
     }
 }

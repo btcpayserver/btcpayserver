@@ -37,6 +37,7 @@ namespace BTCPayServer.Controllers.Greenfield
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly SettingsRepository _settingsRepository;
         private readonly EventAggregator _eventAggregator;
+        private readonly CallbackGenerator _callbackGenerator;
         private readonly IPasswordValidator<ApplicationUser> _passwordValidator;
         private readonly IRateLimitService _throttleService;
         private readonly BTCPayServerOptions _options;
@@ -50,6 +51,7 @@ namespace BTCPayServer.Controllers.Greenfield
             SettingsRepository settingsRepository,
             PoliciesSettings policiesSettings,
             EventAggregator eventAggregator,
+            CallbackGenerator callbackGenerator,
             IPasswordValidator<ApplicationUser> passwordValidator,
             IRateLimitService throttleService,
             BTCPayServerOptions options,
@@ -65,6 +67,7 @@ namespace BTCPayServer.Controllers.Greenfield
             _settingsRepository = settingsRepository;
             PoliciesSettings = policiesSettings;
             _eventAggregator = eventAggregator;
+            _callbackGenerator = callbackGenerator;
             _passwordValidator = passwordValidator;
             _throttleService = throttleService;
             _options = options;
@@ -113,7 +116,8 @@ namespace BTCPayServer.Controllers.Greenfield
 
             if (user.RequiresApproval)
             {
-                return await _userService.SetUserApproval(user.Id, request.Approved, Request.GetAbsoluteRootUri())
+                var loginLink = _callbackGenerator.ForLogin(user, Request);
+                return await _userService.SetUserApproval(user.Id, request.Approved, loginLink)
                     ? Ok()
                     : this.CreateAPIError("invalid-state", $"User is already {(request.Approved ? "approved" : "unapproved")}");
             }
@@ -219,6 +223,10 @@ namespace BTCPayServer.Controllers.Greenfield
                             ModelState.AddModelError(string.Empty, error.Description);
                     }
                 }
+                else
+                {
+                    _eventAggregator.Publish(new UserEvent.Updated(user));
+                }
             }
 
             if (!ModelState.IsValid)
@@ -255,7 +263,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 blob.ImageUrl = fileIdUri.ToString();
                 user.SetBlob(blob);
                 await _userManager.UpdateAsync(user);
-
+                _eventAggregator.Publish(new UserEvent.Updated(user));
                 var model = await FromModel(user);
                 return Ok(model);
             }
@@ -280,6 +288,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 blob.ImageUrl = null;
                 user.SetBlob(blob);
                 await _userManager.UpdateAsync(user);
+                _eventAggregator.Publish(new UserEvent.Updated(user));
             }
             return Ok();
         }
@@ -399,18 +408,11 @@ namespace BTCPayServer.Controllers.Greenfield
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration, Logs);
                 }
             }
-
             var currentUser = await _userManager.GetUserAsync(User);
-            var userEvent = new UserRegisteredEvent
+            var userEvent = currentUser switch
             {
-                RequestUri = Request.GetAbsoluteRootUri(),
-                Admin = isNewAdmin,
-                User = user
-            };
-            if (currentUser is not null)
-            {
-                userEvent.Kind = UserRegisteredEventKind.Invite;
-                userEvent.InvitedByUser = currentUser;
+                { } invitedBy => await UserEvent.Invited.Create(user, invitedBy, _callbackGenerator, Request, true),
+                _ => await UserEvent.Registered.Create(user, _callbackGenerator, Request)
             };
             _eventAggregator.Publish(userEvent);
 
@@ -444,6 +446,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
             // Ok, this user is an admin but there are other admins as well so safe to delete
             await _userService.DeleteUserAndAssociatedData(user);
+            _eventAggregator.Publish(new UserEvent.Deleted(user));
 
             return Ok();
         }

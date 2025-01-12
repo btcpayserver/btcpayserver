@@ -219,7 +219,7 @@
                 <label asp-for="SupportUrl" class="form-label"></label>
                 <input asp-for="SupportUrl" class="form-control" />
                 <span asp-validation-for="SupportUrl" class="text-danger"></span>
-                <div class="form-text" html-translate="true">For support requests related to partially paid invoices. A "Contact Us" button with this link will be shown on the invoice expired page. Can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and Nostr.</div>
+                <div class="form-text" html-translate="true">A "Contact Us" button with this link will be shown on the checkout page. Can contain the placeholders <code>{OrderId}</code> and <code>{InvoiceId}</code>. Can be any valid URI, such as a website, email, and Nostr.</div>
             </div>
             <div class="d-flex my-3">
                 <input asp-for="LazyPaymentMethods" type="checkbox" class="btcpay-toggle me-3" />

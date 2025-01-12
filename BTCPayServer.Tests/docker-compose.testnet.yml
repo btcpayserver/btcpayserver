@@ -1,0 +1,288 @@
+version: "3"
+
+# Run `docker-compose up dev` for bootstrapping your development environment
+# Doing so will expose NBXplorer, Bitcoind RPC and postgres port to the host so that tests can Run,
+# The Visual Studio launch setting `Docker-testnet` is configured to use this environment.
+services:
+
+  # The dev container is not actually used, it is just handy to run `docker-compose up dev` to start all services
+  dev:
+    image: alpine:3.7
+    command: [ "/bin/sh", "-c", "trap : TERM INT; while :; do echo Ready to code and debug like a rockstar!!!; sleep 2073600; done & wait" ]
+    depends_on:
+      - nbxplorer
+      - postgres
+      - customer_lightningd
+      - merchant_lightningd
+      - customer_lnd
+      - merchant_lnd
+      - sshd
+      - tor
+
+  sshd:
+    build:
+        context: .
+        dockerfile: sshd.Dockerfile
+    ports:
+        - "21622:22"
+    expose:
+        - 22
+    volumes:
+        - "sshd_datadir:/root/.ssh"
+
+  devlnd:
+    image: btcpayserver/bitcoin:26.0
+    environment:
+      BITCOIN_NETWORK: testnet
+      BITCOIN_WALLETDIR: "/data/wallets"
+      BITCOIN_EXTRA_ARGS: |
+        deprecatedrpc=signrawtransaction
+        connect=bitcoind:39388
+        fallbackfee=0.0002
+        rpcallowip=0.0.0.0/0
+    depends_on:
+      - nbxplorer
+      - postgres
+      - customer_lnd
+      - merchant_lnd
+
+  selenium:
+    image: selenium/standalone-chrome:125.0
+    extra_hosts:
+      - "tests:172.23.0.18"
+    expose:
+      - "4444"
+    networks:
+      default:
+      custom:
+
+  nbxplorer:
+    image: nicolasdorier/nbxplorer:2.5.16
+    restart: unless-stopped
+    ports:
+      - "32838:32838"
+    expose:
+      - "32838"
+    environment:
+      NBXPLORER_NETWORK: testnet
+      NBXPLORER_CHAINS: "btc"
+      NBXPLORER_BTCRPCURL: http://bitcoind:43782/
+      NBXPLORER_BTCNODEENDPOINT: bitcoind:39388
+      NBXPLORER_BTCRPCUSER: ceiwHEbqWI83
+      NBXPLORER_BTCRPCPASSWORD: DwubwWsoo3
+      NBXPLORER_BIND: 0.0.0.0:32838
+      NBXPLORER_MINGAPSIZE: 5
+      NBXPLORER_MAXGAPSIZE: 10
+      NBXPLORER_VERBOSE: 1
+      NBXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer_testnet
+      NBXPLORER_EXPOSERPC: 1
+      NBXPLORER_NOAUTH: 1
+    depends_on:
+      - bitcoind
+
+  bitcoind:
+    restart: unless-stopped
+    image: btcpayserver/bitcoin:26.0
+    environment:
+      BITCOIN_NETWORK: testnet
+      BITCOIN_WALLETDIR: "/data/wallets"
+      BITCOIN_EXTRA_ARGS: |-
+        rpcuser=ceiwHEbqWI83
+        rpcpassword=DwubwWsoo3
+        rpcport=43782
+        rpcbind=0.0.0.0:43782
+        rpcallowip=0.0.0.0/0
+        port=39388
+        whitelist=0.0.0.0/0
+        zmqpubrawblock=tcp://0.0.0.0:28332
+        zmqpubrawtx=tcp://0.0.0.0:28333
+        deprecatedrpc=signrawtransaction
+        fallbackfee=0.0002
+    ports:
+      - "43782:43782"
+      - "39388:39388"
+    expose:
+      - "43782" # RPC
+      - "39388" # P2P
+      - "28332" # ZMQ
+      - "28333" # ZMQ
+    volumes:
+      - "bitcoin_datadir:/data"
+
+  customer_lightningd:
+    image: btcpayserver/lightning:v24.08.2
+    stop_signal: SIGKILL
+    restart: unless-stopped
+    environment:
+      EXPOSE_TCP: "true"
+      LIGHTNINGD_CHAIN: "btc"
+      LIGHTNINGD_NETWORK: "testnet"
+      LIGHTNINGD_OPT: |
+        developer
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        announce-addr=customer_lightningd:9735
+        log-level=debug
+        funding-confirms=1
+        dev-fast-gossip
+        dev-bitcoind-poll=1
+    ports:
+      - "30992:9835" # api port
+      - "30892:9735" # server port
+    expose:
+      - "9735" # server port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "customer_lightningd_datadir:/root/.lightning"
+    depends_on:
+      - bitcoind
+
+  merchant_lightningd:
+    image: btcpayserver/lightning:v24.08.2
+    stop_signal: SIGKILL
+    restart: unless-stopped
+    environment:
+      EXPOSE_TCP: "true"
+      LIGHTNINGD_CHAIN: "btc"
+      LIGHTNINGD_NETWORK: "testnet"
+      LIGHTNINGD_OPT: |
+        developer
+        bitcoin-datadir=/etc/bitcoin
+        bitcoin-rpcconnect=bitcoind
+        announce-addr=merchant_lightningd:9735
+        funding-confirms=1
+        log-level=debug
+        dev-fast-gossip
+        dev-bitcoind-poll=1
+    ports:
+      - "30993:9835" # api port
+      - "30893:9735" # server port
+    expose:
+      - "9735" # server port
+      - "9835" # api port
+    volumes:
+      - "bitcoin_datadir:/etc/bitcoin"
+      - "merchant_lightningd_datadir:/root/.lightning"
+    depends_on:
+      - bitcoind
+
+  postgres:
+    image:  postgres:13.13
+    environment:
+        POSTGRES_HOST_AUTH_METHOD: trust
+    ports:
+      - "39372:5432"
+    expose:
+      - "5432"
+
+  merchant_lnd:
+    image: btcpayserver/lnd:v0.18.4-beta
+    restart: unless-stopped
+    environment:
+      LND_CHAIN: "btc"
+      LND_ENVIRONMENT: "testnet"
+      LND_EXPLORERURL: "http://nbxplorer:32838/"
+      LND_REST_LISTEN_HOST: http://merchant_lnd:8080
+      LND_EXTRA_ARGS: |
+        restlisten=merchant_lnd:8080
+        rpclisten=127.0.0.1:10008
+        rpclisten=merchant_lnd:10009
+        bitcoin.node=bitcoind
+        bitcoind.rpchost=bitcoind:43782
+        bitcoind.rpcuser=ceiwHEbqWI83
+        bitcoind.rpcpass=DwubwWsoo3
+        bitcoind.zmqpubrawblock=tcp://bitcoind:28332
+        bitcoind.zmqpubrawtx=tcp://bitcoind:28333
+        externalip=merchant_lnd:9735
+        bitcoin.defaultchanconfs=1
+        no-macaroons=1
+        debuglevel=debug
+        trickledelay=1000
+        no-rest-tls=1
+    ports:
+      - "35531:8080"
+      - "30894:9735"
+      - "53280:10009"
+    expose:
+      - "8080"
+      - "9735"
+      - "10009"
+    volumes:
+      - "merchant_lnd_datadir:/data"
+      - "bitcoin_datadir:/deps/.bitcoin"
+    depends_on:
+      - bitcoind
+
+  customer_lnd:
+    image: btcpayserver/lnd:v0.18.4-beta
+    restart: unless-stopped
+    environment:
+      LND_CHAIN: "btc"
+      LND_ENVIRONMENT: "testnet"
+      LND_EXPLORERURL: "http://nbxplorer:32838/"
+      LND_REST_LISTEN_HOST: http://customer_lnd:8080
+      LND_EXTRA_ARGS: |
+        restlisten=customer_lnd:8080
+        rpclisten=127.0.0.1:10008
+        rpclisten=customer_lnd:10009
+        bitcoin.node=bitcoind
+        bitcoind.rpchost=bitcoind:43782
+        bitcoind.rpcuser=ceiwHEbqWI83
+        bitcoind.rpcpass=DwubwWsoo3
+        bitcoind.zmqpubrawblock=tcp://bitcoind:28332
+        bitcoind.zmqpubrawtx=tcp://bitcoind:28333
+        externalip=customer_lnd:9735
+        bitcoin.defaultchanconfs=1
+        no-macaroons=1
+        debuglevel=debug
+        trickledelay=1000
+        no-rest-tls=1
+    ports:
+      - "35532:8080"
+      - "30895:9735"
+    expose:
+      - "8080"
+      - "9735"
+      - "10009"
+    volumes:
+      - "customer_lnd_datadir:/root/.lnd"
+      - "bitcoin_datadir:/deps/.bitcoin"
+    depends_on:
+      - bitcoind
+
+  tor:
+    restart: unless-stopped
+    image: btcpayserver/tor:0.4.6.5
+    container_name: tor
+    environment:
+        TOR_PASSWORD: btcpayserver
+    ports:
+        - "9050:9050" # SOCKS
+        - "9051:9051" # Tor Control
+    volumes:
+        - "tor_datadir:/home/tor/.tor"
+        - "torrcdir:/usr/local/etc/tor"
+        - "tor_servicesdir:/var/lib/tor/hidden_services"
+
+volumes:
+    sshd_datadir:
+    bitcoin_datadir:
+    elementsd_liquid_datadir:
+    customer_lightningd_datadir:
+    merchant_lightningd_datadir:
+    lightning_charge_datadir:
+    customer_lnd_datadir:
+    merchant_lnd_datadir:
+    tor_datadir:
+    torrcdir:
+    tor_servicesdir:
+
+networks:
+  default:
+    driver: bridge
+  custom:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16

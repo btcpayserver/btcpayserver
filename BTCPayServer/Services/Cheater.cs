@@ -27,18 +27,17 @@ namespace BTCPayServer.Services
             return _prov.GetExplorerClient(cryptoCode)?.RPCClient;
         }
 
-        public async Task UpdateInvoiceExpiry(string invoiceId, TimeSpan seconds)
-        {
-            await _invoiceRepository.UpdateInvoiceExpiry(invoiceId, seconds);
-        }
-
         async Task IHostedService.StartAsync(CancellationToken cancellationToken)
         {
             var liquid = _prov.GetNetwork("LBTC");
             if (liquid is not null)
             {
                 var lbtcrpc = GetCashCow(liquid.CryptoCode);
-                await lbtcrpc.SendCommandAsync("rescanblockchain");
+                try
+                {
+                    await lbtcrpc.SendCommandAsync("rescanblockchain");
+                }
+                catch { goto next; }
                 var elements = _prov.NetworkProviders.GetAll().OfType<Plugins.Altcoins.ElementsBTCPayNetwork>();
                 foreach (Plugins.Altcoins.ElementsBTCPayNetwork element in elements)
                 {
@@ -55,8 +54,12 @@ namespace BTCPayServer.Services
                     }
                 }
             }
-
-            await Task.WhenAll(_prov.GetAll().Select(o => o.Item2.RPCClient.ScanRPCCapabilitiesAsync()));
+            next:
+            try
+            {
+                await Task.WhenAll(_prov.GetAll().Select(o => o.Item2.RPCClient.ScanRPCCapabilitiesAsync()));
+            }
+            catch { }
         }
 
         Task IHostedService.StopAsync(CancellationToken cancellationToken)

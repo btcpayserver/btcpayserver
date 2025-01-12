@@ -6,7 +6,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
+
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Models.AppViewModels;
 using BTCPayServer.Plugins.Crowdfund;
 using BTCPayServer.Plugins.PointOfSale;
@@ -28,7 +30,7 @@ namespace BTCPayServer.Services.Apps
         private readonly Dictionary<string, AppBaseType> _appTypes;
         static AppService()
         {
-            _defaultSerializer = new JsonSerializerSettings()
+            _defaultSerializer = new JsonSerializerSettings
             {
                 ContractResolver = new Newtonsoft.Json.Serialization.CamelCasePropertyNamesContractResolver(),
                 Formatting = Formatting.None
@@ -40,8 +42,8 @@ namespace BTCPayServer.Services.Apps
         readonly ApplicationDbContextFactory _ContextFactory;
         private readonly InvoiceRepository _InvoiceRepository;
         readonly CurrencyNameTable _Currencies;
-        private readonly DisplayFormatter _displayFormatter;
         private readonly StoreRepository _storeRepository;
+        private readonly EventAggregator _eventAggregator;
         public CurrencyNameTable Currencies => _Currencies;
         private readonly string[] _paidStatuses = [
             InvoiceStatus.Processing.ToString(),
@@ -53,15 +55,15 @@ namespace BTCPayServer.Services.Apps
             ApplicationDbContextFactory contextFactory,
             InvoiceRepository invoiceRepository,
             CurrencyNameTable currencies,
-            DisplayFormatter displayFormatter,
-            StoreRepository storeRepository)
+            StoreRepository storeRepository,
+            EventAggregator eventAggregator)
         {
             _appTypes = apps.ToDictionary(a => a.Type, a => a);
             _ContextFactory = contextFactory;
             _InvoiceRepository = invoiceRepository;
             _Currencies = currencies;
             _storeRepository = storeRepository;
-            _displayFormatter = displayFormatter;
+            _eventAggregator = eventAggregator;
         }
 #nullable enable
         public Dictionary<string, string> GetAvailableAppTypes()
@@ -231,6 +233,7 @@ namespace BTCPayServer.Services.Apps
             await using var ctx = _ContextFactory.CreateContext();
             ctx.Apps.Add(appData);
             ctx.Entry(appData).State = EntityState.Deleted;
+            _eventAggregator.Publish(new AppEvent.Deleted(appData));
             return await ctx.SaveChangesAsync() == 1;
         }
 
@@ -239,6 +242,7 @@ namespace BTCPayServer.Services.Apps
             await using var ctx = _ContextFactory.CreateContext();
             appData.Archived = archived;
             ctx.Entry(appData).State = EntityState.Modified;
+            _eventAggregator.Publish(new AppEvent.Updated(appData));
             return await ctx.SaveChangesAsync() == 1;
         }
 
@@ -446,7 +450,8 @@ retry:
         public async Task UpdateOrCreateApp(AppData app)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            if (string.IsNullOrEmpty(app.Id))
+            var newApp = string.IsNullOrEmpty(app.Id);
+            if (newApp)
             {
                 app.Id = Encoders.Base58.EncodeData(RandomUtils.GetBytes(20));
                 app.Created = DateTimeOffset.UtcNow;
@@ -460,6 +465,10 @@ retry:
                 ctx.Entry(app).Property(data => data.AppType).IsModified = false;
             }
             await ctx.SaveChangesAsync();
+            if (newApp)
+                _eventAggregator.Publish(new AppEvent.Created(app));
+            else
+                _eventAggregator.Publish(new AppEvent.Updated(app));
         }
 
         private static bool TryParseJson(string json, [MaybeNullWhen(false)] out JObject result)

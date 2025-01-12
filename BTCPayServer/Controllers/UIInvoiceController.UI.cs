@@ -56,8 +56,8 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
-                InvoiceId = new[] { invoiceId },
-                UserId = GetUserId()
+                InvoiceId = [invoiceId],
+                UserId = GetUserIdForInvoiceQuery()
             })).FirstOrDefault();
             if (invoice is null)
                 return NotFound();
@@ -71,11 +71,11 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> RedeliverWebhook(string storeId, string invoiceId, string deliveryId)
         {
-            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery()
+            var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
-                InvoiceId = new[] { invoiceId },
-                StoreId = new[] { storeId },
-                UserId = GetUserId()
+                InvoiceId = [invoiceId],
+                StoreId = [storeId],
+                UserId = GetUserIdForInvoiceQuery()
             })).FirstOrDefault();
             if (invoice is null)
                 return NotFound();
@@ -100,8 +100,8 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
-                InvoiceId = new[] { invoiceId },
-                UserId = GetUserId(),
+                InvoiceId = [invoiceId],
+                UserId = GetUserIdForInvoiceQuery(),
                 IncludeAddresses = true,
                 IncludeArchived = true,
                 IncludeRefunds = true,
@@ -599,8 +599,8 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
-                InvoiceId = new[] { invoiceId },
-                UserId = GetUserId(),
+                InvoiceId = [invoiceId],
+                UserId = GetUserIdForInvoiceQuery(),
                 IncludeAddresses = false,
                 IncludeArchived = true,
             })).FirstOrDefault();
@@ -936,10 +936,15 @@ namespace BTCPayServer.Controllers
             var expiration = TimeSpan.FromSeconds(model.ExpirationSeconds);
             model.TimeLeft = expiration.PrettyPrint();
 
-            if (_paymentModelExtensions.TryGetValue(paymentMethodId, out var extension) &&
-                    _handlers.TryGetValue(paymentMethodId, out var h))
+            if (_handlers.TryGetValue(paymentMethodId, out var h))
             {
-                extension.ModifyCheckoutModel(new CheckoutModelContext(model, store, storeBlob, invoice, Url, prompt, h));
+                var ctx = new CheckoutModelContext(model, store, storeBlob, invoice, Url, prompt, h);
+                if (_paymentModelExtensions.TryGetValue(paymentMethodId, out var extension))
+                {
+                    extension.ModifyCheckoutModel(ctx);
+                }
+                foreach (var global in GlobalCheckoutModelExtensions)
+                    global.ModifyCheckoutModel(ctx);
             }
             return model;
         }
@@ -1111,7 +1116,7 @@ namespace BTCPayServer.Controllers
             return new InvoiceQuery
             {
                 TextSearch = textSearch,
-                UserId = GetUserId(),
+                UserId = GetUserIdForInvoiceQuery(),
                 Unusual = fs.GetFilterBool("unusual"),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 Status = fs.GetFilterArray("status"),
@@ -1252,8 +1257,8 @@ namespace BTCPayServer.Controllers
         {
             var invoice = (await _InvoiceRepository.GetInvoices(new InvoiceQuery
             {
-                InvoiceId = new[] { invoiceId },
-                UserId = GetUserId()
+                InvoiceId = [invoiceId],
+                UserId = GetUserIdForInvoiceQuery()
             })).FirstOrDefault();
             var model = new InvoiceStateChangeModel();
             if (invoice == null)
@@ -1286,6 +1291,9 @@ namespace BTCPayServer.Controllers
         private InvoiceEntity GetCurrentInvoice() => HttpContext.GetInvoiceData();
 
         private string GetUserId() => _UserManager.GetUserId(User)!;
+
+        // Let server admin lookup invoices from users, see #6489
+        private string? GetUserIdForInvoiceQuery() => User.IsInRole(Roles.ServerAdmin) ? null : GetUserId();
 
         private SelectList GetPaymentMethodsSelectList(StoreData store)
         {

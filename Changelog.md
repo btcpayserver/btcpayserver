@@ -1,5 +1,61 @@
 # Changelog
 
+## 2.0.5
+
+### Bug fixes
+
+* Invoices: Allow admin to see users' invoices (#6517) @dennisreimann
+* UI: Fix inconsistent responsiveness of labels (#6508, #6501) @dennisreimann
+* Greenfield: Receipt options from the GetInvoice route were not reflecting the store's settings (#6483) @dennisreimann
+* Checkout: Fix regression affecting the UI of the SideShift, FixedFloat, and Trocador plugins (#6481) @dennisreimann
+* Fix several incorrectly generated links when `BTCPAY_ROOTPATH` is used (#6506)
+
+### Improvements
+
+* Checkout: Add support link to footer (#6511, #6495) @dennisreimann
+* Pull Payment: Add "Copy Link" button to the action column (#6516, #6515) @dennisreimann
+* Greenfield: Remove authorization requirement for PoS data (#6499) @dennisreimann
+* Greenfield: Resolve store user's image URL @dennisreimann
+
+### Feature removed
+
+* Remove the Lightning Balance histogram from the dashboard (too slow on large instances).
+
+## 2.0.4
+
+### New features
+
+* Add QR Code with link to invitation email (#6438) @dennisreimann
+* Add rate providers for Norwegian exchanges (Bitmynt and Bare Bitcoin) (#6452) @schjonhaug
+* Greenfield: Improve store users API (#6427) @dennisreimann
+  * Adds an endpoint to update store users (before they had to be removed and re-added)
+  * Checks for the existence of a user and responds with 404 in that case (fixes #6423)
+  * Allows retrieval of user by user id or email for add and update (consistent with the other endpoints)
+  * Improves the API docs for the store users endpoint
+  * Adds details to store user data
+
+### Bug fixes
+
+* Fix: correct `  <` plugin dependency implementation (#6420) @jackstar12
+* Fix: Point of Sale as PWA on iOS no longer working in Lockdown mode (#6422 #6424) @leesalminen
+* Greenfield: Users API fixes (#6425) @dennisreimann
+  * Do not crash when creating users without a password
+  * More precise error message for user approval toggling
+* App: Sales stats should only include paid invoices (#6444) @dennisreimann
+* Fix: Combination of status filters on invoices page causes 500 fatal server error (#6437) @NicolasDorier
+* Fix: Payment Requests should show payments of invalid invoices (#6412) @NicolasDorier
+* Bugfix: Providing updated PSBT with QR Code was not possible (#6459 #6460) @Orcinus21
+
+### Improvements
+
+* UI: Move App's invoices link to the top (#6429) @dennisreimann
+* Account: Sign in users after accepting an invitation or resetting a password (#6442) @dennisreimann
+* Improve display for the PoS editor (#6441 #6436) @dennisreimann
+* Fix: Truncate center CSS for icons (#6465) @jackstar12
+* Do not throttle authenticated users on a PoS application (#6415) @Kukks
+* Plugin: Add `IGlobalCheckoutModelExtension` to allow a plugin to customize checkout experience regardless of the payment method (#6470) @NicolasDorier
+* Plugin: Add `IExtendedLightningClient` to allow a plugin to better validate a lightning connection string, and customize display stringss. (#6467) @NicolasDorier
+
 ## 2.0.3
 
 If you are using Boltcards, we advise you to update to this release.

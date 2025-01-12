@@ -146,7 +146,6 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         [IgnoreAntiforgeryToken]
         [EnableCors(CorsPolicies.All)]
         [DomainMappingConstraint(PointOfSaleAppType.AppType)]
-        [RateLimitsFilter(ZoneLimits.PublicInvoices, Scope = RateLimitsScope.RemoteAddress)]
         [XFrameOptions(XFrameOptionsAttribute.XFrameOptions.Unset)]
         public async Task<IActionResult> ViewPointOfSale(string appId,
                                                         PosViewType? viewType = null,
@@ -163,18 +162,29 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                                         string formResponse = null,
                                                         CancellationToken cancellationToken = default)
         {
+            if (await Throttle(appId))
+                return new TooManyRequestsResult(ZoneLimits.PublicInvoices);
+
+            // Distinguish JSON requests coming via the mobile app
+            var wantsJson = Request.Headers.Accept.FirstOrDefault()?.StartsWith("application/json") is true;
+
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType);
+            if (app == null)
+                return wantsJson
+                    ? Json(new { error = "App not found" })
+                    : NotFound();
 
             // not allowing negative tips or discounts
             if (tip < 0 || discount < 0)
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return wantsJson
+                    ? Json(new { error = "Negative tip or discount is not allowed" })
+                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
 
             if (string.IsNullOrEmpty(choiceKey) && amount <= 0)
-                return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                return wantsJson
+                    ? Json(new { error = "Negative amount is not allowed" })
+                    : RedirectToAction(nameof(ViewPointOfSale), new { appId });
 
-            if (app == null)
-                return NotFound();
-            
             var settings = app.GetSettings<PointOfSaleSettings>();
             settings.DefaultView = settings.EnableShoppingCart ? PosViewType.Cart : settings.DefaultView;
             var currentView = viewType ?? settings.DefaultView;
@@ -183,6 +193,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             {
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId, viewType });
             }
+
             var jposData = TryParseJObject(posData);
             string title;
             decimal? price;
@@ -238,16 +249,17 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                             switch (itemChoice.Inventory)
                             {
                                 case <= 0:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
                                 case { } inventory when inventory < cartItem.Count:
-                                    return RedirectToAction(nameof(ViewPointOfSale), new { appId });
+                                    return wantsJson
+                                        ? Json(new { error = $"Inventory for {itemChoice.Title} exhausted: {itemChoice.Inventory} available" })
+                                        : RedirectToAction(nameof(ViewPointOfSale), new { appId });
                             }
                         }
 
                         var expectedCartItemPrice = itemChoice.PriceType != AppItemPriceType.Topup
                             ? itemChoice.Price ?? 0
                             : 0;
-                        
+
                         if (cartItem.Price < expectedCartItemPrice)
                             cartItem.Price = expectedCartItemPrice;
 
@@ -256,7 +268,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     if (customAmount is { } c)
                         price += c;
                     if (discount is { } d)
-                        price -= price * d/100.0m;
+                        price -= price * d / 100.0m;
                     if (tip is { } t)
                         price += t;
                 }
@@ -265,8 +277,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             var store = await _appService.GetStore(app);
             var storeBlob = store.GetStoreBlob();
             var posFormId = settings.FormId;
-            var formData = await FormDataService.GetForm(posFormId);
 
+            // skip forms feature for JSON requests (from the app)
+            var formData = wantsJson ? null : await FormDataService.GetForm(posFormId);
             JObject formResponseJObject = null;
             switch (formData)
             {
@@ -277,7 +290,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                     {
                         var vm = new PostRedirectViewModel
                         {
-                            FormUrl = Url.Action(nameof(POSForm), "UIPointOfSale", new {appId, buyerEmail = email}),
+                            FormUrl = Url.Action(nameof(POSForm), "UIPointOfSale", new { appId, buyerEmail = email }),
                             FormParameters = new MultiValueDictionary<string, string>(Request.Form.Select(pair =>
                                 new KeyValuePair<string, IReadOnlyCollection<string>>(pair.Key, pair.Value)))
                         };
@@ -314,7 +327,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         amtField.Value = price?.ToString();
                     }
                     formResponseJObject = FormDataService.GetValues(form);
-                    
+
                     var invoiceRequest = FormDataService.GenerateInvoiceParametersFromForm(form);
                     if (invoiceRequest.Amount is not null)
                     {
@@ -340,10 +353,10 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         RedirectAutomatically = settings.RedirectAutomatically,
                         RedirectURL = !string.IsNullOrEmpty(redirectUrl) ? redirectUrl
                             : !string.IsNullOrEmpty(settings.RedirectUrl) ? settings.RedirectUrl
-                            : Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType })),
+                            : Url.ActionAbsolute(Request, nameof(ViewPointOfSale), "UIPointOfSale", new { appId, viewType }).ToString(),
                         PaymentMethods = paymentMethods?.Where(p => p.Value.Enabled).Select(p => p.Key).ToArray()
                     },
-                    AdditionalSearchTerms = new [] { AppService.GetAppSearchTerm(app) }
+                    AdditionalSearchTerms = new[] { AppService.GetAppSearchTerm(app) }
                 }, store, HttpContext.Request.GetAbsoluteRoot(),
                     new List<string> { AppService.GetAppInternalTag(appId) },
                     cancellationToken, entity =>
@@ -358,7 +371,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         if (choice is not null)
                         {
                             var dict = new Dictionary<string, string> { { "Title", choice.Title } };
-                            if (!string.IsNullOrEmpty(choice.Description)) dict["Description"] = choice.Description;
+                            if (!string.IsNullOrEmpty(choice.Description))
+                                dict["Description"] = choice.Description;
                             receiptData = JObject.FromObject(dict);
                         }
                         else if (jposData is not null)
@@ -374,7 +388,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                 var cartData = new JObject();
                                 foreach (AppCartItem cartItem in posCartItems)
                                 {
-                                    if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice)) continue;
+                                    if (!selectedChoices.TryGetValue(cartItem.Id, out var selectedChoice))
+                                        continue;
                                     var singlePrice = _displayFormatter.Currency(cartItem.Price, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                     var totalPrice = _displayFormatter.Currency(cartItem.Price * cartItem.Count, settings.Currency, DisplayFormatter.CurrencyFormat.Symbol);
                                     var ident = selectedChoice.Title ?? selectedChoice.Id;
@@ -386,7 +401,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                                 {
                                     for (var i = 0; i < amountsArray.Count; i++)
                                     {
-                                        cartData.Add($"Custom Amount {i+1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
+                                        cartData.Add($"Custom Amount {i + 1}", _displayFormatter.Currency(amountsArray[i].ToObject<decimal>(), settings.Currency, DisplayFormatter.CurrencyFormat.Symbol));
                                     }
                                 }
                                 receiptData.Add("Cart", cartData);
@@ -412,14 +427,16 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                         meta.Merge(formResponseJObject);
                         entity.Metadata = InvoiceMetadata.FromJObject(meta);
                     });
+                var data = new { invoiceId = invoice.Id };
+                if (wantsJson)
+                    return Json(data);
                 if (price is 0 && storeBlob.ReceiptOptions?.Enabled is true)
-                {
-                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", new { invoiceId = invoice.Id });
-                }
-                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", new { invoiceId = invoice.Id });
+                    return RedirectToAction(nameof(UIInvoiceController.InvoiceReceipt), "UIInvoice", data);
+                return RedirectToAction(nameof(UIInvoiceController.Checkout), "UIInvoice", data);
             }
             catch (BitpayHttpException e)
             {
+                if (wantsJson) return Json(new { error = e.Message });
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Html = e.Message.Replace("\n", "<br />", StringComparison.OrdinalIgnoreCase),
@@ -429,6 +446,11 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return RedirectToAction(nameof(ViewPointOfSale), new { appId });
             }
         }
+
+        private async Task<bool> Throttle(string appId) =>
+            !(await _authorizationService.AuthorizeAsync(HttpContext.User, appId, Policies.CanViewInvoices)).Succeeded &&
+            HttpContext.Connection is { RemoteIpAddress: { } addr } &&
+            !await _rateLimitService.Throttle(ZoneLimits.PublicInvoices, addr.ToString(), HttpContext.RequestAborted);
 
         private JObject TryParseJObject(string posData)
         {
@@ -517,7 +539,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 {
                     var controller = nameof(UIPointOfSaleController).TrimEnd("Controller", StringComparison.InvariantCulture);
                     var redirectUrl =
-                        Request.GetAbsoluteUri(Url.Action(nameof(ViewPointOfSale), controller, new { appId, viewType }));
+                        Url.ActionAbsolute(Request, nameof(ViewPointOfSale), controller, new { appId, viewType }).ToString();
                     formParameters.Add("formResponse", FormDataService.GetValues(form).ToString());
                     return View("PostRedirect", new PostRedirectViewModel
                     {

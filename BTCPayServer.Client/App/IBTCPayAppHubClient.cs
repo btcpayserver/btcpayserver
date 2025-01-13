@@ -44,7 +44,7 @@ public interface IBTCPayAppHubServer
     Task<string> DeriveScript(string identifier);
     Task TrackScripts(string identifier, string[] scripts);
     Task<string> UpdatePsbt(string[] identifiers, string psbt);
-    Task<CoinResponse[]> GetUTXOs(string[] identifiers);
+    Task<Dictionary<string, CoinResponse[]>> GetUTXOs(string[] identifiers);
     Task<Dictionary<string, TxResp[]>> GetTransactions(string[] identifiers);
     Task SendInvoiceUpdate(LightningInvoice lightningInvoice);
     Task<long?> GetCurrentMaster();
@@ -94,7 +94,6 @@ public class TransactionDetectedRequest
 
 public class CoinResponse
 {
-    public string? Identifier{ get; set; }
     public bool Confirmed { get; set; }
     public string? Script { get; set; }
     public string? Outpoint { get; set; }

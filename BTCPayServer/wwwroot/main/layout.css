@@ -488,7 +488,6 @@
         transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
         /* Fixes https://github.com/btcpayserver/btcpayserver/issues/3807 */
         height: calc(100vh - var(--mobile-header-height)); /* This line is a fallback for browsers which don't support "fill-available" */
-        height: -moz-available;
         height: -webkit-fill-available;
         height: fill-available;
         /* Since we can't do "calc(fill-available - var(--mobile-header-height));" I'm using "padding-bottom" instead */

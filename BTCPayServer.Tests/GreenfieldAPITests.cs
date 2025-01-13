@@ -1777,6 +1777,14 @@ namespace BTCPayServer.Tests
             archivableStore = await client.UpdateStore(archivableStore.Id, new UpdateStoreRequest { Name = "Archived", Archived = true });
             Assert.Equal("Archived", archivableStore.Name);
             Assert.True(archivableStore.Archived);
+
+            // Testing some legacy format
+            var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
+            var handler = handlers.GetBitcoinHandler("BTC");
+            var key = new ExtKey().Neuter().GetWif(Network.RegTest);
+            var tok = JToken.Parse($"\"{key}\"");
+            var res = handler.ParsePaymentMethodConfig(tok);
+            Assert.Equal(key.ToString(), res.AccountDerivation.ToString());
         }
 
         private async Task<GreenfieldValidationException> AssertValidationError(string[] fields, Func<Task> act)

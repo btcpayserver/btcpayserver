@@ -83,7 +83,17 @@ namespace BTCPayServer.Payments.Bitcoin
         }
         public DerivationSchemeSettings ParsePaymentMethodConfig(JToken config)
         {
-            return config.ToObject<DerivationSchemeSettings>(Serializer) ?? throw new FormatException($"Invalid {nameof(DerivationSchemeSettings)}");
+            if (config is JValue { Type: JTokenType.String, Value: string str})
+            {
+#pragma warning disable CS0618 // Type or member is obsolete
+                // Work around to fix some very old store https://github.com/btcpayserver/btcpayserver-docker/issues/966
+                return DerivationSchemeSettings.Parse(str, _Network);
+#pragma warning restore CS0618 // Type or member is obsolete
+            }
+            else
+            {
+                return config.ToObject<DerivationSchemeSettings>(Serializer) ?? throw new FormatException($"Invalid {nameof(DerivationSchemeSettings)}");
+            }
         }
         object IPaymentMethodHandler.ParsePaymentMethodConfig(JToken config)
         {

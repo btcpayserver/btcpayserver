@@ -11,6 +11,7 @@ namespace BTCPayServer
 {
     public class DerivationSchemeSettings
     {
+        [Obsolete("Do not use this. Instead, use BitcoinLikePaymentHandler.ParsePaymentMethodConfig")]
         public static DerivationSchemeSettings Parse(string derivationStrategy, BTCPayNetwork network)
         {
             ArgumentNullException.ThrowIfNull(network);

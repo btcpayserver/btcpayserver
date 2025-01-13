@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Text.RegularExpressions;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using Microsoft.AspNetCore.Authentication;
@@ -15,10 +16,11 @@ namespace BTCPayServer.Security.Greenfield
         public static bool GetAPIKey(this HttpContext httpContext, out StringValues apiKey)
         {
             apiKey = default;
-            if (httpContext.Request.Headers.TryGetValue("Authorization", out var value) &&
-                value.ToString().StartsWith("token ", StringComparison.InvariantCultureIgnoreCase))
+            if (httpContext.Request.Headers.TryGetValue("Authorization", out var value))
             {
-                apiKey = value.ToString().Substring("token ".Length);
+                var match = Regex.Match(value.ToString(), @"^(token|bearer)\s+(\S+)", RegexOptions.IgnoreCase);
+                if (!match.Success) return false;
+                apiKey = match.Groups[2].Value;
                 return true;
             }
             return false;

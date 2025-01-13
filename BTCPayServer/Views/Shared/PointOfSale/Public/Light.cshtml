@@ -3,15 +3,13 @@
 @{
     Layout = "PointOfSale/Public/_Layout";
 	Csp.UnsafeEval();
+    ViewData.SetBlazorAllowed(true);
 }
 @section PageHeadContent {
     <link href="~/pos/keypad.css" asp-append-version="true" rel="stylesheet" />
 }
 @section PageFootContent {
-    <script>var srvModel = @Safe.Json(Model);</script>
-    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <script src="~/pos/common.js" asp-append-version="true"></script>
-    <script src="~/pos/keypad.js" asp-append-version="true"></script>
+    <script src="~/js/blazor-interop.js" autostart="false" asp-append-version="true"></script>
 }
 <div id="PosKeypad" class="public-page-wrap">
     <partial name="_StatusMessage" />
@@ -25,7 +23,21 @@
         <noscript>
             <partial name="PointOfSale/Public/MinimalLight" model="Model" />
         </noscript>
-        <partial name="PointOfSale/Public/VueLight" model="Model" />
+        <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" class="only-for-js my-auto">
+            <component type="typeof(BTCPayServer.Blazor.KeypadWrapper)" render-mode="ServerPrerendered"
+                       param-StoreId="@Model.StoreId"
+                       param-AppId="@Model.AppId"
+                       param-CurrencyCode="@Model.CurrencyCode"
+                       param-CurrencyInfo="@Model.CurrencyInfo"
+                       param-IsItemlistEnabled="@Model.ShowItems"
+                       param-IsDiscountEnabled="@Model.ShowDiscount"
+                       param-IsTipEnabled="@Model.EnableTips"
+                       param-IsSearchEnabled="@Model.ShowSearch"
+                       param-IsCategoriesEnabled="@Model.ShowCategories"
+                       param-Categories="@Model.AllCategories?.Select(c => c.Text).ToList()"
+                       param-Items="@Model.Items"
+                       param-CustomTipPercentages="@Model.CustomTipPercentages" />
+        </form>
     }
     <footer class="store-footer">
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">

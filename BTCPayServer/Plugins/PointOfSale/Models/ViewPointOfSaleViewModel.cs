@@ -1,6 +1,5 @@
-using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Models;
@@ -10,19 +9,9 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
 {
     public class ViewPointOfSaleViewModel
     {
-        public class CurrencyInfoData
-        {
-            public bool Prefixed { get; set; }
-            public string CurrencySymbol { get; set; }
-            public string ThousandSeparator { get; set; }
-            public string DecimalSeparator { get; set; }
-            public int Divisibility { get; set; }
-            public bool SymbolSpace { get; set; }
-        }
-
         public StoreBrandingViewModel StoreBranding { get; set; }
         public string StoreName { get; set; }
-        public CurrencyInfoData CurrencyInfo { get; set; }
+        public NumberFormatInfo CurrencyInfo { get; set; }
         public PosViewType ViewType { get; set; }
         public bool ShowItems { get; set; }
         public bool ShowCustomAmount { get; set; }
@@ -51,7 +40,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
             AllCategories = null;
             if (Items is null)
                 return;
-            var groups = Items.SelectMany(g => g.Categories ?? Array.Empty<string>())
+            var groups = Items.SelectMany(g => g.Categories ?? [])
                               .ToHashSet()
                               .Select(o => new KeyValuePair<string, string>(o, o))
                               .ToList();

@@ -23,35 +23,6 @@ namespace BTCPayServer.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
-            modelBuilder.Entity("BTCPayServer.App.BackupStorage.AppStorageItemData", b =>
-                {
-                    b.Property<string>("Key")
-                        .HasColumnType("text");
-
-                    b.Property<long>("Version")
-                        .HasColumnType("bigint");
-
-                    b.Property<string>("UserId")
-                        .HasColumnType("text");
-
-                    b.Property<byte[]>("Value")
-                        .HasColumnType("bytea");
-
-                    b.HasKey("Key", "Version", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.HasIndex("Key", "UserId")
-                        .IsUnique();
-
-                    b.ToTable("AppStorageItems", t =>
-                        {
-                            t.HasTrigger("LC_TRIGGER_BEFORE_INSERT_APPSTORAGEITEMDATA");
-                        });
-
-                    b.HasAnnotation("LC_TRIGGER_BEFORE_INSERT_APPSTORAGEITEMDATA", "CREATE FUNCTION \"LC_TRIGGER_BEFORE_INSERT_APPSTORAGEITEMDATA\"() RETURNS trigger as $LC_TRIGGER_BEFORE_INSERT_APPSTORAGEITEMDATA$\r\nBEGIN\r\n  DELETE FROM \"AppStorageItems\"\r\n  WHERE NEW.\"UserId\" = \"AppStorageItems\".\"UserId\" AND NEW.\"Key\" = \"AppStorageItems\".\"Key\" AND NEW.\"Version\" > \"AppStorageItems\".\"Version\";\r\nRETURN NEW;\r\nEND;\r\n$LC_TRIGGER_BEFORE_INSERT_APPSTORAGEITEMDATA$ LANGUAGE plpgsql;\r\nCREATE TRIGGER LC_TRIGGER_BEFORE_INSERT_APPSTORAGEITEMDATA BEFORE INSERT\r\nON \"AppStorageItems\"\r\nFOR EACH ROW EXECUTE PROCEDURE \"LC_TRIGGER_BEFORE_INSERT_APPSTORAGEITEMDATA\"();");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.APIKeyData", b =>
                 {
                     b.Property<string>("Id")
@@ -1208,17 +1179,6 @@ namespace BTCPayServer.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("BTCPayServer.App.BackupStorage.AppStorageItemData", b =>
-                {
-                    b.HasOne("BTCPayServer.Data.ApplicationUser", "User")
-                        .WithMany("AppStorageItems")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("BTCPayServer.Data.APIKeyData", b =>
                 {
                     b.HasOne("BTCPayServer.Data.StoreData", "StoreData")
@@ -1612,8 +1572,6 @@ namespace BTCPayServer.Migrations
             modelBuilder.Entity("BTCPayServer.Data.ApplicationUser", b =>
                 {
                     b.Navigation("APIKeys");
-
-                    b.Navigation("AppStorageItems");
 
                     b.Navigation("Fido2Credentials");
 

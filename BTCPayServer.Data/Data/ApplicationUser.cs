@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using BTCPayServer.App.BackupStorage;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
@@ -29,9 +28,6 @@ namespace BTCPayServer.Data
         public string Blob2 { get; set; }
 
         public List<IdentityUserRole<string>> UserRoles { get; set; }
-
-        public List<AppStorageItemData> AppStorageItems { get; set; }
-
 
         public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {

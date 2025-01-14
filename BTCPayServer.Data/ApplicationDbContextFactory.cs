@@ -1,7 +1,6 @@
 using System;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Models;
-using Laraue.EfCoreTriggers.PostgreSql.Extensions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,10 +24,7 @@ namespace BTCPayServer.Data
             builder.AddInterceptors(MigrationInterceptor.Instance);
             ConfigureBuilder(builder, npgsqlOptionsAction);
             
-            builder.UsePostgreSqlTriggers();
             return new ApplicationDbContext(builder.Options);
         }
-        
-        
     }
 }

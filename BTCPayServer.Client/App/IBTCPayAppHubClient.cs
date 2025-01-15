@@ -41,7 +41,7 @@ public interface IBTCPayAppHubServer
     Task<decimal> GetFeeRate(int blockTarget);
     Task<BestBlockResponse?> GetBestBlock();
     Task<TxInfoResponse> FetchTxsAndTheirBlockHeads(string identifier, string[] txIds, string[] outpoints);
-    Task<string> DeriveScript(string identifier);
+    Task<ScriptResponse> DeriveScript(string identifier);
     Task TrackScripts(string identifier, string[] scripts);
     Task<string> UpdatePsbt(string[] identifiers, string psbt);
     Task<Dictionary<string, CoinResponse[]>> GetUTXOs(string[] identifiers);
@@ -121,6 +121,12 @@ public class BestBlockResponse
     public string? BlockHeader { get; set; }
 }
 
+public class ScriptResponse
+{
+    public string Script { get; set; }
+    public string KeyPath { get; set; }
+}
+
 public class AppHandshake
 {
     public string[]? Identifiers { get; set; }
@@ -134,5 +140,15 @@ public class AppHandshakeResponse
 
 public class PairRequest
 {
-    public Dictionary<string, string?> Derivations { get; set; } = new();
+    public Dictionary<string, DerivationItem?> Derivations { get; set; } = new();
+}
+
+public class DerivationItem
+{
+    public string Descriptor { get; set; }
+    public int Index { get; set; }
+    
+    public OutPoint[] KnownCoins { get; set; } = Array.Empty<OutPoint>();
+    
+    
 }

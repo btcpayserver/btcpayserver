@@ -14,7 +14,7 @@
     }
 }
 <!DOCTYPE html>
-<html lang="@Model.Lang" class="h-100" @(Env.IsDeveloping ? " data-devenv" : "") id="Crowdfund-@Model.AppId">
+<html lang="@Model.HtmlLang" class="h-100" @(Env.IsDeveloping ? " data-devenv" : "") id="Crowdfund-@Model.AppId">
 <head>
     <partial name="LayoutHead" />
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet" />

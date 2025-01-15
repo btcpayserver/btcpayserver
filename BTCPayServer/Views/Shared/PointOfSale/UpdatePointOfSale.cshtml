@@ -208,10 +208,9 @@
                         <div id="additional-htmlheader" class="accordion-collapse collapse" aria-labelledby="additional-htmlheader-header">
                             <div class="accordion-body">
                                 <div class="form-group">
-                                    <label asp-for="Language" class="form-label"></label>
-                                    <input asp-for="Language" class="form-control" maxlength="2" required />
-                                    <div class="form-text">Fix the HTML page language</div>
-                                    <span asp-validation-for="Language" class="text-danger"></span>
+                                    <label asp-for="HtmlLang" class="form-label"></label>
+                                    <input asp-for="HtmlLang" class="form-control"/>
+                                    <span asp-validation-for="HtmlLang" class="text-danger"></span>
                                 </div>
                                 <div class="form-group">
                                     <label asp-for="HtmlMetaTags" class="form-label"></label>

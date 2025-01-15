@@ -333,6 +333,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 SortPerksByPopularity = request.SortPerksByPopularity ?? false,
                 Sounds = parsedSounds ?? new CrowdfundSettings().Sounds,
                 AnimationColors = parsedColors ?? new CrowdfundSettings().AnimationColors,
+                HtmlMetaTags = request.HtmlMetaTags,
+                HtmlLang  = request.HtmlLang,
                 FormId = request.FormId
             };
         }
@@ -360,6 +362,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 NotificationUrl = request.NotificationUrl,
                 RedirectUrl = request.RedirectUrl,
                 Description = request.Description,
+                HtmlLang = request.HtmlLang,
+                HtmlMetaTags = request.HtmlMetaTags,
                 RedirectAutomatically = request.RedirectAutomatically,
                 FormId = request.FormId
             };
@@ -421,6 +425,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 FormId = settings.FormId,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
+                HtmlLang = settings.HtmlLang,
+                HtmlMetaTags = settings.HtmlMetaTags,
                 Description = settings.Description,
                 RedirectAutomatically = settings.RedirectAutomatically,
                 Items = items
@@ -484,6 +490,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 SortPerksByPopularity = settings.SortPerksByPopularity,
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
+                HtmlLang = settings.HtmlLang,
+                HtmlMetaTags = settings.HtmlMetaTags,
+                FormId = settings.FormId,
                 Perks = perks
             };
         }

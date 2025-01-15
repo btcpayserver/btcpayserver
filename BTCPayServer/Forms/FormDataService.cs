@@ -34,6 +34,15 @@ public class FormDataService
         Fields = new List<Field> { Field.Create("Enter your email", "buyerEmail", null, true, null, "email") }
     };
 
+    public static readonly Form StaticFormNameAndEmail = new()
+    {
+        Fields = new List<Field>
+        {
+            Field.Create("Name", "buyerName", null, true, null),
+            Field.Create("Enter your email", "buyerEmail", null, true, null, "email")
+        }
+    };
+
     public static readonly Form StaticFormAddress = new()
     {
         Fields = new List<Field>
@@ -60,6 +69,7 @@ public class FormDataService
     private static readonly Dictionary<string, (string selectText, string name, Form form)> _hardcodedOptions = new()
     {
         {"", ("Do not request any information", null, null)!},
+        {"Name & Email", ("Request name & email address only", "Provide your name & email address", StaticFormNameAndEmail )},
         {"Email", ("Request email address only", "Provide your email address", StaticFormEmail )},
         {"Address", ("Request shipping address", "Provide your address", StaticFormAddress)},
     };
@@ -165,7 +175,7 @@ public class FormDataService
                 {
                     amt += adjustment;
                 }
-            } 
+            }
             if (f.FullName.StartsWith($"{InvoiceParameterPrefix}amount_multiply_adjustment") && decimal.TryParse(GetValue(form, f.Field), out var adjustmentM))
             {
                 if (amt is not null)
@@ -174,7 +184,7 @@ public class FormDataService
                 }
             }
         }
-        
+
         if(amt is not null)
         {
             amt = Math.Max(0, amt.Value);
@@ -224,10 +234,10 @@ public class FormDataService
         }
         return r;
     }
-    
+
     public void SetValues(Form form, JObject values)
     {
-        
+
         var fields = form.GetAllFields().ToDictionary(k => k.FullName, k => k.Field);
         SetValues(fields, new List<string>(), values);
     }

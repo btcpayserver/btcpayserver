@@ -4,6 +4,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
+        "BTCPAY_DEBUG_PLUGINS": "../../../BTCPayServer.Plugins.App/bin/Debug/net8.0/BTCPayServer.Plugins.App.dll",
         "BTCPAY_NETWORK": "regtest",
         "BTCPAY_LAUNCHSETTINGS": "true",
         "BTCPAY_BTCLIGHTNING": "type=clightning;server=tcp://127.0.0.1:30993/",
@@ -75,6 +76,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
+        "BTCPAY_DEBUG_PLUGINS": "../../../BTCPayServer.Plugins.App/bin/Debug/net8.0/BTCPayServer.Plugins.App.dll",
         "BTCPAY_EXPERIMENTALV2_CONFIRM": "true",
         "BTCPAY_NETWORK": "testnet",
         "BTCPAY_LAUNCHSETTINGS": "true",
@@ -113,6 +115,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
+        "BTCPAY_DEBUG_PLUGINS": "../../../BTCPayServer.Plugins.App/bin/Debug/net8.0/BTCPayServer.Plugins.App.dll",
         "BTCPAY_EXPERIMENTALV2_CONFIRM": "true",
         "BTCPAY_NETWORK": "signet",
         "BTCPAY_LAUNCHSETTINGS": "true",
@@ -151,6 +154,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
+        "BTCPAY_DEBUG_PLUGINS": "../../../BTCPayServer.Plugins.App/bin/Debug/net8.0/BTCPayServer.Plugins.App.dll",
         "BTCPAY_NETWORK": "regtest",
         "BTCPAY_LAUNCHSETTINGS": "true",
         "BTCPAY_PORT": "14142",
@@ -191,6 +195,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
+        "BTCPAY_DEBUG_PLUGINS": "../../../BTCPayServer.Plugins.App/bin/Debug/net8.0/BTCPayServer.Plugins.App.dll",
         "BTCPAY_NETWORK": "regtest",
         "BTCPAY_LAUNCHSETTINGS": "true",
         "BTCPAY_PORT": "14142",

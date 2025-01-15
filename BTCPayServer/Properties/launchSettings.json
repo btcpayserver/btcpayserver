@@ -37,6 +37,7 @@
       "commandName": "Project",
       "launchBrowser": true,
       "environmentVariables": {
+        "BTCPAY_DEBUG_PLUGINS": "../../../BTCPayServer.Plugins.App/bin/Debug/net8.0/BTCPayServer.Plugins.App.dll",
         "BTCPAY_NETWORK": "regtest",
         "BTCPAY_LAUNCHSETTINGS": "true",
         "BTCPAY_PORT": "14142",

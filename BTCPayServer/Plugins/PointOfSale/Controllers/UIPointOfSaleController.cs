@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -11,6 +12,7 @@ using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Form;
 using BTCPayServer.Abstractions.Models;
+using BTCPayServer.Abstractions.Services;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
@@ -26,6 +28,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using Ganss.Xss;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http.Extensions;
@@ -55,7 +58,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             IStringLocalizer stringLocalizer,
             DisplayFormatter displayFormatter,
             IRateLimitService rateLimitService,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            Safe safe)
         {
             _currencies = currencies;
             _appService = appService;
@@ -66,6 +70,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             _displayFormatter = displayFormatter;
             _rateLimitService = rateLimitService;
             _authorizationService = authorizationService;
+            _safe = safe;
             StringLocalizer = stringLocalizer;
             FormDataService = formDataService;
         }
@@ -79,6 +84,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
         private readonly DisplayFormatter _displayFormatter;
         private readonly IRateLimitService _rateLimitService;
         private readonly IAuthorizationService _authorizationService;
+        private readonly Safe _safe;
         public FormDataService FormDataService { get; }
         public IStringLocalizer StringLocalizer { get; }
 
@@ -132,6 +138,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = settings.CustomTipPercentages,
                 AppId = appId,
                 StoreId = store.Id,
+                HtmlLang = settings.HtmlLang,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
             });
         }
@@ -611,6 +619,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomButtonText = settings.CustomButtonText ?? PointOfSaleSettings.CUSTOM_BUTTON_TEXT_DEF,
                 CustomTipText = settings.CustomTipText ?? PointOfSaleSettings.CUSTOM_TIP_TEXT_DEF,
                 CustomTipPercentages = settings.CustomTipPercentages != null ? string.Join(",", settings.CustomTipPercentages) : string.Join(",", PointOfSaleSettings.CUSTOM_TIP_PERCENTAGES_DEF),
+                HtmlLang = settings.HtmlLang,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
@@ -687,6 +697,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 return View("PointOfSale/UpdatePointOfSale", vm);
             }
 
+            bool wasHtmlModified;
             var settings = new PointOfSaleSettings
             {
                 Title = vm.Title,
@@ -705,6 +716,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
                 CustomTipPercentages = ListSplit(vm.CustomTipPercentages),
                 NotificationUrl = vm.NotificationUrl,
                 RedirectUrl = vm.RedirectUrl,
+                HtmlLang = vm.HtmlLang,
+                HtmlMetaTags = _safe.RawMeta(vm.HtmlMetaTags, out wasHtmlModified),
                 Description = vm.Description,
                 RedirectAutomatically = string.IsNullOrEmpty(vm.RedirectAutomatically) ? null : bool.Parse(vm.RedirectAutomatically),
                 FormId = vm.FormId
@@ -714,7 +727,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             app.Archived = vm.Archived;
             app.SetSettings(settings);
             await _appService.UpdateOrCreateApp(app);
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["App updated"].Value;
+            if (wasHtmlModified)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly."].Value;
+            } else {
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["App updated"].Value;
+            }
             return RedirectToAction(nameof(UpdatePointOfSale), new { appId });
         }
 

@@ -14,7 +14,7 @@
     }
 }
 <!DOCTYPE html>
-<html class="h-100" @(Env.IsDeveloping ? " data-devenv" : "") id="Crowdfund-@Model.AppId">
+<html lang="@Model.HtmlLang" class="h-100" @(Env.IsDeveloping ? " data-devenv" : "") id="Crowdfund-@Model.AppId">
 <head>
     <partial name="LayoutHead" />
     <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet" />
@@ -35,6 +35,8 @@
             object-fit: scale-down;
         }
     </style>
+    @* Html.Raw OK here since Html has been cleaned before in controller *@
+    @Html.Raw(Model.HtmlMetaTags)
     <vc:ui-extension-point location="crowdfund-head" model="@Model"/>
 </head>
 <body class="min-vh-100 p-2">

@@ -224,12 +224,43 @@ namespace BTCPayServer.Hosting
                     settings.MigrateStoreExcludedPaymentMethods = true;
                     await _Settings.UpdateSetting(settings);
                 }
+                if (!settings.MigrateOldDerivationSchemes)
+                {
+                    await MigrateOldDerivationSchemes();
+                    settings.MigrateOldDerivationSchemes = true;
+                    await _Settings.UpdateSetting(settings);
+                }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error on the MigrationStartupTask");
                 throw;
             }
+        }
+
+        private async Task MigrateOldDerivationSchemes()
+        {
+            await using var ctx = _DBContextFactory.CreateContext();
+            var stores = await ctx.Stores.ToArrayAsync();
+            foreach (var store in stores)
+            {
+                if (string.IsNullOrEmpty(store.DerivationStrategies))
+                    continue;
+                JObject strategies = JObject.Parse(store.DerivationStrategies);
+                if (strategies is null)
+                    continue;
+                foreach (var prop in strategies.Properties())
+                {
+                    var h = _handlers.TryGet(new PaymentMethodId(prop.Name));
+                    if (h is not BitcoinLikePaymentHandler bh ||
+                        prop.Value is not JValue { Type: JTokenType.String, Value: string v })
+                        continue;
+                    var settings = DerivationSchemeSettings.Parse(v, bh.Network);
+                    prop.Value = JToken.FromObject(settings, bh.Serializer);
+                    store.DerivationStrategies = strategies.ToString();
+                }
+            }
+            await ctx.SaveChangesAsync();
         }
 
         private async Task MigrateStoreExcludedPaymentMethods()

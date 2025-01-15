@@ -762,6 +762,18 @@
                                 "example": true,
                                 "nullable": true
                             },
+                            "htmlLang": {
+                                "type": "string",
+                                "description": "Used for SEO, the [HTML Lang](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang) of the page",
+                                "nullable": true,
+                                "example": "en"
+                            },
+                            "htmlMetaTags": {
+                                "type": "string",
+                                "description": "Used for SEO, the [Meta tags](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta) of the page",
+                                "nullable": true,
+                                "example": "<meta name=\"description\" content=\"Your description\">"
+                            },
                             "formId": {
                                 "type": "string",
                                 "description": "Form ID to request customer data",
@@ -983,6 +995,18 @@
                                     "#0000FF"
                                 ],
                                 "nullable": true
+                            },
+                            "htmlLang": {
+                                "type": "string",
+                                "description": "Used for SEO, the [HTML Lang](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/lang) of the page",
+                                "nullable": true,
+                                "example": "en"
+                            },
+                            "htmlMetaTags": {
+                                "type": "string",
+                                "description": "Used for SEO, the [Meta tags](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta) of the page",
+                                "nullable": true,
+                                "example": "<meta name=\"description\" content=\"Your description\">"
                             },
                             "formId": {
                                 "type": "string",

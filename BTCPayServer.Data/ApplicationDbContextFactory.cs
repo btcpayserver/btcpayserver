@@ -23,7 +23,6 @@ namespace BTCPayServer.Data
             builder.UseLoggerFactory(LoggerFactory);
             builder.AddInterceptors(MigrationInterceptor.Instance);
             ConfigureBuilder(builder, npgsqlOptionsAction);
-            
             return new ApplicationDbContext(builder.Options);
         }
     }

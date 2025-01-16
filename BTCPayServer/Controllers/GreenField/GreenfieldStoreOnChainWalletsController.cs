@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Labels = data.Labels
             });
         }
-
+        
         [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}/wallet/feerate")]
         public async Task<IActionResult> GetOnChainFeeRate(string storeId, string paymentMethodId, int? blockTarget = null)
@@ -573,7 +573,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     WellknownMetadataKeys.MasterHDKey);
             if (!derivationScheme.IsHotWallet || signingKeyStr is null)
             {
-                var reason = !derivationScheme.IsHotWallet ?
+                var reason = !derivationScheme.IsHotWallet ? 
                     "You cannot send from a cold wallet" :
                     "NBXplorer doesn't have the seed of the wallet";
 

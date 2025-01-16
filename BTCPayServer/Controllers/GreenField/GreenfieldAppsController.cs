@@ -239,7 +239,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (app == null) return AppNotFound();
 
             var stats = (await _appService.GetItemStats(app)).ToList();
-            var max = Math.Min(count, stats.Count - offset);
+            var max = Math.Min(count, stats.Count - offset); 
             var items = stats.GetRange(offset, max);
             return Ok(items);
         }
@@ -251,7 +251,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var app = await _appService.GetApp(appId, null, includeArchived: true);
             var userId = _userManager.GetUserId(User);
             if (app == null || userId == null) return AppNotFound();
-
+            
             UploadImageResultModel? upload = null;
             if (file is null)
                 ModelState.AddModelError(nameof(file), "Invalid file");
@@ -263,7 +263,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-
+            
             try
             {
                 var storedFile = upload!.StoredFile!;
@@ -294,7 +294,7 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!string.IsNullOrEmpty(fileId)) await _fileService.RemoveFile(fileId, userId);
             return Ok();
         }
-
+        
         private IActionResult AppNotFound()
         {
             return this.CreateAPIError(404, "app-not-found", "The app with specified ID was not found");
@@ -305,7 +305,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var parsedSounds = ValidateStringArray(request.Sounds);
             var parsedColors = ValidateStringArray(request.AnimationColors);
             Enum.TryParse<BTCPayServer.Services.Apps.CrowdfundResetEvery>(request.ResetEvery.ToString(), true, out var resetEvery);
-
+            
             return new CrowdfundSettings
             {
                 Title = request.Title?.Trim() ?? request.AppName,
@@ -400,7 +400,7 @@ namespace BTCPayServer.Controllers.Greenfield
             var settings = appData.GetSettings<PointOfSaleSettings>();
             Enum.TryParse<PosViewType>(settings.DefaultView.ToString(), true, out var defaultView);
             var items = AppService.Parse(settings.Template);
-
+            
             return new PointOfSaleAppData
             {
                 Id = appData.Id,
@@ -544,7 +544,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     ModelState.AddModelError(nameof(request.ResetEveryAmount), "You must reset the goal at a minimum of 1");
                 }
             }
-
+            
             if (request.Sounds != null && ValidateStringArray(request.Sounds) == null)
             {
                 ModelState.AddModelError(nameof(request.Sounds), "Sounds must be a non-empty array of non-empty strings");

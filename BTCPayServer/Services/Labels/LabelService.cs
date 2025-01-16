@@ -115,6 +115,11 @@ public class LabelService
                     model.Tooltip = $"This UTXO was exposed through a PayJoin proposal";
                 }
             }
+            else if (tag.Type == WalletObjectData.Types.PullPayment)
+            {
+                model.Tooltip = $"Received through a pull payment {tag.Id}";
+                model.Link = _linkGenerator.PullPaymentLink(tag.Id, req.Scheme, req.Host, req.PathBase);
+            }
             else if (tag.Type == WalletObjectData.Types.Payjoin)
             {
                 model.Tooltip = $"This UTXO was part of a PayJoin transaction.";

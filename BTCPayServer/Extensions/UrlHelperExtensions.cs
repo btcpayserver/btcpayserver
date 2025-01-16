@@ -62,6 +62,15 @@ namespace Microsoft.AspNetCore.Mvc
                 scheme, host, pathbase);
         }
 
+        public static string PullPaymentLink(this LinkGenerator urlHelper, string pullPaymentId, string scheme, HostString host, string pathbase)
+        {
+            return urlHelper.GetUriByAction(
+                action: nameof(UIPullPaymentController.ViewPullPayment),
+                controller: "UIPullPayment",
+                values: new { pullPaymentId },
+                scheme, host, pathbase);
+        }
+
         public static string CheckoutLink(this LinkGenerator urlHelper, string invoiceId, string scheme, HostString host, string pathbase)
         {
             return urlHelper.GetUriByAction(

@@ -194,6 +194,8 @@ namespace BTCPayServer.Plugins.Crowdfund
             {
                 Title = settings.Title,
                 Tagline = settings.Tagline,
+                HtmlLang = settings.HtmlLang,
+                HtmlMetaTags= settings.HtmlMetaTags,
                 Description = settings.Description,
                 StoreName = store.StoreName,
                 StoreId = appData.StoreDataId,

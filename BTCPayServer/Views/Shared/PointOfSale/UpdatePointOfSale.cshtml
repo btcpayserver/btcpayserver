@@ -93,6 +93,7 @@
             <span asp-validation-for="Currency" class="text-danger"></span>
         </div>
     </div>
+
     <div id="description" class="row mt-4">
         <div class="col-xxl-constrain">
             <div class="form-group mb-0">
@@ -196,6 +197,35 @@
             <h3 class="mb-2">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-htmlheader-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-htmlheader" aria-expanded="false" aria-controls="additional-htmlheader">
+                                <span text-translate="true">HTML Headers</span>
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-htmlheader" class="accordion-collapse collapse" aria-labelledby="additional-htmlheader-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="HtmlLang" class="form-label"></label>
+                                    <input asp-for="HtmlLang" class="form-control"/>
+                                    <span asp-validation-for="HtmlLang" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="HtmlMetaTags" class="form-label"></label>
+                                    <textarea asp-for="HtmlMetaTags" rows="5" cols="40" class="form-control"
+                                              placeholder='<meta name="description" content="Your description">
+<meta name="keywords" content="keyword1, keyword2, keyword3">
+<meta name="author" content="John Doe">
+Please insert valid HTML here. Only meta tags accepted.'>
+                                    </textarea>
+                                    <span asp-validation-for="HtmlMetaTags" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-embed-payment-button-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-payment-button" aria-expanded="false" aria-controls="additional-embed-payment-button">

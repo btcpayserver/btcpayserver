@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
@@ -9,6 +11,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Mvc;
 using NBitcoin;
 
@@ -25,116 +28,101 @@ namespace BTCPayServer.Controllers
 
         public class MineBlocksRequest
         {
+            public string PaymentMethodId { get; set; }
             public int BlockCount { get; set; } = 1;
             public string CryptoCode { get; set; } = "BTC";
         }
 
         [HttpPost("i/{invoiceId}/test-payment")]
         [CheatModeRoute]
-        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request, 
-            [FromServices] Cheater cheater, 
-            [FromServices] LightningClientFactoryService lightningClientFactoryService)
+        public async Task<IActionResult> TestPayment(string invoiceId, FakePaymentRequest request,
+            [FromServices] IEnumerable<ICheckoutCheatModeExtension> extensions)
         {
+            var isSats = request.CryptoCode.ToUpper(CultureInfo.InvariantCulture) == "SATS";
+            var amount = isSats ? new Money(request.Amount, MoneyUnit.Satoshi).ToDecimal(MoneyUnit.BTC) : request.Amount;
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             var store = await _StoreRepository.FindStore(invoice.StoreId);
-            var isSats = request.CryptoCode.ToUpper(CultureInfo.InvariantCulture) == "SATS";
-            var cryptoCode = isSats ? "BTC" : request.CryptoCode;
-            var amount = new Money(request.Amount, isSats ? MoneyUnit.Satoshi : MoneyUnit.BTC);
-            var btcpayNetwork = _NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            var network = btcpayNetwork.NBitcoinNetwork;
-            var paymentMethodId = new[] { store.GetDefaultPaymentId() }
-                .Concat(store.GetEnabledPaymentIds())
-                .FirstOrDefault(p => p?.ToString() == request.PaymentMethodId);
-
-            try
+            PaymentMethodId paymentMethodId = GetPaymentMethodId(request.PaymentMethodId, store);
+            var paymentMethod = invoice.GetPaymentPrompt(paymentMethodId);
+            var extension = GetCheatModeExtension(extensions, paymentMethodId);
+            var details = _handlers.ParsePaymentPromptDetails(paymentMethod);
+            if (extension is not null)
             {
-                var paymentMethod = invoice.GetPaymentPrompt(paymentMethodId);
-                var details = _handlers.ParsePaymentPromptDetails(paymentMethod);
-                var destination = paymentMethod?.Destination;
-
-                if (details is BitcoinPaymentPromptDetails)
+                try
                 {
-                    var address = BitcoinAddress.Create(destination, network);
-                    var txid = (await cheater.GetCashCow(cryptoCode).SendToAddressAsync(address, amount)).ToString();
-
+                    var result = await extension.PayInvoice(new ICheckoutCheatModeExtension.PayInvoiceContext(
+                        invoice,
+                        amount,
+                        store,
+                        paymentMethod,
+                        details));
                     return Ok(new
                     {
-                        Txid = txid,
-                        AmountRemaining = paymentMethod.Calculate().Due - amount.ToDecimal(MoneyUnit.BTC),
-                        SuccessMessage = $"Created transaction {txid}"
+                        Txid = result.TransactionId,
+                        AmountRemaining = result.AmountRemaining ?? paymentMethod.Calculate().Due - amount,
+                        SuccessMessage = result.SuccessMessage ?? $"Created transaction {result.TransactionId}"
                     });
                 }
-                else if (details is LigthningPaymentPromptDetails)
+                catch (Exception e)
                 {
-                    // requires the channels to be set up using the BTCPayServer.Tests/docker-lightning-channel-setup.sh script
-                    var lnClient = lightningClientFactoryService.Create(
-                        Environment.GetEnvironmentVariable("BTCPAY_BTCEXTERNALLNDREST"),
-                        btcpayNetwork);
-
-                    var lnAmount = new LightMoney(amount.Satoshi, LightMoneyUnit.Satoshi);
-                    var response = await lnClient.Pay(destination, new PayInvoiceParams { Amount = lnAmount });
-
-                    if (response.Result == PayResult.Ok)
+                    return BadRequest(new
                     {
-                        var bolt11 = BOLT11PaymentRequest.Parse(destination, network);
-                        var paymentHash = bolt11.PaymentHash?.ToString();
-                        var paid = response.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC);
-                        return Ok(new
-                        {
-                            Txid = paymentHash,
-                            AmountRemaining = paymentMethod.Calculate().TotalDue - paid,
-                            SuccessMessage = $"Sent payment {paymentHash}"
-                        });
-                    }
-                    return UnprocessableEntity(new
-                    {
-                        ErrorMessage = response.ErrorDetail
-                    });
-                }
-                else
-                {
-                    return UnprocessableEntity(new
-                    {
-                        ErrorMessage = $"Payment method {paymentMethodId} is not supported"
+                        ErrorMessage = e.Message
                     });
                 }
             }
-            catch (Exception e)
+            else
             {
-                return BadRequest(new
-                {
-                    ErrorMessage = e.Message
-                });
+                return BadRequest(new { ErrorMessage = "No ICheatModeExtension registered for this payment method" });
             }
+        }
+
+        private static ICheckoutCheatModeExtension GetCheatModeExtension(IEnumerable<ICheckoutCheatModeExtension> extensions, PaymentMethodId paymentMethodId)
+        {
+            return extensions.Where(e => e.Handle(paymentMethodId)).FirstOrDefault();
+        }
+
+        private static PaymentMethodId GetPaymentMethodId(string requestPmi, StoreData store)
+        {
+            return new[] { store.GetDefaultPaymentId() }
+                .Concat(store.GetEnabledPaymentIds())
+                .FirstOrDefault(p => p?.ToString() == requestPmi);
         }
 
         [HttpPost("i/{invoiceId}/mine-blocks")]
         [CheatModeRoute]
-        public IActionResult MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] Cheater cheater)
+        public async Task<IActionResult> MineBlock(string invoiceId, MineBlocksRequest request, [FromServices] IEnumerable<ICheckoutCheatModeExtension> extensions)
         {
-            var blockRewardBitcoinAddress = cheater.GetCashCow(request.CryptoCode).GetNewAddress();
-            try
-            {
-                if (request.BlockCount > 0)
-                {
-                    cheater.GetCashCow(request.CryptoCode).GenerateToAddress(request.BlockCount, blockRewardBitcoinAddress);
-                    return Ok(new { SuccessMessage = $"Mined {request.BlockCount} block{(request.BlockCount == 1 ? "" : "s")} " });
-                }
+            if (request.BlockCount <= 0)
                 return BadRequest(new { ErrorMessage = "Number of blocks should be at least 1" });
-            }
-            catch (Exception e)
+            var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+            var store = await _StoreRepository.FindStore(invoice.StoreId);
+            var paymentMethodId = GetPaymentMethodId(request.PaymentMethodId, store);
+            var extension = GetCheatModeExtension(extensions, paymentMethodId);
+            if (extension != null)
             {
-                return BadRequest(new { ErrorMessage = e.Message });
+                try
+                {
+                    var result = await extension.MineBlock(new() { BlockCount = request.BlockCount });
+                    var defaultMessage = $"Mined {request.BlockCount} block{(request.BlockCount == 1 ? "" : "s")} ";
+                    return Ok(new { SuccessMessage = result.SuccessMessage ?? defaultMessage });
+                }
+                catch (Exception e)
+                {
+                    return BadRequest(new { ErrorMessage = e.Message });
+                }
             }
+            else
+                return BadRequest(new { ErrorMessage = "No ICheatModeExtension registered for this payment method" });
         }
 
         [HttpPost("i/{invoiceId}/expire")]
         [CheatModeRoute]
-        public async Task<IActionResult> Expire(string invoiceId, int seconds, [FromServices] Cheater cheater)
+        public async Task<IActionResult> Expire(string invoiceId, int seconds)
         {
             try
             {
-                await cheater.UpdateInvoiceExpiry(invoiceId, TimeSpan.FromSeconds(seconds));
+                await _InvoiceRepository.UpdateInvoiceExpiry(invoiceId, TimeSpan.FromSeconds(seconds));
                 return Ok(new { SuccessMessage = $"Invoice set to expire in {seconds} seconds." });
             }
             catch (Exception e)

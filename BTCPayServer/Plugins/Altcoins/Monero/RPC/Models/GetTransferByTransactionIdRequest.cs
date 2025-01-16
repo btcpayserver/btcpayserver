@@ -6,6 +6,6 @@ namespace BTCPayServer.Services.Altcoins.Monero.RPC.Models
     {
         [JsonProperty("txid")] public string TransactionId { get; set; }
 
-        [JsonProperty("account_index")] public long AccountIndex { get; set; }
+        [JsonProperty("account_index", DefaultValueHandling = DefaultValueHandling.Ignore)] public long? AccountIndex { get; set; }
     }
 }

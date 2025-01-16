@@ -259,6 +259,10 @@ function initApp() {
                 if (this.pmId !== id) {
                     this.paymentMethodId = id;
                     this.fetchData();
+                    // update url
+                    const url = new URL(window.location.href);
+                    url.pathname = checkoutBaseUrl + '/' + id;
+                    history.pushState({}, "", url);
                 }
             },
             changeLanguage (e) {

@@ -86,6 +86,12 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
                 new() { Text = "Use Store Settings", Value = "" }
             }, nameof(SelectListItem.Value), nameof(SelectListItem.Text), RedirectAutomatically);
 
+        [Display(Name = "HTML Lang")]
+        public string HtmlLang { get; set; }
+
+        [Display(Name = "HTML Meta Tags")]
+        public string HtmlMetaTags{ get; set; }
+
         public string Description { get; set; }
 
         [Display(Name = "Request customer data on checkout")]

@@ -24,6 +24,8 @@ public abstract class PointOfSaleBaseData : AppBaseData
     public string? Description { get; set; }
     public bool? RedirectAutomatically { get; set; }
     public int[]? CustomTipPercentages { get; set; }
+    public string? HtmlLang { get; set; }
+    public string? HtmlMetaTags { get; set; }
     public string? FormId { get; set; }
 }
 

@@ -33,13 +33,15 @@
     }
 }
 <!DOCTYPE html>
-<html class="h-100" lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="POS-@Model.AppId">
+<html class="h-100" lang="@Model.HtmlLang" @(Env.IsDeveloping ? " data-devenv" : "") id="POS-@Model.AppId">
 <head>
     <partial name="LayoutHead" />
     <meta name="apple-mobile-web-app-capable" content="yes">
     <link rel="apple-touch-startup-image" href="~/img/splash.png">
     <link rel="manifest" href="@(await GetDynamicManifest(ViewData["Title"]!.ToString()))">
     <link href="~/pos/common.css" asp-append-version="true" rel="stylesheet" />
+    @* Html.Raw OK here since Html has been cleaned before in controller *@
+    @Html.Raw(Model.HtmlMetaTags)
     @await RenderSectionAsync("PageHeadContent", false)
 </head>
 <body class="min-vh-100">

@@ -195,30 +195,17 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
         [HttpGet("~/api/v1/apps/pos/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetPosApp(string appId)
         {
             var app = await _appService.GetApp(appId, PointOfSaleAppType.AppType, includeArchived: true);
-            if (app == null)
-            {
-                return AppNotFound();
-            }
-
-            return Ok(ToPointOfSaleModel(app));
+            return app == null ? AppNotFound() : Ok(ToPointOfSaleModel(app));
         }
 
         [HttpGet("~/api/v1/apps/crowdfund/{appId}")]
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         public async Task<IActionResult> GetCrowdfundApp(string appId)
         {
             var app = await _appService.GetApp(appId, CrowdfundAppType.AppType, includeArchived: true);
-            if (app == null)
-            {
-                return AppNotFound();
-            }
-
-            var model = await ToCrowdfundModel(app);
-            return Ok(model);
+            return app == null ? AppNotFound() : Ok(await ToCrowdfundModel(app));
         }
 
         [HttpDelete("~/api/v1/apps/{appId}")]
@@ -346,6 +333,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 SortPerksByPopularity = request.SortPerksByPopularity ?? false,
                 Sounds = parsedSounds ?? new CrowdfundSettings().Sounds,
                 AnimationColors = parsedColors ?? new CrowdfundSettings().AnimationColors,
+                HtmlMetaTags = request.HtmlMetaTags,
+                HtmlLang  = request.HtmlLang,
                 FormId = request.FormId
             };
         }
@@ -373,6 +362,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 NotificationUrl = request.NotificationUrl,
                 RedirectUrl = request.RedirectUrl,
                 Description = request.Description,
+                HtmlLang = request.HtmlLang,
+                HtmlMetaTags = request.HtmlMetaTags,
                 RedirectAutomatically = request.RedirectAutomatically,
                 FormId = request.FormId
             };
@@ -434,6 +425,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 FormId = settings.FormId,
                 NotificationUrl = settings.NotificationUrl,
                 RedirectUrl = settings.RedirectUrl,
+                HtmlLang = settings.HtmlLang,
+                HtmlMetaTags = settings.HtmlMetaTags,
                 Description = settings.Description,
                 RedirectAutomatically = settings.RedirectAutomatically,
                 Items = items
@@ -497,6 +490,9 @@ namespace BTCPayServer.Controllers.Greenfield
                 SortPerksByPopularity = settings.SortPerksByPopularity,
                 Sounds = settings.Sounds,
                 AnimationColors = settings.AnimationColors,
+                HtmlLang = settings.HtmlLang,
+                HtmlMetaTags = settings.HtmlMetaTags,
+                FormId = settings.FormId,
                 Perks = perks
             };
         }

@@ -80,4 +80,34 @@ public partial class AltcoinsPlugin
         selectedChains.Add("LBTC");
     }
 
+      private void InitLMEX(IServiceCollection services, SelectedChains selectedChains, NBXplorer.NBXplorerNetwork nbxplorerNetwork)
+    {
+        var network = new ElementsBTCPayNetwork()
+        {
+            CryptoCode = "LMEX",
+            NetworkCryptoCode = "LBTC",
+            ShowSyncSummary = false,
+            DefaultRateRules = new[]
+                  {
+                    "LMEX_MEX = 1",
+                    "LMEX_X = MEX_BTC * BTC_X",
+                    "LMEX_BTC = bylls(MEX_BTC)",
+                    "MEX_BTC = LMEX_BTC"
+                },
+            AssetId = new uint256("26ac924263ba547b706251635550a8649545ee5c074fe5db8d7140557baaf32e"),
+            DisplayName = "Liquid Mexas",
+            NBXplorerNetwork = nbxplorerNetwork,
+            CryptoImagePath = "imlegacy/lcad.png",
+            DefaultSettings = BTCPayDefaultSettings.GetDefaultSettings(ChainName),
+            CoinType = ChainName == ChainName.Mainnet ? new KeyPath("1776'") : new KeyPath("1'"),
+            SupportRBF = true,            
+            SupportLightning = false,
+            SupportPayJoin = false,
+            VaultSupported = false,
+            ReadonlyWallet = true
+        }.SetDefaultElectrumMapping(ChainName);
+        services.AddBTCPayNetwork(network)
+                .AddTransactionLinkProvider(PaymentTypes.CHAIN.GetPaymentMethodId("LMEX"), new DefaultTransactionLinkProvider(LiquidBlockExplorer));
+        selectedChains.Add("LBTC");
+    }
 }

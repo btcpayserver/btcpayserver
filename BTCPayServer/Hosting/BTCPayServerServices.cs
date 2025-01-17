@@ -526,6 +526,7 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             {
                 { "EUR", "kraken" },
                 { "USD", "kraken" },
+                { "CAD", "kraken" },
                 { "GBP", "kraken" },
                 { "CHF", "kraken" },
                 { "GTQ", "bitpay" },

@@ -29,6 +29,7 @@ namespace BTCPayServer.Plugins.Altcoins
                     // Activating LBTC automatically activate the other liquid assets
                     InitUSDT(services, selectedChains, liquidNBX);
                     InitLCAD(services, selectedChains, liquidNBX);
+                    InitLMEX(services, selectedChains, liquidNBX);
                 }
                 else
                 {

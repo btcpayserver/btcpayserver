@@ -481,12 +481,12 @@ namespace BTCPayServer.Tests
             var request = await fakeServer.GetNextRequest();
             Assert.Equal("1", request.Request.Query["v"][0]);
             Assert.Equal(changeIndex.ToString(), request.Request.Query["additionalfeeoutputindex"][0]);
-            Assert.Equal("1146", request.Request.Query["maxadditionalfeecontribution"][0]);
+            Assert.Equal("1853", request.Request.Query["maxadditionalfeecontribution"][0]);
 
             TestLogs.LogInformation("The payjoin receiver tries to make us pay lots of fee");
             var originalPSBT = await ParsePSBT(request);
             var proposalTx = originalPSBT.GetGlobalTransaction();
-            proposalTx.Outputs[changeIndex].Value -= Money.Satoshis(1147);
+            proposalTx.Outputs[changeIndex].Value -= Money.Satoshis(1854);
             await request.Response.WriteAsync(PSBT.FromTransaction(proposalTx, Network.RegTest).ToBase64(), Encoding.UTF8);
             fakeServer.Done();
             var ex = await Assert.ThrowsAsync<PayjoinSenderException>(async () => await requesting);

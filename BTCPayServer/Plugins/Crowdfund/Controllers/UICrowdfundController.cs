@@ -588,7 +588,7 @@ namespace BTCPayServer.Plugins.Crowdfund.Controllers
             });
             if (wasHtmlModified)
             {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly."].Value;
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly."].Value;
             }
             else
             {

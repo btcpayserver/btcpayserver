@@ -729,7 +729,7 @@ namespace BTCPayServer.Plugins.PointOfSale.Controllers
             await _appService.UpdateOrCreateApp(app);
             if (wasHtmlModified)
             {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly."].Value;
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Only meta tags are allowed in HTML headers. Your HTML code has been cleaned up accordingly."].Value;
             } else {
                 TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["App updated"].Value;
             }

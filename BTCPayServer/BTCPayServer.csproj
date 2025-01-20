@@ -78,7 +78,7 @@
     <PackageReference Include="TwentyTwenty.Storage.Azure" Version="2.24.2" />
     <PackageReference Include="TwentyTwenty.Storage.Google" Version="2.24.2" />
     <PackageReference Include="TwentyTwenty.Storage.Local" Version="2.24.2" />
-    <PackageReference Condition="'$(RazorCompileOnBuild)' == 'false'" Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.11" />
+    <PackageReference Condition="'$(RazorCompileOnBuild)' == 'false'" Include="Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation" Version="8.0.12" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.NewtonsoftJson" Version="8.0.11" />
     <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR.Protocols.NewtonsoftJson" Version="8.0.11" />

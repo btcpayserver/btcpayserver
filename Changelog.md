@@ -1,5 +1,37 @@
 # Changelog
 
+## 2.0.6
+
+This release contains a security fix for merchants using refunds/pull payments On-Chain with automated payout processors. Please update as soon as possible.
+We could not reproduce the reported issue on our own instances, but the reporting merchant confirmed the issue was resolved.
+
+### New features
+
+* SEO: Add ability to customize HTML meta tags and HTML lang attribute for crowdfund and PoS (#6229) @Nisaba
+* Add the ability for merchants to manually transition a payout from the `InProgress` state to `AwaitingPayment`. (#6564) @NicolasDorier
+
+### Bug fixes
+
+* **Security fix**: Critical fix to prevent duplicate payouts in certain On-Chain configurations. (#6540 #6564) @NicolasDorier
+* Store: Allow resetting custom email server (#6547 #6546) @dennisreimann
+* UI: Fix store's custom CSS URL (#6555 #6554) @dennisreimann
+* Fix: Sidemenu unscrollable on Firefox for Android (#6548 #6552) @dennisreimann
+* Fix: Migration bug from V1 to V2 which can happen on very old instances (#6551) @NicolasDorier
+* Fix: Migration bug from V1 to V2 for users which used the old ETH integration (#6539) @NicolasDorier
+* Fix: The route `GET v1/stores/{storeId}/payment-methods/{paymentMethod}` was returning a wrong `enabled` property if `onlyEnabled` query parameter was passed. (#6570) @NicolasDorier
+* Fix: The route `PUT v1/stores/{storeId}/payment-methods/{paymentMethod}` for on-chain payment method was not supporting the documented config payload. (#6570) @NicolasDorier
+* Dashboard: Fix Lightning balance display for tiny amounts (#6573) @dennisreimann
+
+### Improvements
+
+* Add a warning about our Shopify integration being [deprecated by Shopify](https://changelog.shopify.com/posts/shopify-scripts-deprecation). Add link to our new plugin for it. (#6559) @TChukwuleta
+* Relaxing some payjoin related rules in accordance with changes to the BIP78 spec (#6561) @NicolasDorier
+* Add kraken as default rate provider for CAD @NicolasDorier
+* Add tooltip and link to pull-payment tags in wallet's transaction list (#6562) @NicolasDorier
+* Make Checkout Cheat Mode extensible by plugins (#6543) @NicolasDorier
+* Allow receipt to be shown in iframe (#6574) @dennisreimann
+* if the checkout page is shown within an iframe and hides the back to store link (#6574) @dennisreimann
+
 ## 2.0.5
 
 ### Bug fixes

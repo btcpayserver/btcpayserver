@@ -408,6 +408,7 @@ public partial class UIStoresController
         var client = _explorerProvider.GetExplorerClient(network);
 
         var handler = _handlers.GetBitcoinHandler(cryptoCode);
+
         var vm = new WalletSettingsViewModel
         {
             StoreId = storeId,
@@ -417,18 +418,18 @@ public partial class UIStoresController
             Network = network,
             IsHotWallet = derivation.IsHotWallet,
             Source = derivation.Source,
-            RootFingerprint = derivation.GetSigningAccountKeySettings().RootFingerprint.ToString(),
-            DerivationScheme = derivation.AccountDerivation.ToString(),
+            RootFingerprint = derivation.GetSigningAccountKeySettingsOrDefault()?.RootFingerprint.ToString(),
+            DerivationScheme = derivation.AccountDerivation?.ToString(),
             DerivationSchemeInput = derivation.AccountOriginal,
-            KeyPath = derivation.GetSigningAccountKeySettings().AccountKeyPath?.ToString(),
+            KeyPath = derivation.GetSigningAccountKeySettingsOrDefault()?.AccountKeyPath?.ToString(),
             UriScheme = network.NBitcoinNetwork.UriScheme,
             Label = derivation.Label,
-            SelectedSigningKey = derivation.SigningKey.ToString(),
+            SelectedSigningKey = derivation.SigningKey?.ToString(),
             NBXSeedAvailable = derivation.IsHotWallet &&
                                canUseHotWallet &&
                                !string.IsNullOrEmpty(await client.GetMetadataAsync<string>(derivation.AccountDerivation,
                                    WellknownMetadataKeys.MasterHDKey)),
-            AccountKeys = derivation.AccountKeySettings
+            AccountKeys = (derivation.AccountKeySettings ?? [])
                 .Select(e => new WalletSettingsAccountKeyViewModel
                 {
                     AccountKey = e.AccountKey.ToString(),
@@ -441,7 +442,7 @@ public partial class UIStoresController
             CanUseHotWallet = canUseHotWallet,
             CanUseRPCImport = rpcImport,
             StoreName = store.StoreName,
-            CanSetupMultiSig = derivation.AccountKeySettings.Length > 1,
+            CanSetupMultiSig = (derivation.AccountKeySettings ?? []).Length > 1,
             IsMultiSigOnServer = derivation.IsMultiSigOnServer,
             DefaultIncludeNonWitnessUtxo = derivation.DefaultIncludeNonWitnessUtxo
         };

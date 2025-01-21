@@ -80,7 +80,12 @@ namespace BTCPayServer
 
         public AccountKeySettings GetSigningAccountKeySettings()
         {
-            return AccountKeySettings.Single(a => a.AccountKey == SigningKey);
+            return (AccountKeySettings ?? []).Single(a => a.AccountKey == SigningKey);
+        }
+
+        public AccountKeySettings GetSigningAccountKeySettingsOrDefault()
+        {
+            return (AccountKeySettings ?? []).SingleOrDefault(a => a.AccountKey == SigningKey);
         }
 
         public AccountKeySettings[] AccountKeySettings { get; set; }

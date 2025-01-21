@@ -439,7 +439,28 @@ namespace BTCPayServer.Controllers
                         });
                         break;
                     }
-
+                case "mark-awaiting-payment":
+                    await using (var context = _dbContextFactory.CreateContext())
+                    {
+                        var payouts = (await PullPaymentHostedService.GetPayouts(new PullPaymentHostedService.PayoutQuery()
+                        {
+                            States = new[] { PayoutState.InProgress },
+                            Stores = new[] { storeId },
+                            PayoutIds = payoutIds
+                        }, context));
+                        foreach (var payout in payouts)
+                        {
+                            payout.State = PayoutState.AwaitingPayment;
+                            payout.Proof = null;
+                        }
+                        await context.SaveChangesAsync();
+                    }
+                    TempData.SetStatusMessageModel(new StatusMessageModel
+                    {
+                        Message = "Payout payments have been marked as awaiting payment",
+                        Severity = StatusMessageModel.StatusSeverity.Success
+                    });
+                    break;
                 case "cancel":
                     await _pullPaymentService.Cancel(
                         new PullPaymentHostedService.CancelRequest(payoutIds, new[] { storeId }));

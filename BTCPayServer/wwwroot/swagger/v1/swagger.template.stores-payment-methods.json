@@ -3,7 +3,7 @@
         "/api/v1/stores/{storeId}/payment-methods": {
             "get": {
                 "tags": [
-                    "Store Payment Methods"
+                    "Store (Payment Methods)"
                 ],
                 "summary": "Get store payment methods",
                 "description": "View information about the stores' configured payment methods",
@@ -79,7 +79,7 @@
         "/api/v1/stores/{storeId}/payment-methods/{paymentMethodId}": {
             "get": {
                 "tags": [
-                    "Store Payment Methods"
+                    "Store (Payment Methods)"
                 ],
                 "summary": "Get store payment method",
                 "description": "View information about the stores' configured payment method",
@@ -144,7 +144,7 @@
             },
             "put": {
                 "tags": [
-                    "Store Payment Methods"
+                    "Store (Payment Methods)"
                 ],
                 "summary": "Update store's payment method",
                 "description": "Update information about the stores' configured payment method",
@@ -209,7 +209,7 @@
             },
             "delete": {
                 "tags": [
-                    "Store Payment Methods"
+                    "Store (Payment Methods)"
                 ],
                 "summary": "Delete store's payment method",
                 "description": "Delete information about the stores' configured payment method",
@@ -369,7 +369,7 @@
     },
     "tags": [
         {
-            "name": "Store Payment Methods",
+            "name": "Store (Payment Methods)",
             "description": "Store Payment Methods operations"
         }
     ]

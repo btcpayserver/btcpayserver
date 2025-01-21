@@ -15,6 +15,7 @@ using StoreData = BTCPayServer.Data.StoreData;
 using BTCPayServer.ModelBinders;
 using BTCPayServer.Payments;
 using BTCPayServer.Services.Stores;
+using System;
 
 namespace BTCPayServer.Controllers.Greenfield
 {
@@ -102,9 +103,9 @@ namespace BTCPayServer.Controllers.Greenfield
                     if (ctx.StripUnknownProperties)
                         config = JToken.FromObject(handler.ParsePaymentMethodConfig(config), handler.Serializer);
                 }
-                catch
+                catch (Exception ex)
                 {
-                    ModelState.AddModelError(nameof(config), "Invalid configuration");
+                    ModelState.AddModelError(nameof(config), $"Invalid configuration ({ex.Message})");
                     return this.CreateValidationError(ModelState);
                 }
                 Store.SetPaymentMethodConfig(paymentMethodId, config);
@@ -151,7 +152,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     method => new GenericPaymentMethodData()
                     {
                         PaymentMethodId = method.Key.ToString(),
-                        Enabled = onlyEnabled.GetValueOrDefault(!excludedPaymentMethods.Match(method.Key)),
+                        Enabled = !excludedPaymentMethods.Match(method.Key),
                         Config = includeConfig is true ? JToken.FromObject(method.Value, _handlers[method.Key].Serializer.ForAPI()) : null
                     }).ToArray());
         }

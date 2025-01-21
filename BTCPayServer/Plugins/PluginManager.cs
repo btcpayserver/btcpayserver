@@ -125,10 +125,19 @@ namespace BTCPayServer.Plugins
             {
                 // Formatted either as "<PLUGIN_IDENTIFIER>::<PathToDll>" or "<PathToDll>"
                 var idx = plugin.IndexOf("::");
+                var filePath = plugin;
                 if (idx != -1)
-                    pluginsToLoad.Add((plugin[0..idx], plugin[(idx + 1)..]));
+                {
+                    filePath = plugin[(idx + 1)..];
+                    filePath = Path.GetFullPath(filePath);
+                    pluginsToLoad.Add((plugin[0..idx], filePath));
+                }
                 else
-                    pluginsToLoad.Add((Path.GetFileNameWithoutExtension(plugin), plugin));
+                {
+                    filePath = Path.GetFullPath(filePath);
+
+                    pluginsToLoad.Add((Path.GetFileNameWithoutExtension(plugin), filePath));
+                }
             }
 #endif
 

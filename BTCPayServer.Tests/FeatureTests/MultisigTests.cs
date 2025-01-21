@@ -117,39 +117,26 @@ public class MultisigTests : UnitTestBase
 
     public async Task<string> SignWithSeed(string psbtBase64, GenerateWalletResponse resp)
     {
-        // Parse master HD key and root path
         var strMasterHdKey = resp.MasterHDKey;
         var extKey = new BitcoinExtKey(strMasterHdKey, Network.RegTest);
 
         var strKeypath = resp.AccountKeyPath.ToStringWithEmptyKeyPathAware();
         RootedKeyPath rootedKeyPath = RootedKeyPath.Parse(strKeypath);
 
-        // Create the derivation scheme
         var derivationScheme = new DirectDerivationStrategy(extKey.Neuter(), true);
-
-        // Parse the PSBT
-        var psbt = PSBT.Parse(psbtBase64, Network.RegTest);
-
-        // Ensure the key paths in the PSBT align with the signing key
+        
         if (rootedKeyPath.MasterFingerprint != extKey.GetPublicKey().GetHDFingerPrint())
-        {
             throw new Exception("Master fingerprint mismatch. Ensure the wallet matches the PSBT.");
-        }
-
-        // Rebase the PSBT key paths
-        psbt.RebaseKeyPaths(extKey.Neuter(), rootedKeyPath);
-
-        // Derive the signing key for the specific account path
-        var signingKey = extKey;
-
+        // finished setting variables, now onto signing
+        
+        var psbt = PSBT.Parse(psbtBase64, Network.RegTest);
+        
         // Sign the PSBT
         psbt.Settings.SigningOptions = new SigningOptions();
-        var changed = psbt.PSBTChanged(() => psbt.SignAll(derivationScheme, signingKey, rootedKeyPath));
+        var changed = psbt.PSBTChanged(() => psbt.SignAll(derivationScheme, extKey, rootedKeyPath));
 
         if (!changed)
-        {
             throw new Exception("Failed to sign the PSBT. Ensure the inputs align with the account key path.");
-        }
 
         // Return the updated and signed PSBT
         return psbt.ToBase64();

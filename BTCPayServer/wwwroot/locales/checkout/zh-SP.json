@@ -1,7 +1,7 @@
 {
   "NOTICE_WARN": "THIS CODE HAS BEEN AUTOMATICALLY GENERATED FROM TRANSIFEX, IF YOU WISH TO HELP TRANSLATION COME ON THE SLACK https://chat.btcpayserver.org/ TO REQUEST PERMISSION TO https://www.transifex.com/btcpayserver/btcpayserver/",
   "code": "zh-SP",
-  "currentLanguage": "中文（简体）",
+  "currentLanguage": "英文",
   "any_amount": "任意金额",
   "expiry_info": "此发票将于",
   "partial_payment_info": "发票未全额支付。",
@@ -40,6 +40,6 @@
   "payment_received": "已收到付款",
   "payment_received_body": "您的付款已收到，正在处理中",
   "payment_received_confirmations": "一旦{{cryptoCode}} 区块链上收到{{requiredConfirmations}}个确认，您的账单将会被结算。",
-  "invoice_paidpartial_body": "一个发票仅在{{minutes}}分钟内有效。此发票因部分付款而过期。请与我们联系，以便我们能够完成您的订单。",
-  "contact_us": "联系我们"
+  "invoice_paidpartial_body": "发票仅在 {{minutes}} 分钟内有效。\n\n此发票已过期，部分付款已过期。请联系我们，以便我们完成您的订单。",
+  "contact_us": "与我们联系"
 }

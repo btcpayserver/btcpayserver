@@ -12,7 +12,7 @@ namespace BTCPayServer.Payments.Lightning
         /// Used to validate the client configuration
         /// </summary>
         /// <returns></returns>
-        public Task<ValidationResult> Validate();
+        public Task<ValidationResult?> Validate();
         /// <summary>
         /// The display name of this client (ie. LND (REST), Eclair, LNDhub)
         /// </summary>

@@ -188,6 +188,7 @@ namespace BTCPayServer.Controllers
             return View(model);
         }
 
+        [XFrameOptions(null)]
         [HttpGet("i/{invoiceId}/receipt")]
         public async Task<IActionResult> InvoiceReceipt(string invoiceId, [FromQuery] bool print = false)
         {

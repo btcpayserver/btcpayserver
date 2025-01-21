@@ -27,6 +27,12 @@
     visibility: hidden;
 }
 
+/* Iframe context */
+[data-within-iframe] #StoreLink,
+[data-within-iframe] .store-footer {
+    display: none;
+}
+
 /* Form validation messages should match alert styles */
 .validation-summary-errors {
     padding: .75rem 1rem;

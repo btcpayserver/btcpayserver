@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -28,30 +29,73 @@ public class MultisigTests : UnitTestBase
 
     [Fact]
     [Trait("Selenium", "Selenium")]
+    public async Task SignTestPSBT()
+    {
+        var cryptoCode = "BTC";
+        using var s = CreateSeleniumTester();
+        await s.StartAsync();
+
+        var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+        var resp1 = generateWalletResp("tprv8ZgxMBicQKsPeGSkDtxjScBmmHP4rfSEPkf1vNmoqt5QjPTco2zPd6UVWkJf2fU8gdKPYRdDMizxtMRqmpVpxsWuqRxVs2d5VsEhwxaK3h7", 
+            "57b3f43a/84'/1'/0'", "tpubDCzBHRPRcv7Y3utw1hZVrCar21gsj8vsXcehAG4z3R4NnmdMAASQwYYxGBd2f4q5s5ZFGvQBBFs1jVcGsXYoSTA1YFQPwizjsQLU12ibLyu", network);
+        var resp2 = generateWalletResp("tprv8ZgxMBicQKsPeC6Xuw83UJHgjnszEUjwH9E5f5FZ3fHgJHBQApo8CmFCsowcdwbRM119UnTqSzVWUsWGtLsxc8wnZa5L8xmEsvEpiyRj4Js", 
+            "ee7d36c4/84'/1'/0'", "tpubDCetxnEjn8HXA5NrDZbKKTUUYoWCVC2V3X7Kmh3o9UYTfh9c3wTPKyCyeUrLkQ8KHYptEsBoQq6AgqPZiW5neEgb2kjKEr41q1qSevoPFDM", network);
+        var resp3 = generateWalletResp("tprv8ZgxMBicQKsPekSniuKwLtXpB82dSDV8ZAK4uLUHxkiHWfDtR5yYwNZiicKdpT3UYwzTTMvXESCm45KyAiH7kiJY6yk51neC9ZvmwDpNsQh", 
+            "6c014fb3/84'/1'/0'", "tpubDCaTgjJfS5UEim6h66VpQBEZ2Tj6hHk8TzvL81HygdW1M8vZCRhUZLNhb3WTimyP2XMQRA3QGZPwwxUsEFQYK4EoRUWTcb9oB237FJ112tN", network);
+
+        var multisigDerivationScheme = $"wsh(multi(2,[{resp1.AccountKeyPath}]{resp1.DerivationScheme}/0/*," +
+                                       $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
+                                       $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
+        
+        var strategy = ParseDerivationStrategy(multisigDerivationScheme, network);
+        strategy.Source = "ManualDerivationScheme";
+        var derivationScheme = strategy.AccountDerivation;
+
+        var testPSBT =
+            "cHNidP8BAIkCAAAAAeY+H/Wt6xqqXIqaJjV+SjENBZGSMLoYktO4xYKHyBoQAAAAAAD9////Amu/vgAAAAAAIgAgztW7uUKcgZpup41zH9TE/SIR86N5nlpA/AF2vcFab1qAlpgAAAAAACIAIL+MaSXCZIWMSeP3d0z/XjAkFXOfXoM/U46iOykq4HdrAAAAAAABASu1ZVcBAAAAACIAIEI1nEO12ebYFlUrvTjV6H5Ni4s9KgKX6DZ0cp2zUkWuAQVpUiED+ydwcMCfdyU8zasfqfwKkfvb8PlU3GoOimrk7tSeUQshAvR/sD54JSEInx8IkChtFwipH+JdRORfOsiUDqu8rKDcIQM2YBLr0lf8JXewzExPRH/EFcWEuDFqfXpY9wUnvpWT3FOuIgYC9H+wPnglIQifHwiQKG0XCKkf4l1E5F86yJQOq7ysoNwY7n02xFQAAIABAACAAAAAgAAAAAAPAAAAIgYDNmAS69JX/CV3sMxMT0R/xBXFhLgxan16WPcFJ76Vk9wYbAFPs1QAAIABAACAAAAAgAAAAAAPAAAAIgYD+ydwcMCfdyU8zasfqfwKkfvb8PlU3GoOimrk7tSeUQsYV7P0OlQAAIABAACAAAAAgAAAAAAPAAAAAAEBaVIhA73+AdFyNMI/L8pW8k8L7V2xtk7ffjIgU8PlaLoDQuc5IQJP1ot2JmtrPDUxCk9jf40t9rHwnvSIRUcARX+fhEM4NSECXESl6tjPWdrMeBHsfMf/8XX1SfhaLJX6fRX9fHynx45TriICAk/Wi3Yma2s8NTEKT2N/jS32sfCe9IhFRwBFf5+EQzg1GO59NsRUAACAAQAAgAAAAIABAAAAAAAAACICAlxEperYz1nazHgR7HzH//F19Un4WiyV+n0V/Xx8p8eOGGwBT7NUAACAAQAAgAAAAIABAAAAAAAAACICA73+AdFyNMI/L8pW8k8L7V2xtk7ffjIgU8PlaLoDQuc5GFez9DpUAACAAQAAgAAAAIABAAAAAAAAAAAA";
+        
+        var signedPsbt = await SignWithSeed(testPSBT, derivationScheme, resp1);
+        s.TestLogs.LogInformation($"Signed PSBT: {signedPsbt}");
+    }
+
+    [Fact]
+    [Trait("Selenium", "Selenium")]
     public async Task CanEnableMultisigWallet()
     {
+        var cryptoCode = "BTC";
         using var s = CreateSeleniumTester();
         await s.StartAsync();
         // var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
         s.RegisterNewUser(true);
         
-        var cryptoCode = "BTC";
-        s.CreateNewStore();
+        var storeData = s.CreateNewStore();
 
         var explorerProvider = s.Server.PayTester.GetService<ExplorerClientProvider>();
         var client = explorerProvider.GetExplorerClient(cryptoCode);
         var req = new GenerateWalletRequest { ScriptPubKeyType = ScriptPubKeyType.Segwit, SavePrivateKeys = true };
+        
+        // var resp1 = await client.GenerateWalletAsync(req);
+        // s.TestLogs.LogInformation($"Created hot wallet 1: {resp1.DerivationScheme} | {resp1.AccountKeyPath} | {resp1.MasterHDKey.ToWif()}");
+        // var resp2 = await client.GenerateWalletAsync(req);
+        // s.TestLogs.LogInformation($"Created hot wallet 2: {resp2.DerivationScheme} | {resp2.AccountKeyPath} | {resp2.MasterHDKey.ToWif()}");
+        // var resp3 = await client.GenerateWalletAsync(req);
+        // s.TestLogs.LogInformation($"Created hot wallet 3: {resp3.DerivationScheme} | {resp3.AccountKeyPath} | {resp3.MasterHDKey.ToWif()}");
 
-        var resp1 = await client.GenerateWalletAsync(req);
-        s.TestLogs.LogInformation($"Created hot wallet 1: {resp1.DerivationScheme} | {resp1.AccountKeyPath} | {resp1.MasterHDKey}");
-        var resp2 = await client.GenerateWalletAsync(req);
-        s.TestLogs.LogInformation($"Created hot wallet 2: {resp2.DerivationScheme} | {resp2.AccountKeyPath} | {resp2.MasterHDKey}");
-        var resp3 = await client.GenerateWalletAsync(req);
-        s.TestLogs.LogInformation($"Created hot wallet 3: {resp3.DerivationScheme} | {resp3.AccountKeyPath} | {resp3.MasterHDKey}");
+        var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+        var resp1 = generateWalletResp("tprv8ZgxMBicQKsPeGSkDtxjScBmmHP4rfSEPkf1vNmoqt5QjPTco2zPd6UVWkJf2fU8gdKPYRdDMizxtMRqmpVpxsWuqRxVs2d5VsEhwxaK3h7", 
+            "57b3f43a/84'/1'/0'", "tpubDCzBHRPRcv7Y3utw1hZVrCar21gsj8vsXcehAG4z3R4NnmdMAASQwYYxGBd2f4q5s5ZFGvQBBFs1jVcGsXYoSTA1YFQPwizjsQLU12ibLyu", network);
+        var resp2 = generateWalletResp("tprv8ZgxMBicQKsPeC6Xuw83UJHgjnszEUjwH9E5f5FZ3fHgJHBQApo8CmFCsowcdwbRM119UnTqSzVWUsWGtLsxc8wnZa5L8xmEsvEpiyRj4Js", 
+            "ee7d36c4/84'/1'/0'", "tpubDCetxnEjn8HXA5NrDZbKKTUUYoWCVC2V3X7Kmh3o9UYTfh9c3wTPKyCyeUrLkQ8KHYptEsBoQq6AgqPZiW5neEgb2kjKEr41q1qSevoPFDM", network);
+        var resp3 = generateWalletResp("tprv8ZgxMBicQKsPekSniuKwLtXpB82dSDV8ZAK4uLUHxkiHWfDtR5yYwNZiicKdpT3UYwzTTMvXESCm45KyAiH7kiJY6yk51neC9ZvmwDpNsQh", 
+            "6c014fb3/84'/1'/0'", "tpubDCaTgjJfS5UEim6h66VpQBEZ2Tj6hHk8TzvL81HygdW1M8vZCRhUZLNhb3WTimyP2XMQRA3QGZPwwxUsEFQYK4EoRUWTcb9oB237FJ112tN", network);
 
         var multisigDerivationScheme = $"wsh(multi(2,[{resp1.AccountKeyPath}]{resp1.DerivationScheme}/0/*," +
                                        $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
                                        $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
+        
+        var strategy = ParseDerivationStrategy(multisigDerivationScheme, network);
+        strategy.Source = "ManualDerivationScheme";
+        var derivationScheme = strategy.AccountDerivation;
         
         s.GoToWalletSettings();
         s.Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
@@ -94,7 +138,11 @@ public class MultisigTests : UnitTestBase
         
         //
         var psbt = s.Driver.FindElement(By.Id("psbt-base64")).Text;
-        var signedPsbt = await SignWithSeed(psbt, resp1);
+        while (String.IsNullOrEmpty(psbt))
+        {
+            psbt = s.Driver.FindElement(By.Id("psbt-base64")).Text;
+        }
+        var signedPsbt = await SignWithSeed(psbt, derivationScheme, resp1);
         
         s.Driver.FindElement(By.Id("PSBTOptionsImportHeader")).Click();
         s.Driver.FindElement(By.Id("ImportedPSBT")).SendKeys(signedPsbt);
@@ -114,16 +162,33 @@ public class MultisigTests : UnitTestBase
         s.TestLogs.LogInformation($"Finished MultiSig Flow");
     }
 
+    private GenerateWalletResponse generateWalletResp(string tpriv, string keypath, string derivation, BTCPayNetwork network)
+    {
+        var key1 = new BitcoinExtKey(
+                ExtKey.Parse(tpriv, Network.RegTest),
+            Network.RegTest);
+        
+        
+        var parser = new DerivationSchemeParser(network);
+        
+        var resp1 = new GenerateWalletResponse
+        {
+            MasterHDKey = key1,
+            DerivationScheme = parser.Parse(derivation),
+            AccountKeyPath = RootedKeyPath.Parse(keypath)
+        };
+        return resp1;
+    }
 
-    public async Task<string> SignWithSeed(string psbtBase64, GenerateWalletResponse resp)
+
+    public async Task<string> SignWithSeed(string psbtBase64, DerivationStrategyBase derivationStrategyBase,
+        GenerateWalletResponse resp)
     {
         var strMasterHdKey = resp.MasterHDKey;
         var extKey = new BitcoinExtKey(strMasterHdKey, Network.RegTest);
 
         var strKeypath = resp.AccountKeyPath.ToStringWithEmptyKeyPathAware();
         RootedKeyPath rootedKeyPath = RootedKeyPath.Parse(strKeypath);
-
-        var derivationScheme = new DirectDerivationStrategy(extKey.Neuter(), true);
         
         if (rootedKeyPath.MasterFingerprint != extKey.GetPublicKey().GetHDFingerPrint())
             throw new Exception("Master fingerprint mismatch. Ensure the wallet matches the PSBT.");
@@ -133,12 +198,37 @@ public class MultisigTests : UnitTestBase
         
         // Sign the PSBT
         psbt.Settings.SigningOptions = new SigningOptions();
-        var changed = psbt.PSBTChanged(() => psbt.SignAll(derivationScheme, extKey, rootedKeyPath));
+        var changed = psbt.PSBTChanged(() => psbt.SignAll(derivationStrategyBase, extKey, rootedKeyPath));
 
         if (!changed)
             throw new Exception("Failed to sign the PSBT. Ensure the inputs align with the account key path.");
 
         // Return the updated and signed PSBT
         return psbt.ToBase64();
+    }
+    
+    
+    
+    private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
+    {
+        var parser = new DerivationSchemeParser(network);
+        var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
+        if (isOD.Success)
+        {
+            var derivationSchemeSettings = new DerivationSchemeSettings();
+            var result = parser.ParseOutputDescriptor(derivationScheme);
+            derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
+            derivationSchemeSettings.AccountDerivation = result.Item1;
+            derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
+            {
+                RootFingerprint = path?.MasterFingerprint,
+                AccountKeyPath = path?.KeyPath,
+                AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(parser.Network)
+            }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
+            return derivationSchemeSettings;
+        }
+
+        var strategy = parser.Parse(derivationScheme);
+        return new DerivationSchemeSettings(strategy, network);
     }
 }

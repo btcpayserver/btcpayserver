@@ -33,6 +33,9 @@
             stateActions.Add(("cancel", StringLocalizer["Cancel"]));
             stateActions.Add(("mark-paid", StringLocalizer["Mark as already paid"]));
             break;
+		case PayoutState.InProgress:
+			stateActions.Add(("mark-awaiting-payment", StringLocalizer["Mark as awaiting payment"]));
+			break;
     }
 }
 

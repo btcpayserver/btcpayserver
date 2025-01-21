@@ -25,18 +25,13 @@ namespace BTCPayServer.Services.Altcoins.Monero.Services
         {
             return _moneroRpcProvider.Summaries.Select(pair => new MoneroSyncStatus()
             {
-                Summary = pair.Value, PaymentMethodId = PaymentMethodId.Parse(pair.Key)
+                Summary = pair.Value, PaymentMethodId = PaymentMethodId.Parse(pair.Key).ToString()
             });
         }
     }
 
     public class MoneroSyncStatus: SyncStatus, ISyncStatus
     {
-        public new PaymentMethodId PaymentMethodId
-        {
-            get => PaymentMethodId.Parse(base.PaymentMethodId);
-            set => base.PaymentMethodId = value.ToString();
-        }
         public override bool Available
         {
             get

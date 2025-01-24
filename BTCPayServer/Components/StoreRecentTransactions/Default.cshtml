@@ -43,7 +43,7 @@
                 <tbody>
                 @foreach (var tx in Model.Transactions)
                 {
-                    <tr>
+                    <tr class="@(tx.IsConfirmed ? "" : "opacity-50")">
                         <td>@tx.Timestamp.ToTimeAgo()</td>
                         <td>
                             <vc:truncate-center text="@tx.Id" link="@tx.Link" classes="truncate-center-id" />

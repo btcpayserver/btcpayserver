@@ -6,7 +6,7 @@
 }
 @foreach (var transaction in Model.Transactions)
 {
-    <tr class="mass-action-row">
+    <tr class="mass-action-row@(transaction.IsConfirmed ? "" : " opacity-50")">
         <td class="only-for-js mass-action-select-col">
             <input name="selectedTransactions" type="checkbox" class="form-check-input mass-action-select" form="WalletActions" value="@transaction.Id" />
         </td>

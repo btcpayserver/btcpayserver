@@ -38,8 +38,6 @@ namespace BTCPayServer.Rating
             ArgumentNullException.ThrowIfNull(str);
             value = null;
             str = str.Trim();
-            if (str.Length > 12)
-                return false;
             var splitted = str.Split(new[] { '_', '-' }, StringSplitOptions.RemoveEmptyEntries);
             if (splitted.Length == 2)
             {

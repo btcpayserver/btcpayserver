@@ -782,22 +782,13 @@ namespace BTCPayServer
                             DescriptionHashOnly = true
                         };
                         invoice = await client.CreateInvoice(param);
-                        if (!BOLT11PaymentRequest.Parse(invoice.BOLT11, network.NBitcoinNetwork)
-                                .VerifyDescriptionHash(description))
-                        {
-                            return BadRequest(new LNUrlStatusResponse
-                            {
-                                Status = "ERROR",
-                                Reason = "Lightning node could not generate invoice with a valid description hash"
-                            });
-                        }
                     }
                     catch (Exception ex)
                     {
                         return BadRequest(new LNUrlStatusResponse
                         {
                             Status = "ERROR",
-                            Reason = "Lightning node could not generate invoice with description hash" + (
+                            Reason = "Lightning node could not generate invoice" + (
                                 string.IsNullOrEmpty(ex.Message) ? "" : $": {ex.Message}")
                         });
                     }

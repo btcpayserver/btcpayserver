@@ -269,7 +269,7 @@ namespace BTCPayServer.Services.Wallets
                         SeenAt = row.seen_at,
                         TransactionId = uint256.Parse(row.tx_id),
                         Confirmations = row.confs,
-                        BlockHash = string.IsNullOrEmpty(row.asset_id) ? null : uint256.Parse(row.blk_id)
+                        BlockHash = string.IsNullOrEmpty(row.blk_id) ? null : uint256.Parse(row.blk_id)
                     });
                 }
                 return lines;

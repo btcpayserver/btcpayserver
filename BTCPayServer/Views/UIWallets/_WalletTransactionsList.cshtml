@@ -6,14 +6,14 @@
 }
 @foreach (var transaction in Model.Transactions)
 {
-    <tr class="mass-action-row">
-        <td class="only-for-js mass-action-select-col">
+    <tr class="mass-action-row transaction-row" data-value="@transaction.Id">
+        <td class="align-middle only-for-js mass-action-select-col">
             <input name="selectedTransactions" type="checkbox" class="form-check-input mass-action-select" form="WalletActions" value="@transaction.Id" />
         </td>
-        <td class="date-col">
+        <td class="align-middle date-col">
             @transaction.Timestamp.ToBrowserDate()
         </td>
-        <td class="text-start">
+        <td class="align-middle text-start">
             <vc:label-manager
                 wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Tx, transaction.Id)"
                 selected-labels="transaction.Tags.Select(t => t.Text).ToArray()"
@@ -24,11 +24,18 @@
         <td>
             <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
         </td>
-        <td class="amount-col">
+        <td class="align-middle amount-col">
             <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")@(transaction.IsConfirmed ? "" : " opacity-50")">@transaction.Balance</span>
         </td>
-        <td class="text-end">
-            <div class="d-inline-block">
+        <td class="align-middle text-end">
+            <div class="d-inline-flex gap-3 align-items-center">
+				@if (transaction.CanBumpFee)
+				{
+					<a asp-action="WalletBumpFee" asp-route-walletId="@Context.GetRouteValue("walletId")" asp-route-transactionId="@transaction.Id" class="btn btn-link p-0 bumpFee-btn">
+						<vc:icon symbol="actions-send" />
+						<span text-translate="true">Bump fee</span>
+					</a>
+				}
                 <button class="btn btn-link p-0 @(!string.IsNullOrEmpty(transaction.Comment) ? "text-primary" : "text-secondary")" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                     <vc:icon symbol="actions-comment" />
                 </button>

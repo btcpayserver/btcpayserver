@@ -112,11 +112,13 @@
 	<ItemGroup>
     <Watch Include="Views\**\*.*"></Watch>
     <Watch Remove="Views\Shared\LocalhostBrowserSupport.cshtml" />
+    <Watch Remove="Views\Shared\_BackAndReturn.cshtml" />
     <Watch Remove="Views\UIAccount\CheatPermissions.cshtml" />
     <Watch Remove="Views\UIReports\StoreReports.cshtml" />
     <Watch Remove="Views\UIServer\CreateDictionary.cshtml" />
     <Watch Remove="Views\UIServer\EditDictionary.cshtml" />
     <Watch Remove="Views\UIServer\ListDictionaries.cshtml" />
+    <Watch Remove="Views\UIWallets\WalletBumpFee.cshtml" />
     <Content Update="Views\UIApps\_ViewImports.cshtml">
       <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
       <Pack>$(IncludeRazorContentInPack)</Pack>

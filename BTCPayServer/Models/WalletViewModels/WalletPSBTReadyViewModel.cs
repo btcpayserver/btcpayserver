@@ -30,7 +30,7 @@ namespace BTCPayServer.Models.WalletViewModels
         public class AmountViewModel
         {
             public bool Positive { get; set; }
-            public string BalanceChange { get; set; }
+            public StringAmounts BalanceChange { get; set; }
         }
         public AmountViewModel ReplacementBalanceChange { get; set; }
         public bool HasErrors => Inputs.Count == 0 || Inputs.Any(i => !string.IsNullOrEmpty(i.Error));

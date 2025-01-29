@@ -663,6 +663,8 @@ namespace BTCPayServer.Controllers
                     var bumpableAddresses = await GetAddresses(btc, selectedItems);
                     var utxos = await explorer.GetUTXOsAsync(derivationScheme);
                     var bumpableUTXOs = utxos.GetUnspentUTXOs().Where(u => u.Confirmations == 0 && bumpableAddresses.Contains(u.ScriptPubKey.Hash.ToString())).ToArray();
+                    if (bumpableUTXOs.Length == 0)
+                        return NotSupported("No UTXOs available for bumping the selected invoices");
                     var parameters = new MultiValueDictionary<string, string>();
                     foreach (var utxo in bumpableUTXOs)
                     {
@@ -671,7 +673,7 @@ namespace BTCPayServer.Controllers
                     return View("PostRedirect", new PostRedirectViewModel
                     {
                         AspController = "UIWallets",
-                        AspAction = nameof(UIWalletsController.WalletCPFP),
+                        AspAction = nameof(UIWalletsController.WalletBumpFee),
                         RouteParameters = {
                             { "walletId", new WalletId(storeId, network.CryptoCode).ToString() },
                             { "returnUrl", Url.Action(nameof(ListInvoices), new { storeId }) }

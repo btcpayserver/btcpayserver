@@ -1,0 +1,156 @@
+@using Microsoft.AspNetCore.Mvc.ModelBinding
+@using BTCPayServer.Controllers
+@using BTCPayServer.Services
+@using BTCPayServer.Components.LabelManager
+@model WalletBumpFeeViewModel
+@{
+	var walletId = Context.GetRouteValue("walletId").ToString();
+	var cancelUrl = this.Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
+	Layout = "_LayoutWizard";
+	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Bump fee"], walletId);
+}
+
+@section Navbar {
+	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
+		<vc:icon symbol="cross" />
+	</a>
+}
+
+@section PageHeadContent
+{
+	<style>
+		.crypto-fee-link {
+			padding-left: 1rem;
+			padding-right: 1rem;
+		}
+
+		.btn-group > .crypto-fee-link:last-of-type {
+			border-top-right-radius: .2rem !important;
+			border-bottom-right-radius: .2rem !important;
+		}
+
+		.buttons .btn {
+			flex: 1 0 45%;
+		}
+	</style>
+}
+
+@section PageFootContent
+{
+	<script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+	<script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+	<script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+	<script src="~/js/wallet/wallet-camera-scanner.js" asp-append-version="true"></script>
+	<script src="~/js/wallet/WalletSend.js" asp-append-version="true"></script>
+}
+
+<partial name="CameraScanner" />
+
+<header class="text-center">
+	<h1>@ViewData["Title"]</h1>
+</header>
+
+<form method="post" asp-action="WalletBumpFee" asp-route-walletId="@walletId" asp-route-transactionId="@Model.TransactionId" class="my-5" id="SendForm">
+	<input type="hidden" asp-for="ReturnUrl" />
+
+	@if (Model.TransactionHashes is not null)
+	{
+		for (int i = 0; i < Model.TransactionHashes.Length; i++)
+		{
+			<input type="hidden" asp-for="TransactionHashes[i]" />
+		}
+	}
+	@if (Model.Outpoints is not null)
+	{
+		for (int i = 0; i < Model.Outpoints.Length; i++)
+		{
+			<input type="hidden" asp-for="Outpoints[i]" />
+		}
+	}
+	@if (!ViewContext.ModelState.IsValid)
+	{
+		<ul class="text-danger">
+			@foreach (var errors in ViewData.ModelState.Where(pair => pair.Key == string.Empty && pair.Value.ValidationState == ModelValidationState.Invalid))
+			{
+				foreach (var error in errors.Value.Errors)
+				{
+					<li>@error.ErrorMessage</li>
+				}
+			}
+		</ul>
+	}
+	@if (Model.GetBumpTarget().GetSingleTransactionId() is { } txId)
+	{
+		<div class="list-group list-group-flush">
+			<div>
+				<label asp-for="TransactionId" class="form-label"></label>
+				<input name="txId" value="@txId" readonly class="form-control" disabled />
+				<span asp-validation-for="TransactionId" class="text-danger"></span>
+			</div>
+		</div>
+	}
+	@if (Model.CurrentFeeSatoshiPerByte is not null)
+	{
+		<div class="d-flex flex-wrap gap-3 my-4">
+			<div>
+				<label asp-for="CurrentFeeSatoshiPerByte" class="form-label">
+					<span text-translate="true">Current effective fee rate</span>
+					<span class="text-secondary">(sat/vB)</span>
+				</label>
+				<input asp-for="CurrentFeeSatoshiPerByte" type="number" min="0" step="any" readonly class="form-control" disabled style="max-width:14ch;" />
+			</div>
+		</div>
+	}
+	<div class="d-flex flex-wrap gap-3 my-4">
+		<div>
+			<label asp-for="FeeSatoshiPerByte" class="form-label">
+				<span text-translate="true">New effective fee rate</span>
+				<span class="text-secondary">(sat/vB)</span>
+			</label>
+			<input asp-for="FeeSatoshiPerByte" type="number" inputmode="numeric" min="0" step="any" class="form-control" style="max-width:14ch;" />
+			<span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
+			<span id="FeeRate-Error" class="text-danger"></span>
+		</div>
+		@if (Model.RecommendedSatoshiPerByte.Any())
+		{
+			<div>
+				<div class="form-label text-secondary" text-translate="true">Confirm in the next …</div>
+				<div class="btn-group btn-group-toggle feerate-options" role="group" data-bs-toggle="buttons">
+					@for (var index = 0; index < Model.RecommendedSatoshiPerByte.Count; index++)
+					{
+						var feeRateOption = Model.RecommendedSatoshiPerByte[index];
+						<button type="button" class="btn btn-sm btn-secondary crypto-fee-link" value="@feeRateOption.FeeRate" data-bs-toggle="tooltip" title="@feeRateOption.FeeRate sat/b">
+							@feeRateOption.Target.TimeString()
+						</button>
+						<input type="hidden" asp-for="RecommendedSatoshiPerByte[index].Target" />
+						<input type="hidden" asp-for="RecommendedSatoshiPerByte[index].FeeRate" />
+					}
+				</div>
+			</div>
+		}
+	</div>
+	<div class="d-flex flex-wrap gap-3 my-4">
+		<div>
+			<div class="form-group">
+				<label asp-for="BumpMethod" class="form-label"></label>
+				<select asp-for="BumpMethod" asp-items="@Model.BumpFeeMethods"
+				disabled="@(Model.BumpFeeMethods.Count == 1)"
+				class="form-select w-auto"></select>
+			</div>
+		</div>
+	</div>
+
+
+	<div class="d-grid d-sm-flex flex-wrap gap-3 buttons">
+		@Html.HiddenFor(a => a.IsMultiSigOnServer)
+		@if (Model.IsMultiSigOnServer)
+		{
+			<button type="submit" id="page-primary" name="command" value="createpending" class="btn btn-primary">Create pending transaction</button>
+		}
+		else
+		{
+			<button type="submit" id="page-primary" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
+		}
+	</div>
+
+</form>

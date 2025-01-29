@@ -63,96 +63,12 @@ namespace BTCPayServer.Controllers
             return psbt;
         }
 
-        [HttpPost("{walletId}/cpfp")]
-        public async Task<IActionResult> WalletCPFP([ModelBinder(typeof(WalletIdModelBinder))]
-            WalletId walletId, string[] outpoints, string[] transactionHashes, string returnUrl)
-        {
-            outpoints ??= Array.Empty<string>();
-            transactionHashes ??= Array.Empty<string>();
-            var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
-            var explorer = ExplorerClientProvider.GetExplorerClient(network);
-            var fr = _feeRateProvider.CreateFeeProvider(network);
-
-            var targetFeeRate = await fr.GetFeeRateAsync(1);
-            // Since we don't know the actual fee rate paid by a tx from NBX
-            // we just assume that it is 20 blocks
-            var assumedFeeRate = await fr.GetFeeRateAsync(20);
-
-            var derivationScheme = (this.GetCurrentStore().GetDerivationSchemeSettings(_handlers, network.CryptoCode))?.AccountDerivation;
-            if (derivationScheme is null)
-                return NotFound();
-
-            var utxos = await explorer.GetUTXOsAsync(derivationScheme);
-            var outpointsHashet = outpoints.ToHashSet();
-            var transactionHashesSet = transactionHashes.ToHashSet();
-            var bumpableUTXOs = utxos.GetUnspentUTXOs().Where(u => u.Confirmations == 0 &&
-                                                                (outpointsHashet.Contains(u.Outpoint.ToString()) ||
-                                                                 transactionHashesSet.Contains(u.Outpoint.Hash.ToString()))).ToArray();
-
-            if (bumpableUTXOs.Length == 0)
-            {
-                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["There isn't any UTXO available to bump fee"].Value;
-                return LocalRedirect(returnUrl);
-            }
-            Money bumpFee = Money.Zero;
-            foreach (var txid in bumpableUTXOs.Select(u => u.TransactionHash).ToHashSet())
-            {
-                var tx = await explorer.GetTransactionAsync(txid);
-                var vsize = tx.Transaction.GetVirtualSize();
-                var assumedFeePaid = assumedFeeRate.GetFee(vsize);
-                var expectedFeePaid = targetFeeRate.GetFee(vsize);
-                bumpFee += Money.Max(Money.Zero, expectedFeePaid - assumedFeePaid);
-            }
-            var returnAddress = (await explorer.GetUnusedAsync(derivationScheme, NBXplorer.DerivationStrategy.DerivationFeature.Deposit)).Address;
-            TransactionBuilder builder = explorer.Network.NBitcoinNetwork.CreateTransactionBuilder();
-            builder.AddCoins(bumpableUTXOs.Select(utxo => utxo.AsCoin(derivationScheme)));
-            // The fee of the bumped transaction should pay for both, the fee
-            // of the bump transaction and those that are being bumped
-            builder.SendEstimatedFees(targetFeeRate);
-            builder.SendFees(bumpFee);
-            builder.SendAll(returnAddress);
-
-            try
-            {
-                var psbt = builder.BuildPSBT(false);
-                psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest()
-                {
-                    PSBT = psbt,
-                    DerivationScheme = derivationScheme
-                })).PSBT;
-
-                return View("PostRedirect", new PostRedirectViewModel
-                {
-                    AspController = "UIWallets",
-                    AspAction = nameof(WalletSign),
-                    RouteParameters = {
-                        { "walletId", walletId.ToString() }
-                    },
-                    FormParameters =
-                    {
-                        { "walletId", walletId.ToString() },
-                        { "psbt", psbt.ToHex() },
-                        { "backUrl", returnUrl },
-                        { "returnUrl", returnUrl }
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                TempData[WellKnownTempData.ErrorMessage] = ex.Message;
-
-                return LocalRedirect(returnUrl);
-            }
-        }
-
         [HttpPost("{walletId}/sign")]
         public async Task<IActionResult> WalletSign([ModelBinder(typeof(WalletIdModelBinder))]
             WalletId walletId, WalletPSBTViewModel vm, string command = null)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
-
-            vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
 
             if (psbt is null || vm.InvalidPSBT)
             {
@@ -387,6 +303,16 @@ namespace BTCPayServer.Controllers
             else
             {
                 var balanceChange = psbtObject.GetBalance(derivationSchemeSettings.AccountDerivation, signingKey, signingKeyPath);
+                var replacement = Money.Satoshis(vm.SigningContext.BalanceChangeFromReplacement);
+                if (replacement != Money.Zero)
+                {
+                    vm.ReplacementBalanceChange = new WalletPSBTReadyViewModel.AmountViewModel()
+                    {
+                        BalanceChange = ValueToString(replacement, network, rate),
+                        Positive = replacement >= Money.Zero
+                    };
+                    balanceChange += replacement;
+                }
                 vm.BalanceChange = ValueToString(balanceChange, network, rate);
                 vm.CanCalculateBalance = true;
                 vm.Positive = balanceChange >= Money.Zero;

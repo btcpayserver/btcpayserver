@@ -43,12 +43,12 @@
                 <tbody>
                 @foreach (var tx in Model.Transactions)
                 {
-                    <tr class="@(tx.IsConfirmed ? "" : "opacity-50")">
-                        <td>@tx.Timestamp.ToTimeAgo()</td>
-                        <td>
+                    <tr>
+                        <td class="align-middle">@tx.Timestamp.ToTimeAgo()</td>
+                        <td class="align-middle">
                             <vc:truncate-center text="@tx.Id" link="@tx.Link" classes="truncate-center-id" />
                         </td>
-                        <td>
+                        <td class="align-middle">
                             @if (tx.Labels.Any())
                             {
                                 <div class="d-flex flex-wrap gap-2 align-items-center">
@@ -70,18 +70,9 @@
                             }
                             
                         </td>
-                        @if (tx.Positive)
-                        {
-                            <td class="text-end text-success">
-                                <span data-sensitive>@DisplayFormatter.Currency(tx.Balance, tx.Currency)</span>
-                            </td>
-                        }
-                        else
-                        {
-                            <td class="text-end text-danger">
-                                <span data-sensitive>@DisplayFormatter.Currency(tx.Balance, tx.Currency)</span>
-                            </td>
-                        }
+                        <td class="align-middle text-end">
+                            <span data-sensitive class="text-@(tx.Positive ? "success" : "danger")@(tx.IsConfirmed ? "" : " opacity-50")">@DisplayFormatter.Currency(tx.Balance, tx.Currency)</span>
+                        </td>
                     </tr>
                 }
                 </tbody>

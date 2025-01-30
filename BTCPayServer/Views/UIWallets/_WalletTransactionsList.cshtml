@@ -6,7 +6,7 @@
 }
 @foreach (var transaction in Model.Transactions)
 {
-    <tr class="mass-action-row@(transaction.IsConfirmed ? "" : " opacity-50")">
+    <tr class="mass-action-row">
         <td class="only-for-js mass-action-select-col">
             <input name="selectedTransactions" type="checkbox" class="form-check-input mass-action-select" form="WalletActions" value="@transaction.Id" />
         </td>
@@ -25,7 +25,7 @@
             <vc:truncate-center text="@transaction.Id" link="@transaction.Link" classes="truncate-center-id" />
         </td>
         <td class="amount-col">
-            <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")">@transaction.Balance</span>
+            <span data-sensitive class="text-@(transaction.Positive ? "success" : "danger")@(transaction.IsConfirmed ? "" : " opacity-50")">@transaction.Balance</span>
         </td>
         <td class="text-end">
             <div class="d-inline-block">

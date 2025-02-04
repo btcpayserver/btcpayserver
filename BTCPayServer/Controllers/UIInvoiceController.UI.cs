@@ -199,8 +199,8 @@ namespace BTCPayServer.Controllers
             if (store is null)
                 return NotFound();
             
-            if (i.Archived && User.Identity is { IsAuthenticated: false })
-                return StatusCode(403);
+            if (i.Archived && !(await _authorizationService.AuthorizeAsync(User, i.StoreId, Policies.CanViewInvoices)).Succeeded)
+                return NotFound();
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
             if (receipt.Enabled is not true)

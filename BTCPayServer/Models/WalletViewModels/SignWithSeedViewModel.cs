@@ -4,7 +4,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class SignWithSeedViewModel
+    public class SignWithSeedViewModel : IHasBackAndReturnUrl
     {
         public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
 

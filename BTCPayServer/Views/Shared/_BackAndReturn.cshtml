@@ -1,0 +1,15 @@
+@model BTCPayServer.Models.IHasBackAndReturnUrl
+@{
+	(var backUrl, var cancelUrl) = this.Model.NormalizeBackAndReturnUrl();
+	cancelUrl ??= Context.Request.Query["returnUrl"].ToString();
+}
+
+@if (backUrl != null)
+{
+	<a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
+		<vc:icon symbol="back" />
+	</a>
+}
+<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
+	<vc:icon symbol="cross" />
+</a>

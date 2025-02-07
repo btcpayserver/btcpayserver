@@ -1960,7 +1960,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
             // Back button should lead back to the previous page inside the send wizard
             var backUrl = s.Driver.FindElement(By.Id("GoBack")).GetAttribute("href");
-            Assert.EndsWith($"/send?returnUrl={walletTransactionUri.AbsolutePath}", backUrl);
+            Assert.EndsWith($"/send?returnUrl={Uri.EscapeDataString(walletTransactionUri.AbsolutePath)}", backUrl);
             // Cancel button should lead to the page that referred to the send wizard
             var cancelUrl = s.Driver.FindElement(By.Id("CancelWizard")).GetAttribute("href");
             Assert.EndsWith(walletTransactionUri.AbsolutePath, cancelUrl);

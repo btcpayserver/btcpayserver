@@ -1,6 +1,6 @@
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class WalletSendVaultModel
+    public class WalletSendVaultModel : IHasBackAndReturnUrl
     {
         public string WalletId { get; set; }
         public string WebsocketPath { get; set; }

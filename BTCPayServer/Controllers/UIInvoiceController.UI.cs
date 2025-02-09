@@ -199,7 +199,7 @@ namespace BTCPayServer.Controllers
             if (store is null)
                 return NotFound();
             
-            if (i.Archived && !(await _authorizationService.AuthorizeAsync(User, i.StoreId, Policies.CanViewInvoices)).Succeeded)
+            if (!await ValidateInvoiceAccessForArchivedState(i))
                 return NotFound();
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
@@ -709,6 +709,10 @@ namespace BTCPayServer.Controllers
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
                 // TODO: Can happen if the invoice has lazy activation which failed for all payment methods. We should display error instead...
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
+                
+                // if (invoice != null && !await ValidateInvoiceAccessForArchivedState(invoice))
+                //     return NotFound();
+                
                 var store = invoice != null ? await _StoreRepository.GetStoreByInvoiceId(invoice.Id) : null;
                 var receipt = invoice != null && store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
                 var redirectUrl = invoice?.RedirectURL?.ToString();
@@ -730,6 +734,9 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return null;
 
+            if (!await ValidateInvoiceAccessForArchivedState(invoice))
+                return null;
+            
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
@@ -1316,6 +1323,13 @@ namespace BTCPayServer.Controllers
                 AllowDismiss = false
             });
             return RedirectToAction(nameof(ListInvoices), new { storeId });
+        }
+        
+        private async Task<bool> ValidateInvoiceAccessForArchivedState(InvoiceEntity invoice)
+        {
+            if (!invoice.Archived) return true;
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
+            return authorizationResult.Succeeded;
         }
     }
 }

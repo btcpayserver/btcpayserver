@@ -95,7 +95,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.5.16
+    image: nicolasdorier/nbxplorer:2.5.22
     restart: unless-stopped
     ports:
       - "32838:32838"

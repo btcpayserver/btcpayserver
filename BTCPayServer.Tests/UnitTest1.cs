@@ -967,7 +967,6 @@ namespace BTCPayServer.Tests
             using (var cts = new CancellationTokenSource(10000))
             using (var listener = tester.ExplorerClient.CreateWebsocketNotificationSession())
             {
-                listener.ListenAllDerivationSchemes();
                 var replaced = tester.ExplorerNode.SignRawTransaction(tx);
                 Thread.Sleep(1000); // Make sure the replacement has a different timestamp
                 var tx2 = tester.ExplorerNode.SendRawTransaction(replaced);

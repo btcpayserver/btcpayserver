@@ -46,7 +46,7 @@
 <form asp-action="EditLightningAddress" method="post">
     @{
         var showAddForm = !ViewContext.ViewData.ModelState.IsValid || !string.IsNullOrEmpty(Model.Add?.Username) || Model.Add?.Max != null || Model.Add?.Min != null || !string.IsNullOrEmpty(Model.Add?.CurrencyCode);
-        var showAdvancedOptions = !string.IsNullOrEmpty(Model.Add?.CurrencyCode) || Model.Add?.Min != null || Model.Add?.Max != null;
+        var showAdvancedOptions = !string.IsNullOrEmpty(Model.Add?.CurrencyCode) || !string.IsNullOrEmpty(Model.Add?.InvoiceMetadata) || Model.Add?.Min != null || Model.Add?.Max != null;
      }
     
     <div class="collapse @(showAddForm ? "show": "")" id="AddAddress">

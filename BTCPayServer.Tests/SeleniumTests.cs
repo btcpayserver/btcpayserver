@@ -888,6 +888,17 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("invoice-unsettled", s.Driver.PageSource);
                 Assert.DoesNotContain("invoice-processing", s.Driver.PageSource);
             });
+            
+            await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
+
+            s.Logout(); 
+            s.Driver.Navigate().GoToUrl(s.Driver.Url + $"/i/{i}/receipt");
+
+            TestUtils.Eventually(() =>
+            {
+                Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
+
+            });
         }
 
         [Fact(Timeout = TestTimeout)]

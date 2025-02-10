@@ -14,7 +14,6 @@
     var store = ViewContext.HttpContext.GetStoreData();
 }
 
-<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
 
 @if (Model.IsSetUp)
@@ -53,7 +52,7 @@
             }
         };
     </script>
-    <div id="Dashboard" class="mt-4">
+    <div id="Dashboard">
         <vc:ui-extension-point location="dashboard" model="@Model" />
         @if (Model.WalletEnabled)
         {

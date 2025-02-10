@@ -426,7 +426,6 @@ namespace BTCPayServer.Tests
             var notifications = await nbx.CreateWebsocketNotificationSessionAsync();
             var alice = tester.NewAccount();
             await alice.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
-            await notifications.ListenDerivationSchemesAsync(new[] { alice.DerivationScheme });
 
             BitcoinAddress address = null;
             for (int i = 0; i < 5; i++)
@@ -434,7 +433,7 @@ namespace BTCPayServer.Tests
                 address = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
                 await tester.ExplorerNode.GenerateAsync(1);
                 tester.ExplorerNode.SendToAddress(address, Money.Coins(1.0m));
-                await notifications.NextEventAsync();
+                await notifications.WaitReceive(alice.DerivationScheme);
             }
             var paymentAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
             var otherAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
@@ -569,10 +568,9 @@ namespace BTCPayServer.Tests
 
             await notifications.DisposeAsync();
             notifications = await nbx.CreateWebsocketNotificationSessionAsync();
-            await notifications.ListenDerivationSchemesAsync(new[] { bob.DerivationScheme });
             address = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
             tester.ExplorerNode.SendToAddress(address, Money.Coins(1.1m));
-            await notifications.NextEventAsync();
+            await notifications.WaitReceive(bob.DerivationScheme);
             await bob.ModifyOnchainPaymentSettings(p => p.PayJoinEnabled = true);
             var invoice = bob.BitPay.CreateInvoice(
                 new Invoice { Price = 0.1m, Currency = "BTC", FullNotifications = true });
@@ -603,7 +601,7 @@ namespace BTCPayServer.Tests
             proposal = proposal.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
             proposal.Finalize();
             await tester.ExplorerNode.SendRawTransactionAsync(proposal.ExtractTransaction());
-            await notifications.NextEventAsync();
+            await notifications.WaitReceive(bob.DerivationScheme);
 
             TestLogs.LogInformation("Abusing minFeeRate should give not enough money error");
             invoice = bob.BitPay.CreateInvoice(

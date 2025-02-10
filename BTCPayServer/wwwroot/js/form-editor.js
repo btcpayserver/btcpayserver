@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let config = parseConfig($config.value) || {}
     
     const specialFieldTypeOptions = ['fieldset', 'textarea', 'select', 'mirror']
-    const inputFieldTypeOptions = ['text', 'number', 'password', 'email', 'url', 'tel', 'date', 'hidden']
+    const inputFieldTypeOptions = ['text', 'number', 'password', 'email', 'url', 'tel', 'date', 'datetime-local', 'color', 'checkbox', 'hidden']
     const fieldTypeOptions = inputFieldTypeOptions.concat(specialFieldTypeOptions)
 
     const getFieldComponent = type => `field-type-${specialFieldTypeOptions.includes(type) ? type : 'input'}`

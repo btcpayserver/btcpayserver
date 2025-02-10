@@ -1,6 +1,7 @@
 @model BTCPayServer.Abstractions.Form.Field
 @{
 	var isInvalid = ViewContext.ModelState[Model.Name]?.ValidationState is Microsoft.AspNetCore.Mvc.ModelBinding.ModelValidationState.Invalid;
+    var isCheckbox = Model.Type == "checkbox";
 	var errors = isInvalid ? ViewContext.ModelState[Model.Name].Errors : null;
 }
 @if (Model.Type == "hidden")
@@ -8,21 +9,43 @@
     <input id="@Model.Name" type="@Model.Type" name="@Model.Name" value="@Model.Value" />
     return;
 }
-<div class="form-group">
-    <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
-        @Safe.Raw(Model.Label)
-    </label>
-    <input id="@Model.Name" type="@Model.Type" class="form-control @(errors is null ? "" : "is-invalid")"
-           name="@Model.Name" value="@Model.Value" data-val="true" readonly="@Model.Constant"
-           @if (!string.IsNullOrEmpty(Model.HelpText))
-           {
-               @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
-           }
-           @if (Model.Required)
-           {
-               @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
-           }
-    />
+<div class="form-@(isCheckbox ? "check" : "group")">
+    @if (isCheckbox)
+    {
+        <input id="@Model.Name" type="@Model.Type" class="form-check-input @(errors is null ? "" : "is-invalid")"
+               name="@Model.Name" value="true" data-val="true" readonly="@Model.Constant"
+               @if (Model.Value == "true")
+               {
+                   @Safe.Raw(" checked")
+               }
+               @if (!string.IsNullOrEmpty(Model.HelpText))
+               {
+                   @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+               }
+               @if (Model.Required)
+               {
+                   @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+               } />
+        <label class="form-check-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
+            @Safe.Raw(Model.Label)
+        </label>
+    }
+    else
+    {
+        <label class="form-label" for="@Model.Name"@(Model.Required ? " data-required" : "")>
+            @Safe.Raw(Model.Label)
+        </label>
+        <input id="@Model.Name" type="@Model.Type" class="form-control @(errors is null ? "" : "is-invalid")"
+               name="@Model.Name" value="@Model.Value" data-val="true" readonly="@Model.Constant"
+               @if (!string.IsNullOrEmpty(Model.HelpText))
+               {
+                   @Safe.Raw($" aria-describedby=\"HelpText-{Model.Name}\"")
+               }
+               @if (Model.Required)
+               {
+                   @Safe.Raw($" data-val-required=\"{Model.Label} is required.\" required")
+               } />
+    }
     <span class="text-danger" data-valmsg-for="@Model.Name" data-valmsg-replace="true">@(isInvalid && errors.Any() ? errors.First().ErrorMessage : string.Empty)</span>
     @if (!string.IsNullOrEmpty(Model.HelpText))
     {

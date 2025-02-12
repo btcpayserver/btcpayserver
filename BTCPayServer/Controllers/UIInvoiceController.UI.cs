@@ -709,10 +709,6 @@ namespace BTCPayServer.Controllers
                 // see if the invoice actually exists and is in a state for which we do not display the checkout
                 // TODO: Can happen if the invoice has lazy activation which failed for all payment methods. We should display error instead...
                 var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
-                
-                // if (invoice != null && !await ValidateInvoiceAccessForArchivedState(invoice))
-                //     return NotFound();
-                
                 var store = invoice != null ? await _StoreRepository.GetStoreByInvoiceId(invoice.Id) : null;
                 var receipt = invoice != null && store != null ? InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, invoice.ReceiptOptions) : null;
                 var redirectUrl = invoice?.RedirectURL?.ToString();

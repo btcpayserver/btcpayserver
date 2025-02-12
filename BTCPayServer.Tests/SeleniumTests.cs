@@ -890,7 +890,7 @@ namespace BTCPayServer.Tests
             });
             
             await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
-
+            
             s.Logout(); 
             s.Driver.Navigate().GoToUrl(s.Driver.Url + $"/i/{i}/receipt");
 
@@ -898,6 +898,13 @@ namespace BTCPayServer.Tests
             {
                 Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
 
+            });
+            
+            s.Driver.Navigate().GoToUrl(s.Driver.Url + $"i/{i}");
+            
+            TestUtils.Eventually(() =>
+            {
+                Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
             });
         }
 

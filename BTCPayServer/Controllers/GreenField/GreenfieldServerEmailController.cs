@@ -36,9 +36,13 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/email")]
-        public async Task<IActionResult> ServerEmail()
+        public async Task<IActionResult> ServerEmailSettings()
         {
             var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
+            if (!string.IsNullOrEmpty(email.Password))
+            {
+                email.Password = ServerEmailSettingsData.PasswordMask;
+            }
             var model = new ServerEmailSettingsData
             {
                 EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings,

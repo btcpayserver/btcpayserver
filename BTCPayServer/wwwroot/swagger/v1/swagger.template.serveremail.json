@@ -4,7 +4,7 @@
             "get": {
                 "tags": ["ServerEmail"],
                 "summary": "Get server email settings",
-                "description": "Retrieve the email settings configured for the server.",
+                "description": "Retrieve the email settings configured for the server. The password field will be masked if present.",
                 "operationId": "ServerEmail_GetSettings",
                 "responses": {
                     "200": {
@@ -28,10 +28,10 @@
                     }
                 ]
             },
-            "post": {
+            "put": {
                 "tags": ["ServerEmail"],
                 "summary": "Update server email settings",
-                "description": "Modify the email settings for the server.",
+                "description": "Modify the email settings for the server. If a password is not provided, the existing one will be retained.",
                 "operationId": "ServerEmail_UpdateSettings",
                 "requestBody": {
                     "required": true,
@@ -91,7 +91,7 @@
                         "type": "string",
                         "description": "The sender email address"
                     },
-                    "host": {
+                    "server": {
                         "type": "string",
                         "description": "SMTP server host"
                     },
@@ -99,16 +99,16 @@
                         "type": "integer",
                         "description": "SMTP server port"
                     },
-                    "username": {
+                    "login": {
                         "type": "string",
                         "description": "SMTP username"
                     },
                     "password": {
                         "type": "string",
-                        "description": "SMTP password",
+                        "description": "SMTP password, masked in responses and retained if not updated",
                         "nullable": true
                     },
-                    "ssl": {
+                    "disablecertificatecheck": {
                         "type": "boolean",
                         "description": "Use SSL for SMTP connection"
                     }
@@ -139,7 +139,7 @@
     "tags": [
         {
             "name": "ServerEmail",
-            "description": "Server Email operations"
+            "description": "Server Email Settings operations"
         }
     ]
 }

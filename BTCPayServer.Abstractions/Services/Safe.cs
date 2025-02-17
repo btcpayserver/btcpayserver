@@ -35,33 +35,35 @@ namespace BTCPayServer.Abstractions.Services
             return _htmlHelper.Raw(_jsonHelper.Serialize(model));
         }
 
+        public IHtmlContent Meta(string inputHtml) => _htmlHelper.Raw(RawMeta(inputHtml, out _));
+
         public string RawMeta(string inputHtml, out bool isHtmlModified)
         {
              bool bHtmlModified;
-             HtmlSanitizer _metaSanitizer = new HtmlSanitizer();
+             HtmlSanitizer sane = new HtmlSanitizer();
 
-            _metaSanitizer.AllowedTags.Clear();
-            _metaSanitizer.AllowedTags.Add("meta");
+            sane.AllowedTags.Clear();
+            sane.AllowedTags.Add("meta");
 
-            _metaSanitizer.AllowedAttributes.Clear();
-            _metaSanitizer.AllowedAttributes.Add("name");
-            _metaSanitizer.AllowedAttributes.Add("http-equiv");
-            _metaSanitizer.AllowedAttributes.Add("content");
-            _metaSanitizer.AllowedAttributes.Add("value");
-            _metaSanitizer.AllowedAttributes.Add("property");
+            sane.AllowedAttributes.Clear();
+            sane.AllowedAttributes.Add("name");
+            sane.AllowedAttributes.Add("http-equiv");
+            sane.AllowedAttributes.Add("content");
+            sane.AllowedAttributes.Add("value");
+            sane.AllowedAttributes.Add("property");
 
-            _metaSanitizer.AllowDataAttributes = false;
+            sane.AllowDataAttributes = false;
 
-            _metaSanitizer.RemovingTag += (sender, e) => bHtmlModified = true;
-            _metaSanitizer.RemovingAtRule += (sender, e) => bHtmlModified = true;
-            _metaSanitizer.RemovingAttribute += (sender, e) => bHtmlModified = true;
-            _metaSanitizer.RemovingComment += (sender, e) => bHtmlModified = true;
-            _metaSanitizer.RemovingCssClass += (sender, e) => bHtmlModified = true;
-            _metaSanitizer.RemovingStyle += (sender, e) => bHtmlModified = true;
+            sane.RemovingTag += (sender, e) => bHtmlModified = true;
+            sane.RemovingAtRule += (sender, e) => bHtmlModified = true;
+            sane.RemovingAttribute += (sender, e) => bHtmlModified = true;
+            sane.RemovingComment += (sender, e) => bHtmlModified = true;
+            sane.RemovingCssClass += (sender, e) => bHtmlModified = true;
+            sane.RemovingStyle += (sender, e) => bHtmlModified = true;
             
             bHtmlModified = false;
 
-            var sRet = _metaSanitizer.Sanitize(inputHtml);
+            var sRet = sane.Sanitize(inputHtml);
             isHtmlModified = bHtmlModified;
 
             return sRet;

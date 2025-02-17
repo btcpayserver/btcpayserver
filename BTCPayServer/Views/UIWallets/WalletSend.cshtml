@@ -7,8 +7,7 @@
 @model WalletSendModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
-	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
 	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Send {0}", Model.CryptoCode], walletId);
 	Csp.Add("worker-src", "blob:");
@@ -16,15 +15,7 @@
 }
 
 @section Navbar {
-    @if (backUrl != null)
-    {
-		<a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
-            <vc:icon symbol="back" />
-        </a>
-    }
-	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
-        <vc:icon symbol="cross" />
-    </a>
+	<partial name="_BackAndReturn" model="Model" />
 }
 
 @section PageHeadContent

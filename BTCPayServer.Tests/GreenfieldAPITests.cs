@@ -20,6 +20,7 @@ using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.Lightning;
 using BTCPayServer.Plugins.PointOfSale.Controllers;
 using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
@@ -3314,6 +3315,12 @@ namespace BTCPayServer.Tests
             await viewOnlyClient.SendHttpRequest($"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", new JObject() { ["config"] = xpub.ToString() }, HttpMethod.Post);
 
             var method = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = JValue.CreateString(xpub.ToString())});
+            var method2 = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = new JObject() { ["derivationScheme"] = xpub.ToString(), ["label"] = "test", ["accountKeyPath"] = "aaaaaaaa/84'/0'/0'" } });
+            Assert.Equal("aaaaaaaa", method2.Config["accountKeySettings"][0]["rootFingerprint"].ToString());
+            Assert.Equal("84'/0'/0'", method2.Config["accountKeySettings"][0]["accountKeyPath"].ToString());
+            var method3 = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = new JObject() { ["derivationScheme"] = xpub.ToString() } });
+
+            Assert.Equal(method.ToJson(), method3.ToJson());
 
             Assert.Equal(firstAddress, (await viewOnlyClient.PreviewStoreOnChainPaymentMethodAddresses(store.Id, "BTC")).Addresses.First().Address);
             await AssertHttpError(403, async () =>
@@ -3378,7 +3385,6 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(24, generateResponse.Mnemonic.Words.Length);
             Assert.Equal(Wordlist.Japanese, generateResponse.Mnemonic.WordList);
-
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]
@@ -4819,9 +4825,9 @@ clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguratio
 clientBasic.UpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO", Spread = -1m }));
 
             await AssertValidationError(new[] { "currencyPair" }, () =>
-clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingecko" }, new[] { "BTC_USD_USD_BTC" }));
+clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingecko" }, new[] { "BTCUSDUSDBTC" }));
             await AssertValidationError(new[] { "PreferredSource", "currencyPair" }, () =>
-clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO" }, new[] { "BTC_USD_USD_BTC" }));
+clientBasic.PreviewUpdateStoreRateConfiguration(user.StoreId, new StoreRateConfiguration() { IsCustomScript = false, PreferredSource = "coingeckoOOO" }, new[] { "BTCUSDUSDBTC" }));
         }
     }
 }

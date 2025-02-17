@@ -613,7 +613,7 @@ retry:
             return data.ToDictionary(pair => pair.Key, pair => Deserialize<T>(pair.Value.Value));
         }
 
-        public async Task UpdateSetting<T>(string storeId, string name, T obj) where T : class
+        public async Task UpdateSetting<T>(string storeId, string name, T? obj) where T : class
         {
             await using var ctx = _ContextFactory.CreateContext();
             StoreSettingData? settings = null;

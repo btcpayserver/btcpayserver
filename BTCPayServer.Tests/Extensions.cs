@@ -19,6 +19,19 @@ namespace BTCPayServer.Tests
 {
     public static class Extensions
     {
+        public static Task<NewTransactionEvent> WaitReceive(this NBXplorer.WebsocketNotificationSession notifications, DerivationStrategyBase target, Func<NewTransactionEvent, bool> predicate = null, CancellationToken cancellationToken = default)
+        => WaitNext<NewTransactionEvent>(notifications, e => e.DerivationStrategy == target && (predicate is null || predicate(e)), cancellationToken);
+        public static async Task<TEvent> WaitNext<TEvent>(this NBXplorer.WebsocketNotificationSession notifications, Func<TEvent, bool> predicate, CancellationToken cancellationToken = default) where TEvent : NewEventBase
+        {
+            retry:
+            var evt = await notifications.NextEventAsync(cancellationToken);
+            if (evt is TEvent { } e)
+            {
+                if (predicate(e))
+                    return e;
+            }
+            goto retry;
+        }
         public static Task<KeyPathInformation> ReserveAddressAsync(this BTCPayWallet wallet, DerivationStrategyBase derivationStrategyBase)
         {
             return wallet.ReserveAddressAsync(null, derivationStrategyBase, "test");

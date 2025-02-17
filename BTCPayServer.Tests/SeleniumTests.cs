@@ -32,6 +32,7 @@ using Microsoft.EntityFrameworkCore;
 using NBitcoin;
 using NBitcoin.DataEncoders;
 using NBitcoin.Payment;
+using NBXplorer.Models;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using OpenQA.Selenium;
@@ -113,7 +114,6 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("Title")).SendKeys("Pay123");
             s.Driver.FindElement(By.Id("Amount")).SendKeys("700");
             new SelectElement(s.Driver.FindElement(By.Id("FormId"))).SelectByValue("Email");
-            s.Driver.TakeScreenshot().SaveAsFile("C:\\Users\\NicolasDorier\\Downloads\\chromedriver-win64\\1.png");
             s.ClickPagePrimary();
 
             s.Driver.FindElement(By.XPath("//a[starts-with(@id, 'Edit-')]")).Click();
@@ -1885,11 +1885,9 @@ namespace BTCPayServer.Tests
 
             //send money to addr and ensure it changed
             var sess = await s.Server.ExplorerClient.CreateWebsocketNotificationSessionAsync();
-            await sess.ListenAllTrackedSourceAsync();
-            var nextEvent = sess.NextEventAsync();
             await s.Server.ExplorerNode.SendToAddressAsync(BitcoinAddress.Create(receiveAddr, Network.RegTest),
                 Money.Parse("0.1"));
-            await nextEvent;
+            await sess.WaitNext<NewTransactionEvent>(e => e.Outputs.FirstOrDefault()?.Address.ToString() == receiveAddr);
             await Task.Delay(200);
             s.Driver.Navigate().Refresh();
             s.Driver.FindElement(By.CssSelector("button[value=generate-new-address]")).Click();
@@ -1899,6 +1897,7 @@ namespace BTCPayServer.Tests
 
             // Check the label is applied to the tx
             s.Driver.WaitWalletTransactionsLoaded();
+            // Sometimes this fails in local, but not CI
             Assert.Equal("label2", s.Driver.FindElement(By.XPath("//*[@id=\"WalletTransactionsList\"]//*[contains(@class, 'transaction-label')]")).Text);
 
             //change the wallet and ensure old address is not there and generating a new one does not result in the prev one
@@ -1961,7 +1960,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SignTransaction")).Click();
             // Back button should lead back to the previous page inside the send wizard
             var backUrl = s.Driver.FindElement(By.Id("GoBack")).GetAttribute("href");
-            Assert.EndsWith($"/send?returnUrl={walletTransactionUri.AbsolutePath}", backUrl);
+            Assert.EndsWith($"/send?returnUrl={Uri.EscapeDataString(walletTransactionUri.AbsolutePath)}", backUrl);
             // Cancel button should lead to the page that referred to the send wizard
             var cancelUrl = s.Driver.FindElement(By.Id("CancelWizard")).GetAttribute("href");
             Assert.EndsWith(walletTransactionUri.AbsolutePath, cancelUrl);
@@ -2173,6 +2172,55 @@ namespace BTCPayServer.Tests
             s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
             Assert.Contains("Description Edit", s.Driver.PageSource);
             Assert.Contains("PP1 Edited", s.Driver.PageSource);
+        }
+
+        [Fact]
+        [Trait("Selenium", "Selenium")]
+        public async Task CanUseAwaitProgressForInProgressPayout()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+            s.GenerateWallet(isHotWallet: true);
+            await s.FundStoreWallet(denomination: 50.0m);
+
+            s.GoToStore(s.StoreId, StoreNavPages.PayoutProcessors);
+            s.Driver.FindElement(By.Id("Configure-BTC-CHAIN")).Click();
+            s.Driver.SetCheckbox(By.Id("ProcessNewPayoutsInstantly"), true);
+            s.ClickPagePrimary();
+
+            s.GoToStore(s.StoreId, StoreNavPages.PullPayments);
+            s.ClickPagePrimary();
+            s.Driver.FindElement(By.Id("Name")).SendKeys("PP1");
+            s.Driver.FindElement(By.Id("Amount")).Clear();
+            s.Driver.FindElement(By.Id("Amount")).SendKeys("99.0");
+            s.Driver.SetCheckbox(By.Id("AutoApproveClaims"), true);
+            s.ClickPagePrimary();
+
+            s.Driver.FindElement(By.LinkText("View")).Click();
+            s.Driver.SwitchTo().Window(s.Driver.WindowHandles.Last());
+
+            var address = await s.Server.ExplorerNode.GetNewAddressAsync();
+            s.Driver.FindElement(By.Id("Destination")).SendKeys(address.ToString() + Keys.Enter);
+            s.GoToStore(s.StoreId, StoreNavPages.Payouts);
+            s.Driver.FindElement(By.Id("InProgress-view")).Click();
+
+            // Waiting for the payment processor to process the payment
+            int i = 0;
+            while (!s.Driver.PageSource.Contains("mass-action-select-all"))
+            {
+                s.Driver.Navigate().Refresh();
+                i++;
+                Thread.Sleep(1000);
+                if (i > 10)
+                    break;
+            }
+            s.Driver.FindElement(By.ClassName("mass-action-select-all")).Click();
+
+            s.Driver.FindElement(By.Id("InProgress-mark-awaiting-payment")).Click();
+            s.Driver.FindElement(By.Id("AwaitingPayment-view")).Click();
+            Assert.Contains("PP1", s.Driver.PageSource);
         }
 
         [Fact]

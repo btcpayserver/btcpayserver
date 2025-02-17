@@ -426,7 +426,6 @@ namespace BTCPayServer.Tests
             var notifications = await nbx.CreateWebsocketNotificationSessionAsync();
             var alice = tester.NewAccount();
             await alice.RegisterDerivationSchemeAsync("BTC", ScriptPubKeyType.Segwit, true);
-            await notifications.ListenDerivationSchemesAsync(new[] { alice.DerivationScheme });
 
             BitcoinAddress address = null;
             for (int i = 0; i < 5; i++)
@@ -434,7 +433,7 @@ namespace BTCPayServer.Tests
                 address = (await nbx.GetUnusedAsync(alice.DerivationScheme, DerivationFeature.Deposit)).Address;
                 await tester.ExplorerNode.GenerateAsync(1);
                 tester.ExplorerNode.SendToAddress(address, Money.Coins(1.0m));
-                await notifications.NextEventAsync();
+                await notifications.WaitReceive(alice.DerivationScheme);
             }
             var paymentAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
             var otherAddress = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest);
@@ -481,12 +480,12 @@ namespace BTCPayServer.Tests
             var request = await fakeServer.GetNextRequest();
             Assert.Equal("1", request.Request.Query["v"][0]);
             Assert.Equal(changeIndex.ToString(), request.Request.Query["additionalfeeoutputindex"][0]);
-            Assert.Equal("1146", request.Request.Query["maxadditionalfeecontribution"][0]);
+            Assert.Equal("1853", request.Request.Query["maxadditionalfeecontribution"][0]);
 
             TestLogs.LogInformation("The payjoin receiver tries to make us pay lots of fee");
             var originalPSBT = await ParsePSBT(request);
             var proposalTx = originalPSBT.GetGlobalTransaction();
-            proposalTx.Outputs[changeIndex].Value -= Money.Satoshis(1147);
+            proposalTx.Outputs[changeIndex].Value -= Money.Satoshis(1854);
             await request.Response.WriteAsync(PSBT.FromTransaction(proposalTx, Network.RegTest).ToBase64(), Encoding.UTF8);
             fakeServer.Done();
             var ex = await Assert.ThrowsAsync<PayjoinSenderException>(async () => await requesting);
@@ -569,10 +568,9 @@ namespace BTCPayServer.Tests
 
             await notifications.DisposeAsync();
             notifications = await nbx.CreateWebsocketNotificationSessionAsync();
-            await notifications.ListenDerivationSchemesAsync(new[] { bob.DerivationScheme });
             address = (await nbx.GetUnusedAsync(bob.DerivationScheme, DerivationFeature.Deposit)).Address;
             tester.ExplorerNode.SendToAddress(address, Money.Coins(1.1m));
-            await notifications.NextEventAsync();
+            await notifications.WaitReceive(bob.DerivationScheme);
             await bob.ModifyOnchainPaymentSettings(p => p.PayJoinEnabled = true);
             var invoice = bob.BitPay.CreateInvoice(
                 new Invoice { Price = 0.1m, Currency = "BTC", FullNotifications = true });
@@ -603,7 +601,7 @@ namespace BTCPayServer.Tests
             proposal = proposal.SignAll(derivationSchemeSettings.AccountDerivation, alice.GenerateWalletResponseV.AccountHDKey, signingAccount.GetRootedKeyPath());
             proposal.Finalize();
             await tester.ExplorerNode.SendRawTransactionAsync(proposal.ExtractTransaction());
-            await notifications.NextEventAsync();
+            await notifications.WaitReceive(bob.DerivationScheme);
 
             TestLogs.LogInformation("Abusing minFeeRate should give not enough money error");
             invoice = bob.BitPay.CreateInvoice(

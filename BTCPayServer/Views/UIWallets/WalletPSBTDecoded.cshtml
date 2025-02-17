@@ -2,10 +2,9 @@
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletPSBTViewModel
 @{
-    var walletId = Context.GetRouteValue("walletId").ToString();
-    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new {walletId});
-    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
-    var isReady = !Model.HasErrors;
+	var walletId = Context.GetRouteValue("walletId").ToString();
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
+	var isReady = !Model.HasErrors;
     var isSignable = !isReady;
     var needsExport = !isSignable && !isReady;
     Layout = "_LayoutWizard";
@@ -78,15 +77,7 @@
 }
 
 @section Navbar {
-    @if (backUrl != null)
-    {
-        <a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
-            <vc:icon symbol="back" />
-        </a>
-    }
-	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
-        <vc:icon symbol="cross" />
-    </a>
+	<partial name="_BackAndReturn" model="Model" />
 }
 
 <header class="text-center mb-3">

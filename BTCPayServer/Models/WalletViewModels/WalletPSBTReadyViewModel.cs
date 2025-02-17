@@ -5,7 +5,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class WalletPSBTReadyViewModel
+    public class WalletPSBTReadyViewModel : IHasBackAndReturnUrl
     {
         public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
         public string SigningKey { get; set; }
@@ -27,6 +27,12 @@ namespace BTCPayServer.Models.WalletViewModels
             public string BalanceChange { get; set; }
             public IEnumerable<TransactionTagModel> Labels { get; set; } = new List<TransactionTagModel>();
         }
+        public class AmountViewModel
+        {
+            public bool Positive { get; set; }
+            public string BalanceChange { get; set; }
+        }
+        public AmountViewModel ReplacementBalanceChange { get; set; }
         public bool HasErrors => Inputs.Count == 0 || Inputs.Any(i => !string.IsNullOrEmpty(i.Error));
         public string BalanceChange { get; set; }
         public bool CanCalculateBalance { get; set; }

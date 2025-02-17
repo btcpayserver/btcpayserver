@@ -35,8 +35,7 @@
             object-fit: scale-down;
         }
     </style>
-    @* Html.Raw OK here since Html has been cleaned before in controller *@
-    @Html.Raw(Model.HtmlMetaTags)
+    @this.Safe.Meta(Model.HtmlMetaTags)
     <vc:ui-extension-point location="crowdfund-head" model="@Model"/>
 </head>
 <body class="min-vh-100 p-2">

@@ -128,7 +128,7 @@ namespace BTCPayServer.Payments.Bitcoin
                     return;
                 if (_Cts.IsCancellationRequested)
                     return;
-                var session = await client.CreateWebsocketNotificationSessionAsync(_Cts.Token).ConfigureAwait(false);
+                var session = await client.CreateWebsocketNotificationSessionLegacyAsync(_Cts.Token).ConfigureAwait(false);
                 if (!_SessionsByCryptoCode.TryAdd(network.CryptoCode, session))
                 {
                     await session.DisposeAsync();
@@ -291,7 +291,9 @@ namespace BTCPayServer.Payments.Bitcoin
                                     result.RPCCode == RPCErrorCode.RPC_TRANSACTION_REJECTED);
                         if (!accounted && payment.Accounted && tx.Confirmations != -1)
                         {
-                            Logs.PayServer.LogInformation($"{wallet.Network.CryptoCode}: The transaction {tx.TransactionHash} has been replaced.");
+                            var logs = new InvoiceLogs();
+                            logs.Write($"The transaction {tx.TransactionHash} has been replaced.", InvoiceEventData.EventSeverity.Warning);
+                            await _InvoiceRepository.AddInvoiceLogs(invoice.Id, logs);
                         }
                         if (paymentData.PayjoinInformation is PayjoinInformation pj)
                         {

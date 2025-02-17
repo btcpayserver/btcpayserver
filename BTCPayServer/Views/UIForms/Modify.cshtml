@@ -149,7 +149,12 @@
         </div>
     </template>
     <template id="field-type-input">
-        <div class="form-group mb-0">
+        <div class="form-check mb-0" v-if="type === 'checkbox'">
+            <input class="form-check-input" :id="name" :name="name" :type="type" v-model="value" />
+            <label class="form-check-label" :for="name" :data-required="required" v-sanitize="label"></label>
+            <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-sanitize="helpText"></div>
+        </div>
+        <div class="form-groupcheck mb-0" v-else>
             <label class="form-label" :for="name" :data-required="required" v-sanitize="label"></label>
             <input class="form-control" :id="name" :name="name" :type="type" v-model="value" />
             <div v-if="helpText" :id="`HelpText-{name}`" class="form-text" v-sanitize="helpText"></div>
@@ -208,7 +213,7 @@
             </h2>
         </nav>
         <div>
-			<button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
             @if (!isNew)
             {
                 <a class="btn btn-secondary" asp-action="ViewPublicForm" asp-route-formId="@formId" id="ViewForm" text-translate="true">View</a>

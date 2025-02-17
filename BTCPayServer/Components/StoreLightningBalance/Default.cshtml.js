@@ -35,8 +35,7 @@ if (!window.storeLightningBalance) {
                 const currency = rate ? defaultCurrency : cryptoCode;
                 document.querySelectorAll(`#${id} .currency`).forEach(c => c.innerText = currency)
                 document.querySelectorAll(`#${id} [data-balance]`).forEach(c => {
-                    const value = Number.parseFloat(c.dataset.balance);
-                    c.innerText = valueTransform(value)
+                    c.innerText = valueTransform(c.dataset.balance)
                 });
                 if (!series) return;
 

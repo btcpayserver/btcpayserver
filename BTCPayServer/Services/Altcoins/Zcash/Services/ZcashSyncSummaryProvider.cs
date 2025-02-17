@@ -25,18 +25,13 @@ namespace BTCPayServer.Services.Altcoins.Zcash.Services
         {
             return _ZcashRpcProvider.Summaries.Select(pair => new ZcashSyncStatus()
             {
-                Summary = pair.Value, PaymentMethodId = PaymentMethodId.Parse(pair.Key)
+                Summary = pair.Value, PaymentMethodId = PaymentMethodId.Parse(pair.Key).ToString()
             });
         }
     }
 
     public class ZcashSyncStatus: SyncStatus, ISyncStatus
     {
-        public new PaymentMethodId PaymentMethodId
-        {
-            get => PaymentMethodId.Parse(base.PaymentMethodId);
-            set => base.PaymentMethodId = value.ToString();
-        }
         public override bool Available
         {
             get

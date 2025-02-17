@@ -123,12 +123,7 @@ public class PendingTransactionService(
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction =
             await ctx.PendingTransactions.FindAsync(new object[] { cryptoCode, txId.ToString() }, cancellationToken);
-        if (pendingTransaction is null)
-        {
-            return null;
-        }
-
-        if (pendingTransaction.State != PendingTransactionState.Pending)
+        if (pendingTransaction is null || pendingTransaction.State != PendingTransactionState.Pending)
         {
             return null;
         }
@@ -138,7 +133,17 @@ public class PendingTransactionService(
         {
             return null;
         }
+
         var originalPsbtWorkingCopy = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
+
+        // Deduplicate: Check if this exact PSBT (Base64) was already collected
+        var newPsbtBase64 = psbt.ToBase64();
+        if (blob.CollectedSignatures.Any(s => s.ReceivedPSBT == newPsbtBase64))
+        {
+            // Avoid duplicate signature collection
+            return pendingTransaction;
+        }
+
         foreach (var collectedSignature in blob.CollectedSignatures)
         {
             var collectedPsbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
@@ -146,13 +151,25 @@ public class PendingTransactionService(
         }
 
         var originalPsbtWorkingCopyWithNewPsbt = originalPsbtWorkingCopy.Combine(psbt);
-        //check if we have more signatures than before
-        if (originalPsbtWorkingCopyWithNewPsbt.Inputs.All(i =>
-                i.PartialSigs.Count >= originalPsbtWorkingCopy.Inputs[(int)i.Index].PartialSigs.Count))
+
+        // Check if the new PSBT actually adds signatures
+        bool newSignaturesCollected = false;
+        for (int i = 0; i < originalPsbtWorkingCopy.Inputs.Count; i++)
+        {
+            if (originalPsbtWorkingCopyWithNewPsbt.Inputs[i].PartialSigs.Count > 
+                originalPsbtWorkingCopy.Inputs[i].PartialSigs.Count)
+            {
+                newSignaturesCollected = true;
+                break;
+            }
+        }
+
+        if (newSignaturesCollected)
         {
             blob.CollectedSignatures.Add(new CollectedSignature
             {
-                ReceivedPSBT = psbt.ToBase64(), Timestamp = DateTimeOffset.UtcNow
+                ReceivedPSBT = newPsbtBase64,
+                Timestamp = DateTimeOffset.UtcNow
             });
             pendingTransaction.SetBlob(blob);
         }
@@ -163,6 +180,7 @@ public class PendingTransactionService(
         }
 
         await ctx.SaveChangesAsync(cancellationToken);
+
         if (broadcastIfComplete && pendingTransaction.State == PendingTransactionState.Signed)
         {
             var explorerClient = explorerClientProvider.GetExplorerClient(network);
@@ -181,6 +199,7 @@ public class PendingTransactionService(
 
         return pendingTransaction;
     }
+
 
     public async Task<PendingTransaction?> GetPendingTransaction(string cryptoCode, string storeId, string txId)
     {

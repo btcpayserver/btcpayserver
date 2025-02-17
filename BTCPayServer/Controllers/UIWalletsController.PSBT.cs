@@ -616,16 +616,18 @@ namespace BTCPayServer.Controllers
                         {
                             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Transaction broadcasted successfully ({0})", transaction.GetHash()].Value;
                         }
-                        if (!string.IsNullOrEmpty(vm.ReturnUrl))
-                        {
-                            return LocalRedirect(vm.ReturnUrl);
-                        }
 
                         if (vm.SigningContext.PendingTransactionId is not null)
                         {
                             await _pendingTransactionService.Broadcasted(walletId.CryptoCode, walletId.StoreId,
                                 vm.SigningContext.PendingTransactionId);
                         }
+                        
+                        if (!string.IsNullOrEmpty(vm.ReturnUrl))
+                        {
+                            return LocalRedirect(vm.ReturnUrl);
+                        }
+                        
                         return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }
                 case "analyze-psbt":

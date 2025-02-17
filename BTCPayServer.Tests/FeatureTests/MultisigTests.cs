@@ -21,8 +21,6 @@ namespace BTCPayServer.Tests.FeatureTests;
 [Collection(nameof(NonParallelizableCollectionDefinition))]
 public class MultisigTests : UnitTestBase
 {
-    public const int TestTimeout = 60_000;
-
     public MultisigTests(ITestOutputHelper helper) : base(helper)
     {
     }
@@ -52,15 +50,15 @@ public class MultisigTests : UnitTestBase
         var derivationScheme = strategy.AccountDerivation;
 
         var testPSBT =
-            "cHNidP8BAH0CAAAAAWNgMvezbLK99DapvvVGAcfLpsb8MciqkyxACbjkIci8AQAAAAD9////AtTjXAAAAAAAIgAgztW7uUKcgZpup41zH9TE/SIR86N5nlpA/AF2vcFab1qAlpgAAAAAABYAFDrseiyzjyn1HTS0qHu6994085FbAAAAAAABASuMxPUAAAAAACIAILouk+nHd2D+GBCUcH/I3br1i+VDi189C6s1ehiE0EJPAQVpUiEC7aReaC4gC3y/hovEu4JEpTIeUJreLFaR+liCBCQkfzshAhCnQ9PzA+Bsiz/2dSAt07YMSXITpp0nhYeKhcs5vp09IQKFIqThm1/7rfFM6EeXuIyGoc5s9uqf9eqZMwfBs5VSN1OuIgIC7aReaC4gC3y/hovEu4JEpTIeUJreLFaR+liCBCQkfztHMEQCIHaWPMMXi0travWfil3xTWBggA5TfDHZcf00FwWRh/1qAiAfxFWLy7aclh8TNvhrfVoBnORp3Kd5cwvO4BpbhAJn/QEiBgIQp0PT8wPgbIs/9nUgLdO2DElyE6adJ4WHioXLOb6dPRjufTbEVAAAgAEAAIAAAACAAAAAAAMAAAAiBgKFIqThm1/7rfFM6EeXuIyGoc5s9uqf9eqZMwfBs5VSNxhsAU+zVAAAgAEAAIAAAACAAAAAAAMAAAAiBgLtpF5oLiALfL+Gi8S7gkSlMh5Qmt4sVpH6WIIEJCR/OxhXs/Q6VAAAgAEAAIAAAACAAAAAAAMAAAAAAQFpUiEDvf4B0XI0wj8vylbyTwvtXbG2Tt9+MiBTw+VougNC5zkhAk/Wi3Yma2s8NTEKT2N/jS32sfCe9IhFRwBFf5+EQzg1IQJcRKXq2M9Z2sx4Eex8x//xdfVJ+Foslfp9Ff18fKfHjlOuIgICT9aLdiZrazw1MQpPY3+NLfax8J70iEVHAEV/n4RDODUY7n02xFQAAIABAACAAAAAgAEAAAAAAAAAIgICXESl6tjPWdrMeBHsfMf/8XX1SfhaLJX6fRX9fHynx44YbAFPs1QAAIABAACAAAAAgAEAAAAAAAAAIgIDvf4B0XI0wj8vylbyTwvtXbG2Tt9+MiBTw+VougNC5zkYV7P0OlQAAIABAACAAAAAgAEAAAAAAAAAAAA=";
+            "cHNidP8BAIkCAAAAAQmiSunnaKN7F4Jv5uHROfYbIZOckCck/Wo7gAQmi9hfAAAAAAD9////AtgbZgAAAAAAIgAgWCUFlU9eWkyxn0l0yQxs2rXQZ7d9Ry8LaYECaVC0TUGAlpgAAAAAACIAIFZxT+UIdhHZC4qFPhPQ6IXdX+44HIxCYcoh/bNOhB0hAAAAAAABAStAAf8AAAAAACIAIL2DDkfKwKHxZj2EKxXUd4uwf0IvPaCxUtAPq9snpq9TAQDqAgAAAAABAVuHuou9E5y6zUJaUreQD0wUeiPnT2aY+YU7QaPJOiQCAAAAAAD9////AkAB/wAAAAAAIgAgvYMOR8rAofFmPYQrFdR3i7B/Qi89oLFS0A+r2yemr1PM5AYpAQAAABYAFIlFupZkD07+GRo24WRS3IFcf+EuAkcwRAIgGi9wAcTfc0d0+j+Vg82aYklXCUsPg+g3jS+PTBTSQwkCIAPh5CZF18DTBKqWU2qdhNCbZ8Tp/NCEHjLJRHcH0oluASECWnI1s9ozQRL2qbK6JbLHzj9LlU9Pras3nZfq/njBJwhwAAAAAQVpUiECMCCasr2FRmRMiWkM/l1iraFR18td5SZ2APyQiaI0yY8hA8K96vH64BelUJiEPGwM6UTwRSfAJUR2j8dkw7i31fFTIQMlHLlaAPxw3fl1vaM1EofIirt79MXOryM54zpHwu1GlVOuIgIDwr3q8frgF6VQmIQ8bAzpRPBFJ8AlRHaPx2TDuLfV8VNHMEQCIANnprskJz8oVsetqOEViHtzhmSG8c36r3zmUIHwIoOhAiAZ1jBqj40iu2S/nMfiGyuCC/jSiSGik7YVwiwN+bbxPAEiBgIwIJqyvYVGZEyJaQz+XWKtoVHXy13lJnYA/JCJojTJjxhXs/Q6VAAAgAEAAIAAAACAAAAAAAUAAAAiBgMlHLlaAPxw3fl1vaM1EofIirt79MXOryM54zpHwu1GlRhsAU+zVAAAgAEAAIAAAACAAAAAAAUAAAAiBgPCverx+uAXpVCYhDxsDOlE8EUnwCVEdo/HZMO4t9XxUxjufTbEVAAAgAEAAIAAAACAAAAAAAUAAAAAAQFpUiEDa/J6SaiRjP1jhq9jpNxFKovEuWBz28seNMvsn0JC/ZIhA7p3bS7vLYB5UxlNN6YqkEDITyaMlk/i450q6+4woveAIQPTchIOrd+TNGBOX6il1HRZnBndyRoUj/hahbjTaAGHglOuIgIDa/J6SaiRjP1jhq9jpNxFKovEuWBz28seNMvsn0JC/ZIYV7P0OlQAAIABAACAAAAAgAEAAAABAAAAIgIDundtLu8tgHlTGU03piqQQMhPJoyWT+LjnSrr7jCi94AY7n02xFQAAIABAACAAAAAgAEAAAABAAAAIgID03ISDq3fkzRgTl+opdR0WZwZ3ckaFI/4WoW402gBh4IYbAFPs1QAAIABAACAAAAAgAEAAAABAAAAAAEBaVIhA/fCRR3MWwCgNuXMvlWLonY+TurUKOHXOSHALCck62deIQPqeQXD8ws9SDEDXSyD6a3WFlIGH+gDUf2/xAfw8HxE8iEC3LBRJYYxRzIeg9NxLGvtfATvFaKsO9D7AUjoTLZzke5TriICAtywUSWGMUcyHoPTcSxr7XwE7xWirDvQ+wFI6Ey2c5HuGGwBT7NUAACAAQAAgAAAAIAAAAAADAAAACICA+p5BcPzCz1IMQNdLIPprdYWUgYf6ANR/b/EB/DwfETyGO59NsRUAACAAQAAgAAAAIAAAAAADAAAACICA/fCRR3MWwCgNuXMvlWLonY+TurUKOHXOSHALCck62deGFez9DpUAACAAQAAgAAAAIAAAAAADAAAAAA=";
         
-        var signedPsbt = await SignWithSeed(testPSBT, derivationScheme, resp2);
+        var signedPsbt = await SignWithSeed(testPSBT, derivationScheme, resp1);
         s.TestLogs.LogInformation($"Signed PSBT: {signedPsbt}");
     }
 
     [Fact]
     [Trait("Selenium", "Selenium")]
-    public async Task CanEnableMultisigWallet()
+    public async Task CanEnableAndUseMultisigWallet()
     {
         var cryptoCode = "BTC";
         using var s = CreateSeleniumTester();
@@ -111,55 +109,80 @@ public class MultisigTests : UnitTestBase
         s.Driver.FindElement(By.Id("SaveWalletSettings")).Click();
         Assert.Contains("Wallet settings successfully updated.", s.FindAlertMessage().Text);
         
-        // TODO: Add sending of transaction
         // fetch address from receive page
         s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
         var address = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
         s.Driver.FindElement(By.XPath("//button[@value='fill-wallet']")).Click();
         s.Driver.FindElement(By.Id("CancelWizard")).Click();
         
+        // we are creating a pending transaction
         s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
         s.Driver.FindElement(By.Id("Outputs_0__DestinationAddress")).SendKeys(address);
         var amount = "0.1";
         s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys(amount);
         s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
         
-        s.Driver.WaitForElement(By.XPath("//a[text()='View']")).Click();
+        // now clicking on View to sign transaction
+        await SignPendingTransactionWithKey(s, address, derivationScheme, resp1);
+        await SignPendingTransactionWithKey(s, address, derivationScheme, resp2);
 
-        var transactionRow = s.Driver.FindElement(By.XPath($"//tr[td[text()='{address}']]"));
-         Assert.NotNull(transactionRow);
-
-        var signTransactionButton = s.Driver.FindElement(By.Id("SignTransaction"));
-        Assert.NotNull(signTransactionButton);
-        
-        s.Driver.FindElement(By.Id("PSBTOptionsExportHeader")).Click();
-        s.Driver.FindElement(By.Id("ShowRawVersion")).Click();
-        
-        
-        //
-        var psbt = s.Driver.FindElement(By.Id("psbt-base64")).Text;
-        while (String.IsNullOrEmpty(psbt))
+        // Broadcasting transaction and ensuring there is no longer broadcast button
+        s.Driver.WaitForElement(By.XPath("//a[text()='Broadcast']")).Click();
+        s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
+        Assert.Contains("Transaction broadcasted successfully", s.FindAlertMessage().Text);
+        try
         {
-            psbt = s.Driver.FindElement(By.Id("psbt-base64")).Text;
+            s.Driver.FindElement(By.XPath("//a[text()='Broadcast']"));
+            throw new Exception("Broadcast button should not be present after transaction is broadcasted");
         }
-        var signedPsbt = await SignWithSeed(psbt, derivationScheme, resp1);
+        catch (NoSuchElementException)
+        {
+            // swallow exception, it's expected button is not there
+        }
         
-        s.Driver.FindElement(By.Id("PSBTOptionsImportHeader")).Click();
-        s.Driver.FindElement(By.Id("ImportedPSBT")).SendKeys(signedPsbt);
+        // Abort pending transaction flow
+        s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
+        s.Driver.FindElement(By.Id("Outputs_0__DestinationAddress")).SendKeys(address);
+        s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys("0.2");
+        s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
         
-        s.Driver.FindElement(By.Id("Decode")).Click();
-
-        // TODO: In future add signing of PSBT transaction here and check if it is signed
-        
-        var cancelTransactionButton = s.Driver.FindElement(By.XPath("//a[text()='Cancel']"));
-        Assert.NotNull(cancelTransactionButton);
-        cancelTransactionButton.Click();
+        s.Driver.FindElement(By.XPath("//a[text()='Abort']")).Click();
 
         s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
 
         Assert.Contains("Aborted Pending Transaction", s.FindAlertMessage().Text);
         
         s.TestLogs.LogInformation($"Finished MultiSig Flow");
+    }
+
+    private async Task SignPendingTransactionWithKey(SeleniumTester s, string address,
+        DerivationStrategyBase derivationScheme, GenerateWalletResponse signingKey)
+    {
+        // getting to pending transaction page
+        s.Driver.WaitForElement(By.XPath("//a[text()='View']")).Click();
+
+        var transactionRow = s.Driver.FindElement(By.XPath($"//tr[td[text()='{address}']]"));
+        Assert.NotNull(transactionRow);
+
+        var signTransactionButton = s.Driver.FindElement(By.Id("SignTransaction"));
+        Assert.NotNull(signTransactionButton);
+        
+        // fetching PSBT
+        s.Driver.FindElement(By.Id("PSBTOptionsExportHeader")).Click();
+        s.Driver.FindElement(By.Id("ShowRawVersion")).Click();
+        var psbt = s.Driver.WaitForElement(By.Id("psbt-base64")).Text;
+        while (string.IsNullOrEmpty(psbt))
+        {
+            psbt = s.Driver.FindElement(By.Id("psbt-base64")).Text;
+        }
+        
+        // signing PSBT and entering it to submit
+        var signedPsbt = await SignWithSeed(psbt, derivationScheme, signingKey);
+        
+        s.Driver.FindElement(By.Id("PSBTOptionsImportHeader")).Click();
+        s.Driver.WaitForElement(By.Id("ImportedPSBT")).SendKeys(signedPsbt);
+        
+        s.Driver.FindElement(By.Id("Decode")).Click();
     }
 
     private GenerateWalletResponse generateWalletResp(string tpriv, string keypath, string derivation, BTCPayNetwork network)

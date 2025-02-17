@@ -140,19 +140,19 @@ public class PendingTransactionService(
         var newPsbtBase64 = psbt.ToBase64();
         if (blob.CollectedSignatures.Any(s => s.ReceivedPSBT == newPsbtBase64))
         {
-            // Avoid duplicate signature collection
-            return pendingTransaction;
+            return pendingTransaction; // Avoid duplicate signature collection
         }
 
         foreach (var collectedSignature in blob.CollectedSignatures)
         {
             var collectedPsbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
-            originalPsbtWorkingCopy = originalPsbtWorkingCopy.Combine(collectedPsbt);
+            originalPsbtWorkingCopy.Combine(collectedPsbt); // combine changes the object
         }
 
-        var originalPsbtWorkingCopyWithNewPsbt = originalPsbtWorkingCopy.Combine(psbt);
+        var originalPsbtWorkingCopyWithNewPsbt = originalPsbtWorkingCopy.Clone(); // Clone before modifying
+        originalPsbtWorkingCopyWithNewPsbt.Combine(psbt);
 
-        // Check if the new PSBT actually adds signatures
+        // Check if new signatures were actually added
         bool newSignaturesCollected = false;
         for (int i = 0; i < originalPsbtWorkingCopy.Inputs.Count; i++)
         {
@@ -199,6 +199,7 @@ public class PendingTransactionService(
 
         return pendingTransaction;
     }
+
 
 
     public async Task<PendingTransaction?> GetPendingTransaction(string cryptoCode, string storeId, string txId)

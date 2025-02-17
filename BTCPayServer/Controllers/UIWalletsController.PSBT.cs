@@ -239,6 +239,7 @@ namespace BTCPayServer.Controllers
             vm.NBXSeedAvailable = await CanUseHotWallet() && derivationSchemeSettings.IsHotWallet;
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
 
+            vm.SigningContext.PSBT = vm.PSBT;
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT)
             {
@@ -259,7 +260,7 @@ namespace BTCPayServer.Controllers
                     ModelState.Remove(nameof(vm.PSBT));
                     ModelState.Remove(nameof(vm.FileName));
                     ModelState.Remove(nameof(vm.UploadedPSBTFile));
-
+                    
                     // for pending transactions we collect signature from PSBT and redirect if everything is good
                     if (vm.SigningContext.PendingTransactionId is not null)
                     {

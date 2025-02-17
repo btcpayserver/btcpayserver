@@ -203,6 +203,7 @@ else
                     <form method="post" asp-action="WalletPSBT" asp-route-walletId="@walletId" enctype="multipart/form-data" class="mb-2">
                         <input type="hidden" asp-for="ReturnUrl" />
                         <input type="hidden" asp-for="BackUrl" />
+                        <partial name="SigningContext" for="SigningContext" />
                         <div class="form-group">
                             <label for="ImportedPSBT" class="form-label" text-translate="true">PSBT content</label>
                             <textarea id="ImportedPSBT" name="PSBT" class="form-control" rows="5"></textarea>

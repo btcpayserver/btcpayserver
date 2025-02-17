@@ -169,7 +169,7 @@ public class MultisigTests : UnitTestBase
         
         // fetching PSBT
         s.Driver.FindElement(By.Id("PSBTOptionsExportHeader")).Click();
-        s.Driver.FindElement(By.Id("ShowRawVersion")).Click();
+        s.Driver.WaitForElement(By.Id("ShowRawVersion")).Click();
         var psbt = s.Driver.WaitForElement(By.Id("psbt-base64")).Text;
         while (string.IsNullOrEmpty(psbt))
         {

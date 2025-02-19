@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
@@ -19,6 +20,8 @@ namespace BTCPayServer.Data
             }
             public const string Label = "label";
             public const string Tx = "tx";
+            public const string CPFP = "CPFP";
+            public const string RBF = "RBF";
             public const string Payjoin = "payjoin";
             public const string Invoice = "invoice";
             public const string PaymentRequest = "payment-request";
@@ -33,24 +36,27 @@ namespace BTCPayServer.Data
         public string Type { get; set; }
         public string Id { get; set; }
         public string Data { get; set; }
-
+#nullable enable
+        public JObject? GetData() => Data is null ? null : JObject.Parse(Data);
+#nullable restore
         public List<WalletObjectLinkData> Bs { get; set; }
         public List<WalletObjectLinkData> As { get; set; }
-
-        public IEnumerable<(string type, string id, string linkdata, string objectdata)> GetLinks()
+#nullable enable
+        public IEnumerable<(string type, string id, JObject? linkdata, JObject? objectdata)> GetLinks()
         {
+            static JObject? AsJObj(string? data) => data is null ? null : JObject.Parse(data);
             if (Bs is not null)
                 foreach (var c in Bs)
                 {
-                    yield return (c.BType, c.BId, c.Data, c.B?.Data);
+                    yield return (c.BType, c.BId, AsJObj(c.Data), AsJObj(c.B?.Data));
                 }
             if (As is not null)
                 foreach (var c in As)
                 {
-                    yield return (c.AType, c.AId, c.Data, c.A?.Data);
+                    yield return (c.AType, c.AId, AsJObj(c.Data), AsJObj(c.A?.Data));
                 }
         }
-
+#nullable restore
         public IEnumerable<WalletObjectData> GetNeighbours()
         {
             if (Bs != null)

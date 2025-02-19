@@ -12,12 +12,13 @@ namespace BTCPayServer.Services
         public string Type { get; }
         public string Id { get; }
         public JObject? Data { get; }
-
-        public Attachment(string type, string? id = null, JObject? data = null)
+        public JObject? LinkData { get; }
+        public Attachment(string type, string? id = null, JObject? data = null, JObject? linkData = null)
         {
             Type = type;
             Id = id ?? string.Empty;
             Data = data;
+            LinkData = linkData;
         }
         public static Attachment Payjoin()
         {

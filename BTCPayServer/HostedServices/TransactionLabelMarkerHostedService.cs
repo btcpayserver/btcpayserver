@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -12,8 +13,10 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
@@ -75,36 +78,99 @@ namespace BTCPayServer.HostedServices
                             matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Utxo, new OutPoint(transactionEvent.NewTransactionEvent.TransactionData.TransactionHash, txOut.N).ToString()));
                         }
 
+                        matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Tx, transactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString()));
                         var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects.Distinct().ToArray() });
-                        var links  = new List<WalletObjectLinkData>(); 
+                        var links = new List<WalletObjectLinkData>();
+                        var newObjs = new List<WalletObjectData>();
                         foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))
                         {
-                            var txWalletObject = new WalletObjectId(walletObjectDatas.Key,
-                                WalletObjectData.Types.Tx, txHash);
+                            var wid = walletObjectDatas.Key;
+                            var txWalletObject = new WalletObjectId(wid, WalletObjectData.Types.Tx, txHash);
+
+                            // if we are replacing a transaction, we add the same links to the new transaction
+                            // Note that unlike CPFP, RBF tag may be applied to transactions that may not be fee bumps
+                            {
+                                if (transactionEvent.NewTransactionEvent.Replacing is not null)
+                                {
+
+                                    foreach (var replaced in transactionEvent.NewTransactionEvent.Replacing)
+                                    {
+                                        var replacedwoId = new WalletObjectId(wid,
+                                              WalletObjectData.Types.Tx, replaced.ToString());
+                                        var replacedo = await _walletRepository.GetWalletObject(replacedwoId);
+                                        var replacedLinks = replacedo?.GetLinks().Where(t => t.type != WalletObjectData.Types.Tx) ?? [];
+                                        if (replacedLinks.Count() != 0)
+                                        {
+                                            var rbf = new WalletObjectId(wid, WalletObjectData.Types.RBF, "");
+                                            var label = WalletRepository.CreateLabel(rbf);
+                                            newObjs.Add(label.ObjectData);
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, label.Id));
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, rbf, new JObject()
+                                            {
+                                                ["txs"] = JArray.FromObject(new[] { replaced.ToString() })
+                                            }));
+                                        }
+                                        foreach (var link in replacedLinks)
+                                        {
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(walletObjectDatas.Key, link.type, link.id), txWalletObject, link.linkdata));
+                                        }
+                                    }
+                                }
+                            }
+
                             foreach (var walletObjectData in walletObjectDatas)
                             {
-                                links.Add(
-                                    WalletRepository.NewWalletObjectLinkData(txWalletObject, walletObjectData.Key));
-                                //if the object is an address, we also link the labels to the tx
-                                if (walletObjectData.Value.Type == WalletObjectData.Types.Address)
+                                // if we detect it's a CPFP, we add a CPFP label
                                 {
-                                    var neighbours = walletObjectData.Value.GetNeighbours().ToArray();
-                                    var labels = neighbours
-                                        .Where(data => data.Type == WalletObjectData.Types.Label).Select(data =>
-                                            new WalletObjectId(walletObjectDatas.Key, data.Type, data.Id));
-                                    foreach (var label in labels)
+                                    // Only for non confirmed transaction where all inputs and outputs belong to the wallet and issued by us
+                                    if (
+                                        walletObjectData.Value.Type is WalletObjectData.Types.Tx &&
+                                        walletObjectData.Value.GetData()?["bumpFeeMethod"] is JValue { Value: "CPFP" } &&
+                                        transactionEvent.NewTransactionEvent is { BlockId: null, TransactionData: { Transaction: { } tx } } txEvt &&
+                                        txEvt.Inputs.Count == tx.Inputs.Count &&
+                                        txEvt.Outputs.Count == tx.Outputs.Count)
                                     {
-                                        links.Add(WalletRepository.NewWalletObjectLinkData(label, txWalletObject));
-                                        var attachments = neighbours.Where(data => data.Type == label.Id);
-                                        foreach (var attachment in attachments)
+                                        var cpfp = new WalletObjectId(wid, WalletObjectData.Types.CPFP, "");
+                                        var label = WalletRepository.CreateLabel(cpfp);
+                                        newObjs.Add(label.ObjectData);
+                                        links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, label.Id));
+                                        links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, cpfp, new JObject()
                                         {
-                                            links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(walletObjectDatas.Key, attachment.Type, attachment.Id), txWalletObject));
+                                            ["outpoints"] = JArray.FromObject(txEvt.Inputs.Select(i => $"{i.TransactionId}-{i.Index}"))
+                                        }));
+                                    }
+                                }
+
+
+                                // if we the tx is matching some known address and utxo, we link them to this tx
+                                {
+                                    if (walletObjectData.Value.Type is WalletObjectData.Types.Utxo or WalletObjectData.Types.Address)
+                                    links.Add(
+                                        WalletRepository.NewWalletObjectLinkData(txWalletObject, walletObjectData.Key));
+                                }
+                                // if the object is an address, we also link its labels (the ones added in the wallet receive page)
+                                {
+                                    if (walletObjectData.Value.Type == WalletObjectData.Types.Address)
+                                    {
+                                        var neighbours = walletObjectData.Value.GetNeighbours().ToArray();
+                                        var labels = neighbours
+                                            .Where(data => data.Type == WalletObjectData.Types.Label).Select(data =>
+                                                new WalletObjectId(wid, data.Type, data.Id));
+                                        foreach (var label in labels)
+                                        {
+											links.Add(WalletRepository.NewWalletObjectLinkData(label, txWalletObject));
+                                            var attachments = neighbours.Where(data => data.Type == label.Id);
+                                            foreach (var attachment in attachments)
+                                            {
+                                                links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(wid, attachment.Type, attachment.Id), txWalletObject));
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
-                        await _walletRepository.EnsureCreated(null,links);
+
+                        await _walletRepository.EnsureCreated(newObjs, links);
 
                         break;
                     }

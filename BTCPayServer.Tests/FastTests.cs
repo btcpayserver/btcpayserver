@@ -26,6 +26,7 @@ using BTCPayServer.Services.Fees;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
+using BTCPayServer.Services.Wallets;
 using BTCPayServer.Validation;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Configuration.Memory;
@@ -33,6 +34,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NBitcoin;
+using NBitcoin.RPC;
 using NBitcoin.Scripting.Parser;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
@@ -430,6 +432,61 @@ namespace BTCPayServer.Tests
         }
         PaymentMethodId BTC = PaymentTypes.CHAIN.GetPaymentMethodId("BTC");
         PaymentMethodId LTC = PaymentTypes.CHAIN.GetPaymentMethodId("LTC");
+
+        [Fact]
+        public void CalculateMinFeeBump()
+        {
+            // Check IncrementalFee is respected
+            var replacementInfo = new ReplacementInfo
+            (
+                new MempoolEntry()
+                {
+                    // RBF only work if there is no descendants
+                    BaseFee = Money.Satoshis(1000),
+                    VirtualSizeBytes = 100,
+                    DescendantFees = Money.Satoshis(1000),
+                    DescendantVirtualSizeBytes = 100,
+
+                    AncestorVirtualSizeBytes = 350,
+                    AncestorFees = Money.Satoshis(3000),
+                },
+                IncrementalRelayFee: new FeeRate(1.0m),
+                MinMempoolFeeRate: new FeeRate(2.0m)
+            );
+
+            var minFeeRate = replacementInfo.CalculateNewMinFeeRate();
+            var bump = replacementInfo.CalculateBumpResult(minFeeRate);
+            Assert.True(bump.NewTxFeeRate >= replacementInfo.MinMempoolFeeRate);
+            Assert.True(bump.NewEffectiveFeeRate.SatoshiPerByte >= replacementInfo.IncrementalRelayFee.SatoshiPerByte + new FeeRate(replacementInfo.Entry.AncestorFees, replacementInfo.Entry.AncestorVirtualSizeBytes).SatoshiPerByte);
+
+            Assert.Equal(new FeeRate(Money.Satoshis(3350), 350), minFeeRate);
+            Assert.Equal(Money.Satoshis(1350), bump.NewTxFee);
+
+            // Check MinMempoolFee is respected
+            replacementInfo = new ReplacementInfo
+            (
+                new MempoolEntry()
+                {
+                    BaseFee = Money.Satoshis(90),
+                    VirtualSizeBytes = 100,
+                    DescendantFees = Money.Satoshis(90),
+                    DescendantVirtualSizeBytes = 100,
+
+                    AncestorVirtualSizeBytes = 350,
+                    AncestorFees = Money.Satoshis(3000),
+                },
+                IncrementalRelayFee: new FeeRate(0.0m),
+                MinMempoolFeeRate: new FeeRate(2.0m)
+            );
+            minFeeRate = replacementInfo.CalculateNewMinFeeRate();
+            bump = replacementInfo.CalculateBumpResult(minFeeRate);
+            Assert.True(bump.NewTxFeeRate >= replacementInfo.MinMempoolFeeRate);
+            Assert.True(bump.NewEffectiveFeeRate.SatoshiPerByte >= replacementInfo.IncrementalRelayFee.SatoshiPerByte + new FeeRate(replacementInfo.Entry.AncestorFees, replacementInfo.Entry.AncestorVirtualSizeBytes).SatoshiPerByte);
+
+            Assert.Equal(new FeeRate(Money.Satoshis(3110), 350), minFeeRate);
+            Assert.Equal(Money.Satoshis(200), bump.NewTxFee);
+        }
+
         [Fact]
         public void CanCalculateDust()
         {

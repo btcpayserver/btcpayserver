@@ -41,9 +41,11 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
 using NBitcoin.Payment;
+using NBitcoin.RPC;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using InvoiceCryptoInfo = BTCPayServer.Services.Invoices.InvoiceCryptoInfo;
 
 namespace BTCPayServer
@@ -440,6 +442,66 @@ namespace BTCPayServer
             }
             catch { }
             finally { try { webSocket.Dispose(); } catch { } }
+        }
+
+        public static async Task<GetMempoolInfoResponse> GetMempoolInfo(this RPCClient rpc, CancellationToken cancellationToken)
+        {
+            var mempoolInfo = await rpc.SendCommandAsync(new RPCRequest("getmempoolinfo", [])
+            {
+                ThrowIfRPCError = false,
+            }, cancellationToken);
+            if (mempoolInfo is null || mempoolInfo.Error is not null)
+                return null;
+            var result = new GetMempoolInfoResponse();
+            var incrementalRelayFee = mempoolInfo.Result["incrementalrelayfee"]?.Value<decimal>();
+            if (incrementalRelayFee is not null)
+            {
+                result.IncrementalRelayFeeRate = new FeeRate(Money.Coins(incrementalRelayFee.Value), 1000);
+            }
+
+            var mempoolminfee = mempoolInfo.Result["mempoolminfee"]?.Value<decimal>();
+            if (mempoolminfee is not null)
+            {
+                result.MempoolMinfeeRate = new FeeRate(Money.Coins(mempoolminfee.Value), 1000);
+            }
+            result.FullRBF = mempoolInfo.Result["fullrbf"]?.Value<bool>();
+            return result;
+        }
+
+        public static async Task<Dictionary<uint256, MempoolEntry>> FetchMempoolEntries(this RPCClient rpc, IEnumerable<uint256> txHashes, CancellationToken cancellationToken)
+        {
+            var batch = rpc.PrepareBatch();
+            var tasks = new List<(uint256 Id, Task<MempoolEntry> MempoolEntry)>();
+            var metadatas = new Dictionary<uint256, MempoolEntry>();
+            foreach (var id in txHashes)
+            {
+                tasks.Add((id, batch.GetMempoolEntryAsync(id, false, cancellationToken)));
+            }
+            if (tasks.Count == 0)
+                return metadatas;
+            try
+            {
+                await batch.SendBatchAsync(cancellationToken);
+                foreach (var t in tasks)
+                {
+                    try
+                    {
+                        var entry = await t.MempoolEntry;
+                        if (entry is null)
+                            continue;
+                        metadatas.TryAdd(t.Id, entry);
+                    }
+                    catch
+                    {
+                        break;
+                    }
+                }
+            }
+            // If it fails, that's OK, we don't care about the mempool entry information that much
+            catch
+            {
+            }
+            return metadatas;
         }
 
         public static IEnumerable<BitcoinLikePaymentData> GetAllBitcoinPaymentData(this InvoiceEntity invoice, BitcoinLikePaymentHandler handler, bool accountedOnly)

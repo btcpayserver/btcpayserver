@@ -790,12 +790,12 @@ namespace BTCPayServer.Controllers.Greenfield
             };
         }
 
-        private OnChainWalletObjectData.OnChainWalletObjectLink ToModel((string type, string id, string linkdata, string objectdata) data)
+        private OnChainWalletObjectData.OnChainWalletObjectLink ToModel((string type, string id, JObject? linkdata, JObject? objectdata) data)
         {
             return new OnChainWalletObjectData.OnChainWalletObjectLink()
             {
-                LinkData = string.IsNullOrEmpty(data.linkdata) ? null : JObject.Parse(data.linkdata),
-                ObjectData = string.IsNullOrEmpty(data.objectdata) ? null : JObject.Parse(data.objectdata),
+                LinkData = data.linkdata,
+                ObjectData = data.objectdata,
                 Type = data.type,
                 Id = data.id,
             };

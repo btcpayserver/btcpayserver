@@ -8,7 +8,24 @@
         <span class="text-@(Model.Positive ? "success" : "danger")">@Model.BalanceChange</span>
     </p>
 }
-
+@if (Model.ReplacementBalanceChange is not null)
+{
+    <div id="replacements">
+        <h4 class="mb-n3" text-translate="true">Replacements</h4>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th text-translate="true" class="text-end">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-end text-@(Model.ReplacementBalanceChange.Positive ? "success" : "danger")">@Model.ReplacementBalanceChange.BalanceChange</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+}
 <div id="inputs">
     <h4 class="mb-n3" text-translate="true">Inputs</h4>
     <table class="table">

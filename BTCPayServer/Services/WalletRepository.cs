@@ -259,16 +259,15 @@ namespace BTCPayServer.Services
                     Comment = data?["comment"]?.Value<string>()
                 };
                 result.Add(obj.Id, info);
-                foreach (var neighbour in obj.GetNeighbours())
+                foreach (var link in obj.GetLinks())
                 {
-                    var neighbourData = neighbour.Data is null ? null : JObject.Parse(neighbour.Data);
-                    if (neighbour.Type == WalletObjectData.Types.Label)
+                    if (link.type == WalletObjectData.Types.Label)
                     {
-                        info.LabelColors.TryAdd(neighbour.Id, neighbourData?["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(neighbour.Id));
+                        info.LabelColors.TryAdd(link.id, link.objectdata?["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(link.id));
                     }
                     else
                     {
-                        info.Attachments.Add(new Attachment(neighbour.Type, neighbour.Id, neighbourData));
+                        info.Attachments.Add(new Attachment(link.type, link.id, link.objectdata, link.linkdata));
                     }
                 }
             }
@@ -422,6 +421,17 @@ namespace BTCPayServer.Services
         }
 
 
+        public static (WalletObjectData ObjectData, WalletObjectId Id) CreateLabel(WalletObjectId obj)
+            => CreateLabel(obj.WalletId, obj.Type);
+        public static (WalletObjectData ObjectData, WalletObjectId Id) CreateLabel(WalletId walletId, string txt)
+        {
+            var id = new WalletObjectId(walletId, WalletObjectData.Types.Label, txt);
+            return (WalletRepository.NewWalletObjectData(id,
+            new JObject
+            {
+                ["color"] = ColorPalette.Default.DeterministicColor(txt)
+            }), id);
+        }
         public static WalletObjectData NewWalletObjectData(WalletObjectId id, JObject? data = null)
         {
             return new WalletObjectData()
@@ -460,10 +470,9 @@ namespace BTCPayServer.Services
             objs.Add(NewWalletObjectData(id));
             foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
             {
-                var labelObjId = new WalletObjectId(id.WalletId, WalletObjectData.Types.Label, l);
-                objs.Add(NewWalletObjectData(labelObjId,
-                    new JObject() {["color"] = ColorPalette.Default.DeterministicColor(l)}));
-                links.Add(NewWalletObjectLinkData(labelObjId, id));
+                var label = CreateLabel(id.WalletId, l);
+                objs.Add(label.ObjectData);
+                links.Add(NewWalletObjectLinkData(label.Id, id));
             }
             await EnsureCreated(objs, links);
         }
@@ -490,10 +499,9 @@ namespace BTCPayServer.Services
                 objs.Add(NewWalletObjectData(txObjId));
                 foreach (var attachment in req.attachments)
                 {
-                    var labelObjId = new WalletObjectId(req.walletId, WalletObjectData.Types.Label, attachment.Type);
-                    objs.Add(NewWalletObjectData(labelObjId,
-                        new JObject() {["color"] = ColorPalette.Default.DeterministicColor(attachment.Type)}));
-                    links.Add(NewWalletObjectLinkData(labelObjId, txObjId));
+                    var label = CreateLabel(req.walletId, attachment.Type);
+                    objs.Add(label.ObjectData);
+                    links.Add(NewWalletObjectLinkData(label.Id, txObjId));
                     if (attachment.Data is not null || attachment.Id.Length != 0)
                     {
                         var data = new WalletObjectId(req.walletId, attachment.Type, attachment.Id);

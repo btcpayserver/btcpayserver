@@ -8,6 +8,7 @@ using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using NBitcoin;
 using NBXplorer;
 using NBXplorer.Models;
 
@@ -28,12 +29,13 @@ namespace BTCPayServer.HostedServices
             public NBXplorerState State { get; set; }
             public StatusResult Status { get; set; }
             public string Error { get; set; }
+            public GetMempoolInfoResponse MempoolInfo { get; set; }
         }
 
         readonly ConcurrentDictionary<string, NBXplorerSummary> _Summaries = new ConcurrentDictionary<string, NBXplorerSummary>();
-        public void Publish(BTCPayNetworkBase network, NBXplorerState state, StatusResult status, string error)
+        public void Publish(BTCPayNetworkBase network, NBXplorerState state, StatusResult status, GetMempoolInfoResponse mempoolInfo, string error)
         {
-            var summary = new NBXplorerSummary() { Network = network, State = state, Status = status, Error = error };
+            var summary = new NBXplorerSummary() { Network = network, State = state, Status = status, MempoolInfo = mempoolInfo, Error = error };
             _Summaries.AddOrUpdate(network.CryptoCode.ToUpperInvariant(), summary, (k, v) => summary);
         }
 
@@ -89,7 +91,7 @@ namespace BTCPayServer.HostedServices
             _Client = client;
             _Aggregator = aggregator;
             _Dashboard = dashboard;
-            _Dashboard.Publish(_Network, State, null, null);
+            _Dashboard.Publish(_Network, State, null, null, null);
         }
 
         readonly NBXplorerDashboard _Dashboard;
@@ -139,6 +141,7 @@ namespace BTCPayServer.HostedServices
             var oldState = State;
             string error = null;
             StatusResult status = null;
+            var mempoolInfoAsync = this._Client.RPCClient.GetMempoolInfo(cancellation);
             try
             {
                 switch (State)
@@ -204,7 +207,13 @@ namespace BTCPayServer.HostedServices
                 Logs.PayServer.LogError($"{_Network.CryptoCode}: NBXplorer error `{error}`");
             }
 
-            _Dashboard.Publish(_Network, State, status, error);
+            GetMempoolInfoResponse mempoolInfo = null;
+            try
+            {
+                mempoolInfo = await mempoolInfoAsync;
+            }
+            catch { }
+            _Dashboard.Publish(_Network, State, status, mempoolInfo, error);
             if (oldState != State)
             {
                 if (State == NBXplorerState.Synching)

@@ -234,6 +234,7 @@ services:
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=merchant_lnd:9735
         bitcoin.defaultchanconfs=1
+        protocol.custom-message=37913
         no-macaroons=1
         debuglevel=debug
         trickledelay=1000
@@ -272,6 +273,7 @@ services:
         bitcoind.zmqpubrawtx=tcp://bitcoind:28333
         externalip=customer_lnd:9735
         bitcoin.defaultchanconfs=1
+        protocol.custom-message=37913
         no-macaroons=1
         debuglevel=debug
         trickledelay=1000

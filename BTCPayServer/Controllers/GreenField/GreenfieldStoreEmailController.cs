@@ -55,7 +55,6 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpGet("~/api/v1/stores/{storeId}/email")]
         public IActionResult GetStoreEmailSettings()
         {
-
             var store = HttpContext.GetStoreData();
             return store == null ? StoreNotFound() : Ok(FromModel(store));
         }
@@ -87,7 +86,13 @@ namespace BTCPayServer.Controllers.GreenField
         }
         private EmailSettings FromModel(Data.StoreData data)
         {
-            return data.GetStoreBlob().EmailSettings ?? new();
+            var emailSettings = data.GetStoreBlob().EmailSettings;
+            if (emailSettings == null)
+                return new EmailSettings();
+            
+            emailSettings.Password = ServerEmailSettingsData.PasswordMask;
+
+            return emailSettings;
         }
         private IActionResult StoreNotFound()
         {

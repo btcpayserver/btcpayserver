@@ -462,7 +462,7 @@ namespace BTCPayServer.Controllers
             {
                 await cashCow.SendCommandAsync("rescanblockchain");
             }
-            var addresses = Enumerable.Range(0, 200).Select(_ => c.GetUnusedAsync(paymentMethod.AccountDerivation, DerivationFeature.Deposit, reserve: true)).ToArray();
+            var addresses = Enumerable.Range(0, 10).Select(_ => c.GetUnusedAsync(paymentMethod.AccountDerivation, DerivationFeature.Deposit, reserve: true)).ToArray();
             
             await Task.WhenAll(addresses);
             await cashCow.GenerateAsync(addresses.Length / 8);

@@ -3,7 +3,7 @@ using BTCPayServer.Data;
 
 namespace BTCPayServer.Models.StoreViewModels;
 
-public class ListStoresViewModel
+public class ListStoresViewModel : BasePagingViewModel
 {
     public class StoreViewModel
     {
@@ -15,4 +15,5 @@ public class ListStoresViewModel
 
     public List<StoreViewModel> Stores { get; set; } = new ();
     public bool Archived { get; set; }
+    public override int CurrentPageCount => Stores.Count;
 }

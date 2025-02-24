@@ -1,23 +1,47 @@
 @model BTCPayServer.Models.StoreViewModels.ListStoresViewModel
 @{
     Layout = "_Layout";
-    ViewData.SetActivePage(ServerNavPages.Stores, StringLocalizer["Store Overview"]);
+    ViewData.SetActivePage(ServerNavPages.Stores, StringLocalizer["Stores"]);
+    var nextStoreNameSortOrder = (string)ViewData["nextStoreNameSortOrder"];
+    var storeNameSortOrder = nextStoreNameSortOrder switch
+    {
+        "asc" => "desc",
+        "desc" => "asc",
+        _ => null
+    };
+    const string sortByDesc = "Sort by email descending...";
+    const string sortByAsc = "Sort by email ascending...";
 }
 <div class="sticky-header">
 	<h2 class="my-1">@ViewData["Title"]</h2>
 </div>
 <partial name="_StatusMessage" />
 
+<form asp-action="ListStores" asp-route-sortOrder="@(storeNameSortOrder)" style="max-width:640px" method="get">
+    <input asp-for="SearchTerm" class="form-control" placeholder="@StringLocalizer["Search by name..."]" />
+</form>
+
 @if (Model.Stores.Any())
 {
-    <table class="table table-hover">
-        <thead>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
             <tr>
-                <th text-translate="true">Store</th>
+                <th>
+                    <a
+                        asp-action="ListStores"
+                        asp-route-sortOrder="@(nextStoreNameSortOrder ?? "asc")"
+                        class="text-nowrap"
+                        title="@(nextStoreNameSortOrder == "desc" ? sortByAsc : sortByDesc)"
+                    >
+                        <span text-translate="true">Store</span>
+                        <vc:icon symbol="actions-sort-alpha-@(storeNameSortOrder ?? nextStoreNameSortOrder ?? "desc")" />
+                    </a>
+                </th>
                 <th text-translate="true">Users</th>
             </tr>
-        </thead>
-        <tbody>
+            </thead>
+            <tbody>
             @foreach (var store in Model.Stores)
             {
                 var detailsId = $"store_details_{store.StoreId}";
@@ -65,8 +89,9 @@
                     </td>
                 </tr>
             }
-        </tbody>
-    </table>
+            </tbody>
+        </table>
+    </div>
 }
 else
 {

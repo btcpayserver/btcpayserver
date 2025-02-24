@@ -4,6 +4,7 @@ using BTCPayServer.Models;
 using BTCPayServer.Models.InvoicingModels;
 using BTCPayServer.Models.PaymentRequestViewModels;
 using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models.StoreViewModels;
 using BTCPayServer.Models.WalletViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
@@ -20,6 +21,8 @@ namespace BTCPayServer
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.InvoicesQuery));
             else if (model is ListPaymentRequestsViewModel)
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.PaymentRequestsQuery));
+            else if (model is ListStoresViewModel)
+                prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.StoresQuery));
             else if (model is UsersViewModel)
                 prop = typeof(UserPrefsCookie).GetProperty(nameof(UserPrefsCookie.UsersQuery));
             else if (model is PayoutsModel)

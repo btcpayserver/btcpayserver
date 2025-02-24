@@ -131,23 +131,40 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("server/stores")]
-        public async Task<IActionResult> ListStores()
+        public async Task<IActionResult> ListStores(ListStoresViewModel? model, string? sortOrder = null)
         {
-            var stores = await _StoreRepository.GetStores();
-            var vm = new ListStoresViewModel
+            model = this.ParseListQuery(model ?? new ListStoresViewModel());
+
+            var query = new StoreQuery { SearchTerm = model.SearchTerm };
+            var sortDesc = false;
+            if (sortOrder != null)
             {
-                Stores = stores
-                    .Select(s => new ListStoresViewModel.StoreViewModel
-                    {
-                        StoreId = s.Id,
-                        StoreName = s.StoreName,
-                        Archived = s.Archived,
-                        Users = s.UserStores
-                    })
-                    .OrderBy(s => !s.Archived)
-                    .ToList()
-            };
-            return View(vm);
+                switch (sortOrder)
+                {
+                    case "desc":
+                        ViewData["NextStoreNameSortOrder"] = "asc";
+                        sortDesc = true;
+                        break;
+                    case "asc":
+                        ViewData["NextStoreNameSortOrder"] = "desc";
+                        break;
+                }
+            }
+            
+            var stores = (await _StoreRepository.GetStores(query))
+                .Select(s => new ListStoresViewModel.StoreViewModel
+                {
+                    StoreId = s.Id,
+                    StoreName = s.StoreName,
+                    Archived = s.Archived,
+                    Users = s.UserStores
+                });
+            model.Stores = (sortDesc
+                ? stores.OrderByDescending(store => store.StoreName)
+                : stores.OrderBy(store => store.StoreName))
+                .ThenBy(store => !store.Archived)
+                .ToList();
+            return View(model);
         }
 
         [HttpGet("server/maintenance")]

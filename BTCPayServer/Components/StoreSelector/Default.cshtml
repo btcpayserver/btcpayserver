@@ -1,7 +1,9 @@
+@using BTCPayServer.Client
 @using BTCPayServer.Components.MainLogo
 @using BTCPayServer.Services
 @using BTCPayServer.Views.Server
 @using BTCPayServer.Views.Stores
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject BTCPayServerEnvironment Env
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @functions {
@@ -64,10 +66,6 @@ else
                     <li><hr class="dropdown-divider"></li>
                     <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Index)" id="StoreSelectorArchived">@(Model.ArchivedCount == 1 ? StringLocalizer["{0} Archived Store", Model.ArchivedCount] : StringLocalizer["{0} Archived Stores", Model.ArchivedCount])</a></li>
                 }
-                @*
-                <li permission="@Policies.CanModifyServerSettings"><hr class="dropdown-divider"></li>
-                <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.ActivePageClass(ServerNavPages.Stores)" id="StoreSelectorAdminStores" text-translate="true">Admin Store Overview</a></li>
-                *@
             </ul>
         </div>
     </div>

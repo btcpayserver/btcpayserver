@@ -304,6 +304,9 @@
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Roles" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Roles)" asp-action="ListRoles" text-translate="true">Roles</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
+                    <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Stores" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Stores)" asp-action="ListStores" text-translate="true">Stores</a>
+                </li>
+                <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Emails" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Emails)" asp-action="Emails" text-translate="true">Email</a>
                 </li>
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">

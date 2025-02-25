@@ -1,0 +1,60 @@
+@using BTCPayServer.Client
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model List<BTCPayServer.Controllers.UIStoresController.StoreEmailRule>
+
+@{
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer["Email Rules"], storeId);
+}
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+    <a id="page-primary" permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="EmailRulesCreate" asp-route-storeId="@storeId" 
+       class="btn btn-primary" role="button">
+        Create Email Rule
+    </a>
+</div>
+
+<partial name="_StatusMessage" />
+<p text-translate="true">
+    Email rules allow BTCPay Server to send customized emails from your store based on events.
+</p>
+
+<div class="table-responsive">
+<table class="table table-hover">
+    <thead>
+    <tr>
+        <th>Trigger</th>
+        <th>Customer Email</th>
+        <th>To</th>
+        <th>Subject</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    @foreach (var rule in Model.Select((value, index) => new { value, index }))
+    {
+        <tr>
+            <td>@rule.value.Trigger</td>
+            <td>@(rule.value.CustomerEmail ? "Yes" : "No")</td>
+            <td>@rule.value.To</td>
+            <td>@rule.value.Subject</td>
+            <td>
+                <a asp-action="EmailRulesEdit" asp-route-storeId="@ViewBag.StoreId" asp-route-ruleIndex="@rule.index" class="btn btn-primary">Edit</a>
+                <form asp-action="EmailRulesDelete" asp-route-storeId="@ViewBag.StoreId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </td>
+        </tr>
+    }
+    </tbody>
+</table>
+</div>

@@ -38,7 +38,7 @@
 <div class="mt-5" permission="@Policies.CanModifyStoreSettings">
     <h3 text-translate="true">Email Rules</h3>
     <p text-translate="true">Email rules allow BTCPay Server to send customized emails from your store based on events.</p>
-    <a class="btn btn-secondary" asp-action="StoreEmails" asp-controller="UIStores" asp-route-storeId="@storeId" id="ConfigureEmailRules" permission="@Policies.CanModifyStoreSettings" text-translate="true">
+    <a class="btn btn-secondary" asp-action="EmailRulesIndex" asp-controller="UIStores" asp-route-storeId="@storeId" id="ConfigureEmailRules" permission="@Policies.CanModifyStoreSettings" text-translate="true">
         Configure
     </a>
 </div>   

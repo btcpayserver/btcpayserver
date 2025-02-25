@@ -381,15 +381,14 @@ namespace BTCPayServer.Controllers
                 try
                 {
                     var r = await fetchRate(walletId);
-
-                    var fiatAmount = r.result.BidAsk.Center * balanceChange.ToDecimal(MoneyUnit.BTC);
-
-                    vm.FiatBalanceChange = fiatAmount.ToString("C",
-                        _currencyTable.GetNumberFormatInfo(r.currencyPair.Right, true));
+                    
                     vm.Rate = r.result.BidAsk.Center;
                     vm.FiatDivisibility = _currencyTable.GetNumberFormatInfo(r.currencyPair.Right, true)
                         .CurrencyDecimalDigits;
                     vm.Fiat = r.currencyPair.Right;
+
+                    var fiatAmount = r.result.BidAsk.Center * balanceChange.ToDecimal(MoneyUnit.BTC);
+                    vm.FiatBalanceChange = fiatAmount.ToString("N"+vm.FiatDivisibility) +" "+ vm.Fiat;
                 }
                 catch (Exception ex)
                 {

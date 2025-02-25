@@ -1,14 +1,21 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices;
 
@@ -19,7 +26,7 @@ public class PendingTransactionService(
     EventAggregator eventAggregator,
     ILogger<PendingTransactionService> logger,
     ExplorerClientProvider explorerClientProvider)
-    : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask
+    : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask, IWebhookProvider
 {
     protected override void SubscribeToEvents()
     {
@@ -238,5 +245,83 @@ public class PendingTransactionService(
         if (pt is null) return;
         pt.State = PendingTransactionState.Broadcast;
         await ctx.SaveChangesAsync();
+    }
+
+ 
+    public const string PendingTransactionCreated = "PendingTransactionCreated";
+    public const string PendingTransactionSigned = "PendingTransactionSigned";
+
+    public Dictionary<string, string> GetSupportedWebhookTypes()
+    {
+        return new Dictionary<string, string>
+        {
+            {PendingTransactionCreated, "Pending Transaction - Created"},
+            {PendingTransactionSigned, "Pending Transaction - Signed"}
+        };
+    }
+
+    public WebhookEvent CreateTestEvent(string type, params object[] args)
+    {
+        var storeId = args[0].ToString();
+        return new WebhookPendingTransactionEvent(type, storeId)
+        {
+            AppId = "__test__" + Guid.NewGuid() + "__test__",
+            SubscriptionId = "__test__" + Guid.NewGuid() + "__test__",
+            Status = "Active"
+        };
+    }
+
+    public class WebhookPendingTransactionEvent : StoreWebhookEvent
+    {
+        public WebhookPendingTransactionEvent(string type, string storeId)
+        {
+            if (!type.StartsWith("subscription", StringComparison.InvariantCultureIgnoreCase))
+                throw new ArgumentException("Invalid event type", nameof(type));
+            Type = type;
+            StoreId = storeId;
+        }
+
+
+        [JsonProperty(Order = 2)] public string AppId { get; set; }
+
+        [JsonProperty(Order = 3)] public string SubscriptionId { get; set; }
+        [JsonProperty(Order = 4)] public string Status { get; set; }
+        [JsonProperty(Order = 5)] public string PaymentRequestId { get; set; }
+        [JsonProperty(Order = 6)] public string Email { get; set; }
+    }
+
+    public class SubscriptionWebhookDeliveryRequest(
+        string receiptUrl,
+        string? webhookId,
+        WebhookPendingTransactionEvent webhookEvent,
+        WebhookDeliveryData? delivery,
+        WebhookBlob? webhookBlob,
+        BTCPayNetworkJsonSerializerSettings btcPayNetworkJsonSerializerSettings)
+        : WebhookSender.WebhookDeliveryRequest(webhookId!, webhookEvent, delivery!, webhookBlob!)
+    {
+        public override Task<SendEmailRequest?> Interpolate(SendEmailRequest req,
+            UIStoresController.StoreEmailRule storeEmailRule)
+        {
+            if (storeEmailRule.CustomerEmail &&
+                MailboxAddressValidator.TryParse(webhookEvent.Email, out var bmb))
+            {
+                req.Email ??= string.Empty;
+                req.Email += $",{bmb}";
+            }
+
+            req.Subject = Interpolate(req.Subject);
+            req.Body = Interpolate(req.Body);
+            return Task.FromResult(req)!;
+        }
+
+        private string Interpolate(string str)
+        {
+            var res = str.Replace("{Subscription.SubscriptionId}", webhookEvent.SubscriptionId)
+                .Replace("{Subscription.Status}", webhookEvent.Status)
+                .Replace("{Subscription.PaymentRequestId}", webhookEvent.PaymentRequestId)
+                .Replace("{Subscription.AppId}", webhookEvent.AppId);
+
+            return res;
+        }
     }
 }

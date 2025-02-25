@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
+using BTCPayServer.Controllers;
 using BTCPayServer.Events;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Views.Wallets;
@@ -45,7 +46,7 @@ public class MultisigTests : UnitTestBase
                                        $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
                                        $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
         
-        var strategy = ParseDerivationStrategy(multisigDerivationScheme, network);
+        var strategy = UIStoresController.ParseDerivationStrategy(multisigDerivationScheme, network);
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
 
@@ -91,7 +92,7 @@ public class MultisigTests : UnitTestBase
                                        $"[{resp2.AccountKeyPath}]{resp2.DerivationScheme}/0/*," +
                                        $"[{resp3.AccountKeyPath}]{resp3.DerivationScheme}/0/*))";
         
-        var strategy = ParseDerivationStrategy(multisigDerivationScheme, network);
+        var strategy = UIStoresController.ParseDerivationStrategy(multisigDerivationScheme, network);
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
         
@@ -222,30 +223,5 @@ public class MultisigTests : UnitTestBase
 
         // Return the updated and signed PSBT
         return psbt.ToBase64();
-    }
-    
-    
-    
-    private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
-    {
-        var parser = new DerivationSchemeParser(network);
-        var isOD = Regex.Match(derivationScheme, @"\(.*?\)");
-        if (isOD.Success)
-        {
-            var derivationSchemeSettings = new DerivationSchemeSettings();
-            var result = parser.ParseOutputDescriptor(derivationScheme);
-            derivationSchemeSettings.AccountOriginal = derivationScheme.Trim();
-            derivationSchemeSettings.AccountDerivation = result.Item1;
-            derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
-            {
-                RootFingerprint = path?.MasterFingerprint,
-                AccountKeyPath = path?.KeyPath,
-                AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(parser.Network)
-            }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
-            return derivationSchemeSettings;
-        }
-
-        var strategy = parser.Parse(derivationScheme);
-        return new DerivationSchemeSettings(strategy, network);
     }
 }

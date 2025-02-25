@@ -31,7 +31,7 @@
             "put": {
                 "tags": ["ServerEmail"],
                 "summary": "Update server email settings",
-                "description": "Modify the email settings for the server. If a password is not provided, the existing one will be retained.",
+                "description": "Update server's email settings.",
                 "operationId": "ServerEmail_UpdateSettings",
                 "requestBody": {
                     "required": true,

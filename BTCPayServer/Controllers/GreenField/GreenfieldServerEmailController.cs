@@ -64,11 +64,14 @@ namespace BTCPayServer.Controllers.GreenField
                  return this.CreateValidationError(ModelState);
             }
             
+            if (request.Settings.Password == ServerEmailSettingsData.PasswordMask)
+                request.Settings.Password = null;
+            
             var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            if (new ServerEmailsViewModel(oldSettings).PasswordSet)
-            {
+            // retaining the password if it exists and was not provided in request
+            if (string.IsNullOrEmpty(request.Settings.Password) && new ServerEmailsViewModel(oldSettings).PasswordSet)
                 request.Settings.Password = oldSettings.Password;
-            }
+            
             // important to save as EmailSettings otherwise it won't be able to be fetched
             await _settingsRepository.UpdateSetting(new EmailSettings
             {

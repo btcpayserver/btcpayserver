@@ -1,11 +1,22 @@
 @model WalletPSBTReadyViewModel
 
+@functions {
+    private string ToFiatAmount(string destinationBalance)
+    {
+        var amt = Model.Rate * Decimal.Parse(destinationBalance.Replace("BTC", "").Trim());
+        return amt.ToString("N" + Model.FiatDivisibility) + " " + Model.Fiat;
+    }
+}
+
 @if (Model.CanCalculateBalance)
 {
     <p class="lead text-center text-secondary">
         <span text-translate="true">This transaction will change your balance:</span>
         <br>
-        <span class="text-@(Model.Positive ? "success" : "danger")">@Model.BalanceChange</span>
+        <span id="balance-toggle" class="text-@(Model.Positive ? "success" : "danger") cursor-pointer"
+              data-btc="@Model.BalanceChange" data-fiat="@Model.FiatBalanceChange">
+            @Model.BalanceChange (<small>@Model.FiatBalanceChange</small>)
+        </span>
     </p>
 }
 
@@ -23,38 +34,36 @@
         @foreach (var input in Model.Inputs)
         {
             <tr>
-                @if (input.Error != null)
-                {
-                    <td>
-                        @input.Index <span class="text-danger" title="@input.Error"><vc:icon symbol="warning"/></span>
-                    </td>
-                }
-                else
-                {
-                    <td>@input.Index</td>
-                }<td>
+                <td>@input.Index</td>
+                <td>
                     @if (input.Labels.Any())
-                       {
-                           <div class="d-flex flex-wrap gap-2 align-items-center">
-                               @foreach (var label in input.Labels)
-                               {
-                                   <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
-                                       <span>@label.Text</span>
-                                       @if (!string.IsNullOrEmpty(label.Link))
-                                       {
-                                           <a class="transaction-label-info transaction-details-icon" href="@label.Link"
-                                              target="_blank" rel="noreferrer noopener" title="@label.Tooltip" data-bs-html="true"
-                                              data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip">
-                                               <vc:icon symbol="info" />
-                                           </a>
-                                       }
-                                   </div>
-                               }
-                           </div>
-                       }
+                    {
+                        <div class="d-flex flex-wrap gap-2 align-items-center">
+                            @foreach (var label in input.Labels)
+                            {
+                                <div class="transaction-label" style="--label-bg:@label.Color;--label-fg:@label.TextColor">
+                                    <span>@label.Text</span>
+                                    @if (!string.IsNullOrEmpty(label.Link))
+                                    {
+                                        <a class="transaction-label-info transaction-details-icon" href="@label.Link"
+                                           target="_blank" rel="noreferrer noopener" title="@label.Tooltip"
+                                           data-bs-html="true" data-bs-toggle="tooltip"
+                                           data-bs-custom-class="transaction-label-tooltip">
+                                            <vc:icon symbol="info"/>
+                                        </a>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    }
                 </td>
-                <td class="text-end text-@(input.Positive ? "success" : "danger")">@input.BalanceChange</td>
-                
+                <td class="text-end text-@(input.Positive ? "success" : "danger")">
+                    <span class="amount-toggle cursor-pointer"
+                          data-btc="@input.BalanceChange"
+                          data-fiat="@ToFiatAmount(input.BalanceChange)">
+                        @input.BalanceChange
+                    </span>
+                </td>
             </tr>
         }
         </tbody>
@@ -87,9 +96,10 @@
                                     @if (!string.IsNullOrEmpty(label.Link))
                                     {
                                         <a class="transaction-label-info transaction-details-icon" href="@label.Link"
-                                           target="_blank" rel="noreferrer noopener" title="@label.Tooltip" data-bs-html="true"
-                                           data-bs-toggle="tooltip" data-bs-custom-class="transaction-label-tooltip">
-                                            <vc:icon symbol="info" />
+                                           target="_blank" rel="noreferrer noopener" title="@label.Tooltip"
+                                           data-bs-html="true" data-bs-toggle="tooltip"
+                                           data-bs-custom-class="transaction-label-tooltip">
+                                            <vc:icon symbol="info"/>
                                         </a>
                                     }
                                 </div>
@@ -97,7 +107,13 @@
                         </div>
                     }
                 </td>
-                <td class="text-end text-@(destination.Positive ? "success" : "danger")">@destination.Balance</td>
+                <td class="text-end text-@(destination.Positive ? "success" : "danger")">
+                    <span class="amount-toggle cursor-pointer"
+                          data-btc="@destination.Balance"
+                          data-fiat="@ToFiatAmount(destination.Balance)">
+                        @destination.Balance
+                    </span>
+                </td>
             </tr>
         }
         </tbody>
@@ -111,3 +127,36 @@
         <b>@Model.FeeRate</b>
     </p>
 }
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const balanceElement = document.getElementById("balance-toggle");
+        const amounts = document.querySelectorAll(".amount-toggle");
+
+        let showFiat = false;
+
+        function updateAllAmounts() {
+            amounts.forEach(el => {
+                const btcAmount = el.getAttribute("data-btc");
+                const fiatAmount = el.getAttribute("data-fiat");
+                el.innerText = showFiat ? fiatAmount : btcAmount;
+            });
+        }
+
+        // Toggle all amounts when clicking balance header
+        balanceElement.addEventListener("click", function () {
+            showFiat = !showFiat;
+            updateAllAmounts();
+        });
+
+        // Toggle individual amounts
+        amounts.forEach(el => {
+            el.addEventListener("click", function (event) {
+                event.stopPropagation();
+                const btcAmount = el.getAttribute("data-btc");
+                const fiatAmount = el.getAttribute("data-fiat");
+                el.innerText = el.innerText === btcAmount ? fiatAmount : btcAmount;
+            });
+        });
+    });
+</script>

@@ -130,15 +130,7 @@ public class MultisigTests : UnitTestBase
         s.Driver.WaitForElement(By.XPath("//a[text()='Broadcast']")).Click();
         s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
         Assert.Contains("Transaction broadcasted successfully", s.FindAlertMessage().Text);
-        try
-        {
-            s.Driver.FindElement(By.XPath("//a[text()='Broadcast']"));
-            throw new Exception("Broadcast button should not be present after transaction is broadcasted");
-        }
-        catch (NoSuchElementException)
-        {
-            // swallow exception, it's expected button is not there
-        }
+        s.Driver.AssertElementNotFound(By.XPath("//a[text()='Broadcast']"));
         
         // Abort pending transaction flow
         s.Driver.FindElement(By.Id("WalletNav-Send")).Click();

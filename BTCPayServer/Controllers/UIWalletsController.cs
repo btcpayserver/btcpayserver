@@ -21,6 +21,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payouts;
+using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -33,9 +34,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -513,10 +512,7 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
-            var storeData = store.GetStoreBlob();
-            var rateRules = store.GetStoreBlob().GetRateRules(_defaultRules);
-            rateRules.Spread = 0.0m;
-            var currencyPair = new Rating.CurrencyPair(walletId.CryptoCode, storeData.DefaultCurrency);
+            
             double.TryParse(defaultAmount, out var amount);
 
             var model = new WalletSendModel
@@ -587,29 +583,41 @@ namespace BTCPayServer.Controllers
 
             model.FeeSatoshiPerByte = recommendedFees[1].GetAwaiter().GetResult()?.FeeRate;
             model.CryptoDivisibility = network.Divisibility;
-            using (CancellationTokenSource cts = new CancellationTokenSource())
+            
+            var storeData = store.GetStoreBlob();
+            var rateRules = storeData.GetRateRules(_defaultRules);
+            rateRules.Spread = 0.0m;
+            var currencyPair = new CurrencyPair(walletId.CryptoCode, storeData.DefaultCurrency);
+
+            try
             {
-                try
-                {
-                    cts.CancelAfter(TimeSpan.FromSeconds(5));
-                    var result = await RateFetcher.FetchRate(currencyPair, rateRules, new StoreIdRateContext(walletId.StoreId),  cts.Token)
-                        .WithCancellation(cts.Token);
-                    if (result.BidAsk != null)
-                    {
-                        model.Rate = result.BidAsk.Center;
-                        model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true)
-                            .CurrencyDecimalDigits;
-                        model.Fiat = currencyPair.Right;
-                    }
-                    else
-                    {
-                        model.RateError =
-                            $"{result.EvaluatedRule} ({string.Join(", ", result.Errors.OfType<object>().ToArray())})";
-                    }
-                }
-                catch (Exception ex) { model.RateError = ex.Message; }
+                var result = await fetchRate(currencyPair, rateRules, new StoreIdRateContext(walletId.StoreId));
+                
+                model.Rate = result.BidAsk.Center;
+                model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true)
+                    .CurrencyDecimalDigits;
+                model.Fiat = currencyPair.Right;
             }
+            catch (Exception ex) { model.RateError = ex.Message; }
+                    
             return View(model);
+        }
+
+        private async Task<RateResult> fetchRate(CurrencyPair currencyPair, RateRules rateRules,
+            StoreIdRateContext storeIdRateContext)
+        {
+            using CancellationTokenSource cts = new();
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+            var result = await RateFetcher.FetchRate(currencyPair, rateRules, storeIdRateContext, cts.Token)
+                .WithCancellation(cts.Token);
+
+            if (result.BidAsk == null)
+            {
+                throw new Exception(
+                    $"{result.EvaluatedRule} ({string.Join(", ", result.Errors.OfType<object>().ToArray())})");
+            }
+
+            return result;
         }
 
         private async Task<string?> GetSeed(WalletId walletId, BTCPayNetwork network)

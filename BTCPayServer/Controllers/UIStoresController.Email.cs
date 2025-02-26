@@ -247,10 +247,9 @@ public partial class UIStoresController
             if (!ModelState.IsValid)
                 return View(model);
             var storeBlob = store.GetStoreBlob();
-            if (storeBlob.EmailSettings != null && new EmailsViewModel(storeBlob.EmailSettings, model.FallbackSettings).PasswordSet)
-            {
+            if (!string.IsNullOrEmpty(storeBlob.EmailSettings.Password))
                 model.Settings.Password = storeBlob.EmailSettings.Password;
-            }
+
             storeBlob.EmailSettings = unsetCustomSMTP ? null : model.Settings;
             store.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(store);

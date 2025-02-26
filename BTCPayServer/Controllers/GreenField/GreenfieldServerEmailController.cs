@@ -34,10 +34,7 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> ServerEmailSettings()
         {
             var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            if (!string.IsNullOrEmpty(email.Password))
-            {
-                email.Password = ServerEmailSettingsData.PasswordMask;
-            }
+            email.Password = null;
             var model = new ServerEmailSettingsData
             {
                 EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings,
@@ -64,12 +61,10 @@ namespace BTCPayServer.Controllers.GreenField
                  return this.CreateValidationError(ModelState);
             }
             
-            if (request.Settings.Password == ServerEmailSettingsData.PasswordMask)
-                request.Settings.Password = null;
-            
             var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
             // retaining the password if it exists and was not provided in request
-            if (string.IsNullOrEmpty(request.Settings.Password) && new ServerEmailsViewModel(oldSettings).PasswordSet)
+            if (string.IsNullOrEmpty(request.Settings.Password) &&
+                !string.IsNullOrEmpty(oldSettings?.Password))
                 request.Settings.Password = oldSettings.Password;
             
             // important to save as EmailSettings otherwise it won't be able to be fetched

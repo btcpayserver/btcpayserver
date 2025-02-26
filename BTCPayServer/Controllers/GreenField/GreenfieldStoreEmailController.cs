@@ -75,10 +75,7 @@ namespace BTCPayServer.Controllers.GreenField
                     "Invalid email address", this);
                 return this.CreateValidationError(ModelState);
             }
-            
-            if (request.Password == ServerEmailSettingsData.PasswordMask)
-                request.Password = null;
-            
+
             var blob = store.GetStoreBlob();
             
             // retaining the password if it exists and was not provided in request
@@ -98,9 +95,7 @@ namespace BTCPayServer.Controllers.GreenField
             var emailSettings = data.GetStoreBlob().EmailSettings;
             if (emailSettings == null)
                 return new EmailSettings();
-            
-            emailSettings.Password = ServerEmailSettingsData.PasswordMask;
-
+            emailSettings.Password = null;
             return emailSettings;
         }
         private IActionResult StoreNotFound()

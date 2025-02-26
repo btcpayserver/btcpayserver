@@ -4114,19 +4114,18 @@ namespace BTCPayServer.Tests
             };
             var serverEmailSettings = new ServerEmailSettingsData
             {
-                EnableStoresToUseServerEmailSettings = false,
-                Settings = data
+                EnableStoresToUseServerEmailSettings = false
             };
             await adminClient.UpdateServerEmailSettings(serverEmailSettings);
             
             var s = await adminClient.GetServerEmailSettings();
             // email password is masked and not returned from the server once set
-            serverEmailSettings.Settings.Password = null;
+            serverEmailSettings.Password = null;
             Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(serverEmailSettings));
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData
                 {
-                    Settings = new EmailSettingsData { From = "invalid" }
+                    From = "invalid"
                 }));
 
             // NOTE: This email test fails silently in EmailSender.cs#31, can't test, but leaving for the future as reminder

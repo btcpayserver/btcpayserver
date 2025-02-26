@@ -34,11 +34,16 @@ namespace BTCPayServer.Controllers.GreenField
         public async Task<IActionResult> ServerEmailSettings()
         {
             var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            email.Password = null;
             var model = new ServerEmailSettingsData
             {
                 EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings,
-                Settings = email
+                From = email.From,
+                Server = email.Server,
+                Port = email.Port,
+                Login = email.Login,
+                DisableCertificateCheck = email.DisableCertificateCheck,
+                // Password is not returned
+                Password = null
             };
             return Ok(model);
         }
@@ -54,28 +59,28 @@ namespace BTCPayServer.Controllers.GreenField
             }
             
             // save
-            if (request.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(request.Settings.From))
+            if (request.From is not null && !MailboxAddressValidator.IsMailboxAddress(request.From))
             {
-                 request.Settings.AddModelError(e => e.From,
+                 request.AddModelError(e => e.From,
                      "Invalid email address", this);
                  return this.CreateValidationError(ModelState);
             }
             
             var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
             // retaining the password if it exists and was not provided in request
-            if (string.IsNullOrEmpty(request.Settings.Password) &&
+            if (string.IsNullOrEmpty(request.Password) &&
                 !string.IsNullOrEmpty(oldSettings?.Password))
-                request.Settings.Password = oldSettings.Password;
+                request.Password = oldSettings.Password;
             
             // important to save as EmailSettings otherwise it won't be able to be fetched
             await _settingsRepository.UpdateSetting(new EmailSettings
             {
-                Server = request.Settings.Server,
-                Port = request.Settings.Port,
-                Login = request.Settings.Login,
-                Password = request.Settings.Password,
-                From = request.Settings.From,
-                DisableCertificateCheck = request.Settings.DisableCertificateCheck
+                Server = request.Server,
+                Port = request.Port,
+                Login = request.Login,
+                Password = request.Password,
+                From = request.From,
+                DisableCertificateCheck = request.DisableCertificateCheck
             });
             
             return Ok(true);

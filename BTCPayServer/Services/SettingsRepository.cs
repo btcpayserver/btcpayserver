@@ -26,12 +26,13 @@ namespace BTCPayServer.Services
         public async Task<T?> GetSettingAsync<T>(string? name = null) where T : class
         {
             name ??= typeof(T).FullName ?? string.Empty;
-            return await _memoryCache.GetOrCreateAsync(GetCacheKey(name), async entry =>
+            var data = await _memoryCache.GetOrCreateAsync(GetCacheKey(name), async entry =>
             {
                 await using var ctx = _ContextFactory.CreateContext();
                 var data = await ctx.Settings.Where(s => s.Id == name).FirstOrDefaultAsync();
-                return data == null ? default : Deserialize<T>(data.Value);
+                return data?.Value;
             });
+            return data is string ? Deserialize<T>(data) : null;
         }
         public async Task UpdateSetting<T>(T obj, string? name = null) where T : class
         {
@@ -49,7 +50,7 @@ namespace BTCPayServer.Services
                     await ctx.SaveChangesAsync();
                 }
             }
-            _memoryCache.Set(GetCacheKey(name), obj);
+            _memoryCache.Remove(GetCacheKey(name));
             _EventAggregator.Publish(new SettingsChanged<T>()
             {
                 Settings = obj,

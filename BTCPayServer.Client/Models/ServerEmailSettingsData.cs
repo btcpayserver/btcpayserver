@@ -1,9 +1,7 @@
 namespace BTCPayServer.Client.Models
 {
-    public class ServerEmailSettingsData
+    public class ServerEmailSettingsData : EmailSettingsData
     {
         public bool EnableStoresToUseServerEmailSettings { get; set; }
-        
-        public EmailSettingsData Settings { get; set; }
     }
 }

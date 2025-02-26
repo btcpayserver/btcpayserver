@@ -73,16 +73,18 @@
     "components": {
         "schemas": {
             "ServerEmailSettingsData": {
-                "type": "object",
-                "properties": {
-                    "enableStoresToUseServerEmailSettings": {
-                        "type": "boolean",
-                        "description": "Indicates if stores can use server email settings"
-                    },
-                    "settings": {
-                        "$ref": "#/components/schemas/EmailSettings"
+                "allOf": [
+                    { "$ref": "#/components/schemas/EmailSettings" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enableStoresToUseServerEmailSettings": {
+                                "type": "boolean",
+                                "description": "Indicates if stores can use server email settings"
+                            }
+                        }
                     }
-                }
+                ]
             },
             "EmailSettings": {
                 "type": "object",
@@ -108,7 +110,7 @@
                         "description": "SMTP password, masked in responses and retained if not updated",
                         "nullable": true
                     },
-                    "disablecertificatecheck": {
+                    "disableCertificateCheck": {
                         "type": "boolean",
                         "description": "Use SSL for SMTP connection"
                     }

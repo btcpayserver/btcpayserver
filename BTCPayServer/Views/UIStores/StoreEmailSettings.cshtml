@@ -2,34 +2,33 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Models.EmailsViewModel
 @{
-    var storeId = Context.GetStoreData().Id;
-    var hasCustomSettings = (Model.IsSetup() && !Model.UsesFallback()) || ViewBag.UseCustomSMTP ?? false;
-    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer["Email Rules"], storeId);
+	var storeId = Context.GetStoreData().Id;
+	ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer["Email Rules"], storeId);
 }
 
 <form method="post" autocomplete="off" permissioned="@Policies.CanModifyStoreSettings">
-    <div class="sticky-header">
-        <h2 text-translate="true">Email Server</h2>
+	<div class="sticky-header">
+		<h2 text-translate="true">Email Server</h2>
 		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
-    </div>
-    <partial name="_StatusMessage" />
-    @if (Model.IsFallbackSetup())
-    {
-        <label class="d-flex align-items-center mb-4">
-            <input type="checkbox" id="UseCustomSMTP" name="UseCustomSMTP" value="true" checked="@hasCustomSettings" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SmtpSettings" aria-expanded="@hasCustomSettings" aria-controls="SmtpSettings" />
-            <div>
-                <span text-translate="true">Use custom SMTP settings for this store</span>
-                <div class="form-text" text-translate="true">Otherwise, the server's SMTP settings will be used to send emails.</div>
-            </div>
-        </label>
+	</div>
+	<partial name="_StatusMessage" />
+	@if (Model.IsFallbackSetup)
+	{
+		<label class="d-flex align-items-center mb-4">
+			<input type="checkbox" asp-for="IsCustomSMTP" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#SmtpSettings" aria-expanded="@Model.IsCustomSMTP" aria-controls="SmtpSettings" />
+			<div>
+				<span text-translate="true">Use custom SMTP settings for this store</span>
+				<div class="form-text" text-translate="true">Otherwise, the server's SMTP settings will be used to send emails.</div>
+			</div>
+		</label>
 
-        <div class="collapse @(hasCustomSettings ? "show" : "")" id="SmtpSettings">
-            <partial name="EmailsBody" model="Model" />
+		<div class="collapse @(Model.IsCustomSMTP ? "show" : "")" id="SmtpSettings">
+			<partial name="EmailsBody" model="Model" />
         </div>
     }
     else
     {
-        <input type="hidden" name="UseCustomSMTP" value="true" />
+		<input type="hidden" id="IsCustomSMTPHidden" asp-for="IsCustomSMTP" />
         <partial name="EmailsBody" model="Model" />
     }
 

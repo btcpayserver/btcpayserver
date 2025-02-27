@@ -1263,10 +1263,8 @@ namespace BTCPayServer.Controllers
                 return View(model);
             }
             var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            if (new ServerEmailsViewModel(oldSettings).PasswordSet)
-            {
+            if (!string.IsNullOrEmpty(oldSettings.Password))
                 model.Settings.Password = oldSettings.Password;
-            }
             
             await _SettingsRepository.UpdateSetting(model.Settings);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;

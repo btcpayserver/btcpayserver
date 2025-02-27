@@ -4,7 +4,7 @@
 
 <script>
     if (window.localStorage.getItem('btcpay-hide-sensitive-info') === 'true') { document.documentElement.setAttribute('data-hide-sensitive-info', 'true')}
-    if (window.location !== window.parent.location) { document.documentElement.setAttribute('data-within-iframe', 'true')}
+    if (window.location !== window.parent.location) { window.addEventListener('message', function(event) { try { const data = JSON.parse(event.data); if (data.context) { document.documentElement.setAttribute('data-context', data.context) } } catch {} }, false); }
 </script>
 @if (Theme.CustomTheme && Theme.CustomThemeCssUrl is not null)
 {   // new customization uses theme file id provided by upload

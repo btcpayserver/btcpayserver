@@ -28,8 +28,8 @@
 }
 
 /* Iframe context */
-[data-within-iframe] #StoreLink,
-[data-within-iframe] .store-footer {
+[data-context="btcpayapp"] #Checkout #StoreLink,
+[data-context="btcpayapp"] #Checkout .store-footer {
     display: none;
 }
 

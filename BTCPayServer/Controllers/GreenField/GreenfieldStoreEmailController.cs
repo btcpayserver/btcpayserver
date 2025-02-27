@@ -61,43 +61,25 @@ namespace BTCPayServer.Controllers.GreenField
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/email")]
-        public async Task<IActionResult> UpdateStoreEmailSettings(string storeId, EmailSettings request)
+        public async Task<IActionResult> UpdateStoreEmailSettings(string storeId, EmailSettingsData request)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null)
-            {
-                return StoreNotFound();
-            }
-
-            if (!string.IsNullOrEmpty(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
-            {
-                request.AddModelError(e => e.From,
-                    "Invalid email address", this);
-                return this.CreateValidationError(ModelState);
-            }
+			request ??= new();
+			request.Validate(this.ModelState);
+			if (!ModelState.IsValid)
+				return this.CreateValidationError(ModelState);
 
             var blob = store.GetStoreBlob();
-            
-            // retaining the password if it exists and was not provided in request
-            if (string.IsNullOrEmpty(request.Password) && blob.EmailSettings?.Password != null)
-                request.Password = blob.EmailSettings?.Password;
-            
-            blob.EmailSettings = request;
+            var settings = EmailSettings.FromData(request, blob.EmailSettings?.Password);
+            blob.EmailSettings = settings;
             if (store.SetStoreBlob(blob))
-            {
                 await _storeRepository.UpdateStore(store);
-            }
 
             return Ok(FromModel(store));
         }
-        private EmailSettings FromModel(Data.StoreData data)
-        {
-            var emailSettings = data.GetStoreBlob().EmailSettings;
-            if (emailSettings == null)
-                return new EmailSettings();
-            emailSettings.Password = null;
-            return emailSettings;
-        }
+        private EmailSettingsData FromModel(Data.StoreData data)
+        => (data.GetStoreBlob().EmailSettings ?? new()).ToData();
+
         private IActionResult StoreNotFound()
         {
             return this.CreateAPIError(404, "store-not-found", "The store was not found");

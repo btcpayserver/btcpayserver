@@ -12,7 +12,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/ServerEmailSettingsData"
+                                    "$ref": "#/components/schemas/GetServerEmailSettings"
                                 }
                             }
                         }
@@ -38,14 +38,21 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/ServerEmailSettingsData"
+                                "$ref": "#/components/schemas/UpdateServerEmailSettings"
                             }
                         }
                     }
                 },
                 "responses": {
                     "200": {
-                        "description": "Email settings updated successfully"
+                        "description": "Server email settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/GetServerEmailSettings"
+                                }
+                            }
+                        }
                     },
                     "400": {
                         "description": "Invalid request or email format",
@@ -72,9 +79,9 @@
     },
     "components": {
         "schemas": {
-            "ServerEmailSettingsData": {
+            "UpdateServerEmailSettings": {
                 "allOf": [
-                    { "$ref": "#/components/schemas/EmailSettings" },
+                    { "$ref": "#/components/schemas/UpdateEmailSettings" },
                     {
                         "type": "object",
                         "properties": {
@@ -86,35 +93,19 @@
                     }
                 ]
             },
-            "EmailSettings": {
-                "type": "object",
-                "properties": {
-                    "from": {
-                        "type": "string",
-                        "description": "The sender email address"
-                    },
-                    "server": {
-                        "type": "string",
-                        "description": "SMTP server host"
-                    },
-                    "port": {
-                        "type": "integer",
-                        "description": "SMTP server port"
-                    },
-                    "login": {
-                        "type": "string",
-                        "description": "SMTP username"
-                    },
-                    "password": {
-                        "type": "string",
-                        "description": "SMTP password, masked in responses and retained if not updated",
-                        "nullable": true
-                    },
-                    "disableCertificateCheck": {
-                        "type": "boolean",
-                        "description": "Use SSL for SMTP connection"
+            "GetServerEmailSettings": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/GetEmailSettings" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enableStoresToUseServerEmailSettings": {
+                                "type": "boolean",
+                                "description": "Indicates if stores can use server email settings"
+                            }
+                        }
                     }
-                }
+                ]
             }
         }
     },

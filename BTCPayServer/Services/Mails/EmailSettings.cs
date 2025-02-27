@@ -6,11 +6,48 @@ using BTCPayServer.Validation;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MimeKit;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Mails
 {
-    public class EmailSettings : EmailSettingsData
+    public class EmailSettings
     {
+#nullable enable
+        public static EmailSettings FromData(EmailSettingsData data, string? existingPassword)
+        => new EmailSettings()
+        {
+            Server = data.Server,
+            Port = data.Port,
+            Login = data.Login,
+            // Retaining the password if it exists and was not provided in request
+            Password = string.IsNullOrEmpty(data.Password) ? existingPassword : data.Password,
+            From = data.From,
+            DisableCertificateCheck = data.DisableCertificateCheck
+        };
+        public EmailSettingsData ToData() => ToData<EmailSettingsData>();
+        public T ToData<T>() where T : EmailSettingsData, new()
+        => new T()
+        {
+            Server = Server,
+            Port = Port,
+            Login = Login,
+            PasswordSet = !string.IsNullOrEmpty(Password),
+            From = From,
+            DisableCertificateCheck = DisableCertificateCheck
+        };
+#nullable restore
+        public string Server { get; set; }
+        public int? Port { get; set; }
+        public string Login { get; set; }
+        public string Password { get; set; }
+        public string From { get; set; }
+        public bool DisableCertificateCheck { get; set; }
+        [JsonIgnore]
+        public bool EnabledCertificateCheck
+        {
+            get => !DisableCertificateCheck;
+            set { DisableCertificateCheck = !value; }
+        }
         public bool IsComplete()
         {
             return MailboxAddressValidator.IsMailboxAddress(From)

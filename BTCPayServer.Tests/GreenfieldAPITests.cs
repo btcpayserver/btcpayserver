@@ -4104,24 +4104,23 @@ namespace BTCPayServer.Tests
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
-            var data = new EmailSettingsData
+            var data = new ServerEmailSettingsData
             {
                 From = "admin@admin.com",
                 Login = "admin@admin.com",
                 Password = "admin@admin.com",
                 Port = 1234,
                 Server = "admin.com",
-            };
-            var serverEmailSettings = new ServerEmailSettingsData
-            {
                 EnableStoresToUseServerEmailSettings = false
             };
-            await adminClient.UpdateServerEmailSettings(serverEmailSettings);
+            var actualUpdated = await adminClient.UpdateServerEmailSettings(data);
             
-            var s = await adminClient.GetServerEmailSettings();
+            var actualUpdated2 = await adminClient.GetServerEmailSettings();
             // email password is masked and not returned from the server once set
-            serverEmailSettings.Password = null;
-            Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(serverEmailSettings));
+            data.Password = null;
+            data.PasswordSet = true;
+            Assert.Equal(JsonConvert.SerializeObject(actualUpdated2), JsonConvert.SerializeObject(data));
+            Assert.Equal(JsonConvert.SerializeObject(actualUpdated2), JsonConvert.SerializeObject(actualUpdated));
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData
                 {
@@ -4157,6 +4156,7 @@ namespace BTCPayServer.Tests
             var s = await adminClient.GetStoreEmailSettings(admin.StoreId);
             // email password is masked and not returned from the server once set
             data.Password = null;
+            data.PasswordSet = true;
             Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(data));
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateStoreEmailSettings(admin.StoreId,

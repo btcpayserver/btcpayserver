@@ -42,6 +42,12 @@ namespace BTCPayServer.Models.WalletViewModels
         public string FeeRate { get; set; }
         public string BackUrl { get; set; }
         public string ReturnUrl { get; set; }
+        
+        // fiat balance display properties
+        public string FiatBalanceChange { get; set; }
+        public decimal Rate { get; set; }
+        public int FiatDivisibility { get; set; }
+        public string Fiat { get; set; }
 
         internal void SetErrors(IList<PSBTError> errors)
         {

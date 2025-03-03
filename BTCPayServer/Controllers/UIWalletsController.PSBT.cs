@@ -377,6 +377,24 @@ namespace BTCPayServer.Controllers
                 vm.BalanceChange = ValueToString(balanceChange, network);
                 vm.CanCalculateBalance = true;
                 vm.Positive = balanceChange >= Money.Zero;
+
+                try
+                {
+                    var r = await fetchRate(walletId);
+                    
+                    vm.Rate = r.result.BidAsk.Center;
+                    vm.FiatDivisibility = _currencyTable.GetNumberFormatInfo(r.currencyPair.Right, true)
+                        .CurrencyDecimalDigits;
+                    vm.Fiat = r.currencyPair.Right;
+
+                    var fiatAmount = r.result.BidAsk.Center * balanceChange.ToDecimal(MoneyUnit.BTC);
+                    vm.FiatBalanceChange = fiatAmount.ToString("N"+vm.FiatDivisibility) +" "+ vm.Fiat;
+                }
+                catch (Exception ex)
+                {
+                    // keeping model simple
+                    // vm.RateError = ex.Message;
+                }
             }
             vm.Inputs = new List<WalletPSBTReadyViewModel.InputViewModel>();
             var inputToObjects = new Dictionary<uint, ObjectTypeId[]>();

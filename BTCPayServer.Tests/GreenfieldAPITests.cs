@@ -24,6 +24,7 @@ using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Notifications;
 using BTCPayServer.Services.Notifications.Blobs;
 using BTCPayServer.Services.Stores;
@@ -1537,7 +1538,7 @@ namespace BTCPayServer.Tests
             });
         }
 
-        [Fact]
+        [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]
         public async Task CanProcessPayoutsExternally()
         {
@@ -4092,6 +4093,45 @@ namespace BTCPayServer.Tests
 
             await AssertAPIError("store-user-role-orphaned", async () => await employeeClient.RemoveStoreUser(user.StoreId, employee.UserId));
         }
+        
+
+        [Fact(Timeout = TestTimeout)]
+        [Trait("Integration", "Integration")]
+        public async Task ServerEmailTests()
+        {
+            using var tester = CreateServerTester();
+            await tester.StartAsync();
+            var admin = tester.NewAccount();
+            await admin.GrantAccessAsync(true);
+            var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            var data = new EmailSettingsData
+            {
+                From = "admin@admin.com",
+                Login = "admin@admin.com",
+                Password = "admin@admin.com",
+                Port = 1234,
+                Server = "admin.com",
+            };
+            var serverEmailSettings = new ServerEmailSettingsData
+            {
+                EnableStoresToUseServerEmailSettings = false
+            };
+            await adminClient.UpdateServerEmailSettings(serverEmailSettings);
+            
+            var s = await adminClient.GetServerEmailSettings();
+            // email password is masked and not returned from the server once set
+            serverEmailSettings.Password = null;
+            Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(serverEmailSettings));
+            await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
+                async () => await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData
+                {
+                    From = "invalid"
+                }));
+
+            // NOTE: This email test fails silently in EmailSender.cs#31, can't test, but leaving for the future as reminder
+            //await adminClient.SendEmail(admin.StoreId,
+            //    new SendEmailRequest { Body = "lol", Subject = "subj", Email = "to@example.org" });
+        }
 
         [Fact(Timeout = 60 * 2 * 1000)]
         [Trait("Integration", "Integration")]
@@ -4115,6 +4155,8 @@ namespace BTCPayServer.Tests
             };
             await adminClient.UpdateStoreEmailSettings(admin.StoreId, data);
             var s = await adminClient.GetStoreEmailSettings(admin.StoreId);
+            // email password is masked and not returned from the server once set
+            data.Password = null;
             Assert.Equal(JsonConvert.SerializeObject(s), JsonConvert.SerializeObject(data));
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateStoreEmailSettings(admin.StoreId,

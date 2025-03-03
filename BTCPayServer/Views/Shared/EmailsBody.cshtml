@@ -49,7 +49,7 @@
             <label asp-for="Settings.Password" class="form-label" text-translate="true">Password</label>
             @if (!Model.PasswordSet)
             {
-                <input asp-for="Settings.Password" type="password" class="form-control"/>
+                <input asp-for="Settings.Password" type="password" value="@Model.Settings.Password" class="form-control" />
                 <span asp-validation-for="Settings.Password" class="text-danger"></span>
             }
             else

@@ -789,7 +789,7 @@ public partial class UIStoresController
             $"The store won't be able to receive {cryptoCode} onchain payments until a new wallet is set up.");
     }
     
-    private DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
+    internal static DerivationSchemeSettings ParseDerivationStrategy(string derivationScheme, BTCPayNetwork network)
     {
         var parser = new DerivationSchemeParser(network);
         var isOD = Regex.Match(derivationScheme, @"\(.*?\)");

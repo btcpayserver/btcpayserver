@@ -11,7 +11,7 @@
                         "$ref": "#/components/parameters/StoreId"
                     }
                 ],
-                "description": "View email settings of the specified store",
+                "description": "Retrieve the email settings configured for specific store. The password field will be masked if present.",
                 "operationId": "Stores_GetStoreEmailSettings",
                 "responses": {
                     "200": {

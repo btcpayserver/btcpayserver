@@ -691,7 +691,7 @@ namespace BTCPayServer.Tests
             
             // Store Emails without server fallback
             s.GoToStore(StoreNavPages.Emails);
-            s.Driver.ElementDoesNotExist(By.Id("UseCustomSMTP"));
+            s.Driver.ElementDoesNotExist(By.Id("IsCustomSMTP"));
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
             Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
 
@@ -706,12 +706,12 @@ namespace BTCPayServer.Tests
             
             // Store Emails with server fallback
             s.GoToStore(StoreNavPages.Emails);
-            Assert.False(s.Driver.FindElement(By.Id("UseCustomSMTP")).Selected);
+            Assert.False(s.Driver.FindElement(By.Id("IsCustomSMTP")).Selected);
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
             Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
 
             s.GoToStore(StoreNavPages.Emails);
-            s.Driver.FindElement(By.Id("UseCustomSMTP")).Click();
+            s.Driver.FindElement(By.Id("IsCustomSMTP")).Click();
             Thread.Sleep(250);
             CanSetupEmailCore(s);
 
@@ -732,7 +732,7 @@ namespace BTCPayServer.Tests
             Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
             
             s.GoToStore(StoreNavPages.Emails);
-            Assert.True(s.Driver.FindElement(By.Id("UseCustomSMTP")).Selected);
+            Assert.True(s.Driver.FindElement(By.Id("IsCustomSMTP")).Selected);
         }
 
         [Fact(Timeout = TestTimeout)]

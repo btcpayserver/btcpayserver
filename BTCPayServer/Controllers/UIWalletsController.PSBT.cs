@@ -239,6 +239,7 @@ namespace BTCPayServer.Controllers
             vm.NBXSeedAvailable = await CanUseHotWallet() && derivationSchemeSettings.IsHotWallet;
             vm.BackUrl ??= HttpContext.Request.GetTypedHeaders().Referer?.AbsolutePath;
 
+            vm.SigningContext.PSBT = vm.PSBT;
             var psbt = await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             if (vm.InvalidPSBT)
             {
@@ -259,6 +260,18 @@ namespace BTCPayServer.Controllers
                     ModelState.Remove(nameof(vm.PSBT));
                     ModelState.Remove(nameof(vm.FileName));
                     ModelState.Remove(nameof(vm.UploadedPSBTFile));
+                    
+                    // for pending transactions we collect signature from PSBT and redirect if everything is good
+                    if (vm.SigningContext.PendingTransactionId is not null)
+                    {
+                        return await RedirectToWalletPSBTReady(walletId,
+                            new WalletPSBTReadyViewModel
+                            {
+                                SigningContext = vm.SigningContext, ReturnUrl = vm.ReturnUrl, BackUrl = vm.BackUrl
+                            });
+                    }
+
+                    // for regular transactions we decode PSBT and show the details
                     await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
                     return View("WalletPSBTDecoded", vm);
 
@@ -603,16 +616,18 @@ namespace BTCPayServer.Controllers
                         {
                             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Transaction broadcasted successfully ({0})", transaction.GetHash()].Value;
                         }
-                        if (!string.IsNullOrEmpty(vm.ReturnUrl))
-                        {
-                            return LocalRedirect(vm.ReturnUrl);
-                        }
 
                         if (vm.SigningContext.PendingTransactionId is not null)
                         {
                             await _pendingTransactionService.Broadcasted(walletId.CryptoCode, walletId.StoreId,
                                 vm.SigningContext.PendingTransactionId);
                         }
+                        
+                        if (!string.IsNullOrEmpty(vm.ReturnUrl))
+                        {
+                            return LocalRedirect(vm.ReturnUrl);
+                        }
+                        
                         return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }
                 case "analyze-psbt":

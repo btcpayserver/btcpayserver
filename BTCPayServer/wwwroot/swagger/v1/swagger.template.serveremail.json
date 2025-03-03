@@ -1,0 +1,127 @@
+{
+    "paths": {
+        "/api/v1/server/email": {
+            "get": {
+                "tags": ["ServerEmail"],
+                "summary": "Get server email settings",
+                "description": "Retrieve the email settings configured for the server. The password field will be masked if present.",
+                "operationId": "ServerEmail_GetSettings",
+                "responses": {
+                    "200": {
+                        "description": "Server email settings",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ServerEmailSettingsData"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": ["btcpay.server.canmodifyserversettings"],
+                        "Basic": []
+                    }
+                ]
+            },
+            "put": {
+                "tags": ["ServerEmail"],
+                "summary": "Update server email settings",
+                "description": "Update server's email settings.",
+                "operationId": "ServerEmail_UpdateSettings",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/ServerEmailSettingsData"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Email settings updated successfully"
+                    },
+                    "400": {
+                        "description": "Invalid request or email format",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden - Insufficient permissions"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": ["btcpay.server.canmodifyserversettings"],
+                        "Basic": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "ServerEmailSettingsData": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/EmailSettings" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "enableStoresToUseServerEmailSettings": {
+                                "type": "boolean",
+                                "description": "Indicates if stores can use server email settings"
+                            }
+                        }
+                    }
+                ]
+            },
+            "EmailSettings": {
+                "type": "object",
+                "properties": {
+                    "from": {
+                        "type": "string",
+                        "description": "The sender email address"
+                    },
+                    "server": {
+                        "type": "string",
+                        "description": "SMTP server host"
+                    },
+                    "port": {
+                        "type": "integer",
+                        "description": "SMTP server port"
+                    },
+                    "login": {
+                        "type": "string",
+                        "description": "SMTP username"
+                    },
+                    "password": {
+                        "type": "string",
+                        "description": "SMTP password, masked in responses and retained if not updated",
+                        "nullable": true
+                    },
+                    "disableCertificateCheck": {
+                        "type": "boolean",
+                        "description": "Use SSL for SMTP connection"
+                    }
+                }
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "ServerEmail",
+            "description": "Server Email Settings operations"
+        }
+    ]
+}

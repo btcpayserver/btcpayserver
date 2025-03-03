@@ -977,7 +977,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return GetFromActionResult<EmailSettingsData>(
                 await GetController<GreenfieldStoreEmailController>().UpdateStoreEmailSettings(storeId,
-                    JObject.FromObject(request).ToObject<EmailSettings>()));
+                    JObject.FromObject(request).ToObject<EmailSettingsData>()));
         }
 
         public override async Task<ApplicationUserData[]> GetUsers(CancellationToken token = default)

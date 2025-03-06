@@ -889,19 +889,23 @@ namespace BTCPayServer.Tests
                 Assert.DoesNotContain("invoice-processing", s.Driver.PageSource);
             });
             
+            // ensure archived invoices are not accessible for logged out users
             await s.Server.PayTester.InvoiceRepository.ToggleInvoiceArchival(i, true);
-            
             s.Logout(); 
-            s.Driver.Navigate().GoToUrl(s.Driver.Url + $"/i/{i}/receipt");
-
+            
+            await s.Driver.Navigate().GoToUrlAsync(s.Driver.Url + $"/i/{i}/receipt");
             TestUtils.Eventually(() =>
             {
                 Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
-
             });
             
-            s.Driver.Navigate().GoToUrl(s.Driver.Url + $"i/{i}");
+            await s.Driver.Navigate().GoToUrlAsync(s.Driver.Url + $"i/{i}");
+            TestUtils.Eventually(() =>
+            {
+                Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);
+            });
             
+            await s.Driver.Navigate().GoToUrlAsync(s.Driver.Url + $"i/{i}/status");
             TestUtils.Eventually(() =>
             {
                 Assert.Contains("Page not found", s.Driver.Title, StringComparison.OrdinalIgnoreCase);

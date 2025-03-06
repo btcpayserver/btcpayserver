@@ -199,7 +199,7 @@ namespace BTCPayServer.Controllers
             if (store is null)
                 return NotFound();
             
-            if (!await ValidateInvoiceAccessForArchivedState(i))
+            if (!await ValidateAccessForArchivedInvoice(i))
                 return NotFound();
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
@@ -730,7 +730,7 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return null;
 
-            if (!await ValidateInvoiceAccessForArchivedState(invoice))
+            if (!await ValidateAccessForArchivedInvoice(invoice))
                 return null;
             
             var store = await _StoreRepository.FindStore(invoice.StoreId);
@@ -1006,6 +1006,10 @@ namespace BTCPayServer.Controllers
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null || invoice.Status == InvoiceStatus.Settled || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
                 return NotFound();
+            
+            if (!await ValidateAccessForArchivedInvoice(invoice))
+                return NotFound();
+            
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             CompositeDisposable leases = new CompositeDisposable();
             try
@@ -1321,7 +1325,7 @@ namespace BTCPayServer.Controllers
             return RedirectToAction(nameof(ListInvoices), new { storeId });
         }
         
-        private async Task<bool> ValidateInvoiceAccessForArchivedState(InvoiceEntity invoice)
+        private async Task<bool> ValidateAccessForArchivedInvoice(InvoiceEntity invoice)
         {
             if (!invoice.Archived) return true;
             var authorizationResult = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);

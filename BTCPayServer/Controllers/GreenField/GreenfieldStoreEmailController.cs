@@ -70,11 +70,11 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpPut("~/api/v1/stores/{storeId}/email")]
         public async Task<IActionResult> UpdateStoreEmailSettings(string storeId, EmailSettingsData request)
         {
-            if (!MailboxAddressValidator.IsMailboxAddress(request.From))
-            {
+            if (!string.IsNullOrWhiteSpace(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
                 ModelState.AddModelError(nameof(request.From), "Invalid email address");
+            
+            if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            }
 
             var store = HttpContext.GetStoreData();
             var blob = store.GetStoreBlob();

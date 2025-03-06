@@ -50,11 +50,11 @@ namespace BTCPayServer.Controllers.GreenField
         [HttpPut("~/api/v1/server/email")]
         public async Task<IActionResult> ServerEmailSettings(ServerEmailSettingsData request)
         {
-            if (!MailboxAddressValidator.IsMailboxAddress(request.From))
-            {
+            if (!string.IsNullOrWhiteSpace(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
                 ModelState.AddModelError(nameof(request.From), "Invalid email address");
+            
+            if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            }
 
             if (_policiesSettings.DisableStoresToUseServerEmailSettings == request.EnableStoresToUseServerEmailSettings)
             {

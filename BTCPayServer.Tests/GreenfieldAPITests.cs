@@ -4104,6 +4104,9 @@ namespace BTCPayServer.Tests
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
+            // validate that clear email settings will not throw an error
+            await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData());
+            
             var data = new ServerEmailSettingsData
             {
                 From = "admin@admin.com",
@@ -4129,6 +4132,11 @@ namespace BTCPayServer.Tests
                 {
                     From = "invalid"
                 }));
+            
+            // check that clear server email settings works
+            await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData());
+            var clearedSettings = await adminClient.GetServerEmailSettings();
+            Assert.Equal(JsonConvert.SerializeObject(new EmailSettingsData { PasswordSet = false }), JsonConvert.SerializeObject(clearedSettings));
 
             // NOTE: This email test fails silently in EmailSender.cs#31, can't test, but leaving for the future as reminder
             //await adminClient.SendEmail(admin.StoreId,
@@ -4144,8 +4152,8 @@ namespace BTCPayServer.Tests
             var admin = tester.NewAccount();
             await admin.GrantAccessAsync(true);
             var adminClient = await admin.CreateClient(Policies.Unrestricted);
-            await adminClient.UpdateStoreEmailSettings(admin.StoreId,
-                new EmailSettingsData());
+            // validate that clear email settings will not throw an error
+            await adminClient.UpdateStoreEmailSettings(admin.StoreId, new EmailSettingsData());
 
             var data = new EmailSettingsData
             {
@@ -4164,7 +4172,12 @@ namespace BTCPayServer.Tests
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateStoreEmailSettings(admin.StoreId,
                     new EmailSettingsData { From = "invalid" }));
-
+            
+            // clear store email settings
+            await adminClient.UpdateStoreEmailSettings(admin.StoreId, new EmailSettingsData());
+            var clearedSettings = await adminClient.GetStoreEmailSettings(admin.StoreId);
+            Assert.Equal(JsonConvert.SerializeObject(new EmailSettingsData { PasswordSet = false }), JsonConvert.SerializeObject(clearedSettings));
+            
             await adminClient.SendEmail(admin.StoreId,
                 new SendEmailRequest { Body = "lol", Subject = "subj", Email = "to@example.org" });
         }

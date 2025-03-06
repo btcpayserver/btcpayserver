@@ -36,8 +36,9 @@ namespace BTCPayServer.Services.Mails
                 Server = data.Server,
                 Port = data.Port,
                 Login = data.Login,
-                // Retaining the password if it exists and was not provided in request
-                Password = string.IsNullOrEmpty(data.Password) ? existingPassword : data.Password,
+                // If login was provided but password was not, use the existing password from database
+                Password = !string.IsNullOrEmpty(data.Login) && string.IsNullOrEmpty(data.Password) ? 
+                    existingPassword : data.Password,
                 From = data.From,
                 DisableCertificateCheck = data.DisableCertificateCheck
             };

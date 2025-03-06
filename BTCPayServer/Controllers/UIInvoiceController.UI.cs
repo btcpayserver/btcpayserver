@@ -198,6 +198,9 @@ namespace BTCPayServer.Controllers
             var store = await _StoreRepository.GetStoreByInvoiceId(i.Id);
             if (store is null)
                 return NotFound();
+            
+            if (!await ValidateAccessForArchivedInvoice(i))
+                return NotFound();
 
             var receipt = InvoiceDataBase.ReceiptOptions.Merge(store.GetStoreBlob().ReceiptOptions, i.ReceiptOptions);
             if (receipt.Enabled is not true)
@@ -727,6 +730,9 @@ namespace BTCPayServer.Controllers
             if (invoice == null)
                 return null;
 
+            if (!await ValidateAccessForArchivedInvoice(invoice))
+                return null;
+            
             var store = await _StoreRepository.FindStore(invoice.StoreId);
             if (store == null)
                 return null;
@@ -1000,6 +1006,10 @@ namespace BTCPayServer.Controllers
             var invoice = await _InvoiceRepository.GetInvoice(invoiceId);
             if (invoice == null || invoice.Status == InvoiceStatus.Settled || invoice.Status == InvoiceStatus.Invalid || invoice.Status == InvoiceStatus.Expired)
                 return NotFound();
+            
+            if (!await ValidateAccessForArchivedInvoice(invoice))
+                return NotFound();
+            
             var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
             CompositeDisposable leases = new CompositeDisposable();
             try
@@ -1313,6 +1323,13 @@ namespace BTCPayServer.Controllers
                 AllowDismiss = false
             });
             return RedirectToAction(nameof(ListInvoices), new { storeId });
+        }
+        
+        private async Task<bool> ValidateAccessForArchivedInvoice(InvoiceEntity invoice)
+        {
+            if (!invoice.Archived) return true;
+            var authorizationResult = await _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanViewInvoices);
+            return authorizationResult.Succeeded;
         }
     }
 }

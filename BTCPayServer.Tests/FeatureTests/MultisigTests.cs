@@ -124,8 +124,8 @@ public class MultisigTests : UnitTestBase
         s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
         
         // now clicking on View to sign transaction
-        await SignPendingTransactionWithKey(s, address, derivationScheme, resp1);
-        await SignPendingTransactionWithKey(s, address, derivationScheme, resp2);
+        SignPendingTransactionWithKey(s, address, derivationScheme, resp1);
+        SignPendingTransactionWithKey(s, address, derivationScheme, resp2);
 
         // Broadcasting transaction and ensuring there is no longer broadcast button
         s.Driver.WaitForElement(By.XPath("//a[text()='Broadcast']")).Click();
@@ -148,7 +148,7 @@ public class MultisigTests : UnitTestBase
         s.TestLogs.LogInformation($"Finished MultiSig Flow");
     }
 
-    private async Task SignPendingTransactionWithKey(SeleniumTester s, string address,
+    private void SignPendingTransactionWithKey(SeleniumTester s, string address,
         DerivationStrategyBase derivationScheme, GenerateWalletResponse signingKey)
     {
         // getting to pending transaction page
@@ -159,7 +159,7 @@ public class MultisigTests : UnitTestBase
 
         var signTransactionButton = s.Driver.FindElement(By.Id("SignTransaction"));
         Assert.NotNull(signTransactionButton);
-        
+
         // fetching PSBT
         s.Driver.FindElement(By.Id("PSBTOptionsExportHeader")).Click();
         s.Driver.WaitForElement(By.Id("ShowRawVersion")).Click();
@@ -168,13 +168,13 @@ public class MultisigTests : UnitTestBase
         {
             psbt = s.Driver.FindElement(By.Id("psbt-base64")).Text;
         }
-        
+
         // signing PSBT and entering it to submit
         var signedPsbt = SignWithSeed(psbt, derivationScheme, signingKey);
-        
+
         s.Driver.FindElement(By.Id("PSBTOptionsImportHeader")).Click();
         s.Driver.WaitForElement(By.Id("ImportedPSBT")).SendKeys(signedPsbt);
-        
+
         s.Driver.FindElement(By.Id("Decode")).Click();
     }
 

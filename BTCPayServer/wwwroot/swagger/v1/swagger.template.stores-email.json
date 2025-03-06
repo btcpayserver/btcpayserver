@@ -221,7 +221,7 @@
                     },
                     "disableCertificateCheck": {
                         "type": "boolean",
-                        "description": "Use SSL for SMTP connection",
+                        "description": "Disable TLS certificate security checks",
                         "example": false
                     }
                 }

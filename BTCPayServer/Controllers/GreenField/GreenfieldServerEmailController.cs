@@ -30,16 +30,8 @@ namespace BTCPayServer.Controllers.GreenField
             _policiesSettings = policiesSettings;
             _settingsRepository = settingsRepository;
         }
-
-        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
-        [HttpGet("~/api/v1/server/email")]
-        public async Task<IActionResult> ServerEmailSettings()
-        {
-            var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            return Ok(FromModel(email));
-        }
-
-        private ServerEmailSettingsData FromModel(EmailSettings email)
+        
+        private ServerEmailSettingsData ToApiModel(EmailSettings email)
         {
             var data = email.ToData<ServerEmailSettingsData>();
             data.EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings;
@@ -47,12 +39,22 @@ namespace BTCPayServer.Controllers.GreenField
         }
 
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/server/email")]
+        public async Task<IActionResult> ServerEmailSettings()
+        {
+            var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
+            return Ok(ToApiModel(email));
+        }
+
+        [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/server/email")]
         public async Task<IActionResult> ServerEmailSettings(ServerEmailSettingsData request)
         {
-            request.Validate(ModelState);
-            if (!ModelState.IsValid)
+            if (!MailboxAddressValidator.IsMailboxAddress(request.From))
+            {
+                ModelState.AddModelError(nameof(request.From), "Invalid email address");
                 return this.CreateValidationError(ModelState);
+            }
 
             if (_policiesSettings.DisableStoresToUseServerEmailSettings == request.EnableStoresToUseServerEmailSettings)
             {
@@ -65,7 +67,7 @@ namespace BTCPayServer.Controllers.GreenField
 
             // important to save as EmailSettings otherwise it won't be able to be fetched
             await _settingsRepository.UpdateSetting(settings);
-            return Ok(FromModel(settings));
+            return Ok(ToApiModel(settings));
         }
     }
 }

@@ -10,32 +10,11 @@ using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Mails
 {
+    /// <summary>
+    /// Email Settings gets saved to database, and is used by both the server and store settings
+    /// </summary>
     public class EmailSettings
     {
-#nullable enable
-        public static EmailSettings FromData(EmailSettingsData data, string? existingPassword)
-        => new EmailSettings()
-        {
-            Server = data.Server,
-            Port = data.Port,
-            Login = data.Login,
-            // Retaining the password if it exists and was not provided in request
-            Password = string.IsNullOrEmpty(data.Password) ? existingPassword : data.Password,
-            From = data.From,
-            DisableCertificateCheck = data.DisableCertificateCheck
-        };
-        public EmailSettingsData ToData() => ToData<EmailSettingsData>();
-        public T ToData<T>() where T : EmailSettingsData, new()
-        => new T()
-        {
-            Server = Server,
-            Port = Port,
-            Login = Login,
-            PasswordSet = !string.IsNullOrEmpty(Password),
-            From = From,
-            DisableCertificateCheck = DisableCertificateCheck
-        };
-#nullable restore
         public string Server { get; set; }
         public int? Port { get; set; }
         public string Login { get; set; }
@@ -48,11 +27,40 @@ namespace BTCPayServer.Services.Mails
             get => !DisableCertificateCheck;
             set { DisableCertificateCheck = !value; }
         }
+        
+        // Conversion functions for mapping to and from the client EmailSettingsData model
+#nullable enable
+        public static EmailSettings FromData(EmailSettingsData data, string? existingPassword)
+            => new()
+            {
+                Server = data.Server,
+                Port = data.Port,
+                Login = data.Login,
+                // Retaining the password if it exists and was not provided in request
+                Password = string.IsNullOrEmpty(data.Password) ? existingPassword : data.Password,
+                From = data.From,
+                DisableCertificateCheck = data.DisableCertificateCheck
+            };
+        
+        public T ToData<T>() where T : EmailSettingsData, new()
+            => new T()
+            {
+                Server = Server,
+                Port = Port,
+                Login = Login,
+                PasswordSet = !string.IsNullOrEmpty(Password),
+                From = From,
+                DisableCertificateCheck = DisableCertificateCheck
+            };
+#nullable restore
+        
+        
+        // 
         public bool IsComplete()
         {
             return MailboxAddressValidator.IsMailboxAddress(From)
                 && !string.IsNullOrWhiteSpace(Server)
-                && Port is int;
+                && Port != null;
         }
 
         public void Validate(string prefixKey, ModelStateDictionary modelState)

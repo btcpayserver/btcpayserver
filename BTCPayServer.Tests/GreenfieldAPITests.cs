@@ -4115,12 +4115,15 @@ namespace BTCPayServer.Tests
             };
             var actualUpdated = await adminClient.UpdateServerEmailSettings(data);
             
-            var actualUpdated2 = await adminClient.GetServerEmailSettings();
+            var finalEmailSettings = await adminClient.GetServerEmailSettings();
             // email password is masked and not returned from the server once set
             data.Password = null;
             data.PasswordSet = true;
-            Assert.Equal(JsonConvert.SerializeObject(actualUpdated2), JsonConvert.SerializeObject(data));
-            Assert.Equal(JsonConvert.SerializeObject(actualUpdated2), JsonConvert.SerializeObject(actualUpdated));
+            
+            Assert.Equal(JsonConvert.SerializeObject(finalEmailSettings), JsonConvert.SerializeObject(data));
+            Assert.Equal(JsonConvert.SerializeObject(finalEmailSettings), JsonConvert.SerializeObject(actualUpdated));
+            
+            // check that email validation works
             await AssertValidationError(new[] { nameof(EmailSettingsData.From) },
                 async () => await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData
                 {

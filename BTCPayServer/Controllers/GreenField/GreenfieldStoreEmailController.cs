@@ -51,34 +51,40 @@ namespace BTCPayServer.Controllers.GreenField
             return Ok();
         }
 
+
+        private EmailSettingsData ToApiModel(Data.StoreData data)
+        {
+            var storeEmailSettings = data.GetStoreBlob().EmailSettings ?? new();
+            return storeEmailSettings.ToData<EmailSettingsData>();
+        }
+
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/email")]
         public IActionResult GetStoreEmailSettings()
         {
             var store = HttpContext.GetStoreData();
-            return store == null ? StoreNotFound() : Ok(FromModel(store));
+            return store == null ? StoreNotFound() : Ok(ToApiModel(store));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/stores/{storeId}/email")]
         public async Task<IActionResult> UpdateStoreEmailSettings(string storeId, EmailSettingsData request)
         {
-            var store = HttpContext.GetStoreData();
-			request ??= new();
-			request.Validate(this.ModelState);
-			if (!ModelState.IsValid)
-				return this.CreateValidationError(ModelState);
+            if (!MailboxAddressValidator.IsMailboxAddress(request.From))
+            {
+                ModelState.AddModelError(nameof(request.From), "Invalid email address");
+                return this.CreateValidationError(ModelState);
+            }
 
+            var store = HttpContext.GetStoreData();
             var blob = store.GetStoreBlob();
             var settings = EmailSettings.FromData(request, blob.EmailSettings?.Password);
             blob.EmailSettings = settings;
             if (store.SetStoreBlob(blob))
                 await _storeRepository.UpdateStore(store);
 
-            return Ok(FromModel(store));
+            return Ok(ToApiModel(store));
         }
-        private EmailSettingsData FromModel(Data.StoreData data)
-        => (data.GetStoreBlob().EmailSettings ?? new()).ToData();
 
         private IActionResult StoreNotFound()
         {

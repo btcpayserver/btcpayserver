@@ -4132,15 +4132,15 @@ namespace BTCPayServer.Tests
                 {
                     From = "invalid"
                 }));
-            
-            // check that clear server email settings works
-            await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData());
-            var clearedSettings = await adminClient.GetServerEmailSettings();
-            Assert.Equal(JsonConvert.SerializeObject(new EmailSettingsData { PasswordSet = false }), JsonConvert.SerializeObject(clearedSettings));
 
             // NOTE: This email test fails silently in EmailSender.cs#31, can't test, but leaving for the future as reminder
             //await adminClient.SendEmail(admin.StoreId,
             //    new SendEmailRequest { Body = "lol", Subject = "subj", Email = "to@example.org" });
+            
+            // check that clear server email settings works
+            await adminClient.UpdateServerEmailSettings(new ServerEmailSettingsData());
+            var clearedSettings = await adminClient.GetServerEmailSettings();
+            Assert.Equal(JsonConvert.SerializeObject(new ServerEmailSettingsData { PasswordSet = false }), JsonConvert.SerializeObject(clearedSettings));
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]
@@ -4173,13 +4173,14 @@ namespace BTCPayServer.Tests
                 async () => await adminClient.UpdateStoreEmailSettings(admin.StoreId,
                     new EmailSettingsData { From = "invalid" }));
             
+            // send test email
+            await adminClient.SendEmail(admin.StoreId,
+                new SendEmailRequest { Body = "lol", Subject = "subj", Email = "to@example.org" });
+            
             // clear store email settings
             await adminClient.UpdateStoreEmailSettings(admin.StoreId, new EmailSettingsData());
             var clearedSettings = await adminClient.GetStoreEmailSettings(admin.StoreId);
             Assert.Equal(JsonConvert.SerializeObject(new EmailSettingsData { PasswordSet = false }), JsonConvert.SerializeObject(clearedSettings));
-            
-            await adminClient.SendEmail(admin.StoreId,
-                new SendEmailRequest { Body = "lol", Subject = "subj", Email = "to@example.org" });
         }
 
         [Fact(Timeout = 60 * 2 * 1000)]

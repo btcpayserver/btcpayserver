@@ -209,7 +209,7 @@ public partial class UIStoresController
         if (model.IsCustomSMTP)
         {
             model.Settings.Validate("Settings.", ModelState);
-            if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
+            if (!MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
                 ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
             }

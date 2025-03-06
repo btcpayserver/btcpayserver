@@ -1257,7 +1257,7 @@ namespace BTCPayServer.Controllers
             }
             
             // save
-            if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
+            if (!MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
                 ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
                 return View(model);

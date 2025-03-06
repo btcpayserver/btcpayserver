@@ -306,14 +306,12 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             if (request.Email is null)
                 ModelState.AddModelError(nameof(request.Email), "Email is missing");
-            if (!string.IsNullOrEmpty(request.Email) && !MailboxAddressValidator.IsMailboxAddress(request.Email))
-            {
+            if (!MailboxAddressValidator.IsMailboxAddress(request.Email))
                 ModelState.AddModelError(nameof(request.Email), "Invalid email");
-            }
+            
             if (!ModelState.IsValid)
-            {
                 return this.CreateValidationError(ModelState);
-            }
+            
             if (User.Identity is null)
                 throw new JsonHttpException(this.StatusCode(401));
             var anyAdmin = (await _userManager.GetUsersInRoleAsync(Roles.ServerAdmin)).Any();

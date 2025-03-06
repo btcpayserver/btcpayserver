@@ -285,7 +285,8 @@ namespace BTCPayServer.Tests
                 "https://support.bitpay.com",
                 "https://www.coingecko.com", // unhappy service
                 "https://www.wasabiwallet.io", // Banning US, CI unhappy
-                "https://fullynoded.app" // Sometimes DNS doesn't work
+                "https://fullynoded.app", // Sometimes DNS doesn't work
+                "https://hrf.org" // Started returning Forbidden
             };
 
             foreach (var match in regex.Matches(text).OfType<Match>())

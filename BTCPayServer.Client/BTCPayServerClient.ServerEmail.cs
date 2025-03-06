@@ -13,8 +13,8 @@ public partial class BTCPayServerClient
         return await SendHttpRequest<ServerEmailSettingsData>("api/v1/server/email", null, HttpMethod.Get, token);
     }
     
-    public virtual async Task<bool> UpdateServerEmailSettings(ServerEmailSettingsData request, CancellationToken token = default)
+    public virtual async Task<ServerEmailSettingsData> UpdateServerEmailSettings(ServerEmailSettingsData request, CancellationToken token = default)
     {
-        return await SendHttpRequest<bool>("api/v1/server/email", request, HttpMethod.Put, token);
+        return await SendHttpRequest<ServerEmailSettingsData>("api/v1/server/email", request, HttpMethod.Put, token);
     }
 }

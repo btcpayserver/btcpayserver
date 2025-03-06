@@ -19,7 +19,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/EmailSettingsData"
+                                    "$ref": "#/components/schemas/GetEmailSettings"
                                 }
                             }
                         }
@@ -57,7 +57,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/EmailSettingsData"
+                                "$ref": "#/components/schemas/UpdateEmailSettings"
                             }
                         }
                     },
@@ -70,7 +70,7 @@
                         "content": {
                             "application/json": {
                                 "schema": {
-                                    "$ref": "#/components/schemas/EmailSettingsData"
+                                    "$ref": "#/components/schemas/GetEmailSettings"
                                 }
                             }
                         }
@@ -117,7 +117,22 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "$ref": "#/components/schemas/EmailData"
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "description": "Email of the recipient"
+                                    },
+                                    "subject": {
+                                        "type": "string",
+                                        "description": "Subject of the email"
+                                    },
+                                    "body": {
+                                        "type": "string",
+                                        "description": "Body of the email to send as plain text."
+                                    }
+                                }
                             }
                         }
                     },
@@ -151,57 +166,63 @@
     },
     "components": {
         "schemas": {
-            "EmailData": {
-                "type": "object",
-                "additionalProperties": false,
-                "properties": {
-                    "email": {
-                        "type": "string",
-                        "description": "Email of the recipient"
-                    },
-                    "subject": {
-                        "type": "string",
-                        "description": "Subject of the email"
-                    },
-                    "body": {
-                        "type": "string",
-                        "description": "Body of the email to send as plain text."
+            "UpdateEmailSettings": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/EmailSettingsBase" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "password": {
+                                "type": "string",
+                                "description": "SMTP password. Keep null or empty to not update it.",
+                                "nullable": true,
+                                "example": "MyS3cr3t"
+                            }
+                        }
                     }
-                }
+                ]
             },
-            "EmailSettingsData": {
+            "GetEmailSettings": {
+                "allOf": [
+                    { "$ref": "#/components/schemas/EmailSettingsBase" },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "passwordSet": {
+                                "type": "boolean",
+                                "description": "`true` if the password has been set."
+                            }
+                        }
+                    }
+                ]
+            },
+            "EmailSettingsBase": {
                 "type": "object",
-                "additionalProperties": false,
                 "properties": {
+                    "from": {
+                        "type": "string",
+                        "description": "The sender email address",
+                        "example": "sender@gmail.com"
+                    },
                     "server": {
                         "type": "string",
-                        "description": "Smtp server host"
+                        "description": "SMTP server host",
+                        "example": "smtp.gmail.com"
                     },
                     "port": {
-                        "type": "number",
-                        "description": "Smtp server port"
+                        "type": "integer",
+                        "description": "SMTP server port",
+                        "example": 587
                     },
                     "login": {
                         "type": "string",
-                        "description": "Smtp server username"
-                    },
-                    "password": {
-                        "type": "string",
-                        "description": "Smtp server password"
-                    },
-                    "from": {
-                        "type": "string",
-                        "format": "email",
-                        "description": "Email to send from"
-                    },
-                    "fromDisplay": {
-                        "type": "string",
-                        "description": "The name of the sender"
+                        "description": "SMTP username",
+                        "example": "John.Smith"
                     },
                     "disableCertificateCheck": {
                         "type": "boolean",
-                        "default": false,
-                        "description": "Disable TLS certificate security checks"
+                        "description": "Disable TLS certificate security checks",
+                        "example": false
                     }
                 }
             }

@@ -1256,7 +1256,7 @@ namespace BTCPayServer.Controllers
                 return RedirectToAction(nameof(Emails));
             }
             
-            // save
+            // save if user provided valid email; this will also clear settings if no model.Settings.From
             if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
                 ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);

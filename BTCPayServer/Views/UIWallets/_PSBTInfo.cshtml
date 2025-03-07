@@ -1,10 +1,20 @@
+@using BTCPayServer.Services
 @model WalletPSBTReadyViewModel
-
+@inject DisplayFormatter Formatter
 @functions {
     private string ToFiatAmount(string destinationBalance)
     {
-        var amt = Model.Rate * Decimal.Parse(destinationBalance.Replace("BTC", "").Trim());
-        return amt.ToString("N" + Model.FiatDivisibility) + " " + Model.Fiat;
+        if (string.IsNullOrWhiteSpace(destinationBalance))
+            return destinationBalance; // Fallback for null/empty input
+        var parts = destinationBalance.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length == 0)
+            return destinationBalance; // Fallback for malformed input
+        if (!decimal.TryParse(parts[0], System.Globalization.NumberStyles.AllowDecimalPoint, 
+                System.Globalization.CultureInfo.InvariantCulture, out var balanceAmount))
+            return destinationBalance; // Fallback for non-numeric values
+
+        var amt = Model.Rate * balanceAmount;
+        return Formatter.Currency(amt, Model.Fiat);
     }
 }
 

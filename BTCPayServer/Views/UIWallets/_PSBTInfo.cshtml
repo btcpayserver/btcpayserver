@@ -9,7 +9,7 @@
         var parts = destinationBalance.Split(' ', StringSplitOptions.RemoveEmptyEntries);
         if (parts.Length == 0)
             return destinationBalance; // Fallback for malformed input
-        if (!decimal.TryParse(parts[0], System.Globalization.NumberStyles.AllowDecimalPoint, 
+        if (!decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, 
                 System.Globalization.CultureInfo.InvariantCulture, out var balanceAmount))
             return destinationBalance; // Fallback for non-numeric values
 
@@ -25,7 +25,7 @@
         <br>
         <span id="balance-toggle" class="text-@(Model.Positive ? "success" : "danger") cursor-pointer"
               data-btc="@Model.BalanceChange" data-fiat="@Model.FiatBalanceChange">
-            @Model.BalanceChange (<small>@Model.FiatBalanceChange</small>)
+            @Model.BalanceChange (<small style="text-decoration: underline dotted;">@Model.FiatBalanceChange</small>)
         </span>
     </p>
 }

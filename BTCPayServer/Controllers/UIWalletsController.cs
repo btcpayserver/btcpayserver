@@ -589,21 +589,24 @@ namespace BTCPayServer.Controllers
             
             try
             {
-                var r = await fetchRate(walletId);
+                var r = await FetchRate(walletId);
                 
-                model.Rate = r.result.BidAsk.Center;
-                model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(r.currencyPair.Right, true)
+                model.Rate = r.Rate;
+                model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(r.Fiat, true)
                     .CurrencyDecimalDigits;
-                model.Fiat = r.currencyPair.Right;
+                model.Fiat = r.Fiat;
             }
             catch (Exception ex) { model.RateError = ex.Message; }
                     
             return View(model);
         }
 
-        private async Task<(RateResult result, CurrencyPair currencyPair)> fetchRate(WalletId walletId)
+        public record FiatRate(decimal Rate, string Fiat);
+        private async Task<FiatRate> FetchRate(WalletId walletId)
         {            
             var store = await Repository.FindStore(walletId.StoreId);
+            if (store is null)
+                throw new Exception("Store not found");
             var storeData = store.GetStoreBlob();
             var rateRules = storeData.GetRateRules(_defaultRules);
             rateRules.Spread = 0.0m;
@@ -620,7 +623,7 @@ namespace BTCPayServer.Controllers
                     $"{result.EvaluatedRule} ({string.Join(", ", result.Errors.OfType<object>().ToArray())})");
             }
 
-            return (result, currencyPair);
+            return new (result.BidAsk.Center, currencyPair.Right);
         }
 
         private async Task<string?> GetSeed(WalletId walletId, BTCPayNetwork network)
@@ -1225,20 +1228,13 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private WalletPSBTReadyViewModel.CryptoFiatAmount ValueToString(Money v, BTCPayNetworkBase network, 
-            WalletPSBTReadyViewModel.CryptoFiatConversionHelper? converter)
-        {
-            var cryptoAmount = v.ToString() + " " + network.CryptoCode;
-            string? fiatAmount = null;
-            if (converter != null)
-            {
-                var amt = converter.Rate * v.ToDecimal(MoneyUnit.BTC);
-                fiatAmount = _displayFormatter.Currency(amt, converter.Fiat);
-            }
-            
-            var x = new WalletPSBTReadyViewModel.CryptoFiatAmount(cryptoAmount, fiatAmount);
-            return x;
-        }
+        private WalletPSBTReadyViewModel.StringAmounts ValueToString(Money v, BTCPayNetworkBase network,
+            FiatRate? rate) =>
+            new(
+                CryptoAmount : _displayFormatter.Currency(v.ToDecimal(MoneyUnit.BTC), network.CryptoCode),
+                FiatAmount : rate is null ? null
+                    : _displayFormatter.Currency(rate.Rate * v.ToDecimal(MoneyUnit.BTC), rate.Fiat)
+            );
 
         [HttpGet("{walletId}/rescan")]
         public async Task<IActionResult> WalletRescan(

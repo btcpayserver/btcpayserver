@@ -366,19 +366,14 @@ namespace BTCPayServer.Controllers
                     vm.SigningKeyPath = signingKeyPath?.ToString();
                 }
             }
-            
+
             // fetch helper that will be used to convert the value to fiat
-            WalletPSBTReadyViewModel.CryptoFiatConversionHelper conversionHelper = null;
+            FiatRate rate = null;
             try
             {
-                var r = await fetchRate(walletId);
-                conversionHelper = new WalletPSBTReadyViewModel.CryptoFiatConversionHelper
-                {
-                    Rate = r.result.BidAsk.Center,
-                    Fiat = r.currencyPair.Right
-                };
+                rate = await FetchRate(walletId);
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 // keeping model simple
                 // vm.RateError = ex.Message;
@@ -392,7 +387,7 @@ namespace BTCPayServer.Controllers
             else
             {
                 var balanceChange = psbtObject.GetBalance(derivationSchemeSettings.AccountDerivation, signingKey, signingKeyPath);
-                vm.BalanceChange = ValueToString(balanceChange, network, conversionHelper);
+                vm.BalanceChange = ValueToString(balanceChange, network, rate);
                 vm.CanCalculateBalance = true;
                 vm.Positive = balanceChange >= Money.Zero;
             }
@@ -408,7 +403,7 @@ namespace BTCPayServer.Controllers
                 var balanceChange2 = txOut?.Value ?? Money.Zero;
                 if (mine)
                     balanceChange2 = -balanceChange2;
-                inputVm.BalanceChange = ValueToString(balanceChange2, network, conversionHelper);
+                inputVm.BalanceChange = ValueToString(balanceChange2, network, rate);
                 inputVm.Positive = balanceChange2 >= Money.Zero;
                 inputVm.Index = (int)input.Index;
 
@@ -430,7 +425,7 @@ namespace BTCPayServer.Controllers
                 var balanceChange2 = output.Value;
                 if (!mine)
                     balanceChange2 = -balanceChange2;
-                dest.Balance = ValueToString(balanceChange2, network, conversionHelper);
+                dest.Balance = ValueToString(balanceChange2, network, rate);
                 dest.Positive = balanceChange2 >= Money.Zero;
                 dest.Destination = output.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString() ?? output.ScriptPubKey.ToString();
                 var address = output.ScriptPubKey.GetDestinationAddress(network.NBitcoinNetwork)?.ToString();
@@ -444,7 +439,7 @@ namespace BTCPayServer.Controllers
                 vm.Destinations.Add(new WalletPSBTReadyViewModel.DestinationViewModel
                 {
                     Positive = false,
-                    Balance = ValueToString(-fee, network, conversionHelper),
+                    Balance = ValueToString(-fee, network, rate),
                     Destination = "Mining fees"
                 });
             }

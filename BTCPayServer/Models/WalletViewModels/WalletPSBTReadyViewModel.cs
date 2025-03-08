@@ -15,7 +15,7 @@ namespace BTCPayServer.Models.WalletViewModels
         {
             public bool Positive { get; set; }
             public string Destination { get; set; }
-            public CryptoFiatAmount Balance { get; set; }
+            public StringAmounts Balance { get; set; }
             public IEnumerable<TransactionTagModel> Labels { get; set; } = new List<TransactionTagModel>();
         }
 
@@ -24,7 +24,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public int Index { get; set; }
             public string Error { get; set; }
             public bool Positive { get; set; }
-            public CryptoFiatAmount BalanceChange { get; set; }
+            public StringAmounts BalanceChange { get; set; }
             public IEnumerable<TransactionTagModel> Labels { get; set; } = new List<TransactionTagModel>();
         }
         public class AmountViewModel
@@ -34,7 +34,7 @@ namespace BTCPayServer.Models.WalletViewModels
         }
         public AmountViewModel ReplacementBalanceChange { get; set; }
         public bool HasErrors => Inputs.Count == 0 || Inputs.Any(i => !string.IsNullOrEmpty(i.Error));
-        public CryptoFiatAmount BalanceChange { get; set; }
+        public StringAmounts BalanceChange { get; set; }
         public bool CanCalculateBalance { get; set; }
         public bool Positive { get; set; }
         public List<DestinationViewModel> Destinations { get; set; } = new List<DestinationViewModel>();
@@ -51,12 +51,6 @@ namespace BTCPayServer.Models.WalletViewModels
             }
         }
 
-        public record CryptoFiatAmount(string CryptoAmount, string FiatAmount);
-
-        public class CryptoFiatConversionHelper
-        {
-            public decimal Rate { get; set; }
-            public string Fiat { get; set; }
-        }
+        public record StringAmounts(string CryptoAmount, string FiatAmount);
     }
 }

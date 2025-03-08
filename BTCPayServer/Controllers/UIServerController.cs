@@ -135,7 +135,7 @@ namespace BTCPayServer.Controllers
         {
             model = this.ParseListQuery(model ?? new ListStoresViewModel());
 
-            var query = new StoreQuery { SearchTerm = model.SearchTerm };
+            var query = new StoreQuery { SearchTerm = model.SearchTerm, Skip = model.Skip, Count = model.Count };
             var sortDesc = false;
             if (sortOrder != null)
             {

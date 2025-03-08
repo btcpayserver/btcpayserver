@@ -232,8 +232,10 @@ namespace BTCPayServer.Services.Stores
             await using var ctx = _ContextFactory.CreateContext();
             var queryable = ctx.Stores
                 .Where(s => (query.StoreId == null || query.StoreId.Contains(s.Id)) &&
-                    (string.IsNullOrEmpty(query.SearchTerm) || s.StoreName.Contains(query.SearchTerm)))
-                .Include(data => data.UserStores)
+                            (string.IsNullOrEmpty(query.SearchTerm) || s.StoreName.Contains(query.SearchTerm)));
+            if (query.Skip.HasValue) queryable = queryable.Skip(query.Skip.Value);
+            if (query.Count.HasValue) queryable = queryable.Take(query.Count.Value);
+            queryable = queryable.Include(data => data.UserStores)
                 .ThenInclude(data => data.StoreRole)
                 .Include(data => data.UserStores)
                 .ThenInclude(data => data.ApplicationUser);
@@ -669,6 +671,8 @@ retry:
     {
         public string[]? StoreId { get; set; }
         public string? SearchTerm { get; set; }
+        public int? Skip { get; set; }
+        public int? Count { get; set; }
     }
 
     public record StoreRoleId

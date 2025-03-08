@@ -31,6 +31,8 @@
                     <a
                         asp-action="ListStores"
                         asp-route-sortOrder="@(nextStoreNameSortOrder ?? "asc")"
+                        asp-route-skip="@Model.Skip"
+                        asp-route-count="@Model.Count"
                         class="text-nowrap"
                         title="@(nextStoreNameSortOrder == "desc" ? sortByAsc : sortByDesc)"
                     >
@@ -92,7 +94,6 @@
             </tbody>
         </table>
     </div>
-
     <vc:pager view-model="Model"></vc:pager>
 }
 else

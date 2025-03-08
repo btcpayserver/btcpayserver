@@ -1,5 +1,30 @@
 # Changelog
 
+## 2.0.7
+
+### New features
+
+* Display fiat amount previews in Transaction Details page (#6610) @rockstardev
+* Greenfield: Adding endpoint to set server email settings (#6601) @rockstardev
+
+### Bug fixes
+
+* JS-Modal is missing contact us link at end of invoice (#6614 #6615) @dennisreimann
+* Forms: Properly support checkbox type (#6596 #6592) @dennisreimann
+* Forms: Remove unsupported input types @dennisreimann
+* Lightning Address: Display validation messages on failed creation (#6597 #6590) @dennisreimann
+* Fix: Display unconfirmed transactions with lower opacity (#6600) @dennisreimann
+* Greenfield: Wallet's transaction had null blockhash on greenfield @NicolasDorier
+* Invalid currency pair (FARTCOIN_USDC) may show in the logs when using kraken rate provider (#6577) @NicolasDorier
+
+### Improvements
+
+* Fix: Archived invoices shouldn't be browsable by non authenticated users  (#6588) @ThiagoOyo
+* UI: Fix spacing of Lightning Address info on invoice details page @dennisreimann
+* Dashboard: Remove store name headline (#6598) @dennisreimann
+* If an On-Chain payment get replaced, log it in invoice logs rather than console (#6595) @NicolasDorier
+* Remove LNURL description hash check (#6580) @reneaaron
+
 ## 2.0.6
 
 This release contains a security fix for merchants using refunds/pull payments On-Chain with automated payout processors. Please update as soon as possible.

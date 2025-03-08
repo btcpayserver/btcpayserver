@@ -21,6 +21,7 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Payments.PayJoin;
 using BTCPayServer.Payouts;
+using BTCPayServer.Rating;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Labels;
@@ -33,9 +34,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Localization;
 using NBitcoin;
@@ -58,9 +57,9 @@ namespace BTCPayServer.Controllers
         private WalletRepository WalletRepository { get; }
         private BTCPayNetworkProvider NetworkProvider { get; }
         private ExplorerClientProvider ExplorerClientProvider { get; }
-        public IServiceProvider ServiceProvider { get; }
-        public RateFetcher RateFetcher { get; }
-        public IStringLocalizer StringLocalizer { get; }
+        private IServiceProvider ServiceProvider { get; }
+        private RateFetcher RateFetcher { get; }
+        private IStringLocalizer StringLocalizer { get; }
 
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NBXplorerDashboard _dashboard;
@@ -81,33 +80,35 @@ namespace BTCPayServer.Controllers
 
         private readonly PendingTransactionService _pendingTransactionService;
         readonly CurrencyNameTable _currencyTable;
+        private readonly DisplayFormatter _displayFormatter;
 
         public UIWalletsController(
             PendingTransactionService pendingTransactionService,
             StoreRepository repo,
-                                 WalletRepository walletRepository,
-                                 CurrencyNameTable currencyTable,
-                                 BTCPayNetworkProvider networkProvider,
-                                 UserManager<ApplicationUser> userManager,
-                                 NBXplorerDashboard dashboard,
-                                 WalletHistogramService walletHistogramService,
-                                 RateFetcher rateProvider,
-                                 IAuthorizationService authorizationService,
-                                 ExplorerClientProvider explorerProvider,
-                                 IFeeProviderFactory feeRateProvider,
-                                 BTCPayWalletProvider walletProvider,
-                                 WalletReceiveService walletReceiveService,
-                                 SettingsRepository settingsRepository,
-                                 DelayedTransactionBroadcaster broadcaster,
-                                 PayjoinClient payjoinClient,
-                                 IServiceProvider serviceProvider,
-                                 PullPaymentHostedService pullPaymentHostedService,
-                                 LabelService labelService,
-                                 DefaultRulesCollection defaultRules,
-                                 PaymentMethodHandlerDictionary handlers,
-                                 Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
-                                 IStringLocalizer stringLocalizer,
-                                 TransactionLinkProviders transactionLinkProviders)
+            WalletRepository walletRepository,
+            CurrencyNameTable currencyTable,
+            BTCPayNetworkProvider networkProvider,
+            UserManager<ApplicationUser> userManager,
+            NBXplorerDashboard dashboard,
+            WalletHistogramService walletHistogramService,
+            RateFetcher rateProvider,
+            IAuthorizationService authorizationService,
+            ExplorerClientProvider explorerProvider,
+            IFeeProviderFactory feeRateProvider,
+            BTCPayWalletProvider walletProvider,
+            WalletReceiveService walletReceiveService,
+            SettingsRepository settingsRepository,
+            DelayedTransactionBroadcaster broadcaster,
+            PayjoinClient payjoinClient,
+            IServiceProvider serviceProvider,
+            PullPaymentHostedService pullPaymentHostedService,
+            LabelService labelService,
+            DefaultRulesCollection defaultRules,
+            PaymentMethodHandlerDictionary handlers,
+            Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
+            IStringLocalizer stringLocalizer,
+            TransactionLinkProviders transactionLinkProviders,
+            DisplayFormatter displayFormatter)
         {
             _pendingTransactionService = pendingTransactionService;
             _currencyTable = currencyTable;
@@ -134,6 +135,7 @@ namespace BTCPayServer.Controllers
             ServiceProvider = serviceProvider;
             _walletHistogramService = walletHistogramService;
             StringLocalizer = stringLocalizer;
+            _displayFormatter = displayFormatter;
         }
 
         [HttpGet("{walletId}/pending/{transactionId}/cancel")]
@@ -513,10 +515,7 @@ namespace BTCPayServer.Controllers
             var network = this.NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             if (network == null || network.ReadonlyWallet)
                 return NotFound();
-            var storeData = store.GetStoreBlob();
-            var rateRules = store.GetStoreBlob().GetRateRules(_defaultRules);
-            rateRules.Spread = 0.0m;
-            var currencyPair = new Rating.CurrencyPair(walletId.CryptoCode, storeData.DefaultCurrency);
+            
             double.TryParse(defaultAmount, out var amount);
 
             var model = new WalletSendModel
@@ -587,29 +586,44 @@ namespace BTCPayServer.Controllers
 
             model.FeeSatoshiPerByte = recommendedFees[1].GetAwaiter().GetResult()?.FeeRate;
             model.CryptoDivisibility = network.Divisibility;
-            using (CancellationTokenSource cts = new CancellationTokenSource())
+            
+            try
             {
-                try
-                {
-                    cts.CancelAfter(TimeSpan.FromSeconds(5));
-                    var result = await RateFetcher.FetchRate(currencyPair, rateRules, new StoreIdRateContext(walletId.StoreId),  cts.Token)
-                        .WithCancellation(cts.Token);
-                    if (result.BidAsk != null)
-                    {
-                        model.Rate = result.BidAsk.Center;
-                        model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(currencyPair.Right, true)
-                            .CurrencyDecimalDigits;
-                        model.Fiat = currencyPair.Right;
-                    }
-                    else
-                    {
-                        model.RateError =
-                            $"{result.EvaluatedRule} ({string.Join(", ", result.Errors.OfType<object>().ToArray())})";
-                    }
-                }
-                catch (Exception ex) { model.RateError = ex.Message; }
+                var r = await FetchRate(walletId);
+                
+                model.Rate = r.Rate;
+                model.FiatDivisibility = _currencyTable.GetNumberFormatInfo(r.Fiat, true)
+                    .CurrencyDecimalDigits;
+                model.Fiat = r.Fiat;
             }
+            catch (Exception ex) { model.RateError = ex.Message; }
+                    
             return View(model);
+        }
+
+        public record FiatRate(decimal Rate, string Fiat);
+        private async Task<FiatRate> FetchRate(WalletId walletId)
+        {            
+            var store = await Repository.FindStore(walletId.StoreId);
+            if (store is null)
+                throw new Exception("Store not found");
+            var storeData = store.GetStoreBlob();
+            var rateRules = storeData.GetRateRules(_defaultRules);
+            rateRules.Spread = 0.0m;
+            var currencyPair = new CurrencyPair(walletId.CryptoCode, storeData.DefaultCurrency);
+            
+            using CancellationTokenSource cts = new();
+            cts.CancelAfter(TimeSpan.FromSeconds(5));
+            var result = await RateFetcher.FetchRate(currencyPair, rateRules, new StoreIdRateContext(store.Id), cts.Token)
+                .WithCancellation(cts.Token);
+
+            if (result.BidAsk == null)
+            {
+                throw new Exception(
+                    $"{result.EvaluatedRule} ({string.Join(", ", result.Errors.OfType<object>().ToArray())})");
+            }
+
+            return new (result.BidAsk.Center, currencyPair.Right);
         }
 
         private async Task<string?> GetSeed(WalletId walletId, BTCPayNetwork network)
@@ -1214,10 +1228,13 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private string ValueToString(Money v, BTCPayNetworkBase network)
-        {
-            return v.ToString() + " " + network.CryptoCode;
-        }
+        private WalletPSBTReadyViewModel.StringAmounts ValueToString(Money v, BTCPayNetworkBase network,
+            FiatRate? rate) =>
+            new(
+                CryptoAmount : _displayFormatter.Currency(v.ToDecimal(MoneyUnit.BTC), network.CryptoCode),
+                FiatAmount : rate is null ? null
+                    : _displayFormatter.Currency(rate.Rate * v.ToDecimal(MoneyUnit.BTC), rate.Fiat)
+            );
 
         [HttpGet("{walletId}/rescan")]
         public async Task<IActionResult> WalletRescan(

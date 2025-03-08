@@ -1,31 +1,16 @@
-@using BTCPayServer.Services
 @model WalletPSBTReadyViewModel
-@inject DisplayFormatter Formatter
-@functions {
-    private string ToFiatAmount(string destinationBalance)
-    {
-        if (string.IsNullOrWhiteSpace(destinationBalance))
-            return destinationBalance; // Fallback for null/empty input
-        var parts = destinationBalance.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-        if (parts.Length == 0)
-            return destinationBalance; // Fallback for malformed input
-        if (!decimal.TryParse(parts[0], System.Globalization.NumberStyles.Any, 
-                System.Globalization.CultureInfo.InvariantCulture, out var balanceAmount))
-            return destinationBalance; // Fallback for non-numeric values
-
-        var amt = Model.Rate * balanceAmount;
-        return Formatter.Currency(amt, Model.Fiat);
-    }
-}
 
 @if (Model.CanCalculateBalance)
 {
     <p class="lead text-center text-secondary">
         <span text-translate="true">This transaction will change your balance:</span>
         <br>
-        <span id="balance-toggle" class="text-@(Model.Positive ? "success" : "danger") cursor-pointer"
-              data-btc="@Model.BalanceChange" data-fiat="@Model.FiatBalanceChange">
-            @Model.BalanceChange (<small style="text-decoration: underline dotted;">@Model.FiatBalanceChange</small>)
+        <span id="balance-toggle" class="text-@(Model.Positive ? "success" : "danger") cursor-pointer">
+            @Model.BalanceChange.CryptoAmount
+            @if (Model.BalanceChange.FiatAmount != null)
+            {
+                <small style="text-decoration: underline dotted;">(@Model.BalanceChange.FiatAmount)</small>
+            }
         </span>
     </p>
 }
@@ -76,9 +61,9 @@
                 </td>
                 <td class="text-end text-@(input.Positive ? "success" : "danger")">
                     <span class="amount-toggle cursor-pointer"
-                          data-btc="@input.BalanceChange"
-                          data-fiat="@ToFiatAmount(input.BalanceChange)">
-                        @input.BalanceChange
+                          data-btc="@input.BalanceChange.CryptoAmount"
+                          data-fiat="@input.BalanceChange.FiatAmount">
+                        @input.BalanceChange.CryptoAmount
                     </span>
                 </td>
             </tr>
@@ -126,9 +111,9 @@
                 </td>
                 <td class="text-end text-@(destination.Positive ? "success" : "danger")">
                     <span class="amount-toggle cursor-pointer"
-                          data-btc="@destination.Balance"
-                          data-fiat="@ToFiatAmount(destination.Balance)">
-                        @destination.Balance
+                          data-btc="@destination.Balance.CryptoAmount"
+                          data-fiat="@destination.Balance.FiatAmount">
+                        @destination.Balance.CryptoAmount
                     </span>
                 </td>
             </tr>
@@ -152,18 +137,22 @@
 
         let showFiat = false;
 
-        function updateAllAmounts() {
+        // Toggle all amounts when clicking balance header
+        balanceElement.addEventListener("click", function () {
+            // Check if all elements have a non-empty data-fiat
+            const allHaveValidFiat = Array.from(amounts).every(el => {
+                const fiatAmount = el.getAttribute("data-fiat");
+                return fiatAmount !== null && fiatAmount.trim() !== "";
+            });
+
+            if (!allHaveValidFiat) return; // If any is missing or empty, do nothing
+
+            showFiat = !showFiat;
             amounts.forEach(el => {
                 const btcAmount = el.getAttribute("data-btc");
                 const fiatAmount = el.getAttribute("data-fiat");
                 el.innerText = showFiat ? fiatAmount : btcAmount;
             });
-        }
-
-        // Toggle all amounts when clicking balance header
-        balanceElement.addEventListener("click", function () {
-            showFiat = !showFiat;
-            updateAllAmounts();
         });
 
         // Toggle individual amounts
@@ -172,8 +161,12 @@
                 event.stopPropagation();
                 const btcAmount = el.getAttribute("data-btc");
                 const fiatAmount = el.getAttribute("data-fiat");
-                el.innerText = el.innerText === btcAmount ? fiatAmount : btcAmount;
+                if (fiatAmount !== null && fiatAmount.trim() !== "") {
+                    el.innerText = el.innerText === btcAmount ? fiatAmount : btcAmount;
+                }
             });
         });
     });
 </script>
+
+

@@ -15,7 +15,7 @@ namespace BTCPayServer.Models.WalletViewModels
         {
             public bool Positive { get; set; }
             public string Destination { get; set; }
-            public string Balance { get; set; }
+            public CryptoFiatAmount Balance { get; set; }
             public IEnumerable<TransactionTagModel> Labels { get; set; } = new List<TransactionTagModel>();
         }
 
@@ -24,7 +24,7 @@ namespace BTCPayServer.Models.WalletViewModels
             public int Index { get; set; }
             public string Error { get; set; }
             public bool Positive { get; set; }
-            public string BalanceChange { get; set; }
+            public CryptoFiatAmount BalanceChange { get; set; }
             public IEnumerable<TransactionTagModel> Labels { get; set; } = new List<TransactionTagModel>();
         }
         public class AmountViewModel
@@ -34,7 +34,7 @@ namespace BTCPayServer.Models.WalletViewModels
         }
         public AmountViewModel ReplacementBalanceChange { get; set; }
         public bool HasErrors => Inputs.Count == 0 || Inputs.Any(i => !string.IsNullOrEmpty(i.Error));
-        public string BalanceChange { get; set; }
+        public CryptoFiatAmount BalanceChange { get; set; }
         public bool CanCalculateBalance { get; set; }
         public bool Positive { get; set; }
         public List<DestinationViewModel> Destinations { get; set; } = new List<DestinationViewModel>();
@@ -42,12 +42,6 @@ namespace BTCPayServer.Models.WalletViewModels
         public string FeeRate { get; set; }
         public string BackUrl { get; set; }
         public string ReturnUrl { get; set; }
-        
-        // fiat balance display properties
-        public string FiatBalanceChange { get; set; }
-        public decimal Rate { get; set; }
-        public int FiatDivisibility { get; set; }
-        public string Fiat { get; set; }
 
         internal void SetErrors(IList<PSBTError> errors)
         {
@@ -55,6 +49,14 @@ namespace BTCPayServer.Models.WalletViewModels
             {
                 Inputs[(int)err.InputIndex].Error = err.Message;
             }
+        }
+
+        public record CryptoFiatAmount(string CryptoAmount, string FiatAmount);
+
+        public class CryptoFiatConversionHelper
+        {
+            public decimal Rate { get; set; }
+            public string Fiat { get; set; }
         }
     }
 }

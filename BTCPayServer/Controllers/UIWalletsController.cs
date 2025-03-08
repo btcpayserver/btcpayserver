@@ -80,33 +80,35 @@ namespace BTCPayServer.Controllers
 
         private readonly PendingTransactionService _pendingTransactionService;
         readonly CurrencyNameTable _currencyTable;
+        private readonly DisplayFormatter _displayFormatter;
 
         public UIWalletsController(
             PendingTransactionService pendingTransactionService,
             StoreRepository repo,
-                                 WalletRepository walletRepository,
-                                 CurrencyNameTable currencyTable,
-                                 BTCPayNetworkProvider networkProvider,
-                                 UserManager<ApplicationUser> userManager,
-                                 NBXplorerDashboard dashboard,
-                                 WalletHistogramService walletHistogramService,
-                                 RateFetcher rateProvider,
-                                 IAuthorizationService authorizationService,
-                                 ExplorerClientProvider explorerProvider,
-                                 IFeeProviderFactory feeRateProvider,
-                                 BTCPayWalletProvider walletProvider,
-                                 WalletReceiveService walletReceiveService,
-                                 SettingsRepository settingsRepository,
-                                 DelayedTransactionBroadcaster broadcaster,
-                                 PayjoinClient payjoinClient,
-                                 IServiceProvider serviceProvider,
-                                 PullPaymentHostedService pullPaymentHostedService,
-                                 LabelService labelService,
-                                 DefaultRulesCollection defaultRules,
-                                 PaymentMethodHandlerDictionary handlers,
-                                 Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
-                                 IStringLocalizer stringLocalizer,
-                                 TransactionLinkProviders transactionLinkProviders)
+            WalletRepository walletRepository,
+            CurrencyNameTable currencyTable,
+            BTCPayNetworkProvider networkProvider,
+            UserManager<ApplicationUser> userManager,
+            NBXplorerDashboard dashboard,
+            WalletHistogramService walletHistogramService,
+            RateFetcher rateProvider,
+            IAuthorizationService authorizationService,
+            ExplorerClientProvider explorerProvider,
+            IFeeProviderFactory feeRateProvider,
+            BTCPayWalletProvider walletProvider,
+            WalletReceiveService walletReceiveService,
+            SettingsRepository settingsRepository,
+            DelayedTransactionBroadcaster broadcaster,
+            PayjoinClient payjoinClient,
+            IServiceProvider serviceProvider,
+            PullPaymentHostedService pullPaymentHostedService,
+            LabelService labelService,
+            DefaultRulesCollection defaultRules,
+            PaymentMethodHandlerDictionary handlers,
+            Dictionary<PaymentMethodId, ICheckoutModelExtension> paymentModelExtensions,
+            IStringLocalizer stringLocalizer,
+            TransactionLinkProviders transactionLinkProviders,
+            DisplayFormatter displayFormatter)
         {
             _pendingTransactionService = pendingTransactionService;
             _currencyTable = currencyTable;
@@ -133,6 +135,7 @@ namespace BTCPayServer.Controllers
             ServiceProvider = serviceProvider;
             _walletHistogramService = walletHistogramService;
             StringLocalizer = stringLocalizer;
+            _displayFormatter = displayFormatter;
         }
 
         [HttpGet("{walletId}/pending/{transactionId}/cancel")]
@@ -1222,9 +1225,19 @@ namespace BTCPayServer.Controllers
             });
         }
 
-        private string ValueToString(Money v, BTCPayNetworkBase network)
+        private WalletPSBTReadyViewModel.CryptoFiatAmount ValueToString(Money v, BTCPayNetworkBase network, 
+            WalletPSBTReadyViewModel.CryptoFiatConversionHelper? converter)
         {
-            return v.ToString() + " " + network.CryptoCode;
+            var cryptoAmount = v.ToString() + " " + network.CryptoCode;
+            string? fiatAmount = null;
+            if (converter != null)
+            {
+                var amt = converter.Rate * v.ToDecimal(MoneyUnit.BTC);
+                fiatAmount = _displayFormatter.Currency(amt, converter.Fiat);
+            }
+            
+            var x = new WalletPSBTReadyViewModel.CryptoFiatAmount(cryptoAmount, fiatAmount);
+            return x;
         }
 
         [HttpGet("{walletId}/rescan")]

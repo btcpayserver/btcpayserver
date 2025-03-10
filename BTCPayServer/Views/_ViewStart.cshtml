@@ -1,3 +1,5 @@
-﻿@{
+﻿@using BTCPayServer.Abstractions.Extensions
+@{
     Layout = "_Layout";
+    ViewData.SetBlazorAllowed(User.Identity?.IsAuthenticated is true);
 }

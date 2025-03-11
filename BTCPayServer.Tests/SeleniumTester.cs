@@ -679,5 +679,10 @@ retry:
                 Driver.WaitForAndClick(By.Id("page-primary"));
             }
         }
+
+        public void ClickCancel()
+        {
+            Driver.FindElement(By.Id("CancelWizard")).Click();
+        }
     }
 }

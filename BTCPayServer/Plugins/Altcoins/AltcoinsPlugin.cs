@@ -52,10 +52,6 @@ namespace BTCPayServer.Plugins.Altcoins
                 InitDash(services);
             if (selectedChains.Contains("GRS"))
                 InitGroestlcoin(services);
-            if (selectedChains.Contains("XMR"))
-                InitMonero(services);
-            if (selectedChains.Contains("ZEC"))
-                InitZcash(services);
         }
     }
 }

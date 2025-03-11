@@ -1,11 +1,11 @@
 @model System.Collections.Generic.List<BTCPayServer.Data.Payouts.LightningLike.UILightningLikePayoutController.ConfirmVM>
 @{
     Layout = "../Shared/_Layout.cshtml";
-    ViewData["Title"] = "Confirm Lightning Payout";
+    ViewData["Title"] = StringLocalizer["Confirm Lightning Payout"];
     var cryptoCode = Context.GetRouteValue("cryptoCode");
 }
 
-<h2 class="mt-1 mb-2" text-translate="true">@ViewData["Title"]</h2>
+<h2 class="mt-1 mb-2">@ViewData["Title"]</h2>
 <div class="row">
     <div class="col-md-12">
         <ul class="list-group list-group-flush">

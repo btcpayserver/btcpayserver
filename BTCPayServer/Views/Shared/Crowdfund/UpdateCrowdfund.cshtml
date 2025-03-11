@@ -30,7 +30,7 @@
 
 <form method="post" enctype="multipart/form-data" permissioned="@Policies.CanModifyStoreSettings">
     <div class="sticky-header">
-        <h2 text-translate="true">@ViewData["Title"]</h2>
+        <h2>@ViewData["Title"]</h2>
         <div>
             <button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
             <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>

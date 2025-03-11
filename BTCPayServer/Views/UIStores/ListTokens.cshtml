@@ -34,7 +34,7 @@
         </p>
         
         <div class="d-flex align-items-center justify-content-between mt-5 mb-3">
-            <h3 class="mb-0" text-translate="true">@ViewData["Title"]</h3>
+            <h3 class="mb-0">@ViewData["Title"]</h3>
             <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings" text-translate="true">
                 Create Token
             </a>

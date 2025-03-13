@@ -8,56 +8,71 @@
 }
 
 @section Navbar {
-    <a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
-        <vc:icon symbol="back" />
-    </a>
+	<a asp-controller="UIStores" asp-action="SetupWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
+		<vc:icon symbol="back" />
+	</a>
 }
 
 <h1 class="text-center" text-translate="true">Choose your wallet option</h1>
 
 <div class="list-group mt-5">
-    @if (Model.CanUseHotWallet)
-    {
-        <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@WalletSetupMethod.HotWallet.ToString()" id="GenerateHotwalletLink" class="list-group-item list-group-item-action">
-            <div class="image">
-                <vc:icon symbol="wallet-hot"/>
-            </div>
-            <div class="content">
+	@if (Model.CanUseHotWallet)
+	{
+		<a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@WalletSetupMethod.HotWallet.ToString()" id="GenerateHotwalletLink" class="list-group-item list-group-item-action">
+			<div class="image">
+				<vc:icon symbol="wallet-hot"/>
+			</div>
+			<div class="content">
 				<h4 text-translate="true">Hot wallet</h4>
 				<p class="mb-0 text-secondary" text-translate="true">
-                    Wallet's private key is stored on the server. Spending the funds you received is convenient. To minimize the risk of theft, regularly withdraw funds to a different wallet.
-                </p>
-            </div>
-            <vc:icon symbol="caret-right"/>
-        </a>
-    }
-    else
-    {
-        <div class="list-group-item text-muted">
-            <div class="image">
-                <vc:icon symbol="wallet-hot"/>
-            </div>
-            <div class="content">
+					Wallet's private key is stored on the server. Spending the funds you received is convenient. To minimize the risk of theft, regularly withdraw funds to a different wallet.
+				</p>
+			</div>
+			<vc:icon symbol="caret-right"/>
+		</a>
+	}
+	else
+	{
+		<div class="list-group-item text-muted">
+			<div class="image">
+				<vc:icon symbol="wallet-hot"/>
+			</div>
+			<div class="content">
 				<h4 text-translate="true">Hot wallet</h4>
 				<p class="mb-0" text-translate="true">Please note that creating a hot wallet is not supported by this instance for non administrators.</p>
-            </div>
-        </div>
-    }
+			</div>
+		</div>
+	}
 </div>
 
 <div class="list-group mt-4">
-    <a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@WalletSetupMethod.WatchOnly.ToString()" id="GenerateWatchonlyLink" class="list-group-item list-group-item-action">
-        <div class="image">
-            <vc:icon symbol="wallet-watchonly"/>
-        </div>
-        <div class="content">
-			<h4 text-translate="true">Watch-only wallet</h4>
-			<p class="mb-0 text-secondary" text-translate="true">
-                Wallet's private key is erased from the server. Higher security. To spend, you have to manually input the private key or import it into an external wallet.
-            </p>
-        </div>
-        <vc:icon symbol="caret-right" />
-    </a>
+	@if (Model.CanCreateNewColdWallet)
+	{
+		<a asp-controller="UIStores" asp-action="GenerateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode" asp-route-method="@WalletSetupMethod.WatchOnly.ToString()" id="GenerateWatchonlyLink" class="list-group-item list-group-item-action">
+			<div class="image">
+				<vc:icon symbol="wallet-watchonly"/>
+			</div>
+			<div class="content">
+				<h4 text-translate="true">Watch-only wallet</h4>
+				<p class="mb-0 text-secondary" text-translate="true">
+					Wallet's private key is erased from the server. Higher security. To spend, you have to manually input the private key or import it into an external wallet.
+				</p>
+			</div>
+			<vc:icon symbol="caret-right" />
+		</a>
+	}
+	else
+	{
+		<div class="list-group-item text-muted">
+			<div class="image">
+				<vc:icon symbol="wallet-watchonly" />
+			</div>
+			<div class="content">
+				<h4 text-translate="true">Watch-only wallet</h4>
+				<p class="mb-0" text-translate="true">Please note that this instance does not support creating a new cold wallet for non-administrators. However, you can import one from other wallet software.</p>
+			</div>
+		</div>		
+	}
 </div>
 
 

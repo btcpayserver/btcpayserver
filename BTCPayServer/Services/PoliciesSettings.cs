@@ -52,6 +52,8 @@ namespace BTCPayServer.Services
 
         [Display(Name = "Non-admins can create Hot Wallets for their Store")]
         public bool AllowHotWalletForAll { get; set; }
+        [Display(Name = "Non-admins can create Cold Wallets for their Store")]
+        public bool AllowCreateColdWalletForAll { get; set; }
 
         [Display(Name = "Non-admins can import Hot Wallets for their Store")]
         public bool AllowHotWalletRPCImportForAll { get; set; }

@@ -1,3 +1,6 @@
+using System;
+using Microsoft.AspNetCore.Mvc.ViewFeatures;
+
 namespace BTCPayServer.Models.StoreViewModels
 {
     public enum WalletSetupMethod
@@ -34,5 +37,21 @@ namespace BTCPayServer.Models.StoreViewModels
                 WalletSetupMethod.WatchOnly => "GenerateWallet",
                 _ => "SetupWallet"
             };
+
+        internal void SetPermission(WalletCreationPermissions perm)
+        {
+            this.CanCreateNewColdWallet = perm.CanCreateColdWallet;
+            this.CanUseHotWallet = perm.CanCreateHotWallet;
+            this.CanUseRPCImport = perm.CanRPCImport;
+        }
+        public void SetViewData(ViewDataDictionary ViewData)
+        {
+            ViewData.Add(nameof(CanUseHotWallet), CanUseHotWallet);
+            ViewData.Add(nameof(CanCreateNewColdWallet), CanCreateNewColdWallet);
+            ViewData.Add(nameof(CanUseRPCImport), CanUseRPCImport);
+            ViewData.Add(nameof(SupportSegwit), SupportSegwit);
+            ViewData.Add(nameof(SupportTaproot), SupportTaproot);
+            ViewData.Add(nameof(Method), Method);
+        }
     }
 }

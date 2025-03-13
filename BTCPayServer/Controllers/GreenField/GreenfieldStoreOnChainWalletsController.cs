@@ -383,7 +383,7 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             //This API is only meant for hot wallet usage for now. We can expand later when we allow PSBT manipulation.
-            if (!(await CanUseHotWallet()).HotWallet)
+            if (!(await CanUseHotWallet()).CanCreateHotWallet)
             {
                 return this.CreateAPIError(503, "not-available",
                     $"You need to allow non-admins to use hotwallets for their stores (in /server/policies)");
@@ -802,7 +802,7 @@ namespace BTCPayServer.Controllers.Greenfield
         }
 
 
-        private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
+        private async Task<WalletCreationPermissions> CanUseHotWallet()
         {
             return await _authorizationService.CanUseHotWallet(PoliciesSettings, User);
         }

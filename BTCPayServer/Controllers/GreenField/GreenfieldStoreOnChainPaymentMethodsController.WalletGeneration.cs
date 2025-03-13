@@ -43,13 +43,13 @@ namespace BTCPayServer.Controllers.Greenfield
             }
 
             var canUseHotWallet = await CanUseHotWallet();
-            if (request.SavePrivateKeys && !canUseHotWallet.HotWallet)
+            if (request.SavePrivateKeys && !canUseHotWallet.CanCreateHotWallet)
             {
                 ModelState.AddModelError(nameof(request.SavePrivateKeys),
                     "This instance forbids non-admins from having a hot wallet for your store.");
             }
 
-            if (request.ImportKeysToRPC && !canUseHotWallet.RPCImport)
+            if (request.ImportKeysToRPC && !canUseHotWallet.CanRPCImport)
             {
                 ModelState.AddModelError(nameof(request.ImportKeysToRPC),
                     "This instance forbids non-admins from having importing the wallet addresses/keys to the underlying node.");
@@ -120,7 +120,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return Ok(result);
         }
 
-        private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
+        private async Task<WalletCreationPermissions> CanUseHotWallet()
         {
             return await _authorizationService.CanUseHotWallet(PoliciesSettings, User);
         }

@@ -1,5 +1,27 @@
 # Changelog
 
+## 2.1.0
+
+### New features
+
+* Add better MultiSig flow when all users are using BTCPay Server @rockstardev
+* Remove ZCash and Monero from core code (#6535) @NicolasDorier
+* Disable cold wallet creation by default (#6626) @NicolasDorier
+* Adding support for RBF and improve UX for CPFP (#6581) @NicolasDorier
+* Greenfield: added `refundBOLT11Expiration` to Get/Update store endpoint (#6644) @NicolasDorier
+* Greenfield: Added `invitationLink` and `disabled` properties to user APIs (#6649) @dennisreimann
+
+### Bug fixes
+
+* Translatable text with accents were improperly rendered (#6622 #6623) @dennisreimann
+* Fix: Refunds through API were ignoring BOLT11 expiration at store level (#6644) @NicolasDorier
+* Fix: PaymentRequests created via API never expires (#6657) @NicolasDorier
+
+## Improvements
+
+* Improve UX for store email rules triggers (#6629) @rockstardev
+* Store users: Ensure the last owner cannot be downgraded (#6654) @dennisreimann
+
 ## 2.0.8
 
 ### Bug fixes

@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.1.0
+
+### New features
+
+* Remove ZCash and Monero from core code (#6535) @NicolasDorier
+* Disable cold wallet creation by default (#6626) @NicolasDorier
+* Adding support for RBF and improve UX for CPFP (#6581) @NicolasDorier
+
+### Bug fixes
+
+* Translatable text with accents were improperly rendered (#6622 #6623) @dennisreimann
+
 ## 2.0.7
 
 ### New features

@@ -15,14 +15,14 @@
                     <li class="breadcrumb-item">
                         <a asp-action="ListTokens" asp-route-storeId="@store.Id" text-translate="true">Access Tokens</a>
                     </li>
-                    <li class="breadcrumb-item active" aria-current="page" text-translate="true">@ViewData["Title"]</li>
+                    <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
                 </ol>
-                <h2 text-translate="true">@ViewData["Title"]</h2>
+                <h2>@ViewData["Title"]</h2>
             </nav>
         }
         else
         {
-            <h2 text-translate="true">@ViewData["Title"]</h2>
+            <h2>@ViewData["Title"]</h2>
         }
         <input id="page-primary" type="submit" value="Request Pairing" class="btn btn-primary" />
     </div>

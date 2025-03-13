@@ -24,7 +24,7 @@
     {
         <div class="store-number">
             <header>
-                <h6 text-translate="true">@ViewLocalizer["Paid invoices in the last {0} days", Model.TimeframeDays]</h6>
+                <h6>@ViewLocalizer["Paid invoices in the last {0} days", Model.TimeframeDays]</h6>
                 @if (Model.PaidInvoices > 0)
                 {
                     <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@Model.StoreId"  permission="@Policies.CanViewInvoices" text-translate="true">View All</a>

@@ -12,12 +12,11 @@
         role = null;
 
     var storeId = Context.GetRouteValue("storeId") as string;
+    var title = role is null ? StringLocalizer["Create role"] : StringLocalizer["Update Role"];
     if (storeId is null)
-        ViewData.SetActivePage(ServerNavPages.Roles, role is null ? "Create role" : "Update Role");
+        ViewData.SetActivePage(ServerNavPages.Roles, title);
     else
-    {
-        ViewData.SetActivePage(StoreNavPages.Roles, role is null ? "Create role" : "Update Role");
-    }
+        ViewData.SetActivePage(StoreNavPages.Roles, title, storeId);
     var storePolicies = Policies.AllPolicies.Where(Policies.IsStorePolicy).ToArray();
 }
 
@@ -30,7 +29,7 @@
                 </li>
                 <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
             </ol>
-            <h2 text-translate="true">@ViewData["Title"]</h2>
+            <h2>@ViewData["Title"]</h2>
         </nav>
         <button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>

@@ -1,11 +1,11 @@
 @using BTCPayServer.Abstractions.Models
 @model ListDictionariesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Translations, "Dictionaries");
+    ViewData.SetActivePage(ServerNavPages.Translations, StringLocalizer["Dictionaries"]);
 }
 
 <div class="sticky-header">
-	<h2 text-translate="true">@ViewData["Title"]</h2>
+	<h2>@ViewData["Title"]</h2>
 	<a id="page-primary" asp-action="CreateDictionary" class="btn btn-primary" role="button">
 		Create
 	</a>

@@ -4,9 +4,22 @@ document.addEventListener("DOMContentLoaded",function () {
         mixins: [posCommon],
         data () {
             return {
+                displayCategory: '*',
+                searchTerm: null,
+                cart: loadState('cart'),
+                categoriesScrollable: false,
                 $cart: null,
                 amount: 0,
                 persistState: true
+            }
+        },
+        computed: {
+            cartCount() {
+                return this.cart.reduce((res, item) => res + (parseInt(item.count) || 0), 0)
+            },
+            amountNumeric () {
+                return parseFloat(this.cart.reduce((res, item) => res + (item.price||0) * item.count, 0)
+                    .toFixed(this.divisibility))
             }
         },
         watch: {

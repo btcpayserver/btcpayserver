@@ -17,10 +17,6 @@ namespace BTCPayServer.Controllers
     [Authorize(Policy = Policies.CanModifyStoreSettings)]
     public partial class UIStoresController
     {
-        
-        
-        
-        
         [HttpGet("{storeId}/emails/rules")]
         public IActionResult EmailRulesIndex(string storeId)
         {
@@ -34,11 +30,11 @@ namespace BTCPayServer.Controllers
         [HttpGet("{storeId}/emails/rules/create")]
         public IActionResult EmailRulesCreate(string storeId)
         {
-            return View("StoreEmailRulesManage", new StoreEmailRuleViewModel { StoreId = storeId });
+            return View("StoreEmailRulesManage", new StoreEmailRule());
         }
 
         [HttpPost("{storeId}/emails/rules/create")]
-        public async Task<IActionResult> EmailRulesCreate(string storeId, StoreEmailRuleViewModel model)
+        public async Task<IActionResult> EmailRulesCreate(string storeId, StoreEmailRule model)
         {
             if (!ModelState.IsValid)
                 return View("StoreEmailRulesManage", model);
@@ -74,19 +70,11 @@ namespace BTCPayServer.Controllers
             if (rules == null || ruleIndex >= rules.Count) return NotFound();
 
             var rule = rules[ruleIndex];
-            return View("StoreEmailRulesManage", new StoreEmailRuleViewModel
-            {
-                StoreId = storeId,
-                Trigger = rule.Trigger,
-                CustomerEmail = rule.CustomerEmail,
-                To = rule.To,
-                Subject = rule.Subject,
-                Body = rule.Body
-            });
+            return View("StoreEmailRulesManage", rule);
         }
 
         [HttpPost("{storeId}/emails/rules/{ruleIndex}/edit")]
-        public async Task<IActionResult> EmailRulesEdit(string storeId, int ruleIndex, StoreEmailRuleViewModel model)
+        public async Task<IActionResult> EmailRulesEdit(string storeId, int ruleIndex, StoreEmailRule model)
         {
             if (!ModelState.IsValid)
                 return View("StoreEmailRulesManage", model);
@@ -122,31 +110,8 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _storeRepo.UpdateStore(store);
 
-            return RedirectToAction(nameof(Index), new { storeId });
+            return RedirectToAction(nameof(EmailRulesIndex), new { storeId });
         }
-        
-        
-
-
-        public class StoreEmailRuleViewModel
-        {
-            public string StoreId { get; set; }
-
-            [Required]
-            public string Trigger { get; set; }
-
-            public bool CustomerEmail { get; set; }
-
-            public string To { get; set; }
-
-            [Required]
-            public string Subject { get; set; }
-
-            [Required]
-            public string Body { get; set; }
-        }
-    
-    
 
         public class StoreEmailRule
         {
@@ -155,7 +120,6 @@ namespace BTCPayServer.Controllers
             
             public bool CustomerEmail { get; set; }
             
-           
             public string To { get; set; }
             
             [Required]

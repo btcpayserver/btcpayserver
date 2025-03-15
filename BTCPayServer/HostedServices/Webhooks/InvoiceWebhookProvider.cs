@@ -22,13 +22,13 @@ public class InvoiceWebhookProvider : WebhookProvider<InvoiceEvent>
     {
         return new Dictionary<string, string>
         {
-            {WebhookEventType.InvoiceCreated, "A new invoice has been created"},
-            {WebhookEventType.InvoiceReceivedPayment, "A new payment has been received"},
-            {WebhookEventType.InvoicePaymentSettled, "A payment has been settled"},
-            {WebhookEventType.InvoiceProcessing, "An invoice is processing"},
-            {WebhookEventType.InvoiceExpired, "An invoice has expired"},
-            {WebhookEventType.InvoiceSettled, "An invoice has been settled"},
-            {WebhookEventType.InvoiceInvalid, "An invoice became invalid"},
+            {WebhookEventType.InvoiceCreated, "Invoice - Created"},
+            {WebhookEventType.InvoiceReceivedPayment, "Invoice - Received Payment"},
+            {WebhookEventType.InvoicePaymentSettled, "Invoice - Payment Settled"},
+            {WebhookEventType.InvoiceProcessing, "Invoice - Is Processing"},
+            {WebhookEventType.InvoiceExpired, "Invoice - Expired"},
+            {WebhookEventType.InvoiceSettled, "Invoice - Is Settled"},
+            {WebhookEventType.InvoiceInvalid, "Invoice - Became Invalid"},
         };
     }
 

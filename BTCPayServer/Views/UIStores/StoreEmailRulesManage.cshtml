@@ -1,9 +1,10 @@
 @using BTCPayServer.HostedServices.Webhooks
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@model BTCPayServer.Controllers.UIStoresController.StoreEmailRuleViewModel
+@model BTCPayServer.Controllers.UIStoresController.StoreEmailRule
 @inject WebhookSender WebhookSender
 
 @{
+    var storeId = Context.GetStoreData().Id;
     bool isEdit = Model.Trigger != null;
     ViewData["Title"] = isEdit ? "Edit Store Email Rule" : "Create Store Email Rule";
 }
@@ -12,12 +13,12 @@
     <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
 }
 
-<form asp-action="@(isEdit ? "EmailRulesEdit" : "EmailRulesCreate")" asp-route-storeId="@Model.StoreId" method="post">
+<form asp-action="@(isEdit ? "EmailRulesEdit" : "EmailRulesCreate")" asp-route-storeId="@storeId" method="post">
     <div class="sticky-header">
         <h2 text-translate="true">@ViewData["Title"]</h2>
         <div>
         <button id="page-primary" type="submit" class="btn btn-primary">Save</button>
-        <a asp-action="EmailRulesIndex" asp-route-storeId="@Model.StoreId" class="btn btn-secondary">Cancel</a>
+        <a asp-action="EmailRulesIndex" asp-route-storeId="@storeId" class="btn btn-secondary">Cancel</a>
         </div>
     </div>
     <partial name="_StatusMessage" />

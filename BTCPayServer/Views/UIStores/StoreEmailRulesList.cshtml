@@ -48,9 +48,10 @@
             <td>@rule.value.To</td>
             <td>@rule.value.Subject</td>
             <td>
-                <a asp-action="EmailRulesEdit" asp-route-storeId="@ViewBag.StoreId" asp-route-ruleIndex="@rule.index" class="btn btn-primary">Edit</a>
-                <form asp-action="EmailRulesDelete" asp-route-storeId="@ViewBag.StoreId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
-                    <button type="submit" class="btn btn-danger">Delete</button>
+                <a asp-action="EmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
+                -
+                <form asp-action="EmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
+                    <a href="#" class="text-danger" onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this email rule?')) this.closest('form').submit();">Delete</a>
                 </form>
             </td>
         </tr>

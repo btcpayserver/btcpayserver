@@ -855,8 +855,7 @@ namespace BTCPayServer.Tests
             s.GoToStore(StoreNavPages.Emails);
             s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);
-            // by default selenium tests setup email server settings
-            Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
 
             // invoice created rule
             s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
@@ -906,13 +905,11 @@ namespace BTCPayServer.Tests
             Assert.True(deleteLinks.Count == 2, "Expected exactly two delete buttons but found a different number.");
 
             deleteLinks[0].Click();
-            s.Driver.SwitchTo().Alert().Accept(); // Confirm the delete
 
             deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]")); // Refresh list
             Assert.True(deleteLinks.Count == 1, "Expected one delete button remaining.");
 
             deleteLinks[0].Click();
-            s.Driver.SwitchTo().Alert().Accept(); // Confirm the second delete
 
             // Validate that there are no more rules
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);
@@ -3960,7 +3957,6 @@ retry:
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
-            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
 
             // Setup user, store and wallets
             s.RegisterNewUser();
@@ -3993,6 +3989,10 @@ retry:
             s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
             s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
             s.AssertPageAccess(false, GetStorePath("apps/create"));
+            
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", 
+                "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", 
+                "emails/rules", "email-settings", "forms"};
             foreach (var path in storeSettingsPaths)
             {   // should have view access to settings, but no submit buttons or create links
                 TestLogs.LogInformation($"Checking access to store page {path} as admin");
@@ -4013,7 +4013,8 @@ retry:
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
-            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", 
+                "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails/rules", "email-settings", "forms"};
 
             // Setup users
             var manager = s.RegisterNewUser();

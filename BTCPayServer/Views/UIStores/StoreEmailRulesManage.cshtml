@@ -6,7 +6,7 @@
 @{
     var storeId = Context.GetStoreData().Id;
     bool isEdit = Model.Trigger != null;
-    ViewData["Title"] = isEdit ? "Edit Store Email Rule" : "Create Store Email Rule";
+    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
 }
 
 @section PageHeadContent {

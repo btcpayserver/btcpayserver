@@ -53,7 +53,7 @@
                         <a asp-action="EmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
                         -
                         <form asp-action="EmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
-                            <a href="#" class="text-danger" onclick="event.preventDefault(); if (confirm('Are you sure you want to delete this email rule?')) this.closest('form').submit();">Delete</a>
+                            <a href="#" class="text-danger" onclick="event.preventDefault(); this.closest('form').submit();">Delete</a>
                         </form>
                     </td>
                 </tr>

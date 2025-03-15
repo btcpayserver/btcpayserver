@@ -25,7 +25,8 @@
 
     <div class="form-group">
         <label asp-for="Trigger" class="form-label" data-required></label>
-        <select asp-for="Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value, s.Key))" 
+        <select asp-for="Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes()
+                .OrderBy(a=>a.Value).Select(s => new SelectListItem(s.Value, s.Key))" 
                 class="form-select email-rule-trigger" required></select>
         <span asp-validation-for="Trigger" class="text-danger"></span>
         <div class="form-text" text-translate="true">Choose what event sends the email.</div>

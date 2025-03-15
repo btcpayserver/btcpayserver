@@ -24,7 +24,8 @@
 
     <div class="form-group">
         <label asp-for="Trigger" class="form-label" data-required></label>
-        <select asp-for="Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value, s.Key))" class="form-select email-rule-trigger" required></select>
+        <select asp-for="Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes().Select(s => new SelectListItem(s.Value, s.Key))" 
+                class="form-select email-rule-trigger" required></select>
         <span asp-validation-for="Trigger" class="text-danger"></span>
         <div class="form-text" text-translate="true">Choose what event sends the email.</div>
     </div>
@@ -101,7 +102,7 @@
     <partial name="_ValidationScriptsPartial" />
     <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
     <script>
-        (function () {
+        document.addEventListener('DOMContentLoaded', () => {
             const templates = {
                 InvoiceCreated: {
                     subject: 'Invoice {Invoice.Id} created',
@@ -132,29 +133,41 @@
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
                 },
             };
+
+            const triggerSelect = document.querySelector('.email-rule-trigger');
+            const subjectInput = document.querySelector('.email-rule-subject');
+            const bodyTextarea = document.querySelector('.email-rule-body');
+
             const isEmptyOrDefault = (value, type) => {
-                const val = value.replace(/<.*?>/gi, '').trim()
+                const val = value.replace(/<.*?>/gi, '').trim();
                 if (!val) return true;
-                return Object.values(templates).find(t => t[type] === val) != null;
-            }
-            const applyDefault = $trigger => {
-                const $emailRule = $trigger.closest('.email-rule');
-                const $subject = $emailRule.querySelector('.email-rule-subject');
-                const $body = $emailRule.querySelector('.email-rule-body');
-                const rule = $trigger.querySelector(`option[value='${$trigger.value}']`).innerText;
-                const { subject, body } = templates[rule];
-                if (isEmptyOrDefault($subject.value, 'subject') && subject) {
-                    $subject.value = subject;
+                return Object.values(templates).some(t => t[type] === val);
+            };
+
+            function applyTemplate() {
+                const selectedTrigger = triggerSelect.value;
+                if (templates[selectedTrigger]) {
+                    if (isEmptyOrDefault(subjectInput.value, 'subject')) {
+                        subjectInput.value = templates[selectedTrigger].subject;
+                    }
+                    if (isEmptyOrDefault(bodyTextarea.value, 'body')) {
+                        if ($(bodyTextarea).summernote) {
+                            $(bodyTextarea).summernote('reset');
+                            $(bodyTextarea).summernote('insertText', templates[selectedTrigger].body);
+                        } else {
+                            bodyTextarea.value = templates[selectedTrigger].body;
+                        }
+                    }
                 }
-                if (isEmptyOrDefault($body.value, 'body') && body) {
-                    $($body).summernote('reset');
-                    $($body).summernote('insertText', body);
-                }
             }
-            delegate('change', '.email-rule-trigger', (e) => { applyDefault(e.target); })
-            document.addEventListener('DOMContentLoaded', () => {
-                document.querySelectorAll('.email-rule-trigger').forEach(applyDefault);
-            });
-        })();
+
+            triggerSelect.addEventListener('change', applyTemplate);
+
+            // Apply template on page load if a trigger is selected
+            if (triggerSelect.value) {
+                applyTemplate();
+            }
+        });
     </script>
+
 }

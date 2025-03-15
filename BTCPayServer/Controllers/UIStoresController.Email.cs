@@ -19,15 +19,6 @@ namespace BTCPayServer.Controllers;
 
 public partial class UIStoresController
 {
-
-
-    // public class StoreEmailRuleViewModel
-    // {
-    //     public List<StoreEmailRule> Rules { get; set; }
-    // }
-
-    
-    
     [HttpGet("{storeId}/email-settings")]
     public async Task<IActionResult> StoreEmailSettings(string storeId)
     {

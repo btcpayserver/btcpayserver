@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Models;
@@ -18,10 +20,21 @@ namespace BTCPayServer.Controllers
     public partial class UIStoresController
     {
         [HttpGet("{storeId}/emails/rules")]
-        public IActionResult EmailRulesIndex(string storeId)
+        public async Task<IActionResult> EmailRulesIndex(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null) return NotFound();
+            
+            var configured = await _emailSenderFactory.IsComplete(store.Id);
+            if (!configured && !TempData.HasStatusMessage())
+            {
+                TempData.SetStatusMessageModel(new StatusMessageModel
+                {
+                    Severity = StatusMessageModel.StatusSeverity.Warning,
+                    Html = "You need to configure email settings before this feature works." +
+                           $" <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure store email settings</a>."
+                });
+            }
 
             var rules = store.GetStoreBlob().EmailRules ?? new List<StoreEmailRule>();
             return View("StoreEmailRulesList", rules);

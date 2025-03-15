@@ -828,14 +828,16 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
 
             s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
-            var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));
+            var select = new SelectElement(s.Driver.FindElement(By.Id("Trigger")));
             select.SelectByText("An invoice has been settled", true);
-            s.Driver.FindElement(By.Id("Rules_0__To")).SendKeys("test@gmail.com");
-            s.Driver.FindElement(By.Id("Rules_0__CustomerEmail")).Click();
-            s.Driver.FindElement(By.Id("Rules_0__Subject")).SendKeys("Thanks!");
+            s.Driver.FindElement(By.Id("To")).SendKeys("test@gmail.com");
+            s.Driver.FindElement(By.Id("CustomerEmail")).Click();
+            s.Driver.FindElement(By.Id("Subject")).SendKeys("Thanks!");
             s.Driver.FindElement(By.ClassName("note-editable")).SendKeys("Your invoice is settled");
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
-            Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
+            // we now have a rule
+            Assert.DoesNotContain("There are no rules yet.", s.Driver.PageSource);
+            Assert.Contains("test@gmail.com", s.Driver.PageSource);
             
             s.GoToStore(StoreNavPages.Emails);
             Assert.True(s.Driver.FindElement(By.Id("IsCustomSMTP")).Selected);

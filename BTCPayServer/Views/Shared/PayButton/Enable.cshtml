@@ -1,13 +1,12 @@
 @using BTCPayServer.TagHelpers
 @using BTCPayServer.Views.Stores
-@using Microsoft.AspNetCore.Html
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @{
-	ViewData.SetActivePage(StoreNavPages.PayButton, "Pay Button", Context.GetStoreData().Id);
+	ViewData.SetActivePage(StoreNavPages.PayButton, StringLocalizer["Pay Button"], Context.GetStoreData().Id);
 }
 
 <div class="sticky-header">
-    <h2 class="my-1" text-translate="true">@ViewData["Title"]</h2>
+    <h2 class="my-1">@ViewData["Title"]</h2>
 </div>
 
 <partial name="_StatusMessage" />

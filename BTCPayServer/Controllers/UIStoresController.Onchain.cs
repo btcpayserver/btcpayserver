@@ -54,10 +54,9 @@ public partial class UIStoresController
             return checkResult;
         }
 
-        var (hotWallet, rpcImport) = await CanUseHotWallet();
+        var perm = await CanUseHotWallet();
         vm.Network = network;
-        vm.CanUseHotWallet = hotWallet;
-        vm.CanUseRPCImport = rpcImport;
+        vm.SetPermission(perm);
         vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
         vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
 
@@ -218,14 +217,13 @@ public partial class UIStoresController
         }
 
         var isHotWallet = vm.Method == WalletSetupMethod.HotWallet;
-        var (hotWallet, rpcImport) = await CanUseHotWallet();
-        if (isHotWallet && !hotWallet)
-        {
+        var isColdWallet = vm.Method == WalletSetupMethod.WatchOnly;
+        var perm = await CanUseHotWallet();
+        if (isHotWallet && !perm.CanCreateHotWallet)
             return NotFound();
-        }
-
-        vm.CanUseHotWallet = hotWallet;
-        vm.CanUseRPCImport = rpcImport;
+        if (isColdWallet && !perm.CanCreateColdWallet)
+            return NotFound();
+        vm.SetPermission(perm);
         vm.SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot;
         vm.SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit;
         vm.Network = network;
@@ -236,7 +234,7 @@ public partial class UIStoresController
         }
         else
         {
-            var canUsePayJoin = hotWallet && isHotWallet && network.SupportPayJoin;
+            var canUsePayJoin = perm.CanCreateHotWallet && isHotWallet && network.SupportPayJoin;
             vm.SetupRequest = new WalletSetupRequest
             {
                 SavePrivateKeys = isHotWallet,
@@ -260,8 +258,10 @@ public partial class UIStoresController
             return checkResult;
         }
 
-        var (hotWallet, rpcImport) = await CanUseHotWallet();
-        if (!hotWallet && request.SavePrivateKeys || !rpcImport && request.ImportKeysToRPC)
+        var perm = await CanUseHotWallet();
+        if ((!perm.CanCreateHotWallet && request.SavePrivateKeys) || 
+            (!perm.CanRPCImport && request.ImportKeysToRPC) ||
+            (!perm.CanCreateColdWallet && !request.SavePrivateKeys))
         {
             return NotFound();
         }
@@ -279,12 +279,10 @@ public partial class UIStoresController
             Source = isImport ? "SeedImported" : "NBXplorerGenerated",
             IsHotWallet = isImport ? request.SavePrivateKeys : method == WalletSetupMethod.HotWallet,
             DerivationSchemeFormat = "BTCPay",
-            CanUseHotWallet = hotWallet,
-            CanUseRPCImport = rpcImport,
             SupportTaproot = network.NBitcoinNetwork.Consensus.SupportTaproot,
             SupportSegwit = network.NBitcoinNetwork.Consensus.SupportSegwit
         };
-
+        vm.SetPermission(perm);
         if (isImport && string.IsNullOrEmpty(request.ExistingMnemonic))
         {
             ModelState.AddModelError(nameof(request.ExistingMnemonic), StringLocalizer["Please provide your existing seed"]);
@@ -404,7 +402,7 @@ public partial class UIStoresController
 
         var storeBlob = store.GetStoreBlob();
         var excludeFilters = storeBlob.GetExcludedPaymentMethods();
-        (bool canUseHotWallet, bool rpcImport) = await CanUseHotWallet();
+        var perm = await CanUseHotWallet();
         var client = _explorerProvider.GetExplorerClient(network);
 
         var handler = _handlers.GetBitcoinHandler(cryptoCode);
@@ -426,7 +424,7 @@ public partial class UIStoresController
             Label = derivation.Label,
             SelectedSigningKey = derivation.SigningKey?.ToString(),
             NBXSeedAvailable = derivation.IsHotWallet &&
-                               canUseHotWallet &&
+                               perm.CanCreateHotWallet &&
                                !string.IsNullOrEmpty(await client.GetMetadataAsync<string>(derivation.AccountDerivation,
                                    WellknownMetadataKeys.MasterHDKey)),
             AccountKeys = (derivation.AccountKeySettings ?? [])
@@ -438,9 +436,9 @@ public partial class UIStoresController
                 }).ToList(),
             Config = ProtectString(JToken.FromObject(derivation, handler.Serializer).ToString()),
             PayJoinEnabled = storeBlob.PayJoinEnabled,
-            CanUsePayJoin = canUseHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
-            CanUseHotWallet = canUseHotWallet,
-            CanUseRPCImport = rpcImport,
+            CanUsePayJoin = perm.CanCreateHotWallet && network.SupportPayJoin && derivation.IsHotWallet,
+            CanUseHotWallet = perm.CanCreateHotWallet,
+            CanUseRPCImport = perm.CanRPCImport,
             StoreName = store.StoreName,
             CanSetupMultiSig = (derivation.AccountKeySettings ?? []).Length > 1,
             IsMultiSigOnServer = derivation.IsMultiSigOnServer,
@@ -589,11 +587,8 @@ public partial class UIStoresController
             return NotFound();
         }
 
-        (bool canUseHotWallet, bool _) = await CanUseHotWallet();
-        if (!canUseHotWallet)
-        {
+        if (!(await CanUseHotWallet()).CanCreateHotWallet)
             return NotFound();
-        }
 
         var client = _explorerProvider.GetExplorerClient(network);
         if (await GetSeed(client, derivation) != null)
@@ -753,7 +748,7 @@ public partial class UIStoresController
                !string.IsNullOrEmpty(seed) ? seed : null;
     }
 
-    private async Task<(bool HotWallet, bool RPCImport)> CanUseHotWallet()
+    private async Task<WalletCreationPermissions> CanUseHotWallet()
     {
         return await _authorizationService.CanUseHotWallet(_policiesSettings, User);
     }

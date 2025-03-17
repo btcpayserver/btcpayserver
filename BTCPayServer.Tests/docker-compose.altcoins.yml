@@ -58,7 +58,6 @@ services:
       - merchant_lnd
       - sshd
       - tor
-      - monero_wallet
 
   sshd:
     build:
@@ -317,28 +316,6 @@ services:
         - "torrcdir:/usr/local/etc/tor"
         - "tor_servicesdir:/var/lib/tor/hidden_services"
 
-  monerod:
-      image: btcpayserver/monero:0.18.3.3
-      restart: unless-stopped
-      container_name: xmr_monerod
-      entrypoint: monerod --fixed-difficulty 200 --rpc-bind-ip=0.0.0.0 --confirm-external-bind --rpc-bind-port=18081 --block-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/block?cryptoCode=xmr&hash=%s" --testnet --no-igd --hide-my-port --offline --non-interactive
-      volumes:
-          - "monero_data:/home/monero/.bitmonero"
-      ports:
-          - "18081:18081"
-
-  monero_wallet:
-      image: btcpayserver/monero:0.18.3.3
-      restart: unless-stopped
-      container_name: xmr_wallet_rpc
-      entrypoint: monero-wallet-rpc --testnet --rpc-bind-ip=0.0.0.0 --disable-rpc-login --confirm-external-bind --rpc-bind-port=18082 --non-interactive --trusted-daemon  --daemon-address=monerod:18081 --wallet-dir=/wallet --tx-notify="/bin/sh ./scripts/notifier.sh -k -X GET https://host.docker.internal:14142/monerolikedaemoncallback/tx?cryptoCode=xmr&hash=%s"
-      ports:
-          - "18082:18082"
-      volumes:
-          - "./monero_wallet:/wallet"
-      depends_on:
-          - monerod
-
   litecoind:
     restart: unless-stopped
     image: btcpayserver/litecoin:0.18.1
@@ -400,7 +377,6 @@ volumes:
     tor_datadir:
     torrcdir:
     tor_servicesdir:
-    monero_data:
 
 networks:
   default:

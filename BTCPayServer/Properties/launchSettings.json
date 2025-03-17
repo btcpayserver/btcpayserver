@@ -181,8 +181,7 @@
         "BTCPAY_CHEATMODE": "true",
         "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer",
         "BTCPAY_XMR_DAEMON_URI": "http://127.0.0.1:18081",
-        "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082",
-        "BTCPAY_XMR_WALLET_DAEMON_WALLETDIR": "/path/to/monero_wallet"
+        "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082"
       },
       "applicationUrl": "https://localhost:14142/"
     },
@@ -221,10 +220,7 @@
         "BTCPAY_DOCKERDEPLOYMENT": "true",
         "BTCPAY_RECOMMENDED-PLUGINS": "",
         "BTCPAY_CHEATMODE": "true",
-        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer",
-        "BTCPAY_XMR_DAEMON_URI": "http://127.0.0.1:18081",
-        "BTCPAY_XMR_WALLET_DAEMON_URI": "http://127.0.0.1:18082",
-        "BTCPAY_XMR_WALLET_DAEMON_WALLETDIR": "/path/to/monero_wallet"
+        "BTCPAY_EXPLORERPOSTGRES": "User ID=postgres;Include Error Detail=true;Host=127.0.0.1;Port=39372;Database=nbxplorer"
       },
       "applicationUrl": "https://localhost:14142/"
     }

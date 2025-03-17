@@ -7,7 +7,7 @@
 }
 
 <div class="sticky-header">
-    <h2 text-translate="true">@ViewData["Title"]</h2>
+    <h2>@ViewData["Title"]</h2>
 	<a id="page-primary" asp-action="NewWebhook" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
         Create Webhook
     </a>

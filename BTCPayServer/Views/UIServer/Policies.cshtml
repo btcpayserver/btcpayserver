@@ -4,7 +4,7 @@
 @inject EmailSenderFactory EmailSenderFactory
 @inject TransactionLinkProviders TransactionLinkProviders
 @{
-    ViewData.SetActivePage(ServerNavPages.Policies);
+    ViewData.SetActivePage(ServerNavPages.Policies, StringLocalizer["Policies"]);
     var linkProviders = TransactionLinkProviders.ToArray();
 }
 
@@ -20,7 +20,7 @@
 
 <form method="post">
     <div class="sticky-header">
-        <h2 text-translate="true">@ViewData["Title"]</h2>
+        <h2>@ViewData["Title"]</h2>
 		<button id="page-primary" type="submit" class="btn btn-primary" name="command" value="Save">Save</button>
     </div>
     <partial name="_StatusMessage" />
@@ -120,6 +120,13 @@
                             </div>
                         </div>
                     </div>
+					<div class="d-flex my-3">
+						<input asp-for="AllowCreateColdWalletForAll" type="checkbox" class="btcpay-toggle me-3" />
+						<div>
+							<label asp-for="AllowCreateColdWalletForAll" class="form-check-label"></label>
+							<span asp-validation-for="AllowCreateColdWalletForAll" class="text-danger"></span>
+						</div>
+					</div>
                     <div class="d-flex my-3">
                         <input asp-for="AllowHotWalletRPCImportForAll" type="checkbox" class="btcpay-toggle me-3"/>
                         <div>

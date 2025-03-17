@@ -1718,6 +1718,7 @@ namespace BTCPayServer.Services
   "Who to send the email to. For multiple emails, separate with a comma.": "",
   "With <code>DOGE_USD</code> will be expanded to <code>bitpay(DOGE_BTC) * kraken(BTC_USD)</code>. And <code>DOGE_CAD</code> will be expanded to <code>bitpay(DOGE_BTC) * ndax(BTC_CAD)</code>.<br />However, we advise you to write it that way to increase coverage so that <code>DOGE_BTC</code> is also supported:": "",
   "You are not server administrator": "",
+  "You are now using server's email settings": "",
   "You are server administrator": "",
   "You can also apply filters to your search by searching for <code>filtername:value</code>. Be sure to split your search parameters with comma. Supported filters are:": "",
   "You can also share the link/LNURL or encode it in a QR code.": "",

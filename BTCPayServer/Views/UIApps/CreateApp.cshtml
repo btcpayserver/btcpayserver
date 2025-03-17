@@ -1,6 +1,6 @@
 @model CreateAppViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, $"Create a new {Model.AppType ?? "app"}", Model.AppType);
+    ViewData.SetActivePage(AppsNavPages.Create, StringLocalizer["Create a new {0}", Model.AppType]);
 }
 
 @section PageFootContent {
@@ -9,7 +9,7 @@
 
 <form asp-action="CreateApp" asp-route-appType="@Model.AppType">
     <div class="sticky-header">
-        <h2 text-translate="true">@ViewData["Title"]</h2>
+        <h2>@ViewData["Title"]</h2>
 		<input id="page-primary" type="submit" value="Create" class="btn btn-primary" />
     </div>
     <partial name="_StatusMessage" />

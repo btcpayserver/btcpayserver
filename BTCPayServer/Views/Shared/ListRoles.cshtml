@@ -9,7 +9,7 @@
     if (string.IsNullOrEmpty(storeId))
         ViewData.SetActivePage(ServerNavPages.Roles, StringLocalizer["Roles"]);
     else
-        ViewData.SetActivePage(StoreNavPages.Roles, StringLocalizer["Roles"]);
+        ViewData.SetActivePage(StoreNavPages.Roles, StringLocalizer["Roles"], storeId);
     var permission = string.IsNullOrEmpty(storeId) ? Policies.CanModifyServerSettings : Policies.CanModifyStoreSettings;
     var nextRoleSortOrder = (string) ViewData["NextRoleSortOrder"];
     var roleSortOrder = nextRoleSortOrder switch
@@ -25,7 +25,7 @@
 }
 
 <div class="sticky-header">
-    <h2 text-translate="true">@ViewData["Title"]</h2>
+    <h2>@ViewData["Title"]</h2>
 	<a id="page-primary" class="btn btn-primary" role="button" asp-controller="@controller" asp-action="CreateOrEditRole" asp-route-role="create" asp-route-storeId="@storeId" permission="@permission">Add Role</a>
 </div>
 <partial name="_StatusMessage" />

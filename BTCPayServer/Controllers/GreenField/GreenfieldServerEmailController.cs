@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -10,6 +11,7 @@ using BTCPayServer.Services.Mails;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Controllers.GreenField
 {
@@ -28,62 +30,44 @@ namespace BTCPayServer.Controllers.GreenField
             _policiesSettings = policiesSettings;
             _settingsRepository = settingsRepository;
         }
+        
+        private ServerEmailSettingsData ToApiModel(EmailSettings email)
+        {
+            var data = email.ToData<ServerEmailSettingsData>();
+            data.EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings;
+            return data;
+        }
 
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/server/email")]
         public async Task<IActionResult> ServerEmailSettings()
         {
             var email = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            var model = new ServerEmailSettingsData
-            {
-                EnableStoresToUseServerEmailSettings = !_policiesSettings.DisableStoresToUseServerEmailSettings,
-                From = email.From,
-                Server = email.Server,
-                Port = email.Port,
-                Login = email.Login,
-                DisableCertificateCheck = email.DisableCertificateCheck,
-                // Password is not returned
-                Password = null
-            };
-            return Ok(model);
+            return Ok(ToApiModel(email));
         }
 
         [Authorize(Policy = Policies.CanModifyServerSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPut("~/api/v1/server/email")]
         public async Task<IActionResult> ServerEmailSettings(ServerEmailSettingsData request)
         {
+            if (!string.IsNullOrWhiteSpace(request.From) && !MailboxAddressValidator.IsMailboxAddress(request.From))
+                ModelState.AddModelError(nameof(request.From), "Invalid email address");
+            
+            if (!ModelState.IsValid)
+                return this.CreateValidationError(ModelState);
+
             if (_policiesSettings.DisableStoresToUseServerEmailSettings == request.EnableStoresToUseServerEmailSettings)
             {
                 _policiesSettings.DisableStoresToUseServerEmailSettings = !request.EnableStoresToUseServerEmailSettings;
                 await _settingsRepository.UpdateSetting(_policiesSettings);
             }
-            
-            // save
-            if (request.From is not null && !MailboxAddressValidator.IsMailboxAddress(request.From))
-            {
-                 request.AddModelError(e => e.From,
-                     "Invalid email address", this);
-                 return this.CreateValidationError(ModelState);
-            }
-            
-            var oldSettings = await _emailSenderFactory.GetSettings() ?? new EmailSettings();
-            // retaining the password if it exists and was not provided in request
-            if (string.IsNullOrEmpty(request.Password) &&
-                !string.IsNullOrEmpty(oldSettings?.Password))
-                request.Password = oldSettings.Password;
-            
+
+            var settings = await _emailSenderFactory.GetSettings();
+            settings = EmailSettings.FromData(request, settings?.Password);
+
             // important to save as EmailSettings otherwise it won't be able to be fetched
-            await _settingsRepository.UpdateSetting(new EmailSettings
-            {
-                Server = request.Server,
-                Port = request.Port,
-                Login = request.Login,
-                Password = request.Password,
-                From = request.From,
-                DisableCertificateCheck = request.DisableCertificateCheck
-            });
-            
-            return Ok(true);
+            await _settingsRepository.UpdateSetting(settings);
+            return Ok(ToApiModel(settings));
         }
     }
 }

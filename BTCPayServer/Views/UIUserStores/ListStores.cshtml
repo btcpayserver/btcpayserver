@@ -4,7 +4,7 @@
     ViewData.SetActivePage(StoreNavPages.Index, Model.Archived ? StringLocalizer["Archived Stores"] : StringLocalizer["Stores"]);
 }
 
-<h2 class="mb-2 mb-lg-3" text-translate="true">@ViewData["Title"]</h2>
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
 <partial name="_StatusMessage" />
 @if (Model.Stores.Any())
 {

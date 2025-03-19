@@ -4,6 +4,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Client;
@@ -19,7 +20,7 @@ namespace BTCPayServer.Controllers
     public partial class UIStoresController
     {
         [HttpGet("{storeId}/emails/rules")]
-        public async Task<IActionResult> EmailRulesIndex(string storeId)
+        public async Task<IActionResult> StoreEmailRulesList(string storeId)
         {
             var store = HttpContext.GetStoreData();
             if (store == null) return NotFound();
@@ -40,13 +41,15 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpGet("{storeId}/emails/rules/create")]
-        public IActionResult EmailRulesCreate(string storeId)
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public IActionResult StoreEmailRulesCreate(string storeId)
         {
             return View("StoreEmailRulesManage", new StoreEmailRule());
         }
 
         [HttpPost("{storeId}/emails/rules/create")]
-        public async Task<IActionResult> EmailRulesCreate(string storeId, StoreEmailRule model)
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> StoreEmailRulesCreate(string storeId, StoreEmailRule model)
         {
             if (!ModelState.IsValid)
                 return View("StoreEmailRulesManage", model);
@@ -69,11 +72,12 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _storeRepo.UpdateStore(store);
 
-            return RedirectToAction(nameof(EmailRulesIndex), new { storeId });
+            return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
         }
 
         [HttpGet("{storeId}/emails/rules/{ruleIndex}/edit")]
-        public IActionResult EmailRulesEdit(string storeId, int ruleIndex)
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public IActionResult StoreEmailRulesEdit(string storeId, int ruleIndex)
         {
             var store = HttpContext.GetStoreData();
             if (store == null) return NotFound();
@@ -86,7 +90,8 @@ namespace BTCPayServer.Controllers
         }
 
         [HttpPost("{storeId}/emails/rules/{ruleIndex}/edit")]
-        public async Task<IActionResult> EmailRulesEdit(string storeId, int ruleIndex, StoreEmailRule model)
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> StoreEmailRulesEdit(string storeId, int ruleIndex, StoreEmailRule model)
         {
             if (!ModelState.IsValid)
                 return View("StoreEmailRulesManage", model);
@@ -106,11 +111,12 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _storeRepo.UpdateStore(store);
 
-            return RedirectToAction(nameof(EmailRulesIndex), new { storeId });
+            return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
         }
 
         [HttpPost("{storeId}/emails/rules/{ruleIndex}/delete")]
-        public async Task<IActionResult> EmailRulesDelete(string storeId, int ruleIndex)
+        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+        public async Task<IActionResult> StoreEmailRulesDelete(string storeId, int ruleIndex)
         {
             var store = await _storeRepo.FindStore(storeId);
             if (store == null) return NotFound();
@@ -122,7 +128,7 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _storeRepo.UpdateStore(store);
 
-            return RedirectToAction(nameof(EmailRulesIndex), new { storeId });
+            return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
         }
 
         public class StoreEmailRule

@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace BTCPayServer.Controllers
 {
-    [Authorize(Policy = Policies.CanModifyStoreSettings)]
     public partial class UIStoresController
     {
         [HttpGet("{storeId}/emails/rules")]

@@ -17,7 +17,7 @@
         </ol>
         <h2>@ViewData["Title"]</h2>
     </nav>
-    <a id="CreateEmailRule" permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId" 
+    <a id="CreateEmailRule" permission="@Policies.CanModifyStoreSettings" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId" 
        class="btn btn-primary" role="button">
         Create Email Rule
     </a>

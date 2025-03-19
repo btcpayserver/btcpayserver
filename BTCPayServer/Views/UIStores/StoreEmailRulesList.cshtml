@@ -17,7 +17,7 @@
         </ol>
         <h2>@ViewData["Title"]</h2>
     </nav>
-    <a id="CreateEmailRule" permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="EmailRulesCreate" asp-route-storeId="@storeId" 
+    <a id="CreateEmailRule" permission="@Policies.CanCreateNonApprovedPullPayments" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId" 
        class="btn btn-primary" role="button">
         Create Email Rule
     </a>
@@ -50,9 +50,9 @@
                     <td>@rule.value.To</td>
                     <td>@rule.value.Subject</td>
                     <td>
-                        <a asp-action="EmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
+                        <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
                         -
-                        <form asp-action="EmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
+                        <form asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
                             <a href="#" class="text-danger" onclick="event.preventDefault(); this.closest('form').submit();">Delete</a>
                         </form>
                     </td>

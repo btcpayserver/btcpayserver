@@ -1101,7 +1101,6 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 /* Copy */
 .clipboard-button, .clipboard-button input[readonly] {
     cursor: copy;
-    color: var(--btcpay-body-text-muted);
 }
 
 .clipboard-button:hover {

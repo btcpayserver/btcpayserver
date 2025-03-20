@@ -15,7 +15,18 @@
 
 <form asp-action="@(isEdit ? "StoreEmailRulesEdit" : "StoreEmailRulesCreate")" asp-route-storeId="@storeId" method="post">
     <div class="sticky-header">
-        <h2 text-translate="true">@ViewData["Title"]</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" text-translate="true">Email Rules</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
         <div>
         <button id="SaveEmailRules" type="submit" class="btn btn-primary">Save</button>
         <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" class="btn btn-secondary">Cancel</a>

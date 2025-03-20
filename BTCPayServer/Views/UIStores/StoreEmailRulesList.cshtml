@@ -1,0 +1,70 @@
+@using BTCPayServer.Client
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model List<BTCPayServer.Controllers.UIStoresController.StoreEmailRule>
+
+@{
+    var storeId = Context.GetStoreData().Id;
+    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer["Email Rules"], storeId);
+}
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+    <a id="CreateEmailRule" permission="@Policies.CanModifyStoreSettings" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId" 
+       class="btn btn-primary" role="button">
+        Create Email Rule
+    </a>
+</div>
+
+<partial name="_StatusMessage" />
+<p text-translate="true">
+    Email rules allow BTCPay Server to send customized emails from your store based on events.
+</p>
+
+@if (Model.Any())
+{
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+            <tr>
+                <th>Trigger</th>
+                <th>Customer Email</th>
+                <th>To</th>
+                <th>Subject</th>
+                <th>Actions</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var rule in Model.Select((value, index) => new { value, index }))
+            {
+                <tr>
+                    <td>@rule.value.Trigger</td>
+                    <td>@(rule.value.CustomerEmail ? "Yes" : "No")</td>
+                    <td>@rule.value.To</td>
+                    <td>@rule.value.Subject</td>
+                    <td>
+                        <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
+                        -
+                        <form asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
+                            <a href="#" class="text-danger" onclick="event.preventDefault(); this.closest('form').submit();">Delete</a>
+                        </form>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p class="text-secondary" text-translate="true">
+        There are no rules yet.
+    </p>
+}

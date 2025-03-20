@@ -36,9 +36,9 @@ public class PayoutWebhookProvider(EventAggregator eventAggregator, ILogger<Payo
     {
         return new Dictionary<string, string>()
         {
-            {WebhookEventType.PayoutCreated, "A payout has been created"},
-            {WebhookEventType.PayoutApproved, "A payout has been approved"},
-            {WebhookEventType.PayoutUpdated, "A payout was updated"}
+            {WebhookEventType.PayoutCreated, "Payout - Created"},
+            {WebhookEventType.PayoutApproved, "Payout - Approved"},
+            {WebhookEventType.PayoutUpdated, "Payout - Updated"}
         };
     }
 

@@ -416,6 +416,7 @@ namespace BTCPayServer.Services.Invoices
             {
                 Currency = Currency
             };
+            NetSettled = 0.0m;
             foreach (var payment in GetPayments(false))
             {
                 payment.Rate = GetInvoiceRate(payment.Currency);
@@ -425,6 +426,8 @@ namespace BTCPayServer.Services.Invoices
                 {
                     PaidAmount.Gross += payment.InvoicePaidAmount.Gross;
                     PaidAmount.Net += payment.InvoicePaidAmount.Net;
+                    if (payment.Status == PaymentStatus.Settled)
+                        NetSettled += payment.InvoicePaidAmount.Net;
                 }
             }
             NetDue = Price - PaidAmount.Net;
@@ -772,6 +775,12 @@ namespace BTCPayServer.Services.Invoices
         }
         [JsonIgnore]
         public Amounts PaidAmount { get; set; }
+
+        /// <summary>
+        /// Same as <see cref="Amounts.Net"/> of <see cref="PaidAmount"/>, but only counting payments in 'Settled' state
+        /// </summary>
+        [JsonIgnore]
+        public decimal NetSettled { get; private set; }
     }
 
     public enum InvoiceStatusLegacy

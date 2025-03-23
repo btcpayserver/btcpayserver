@@ -176,21 +176,25 @@
             <thead>
                 <th>Id</th>
                 <th>State</th> 
-                <th>Signature count</th>
+                <th>Signatures</th>
+                <th>Scheme</th>
                 <th>Actions</th>
             </thead>
-            @foreach (var pendingTransaction in Model.PendingTransactions)
+            @for (var index = 0; index < Model.PendingTransactions.Length; index++)
             {
+                var pendingTransaction = Model.PendingTransactions[index];
+                var ptblob = @pendingTransaction.GetBlob();
                 <tr>
                     <td>@pendingTransaction.TransactionId</td>
                     <td>@pendingTransaction.State</td>
-                    <td>@pendingTransaction.GetBlob().CollectedSignatures.Count</td>
+                    <td><span id="Sigs_@(index)__Collected">@ptblob?.SignaturesCollected</span></td>
+                    <td><span id="Sigs_@(index)__Scheme">@ptblob?.SignaturesNeeded/@ptblob?.SignaturesTotal</span></td>
                     <td>
-                        <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId"
-                        >@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
+                        <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" 
+                           asp-route-transactionId="@pendingTransaction.TransactionId">@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
                         -
-                        <a asp-action="CancelPendingTransaction" 
-                           asp-route-walletId="@walletId" asp-route-transactionId="@pendingTransaction.TransactionId">Abort</a>
+                        <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
+                           asp-route-transactionId="@pendingTransaction.TransactionId">Abort</a>
                     </td>
                 </tr>
             }

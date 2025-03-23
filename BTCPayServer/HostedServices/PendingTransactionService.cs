@@ -20,12 +20,10 @@ using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 namespace BTCPayServer.HostedServices;
 
 public class PendingTransactionService(
-    DelayedTransactionBroadcaster broadcaster,
     BTCPayNetworkProvider networkProvider,
     ApplicationDbContextFactory dbContextFactory,
     EventAggregator eventAggregator,
-    ILogger<PendingTransactionService> logger,
-    ExplorerClientProvider explorerClientProvider)
+    ILogger<PendingTransactionService> logger)
     : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask
 {
     protected override void SubscribeToEvents()
@@ -114,11 +112,15 @@ public class PendingTransactionService(
         pendingTransaction.SetBlob(new PendingTransactionBlob { PSBT = psbt.ToBase64() });
         ctx.PendingTransactions.Add(pendingTransaction);
         await ctx.SaveChangesAsync(cancellationToken);
+        EventAggregator.Publish(new PendingTransactionEvent
+        {
+            Data = pendingTransaction,
+            Type = PendingTransactionEvent.Created
+        });
         return pendingTransaction;
     }
 
-    public async Task<PendingTransaction?> CollectSignature(string cryptoCode, PSBT psbt, bool broadcastIfComplete,
-        CancellationToken cancellationToken)
+    public async Task<PendingTransaction?> CollectSignature(string cryptoCode, PSBT psbt, CancellationToken cancellationToken)
     {
         var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
         if (network is null)
@@ -187,23 +189,11 @@ public class PendingTransactionService(
         }
 
         await ctx.SaveChangesAsync(cancellationToken);
-
-        if (broadcastIfComplete && pendingTransaction.State == PendingTransactionState.Signed)
+        EventAggregator.Publish(new PendingTransactionEvent
         {
-            var explorerClient = explorerClientProvider.GetExplorerClient(network);
-            var tx = originalPsbtWorkingCopyWithNewPsbt.ExtractTransaction();
-            var result = await explorerClient.BroadcastAsync(tx, cancellationToken);
-            if (result.Success)
-            {
-                pendingTransaction.State = PendingTransactionState.Broadcast;
-                await ctx.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                await broadcaster.Schedule(DateTimeOffset.Now, tx, network);
-            }
-        }
-
+            Data = pendingTransaction,
+            Type = PendingTransactionEvent.SignatureCollected
+        });
         return pendingTransaction;
     }
 
@@ -245,6 +235,21 @@ public class PendingTransactionService(
         if (pt is null) return;
         pt.State = PendingTransactionState.Broadcast;
         await ctx.SaveChangesAsync();
+        EventAggregator.Publish(new PendingTransactionEvent
+        {
+            Data = pt,
+            Type = PendingTransactionEvent.Broadcast
+        });
+    }
+
+    public record PendingTransactionEvent
+    {
+        public const string Created = nameof(Created);
+        public const string SignatureCollected = nameof(SignatureCollected);
+        public const string Broadcast = nameof(Broadcast);
+        
+        public PendingTransaction Data { get; set; } = null!;
+        public string Type { get; set; } = null!;
     }
 
 }

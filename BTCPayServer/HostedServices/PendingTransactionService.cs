@@ -1,14 +1,21 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices;
 
@@ -239,4 +246,5 @@ public class PendingTransactionService(
         pt.State = PendingTransactionState.Broadcast;
         await ctx.SaveChangesAsync();
     }
+
 }

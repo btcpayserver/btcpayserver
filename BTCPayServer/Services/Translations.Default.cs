@@ -523,6 +523,8 @@ namespace BTCPayServer.Services
   "Email password reset functionality is not configured for this server. Please contact the server administrator to assist with account recovery.": "",
   "email rules": "",
   "Email Rules": "",
+  "Create Email Rule": "",
+  "Edit Email Rule": "",
   "Email rules allow BTCPay Server to send customized emails from your store based on events.": "",
   "Email sent to {0}. Please verify you received it.": "",
   "Email Server": "",

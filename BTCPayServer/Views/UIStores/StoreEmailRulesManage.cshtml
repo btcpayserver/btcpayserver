@@ -112,6 +112,7 @@
                     <th text-translate="true">Pending Transaction</th>
                     <td>
                         <code>{PendingTransaction.Id}</code>,
+                        <code>{PendingTransaction.TrimmedId}</code>,
                         <code>{PendingTransaction.StoreId}</code>,
                         <code>{PendingTransaction.SignaturesCollected}</code>,
                         <code>{PendingTransaction.SignaturesNeeded}</code>,
@@ -160,21 +161,21 @@
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionCreated : {
-                    subject: 'Pending Transaction {PendingTransaction.Id} Created',
-                    body: 'Review the transaction and sign it on: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
+                    subject: 'Pending Transaction {PendingTransaction.TrimmedId} Created',
+                    body: 'Review the transaction {PendingTransaction.Id} and sign it on: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionSignatureCollected : {
-                    subject: 'Signature Collected for Pending Transaction {PendingTransaction.Id}',
+                    subject: 'Signature Collected for Pending Transaction {PendingTransaction.TrimmedId}',
                     body: 'So far {PendingTransaction.SignaturesCollected} signatures collected out of {PendingTransaction.SignaturesNeeded} signatures needed. ' +
                         'Review the transaction and sign it on: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionBroadcast : {
-                    subject: 'Transaction {PendingTransaction.Id} has been Broadcast',
+                    subject: 'Transaction {PendingTransaction.TrimmedId} has been Broadcast',
                     body: 'Transaction is visible in mempool on: https://mempool.space/tx/{PendingTransaction.Id}. ' +
                         'Review the transaction: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionCancelled : {
-                    subject: 'Pending Transaction {PendingTransaction.Id} Cancelled',
+                    subject: 'Pending Transaction {PendingTransaction.TrimmedId} Cancelled',
                     body: 'Transaction {PendingTransaction.Id} is cancelled and signatures are no longer being collected. ' +
                         'Review the wallet: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
                 },

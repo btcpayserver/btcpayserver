@@ -1,15 +1,17 @@
-﻿using System.Globalization;
+﻿using System.Collections;
+using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Wallets;
 using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 
 namespace BTCPayServer.HostedServices.Webhooks;
 
 public class PendingTransactionDeliveryRequest(
-    PendingTransaction pendingTransaction,
+    PendingTransactionService.PendingTransactionEvent evt,
     string webhookId,
     WebhookEvent webhookEvent,
     WebhookDeliveryData delivery,
@@ -19,6 +21,7 @@ public class PendingTransactionDeliveryRequest(
     public override Task<SendEmailRequest> Interpolate(SendEmailRequest req,
         UIStoresController.StoreEmailRule storeEmailRule)
     {
+        var blob = evt.Data.GetBlob();
         // if (storeEmailRule.CustomerEmail &&
         //     MailboxAddressValidator.TryParse(Invoice.Metadata.BuyerEmail, out var bmb))
         // {
@@ -26,20 +29,18 @@ public class PendingTransactionDeliveryRequest(
         //     req.Email += $",{bmb}";
         // }
 
-        req.Subject = Interpolate(req.Subject);
-        req.Body = Interpolate(req.Body);
+        req.Subject = Interpolate(req.Subject, blob);
+        req.Body = Interpolate(req.Body, blob);
         return Task.FromResult(req);
     }
 
-    private string Interpolate(string str)
+    private string Interpolate(string str, PendingTransactionBlob blob)
     {
-        var res = str.Replace("{PendingTransaction.Id}", pendingTransaction.TransactionId);
-            // .Replace("{Invoice.StoreId}", Invoice.StoreId)
-            // .Replace("{Invoice.Price}", Invoice.Price.ToString(CultureInfo.InvariantCulture))
-            // .Replace("{Invoice.Currency}", Invoice.Currency)
-            // .Replace("{Invoice.Status}", Invoice.Status.ToString())
-            // .Replace("{Invoice.AdditionalStatus}", Invoice.ExceptionStatus.ToString())
-            // .Replace("{Invoice.OrderId}", Invoice.Metadata.OrderId);
+        var res = str.Replace("{PendingTransaction.Id}", evt.Data.TransactionId)
+            .Replace("{PendingTransaction.StoreId}", evt.Data.StoreId)
+            .Replace("{PendingTransaction.SignaturesCollected}", blob.SignaturesCollected?.ToString())
+            .Replace("{PendingTransaction.SignaturesNeeded}", blob.SignaturesNeeded?.ToString())
+            .Replace("{PendingTransaction.SignaturesTotal}", blob.SignaturesTotal?.ToString());
             
         // res = InterpolateJsonField(res, "Invoice.Metadata", Invoice.Metadata.ToJObject());
         return res;

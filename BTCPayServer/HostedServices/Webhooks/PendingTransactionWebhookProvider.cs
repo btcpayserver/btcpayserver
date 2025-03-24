@@ -23,6 +23,7 @@ public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransact
     public const string PendingTransactionCreated = nameof(PendingTransactionCreated);
     public const string PendingTransactionSignatureCollected = nameof(PendingTransactionSignatureCollected);
     public const string PendingTransactionBroadcast = nameof(PendingTransactionBroadcast);
+    public const string PendingTransactionCancelled = nameof(PendingTransactionCancelled);
 
     public override Dictionary<string, string> GetSupportedWebhookTypes()
     {
@@ -30,7 +31,8 @@ public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransact
         {
             {PendingTransactionCreated, "Pending Transaction - Created"},
             {PendingTransactionSignatureCollected, "Pending Transaction - Signature Collected"},
-            {PendingTransactionBroadcast, "Pending Transaction - Broadcast"}
+            {PendingTransactionBroadcast, "Pending Transaction - Broadcast"},
+            {PendingTransactionCancelled, "Pending Transaction - Cancelled"}
         };
     }
 
@@ -50,7 +52,7 @@ public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransact
             webhookEvent.OriginalDeliveryId = delivery.Id;
             webhookEvent.Timestamp = delivery.Timestamp;
         }
-        return new PendingTransactionDeliveryRequest(evt.Data, webhook?.Id, webhookEvent, delivery, webhookBlob);
+        return new PendingTransactionDeliveryRequest(evt, webhook?.Id, webhookEvent, delivery, webhookBlob);
     }
 
     protected override WebhookPendingTransactionEvent GetWebhookEvent(PendingTransactionService.PendingTransactionEvent evt)
@@ -63,6 +65,8 @@ public class PendingTransactionWebhookProvider : WebhookProvider<PendingTransact
                 PendingTransactionSignatureCollected, evt.Data.StoreId),
             PendingTransactionService.PendingTransactionEvent.Broadcast => new WebhookPendingTransactionEvent(
                 PendingTransactionBroadcast, evt.Data.StoreId),
+            PendingTransactionService.PendingTransactionEvent.Cancelled => new WebhookPendingTransactionEvent(
+                PendingTransactionCancelled, evt.Data.StoreId),
             _ => null
         };
     }

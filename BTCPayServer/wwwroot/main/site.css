@@ -1103,6 +1103,10 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     cursor: copy;
 }
 
+.clipboard-button.btn-link, .clipboard-button.btn-link input[readonly] {
+    color: var(--btcpay-body-text-muted);
+}
+
 .clipboard-button:hover {
     color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1)) !important;
 }

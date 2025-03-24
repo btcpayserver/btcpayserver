@@ -262,18 +262,20 @@ namespace BTCPayServer.Controllers
                                               .ToList();
                 if (contexts.Count == 0)
                 {
-                    StringBuilder errors = new StringBuilder();
+                    var message = new StringBuilder();
                     if (!store.GetPaymentMethodConfigs(_handlers).Any())
-                        errors.AppendLine(
-                            "Warning: No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
+                        message.AppendLine(
+                            "No wallet has been linked to your BTCPay Store. See the following link for more information on how to connect your store and wallet. (https://docs.btcpayserver.org/WalletSetup/)");
                     else
-                        errors.AppendLine("Warning: You have payment methods configured but none of them match any of the requested payment methods or the rate is not available. See logs below:");
-                    foreach (var error in logs.ToList())
                     {
-                        errors.AppendLine(error.ToString());
+                        var list = logs.ToList();
+                        var errors = list.Where(l => l.Severity == InvoiceEventData.EventSeverity.Error).Select(l => l.Log);
+                        message.AppendLine("Error retrieving a matching payment method or rate.");
+                        foreach (var error in errors)
+                            message.AppendLine(error);
                     }
-
-                    throw new BitpayHttpException(400, errors.ToString());
+                    
+                    throw new BitpayHttpException(400, message.ToString());
                 }
                 entity.SetPaymentPrompts(new PaymentPromptDictionary(contexts.Select(c => c.Prompt)));
             }

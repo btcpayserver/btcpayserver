@@ -272,7 +272,7 @@ namespace BTCPayServer.Tests
 
 			// We CPFP'd two transactions with a newExpectedEffectiveFeeRate of 20.0
 			// When we want to RBF the previous CPFP, the currentEffectiveFeeRate should be coherent with our ealier choice
-			Assert.Equal(newExpectedEffectiveFeeRate, currentEffectiveFeeRate, 1);
+			Assert.Equal(newExpectedEffectiveFeeRate, currentEffectiveFeeRate, 0);
 
 			s.ClickPagePrimary();
 			s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();

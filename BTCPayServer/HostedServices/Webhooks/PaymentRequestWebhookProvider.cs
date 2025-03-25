@@ -18,10 +18,10 @@ public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
     {
         return new Dictionary<string, string>()
         {
-            {WebhookEventType.PaymentRequestCreated, "Payment Request Created"},
-            {WebhookEventType.PaymentRequestUpdated, "Payment Request Updated"},
-            {WebhookEventType.PaymentRequestArchived, "Payment Request Archived"},
-            {WebhookEventType.PaymentRequestStatusChanged, "Payment Request Status Changed"},
+            {WebhookEventType.PaymentRequestCreated, "Payment Request - Created"},
+            {WebhookEventType.PaymentRequestUpdated, "Payment Request - Updated"},
+            {WebhookEventType.PaymentRequestArchived, "Payment Request - Archived"},
+            {WebhookEventType.PaymentRequestStatusChanged, "Payment Request - Status Changed"},
         };
     }
 

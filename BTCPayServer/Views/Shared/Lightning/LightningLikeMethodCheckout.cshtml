@@ -4,7 +4,7 @@
 <template id="@LNCheckoutModelExtension.CheckoutBodyComponentName">
     <div class="payment-box">
         @await Component.InvokeAsync("UiExtensionPoint" ,  new { location="checkout-lightning-pre-content", model = Model})
-        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Lightning_@Model.PaymentMethodId [data-clipboard]">
+        <div v-if="model.invoiceBitcoinUrlQR" class="qr-container clipboard-button" :data-qr-value="model.invoiceBitcoinUrlQR" :data-clipboard="model.invoiceBitcoinUrl" data-clipboard-confirm-element="#Lightning_@Model.PaymentMethodId [data-clipboard]">
             <div>
                 <qrcode :value="model.invoiceBitcoinUrlQR" tag="div" :options="qrOptions" />
             </div>

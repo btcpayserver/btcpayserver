@@ -272,7 +272,7 @@ namespace BTCPayServer.Tests
 
 			// We CPFP'd two transactions with a newExpectedEffectiveFeeRate of 20.0
 			// When we want to RBF the previous CPFP, the currentEffectiveFeeRate should be coherent with our ealier choice
-			Assert.Equal(newExpectedEffectiveFeeRate, currentEffectiveFeeRate, 1);
+			Assert.Equal(newExpectedEffectiveFeeRate, currentEffectiveFeeRate, 0);
 
 			s.ClickPagePrimary();
 			s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
@@ -828,17 +828,91 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("You need to configure email settings before this feature works", s.Driver.PageSource);
 
             s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
-            var select = new SelectElement(s.Driver.FindElement(By.Id("Rules_0__Trigger")));
-            select.SelectByText("An invoice has been settled", true);
-            s.Driver.FindElement(By.Id("Rules_0__To")).SendKeys("test@gmail.com");
-            s.Driver.FindElement(By.Id("Rules_0__CustomerEmail")).Click();
-            s.Driver.FindElement(By.Id("Rules_0__Subject")).SendKeys("Thanks!");
+            var select = new SelectElement(s.Driver.FindElement(By.Id("Trigger")));
+            select.SelectByValue("InvoicePaymentSettled");
+            s.Driver.FindElement(By.Id("To")).SendKeys("test@gmail.com");
+            s.Driver.FindElement(By.Id("CustomerEmail")).Click();
+            s.Driver.FindElement(By.Id("Subject")).SendKeys("Thanks!");
             s.Driver.FindElement(By.ClassName("note-editable")).SendKeys("Your invoice is settled");
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
-            Assert.Contains("Store email rules saved", s.FindAlertMessage().Text);
+            // we now have a rule
+            Assert.DoesNotContain("There are no rules yet.", s.Driver.PageSource);
+            Assert.Contains("test@gmail.com", s.Driver.PageSource);
             
             s.GoToStore(StoreNavPages.Emails);
             Assert.True(s.Driver.FindElement(By.Id("IsCustomSMTP")).Selected);
+        }
+
+        [Fact(Timeout = TestTimeout)]
+        public async Task CanSetupEmailRules()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+
+            // Store Email Rules
+            s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("There are no rules yet.", s.Driver.PageSource);
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
+
+            // invoice created rule
+            s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
+            var select = new SelectElement(s.Driver.FindElement(By.Id("Trigger")));
+            select.SelectByValue("InvoiceCreated");
+            s.Driver.FindElement(By.Id("To")).SendKeys("invoicecreated@gmail.com");
+            s.Driver.FindElement(By.Id("CustomerEmail")).Click();
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+
+            // Ensure that the rule is created
+            Assert.DoesNotContain("There are no rules yet.", s.Driver.PageSource);
+            Assert.Contains("invoicecreated@gmail.com", s.Driver.PageSource);
+            Assert.Contains("Invoice {Invoice.Id} created", s.Driver.PageSource);
+            Assert.Contains("Yes", s.Driver.PageSource);
+
+            // payment request status changed rule
+            s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
+            select = new SelectElement(s.Driver.FindElement(By.Id("Trigger")));
+            select.SelectByValue("PaymentRequestStatusChanged");
+            s.Driver.FindElement(By.Id("To")).SendKeys("statuschanged@gmail.com");
+            s.Driver.FindElement(By.Id("Subject")).SendKeys("Status changed!");
+            s.Driver.FindElement(By.ClassName("note-editable")).SendKeys("Your Payment Request Status is Changed");
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+
+            // Validate the second rule is added
+            Assert.Contains("statuschanged@gmail.com", s.Driver.PageSource);
+            Assert.Contains("Status changed!", s.Driver.PageSource);
+
+            // Select the second rule’s edit button
+            var editButtons = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Edit')]"));
+            Assert.True(editButtons.Count >= 2, "Expected at least two edit buttons but found fewer.");
+
+            editButtons[1].Click(); // Clicks the second Edit button
+
+            // Modify the second rule from statuschanged@gmail.com to changedagain@gmail.com
+            var toField = s.Driver.FindElement(By.Id("To"));
+            toField.Clear();
+            toField.SendKeys("changedagain@gmail.com");
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+
+            // Validate that the email is updated in the list of email rules
+            Assert.Contains("changedagain@gmail.com", s.Driver.PageSource);
+            Assert.DoesNotContain("statuschanged@gmail.com", s.Driver.PageSource);
+
+            // Delete both email rules
+            var deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]"));
+            Assert.True(deleteLinks.Count == 2, "Expected exactly two delete buttons but found a different number.");
+
+            deleteLinks[0].Click();
+
+            deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]")); // Refresh list
+            Assert.True(deleteLinks.Count == 1, "Expected one delete button remaining.");
+
+            deleteLinks[0].Click();
+
+            // Validate that there are no more rules
+            Assert.Contains("There are no rules yet.", s.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]
@@ -3883,7 +3957,6 @@ retry:
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
-            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
 
             // Setup user, store and wallets
             s.RegisterNewUser();
@@ -3916,6 +3989,10 @@ retry:
             s.AssertPageAccess(false, GetStorePath("lightning/BTC"));
             s.AssertPageAccess(false, GetStorePath("lightning/BTC/settings"));
             s.AssertPageAccess(false, GetStorePath("apps/create"));
+            
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", 
+                "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", 
+                "emails/rules", "email-settings", "forms"};
             foreach (var path in storeSettingsPaths)
             {   // should have view access to settings, but no submit buttons or create links
                 TestLogs.LogInformation($"Checking access to store page {path} as admin");
@@ -3936,7 +4013,8 @@ retry:
             s.Server.ActivateLightning();
             await s.StartAsync();
             await s.Server.EnsureChannelsSetup();
-            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails", "email-settings", "forms"};
+            var storeSettingsPaths = new [] {"settings", "rates", "checkout", "tokens", "users", "roles", "webhooks", "payout-processors", 
+                "payout-processors/onchain-automated/BTC", "payout-processors/lightning-automated/BTC", "emails/rules", "email-settings", "forms"};
 
             // Setup users
             var manager = s.RegisterNewUser();

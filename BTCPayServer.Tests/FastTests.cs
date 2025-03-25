@@ -2252,17 +2252,21 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                     PaymentMethodId = btcId
                 });
             invoiceEntity.UpdateTotals();
+            var prevNetSettled = invoiceEntity.NetSettled;
+            Assert.Equal(invoiceEntity.PaidAmount.Net, invoiceEntity.NetSettled);
             accounting = btc.Calculate();
             invoiceEntity.Payments.Add(
                 new PaymentEntity()
                 {
-                    Status = PaymentStatus.Settled,
+                    Status = PaymentStatus.Processing,
                     Currency = "BTC",
                     Value = accounting.Due,
                     PaymentMethodFee = 0.00000100m,
                     PaymentMethodId = btcId
                 });
             invoiceEntity.UpdateTotals();
+            Assert.NotEqual(invoiceEntity.PaidAmount.Net, invoiceEntity.NetSettled);
+            Assert.Equal(prevNetSettled, invoiceEntity.NetSettled);
             accounting = btc.Calculate();
             Assert.Equal(0.0m, accounting.Due);
             Assert.Equal(0.0m, accounting.DueUncapped);

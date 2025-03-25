@@ -1,0 +1,186 @@
+@using BTCPayServer.HostedServices.Webhooks
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@model BTCPayServer.Controllers.UIStoresController.StoreEmailRule
+@inject WebhookSender WebhookSender
+
+@{
+    var storeId = Context.GetStoreData().Id;
+    bool isEdit = Model.Trigger != null;
+    ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
+}
+
+@section PageHeadContent {
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+}
+
+<form asp-action="@(isEdit ? "StoreEmailRulesEdit" : "StoreEmailRulesCreate")" asp-route-storeId="@storeId" method="post">
+    <div class="sticky-header">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item">
+                    <a asp-action="StoreEmailSettings" asp-route-storeId="@storeId" text-translate="true">Emails</a>
+                </li>
+                <li class="breadcrumb-item">
+                    <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" text-translate="true">Email Rules</a>
+                </li>
+                <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+            </ol>
+            <h2>@ViewData["Title"]</h2>
+        </nav>
+        <div>
+        <button id="SaveEmailRules" type="submit" class="btn btn-primary">Save</button>
+        <a asp-action="StoreEmailRulesList" asp-route-storeId="@storeId" class="btn btn-secondary">Cancel</a>
+        </div>
+    </div>
+    <partial name="_StatusMessage" />
+
+    <div class="form-group">
+        <label asp-for="Trigger" class="form-label" data-required></label>
+        <select asp-for="Trigger" asp-items="@WebhookSender.GetSupportedWebhookTypes()
+                .OrderBy(a=>a.Value).Select(s => new SelectListItem(s.Value, s.Key))" 
+                class="form-select email-rule-trigger" required></select>
+        <span asp-validation-for="Trigger" class="text-danger"></span>
+        <div class="form-text" text-translate="true">Choose what event sends the email.</div>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="To" class="form-label">Recipients</label>
+        <input type="text" asp-for="To" class="form-control email-rule-to" />
+        <span asp-validation-for="To" class="text-danger"></span>
+        <div class="form-text" text-translate="true">Who to send the email to. For multiple emails, separate with a comma.</div>
+    </div>
+
+    <div class="form-check mb-4">
+        <input asp-for="CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email" />
+        <label asp-for="CustomerEmail" class="form-check-label" text-translate="true">Send the email to the buyer, if email was provided to the invoice</label>
+        <span asp-validation-for="CustomerEmail" class="text-danger"></span>
+    </div>
+
+    <div class="form-group">
+        <label asp-for="Subject" class="form-label" data-required></label>
+        <input type="text" asp-for="Subject" class="form-control email-rule-subject" />
+        <span asp-validation-for="Subject" class="text-danger"></span>
+    </div>
+    
+    <div class="form-group">
+        <label asp-for="Body" class="form-label" data-required></label>
+        <textarea asp-for="Body" class="form-control richtext email-rule-body" rows="4"></textarea>
+        <span asp-validation-for="Body" class="text-danger"></span>
+        <div class="form-text rounded bg-light p-2">
+            <table class="table table-sm caption-top m-0">
+                <caption class="text-muted p-0" text-translate="true">Placeholders</caption>
+                <tr>
+                    <th text-translate="true">Invoice</th>
+                    <td>
+                        <code>{Invoice.Id}</code>,
+                        <code>{Invoice.StoreId}</code>,
+                        <code>{Invoice.Price}</code>,
+                        <code>{Invoice.Currency}</code>,
+                        <code>{Invoice.Status}</code>,
+                        <code>{Invoice.AdditionalStatus}</code>,
+                        <code>{Invoice.OrderId}</code>
+                        <code>{Invoice.Metadata}*</code>
+                    </td>
+                </tr>
+                <tr>
+                    <th text-translate="true">Request</th>
+                    <td>
+                        <code>{PaymentRequest.Id}</code>,
+                        <code>{PaymentRequest.Price}</code>,
+                        <code>{PaymentRequest.Currency}</code>,
+                        <code>{PaymentRequest.Title}</code>,
+                        <code>{PaymentRequest.Description}</code>,
+                        <code>{PaymentRequest.Status}</code>
+                        <code>{PaymentRequest.FormResponse}*</code>
+                    </td>
+                </tr>
+                <tr>
+                    <th text-translate="true">Payout</th>
+                    <td>
+                        <code>{Payout.Id}</code>,
+                        <code>{Payout.PullPaymentId}</code>,
+                        <code>{Payout.Destination}</code>,
+                        <code>{Payout.State}</code>
+                        <code>{Payout.Metadata}*</code>
+                    </td>
+                </tr>
+                <tr><td colspan="2">* These fields are JSON objects. You can access properties within them using <a href="https://www.newtonsoft.com/json/help/html/SelectToken.htm#SelectTokenJSONPath" rel="noreferrer noopener" target="_blank">this syntax</a>. One example is <code>{Invoice.Metadata.itemCode}</code></td></tr>
+            </table>
+        </div>
+    </div>
+
+</form>
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const templates = {
+                InvoiceCreated: {
+                    subject: 'Invoice {Invoice.Id} created',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) created.'
+                },
+                InvoiceReceivedPayment: {
+                    subject: 'Invoice {Invoice.Id} received payment',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) received payment.'
+                },
+                InvoiceProcessing: {
+                    subject: 'Invoice {Invoice.Id} processing',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is processing.'
+                },
+                InvoiceExpired: {
+                    subject: 'Invoice {Invoice.Id} expired',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) expired.'
+                },
+                InvoiceSettled: {
+                    subject: 'Invoice {Invoice.Id} settled',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is settled.'
+                },
+                InvoiceInvalid: {
+                    subject: 'Invoice {Invoice.Id} invalid',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) invalid.'
+                },
+                InvoicePaymentSettled: {
+                    subject: 'Invoice {Invoice.Id} payment settled',
+                    body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
+                },
+            };
+
+            const triggerSelect = document.querySelector('.email-rule-trigger');
+            const subjectInput = document.querySelector('.email-rule-subject');
+            const bodyTextarea = document.querySelector('.email-rule-body');
+
+            const isEmptyOrDefault = (value, type) => {
+                const val = value.replace(/<.*?>/gi, '').trim();
+                if (!val) return true;
+                return Object.values(templates).some(t => t[type] === val);
+            };
+
+            function applyTemplate() {
+                const selectedTrigger = triggerSelect.value;
+                if (templates[selectedTrigger]) {
+                    if (isEmptyOrDefault(subjectInput.value, 'subject')) {
+                        subjectInput.value = templates[selectedTrigger].subject;
+                    }
+                    if (isEmptyOrDefault(bodyTextarea.value, 'body')) {
+                        if ($(bodyTextarea).summernote) {
+                            $(bodyTextarea).summernote('reset');
+                            $(bodyTextarea).summernote('insertText', templates[selectedTrigger].body);
+                        } else {
+                            bodyTextarea.value = templates[selectedTrigger].body;
+                        }
+                    }
+                }
+            }
+
+            triggerSelect.addEventListener('change', applyTemplate);
+
+            // Apply template on page load if a trigger is selected
+            if (triggerSelect.value) {
+                applyTemplate();
+            }
+        });
+    </script>
+
+}

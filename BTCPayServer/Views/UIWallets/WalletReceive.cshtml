@@ -55,7 +55,7 @@
         <div class="only-for-js col-sm-10 col-xxl-8 mx-auto" id="app">
             <div class="tab-content text-center">
                 <div class="tab-pane payment-box" id="link-tab" role="tabpanel">
-                    <div class="qr-container" data-clipboard="@Model.PaymentLink">
+                    <div class="qr-container clipboard-button" data-clipboard="@Model.PaymentLink">
                         <vc:qr-code data="@Model.PaymentLink"/>
 						@if (Model.CryptoImage is not null)
 						{
@@ -70,7 +70,7 @@
                     </div>
                 </div>
                 <div class="tab-pane payment-box show active" id="address-tab" role="tabpanel">
-                    <div class="qr-container" data-clipboard="@Model.Address">
+                    <div class="qr-container clipboard-button" data-clipboard="@Model.Address">
                         <vc:qr-code data="@Model.Address"/>
 						@if (Model.CryptoImage is not null)
 						{

@@ -31,7 +31,7 @@
     }
     @if (Model.Copy)
     {
-        <button type="button" class="btn btn-link p-0" @(prefix)data-clipboard="@Model.Text">
+        <button type="button" class="btn btn-link p-0 clipboard-button" @(prefix)data-clipboard="@Model.Text">
             <vc:icon symbol="actions-copy" />
         </button>
     }

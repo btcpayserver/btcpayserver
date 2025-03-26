@@ -147,19 +147,14 @@ public class PendingTransactionService(
         return pendingTransaction;
     }
 
-    public async Task<PendingTransaction?> CollectSignature(string cryptoCode, PSBT psbt, CancellationToken cancellationToken)
+    public async Task<PendingTransaction?> CollectSignature(PSBT psbt, CancellationToken cancellationToken)
     {
-        var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-        if (network is null)
-        {
-            return null;
-        }
-
+        var cryptoCode = psbt.Network.NetworkSet.CryptoCode;
         var txId = psbt.GetGlobalTransaction().GetHash();
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction =
             await ctx.PendingTransactions.FindAsync(new object[] { cryptoCode, txId.ToString() }, cancellationToken);
-        if (pendingTransaction is null || pendingTransaction.State != PendingTransactionState.Pending)
+        if (pendingTransaction?.State is not PendingTransactionState.Pending)
         {
             return null;
         }
@@ -170,7 +165,7 @@ public class PendingTransactionService(
             return null;
         }
 
-        var dbPsbt = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
+        var dbPsbt = PSBT.Parse(blob.PSBT, psbt.Network);
 
         // Deduplicate: Check if this exact PSBT (Base64) was already collected
         var newPsbtBase64 = psbt.ToBase64();
@@ -181,7 +176,7 @@ public class PendingTransactionService(
 
         foreach (var collectedSignature in blob.CollectedSignatures)
         {
-            var collectedPsbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
+            var collectedPsbt = PSBT.Parse(collectedSignature.ReceivedPSBT, psbt.Network);
             dbPsbt.Combine(collectedPsbt); // combine changes the object
         }
 

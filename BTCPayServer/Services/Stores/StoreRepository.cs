@@ -227,16 +227,19 @@ namespace BTCPayServer.Services.Stores
             };
         }
 
-        public async Task<StoreData[]> GetStores(IEnumerable<string>? storeIds = null)
+        public async Task<StoreData[]> GetStores(StoreQuery query)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            return await ctx.Stores
-                .Where(s => storeIds == null || storeIds.Contains(s.Id))
-                .Include(data => data.UserStores)
+            var queryable = ctx.Stores
+                .Where(s => (query.StoreId == null || query.StoreId.Contains(s.Id)) &&
+                            (string.IsNullOrEmpty(query.SearchTerm) || s.StoreName.Contains(query.SearchTerm)));
+            if (query.Skip.HasValue) queryable = queryable.Skip(query.Skip.Value);
+            if (query.Count.HasValue) queryable = queryable.Take(query.Count.Value);
+            queryable = queryable.Include(data => data.UserStores)
                 .ThenInclude(data => data.StoreRole)
                 .Include(data => data.UserStores)
-                .ThenInclude(data => data.ApplicationUser)
-                .ToArrayAsync();
+                .ThenInclude(data => data.ApplicationUser);
+            return await queryable.ToArrayAsync();
         }
 
         public async Task<StoreData[]> GetStoresByUserId(string userId, IEnumerable<string>? storeIds = null)
@@ -662,6 +665,14 @@ retry:
                 LIMIT 1;
                 """, new { storeId })) is true;
         }
+    }
+
+    public class StoreQuery
+    {
+        public string[]? StoreId { get; set; }
+        public string? SearchTerm { get; set; }
+        public int? Skip { get; set; }
+        public int? Count { get; set; }
     }
 
     public record StoreRoleId

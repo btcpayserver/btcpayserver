@@ -19,11 +19,6 @@ namespace BTCPayServer.Controllers
 {
     public partial class UIStoresController
     {
-        private void setupBitcoinWalletTransactions()
-        {
-            ViewData["BitcoinWalletTransactions"] = _callbackGenerator.WalletTransactionsLink(HttpContext.GetStoreData().Id, "BTC", Request);
-        }
-        
         [HttpGet("{storeId}/emails/rules")]
         public async Task<IActionResult> StoreEmailRulesList(string storeId)
         {
@@ -49,7 +44,6 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public IActionResult StoreEmailRulesCreate(string storeId)
         {
-            setupBitcoinWalletTransactions();
             return View("StoreEmailRulesManage", new StoreEmailRule());
         }
 
@@ -57,8 +51,6 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> StoreEmailRulesCreate(string storeId, StoreEmailRule model)
         {
-            setupBitcoinWalletTransactions();
-            
             if (!ModelState.IsValid)
                 return View("StoreEmailRulesManage", model);
 
@@ -93,8 +85,6 @@ namespace BTCPayServer.Controllers
             var rules = store.GetStoreBlob().EmailRules;
             if (rules == null || ruleIndex >= rules.Count) return NotFound();
 
-            setupBitcoinWalletTransactions();
-            
             var rule = rules[ruleIndex];
             return View("StoreEmailRulesManage", rule);
         }
@@ -103,7 +93,6 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> StoreEmailRulesEdit(string storeId, int ruleIndex, StoreEmailRule model)
         {
-            setupBitcoinWalletTransactions();
             if (!ModelState.IsValid)
                 return View("StoreEmailRulesManage", model);
 

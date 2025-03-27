@@ -1,13 +1,15 @@
 @using BTCPayServer.HostedServices.Webhooks
+@using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Controllers.UIStoresController.StoreEmailRule
 @inject WebhookSender WebhookSender
+@inject CallbackGenerator CallbackGenerator
 
 @{
     var storeId = Context.GetStoreData().Id;
     bool isEdit = Model.Trigger != null;
     ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
-    var bitcoinWalletTransactions = ViewData["BitcoinWalletTransactions"]?.ToString() ?? "";
+    var bitcoinWalletTransactions = CallbackGenerator.WalletTransactionsLink(new (storeId, "BTC"), this.Context.Request);
 }
 
 @section PageHeadContent {

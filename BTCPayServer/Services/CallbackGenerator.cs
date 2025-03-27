@@ -81,13 +81,12 @@ namespace BTCPayServer.Services
 
         private Exception Bug([CallerMemberName] string? name = null) => new InvalidOperationException($"Error generating link for {name} (Report this bug to BTCPay Server github repository)");
 
-        public string WalletTransactionsLink(string storeId, string cryptoCode, HttpRequest request)
+        public string WalletTransactionsLink(WalletId walletId, HttpRequest request)
         {
-            var walletId = new WalletId(storeId, cryptoCode);
             return LinkGenerator.GetUriByAction(
                 action: nameof(UIWalletsController.WalletTransactions),
                 controller: "UIWallets",
-                values: new { walletId },
+                values: new { walletId = walletId.ToString() },
                 scheme: request.Scheme,
                 host: request.Host,
                 pathBase: request.PathBase

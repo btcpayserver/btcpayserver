@@ -1,16 +1,13 @@
 @using BTCPayServer.HostedServices.Webhooks
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Controllers.UIStoresController.StoreEmailRule
-@inject Microsoft.AspNetCore.Http.IHttpContextAccessor context;
 @inject WebhookSender WebhookSender
 
 @{
     var storeId = Context.GetStoreData().Id;
     bool isEdit = Model.Trigger != null;
     ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
-    var expectedScheme = context.HttpContext?.Request.Scheme;
-    var expectedHost = context.HttpContext?.Request.Host.ToString().ToLower();
-    var hostRoot = $"{expectedScheme}://{expectedHost}";
+    var bitcoinWalletTransactions = ViewData["BitcoinWalletTransactions"]?.ToString() ?? "";
 }
 
 @section PageHeadContent {
@@ -162,22 +159,22 @@
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionCreated : {
                     subject: 'Pending Transaction {PendingTransaction.TrimmedId} Created',
-                    body: 'Review the transaction {PendingTransaction.Id} and sign it on: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
+                    body: 'Review the transaction {PendingTransaction.Id} and sign it on: @bitcoinWalletTransactions'
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionSignatureCollected : {
                     subject: 'Signature Collected for Pending Transaction {PendingTransaction.TrimmedId}',
                     body: 'So far {PendingTransaction.SignaturesCollected} signatures collected out of {PendingTransaction.SignaturesNeeded} signatures needed. ' +
-                        'Review the transaction and sign it on: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
+                        'Review the transaction and sign it on: @bitcoinWalletTransactions'
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionBroadcast : {
                     subject: 'Transaction {PendingTransaction.TrimmedId} has been Broadcast',
                     body: 'Transaction is visible in mempool on: https://mempool.space/tx/{PendingTransaction.Id}. ' +
-                        'Review the transaction: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
+                        'Review the transaction: @bitcoinWalletTransactions'
                 },
                 @PendingTransactionWebhookProvider.PendingTransactionCancelled : {
                     subject: 'Pending Transaction {PendingTransaction.TrimmedId} Cancelled',
                     body: 'Transaction {PendingTransaction.Id} is cancelled and signatures are no longer being collected. ' +
-                        'Review the wallet: @hostRoot/wallets/S-{PendingTransaction.StoreId}-BTC/transactions'
+                        'Review the wallet: @bitcoinWalletTransactions'
                 },
             };
 

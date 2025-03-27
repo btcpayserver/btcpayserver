@@ -20,12 +20,10 @@ using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
 namespace BTCPayServer.HostedServices;
 
 public class PendingTransactionService(
-    DelayedTransactionBroadcaster broadcaster,
     BTCPayNetworkProvider networkProvider,
     ApplicationDbContextFactory dbContextFactory,
     EventAggregator eventAggregator,
-    ILogger<PendingTransactionService> logger,
-    ExplorerClientProvider explorerClientProvider)
+    ILogger<PendingTransactionService> logger)
     : EventHostedServiceBase(eventAggregator, logger), IPeriodicTask
 {
     protected override void SubscribeToEvents()
@@ -96,11 +94,28 @@ public class PendingTransactionService(
     {
         var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
         if (network is null)
-        {
             throw new NotSupportedException("CryptoCode not supported");
-        }
 
         var txId = psbt.GetGlobalTransaction().GetHash();
+
+        int signaturesNeeded = 0;
+        int signaturesTotal = 0;
+
+        foreach (var input in psbt.Inputs)
+        {
+            var script = input.WitnessScript ?? input.RedeemScript;
+            if (script is null)
+                continue;
+
+            var multisigParams = PayToMultiSigTemplate.Instance.ExtractScriptPubKeyParameters(script);
+            if (multisigParams != null)
+            {
+                signaturesNeeded = multisigParams.SignatureCount;
+                signaturesTotal = multisigParams.PubKeys.Length;
+                break; // assume consistent multisig scheme across all inputs
+            }
+        }
+
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction = new PendingTransaction
         {
@@ -111,26 +126,35 @@ public class PendingTransactionService(
             Expiry = expiry,
             StoreId = storeId,
         };
-        pendingTransaction.SetBlob(new PendingTransactionBlob { PSBT = psbt.ToBase64() });
+
+        pendingTransaction.SetBlob(new PendingTransactionBlob
+        {
+            PSBT = psbt.ToBase64(),
+            SignaturesCollected = 0,
+            SignaturesNeeded = signaturesNeeded,
+            SignaturesTotal = signaturesTotal
+        });
+
         ctx.PendingTransactions.Add(pendingTransaction);
         await ctx.SaveChangesAsync(cancellationToken);
+
+        EventAggregator.Publish(new PendingTransactionEvent
+        {
+            Data = pendingTransaction,
+            Type = PendingTransactionEvent.Created
+        });
+
         return pendingTransaction;
     }
 
-    public async Task<PendingTransaction?> CollectSignature(string cryptoCode, PSBT psbt, bool broadcastIfComplete,
-        CancellationToken cancellationToken)
+    public async Task<PendingTransaction?> CollectSignature(PSBT psbt, CancellationToken cancellationToken)
     {
-        var network = networkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-        if (network is null)
-        {
-            return null;
-        }
-
+        var cryptoCode = psbt.Network.NetworkSet.CryptoCode;
         var txId = psbt.GetGlobalTransaction().GetHash();
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction =
             await ctx.PendingTransactions.FindAsync(new object[] { cryptoCode, txId.ToString() }, cancellationToken);
-        if (pendingTransaction is null || pendingTransaction.State != PendingTransactionState.Pending)
+        if (pendingTransaction?.State is not PendingTransactionState.Pending)
         {
             return null;
         }
@@ -141,7 +165,7 @@ public class PendingTransactionService(
             return null;
         }
 
-        var originalPsbtWorkingCopy = PSBT.Parse(blob.PSBT, network.NBitcoinNetwork);
+        var dbPsbt = PSBT.Parse(blob.PSBT, psbt.Network);
 
         // Deduplicate: Check if this exact PSBT (Base64) was already collected
         var newPsbtBase64 = psbt.ToBase64();
@@ -152,27 +176,30 @@ public class PendingTransactionService(
 
         foreach (var collectedSignature in blob.CollectedSignatures)
         {
-            var collectedPsbt = PSBT.Parse(collectedSignature.ReceivedPSBT, network.NBitcoinNetwork);
-            originalPsbtWorkingCopy.Combine(collectedPsbt); // combine changes the object
+            var collectedPsbt = PSBT.Parse(collectedSignature.ReceivedPSBT, psbt.Network);
+            dbPsbt.Combine(collectedPsbt); // combine changes the object
         }
 
-        var originalPsbtWorkingCopyWithNewPsbt = originalPsbtWorkingCopy.Clone(); // Clone before modifying
-        originalPsbtWorkingCopyWithNewPsbt.Combine(psbt);
+        var newWorkingCopyPsbt = dbPsbt.Clone(); // Clone before modifying
+        newWorkingCopyPsbt.Combine(psbt);
 
         // Check if new signatures were actually added
-        bool newSignaturesCollected = false;
-        for (int i = 0; i < originalPsbtWorkingCopy.Inputs.Count; i++)
-        {
-            if (originalPsbtWorkingCopyWithNewPsbt.Inputs[i].PartialSigs.Count > 
-                originalPsbtWorkingCopy.Inputs[i].PartialSigs.Count)
-            {
-                newSignaturesCollected = true;
-                break;
-            }
-        }
+        var oldPubKeys = dbPsbt.Inputs
+            .SelectMany(input => input.PartialSigs.Keys)
+            .ToHashSet();
 
-        if (newSignaturesCollected)
+        var newPubKeys = newWorkingCopyPsbt.Inputs
+            .SelectMany(input => input.PartialSigs.Keys)
+            .ToHashSet();
+
+        newPubKeys.ExceptWith(oldPubKeys);
+
+        var newSignatures = newPubKeys.Count;
+        if (newSignatures > 0)
         {
+            // TODO: For now we're going with estimation of how many signatures were collected until we find better way
+            // so for example if we have 4 new signatures and only 2 inputs - number of collected signatures will be 2
+            blob.SignaturesCollected += newSignatures / newWorkingCopyPsbt.Inputs.Count();
             blob.CollectedSignatures.Add(new CollectedSignature
             {
                 ReceivedPSBT = newPsbtBase64,
@@ -181,29 +208,21 @@ public class PendingTransactionService(
             pendingTransaction.SetBlob(blob);
         }
 
-        if (originalPsbtWorkingCopyWithNewPsbt.TryFinalize(out _))
+        if (newWorkingCopyPsbt.TryFinalize(out _))
         {
+            // TODO: Better logic here
+            if (blob.SignaturesCollected < blob.SignaturesNeeded)
+                blob.SignaturesCollected = blob.SignaturesNeeded;
+                    
             pendingTransaction.State = PendingTransactionState.Signed;
         }
 
         await ctx.SaveChangesAsync(cancellationToken);
-
-        if (broadcastIfComplete && pendingTransaction.State == PendingTransactionState.Signed)
+        EventAggregator.Publish(new PendingTransactionEvent
         {
-            var explorerClient = explorerClientProvider.GetExplorerClient(network);
-            var tx = originalPsbtWorkingCopyWithNewPsbt.ExtractTransaction();
-            var result = await explorerClient.BroadcastAsync(tx, cancellationToken);
-            if (result.Success)
-            {
-                pendingTransaction.State = PendingTransactionState.Broadcast;
-                await ctx.SaveChangesAsync(cancellationToken);
-            }
-            else
-            {
-                await broadcaster.Schedule(DateTimeOffset.Now, tx, network);
-            }
-        }
-
+            Data = pendingTransaction,
+            Type = PendingTransactionEvent.SignatureCollected
+        });
         return pendingTransaction;
     }
 
@@ -234,6 +253,11 @@ public class PendingTransactionService(
         if (pt is null) return;
         pt.State = PendingTransactionState.Cancelled;
         await ctx.SaveChangesAsync();
+        EventAggregator.Publish(new PendingTransactionEvent
+        {
+            Data = pt,
+            Type = PendingTransactionEvent.Cancelled
+        });
     }
 
     public async Task Broadcasted(string cryptoCode, string storeId, string transactionId)
@@ -245,6 +269,22 @@ public class PendingTransactionService(
         if (pt is null) return;
         pt.State = PendingTransactionState.Broadcast;
         await ctx.SaveChangesAsync();
+        EventAggregator.Publish(new PendingTransactionEvent
+        {
+            Data = pt,
+            Type = PendingTransactionEvent.Broadcast
+        });
+    }
+
+    public record PendingTransactionEvent
+    {
+        public const string Created = nameof(Created);
+        public const string SignatureCollected = nameof(SignatureCollected);
+        public const string Broadcast = nameof(Broadcast);
+        public const string Cancelled = nameof(Cancelled);
+        
+        public PendingTransaction Data { get; set; } = null!;
+        public string Type { get; set; } = null!;
     }
 
 }

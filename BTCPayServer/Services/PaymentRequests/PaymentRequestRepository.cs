@@ -17,8 +17,6 @@ namespace BTCPayServer.Services.PaymentRequests
         public const string StatusChanged = nameof(StatusChanged);
         public PaymentRequestData Data { get; set; }
         public string Type { get; set; }
-        
-        
     }
     
     public class PaymentRequestRepository
@@ -61,7 +59,6 @@ namespace BTCPayServer.Services.PaymentRequests
 
         public async Task<bool?> ArchivePaymentRequest(string id, bool toggle = false)
         {
-            
             await using var context = _ContextFactory.CreateContext();
             var pr = await context.PaymentRequests.FindAsync(id);
             if(pr == null)

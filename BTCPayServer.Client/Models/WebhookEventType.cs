@@ -1,5 +1,6 @@
 namespace BTCPayServer.Client.Models;
 
+// TODO: This should be moved to individual Webhook Event Providers
 public static class WebhookEventType
 {
     public const string InvoiceCreated = nameof(InvoiceCreated);

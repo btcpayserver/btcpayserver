@@ -54,6 +54,11 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
     {
         public string PSBT { get; set; }
         public List<CollectedSignature> CollectedSignatures { get; set; } = new();
+
+        public int? SignaturesCollected { get; set; }
+        // for example: 3/5
+        public int? SignaturesNeeded { get; set; }
+        public int? SignaturesTotal { get; set; }
     }
 
     public class CollectedSignature

@@ -92,5 +92,17 @@ namespace BTCPayServer.Services
                 pathBase: request.PathBase
             ) ?? throw Bug();
         }
+        
+        public string PaymentRequestLink(string payReqId, HttpRequest request)
+        {
+            return LinkGenerator.GetUriByAction(
+                action: nameof(UIPaymentRequestController.ViewPaymentRequest),
+                controller: "UIPaymentRequest",
+                values: new { payReqId },
+                scheme: request.Scheme,
+                host: request.Host,
+                pathBase: request.PathBase
+            ) ?? throw Bug();
+        }
     }
 }

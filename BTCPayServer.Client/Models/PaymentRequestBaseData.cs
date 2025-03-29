@@ -17,6 +17,8 @@ namespace BTCPayServer.Client.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public string Email { get; set; }
+        // Allow payment requests to be linked to invoices outside BTCPay Server using Reference Number
+        public string ReferenceNumber { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
 
         [JsonExtensionData]

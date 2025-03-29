@@ -91,6 +91,7 @@
                             </button>
                         </div>
                     </th>
+                    <th text-translate="true">Number</th>
                     <th text-translate="true">Status</th>
                     <th class="amount-col" text-translate="true">Amount</th>
                     <th></th>
@@ -105,6 +106,9 @@
                         </td>
                         <td class="date-col">
                             @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
+                        </td>
+                        <td>
+                            @item.ReferenceNumber
                         </td>
                         <td>
                             <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>

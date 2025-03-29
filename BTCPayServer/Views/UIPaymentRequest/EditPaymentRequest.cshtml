@@ -83,6 +83,11 @@
                 <span asp-validation-for="AllowCustomPaymentAmounts" class="text-danger"></span>
             </div>
             <div class="form-group">
+                <label asp-for="ReferenceNumber" class="form-label"></label>
+                <input asp-for="ReferenceNumber" class="form-control" />
+                <span asp-validation-for="ReferenceNumber" class="text-danger"></span>
+            </div>
+            <div class="form-group">
                 <label asp-for="ExpiryDate" class="form-label"></label>
                 <div class="input-group ">
                     <input asp-for="ExpiryDate"

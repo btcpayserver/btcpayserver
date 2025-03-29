@@ -1,5 +1,8 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
 @using BTCPayServer.HostedServices.Webhooks
 @using BTCPayServer.Services
+@using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model BTCPayServer.Controllers.UIStoresController.StoreEmailRule
 @inject WebhookSender WebhookSender
@@ -9,7 +12,6 @@
     var storeId = Context.GetStoreData().Id;
     bool isEdit = Model.Trigger != null;
     ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
-    var bitcoinWalletTransactions = CallbackGenerator.WalletTransactionsLink(new (storeId, "BTC"), this.Context.Request);
 }
 
 @section PageHeadContent {
@@ -94,6 +96,7 @@
                         <code>{PaymentRequest.Currency}</code>,
                         <code>{PaymentRequest.Title}</code>,
                         <code>{PaymentRequest.Description}</code>,
+                        <code>{PaymentRequest.ReferenceNumber}</code>,
                         <code>{PaymentRequest.Status}</code>
                         <code>{PaymentRequest.FormResponse}*</code>
                     </td>
@@ -132,34 +135,41 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const templates = {
-                InvoiceCreated: {
+                @WebhookEventType.InvoiceCreated: {
                     subject: 'Invoice {Invoice.Id} created',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) created.'
                 },
-                InvoiceReceivedPayment: {
+                @WebhookEventType.InvoiceReceivedPayment: {
                     subject: 'Invoice {Invoice.Id} received payment',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) received payment.'
                 },
-                InvoiceProcessing: {
+                @WebhookEventType.InvoiceProcessing: {
                     subject: 'Invoice {Invoice.Id} processing',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is processing.'
                 },
-                InvoiceExpired: {
+                @WebhookEventType.InvoiceExpired: {
                     subject: 'Invoice {Invoice.Id} expired',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) expired.'
                 },
-                InvoiceSettled: {
+                @WebhookEventType.InvoiceSettled: {
                     subject: 'Invoice {Invoice.Id} settled',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) is settled.'
                 },
-                InvoiceInvalid: {
+                @WebhookEventType.InvoiceInvalid: {
                     subject: 'Invoice {Invoice.Id} invalid',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) invalid.'
                 },
-                InvoicePaymentSettled: {
+                @WebhookEventType.InvoicePaymentSettled: {
                     subject: 'Invoice {Invoice.Id} payment settled',
                     body: 'Invoice {Invoice.Id} (Order Id: {Invoice.OrderId}) payment settled.'
                 },
+                @{ var paymentRequestsLink = CallbackGenerator.PaymentRequestListLink(storeId, this.Context.Request); }
+                @WebhookEventType.PaymentRequestCompleted: {
+                    subject: 'Payment Request {PaymentRequest.Title} {PaymentRequest.ReferenceNumber} Completed',
+                    body: 'The total of {PaymentRequest.Amount} {PaymentRequest.Currency} has been received and Payment Request {PaymentRequest.Id} is completed. ' +
+                    '\nReview the payment requests: ' + @Safe.Json(paymentRequestsLink)
+                },
+                @{ var bitcoinWalletTransactions = CallbackGenerator.WalletTransactionsLink(new (storeId, "BTC"), this.Context.Request); }
                 @PendingTransactionWebhookProvider.PendingTransactionCreated : {
                     subject: 'Pending Transaction {PendingTransaction.TrimmedId} Created',
 					body: 'Review the transaction {PendingTransaction.Id} and sign it on: ' + @Safe.Json(bitcoinWalletTransactions)

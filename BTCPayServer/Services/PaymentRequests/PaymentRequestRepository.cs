@@ -15,6 +15,7 @@ namespace BTCPayServer.Services.PaymentRequests
         public const string Updated = nameof(Updated);
         public const string Archived = nameof(Archived);
         public const string StatusChanged = nameof(StatusChanged);
+        public const string Completed = nameof(Completed);
         public PaymentRequestData Data { get; set; }
         public string Type { get; set; }
     }
@@ -99,9 +100,7 @@ namespace BTCPayServer.Services.PaymentRequests
         {
             await using var context = _ContextFactory.CreateContext();
             var paymentRequestData = await context.FindAsync<PaymentRequestData>(paymentRequestId);
-            if (paymentRequestData == null)
-                return;
-            if( paymentRequestData.Status ==  status)
+            if (paymentRequestData == null || paymentRequestData.Status == status)
                 return;
             paymentRequestData.Status = status;
             
@@ -112,6 +111,15 @@ namespace BTCPayServer.Services.PaymentRequests
                 Data = paymentRequestData,
                 Type = PaymentRequestEvent.StatusChanged
             });
+
+            if (status == Client.Models.PaymentRequestData.PaymentRequestStatus.Completed)
+            {
+                _eventAggregator.Publish(new PaymentRequestEvent()
+                {
+                    Data = paymentRequestData,
+                    Type = PaymentRequestEvent.Completed
+                }); 
+            }
         }
         public async Task<PaymentRequestData[]> GetExpirablePaymentRequests(CancellationToken cancellationToken = default)
         {

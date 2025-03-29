@@ -1,11 +1,14 @@
 using System;
 using System.Linq;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
+using BTCPayServer.Lightning.Eclair;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.PaymentRequests
 {
@@ -134,48 +137,50 @@ namespace BTCPayServer.Services.PaymentRequests
         }
         public async Task<PaymentRequestData[]> FindPaymentRequests(PaymentRequestQuery query, CancellationToken cancellationToken = default)
         {
-            using var context = _ContextFactory.CreateContext();
-            var queryable = context.PaymentRequests.Include(data => data.StoreData).AsQueryable();
+            await using var context = _ContextFactory.CreateContext();
+            IQueryable<PaymentRequestData> queryable;
+
+            if (!string.IsNullOrEmpty(query.SearchText))
+            {
+                var searchText = query.SearchText;
+
+                queryable = context.PaymentRequests.FromSqlInterpolated($@"
+                    SELECT * FROM public.""PaymentRequests""
+                    WHERE ""Blob2"" ->> 'referenceNumber' = {searchText}
+                       OR ""Blob2"" ->> 'title' ILIKE {'%' + searchText + '%'}
+                ");
+            }
+            else
+            {
+                queryable = context.PaymentRequests.AsQueryable();
+            }
+
+            queryable = queryable.Include(data => data.StoreData);
 
             if (!query.IncludeArchived)
-            {
                 queryable = queryable.Where(data => !data.Archived);
-            }
+            
             if (!string.IsNullOrEmpty(query.StoreId))
-            {
-                queryable = queryable.Where(data =>
-                   data.StoreDataId == query.StoreId);
-            }
+                queryable = queryable.Where(data => data.StoreDataId == query.StoreId);
 
             if (query.Status != null && query.Status.Any())
-            {
-                queryable = queryable.Where(data =>
-                    query.Status.Contains(data.Status));
-            }
+                queryable = queryable.Where(data => query.Status.Contains(data.Status));
 
             if (query.Ids != null && query.Ids.Any())
-            {
-                queryable = queryable.Where(data =>
-                    query.Ids.Contains(data.Id));
-            }
+                queryable = queryable.Where(data => query.Ids.Contains(data.Id));
 
             if (!string.IsNullOrEmpty(query.UserId))
-            {
-                queryable = queryable.Where(i =>
-                    i.StoreData != null && i.StoreData.UserStores.Any(u => u.ApplicationUserId == query.UserId));
-            }
+                queryable = queryable.Where(data =>
+                    data.StoreData != null && data.StoreData.UserStores.Any(u => u.ApplicationUserId == query.UserId));
 
             queryable = queryable.OrderByDescending(u => u.Created);
 
             if (query.Skip.HasValue)
-            {
                 queryable = queryable.Skip(query.Skip.Value);
-            }
 
             if (query.Count.HasValue)
-            {
                 queryable = queryable.Take(query.Count.Value);
-            }
+            
             var items = await queryable.ToArrayAsync(cancellationToken);
             return items;
         }
@@ -229,5 +234,6 @@ namespace BTCPayServer.Services.PaymentRequests
         public int? Skip { get; set; }
         public int? Count { get; set; }
         public string[] Ids { get; set; }
+        public string SearchText { get; set; }
     }
 }

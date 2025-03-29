@@ -99,7 +99,8 @@ namespace BTCPayServer.Controllers
                 Skip = model.Skip,
                 Count = model.Count,
                 Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<Client.Models.PaymentRequestStatus>(s, true)).ToArray(),
-                IncludeArchived = fs.GetFilterBool("includearchived") ?? false
+                IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
+                SearchText = model.SearchText
             });
             
             model.Search = fs;

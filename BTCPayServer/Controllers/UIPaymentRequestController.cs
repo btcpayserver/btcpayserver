@@ -99,7 +99,8 @@ namespace BTCPayServer.Controllers
                 Skip = model.Skip,
                 Count = model.Count,
                 Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<Client.Models.PaymentRequestData.PaymentRequestStatus>(s, true)).ToArray(),
-                IncludeArchived = fs.GetFilterBool("includearchived") ?? false
+                IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
+                SearchText = model.SearchText
             });
             
             model.Search = fs;
@@ -201,6 +202,7 @@ namespace BTCPayServer.Controllers
             blob.Amount = viewModel.Amount;
             blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
             blob.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
+            blob.ReferenceNumber = viewModel.ReferenceNumber;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
             blob.FormId = viewModel.FormId;
 

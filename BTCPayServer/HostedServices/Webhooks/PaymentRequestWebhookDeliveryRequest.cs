@@ -42,6 +42,7 @@ public class PaymentRequestWebhookDeliveryRequest : WebhookSender.WebhookDeliver
             .Replace("{PaymentRequest.Currency}", blob.Currency)
             .Replace("{PaymentRequest.Title}", blob.Title)
             .Replace("{PaymentRequest.Description}", blob.Description)
+            .Replace("{PaymentRequest.ReferenceNumber}", blob.ReferenceNumber)
             .Replace("{PaymentRequest.Status}", _evt.Data.Status.ToString());
 
         res = InterpolateJsonField(res, "PaymentRequest.FormResponse", blob.FormResponse);

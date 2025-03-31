@@ -32,6 +32,10 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan DisplayExpirationTimer { get; set; } = TimeSpan.FromMinutes(5);
 
+        [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
+        [JsonProperty("refundBOLT11Expiration", NullValueHandling = NullValueHandling.Ignore)]
+        public TimeSpan RefundBOLT11Expiration { get; set; } = TimeSpan.FromDays(30);
+
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan MonitoringExpiration { get; set; } = TimeSpan.FromMinutes(60);

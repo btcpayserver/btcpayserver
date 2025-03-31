@@ -342,7 +342,7 @@ namespace BTCPayServer.Controllers
             var cdCurrency = _CurrencyNameTable.GetCurrencyData(invoice.Currency, true);
             RateRules rules;
             RateResult rateResult;
-            CreatePullPayment createPullPayment;
+            CreatePullPaymentRequest createPullPayment;
 
             var pmis = _payoutHandlers.GetSupportedPayoutMethods(store);
             if (!pmis.Contains(pmi))
@@ -414,12 +414,10 @@ namespace BTCPayServer.Controllers
                     return View("_RefundModal", model);
 
                 case RefundSteps.SelectRate:
-                    createPullPayment = new CreatePullPayment
+                    createPullPayment = new CreatePullPaymentRequest
                     {
                         Name = StringLocalizer["Refund {0}", invoice.Id],
-                        PayoutMethods = new[] { pmi },
-                        StoreId = invoice.StoreId,
-                        BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration
+                        PayoutMethods = new[] { pmi.ToString() }
                     };
                     var authorizedForAutoApprove = (await
                             _authorizationService.AuthorizeAsync(User, invoice.StoreId, Policies.CanCreatePullPayments))
@@ -529,7 +527,7 @@ namespace BTCPayServer.Controllers
                 createPullPayment.Amount = Math.Round(createPullPayment.Amount - reduceByAmount, ppDivisibility);
             }
 
-            var ppId = await _paymentHostedService.CreatePullPayment(createPullPayment);
+            var ppId = await _paymentHostedService.CreatePullPayment(store, createPullPayment);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Html = "Refund successfully created!<br />Share the link to this page with a customer.<br />The customer needs to enter their address and claim the refund.<br />Once a customer claims the refund, you will get a notification and would need to approve and initiate it from your Store > Payouts.",

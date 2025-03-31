@@ -2293,6 +2293,13 @@ namespace BTCPayServer.Tests
             var user = tester.NewAccount();
             await user.RegisterDerivationSchemeAsync("BTC");
             var client = await user.CreateClient();
+            var store = await client.GetStore(user.StoreId);
+            Assert.Equal(TimeSpan.FromDays(30.0), store.RefundBOLT11Expiration);
+            store.RefundBOLT11Expiration = TimeSpan.FromDays(1);
+            await client.UpdateStore(store.Id, store);
+            store = await client.GetStore(user.StoreId);
+            Assert.Equal(TimeSpan.FromDays(1.0), store.RefundBOLT11Expiration);
+
             var invoice = await client.CreateInvoice(user.StoreId, new CreateInvoiceRequest() { Amount = 5000.0m, Currency = "USD" });
             var methods = await client.GetInvoicePaymentMethods(user.StoreId, invoice.Id);
             var method = methods.First();
@@ -2354,6 +2361,7 @@ namespace BTCPayServer.Tests
                 PayoutMethodId = method.PaymentMethodId,
                 RefundVariant = RefundVariant.RateThen
             });
+            Assert.Equal(pp.BOLT11Expiration, TimeSpan.FromDays(1)); 
             Assert.Equal("BTC", pp.Currency);
             Assert.True(pp.AutoApproveClaims);
             Assert.Equal(1, pp.Amount);

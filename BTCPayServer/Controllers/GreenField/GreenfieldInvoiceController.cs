@@ -376,13 +376,11 @@ namespace BTCPayServer.Controllers.Greenfield
 				cancellationToken
             );
             var paidAmount = cryptoPaid.RoundToSignificant(paymentPrompt.Divisibility);
-            var createPullPayment = new CreatePullPayment
+            var createPullPayment = new CreatePullPaymentRequest
             {
-                BOLT11Expiration = store.GetStoreBlob().RefundBOLT11Expiration,
                 Name = request.Name ?? $"Refund {invoice.Id}",
                 Description = request.Description,
-                StoreId = storeId,
-                PayoutMethods = new[] { payoutMethodId },
+                PayoutMethods = new[] { payoutMethodId.ToString() },
             };
 
             if (request.RefundVariant != RefundVariant.Custom)
@@ -479,8 +477,8 @@ namespace BTCPayServer.Controllers.Greenfield
                 createPullPayment.Amount = Math.Round(createPullPayment.Amount - reduceByAmount, appliedDivisibility);
             }
 
-            createPullPayment.AutoApproveClaims = createPullPayment.AutoApproveClaims && (await _authorizationService.AuthorizeAsync(User, createPullPayment.StoreId ,Policies.CanCreatePullPayments)).Succeeded;
-            var ppId = await _pullPaymentService.CreatePullPayment(createPullPayment);
+            createPullPayment.AutoApproveClaims = createPullPayment.AutoApproveClaims && (await _authorizationService.AuthorizeAsync(User, storeId ,Policies.CanCreatePullPayments)).Succeeded;
+            var ppId = await _pullPaymentService.CreatePullPayment(store, createPullPayment);
 
             await using var ctx = _dbContextFactory.CreateContext();
 

@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.0.8
+
+### Bug fixes
+
+* Fix potential migration crash when upgrading from pre 2.0 @NicolasDorier
+
 ## 2.0.7
 
 ### New features

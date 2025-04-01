@@ -151,7 +151,11 @@ namespace BTCPayServer.Services.Invoices
                     var paymentData = jobj.ToObject<PaymentData>();
                     invoiceData.Payments.Add(paymentData);
                 }
-                invoices.Add(ToEntity(invoiceData));
+                var entity = ToEntity(invoiceData);
+                // Disable accounting, as we don't have all the payments...
+                // only those related to this paymentMethodId
+                entity.DisableAccounting = true;
+                invoices.Add(entity);
             }
             return invoices.ToArray();
         }

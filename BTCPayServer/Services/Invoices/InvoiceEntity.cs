@@ -412,6 +412,8 @@ namespace BTCPayServer.Services.Invoices
 
         public void UpdateTotals()
         {
+            if (DisableAccounting)
+                throw new InvalidOperationException("Accounting disabled, impossible to call UpdateTotals");
             PaidAmount = new Amounts()
             {
                 Currency = Currency
@@ -781,6 +783,8 @@ namespace BTCPayServer.Services.Invoices
         /// </summary>
         [JsonIgnore]
         public decimal NetSettled { get; private set; }
+        [JsonIgnore]
+        public bool DisableAccounting { get; set; }
     }
 
     public enum InvoiceStatusLegacy

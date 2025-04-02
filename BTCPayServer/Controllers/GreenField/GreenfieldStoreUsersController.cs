@@ -22,15 +22,18 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly StoreRepository _storeRepository;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CallbackGenerator _callbackGenerator;
         private readonly UriResolver _uriResolver;
 
         public GreenfieldStoreUsersController(
             StoreRepository storeRepository,
             UserManager<ApplicationUser> userManager,
+            CallbackGenerator callbackGenerator,
             UriResolver uriResolver)
         {
             _storeRepository = storeRepository;
             _userManager = userManager;
+            _callbackGenerator = callbackGenerator;
             _uriResolver = uriResolver;
         }
 
@@ -87,20 +90,33 @@ namespace BTCPayServer.Controllers.Greenfield
                 : this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
         }
 
-        private async Task<IEnumerable<StoreUserData>> FromModel(StoreData data)
+        private async Task<IEnumerable<StoreUserData>> FromModel(StoreData store)
         {
             var storeUsers = new List<StoreUserData>();
-            foreach (var storeUser in data.UserStores)
+            foreach (var storeUser in store.UserStores)
             {
                 var user = await _userManager.FindByIdOrEmail(storeUser.ApplicationUserId);
-                var blob = user?.GetBlob();
+                if (user == null) continue;
+                var data = UserService.FromModel(user, []);
                 storeUsers.Add(new StoreUserData
                 {
                     UserId = storeUser.ApplicationUserId,
                     Role = storeUser.StoreRoleId,
-                    Email = user?.Email,
-                    Name = blob?.Name,
-                    ImageUrl = blob?.ImageUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl))
+                    Email = data.Email,
+                    Name = data.Name,
+                    InvitationToken = data.InvitationToken,
+                    EmailConfirmed = data.EmailConfirmed,
+                    RequiresEmailConfirmation = data.RequiresEmailConfirmation,
+                    Approved = data.Approved,
+                    RequiresApproval = data.RequiresApproval,
+                    Created = data.Created,
+                    Disabled = data.Disabled,
+                    ImageUrl = data.ImageUrl == null
+                        ? null
+                        : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(data.ImageUrl)),
+                    InvitationUrl = string.IsNullOrEmpty(data.InvitationToken)
+                        ? null
+                        : _callbackGenerator.ForInvitation(data.Id, data.InvitationToken, Request)
                 });
             }
             return storeUsers;

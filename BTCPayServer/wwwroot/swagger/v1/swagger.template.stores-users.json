@@ -257,6 +257,46 @@
                                 "type": "string",
                                 "description": "The profile picture URL of the user",
                                 "nullable": true
+                            },
+                            "invitationToken": {
+                                "type": "string",
+                                "description": "The pending invitation token of the user",
+                                "nullable": true
+                            },
+                            "invitationUrl": {
+                                "type": "string",
+                                "description": "The pending invitation URL of the user",
+                                "nullable": true
+                            },
+                            "emailConfirmed": {
+                                "type": "boolean",
+                                "description": "True if the email has been confirmed by the user"
+                            },
+                            "requiresEmailConfirmation": {
+                                "type": "boolean",
+                                "description": "True if the email requires confirmation to log in"
+                            },
+                            "approved": {
+                                "type": "boolean",
+                                "description": "True if an admin has approved the user"
+                            },
+                            "requiresApproval": {
+                                "type": "boolean",
+                                "description": "True if the instance requires approval to log in"
+                            },
+                            "disabled": {
+                                "type": "boolean",
+                                "description": "True if an admin has disabled the user"
+                            },
+                            "created": {
+                                "type": "number",
+                                "nullable": true,
+                                "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6",
+                                "allOf": [
+                                    {
+                                        "$ref": "#/components/schemas/UnixTimestamp"
+                                    }
+                                ]
                             }
                         }
                     }

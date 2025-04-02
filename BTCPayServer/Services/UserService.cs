@@ -54,9 +54,9 @@ namespace BTCPayServer.Services
             {
                 Id = data.Id,
                 Email = data.Email,
-                EmailConfirmed = IsEmailConfirmed(data),
+                EmailConfirmed = data.EmailConfirmed,
                 RequiresEmailConfirmation = data.RequiresEmailConfirmation,
-                Approved = IsApproved(data),
+                Approved = data.Approved,
                 RequiresApproval = data.RequiresApproval,
                 Created = data.Created,
                 Name = blob.Name,

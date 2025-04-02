@@ -70,7 +70,7 @@ namespace BTCPayServer.Controllers
                         InvitationUrl =
                             string.IsNullOrEmpty(blob?.InvitationToken)
                                 ? null
-                                : _callbackGenerator.ForInvitation(u, blob.InvitationToken, Request),
+                                : _callbackGenerator.ForInvitation(u.Id, blob.InvitationToken, Request),
                         EmailConfirmed = u.RequiresEmailConfirmation ? u.EmailConfirmed : null,
                         Approved = u.RequiresApproval ? u.Approved : null,
                         Created = u.Created,
@@ -97,7 +97,7 @@ namespace BTCPayServer.Controllers
                 Id = user.Id,
                 Email = user.Email,
                 Name = blob?.Name,
-                InvitationUrl = string.IsNullOrEmpty(blob?.InvitationToken) ? null : _callbackGenerator.ForInvitation(user, blob.InvitationToken, Request),
+                InvitationUrl = string.IsNullOrEmpty(blob?.InvitationToken) ? null : _callbackGenerator.ForInvitation(user.Id, blob.InvitationToken, Request),
                 ImageUrl = string.IsNullOrEmpty(blob?.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
                 EmailConfirmed = user.RequiresEmailConfirmation ? user.EmailConfirmed : null,
                 Approved = user.RequiresApproval ? user.Approved : null,

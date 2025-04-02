@@ -1,5 +1,6 @@
 #nullable enable
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -128,7 +129,11 @@ namespace BTCPayServer.Controllers.Greenfield
         [HttpGet("~/api/v1/users/")]
         public async Task<ActionResult<ApplicationUserData[]>> GetUsers()
         {
-            return Ok(await _userService.GetUsersWithRoles());
+            var usersWithRoles = await _userService.GetUsersWithRoles();
+            List<ApplicationUserData> users = [];
+            foreach (var user in usersWithRoles)
+                users.Add(await FromModel(user));
+            return Ok(users);
         }
 
         [Authorize(Policy = Policies.CanViewProfile, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -452,11 +457,18 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<ApplicationUserData> FromModel(ApplicationUser data)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            var model = UserService.FromModel(data, roles);
-            model.ImageUrl = string.IsNullOrEmpty(model.ImageUrl)
+            return await FromModel(UserService.FromModel(data, roles));
+        }
+
+        private async Task<ApplicationUserData> FromModel(ApplicationUserData data)
+        {
+            data.ImageUrl = string.IsNullOrEmpty(data.ImageUrl)
                 ? null
-                : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(model.ImageUrl));
-            return model;
+                : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(data.ImageUrl));
+            data.InvitationUrl = string.IsNullOrEmpty(data.InvitationToken)
+                ? null
+                : _callbackGenerator.ForInvitation(data.Id, data.InvitationToken, Request);
+            return data;
         }
     }
 }

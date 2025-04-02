@@ -51,6 +51,16 @@ namespace BTCPayServer.Client.Models
         public string[] Roles { get; set; }
 
         /// <summary>
+        /// the invitation url of the user
+        /// </summary>
+        public string InvitationUrl { get; set; }
+
+        /// <summary>
+        /// the invitation token of the user
+        /// </summary>
+        public string InvitationToken { get; set; }
+
+        /// <summary>
         /// the date the user was created. Null if created before v1.0.5.6.
         /// </summary>
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]

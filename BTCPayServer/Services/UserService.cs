@@ -43,26 +43,27 @@ namespace BTCPayServer.Services
         public async Task<List<ApplicationUserData>> GetUsersWithRoles()
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            return await (context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
-               (userRole, role) => role.Name).ToArray()))).ToListAsync();
+            return await context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
+                (userRole, role) => role.Name).ToArray())).ToListAsync();
         }
 
         public static ApplicationUserData FromModel(ApplicationUser data, string?[] roles)
         {
-            var blob = data.GetBlob() ?? new();
+            var blob = data.GetBlob() ?? new UserBlob();
             return new ApplicationUserData
             {
                 Id = data.Id,
                 Email = data.Email,
-                EmailConfirmed = data.EmailConfirmed,
+                EmailConfirmed = IsEmailConfirmed(data),
                 RequiresEmailConfirmation = data.RequiresEmailConfirmation,
-                Approved = data.Approved,
+                Approved = IsApproved(data),
                 RequiresApproval = data.RequiresApproval,
                 Created = data.Created,
                 Name = blob.Name,
                 ImageUrl = blob.ImageUrl,
+                InvitationToken = blob.InvitationToken,
                 Roles = roles,
-                Disabled = data.LockoutEnabled && data.LockoutEnd is not null && DateTimeOffset.UtcNow < data.LockoutEnd.Value.UtcDateTime
+                Disabled = IsDisabled(data)
             };
         }
 
@@ -78,7 +79,7 @@ namespace BTCPayServer.Services
 
         private static bool IsDisabled(ApplicationUser user)
         {
-            return user.LockoutEnabled && user.LockoutEnd is not null &&
+            return user is { LockoutEnabled: true, LockoutEnd: not null } &&
                    DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
         }
         

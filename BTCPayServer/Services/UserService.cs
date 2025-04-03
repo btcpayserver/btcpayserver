@@ -79,8 +79,8 @@ namespace BTCPayServer.Services
 
         private static bool IsDisabled(ApplicationUser user)
         {
-            return user is { LockoutEnabled: true, LockoutEnd: not null } &&
-                   DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
+            return user is { LockoutEnabled: true, LockoutEnd: {} lockoutEnd } &&
+                   DateTimeOffset.UtcNow < lockoutEnd.UtcDateTime;
         }
         
         public static bool TryCanLogin([NotNullWhen(true)] ApplicationUser? user, [MaybeNullWhen(true)] out string error)

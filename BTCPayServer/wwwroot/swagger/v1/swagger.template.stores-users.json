@@ -235,70 +235,25 @@
                         "properties": {
                             "userId": {
                                 "type": "string",
-                                "description": "The id of the user",
-                                "nullable": false
+                                "description": "The id of the user (Deprecated, use `id` instead)",
+                                "nullable": false,
+                                "deprecated": true
                             },
                             "role": {
                                 "type": "string",
+                                "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest` (Deprecated, use `storeRole` instead)",
+                                "nullable": false,
+                                "deprecated": true
+                            },
+                            "storeRole": {
+                                "type": "string",
                                 "description": "The role of the user. Default roles are `Owner`, `Manager`, `Employee` and `Guest`",
                                 "nullable": false
-                            },
-                            "email": {
-                                "type": "string",
-                                "description": "The email of the user",
-                                "nullable": true
-                            },
-                            "name": {
-                                "type": "string",
-                                "description": "The name of the user",
-                                "nullable": true
-                            },
-                            "imageUrl": {
-                                "type": "string",
-                                "description": "The profile picture URL of the user",
-                                "nullable": true
-                            },
-                            "invitationToken": {
-                                "type": "string",
-                                "description": "The pending invitation token of the user",
-                                "nullable": true
-                            },
-                            "invitationUrl": {
-                                "type": "string",
-                                "description": "The pending invitation URL of the user",
-                                "nullable": true
-                            },
-                            "emailConfirmed": {
-                                "type": "boolean",
-                                "description": "True if the email has been confirmed by the user"
-                            },
-                            "requiresEmailConfirmation": {
-                                "type": "boolean",
-                                "description": "True if the email requires confirmation to log in"
-                            },
-                            "approved": {
-                                "type": "boolean",
-                                "description": "True if an admin has approved the user"
-                            },
-                            "requiresApproval": {
-                                "type": "boolean",
-                                "description": "True if the instance requires approval to log in"
-                            },
-                            "disabled": {
-                                "type": "boolean",
-                                "description": "True if an admin has disabled the user"
-                            },
-                            "created": {
-                                "type": "number",
-                                "nullable": true,
-                                "description": "The creation date of the user as a unix timestamp. Null if created before v1.0.5.6",
-                                "allOf": [
-                                    {
-                                        "$ref": "#/components/schemas/UnixTimestamp"
-                                    }
-                                ]
                             }
                         }
+                    },
+                    {
+                        "$ref": "#/components/schemas/ApplicationUserData"
                     }
                 ]
             }

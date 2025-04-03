@@ -520,11 +520,6 @@
                         "description": "The profile picture URL of the user",
                         "nullable": true
                     },
-                    "invitationToken": {
-                        "type": "string",
-                        "description": "The pending invitation token of the user",
-                        "nullable": true
-                    },
                     "invitationUrl": {
                         "type": "string",
                         "description": "The pending invitation URL of the user",

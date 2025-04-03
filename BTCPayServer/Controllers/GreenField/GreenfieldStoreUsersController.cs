@@ -1,4 +1,7 @@
+using System;
 using System.Collections.Generic;
+using System.Data;
+using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -11,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using NicolasDorier.RateLimits;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -50,11 +54,13 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> RemoveStoreUser(string storeId, string idOrEmail)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null) return StoreNotFound();
+            if (store == null)
+                return StoreNotFound();
 
             var user = await _userManager.FindByIdOrEmail(idOrEmail);
-            if (user == null) return UserNotFound();
-            
+            if (user == null)
+                return UserNotFound();
+
             return await _storeRepository.RemoveStoreUser(storeId, user.Id)
                 ? Ok()
                 : this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner.");
@@ -66,19 +72,25 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> AddOrUpdateStoreUser(string storeId, StoreUserData request, string idOrEmail = null)
         {
             var store = HttpContext.GetStoreData();
-            if (store == null) return StoreNotFound();
+            if (store == null)
+                return StoreNotFound();
+#pragma warning disable CS0618 // Type or member is obsolete
+            request.StoreRole ??= request.Role;
+            request.Id ??= request.UserId;
+#pragma warning restore CS0618 // Type or member is obsolete
 
-            var user = await _userManager.FindByIdOrEmail(idOrEmail ?? request.UserId);
-            if (user == null) return UserNotFound();
-            
+            var user = await _userManager.FindByIdOrEmail(idOrEmail ?? request.Id);
+            if (user == null)
+                return UserNotFound();
+
             StoreRoleId roleId = null;
-            if (request.Role is not null)
+            if (request.StoreRole is not null)
             {
-                roleId = await _storeRepository.ResolveStoreRoleId(storeId, request.Role);
+                roleId = await _storeRepository.ResolveStoreRoleId(storeId, request.StoreRole);
                 if (roleId is null)
-                    ModelState.AddModelError(nameof(request.Role), "The role id provided does not exist");
+                    ModelState.AddModelError(nameof(request.StoreRole), "The role id provided does not exist");
             }
-            
+
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
@@ -96,28 +108,15 @@ namespace BTCPayServer.Controllers.Greenfield
             foreach (var storeUser in store.UserStores)
             {
                 var user = await _userManager.FindByIdOrEmail(storeUser.ApplicationUserId);
-                if (user == null) continue;
-                var data = UserService.FromModel(user, []);
-                storeUsers.Add(new StoreUserData
-                {
-                    UserId = storeUser.ApplicationUserId,
-                    Role = storeUser.StoreRoleId,
-                    Email = data.Email,
-                    Name = data.Name,
-                    InvitationToken = data.InvitationToken,
-                    EmailConfirmed = data.EmailConfirmed,
-                    RequiresEmailConfirmation = data.RequiresEmailConfirmation,
-                    Approved = data.Approved,
-                    RequiresApproval = data.RequiresApproval,
-                    Created = data.Created,
-                    Disabled = data.Disabled,
-                    ImageUrl = data.ImageUrl == null
-                        ? null
-                        : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(data.ImageUrl)),
-                    InvitationUrl = string.IsNullOrEmpty(data.InvitationToken)
-                        ? null
-                        : _callbackGenerator.ForInvitation(data.Id, data.InvitationToken, Request)
-                });
+                if (user == null)
+                    continue;
+                var data = await UserService.ForAPI<StoreUserData>(user, [], _callbackGenerator, _uriResolver, Request);
+                data.StoreRole = storeUser.StoreRoleId;
+#pragma warning disable CS0618 // Type or member is obsolete
+                data.UserId = storeUser.ApplicationUserId;
+                data.Role = storeUser.StoreRoleId;
+#pragma warning restore CS0618 // Type or member is obsolete
+                storeUsers.Add(data);
             }
             return storeUsers;
         }

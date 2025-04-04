@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Storage.Services;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -40,17 +42,30 @@ namespace BTCPayServer.Services
             _logger = logger;
         }
 
-        public async Task<List<ApplicationUserData>> GetUsersWithRoles()
+        public record ApplicationUserWithRoles(ApplicationUser User, string[] Roles);
+        public async Task<List<ApplicationUserWithRoles>> GetUsersWithRoles()
         {
             await using var context = _applicationDbContextFactory.CreateContext();
-            return await (context.Users.Select(p => FromModel(p, p.UserRoles.Join(context.Roles, userRole => userRole.RoleId, role => role.Id,
-               (userRole, role) => role.Name).ToArray()))).ToListAsync();
+            var res = await context.Users.Select(p =>
+                        new
+                        {
+                            User = p,
+                            Roles = p.UserRoles.Join(context.Roles, userRole => userRole.RoleId,
+                            role => role.Id, (userRole, role) => role.Name).ToArray()
+                        })
+                .ToListAsync();
+            return res.Select(p => new ApplicationUserWithRoles(p.User, (p.Roles ?? [])!)).ToList();
         }
 
-        public static ApplicationUserData FromModel(ApplicationUser data, string?[] roles)
+        public static async Task<T> ForAPI<T>(
+            ApplicationUser data,
+            string?[] roles,
+            CallbackGenerator callbackGenerator,
+            UriResolver uriResolver,
+            HttpRequest request) where T : ApplicationUserData, new()
         {
-            var blob = data.GetBlob() ?? new();
-            return new ApplicationUserData
+            var blob = data.GetBlob() ?? new UserBlob();
+            return new T
             {
                 Id = data.Id,
                 Email = data.Email,
@@ -60,9 +75,13 @@ namespace BTCPayServer.Services
                 RequiresApproval = data.RequiresApproval,
                 Created = data.Created,
                 Name = blob.Name,
-                ImageUrl = blob.ImageUrl,
                 Roles = roles,
-                Disabled = data.LockoutEnabled && data.LockoutEnd is not null && DateTimeOffset.UtcNow < data.LockoutEnd.Value.UtcDateTime
+                Disabled = IsDisabled(data),
+                ImageUrl = string.IsNullOrEmpty(blob.ImageUrl)
+                    ? null
+                    : await uriResolver.Resolve(request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
+                InvitationUrl = string.IsNullOrEmpty(blob.InvitationToken) ? null
+                    : callbackGenerator.ForInvitation(data.Id, blob.InvitationToken, request)
             };
         }
 
@@ -78,8 +97,8 @@ namespace BTCPayServer.Services
 
         private static bool IsDisabled(ApplicationUser user)
         {
-            return user.LockoutEnabled && user.LockoutEnd is not null &&
-                   DateTimeOffset.UtcNow < user.LockoutEnd.Value.UtcDateTime;
+            return user is { LockoutEnabled: true, LockoutEnd: {} lockoutEnd } &&
+                   DateTimeOffset.UtcNow < lockoutEnd.UtcDateTime;
         }
         
         public static bool TryCanLogin([NotNullWhen(true)] ApplicationUser? user, [MaybeNullWhen(true)] out string error)

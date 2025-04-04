@@ -248,7 +248,7 @@ namespace BTCPayServer.Tests
             await Assert.ThrowsAsync<GreenfieldAPIException>(() => newUserClient.GetInvoices(store.Id));
 
             // if user is a guest or owner, then it should be ok
-            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { UserId = newUser.Id });
+            await unrestricted.AddStoreUser(store.Id, new StoreUserData() { Id = newUser.Id });
             await newUserClient.GetInvoices(store.Id);
         }
 
@@ -4017,8 +4017,8 @@ namespace BTCPayServer.Tests
 #pragma warning restore CS0618
             var users = await client.GetStoreUsers(user.StoreId);
             var storeUser = Assert.Single(users);
-            Assert.Equal(user.UserId, storeUser.UserId);
-            Assert.Equal(ownerRole.Id, storeUser.Role);
+            Assert.Equal(user.UserId, storeUser.Id);
+            Assert.Equal(ownerRole.Id, storeUser.StoreRole);
             Assert.Equal(user.Email, storeUser.Email);
             Assert.Equal("The Admin", storeUser.Name);
             Assert.Equal("avatar.jpg", storeUser.ImageUrl);
@@ -4050,15 +4050,15 @@ namespace BTCPayServer.Tests
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await guestClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             // add users to store
-            await client.AddStoreUser(user.StoreId, new StoreUserData { Role = managerRole.Id, UserId = manager.UserId });
-            await client.AddStoreUser(user.StoreId, new StoreUserData { Role = employeeRole.Id, UserId = employee.UserId });
+            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = managerRole.Id, Id = manager.UserId });
+            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = employeeRole.Id, Id = employee.UserId });
 
             // add with email
-            await client.AddStoreUser(user.StoreId, new StoreUserData { Role = guestRole.Id, UserId = guest.Email });
+            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = guestRole.Id, Id = guest.Email });
             
             // test unknown user
-            await AssertAPIError("user-not-found", async () => await client.AddStoreUser(user.StoreId, new StoreUserData { Role = managerRole.Id, UserId = "unknown" }));
-            await AssertAPIError("user-not-found", async () => await client.UpdateStoreUser(user.StoreId, "unknown", new StoreUserData { Role = ownerRole.Id }));
+            await AssertAPIError("user-not-found", async () => await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = managerRole.Id, Id = "unknown" }));
+            await AssertAPIError("user-not-found", async () => await client.UpdateStoreUser(user.StoreId, "unknown", new StoreUserData { StoreRole = ownerRole.Id }));
             await AssertAPIError("user-not-found", async () => await client.RemoveStoreUser(user.StoreId, "unknown"));
 
             //test no access to api for employee
@@ -4080,7 +4080,7 @@ namespace BTCPayServer.Tests
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             // updates
-            await client.UpdateStoreUser(user.StoreId, employee.UserId, new StoreUserData { Role = ownerRole.Id });
+            await client.UpdateStoreUser(user.StoreId, employee.UserId, new StoreUserData { StoreRole = ownerRole.Id });
             await employeeClient.GetStore(user.StoreId);
             
             // remove
@@ -4088,9 +4088,9 @@ namespace BTCPayServer.Tests
             await AssertHttpError(403, async () => await employeeClient.GetStore(user.StoreId));
 
             // test duplicate add
-            await client.AddStoreUser(user.StoreId, new StoreUserData { Role = ownerRole.Id, UserId = employee.UserId });
+            await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = ownerRole.Id, Id = employee.UserId });
             await AssertAPIError("duplicate-store-user-role", async () =>
-                 await client.AddStoreUser(user.StoreId, new StoreUserData { Role = ownerRole.Id, UserId = employee.UserId }));
+                 await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = ownerRole.Id, Id = employee.UserId }));
             await employeeClient.RemoveStoreUser(user.StoreId, user.UserId);
 
             //test no access to api when unrelated to store at all

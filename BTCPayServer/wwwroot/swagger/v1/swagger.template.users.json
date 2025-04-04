@@ -520,6 +520,11 @@
                         "description": "The profile picture URL of the user",
                         "nullable": true
                     },
+                    "invitationUrl": {
+                        "type": "string",
+                        "description": "The pending invitation URL of the user",
+                        "nullable": true
+                    },
                     "emailConfirmed": {
                         "type": "boolean",
                         "description": "True if the email has been confirmed by the user"
@@ -545,6 +550,10 @@
                                 "$ref": "#/components/schemas/UnixTimestamp"
                             }
                         ]
+                    },
+                    "disabled": {
+                        "type": "boolean",
+                        "description": "True if an admin has disabled the user"
                     },
                     "roles": {
                         "type": "array",

@@ -459,7 +459,6 @@ namespace BTCPayServer.Controllers.Greenfield
         private async Task<ApplicationUserData> ForAPI(ApplicationUser data)
         {
             var roles = (await _userManager.GetRolesAsync(data)).ToArray();
-            var blob = data.GetBlob();
             return await UserService.ForAPI<ApplicationUserData>(data, roles, _callbackGenerator, _uriResolver, Request);
         }
     }

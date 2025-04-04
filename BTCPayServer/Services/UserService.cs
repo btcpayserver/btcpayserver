@@ -76,7 +76,7 @@ namespace BTCPayServer.Services
                 Created = data.Created,
                 Name = blob.Name,
                 Roles = roles,
-                Disabled = IsDisabled(data),
+                Disabled = data.IsDisabled,
                 ImageUrl = string.IsNullOrEmpty(blob.ImageUrl)
                     ? null
                     : await uriResolver.Resolve(request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
@@ -93,12 +93,6 @@ namespace BTCPayServer.Services
         private static bool IsApproved(ApplicationUser user)
         {
             return user.Approved || !user.RequiresApproval;
-        }
-
-        private static bool IsDisabled(ApplicationUser user)
-        {
-            return user is { LockoutEnabled: true, LockoutEnd: {} lockoutEnd } &&
-                   DateTimeOffset.UtcNow < lockoutEnd.UtcDateTime;
         }
         
         public static bool TryCanLogin([NotNullWhen(true)] ApplicationUser? user, [MaybeNullWhen(true)] out string error)
@@ -119,7 +113,7 @@ namespace BTCPayServer.Services
                 error = "Your user account requires approval by an admin before you can log in.";
                 return false;
             }
-            if (IsDisabled(user))
+            if (user.IsDisabled)
             {
                 error = "Your user account is currently disabled.";
                 return false;
@@ -253,7 +247,7 @@ namespace BTCPayServer.Services
             }
             var adminUsers = await userManager.GetUsersInRoleAsync(Roles.ServerAdmin);
             var enabledAdminUsers = adminUsers
-                                        .Where(applicationUser => !IsDisabled(applicationUser) && IsApproved(applicationUser))
+                                        .Where(applicationUser => !applicationUser.IsDisabled && IsApproved(applicationUser))
                                         .Select(applicationUser => applicationUser.Id).ToList();
 
             return enabledAdminUsers.Count == 1 && enabledAdminUsers.Contains(user.Id);

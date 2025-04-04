@@ -75,8 +75,7 @@ namespace BTCPayServer.Controllers
                         Approved = u.RequiresApproval ? u.Approved : null,
                         Created = u.Created,
                         Roles = u.UserRoles.Select(role => role.RoleId),
-                        Disabled = u.LockoutEnabled && u.LockoutEnd != null &&
-                                   DateTimeOffset.UtcNow < u.LockoutEnd.Value.UtcDateTime,
+                        Disabled = u.IsDisabled,
                         Stores = u.UserStores.OrderBy(s => !s.StoreData.Archived).ToList()
                     };
                 })

@@ -4018,7 +4018,9 @@ namespace BTCPayServer.Tests
             var users = await client.GetStoreUsers(user.StoreId);
             var storeUser = Assert.Single(users);
             Assert.Equal(user.UserId, storeUser.Id);
+            Assert.Equal(user.UserId, storeUser.AdditionalData["userId"].ToString());
             Assert.Equal(ownerRole.Id, storeUser.StoreRole);
+            Assert.Equal(ownerRole.Id, storeUser.AdditionalData["role"].ToString());
             Assert.Equal(user.Email, storeUser.Email);
             Assert.Equal("The Admin", storeUser.Name);
             Assert.Equal("avatar.jpg", storeUser.ImageUrl);

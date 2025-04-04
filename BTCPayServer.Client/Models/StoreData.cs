@@ -15,21 +15,9 @@ namespace BTCPayServer.Client.Models
     public class StoreUserData : ApplicationUserData
     {
         /// <summary>
-        /// the id of the user
-        /// </summary>
-        [Obsolete("Use Id instead")]
-        public string UserId { get; set; }
-
-        /// <summary>
         /// the store role of the user
         /// </summary>
         public string StoreRole { get; set; }
-
-        /// <summary>
-        /// the store role of the user
-        /// </summary>
-        [Obsolete("Use StoreRole instead")]
-        public string Role { get; set; }
     }
 
     public class RoleData

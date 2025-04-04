@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using NicolasDorier.RateLimits;
 using StoreData = BTCPayServer.Data.StoreData;
 
@@ -46,7 +47,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetStoreUsers()
         {
             var store = HttpContext.GetStoreData();
-            return store == null ? StoreNotFound() : Ok(await FromModel(store));
+            return store == null ? StoreNotFound() : Ok(await ToAPI(store));
         }
 
         [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -74,10 +75,11 @@ namespace BTCPayServer.Controllers.Greenfield
             var store = HttpContext.GetStoreData();
             if (store == null)
                 return StoreNotFound();
-#pragma warning disable CS0618 // Type or member is obsolete
-            request.StoreRole ??= request.Role;
-            request.Id ??= request.UserId;
-#pragma warning restore CS0618 // Type or member is obsolete
+
+            // Deprecated properties
+            request.StoreRole ??= request.AdditionalData.TryGetValue("role", out var role) ? role.ToString() : null;
+            request.Id ??= request.AdditionalData.TryGetValue("userId", out var userId) ? userId.ToString() : null;
+            /////
 
             var user = await _userManager.FindByIdOrEmail(idOrEmail ?? request.Id);
             if (user == null)
@@ -102,7 +104,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 : this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
         }
 
-        private async Task<IEnumerable<StoreUserData>> FromModel(StoreData store)
+        private async Task<IEnumerable<StoreUserData>> ToAPI(StoreData store)
         {
             var storeUsers = new List<StoreUserData>();
             foreach (var storeUser in store.UserStores)
@@ -112,10 +114,12 @@ namespace BTCPayServer.Controllers.Greenfield
                     continue;
                 var data = await UserService.ForAPI<StoreUserData>(user, [], _callbackGenerator, _uriResolver, Request);
                 data.StoreRole = storeUser.StoreRoleId;
-#pragma warning disable CS0618 // Type or member is obsolete
-                data.UserId = storeUser.ApplicationUserId;
-                data.Role = storeUser.StoreRoleId;
-#pragma warning restore CS0618 // Type or member is obsolete
+
+                // Deprecated properties
+                data.AdditionalData["userId"] = new JValue(storeUser.ApplicationUserId);
+                data.AdditionalData["role"] = new JValue(storeUser.StoreRoleId);
+                /////
+
                 storeUsers.Add(data);
             }
             return storeUsers;

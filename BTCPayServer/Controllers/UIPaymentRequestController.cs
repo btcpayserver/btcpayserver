@@ -207,7 +207,7 @@ namespace BTCPayServer.Controllers
             data.Amount = viewModel.Amount;
             data.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
             data.Expiry = viewModel.ExpiryDate?.ToUniversalTime();
-            blob.ReferenceNumber = viewModel.ReferenceNumber;
+            data.ReferenceId = viewModel.ReferenceId;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
             blob.FormId = viewModel.FormId;
 

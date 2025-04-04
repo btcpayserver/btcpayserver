@@ -43,11 +43,19 @@ namespace BTCPayServer.Tests
                 Currency = "BTC",
                 Amount = 1,
                 StoreId = user.StoreId,
-                Description = "description"
+                Description = "description",
+                ReferenceId = "custom-id-1"
             };
             var id = Assert
                 .IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(null, request))
                 .RouteValues.Values.Last().ToString();
+
+            // Assert initial Title and ReferenceId
+            var repo = tester.PayTester.GetService<PaymentRequestRepository>();
+            var prData = await repo.FindPaymentRequest(id, user.UserId);
+            Assert.NotNull(prData);
+            Assert.Equal("original juice", prData.GetBlob().Title);
+            Assert.Equal("custom-id-1", prData.ReferenceId);
 
             paymentRequestController.HttpContext.SetPaymentRequestData(new PaymentRequestData { Id = id, StoreDataId = request.StoreId });
 
@@ -56,7 +64,14 @@ namespace BTCPayServer.Tests
                 .IsType<NotFoundResult>(await guestpaymentRequestController.EditPaymentRequest(user.StoreId, id));
 
             request.Title = "update";
+            request.ReferenceId = "custom-id-2";
             Assert.IsType<RedirectToActionResult>(await paymentRequestController.EditPaymentRequest(id, request));
+
+            // Assert updated Title and ReferenceId
+            prData = await repo.FindPaymentRequest(id, user.UserId);
+            Assert.NotNull(prData);
+            Assert.Equal("update", prData.GetBlob().Title);
+            Assert.Equal("custom-id-2", prData.ReferenceId);
 
             Assert.Equal(request.Title,
                 Assert.IsType<ViewPaymentRequestViewModel>(Assert

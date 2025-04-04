@@ -48,7 +48,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Description = blob.Description;
             ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
-            ReferenceNumber = blob.ReferenceNumber;
+            ReferenceId = data.ReferenceId;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             FormResponse = blob.FormResponse is null
                 ? null
@@ -85,10 +85,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [MailboxAddress]
         public string Email { get; set; }
         
-        [Display(Name = "Reference Number")]
-        [MaxLength(50)]
-        public string ReferenceNumber { get; set; }
-        
+        [Display(Name = "Reference Id")]
+        public string ReferenceId { get; set; }
+
         [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
 
@@ -111,7 +110,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Description = blob.Description;
             ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
-            ReferenceNumber = blob.ReferenceNumber;
+            ReferenceId = data.ReferenceId;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             switch (data.Status)
             {
@@ -133,7 +132,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             }
         }
         public StoreBrandingViewModel StoreBranding { get; set; }
-        public string ReferenceNumber { get; set; }
+        public string ReferenceId { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }

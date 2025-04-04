@@ -92,7 +92,7 @@ namespace BTCPayServer.Services
                 pathBase: request.PathBase
             ) ?? throw Bug();
         }
-        
+
         public string PaymentRequestByIdLink(string payReqId, HttpRequest request)
         {
             return LinkGenerator.GetUriByAction(
@@ -104,7 +104,7 @@ namespace BTCPayServer.Services
                 pathBase: request.PathBase
             ) ?? throw Bug();
         }
-        
+
         public string PaymentRequestListLink(string storeId, HttpRequest request)
         {
             return LinkGenerator.GetUriByAction(

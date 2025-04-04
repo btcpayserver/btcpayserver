@@ -57,7 +57,7 @@
     <input type="hidden" asp-for="Count" />
     <input type="hidden" asp-for="TimezoneOffset" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
+    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search by Id..."]" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
@@ -94,7 +94,7 @@
                             </button>
                         </div>
                     </th>
-                    <th text-translate="true">Number</th>
+                    <th text-translate="true">Reference Id</th>
                     <th text-translate="true">Status</th>
                     <th class="amount-col" text-translate="true">Amount</th>
                     <th></th>
@@ -111,7 +111,7 @@
                             @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
                         </td>
                         <td>
-                            @item.ReferenceNumber
+                            @item.ReferenceId
                         </td>
                         <td>
                             <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>

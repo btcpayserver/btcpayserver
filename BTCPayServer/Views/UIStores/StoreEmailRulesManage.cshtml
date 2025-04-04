@@ -96,7 +96,7 @@
                         <code>{PaymentRequest.Currency}</code>,
                         <code>{PaymentRequest.Title}</code>,
                         <code>{PaymentRequest.Description}</code>,
-                        <code>{PaymentRequest.ReferenceNumber}</code>,
+                        <code>{PaymentRequest.ReferenceId}</code>,
                         <code>{PaymentRequest.Status}</code>
                         <code>{PaymentRequest.FormResponse}*</code>
                     </td>
@@ -165,7 +165,7 @@
                 },
                 @{ var paymentRequestsLink = CallbackGenerator.PaymentRequestListLink(storeId, this.Context.Request); }
                 @WebhookEventType.PaymentRequestCompleted: {
-                    subject: 'Payment Request {PaymentRequest.Title} {PaymentRequest.ReferenceNumber} Completed',
+                    subject: 'Payment Request {PaymentRequest.Title} {PaymentRequest.ReferenceId} Completed',
                     body: 'The total of {PaymentRequest.Amount} {PaymentRequest.Currency} has been received and Payment Request {PaymentRequest.Id} is completed. ' +
                     '\nReview the payment requests: ' + @Safe.Json(paymentRequestsLink)
                 },

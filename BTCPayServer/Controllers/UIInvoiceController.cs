@@ -163,8 +163,8 @@ namespace BTCPayServer.Controllers
                     Checkout = { RedirectURL = redirectUrl },
                     Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = false }
                 };
-            if (prBlob.ReferenceNumber is not null or "")
-                invoiceRequest.AdditionalSearchTerms = new[] { prBlob.ReferenceNumber };
+            if (prData.ReferenceId is not null or "")
+                invoiceRequest.AdditionalSearchTerms = [prData.ReferenceId];
             var additionalTags = new List<string> { PaymentRequestRepository.GetInternalTag(id) };
             return await CreateInvoiceCoreRaw(invoiceRequest, storeData, request.GetAbsoluteRoot(), additionalTags, cancellationToken);
         }

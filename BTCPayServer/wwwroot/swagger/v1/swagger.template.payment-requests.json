@@ -461,6 +461,12 @@
                             }
                         ]
                     },
+                    "referenceId": {
+                        "type": "string",
+                        "description": "An optional user-defined identifier for this payment request.",
+                        "nullable": true,
+                        "example": "INV-123493"
+                    },
                     "allowCustomPaymentAmounts": {
                         "type": "boolean",
                         "description": "Whether to allow users to create invoices that partially pay the payment request ",

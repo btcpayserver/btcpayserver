@@ -17,5 +17,6 @@ public static class WebhookEventType
     public const string PaymentRequestCreated = nameof(PaymentRequestCreated);
     public const string PaymentRequestArchived = nameof(PaymentRequestArchived);
     public const string PaymentRequestStatusChanged = nameof(PaymentRequestStatusChanged);
+    public const string PaymentRequestCompleted = nameof(PaymentRequestCompleted);
     
 }

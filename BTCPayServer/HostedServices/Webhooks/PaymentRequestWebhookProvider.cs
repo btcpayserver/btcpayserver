@@ -22,6 +22,7 @@ public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
             {WebhookEventType.PaymentRequestUpdated, "Payment Request - Updated"},
             {WebhookEventType.PaymentRequestArchived, "Payment Request - Archived"},
             {WebhookEventType.PaymentRequestStatusChanged, "Payment Request - Status Changed"},
+            {WebhookEventType.PaymentRequestCompleted, "Payment Request - Completed"},
         };
     }
 
@@ -42,6 +43,7 @@ public class PaymentRequestWebhookProvider: WebhookProvider<PaymentRequestEvent>
             PaymentRequestEvent.Updated => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestUpdated, evt.Data.StoreDataId),
             PaymentRequestEvent.Archived => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestArchived, evt.Data.StoreDataId),
             PaymentRequestEvent.StatusChanged => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestStatusChanged, evt.Data.StoreDataId),
+            PaymentRequestEvent.Completed => new WebhookPaymentRequestEvent(WebhookEventType.PaymentRequestCompleted, evt.Data.StoreDataId),
             _ => null
         };
     }

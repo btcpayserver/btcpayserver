@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
@@ -15,7 +13,6 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
-using NicolasDorier.RateLimits;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -79,7 +76,6 @@ namespace BTCPayServer.Controllers.Greenfield
             // Deprecated properties
             request.StoreRole ??= request.AdditionalData.TryGetValue("role", out var role) ? role.ToString() : null;
             request.Id ??= request.AdditionalData.TryGetValue("userId", out var userId) ? userId.ToString() : null;
-            /////
 
             var user = await _userManager.FindByIdOrEmail(idOrEmail ?? request.Id);
             if (user == null)
@@ -96,12 +92,19 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            var result = string.IsNullOrEmpty(idOrEmail)
-                ? await _storeRepository.AddStoreUser(storeId, user.Id, roleId)
-                : await _storeRepository.AddOrUpdateStoreUser(storeId, user.Id, roleId);
-            return result
-                ? Ok()
-                : this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
+            try
+            {
+                var result = string.IsNullOrEmpty(idOrEmail)
+                    ? await _storeRepository.AddStoreUser(storeId, user.Id, roleId)
+                    : await _storeRepository.AddOrUpdateStoreUser(storeId, user.Id, roleId);
+                return result
+                    ? Ok()
+                    : this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
+            }
+            catch (Exception e)
+            {
+                return this.CreateAPIError(409, "store-user-role-orphaned", e.Message);
+            }
         }
 
         private async Task<IEnumerable<StoreUserData>> ToAPI(StoreData store)

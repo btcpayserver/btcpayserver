@@ -83,8 +83,10 @@ public partial class UIStoresController
         var action = isExistingUser
             ? isExistingStoreUser ? "updated" : "added"
             : "invited";
-        if (await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId))
+        
+        try
         {
+            await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -93,9 +95,11 @@ public partial class UIStoresController
             });
             return RedirectToAction(nameof(StoreUsers));
         }
-
-        ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}");
-        return View(vm);
+        catch (Exception e)
+        {
+            ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}: {e.Message}");
+            return View(vm);
+        }
     }
 
     [HttpPost("{storeId}/users/{userId}")]
@@ -105,12 +109,16 @@ public partial class UIStoresController
         var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
         var storeUsers = await _storeRepo.GetStoreUsers(storeId);
         var user = storeUsers.First(user => user.Id == userId);
-        var isOwner = user.StoreRole.Id == StoreRoleId.Owner.Id;
-        var isLastOwner = isOwner && storeUsers.Count(u => u.StoreRole.Id == StoreRoleId.Owner.Id) == 1;
-        if (isLastOwner && roleId != StoreRoleId.Owner)
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["User {0} is the last owner. Their role cannot be changed.", user.Email].Value;
-        else if (await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId))
+
+        try
+        {
+            await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The role of {0} has been changed to {1}.", user.Email, vm.Role].Value;
+        }
+        catch (Exception e)
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Changing the role of user {0} failed: {1}", user.Email, e.Message].Value;
+        }
         return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
     }
 

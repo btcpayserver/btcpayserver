@@ -320,7 +320,8 @@ namespace BTCPayServer.Services.Stores
             AssertStoreRoleIfNeeded(storeId, roleId);
             roleId ??= await GetDefaultRole();
             await using var ctx = _ContextFactory.CreateContext();
-            var userStore = await ctx.UserStore.FindAsync(userId, storeId);
+            var userStore = await ctx.UserStore.Include(store => store.StoreRole)
+                .FirstOrDefaultAsync(u => u.ApplicationUserId == userId && u.StoreDataId == storeId);
             var added = false;
             if (userStore is null)
             {
@@ -328,9 +329,16 @@ namespace BTCPayServer.Services.Stores
                 ctx.UserStore.Add(userStore);
                 added = true;
             }
+            // ensure the last owner doesn't get downgraded
+            else if (userStore.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
+            {
+                var storeRole = await GetStoreRole(roleId);
+                if (storeRole?.Permissions.Contains(Policies.CanModifyStoreSettings) is false && !await EnsureRemainingOwner(ctx.UserStore, storeId, userId))
+                    throw new InvalidOperationException("The user is the last owner. Their role cannot be changed.");
+            }
 
             if (userStore.StoreRoleId == roleId.Id)
-                return false;
+                throw new InvalidOperationException($"The user already has the role {roleId}.");
             
             userStore.StoreRoleId = roleId.Id;
             try
@@ -357,16 +365,21 @@ namespace BTCPayServer.Services.Stores
         public async Task<bool> RemoveStoreUser(string storeId, string userId)
         {
             await using var ctx = _ContextFactory.CreateContext();
-            if (!await ctx.UserStore.Include(store => store.StoreRole).AnyAsync(store =>
-                    store.StoreDataId == storeId && store.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings) &&
-                    userId != store.ApplicationUserId))
+            if (!await EnsureRemainingOwner(ctx.UserStore, storeId, userId))
                 return false;
-            var userStore = new UserStore() { StoreDataId = storeId, ApplicationUserId = userId };
+            var userStore = new UserStore { StoreDataId = storeId, ApplicationUserId = userId };
             ctx.UserStore.Add(userStore);
             ctx.Entry(userStore).State = EntityState.Deleted;
             await ctx.SaveChangesAsync();
             _eventAggregator.Publish(new StoreUserEvent.Removed(storeId, userId));
             return true;
+        }
+
+        private async Task<bool> EnsureRemainingOwner(DbSet<UserStore> userStore, string storeId, string userId)
+        {
+            return await userStore.Include(store => store.StoreRole).AnyAsync(store =>
+                store.StoreDataId == storeId && store.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings) &&
+                store.ApplicationUserId != userId);
         }
 
         private async Task DeleteStoreIfOrphan(string storeId)

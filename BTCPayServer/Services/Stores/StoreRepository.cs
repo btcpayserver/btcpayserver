@@ -7,6 +7,7 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Migrations;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
 using NBitcoin;
@@ -314,11 +315,31 @@ namespace BTCPayServer.Services.Stores
             }
         }
 
-        public async Task<bool> AddOrUpdateStoreUser(string storeId, string userId, StoreRoleId? roleId = null)
+        public record AddOrUpdateStoreUserResult
+        {
+            public record Success : AddOrUpdateStoreUserResult;
+            public record InvalidRole : AddOrUpdateStoreUserResult
+            {
+                public override string ToString() => "The roleId doesn't exist";
+            }
+            public record LastOwner : AddOrUpdateStoreUserResult
+            {
+                public override string ToString() => "The user is the last owner. Their role cannot be changed.";
+            }
+            public record DuplicateRole(StoreRoleId RoleId) : AddOrUpdateStoreUserResult
+            {
+                public override string ToString() => $"The user already has the role {RoleId}.";
+            }
+        }
+        public async Task<AddOrUpdateStoreUserResult> AddOrUpdateStoreUser(string storeId, string userId, StoreRoleId? roleId = null)
         {
             ArgumentNullException.ThrowIfNull(storeId);
             AssertStoreRoleIfNeeded(storeId, roleId);
             roleId ??= await GetDefaultRole();
+            var storeRole = await GetStoreRole(roleId);
+            if (storeRole is null)
+                return new AddOrUpdateStoreUserResult.InvalidRole();
+
             await using var ctx = _ContextFactory.CreateContext();
             var userStore = await ctx.UserStore.Include(store => store.StoreRole)
                 .FirstOrDefaultAsync(u => u.ApplicationUserId == userId && u.StoreDataId == storeId);
@@ -332,13 +353,12 @@ namespace BTCPayServer.Services.Stores
             // ensure the last owner doesn't get downgraded
             else if (userStore.StoreRole.Permissions.Contains(Policies.CanModifyStoreSettings))
             {
-                var storeRole = await GetStoreRole(roleId);
-                if (storeRole?.Permissions.Contains(Policies.CanModifyStoreSettings) is false && !await EnsureRemainingOwner(ctx.UserStore, storeId, userId))
-                    throw new InvalidOperationException("The user is the last owner. Their role cannot be changed.");
+                if (storeRole.Permissions.Contains(Policies.CanModifyStoreSettings) is false && !await EnsureRemainingOwner(ctx.UserStore, storeId, userId))
+                    return new AddOrUpdateStoreUserResult.LastOwner();
             }
 
             if (userStore.StoreRoleId == roleId.Id)
-                throw new InvalidOperationException($"The user already has the role {roleId}.");
+                return new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
             
             userStore.StoreRoleId = roleId.Id;
             try
@@ -348,11 +368,11 @@ namespace BTCPayServer.Services.Stores
                     ? new StoreUserEvent.Added(storeId, userId, userStore.StoreRoleId)
                     : new StoreUserEvent.Updated(storeId, userId, userStore.StoreRoleId);
                 _eventAggregator.Publish(evt);
-                return true;
+                return new AddOrUpdateStoreUserResult.Success();
             }
             catch (DbUpdateException)
             {
-                return false;
+                return new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
             }
         }
 

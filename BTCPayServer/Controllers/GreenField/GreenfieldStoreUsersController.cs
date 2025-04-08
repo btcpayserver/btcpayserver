@@ -13,6 +13,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
+using static BTCPayServer.Services.Stores.StoreRepository;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -92,19 +93,24 @@ namespace BTCPayServer.Controllers.Greenfield
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
 
-            try
+            AddOrUpdateStoreUserResult res;
+            if (string.IsNullOrEmpty(idOrEmail))
             {
-                var result = string.IsNullOrEmpty(idOrEmail)
-                    ? await _storeRepository.AddStoreUser(storeId, user.Id, roleId)
-                    : await _storeRepository.AddOrUpdateStoreUser(storeId, user.Id, roleId);
-                return result
-                    ? Ok()
-                    : this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store");
+                res = await _storeRepository.AddStoreUser(storeId, user.Id, roleId) ? new AddOrUpdateStoreUserResult.Success() : new AddOrUpdateStoreUserResult.DuplicateRole(roleId);
             }
-            catch (Exception e)
+            else
             {
-                return this.CreateAPIError(409, "store-user-role-orphaned", e.Message);
+                res = await _storeRepository.AddOrUpdateStoreUser(storeId, user.Id, roleId);
             }
+
+            return res switch
+            {
+                AddOrUpdateStoreUserResult.Success => Ok(),
+                AddOrUpdateStoreUserResult.DuplicateRole _ => this.CreateAPIError(409, "duplicate-store-user-role", "The user is already added to the store"),
+                // AddOrUpdateStoreUserResult.InvalidRole
+                // AddOrUpdateStoreUserResult.LastOwner
+                _ => this.CreateAPIError(409, "store-user-role-orphaned", "Removing this user would result in the store having no owner."),
+            };
         }
 
         private async Task<IEnumerable<StoreUserData>> ToAPI(StoreData store)

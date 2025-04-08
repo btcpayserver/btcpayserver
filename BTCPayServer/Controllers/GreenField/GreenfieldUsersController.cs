@@ -409,7 +409,6 @@ namespace BTCPayServer.Controllers.Greenfield
                         settings.FirstRun = false;
                         await _settingsRepository.UpdateSetting(settings);
                     }
-
                     await _settingsRepository.FirstAdminRegistered(policies, _options.UpdateUrl != null, _options.DisableRegistration, Logs);
                 }
             }

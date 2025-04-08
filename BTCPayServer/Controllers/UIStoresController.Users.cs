@@ -14,6 +14,7 @@ using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static BTCPayServer.Services.Stores.StoreRepository;
 
 namespace BTCPayServer.Controllers;
 
@@ -83,10 +84,10 @@ public partial class UIStoresController
         var action = isExistingUser
             ? isExistingStoreUser ? "updated" : "added"
             : "invited";
-        
-        try
+
+        var res = await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
+        if (res is AddOrUpdateStoreUserResult.Success)
         {
-            await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
@@ -95,9 +96,9 @@ public partial class UIStoresController
             });
             return RedirectToAction(nameof(StoreUsers));
         }
-        catch (Exception e)
+        else
         {
-            ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}: {e.Message}");
+            ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}: {res.ToString()}");
             return View(vm);
         }
     }
@@ -110,14 +111,14 @@ public partial class UIStoresController
         var storeUsers = await _storeRepo.GetStoreUsers(storeId);
         var user = storeUsers.First(user => user.Id == userId);
 
-        try
+        var res = await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId);
+        if (res is AddOrUpdateStoreUserResult.Success)
         {
-            await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId);
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The role of {0} has been changed to {1}.", user.Email, vm.Role].Value;
         }
-        catch (Exception e)
+        else
         {
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Changing the role of user {0} failed: {1}", user.Email, e.Message].Value;
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Changing the role of user {0} failed: {1}", user.Email, res.ToString()].Value;
         }
         return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
     }

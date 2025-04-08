@@ -98,7 +98,7 @@ namespace BTCPayServer.Controllers
                 StoreId = store.Id,
                 Skip = model.Skip,
                 Count = model.Count,
-                Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<Client.Models.PaymentRequestData.PaymentRequestStatus>(s, true)).ToArray(),
+                Status = fs.GetFilterArray("status")?.Select(s => Enum.Parse<Client.Models.PaymentRequestStatus>(s, true)).ToArray(),
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false
             });
             
@@ -110,7 +110,7 @@ namespace BTCPayServer.Controllers
                 var blob = data.GetBlob();
                 return new ViewPaymentRequestViewModel(data)
                 {
-                    AmountFormatted = _displayFormatter.Currency(blob.Amount, blob.Currency)
+                    AmountFormatted = _displayFormatter.Currency(data.Amount, data.Currency)
                 };
             }).ToList();
 
@@ -180,7 +180,7 @@ namespace BTCPayServer.Controllers
             data.Archived = viewModel.Archived;
             var blob = data.GetBlob();
 
-            if (blob.Amount != viewModel.Amount && payReqId != null)
+            if (data.Amount != viewModel.Amount && payReqId != null)
             {
                 var prInvoices = (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
                 if (prInvoices.Any())
@@ -198,9 +198,9 @@ namespace BTCPayServer.Controllers
             blob.Title = viewModel.Title;
             blob.Email = viewModel.Email;
             blob.Description = viewModel.Description;
-            blob.Amount = viewModel.Amount;
-            blob.ExpiryDate = viewModel.ExpiryDate?.ToUniversalTime();
-            blob.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
+            data.Amount = viewModel.Amount;
+            data.Expiry = viewModel.ExpiryDate?.ToUniversalTime();
+            data.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
             blob.FormId = viewModel.FormId;
 
@@ -212,7 +212,6 @@ namespace BTCPayServer.Controllers
             }
 
             data = await _PaymentRequestRepository.CreateOrUpdatePaymentRequest(data);
-            _EventAggregator.Publish(new PaymentRequestUpdated { Data = data, PaymentRequestId = data.Id, });
 
             TempData[WellKnownTempData.SuccessMessage] = isNewPaymentRequest
                 ? StringLocalizer["Payment request \"{0}\" created successfully", viewModel.Title].Value

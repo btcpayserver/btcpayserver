@@ -158,7 +158,7 @@ namespace BTCPayServer.Controllers
                 new CreateInvoiceRequest
                 {
                     Metadata = invoiceMetadata,
-                    Currency = prBlob.Currency,
+                    Currency = prData.Currency,
                     Amount = amount,
                     Checkout = { RedirectURL = redirectUrl },
                     Receipt = new InvoiceDataBase.ReceiptOptions { Enabled = false }

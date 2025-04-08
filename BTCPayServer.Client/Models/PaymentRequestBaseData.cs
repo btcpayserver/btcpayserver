@@ -2,10 +2,18 @@ using System;
 using System.Collections.Generic;
 using BTCPayServer.JsonConverters;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Client.Models
 {
+    public enum PaymentRequestStatus
+    {
+        Pending,
+        Completed,
+        Expired,
+        Processing,
+    }
     public class PaymentRequestBaseData
     {
         public string StoreId { get; set; }
@@ -19,11 +27,17 @@ namespace BTCPayServer.Client.Models
         public string Email { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
 
-        [JsonExtensionData]
-        public IDictionary<string, JToken> AdditionalData { get; set; }
+        [JsonConverter(typeof(StringEnumConverter))]
+        public PaymentRequestStatus Status { get; set; }
+        [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
+        public DateTimeOffset CreatedTime { get; set; }
+        public string Id { get; set; }
+        public bool Archived { get; set; }
 
         public string FormId { get; set; }
-
         public JObject FormResponse { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JToken> AdditionalData { get; set; }
     }
 }

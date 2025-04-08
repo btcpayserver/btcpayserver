@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 using System.Globalization;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
@@ -30,19 +30,20 @@ public class PaymentRequestWebhookDeliveryRequest : WebhookSender.WebhookDeliver
             req.Email += $",{bmb}";
         }
 
-        req.Subject = Interpolate(req.Subject, blob);
-        req.Body = Interpolate(req.Body, blob);
+        req.Subject = Interpolate(req.Subject, _evt.Data);
+        req.Body = Interpolate(req.Body, _evt.Data);
         return Task.FromResult(req)!;
     }
 
-    private string Interpolate(string str, PaymentRequestBaseData blob)
+    private string Interpolate(string str, Data.PaymentRequestData data)
     {
+        var blob = data.GetBlob();
         var res = str.Replace("{PaymentRequest.Id}", _evt.Data.Id)
-            .Replace("{PaymentRequest.Price}", blob.Amount.ToString(CultureInfo.InvariantCulture))
-            .Replace("{PaymentRequest.Currency}", blob.Currency)
+            .Replace("{PaymentRequest.Price}", data.Amount.ToString(CultureInfo.InvariantCulture))
+            .Replace("{PaymentRequest.Currency}", data.Currency)
             .Replace("{PaymentRequest.Title}", blob.Title)
             .Replace("{PaymentRequest.Description}", blob.Description)
-            .Replace("{PaymentRequest.Status}", _evt.Data.Status.ToString());
+            .Replace("{PaymentRequest.Status}", data.Status.ToString());
 
         res = InterpolateJsonField(res, "PaymentRequest.FormResponse", blob.FormResponse);
         return res;

@@ -43,10 +43,10 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             var blob = data.GetBlob();
             FormId = blob.FormId;
             Title = blob.Title;
-            Amount = blob.Amount;
-            Currency = blob.Currency;
+            Amount = data.Amount;
+            Currency = data.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
+            ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             FormResponse = blob.FormResponse is null
@@ -101,25 +101,25 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             var blob = data.GetBlob();
             Archived = data.Archived;
             Title = blob.Title;
-            Amount = blob.Amount;
-            Currency = blob.Currency;
+            Amount = data.Amount;
+            Currency = data.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
+            ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             switch (data.Status)
             {
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Pending:
+                case Client.Models.PaymentRequestStatus.Pending:
                     Status = "Pending";
                     IsPending = true;
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Processing:
+                case Client.Models.PaymentRequestStatus.Processing:
                     Status = "Processing";
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Completed:
+                case Client.Models.PaymentRequestStatus.Completed:
                     Status = "Settled";
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Expired:
+                case Client.Models.PaymentRequestStatus.Expired:
                     Status = "Expired";
                     break;
                 default:

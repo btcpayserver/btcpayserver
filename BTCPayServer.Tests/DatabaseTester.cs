@@ -19,7 +19,7 @@ namespace BTCPayServer.Tests
     public class DatabaseTester
     {
         private readonly ILoggerFactory _loggerFactory;
-        private readonly string dbname;
+        public readonly string dbname;
         private string[] notAppliedMigrations;
 
         public DatabaseTester(ILog log, ILoggerFactory loggerFactory)

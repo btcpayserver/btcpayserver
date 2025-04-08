@@ -635,7 +635,7 @@ retry:
             Driver.FindElement(By.Id("Email")).SendKeys(email);
             new SelectElement(Driver.FindElement(By.Id("Role"))).SelectByValue(role);
             Driver.FindElement(By.Id("AddUser")).Click();
-            Assert.Contains("User added successfully", FindAlertMessage().Text);
+            Assert.Contains("The user has been added successfully", FindAlertMessage().Text);
         }
 
         public void AssertPageAccess(bool shouldHaveAccess, string url)

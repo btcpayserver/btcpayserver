@@ -92,6 +92,7 @@ namespace BTCPayServer.Hosting
             services.TryAddSingleton<LocalizerService>();
             services.TryAddSingleton<ViewLocalizer>();
             services.TryAddSingleton<IStringLocalizer>(o => o.GetRequiredService<IStringLocalizerFactory>().Create("",""));
+            services.TryAddSingleton<DelayedTaskScheduler>();
 
             services.AddSingleton<MvcNewtonsoftJsonOptions>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value);
             services.AddSingleton<JsonSerializerSettings>(o => o.GetRequiredService<IOptions<MvcNewtonsoftJsonOptions>>().Value.SerializerSettings);
@@ -431,7 +432,8 @@ o.GetRequiredService<IEnumerable<IPaymentLinkExtension>>().ToDictionary(o => o.P
             services.AddSingleton<IHostedService, TransactionLabelMarkerHostedService>();
             services.AddSingleton<IHostedService, UserEventHostedService>();
             services.AddSingleton<IHostedService, DynamicDnsHostedService>();
-            services.AddSingleton<IHostedService, PaymentRequestStreamer>();
+            services.AddSingleton<PaymentRequestStreamer>();
+            services.AddSingleton<IHostedService>(s => s.GetRequiredService<PaymentRequestStreamer>());
             services.AddSingleton<IBackgroundJobClient, BackgroundJobClient>();
             services.AddScoped<IAuthorizationHandler, CookieAuthorizationHandler>();
             services.AddScoped<IAuthorizationHandler, BitpayAuthorizationHandler>();

@@ -27,7 +27,7 @@
             
         @if (!ViewContext.ModelState.IsValid)
         {
-            <div asp-validation-summary="All"></div>
+            <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
         }
 
         <form method="post" class="d-flex flex-wrap align-items-center gap-3" permission="@Policies.CanModifyStoreSettings">

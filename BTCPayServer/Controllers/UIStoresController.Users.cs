@@ -14,6 +14,7 @@ using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using static BTCPayServer.Services.Stores.StoreRepository;
 
 namespace BTCPayServer.Controllers;
 
@@ -83,7 +84,9 @@ public partial class UIStoresController
         var action = isExistingUser
             ? isExistingStoreUser ? "updated" : "added"
             : "invited";
-        if (await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId))
+
+        var res = await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
+        if (res is AddOrUpdateStoreUserResult.Success)
         {
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
@@ -93,9 +96,11 @@ public partial class UIStoresController
             });
             return RedirectToAction(nameof(StoreUsers));
         }
-
-        ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}");
-        return View(vm);
+        else
+        {
+            ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}: {res.ToString()}");
+            return View(vm);
+        }
     }
 
     [HttpPost("{storeId}/users/{userId}")]
@@ -105,12 +110,16 @@ public partial class UIStoresController
         var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
         var storeUsers = await _storeRepo.GetStoreUsers(storeId);
         var user = storeUsers.First(user => user.Id == userId);
-        var isOwner = user.StoreRole.Id == StoreRoleId.Owner.Id;
-        var isLastOwner = isOwner && storeUsers.Count(u => u.StoreRole.Id == StoreRoleId.Owner.Id) == 1;
-        if (isLastOwner && roleId != StoreRoleId.Owner)
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["User {0} is the last owner. Their role cannot be changed.", user.Email].Value;
-        else if (await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId))
+
+        var res = await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId);
+        if (res is AddOrUpdateStoreUserResult.Success)
+        {
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The role of {0} has been changed to {1}.", user.Email, vm.Role].Value;
+        }
+        else
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Changing the role of user {0} failed: {1}", user.Email, res.ToString()].Value;
+        }
         return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
     }
 

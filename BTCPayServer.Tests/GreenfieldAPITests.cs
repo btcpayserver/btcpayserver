@@ -4082,12 +4082,14 @@ namespace BTCPayServer.Tests
             await AssertPermissionError(Policies.CanModifyStoreSettings, async () => await managerClient.RemoveStoreUser(user.StoreId, user.UserId));
 
             // updates
-            await client.UpdateStoreUser(user.StoreId, employee.UserId, new StoreUserData { StoreRole = ownerRole.Id });
+            await client.UpdateStoreUser(user.StoreId, employee.UserId, new StoreUserData { StoreRole = managerRole.Id });
             await employeeClient.GetStore(user.StoreId);
+            await AssertAPIError("store-user-role-orphaned", async () => await client.UpdateStoreUser(user.StoreId, user.UserId, new StoreUserData { StoreRole = managerRole.Id }));
             
             // remove
             await client.RemoveStoreUser(user.StoreId, employee.UserId);
             await AssertHttpError(403, async () => await employeeClient.GetStore(user.StoreId));
+            await AssertAPIError("store-user-role-orphaned", async () => await client.RemoveStoreUser(user.StoreId, user.UserId));
 
             // test duplicate add
             await client.AddStoreUser(user.StoreId, new StoreUserData { StoreRole = ownerRole.Id, Id = employee.UserId });
@@ -4103,7 +4105,6 @@ namespace BTCPayServer.Tests
 
             await AssertAPIError("store-user-role-orphaned", async () => await employeeClient.RemoveStoreUser(user.StoreId, employee.UserId));
         }
-        
 
         [Fact(Timeout = TestTimeout)]
         [Trait("Integration", "Integration")]

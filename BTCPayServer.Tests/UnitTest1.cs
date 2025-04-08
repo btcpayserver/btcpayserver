@@ -3030,7 +3030,9 @@ namespace BTCPayServer.Tests
             });
             var invoiceRepo = tester.PayTester.GetService<InvoiceRepository>();
             var invoice = await invoiceRepo.GetInvoice("Q7RqoHLngK9svM4MgRyi9y");
+#pragma warning disable CS0618 // Type or member is obsolete
             var p = invoice.Payments.First(p => p.Id == "26c879f3d27a894a62f8730c84205ac9dec38b7bbc0a11ccc0c196d1259b25aa-1");
+#pragma warning restore CS0618 // Type or member is obsolete
             var details = p.GetDetails<BitcoinLikePaymentData>(handlers.GetBitcoinHandler("BTC"));
             Assert.Equal("6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d", details.AssetId.ToString());
         }

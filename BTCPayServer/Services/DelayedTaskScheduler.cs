@@ -15,12 +15,25 @@ namespace BTCPayServer.Services
         {
             Logger = logger;
         }
-        record class TimerState(string Key, Func<Task> Act);
+        record class TimerState(string Key, Func<Task> Act, DateTimeOffset ExecuteAt)
+        {
+            internal TimeSpan NextWait()
+            {
+                var due = ExecuteAt - DateTimeOffset.UtcNow;
+                if (due < TimeSpan.Zero)
+                    due = TimeSpan.Zero;
+                // Max timer needed, else dotnet crash
+                if (due > MaxTimer)
+                    due = MaxTimer;
+                return due;
+            }
+        }
+
         private readonly Dictionary<string, Timer> _timers = new();
         bool disposed = false;
 
         public ILogger<DelayedTaskScheduler> Logger { get; }
-
+        static TimeSpan MaxTimer = TimeSpan.FromMilliseconds(4294967294);
         public void Schedule(string key, DateTimeOffset executeAt, Func<Task> act)
         {
             lock (_timers)
@@ -33,23 +46,26 @@ namespace BTCPayServer.Services
                     existing.Dispose();
                     _timers.Remove(key);
                 }
-                var due = executeAt - DateTimeOffset.UtcNow;
-                if (due < TimeSpan.Zero)
-                    due = TimeSpan.Zero;
-                var timer = new Timer(TimerCallback, new TimerState(key, act), Timeout.Infinite, Timeout.Infinite);
+
+                var state = new TimerState(key, act, executeAt);
+                var timer = new Timer(TimerCallback, state, Timeout.Infinite, Timeout.Infinite);
                 _timers.Add(key, timer);
-                timer.Change((long)due.TotalMilliseconds, (long)Timeout.Infinite);
+                timer.Change(state.NextWait(), Timeout.InfiniteTimeSpan);
             }
         }
+
+
 
         void TimerCallback(object? state)
         {
             var s = (TimerState)state!;
             Task.Run(async () =>
             {
+                bool run = s.NextWait() == TimeSpan.Zero;
                 try
                 {
-                    await s.Act();
+                    if (run)
+                        await s.Act();
                 }
                 catch (Exception ex)
                 {
@@ -62,7 +78,10 @@ namespace BTCPayServer.Services
                     {
                         if (_timers.TryGetValue(s.Key, out timer))
                         {
-                            _timers.Remove(s.Key);
+                            if (run)
+                                _timers.Remove(s.Key);
+                            else
+                                timer.Change(s.NextWait(), Timeout.InfiniteTimeSpan);
                         }
                     }
                     timer?.Dispose();
@@ -80,5 +99,5 @@ namespace BTCPayServer.Services
                 _timers.Clear();
             }
         }
-        }
+    }
 }

@@ -38,67 +38,41 @@ public partial class UIStoresController
             return View(vm);
         }
 
-        var roles = await _storeRepo.GetStoreRoles(CurrentStore.Id);
-        if (roles.All(role => role.Id != vm.Role))
+        var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
+        if (roleId is null)
         {
             ModelState.AddModelError(nameof(vm.Role), StringLocalizer["Invalid role"]);
             return View(vm);
         }
             
         var user = await _userManager.FindByEmailAsync(vm.Email);
-        var isExistingUser = user is not null;
-        var isExistingStoreUser = isExistingUser && await _storeRepo.GetStoreUser(storeId, user!.Id) is not null;
-        var successInfo = string.Empty;
-        if (user == null)
+        if (user is null)
         {
-            user = new ApplicationUser
-            {
-                UserName = vm.Email,
-                Email = vm.Email,
-                RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
-                RequiresApproval = _policiesSettings.RequiresUserApproval,
-                Created = DateTimeOffset.UtcNow
-            };
-
-            var currentUser = await _userManager.GetUserAsync(HttpContext.User);
-            if (currentUser is not null &&
-                (await _userManager.CreateAsync(user)) is { Succeeded: true } result)
-            {
-				var invitationEmail = await _emailSenderFactory.IsComplete();
-				var evt = await UserEvent.Invited.Create(user, currentUser, _callbackGenerator, Request, invitationEmail);
-                _eventAggregator.Publish(evt);
-
-                var info = invitationEmail
-					? "An invitation email has been sent.<br/>You may alternatively"
-                    : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
-                successInfo = $"{info} share this link with them: <a class='alert-link' href='{evt.InvitationLink}'>{evt.InvitationLink}</a>";
-            }
-            else
-            {
-                ModelState.AddModelError(nameof(vm.Email), "User could not be invited");
-                return View(vm);
-            }
+            ModelState.AddModelError(nameof(vm.Email), StringLocalizer["This user does not exist"]);
+            return View(vm);
         }
-
-        var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
-        var action = isExistingUser
-            ? isExistingStoreUser ? "updated" : "added"
-            : "invited";
-
-        var res = await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
-        if (res is AddOrUpdateStoreUserResult.Success)
-        {
+        var isExistingStoreUser = await _storeRepo.GetStoreUser(storeId, user.Id) is not null;
+        
+		var res = await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
+		if (res is AddOrUpdateStoreUserResult.Success)
+		{
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 AllowDismiss = false,
-                Html = $"User {action} successfully." + (string.IsNullOrEmpty(successInfo) ? "" : $" {successInfo}")
+                Message = isExistingStoreUser  
+                                ? StringLocalizer["The user has been updated successfully."].Value
+                                : StringLocalizer["The user has been added successfully."].Value,
             });
             return RedirectToAction(nameof(StoreUsers));
         }
         else
         {
-            ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}: {res.ToString()}");
+            ModelState.AddModelError(nameof(vm.Email),
+                isExistingStoreUser
+                    ? StringLocalizer["The user could not be updated: {0}", res.ToString()]
+                    : StringLocalizer["The user could not be added: {0}", res.ToString()]
+                );
             return View(vm);
         }
     }

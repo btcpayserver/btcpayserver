@@ -87,6 +87,11 @@ namespace BTCPayServer.HostedServices.Webhooks
                 return Task.FromResult(req)!;
             }
 
+            public virtual bool SupportsCustomerEmail()
+            {
+                return false;
+            }
+
             protected  static  string InterpolateJsonField(string str, string fieldName, JObject obj)
             {
                 fieldName += ".";
@@ -340,6 +345,31 @@ namespace BTCPayServer.HostedServices.Webhooks
         {
             return _serviceProvider.GetServices<IWebhookProvider>()
                 .SelectMany(provider => provider.GetSupportedWebhookTypes()).ToDictionary(pair => pair.Key, pair => pair.Value);
+        }
+
+        public Dictionary<string, bool> GetWebhookTypesSupportingCustomerEmail()
+        {
+            var result = new Dictionary<string, bool>();
+            var webhookTypes = GetSupportedWebhookTypes();
+
+            foreach (var type in webhookTypes.Keys)
+            {
+                bool supportsCustomerEmail = false;
+                
+                if (type.StartsWith("Invoice"))
+                {
+                    supportsCustomerEmail = true;
+                }
+                
+                if (type.StartsWith("PaymentRequest"))
+                {
+                    supportsCustomerEmail = true;
+                }
+                
+                result[type] = supportsCustomerEmail;
+            }
+            
+            return result;
         }
     }
 }

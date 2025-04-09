@@ -199,7 +199,7 @@ namespace BTCPayServer.PaymentRequest
         {
             if (data is 
                 {
-                    Status: PaymentRequestStatus.Pending or PaymentRequestStatus.Processing,
+                    Expirable: true,
                     Expiry: { } e
                 })
             {

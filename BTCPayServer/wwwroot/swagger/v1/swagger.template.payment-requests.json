@@ -396,9 +396,10 @@
                                 "enum": [
                                     "Pending",
                                     "Completed",
+                                    "Processing",
                                     "Expired"
                                 ],
-                                "description": "The status of the payment request",
+                                "description": "Represents the status of a payment request:\n* `Pending`: Not enough has been paid or settled.\n* `Completed`: Paid and fully settled.\n* `Expired`: Expired before full settlement.\n* `Processing`: Paid enough, awaiting full settlement.",
                                 "nullable": false
                             },
                             "createdTime": {

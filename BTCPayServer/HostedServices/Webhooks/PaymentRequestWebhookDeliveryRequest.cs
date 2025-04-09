@@ -35,6 +35,11 @@ public class PaymentRequestWebhookDeliveryRequest : WebhookSender.WebhookDeliver
         return Task.FromResult(req)!;
     }
 
+    public override bool SupportsCustomerEmail()
+    {
+        return true;
+    }
+
     private string Interpolate(string str, PaymentRequestBaseData blob)
     {
         var res = str.Replace("{PaymentRequest.Id}", _evt.Data.Id)

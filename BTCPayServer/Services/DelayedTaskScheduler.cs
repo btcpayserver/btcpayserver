@@ -22,6 +22,8 @@ namespace BTCPayServer.Services
                 var due = ExecuteAt - DateTimeOffset.UtcNow;
                 if (due < TimeSpan.Zero)
                     due = TimeSpan.Zero;
+                else
+                    due += TimeSpan.FromSeconds(1.0); // Better to be a bit late than too early
                 // Max timer needed, else dotnet crash
                 if (due > MaxTimer)
                     due = MaxTimer;
@@ -61,7 +63,7 @@ namespace BTCPayServer.Services
             var s = (TimerState)state!;
             Task.Run(async () =>
             {
-                bool run = s.NextWait() == TimeSpan.Zero;
+                bool run = s.NextWait() < TimeSpan.FromSeconds(5.0);
                 try
                 {
                     if (run)

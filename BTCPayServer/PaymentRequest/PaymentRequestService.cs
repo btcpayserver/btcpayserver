@@ -10,6 +10,7 @@ using BTCPayServer.Services.Apps;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
 using BTCPayServer.Services.Rates;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using PaymentRequestData = BTCPayServer.Data.PaymentRequestData;
 
 namespace BTCPayServer.PaymentRequest
@@ -50,24 +51,21 @@ namespace BTCPayServer.PaymentRequest
 
         public async Task UpdatePaymentRequestStateIfNeeded(PaymentRequestData pr)
         {
-            var blob = pr.GetBlob();
-            var currentStatus = pr.Status;
-            if (pr.Expiry.HasValue)
+            var newStatus = pr.Status;
+            newStatus = pr switch
             {
-                if (pr.Expiry.Value <= DateTimeOffset.UtcNow)
-                    currentStatus = Client.Models.PaymentRequestStatus.Expired;
-            }
-            else if (currentStatus != Client.Models.PaymentRequestStatus.Completed)
-            {
-                currentStatus = Client.Models.PaymentRequestStatus.Pending;
-            }
+                { Expirable: true, Expiry: { } e }
+                    when e <= DateTimeOffset.UtcNow => PaymentRequestStatus.Expired,
+                { Status: PaymentRequestStatus.Expired, Expiry: null } => PaymentRequestStatus.Pending,
+                _ => pr.Status
+            };
 
-            if (currentStatus != Client.Models.PaymentRequestStatus.Expired)
+            if (newStatus is not (PaymentRequestStatus.Expired or PaymentRequestStatus.Completed))
             {
                 var invoices = await _paymentRequestRepository.GetInvoicesForPaymentRequest(pr.Id);
                 var contributions = _invoiceRepository.GetContributionsByPaymentMethodId(pr.Currency, invoices, true);
 
-                currentStatus =
+                newStatus =
                     (PaidEnough: contributions.Total >= pr.Amount,
                     SettledEnough: contributions.TotalSettled >= pr.Amount) switch
                     {
@@ -77,10 +75,10 @@ namespace BTCPayServer.PaymentRequest
                     };
             }
 
-            if (currentStatus != pr.Status)
+            if (newStatus != pr.Status)
             {
-                pr.Status = currentStatus;
-                await _paymentRequestRepository.UpdatePaymentRequestStatus(pr.Id, currentStatus);
+                pr.Status = newStatus;
+                await _paymentRequestRepository.UpdatePaymentRequestStatus(pr.Id, newStatus);
             }
         }
 

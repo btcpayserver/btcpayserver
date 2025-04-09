@@ -1,4 +1,6 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
@@ -17,6 +19,9 @@ namespace BTCPayServer.Data
         public StoreData StoreData { get; set; }
 
         public Client.Models.PaymentRequestStatus Status { get; set; }
+
+        [NotMapped]
+        public bool Expirable => Status is PaymentRequestStatus.Pending or PaymentRequestStatus.Processing && Expiry is not null;
 
         [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }

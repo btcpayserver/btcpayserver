@@ -9,9 +9,21 @@ namespace BTCPayServer.Client.Models
 {
     public enum PaymentRequestStatus
     {
+        /// <summary>
+        /// Not enough has been paid or settled
+        /// </summary>
         Pending,
+        /// <summary>
+        /// Paid and fully settled
+        /// </summary>
         Completed,
+        /// <summary>
+        /// Expired before full settlement
+        /// </summary>
         Expired,
+        /// <summary>
+        /// Paid enough, awaiting full settlement
+        /// </summary>
         Processing,
     }
     public class PaymentRequestBaseData

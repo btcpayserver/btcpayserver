@@ -10,6 +10,7 @@
     bool isEdit = Model.Trigger != null;
     ViewData.SetActivePage(StoreNavPages.Emails, StringLocalizer[isEdit ? "Edit Email Rule" : "Create Email Rule"], storeId);
     var bitcoinWalletTransactions = CallbackGenerator.WalletTransactionsLink(new (storeId, "BTC"), this.Context.Request);
+    var webhookTypesSupportingCustomerEmail = WebhookSender.GetWebhookTypesSupportingCustomerEmail();
 }
 
 @section PageHeadContent {
@@ -53,7 +54,7 @@
         <div class="form-text" text-translate="true">Who to send the email to. For multiple emails, separate with a comma.</div>
     </div>
 
-    <div class="form-check mb-4">
+    <div id="customerEmailContainer" class="form-check mb-4">
         <input asp-for="CustomerEmail" type="checkbox" class="form-check-input email-rule-customer-email" />
         <label asp-for="CustomerEmail" class="form-check-label" text-translate="true">Send the email to the buyer, if email was provided to the invoice</label>
         <span asp-validation-for="CustomerEmail" class="text-danger"></span>
@@ -183,6 +184,9 @@
             const triggerSelect = document.querySelector('.email-rule-trigger');
             const subjectInput = document.querySelector('.email-rule-subject');
             const bodyTextarea = document.querySelector('.email-rule-body');
+            const customerEmailContainer = document.getElementById('customerEmailContainer');
+
+            const supportCustomerEmail = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(webhookTypesSupportingCustomerEmail));
 
             const isEmptyOrDefault = (value, type) => {
                 const val = value.replace(/<.*?>/gi, '').trim();
@@ -204,6 +208,13 @@
                             bodyTextarea.value = templates[selectedTrigger].body;
                         }
                     }
+                }
+                
+                if (supportCustomerEmail[selectedTrigger]) {
+                    customerEmailContainer.style.display = 'block';
+                } else {
+                    customerEmailContainer.style.display = 'none';
+                    document.querySelector('.email-rule-customer-email').checked = false;
                 }
             }
 

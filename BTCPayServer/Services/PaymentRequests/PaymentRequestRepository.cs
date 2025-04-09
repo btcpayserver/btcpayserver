@@ -95,7 +95,7 @@ namespace BTCPayServer.Services.PaymentRequests
             return result;
         }
 
-        public async Task UpdatePaymentRequestStatus(string paymentRequestId, Client.Models.PaymentRequestData.PaymentRequestStatus status, CancellationToken cancellationToken = default)
+        public async Task UpdatePaymentRequestStatus(string paymentRequestId, Client.Models.PaymentRequestStatus status, CancellationToken cancellationToken = default)
         {
             await using var context = _ContextFactory.CreateContext();
             var paymentRequestData = await context.FindAsync<PaymentRequestData>(paymentRequestId);
@@ -113,7 +113,17 @@ namespace BTCPayServer.Services.PaymentRequests
                 Type = PaymentRequestEvent.StatusChanged
             });
         }
-
+        public async Task<PaymentRequestData[]> GetExpirablePaymentRequests(CancellationToken cancellationToken = default)
+        {
+            using var context = _ContextFactory.CreateContext();
+            var queryable = context.PaymentRequests.Include(data => data.StoreData).AsQueryable();
+            queryable = 
+                queryable
+                .Where(data => 
+                (data.Status == Client.Models.PaymentRequestStatus.Pending || data.Status == Client.Models.PaymentRequestStatus.Processing) &&
+                data.Expiry != null);
+            return await queryable.ToArrayAsync(cancellationToken);
+        }
         public async Task<PaymentRequestData[]> FindPaymentRequests(PaymentRequestQuery query, CancellationToken cancellationToken = default)
         {
             using var context = _ContextFactory.CreateContext();
@@ -202,17 +212,11 @@ namespace BTCPayServer.Services.PaymentRequests
         }
     }
 
-    public class PaymentRequestUpdated
-    {
-        public string PaymentRequestId { get; set; }
-        public PaymentRequestData Data { get; set; }
-    }
-
     public class PaymentRequestQuery
     {
         public string StoreId { get; set; }
         public bool IncludeArchived { get; set; } = true;
-        public Client.Models.PaymentRequestData.PaymentRequestStatus[] Status { get; set; }
+        public Client.Models.PaymentRequestStatus[] Status { get; set; }
         public string UserId { get; set; }
         public int? Skip { get; set; }
         public int? Count { get; set; }

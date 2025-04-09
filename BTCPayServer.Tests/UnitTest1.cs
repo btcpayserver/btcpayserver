@@ -72,12 +72,11 @@ using Xunit;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 using CreateInvoiceRequest = BTCPayServer.Client.Models.CreateInvoiceRequest;
-using CreatePaymentRequestRequest = BTCPayServer.Client.Models.CreatePaymentRequestRequest;
 using MarkPayoutRequest = BTCPayServer.Client.Models.MarkPayoutRequest;
-using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using RatesViewModel = BTCPayServer.Models.StoreViewModels.RatesViewModel;
 using Microsoft.Extensions.Caching.Memory;
 using PosViewType = BTCPayServer.Client.Models.PosViewType;
+using BTCPayServer.PaymentRequest;
 
 namespace BTCPayServer.Tests
 {
@@ -2087,7 +2086,7 @@ namespace BTCPayServer.Tests
             await user.AssertHasWebhookEvent(WebhookEventType.InvoiceInvalid,  (WebhookInvoiceEvent x)=> Assert.Equal(invoice.Id, x.InvoiceId));
             
             //payment request webhook test
-            var pr = await client.CreatePaymentRequest(user.StoreId, new CreatePaymentRequestRequest()
+            var pr = await client.CreatePaymentRequest(user.StoreId, new ()
             {
                 Amount = 100m,
                 Currency = "USD",
@@ -2100,7 +2099,7 @@ namespace BTCPayServer.Tests
             });
             await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestCreated,  (WebhookPaymentRequestEvent x)=> Assert.Equal(pr.Id, x.PaymentRequestId));
             pr = await client.UpdatePaymentRequest(user.StoreId, pr.Id,
-                new UpdatePaymentRequestRequest() { Title = "test pr updated", Amount = 100m,
+                new() { Title = "test pr updated", Amount = 100m,
                     Currency = "USD",
                     //TODO: this is a bug, we should not have these props in create request
                     StoreId = user.StoreId,
@@ -2113,7 +2112,7 @@ namespace BTCPayServer.Tests
             await client.MarkInvoiceStatus(user.StoreId, inv.Id, new MarkInvoiceStatusRequest() { Status = InvoiceStatus.Settled});
             await user.AssertHasWebhookEvent(WebhookEventType.PaymentRequestStatusChanged,  (WebhookPaymentRequestEvent x)=>
             {
-                Assert.Equal(PaymentRequestData.PaymentRequestStatus.Completed, x.Status);
+                Assert.Equal(PaymentRequestStatus.Completed, x.Status);
                 Assert.Equal(pr.Id, x.PaymentRequestId);
             });
             await client.ArchivePaymentRequest(user.StoreId, pr.Id);
@@ -2837,6 +2836,128 @@ namespace BTCPayServer.Tests
 
         [Fact(Timeout = LongRunningTestTimeout)]
         [Trait("Integration", "Integration")]
+        public async Task CanMigratePaymentRequests()
+        {
+            var tester = CreateDBTester();
+            await tester.MigrateUntil("20250407133937_pr_expiry");
+            using var ctx = tester.CreateContext();
+            var conn = ctx.Database.GetDbConnection();
+            await conn.ExecuteAsync("""
+                INSERT INTO "Stores" ("Id", "SpeedPolicy") VALUES ('7Nefq9u8DDYL56HAFskWdHNQ9ZCdfbkVWkH4xYhfzxiB', 0);
+                INSERT INTO "PaymentRequests" (
+                    "Id", "StoreDataId", "Status", "Blob", "Created", "Archived", "Blob2"
+                ) VALUES (
+                    '03463aab-844e-4d60-872f-26310b856131',
+                    '7Nefq9u8DDYL56HAFskWdHNQ9ZCdfbkVWkH4xYhfzxiB',
+                    2,
+                    NULL,
+                    '2024-03-21 23:15:26.356677+00',
+                    FALSE,
+                    '{"email": "f.f@gmail.com", "title": "Online", "amount": 0.001, "formId": null, "storeId": null, "currency": "USD", "expiryDate": 1711066440, "description": null, "embeddedCSS": null, "formResponse": null, "customCSSLink": null, "allowCustomPaymentAmounts": false}'
+                );
+
+                INSERT INTO "PaymentRequests" (
+                    "Id", "StoreDataId", "Status", "Blob", "Created", "Archived", "Blob2"
+                ) VALUES (
+                    'other',
+                    '7Nefq9u8DDYL56HAFskWdHNQ9ZCdfbkVWkH4xYhfzxiB',
+                    1,
+                    NULL,
+                    '2024-03-21 23:15:26.356677+00',
+                    FALSE,
+                    '{"email": "z.f@gmail.com", "title": "Online", "amount": 1, "formId": null, "storeId": null, "currency": "USD", "expiryDate": null, "description": null, "embeddedCSS": null, "formResponse": null, "customCSSLink": null, "allowCustomPaymentAmounts": false}'
+                );
+
+                INSERT INTO "PaymentRequests" (
+                    "Id", "StoreDataId", "Status", "Blob", "Created", "Archived", "Blob2"
+                ) VALUES (
+                    'expired-bug',
+                    '7Nefq9u8DDYL56HAFskWdHNQ9ZCdfbkVWkH4xYhfzxiB',
+                    1,
+                    NULL,
+                    '2024-03-21 23:15:26.356677+00',
+                    FALSE,
+                    '{"email": "f.f@gmail.com", "title": "Online", "amount": 0.001, "formId": null, "storeId": null, "currency": "USD", "expiryDate": 1711066440, "description": null, "embeddedCSS": null, "formResponse": null, "customCSSLink": null, "allowCustomPaymentAmounts": false}'
+                );
+
+                """);
+            await tester.ContinueMigration();
+            // The blob isn't cleaned yet, this is the migrator who does that
+            await conn.QuerySingleAsync("""
+                SELECT * FROM "PaymentRequests"
+                WHERE "Id"= '03463aab-844e-4d60-872f-26310b856131'
+                AND "Status" = 'Completed'
+                AND "Blob2"->>'currency' IS NOT NULL
+                """);
+
+            await conn.QuerySingleAsync("""
+                SELECT * FROM "PaymentRequests"
+                WHERE "Id"= 'other'
+                AND "Status" = 'Processing'
+                """);
+
+            await conn.QuerySingleAsync("""
+                SELECT * FROM "PaymentRequests"
+                WHERE "Id"= 'expired-bug'
+                AND "Status" = 'Processing'
+                """);
+
+            var pr = ctx.PaymentRequests.First(r => r.Id == "03463aab-844e-4d60-872f-26310b856131");
+            Assert.Equal("USD", pr.Currency);
+            Assert.Equal(0.001m, pr.Amount);
+            Assert.Equal(1711066440U, NBitcoin.Utils.DateTimeToUnixTime(pr.Expiry.Value));
+#pragma warning disable CS0618 // Type or member is obsolete
+            Assert.Null(pr.Blob);
+#pragma warning restore CS0618 // Type or member is obsolete
+
+            using var serverTester = CreateServerTester();
+            serverTester.PayTester.Postgres = serverTester.PayTester.Postgres.Replace("btcpayserver", tester.dbname);
+            await serverTester.StartAsync();
+            var dbContext = serverTester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
+            var migrator = serverTester.PayTester.GetService<PaymentRequestsMigratorHostedService>();
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                Assert.True(await migrator.IsComplete());
+            });
+            var actualBlob2 = (string)(await conn.QuerySingleAsync("""
+                SELECT * FROM "PaymentRequests"
+                WHERE "Id"= '03463aab-844e-4d60-872f-26310b856131'
+                AND "Expiry" IS NOT NULL AND "Currency" IS NOT NULL AND "Amount"=0.001
+                """)).Blob2;
+            var expectedBlob2 = new JObject()
+            {
+                ["email"] = "f.f@gmail.com",
+                ["title"] = "Online"
+            };
+            Assert.Equal(JObject.Parse(actualBlob2), expectedBlob2);
+
+            actualBlob2 = (string)(await conn.QuerySingleAsync("""
+                SELECT * FROM "PaymentRequests"
+                WHERE "Id"= 'other'
+                AND "Expiry" IS NULL AND "Amount"=1
+                """)).Blob2;
+            expectedBlob2 = new JObject()
+            {
+                ["email"] = "f.f@gmail.com",
+                ["title"] = "Online"
+            };
+            Assert.Equal(JObject.Parse(actualBlob2), expectedBlob2);
+
+            // 'expired-bug' represents a PaymentRequest whose status isn't Expired even if its expiry is well past.
+            // Normally, on startup, the streamer should set the status to Expired
+            await TestUtils.EventuallyAsync(async () =>
+            {
+                var r = await conn.QuerySingleOrDefaultAsync("""
+                SELECT * FROM "PaymentRequests"
+                WHERE "Id"= 'expired-bug'
+                AND "Status" = 'Expired'
+                """);
+                Assert.NotNull(r);
+            });
+        }
+
+        [Fact(Timeout = LongRunningTestTimeout)]
+        [Trait("Integration", "Integration")]
         public async Task CanDoInvoiceMigrations()
         {
             using var tester = CreateServerTester(newDb: true);
@@ -2889,6 +3010,7 @@ namespace BTCPayServer.Tests
             var handlers = tester.PayTester.GetService<PaymentMethodHandlerDictionary>();
 
             await acc.ImportOldInvoices();
+            
             var dbContext = tester.PayTester.GetService<ApplicationDbContextFactory>().CreateContext();
             var invoiceMigrator = tester.PayTester.GetService<InvoiceBlobMigratorHostedService>();
             invoiceMigrator.BatchSize = 2;
@@ -2908,7 +3030,9 @@ namespace BTCPayServer.Tests
             });
             var invoiceRepo = tester.PayTester.GetService<InvoiceRepository>();
             var invoice = await invoiceRepo.GetInvoice("Q7RqoHLngK9svM4MgRyi9y");
+#pragma warning disable CS0618 // Type or member is obsolete
             var p = invoice.Payments.First(p => p.Id == "26c879f3d27a894a62f8730c84205ac9dec38b7bbc0a11ccc0c196d1259b25aa-1");
+#pragma warning restore CS0618 // Type or member is obsolete
             var details = p.GetDetails<BitcoinLikePaymentData>(handlers.GetBitcoinHandler("BTC"));
             Assert.Equal("6f0279e9ed041c3d710a9f57d0c02928416460c4b722ae3457a11eec381c526d", details.AssetId.ToString());
         }
@@ -3164,12 +3288,14 @@ namespace BTCPayServer.Tests
             // Quick unrelated test on GetMonitoredInvoices
             var invoiceRepo = tester.PayTester.GetService<InvoiceRepository>();
             var monitored = Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN")), i => i.Id == invoiceId);
+#pragma warning disable CS0618 // Type or member is obsolete
             Assert.Single(monitored.Payments);
-			monitored = Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), true), i => i.Id == invoiceId);
+            monitored = Assert.Single(await invoiceRepo.GetMonitoredInvoices(PaymentMethodId.Parse("BTC-CHAIN"), true), i => i.Id == invoiceId);
 			Assert.Single(monitored.Payments);
-			//
+#pragma warning restore CS0618 // Type or member is obsolete
+            //
 
-			app = await client.CreatePointOfSaleApp(acc.StoreId, new PointOfSaleAppRequest
+            app = await client.CreatePointOfSaleApp(acc.StoreId, new PointOfSaleAppRequest
             {
                 AppName = "Cart",
                 DefaultView = PosViewType.Cart,

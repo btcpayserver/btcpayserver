@@ -155,6 +155,7 @@ namespace BTCPayServer.Controllers
         [Authorize(Policy = Policies.CanModifyPaymentRequests, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
         public async Task<IActionResult> EditPaymentRequest(string payReqId, UpdatePaymentRequestViewModel viewModel)
         {
+            viewModel.Id = payReqId;
             if (!string.IsNullOrEmpty(viewModel.Currency) &&
                 _Currencies.GetCurrencyData(viewModel.Currency, false) == null)
                 ModelState.AddModelError(nameof(viewModel.Currency), "Invalid currency");
@@ -162,7 +163,8 @@ namespace BTCPayServer.Controllers
                 viewModel.Currency = null;
             var store = GetCurrentStore();
             var paymentRequest = GetCurrentPaymentRequest();
-            if (paymentRequest == null && !string.IsNullOrEmpty(payReqId))
+            if ((paymentRequest == null && !string.IsNullOrEmpty(payReqId)) ||
+                (paymentRequest != null && paymentRequest.Id != payReqId))
             {
                 return NotFound();
             }
@@ -180,13 +182,16 @@ namespace BTCPayServer.Controllers
             data.Archived = viewModel.Archived;
             var blob = data.GetBlob();
 
-            if (data.Amount != viewModel.Amount && payReqId != null)
+            var prInvoices = payReqId is null ? [] : (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
+            viewModel.AmountAndCurrencyEditable = payReqId is null || !prInvoices.Any();
+            if (!viewModel.AmountAndCurrencyEditable)
             {
-                var prInvoices = (await _PaymentRequestService.GetPaymentRequest(payReqId, GetUserId())).Invoices;
-                if (prInvoices.Any())
-                    ModelState.AddModelError(nameof(viewModel.Amount), StringLocalizer["Amount and currency are not editable once payment request has invoices"]);
+                ModelState.Remove(nameof(data.Amount));
+                ModelState.Remove(nameof(data.Currency));
+                viewModel.Amount = data.Amount;
+                viewModel.Currency = data.Currency;
             }
-
+            
             if (!ModelState.IsValid)
             {
                 var storeBlob = store.GetStoreBlob();
@@ -199,8 +204,8 @@ namespace BTCPayServer.Controllers
             blob.Email = viewModel.Email;
             blob.Description = viewModel.Description;
             data.Amount = viewModel.Amount;
-            data.Expiry = viewModel.ExpiryDate?.ToUniversalTime();
             data.Currency = viewModel.Currency ?? store.GetStoreBlob().DefaultCurrency;
+            data.Expiry = viewModel.ExpiryDate?.ToUniversalTime();
             blob.AllowCustomPaymentAmounts = viewModel.AllowCustomPaymentAmounts;
             blob.FormId = viewModel.FormId;
 

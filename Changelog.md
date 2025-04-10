@@ -2,6 +2,10 @@
 
 ## 2.1.0
 
+Breaking change: If you are using Monero or ZCash, you will need to install [their respective plugins](https://blog.btcpayserver.org./btcpay-server-2-1-0/#pluginizing-zcash-and-monero) after this update.
+
+Please read [our blog post](https://blog.btcpayserver.org./btcpay-server-2-1-0/) for more details.
+
 ### New features
 
 * Add better MultiSig flow when all users are using BTCPay Server @rockstardev

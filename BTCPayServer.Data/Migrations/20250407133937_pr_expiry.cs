@@ -36,9 +36,9 @@ namespace BTCPayServer.Migrations
                 ALTER TABLE "PaymentRequests" ADD COLUMN "StatusNew" TEXT;
                 UPDATE "PaymentRequests" SET "StatusNew" = CASE
                     WHEN "Status" = 0 THEN 'Pending'
-                    WHEN "Status" = 1 THEN 'Processing'
-                    WHEN "Status" = 2 THEN 'Completed'
-                    WHEN "Status" = 3 THEN 'Expired'
+                    WHEN "Status" = 1 THEN 'Completed'
+                    WHEN "Status" = 2 THEN 'Expired'
+                    WHEN "Status" = 3 THEN 'Processing'
                     ELSE NULL
                 END;
                 ALTER TABLE "PaymentRequests" DROP COLUMN "Status";

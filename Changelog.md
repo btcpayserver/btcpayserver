@@ -21,7 +21,7 @@ Please read [our blog post](https://blog.btcpayserver.org./btcpay-server-2-1-0/)
 * Fix: Refunds through API were ignoring BOLT11 expiration at store level (#6644) @NicolasDorier
 * Fix: PaymentRequests created via API never expires (#6657) @NicolasDorier
 
-## Improvements
+### Improvements
 
 * Improve UX for store email rules triggers (#6629) @rockstardev
 * Store users: Ensure the last owner cannot be downgraded (#6654) @dennisreimann

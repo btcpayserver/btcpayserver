@@ -37,9 +37,13 @@ public class PaymentRequestWebhookDeliveryRequest : WebhookSender.WebhookDeliver
 
     private string Interpolate(string str, Data.PaymentRequestData data)
     {
+        var id = data.Id;
+        string trimmedId = $"{id.Substring(0, 7)}...{id.Substring(id.Length - 7)}";
+        
         var blob = data.GetBlob();
-        var res = str.Replace("{PaymentRequest.Id}", _evt.Data.Id)
-            .Replace("{PaymentRequest.Price}", data.Amount.ToString(CultureInfo.InvariantCulture))
+        var res = str.Replace("{PaymentRequest.Id}", id)
+            .Replace("{PaymentRequest.TrimmedId}", trimmedId)
+            .Replace("{PaymentRequest.Amount}", data.Amount.ToString(CultureInfo.InvariantCulture))
             .Replace("{PaymentRequest.Currency}", data.Currency)
             .Replace("{PaymentRequest.Title}", blob.Title)
             .Replace("{PaymentRequest.Description}", blob.Description)

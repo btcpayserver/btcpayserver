@@ -2849,7 +2849,7 @@ namespace BTCPayServer.Tests
                 ) VALUES (
                     '03463aab-844e-4d60-872f-26310b856131',
                     '7Nefq9u8DDYL56HAFskWdHNQ9ZCdfbkVWkH4xYhfzxiB',
-                    2,
+                    1,
                     NULL,
                     '2024-03-21 23:15:26.356677+00',
                     FALSE,
@@ -2861,7 +2861,7 @@ namespace BTCPayServer.Tests
                 ) VALUES (
                     'other',
                     '7Nefq9u8DDYL56HAFskWdHNQ9ZCdfbkVWkH4xYhfzxiB',
-                    1,
+                    3,
                     NULL,
                     '2024-03-21 23:15:26.356677+00',
                     FALSE,
@@ -2873,7 +2873,7 @@ namespace BTCPayServer.Tests
                 ) VALUES (
                     'expired-bug',
                     '7Nefq9u8DDYL56HAFskWdHNQ9ZCdfbkVWkH4xYhfzxiB',
-                    1,
+                    3,
                     NULL,
                     '2024-03-21 23:15:26.356677+00',
                     FALSE,

@@ -3,6 +3,7 @@
 ## 2.1.0
 
 Breaking change: If you are using Monero or ZCash, you will need to install [their respective plugins](https://blog.btcpayserver.org./btcpay-server-2-1-0/#pluginizing-zcash-and-monero) after this update.
+Note that if you aren't using the docker deployment, you will need to remove `--chains xmr` or `--chains zec` (or corresponding `BTCPAY_CHAINS`) from BTCPay Server configuration.
 
 Please read [our blog post](https://blog.btcpayserver.org./btcpay-server-2-1-0/) for more details.
 

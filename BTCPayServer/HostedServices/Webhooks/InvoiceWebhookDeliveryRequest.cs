@@ -33,6 +33,11 @@ public class InvoiceWebhookDeliveryRequest : WebhookSender.WebhookDeliveryReques
         return Task.FromResult(req);
     }
 
+    public override bool SupportsCustomerEmail()
+    {
+        return true;
+    }
+
     private string Interpolate(string str)
     {
         var res =  str.Replace("{Invoice.Id}", Invoice.Id)

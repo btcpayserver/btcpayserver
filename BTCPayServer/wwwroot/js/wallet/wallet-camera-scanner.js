@@ -5,7 +5,7 @@ window.addEventListener("load", () => {
             document.getElementById("BIP21").value = data;
             document.getElementById("SendForm").submit();
         } else {
-            $input.value = data;
+            $input.value = data.includes(":") ? data.split(":")[1] : data;
         }
     }, "scanModal");
     document.getElementById('scanModal').addEventListener('show.bs.modal', e => {

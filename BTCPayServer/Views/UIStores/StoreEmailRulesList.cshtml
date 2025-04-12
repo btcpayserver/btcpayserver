@@ -28,6 +28,24 @@
     Email rules allow BTCPay Server to send customized emails from your store based on events.
 </p>
 
+<div id="overlay" style="display: none; position: fixed; top: 0; left: 0;
+    width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5);
+    z-index: 9998;"></div>
+
+<div id="deleteConfirmation" class="modal-content" style="display: none;position: fixed; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); background-color: black; color: white; padding: 20px;
+    border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); z-index: 9999; width: 500px;">
+    <div class="modal-header"><h4 class="modal-title">Delete rule</h4></div><br />
+    <p style="margin-bottom: 20px;">This rule will be deleted. Are you sure?</p>
+    <br />
+    <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button onclick="cancelDelete()" class="btn btn-secondary only-for-js">Cancel</button>
+        <button onclick="confirmDelete()" class="btn btn-danger">Delete</button>
+    </div>
+</div>
+
+<button onclick="showConfirmation()" style="display: none;">Delete Item</button>
+
 @if (Model.Any())
 {
     <div class="table-responsive">
@@ -52,8 +70,8 @@
                     <td>
                         <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
                         -
-                        <form asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
-                            <a href="#" class="text-danger" onclick="event.preventDefault(); this.closest('form').submit();">Delete</a>
+                        <form id="deleteRule" asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" method="post" style="display:inline;">
+                            <a href="#" class="text-danger" onclick="event.preventDefault(); showConfirmation();">Delete</a>
                         </form>
                     </td>
                 </tr>
@@ -68,3 +86,25 @@ else
         There are no rules yet.
     </p>
 }
+
+<script>
+    function showConfirmation() {
+         document.getElementById('overlay').style.display = 'block';
+         document.getElementById('deleteConfirmation').style.display = 'block';
+     }
+
+     function cancelDelete() {
+         document.getElementById('overlay').style.display = 'none';
+         document.getElementById('deleteConfirmation').style.display = 'none';
+     }
+
+     function confirmDelete() {
+         document.getElementById('deleteRule').submit();
+     }
+
+     document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            cancelDelete();
+        }
+    });
+</script>

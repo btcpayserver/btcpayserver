@@ -1475,29 +1475,26 @@ namespace BTCPayServer.Controllers
             var settings = GetDerivationSchemeSettings(walletId);
             if (settings is null)
                 return NotFound();
-            var signingKeySettings = settings.GetSigningAccountKeySettings();
-            if (signingKeySettings.RootFingerprint is null)
-                signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
-
-            RootedKeyPath rootedKeyPath = signingKeySettings.GetRootedKeyPath();
-            if (rootedKeyPath == null)
+            var signingKeySettings = settings.GetSigningAccountKeySettings(extKey);
+            if (signingKeySettings is null)
+            {
+                // Let's try best effort if RootFingerprint isn't configured, but AccountKeyPath is
+                signingKeySettings = settings.AccountKeySettings
+                                            .Where(a => a.RootFingerprint is null && a.AccountKeyPath is not null)
+                                            .FirstOrDefault();
+                if (signingKeySettings is not null)
+                    signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
+            }
+            RootedKeyPath? rootedKeyPath = signingKeySettings?.GetRootedKeyPath();
+            if (rootedKeyPath is null || signingKeySettings is null)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey),
                     "The master fingerprint and/or account key path of your seed are not set in the wallet settings.");
                 return View(nameof(SignWithSeed), viewModel);
             }
             // The user gave the root key, let's try to rebase the PSBT, and derive the account private key
-            if (rootedKeyPath.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())
-            {
-                psbt.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
-                signingKey = extKey.Derive(rootedKeyPath.KeyPath);
-            }
-            else
-            {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey),
-                    "The master fingerprint does not match the one set in your wallet settings. Probable causes are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
-                return View(nameof(SignWithSeed), viewModel);
-            }
+            psbt.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
+            signingKey = extKey.Derive(rootedKeyPath.KeyPath);
 
             psbt.Settings.SigningOptions = new SigningOptions()
             {

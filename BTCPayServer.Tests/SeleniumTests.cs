@@ -906,10 +906,16 @@ namespace BTCPayServer.Tests
 
             deleteLinks[0].Click();
 
+            var confirmDelete = s.Driver.FindElement(By.XPath("//*[@id='deleteConfirmation']//button[contains(text(), 'Delete')]"));
+            confirmDelete.Click();
+
             deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]")); // Refresh list
             Assert.True(deleteLinks.Count == 1, "Expected one delete button remaining.");
 
             deleteLinks[0].Click();
+
+            confirmDelete = s.Driver.FindElement(By.XPath("//*[@id='deleteConfirmation']//button[contains(text(), 'Delete')]"));
+            confirmDelete.Click();
 
             // Validate that there are no more rules
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);

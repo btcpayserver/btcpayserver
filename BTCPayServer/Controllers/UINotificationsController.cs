@@ -1,17 +1,13 @@
 using System;
 using System.Linq;
-using System.Net.WebSockets;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Filters;
 using BTCPayServer.Models.NotificationViewModels;
-using BTCPayServer.Security;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Notifications;
-using BTCPayServer.Services.Notifications.Blobs;
+using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -23,99 +19,58 @@ namespace BTCPayServer.Controllers
     [Route("notifications/{action:lowercase=Index}")]
     public class UINotificationsController : Controller
     {
-        private readonly BTCPayServerEnvironment _env;
-        private readonly NotificationSender _notificationSender;
+        private readonly StoreRepository _storeRepo;
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly NotificationManager _notificationManager;
-        private readonly EventAggregator _eventAggregator;
 
-        public UINotificationsController(BTCPayServerEnvironment env,
-            NotificationSender notificationSender,
+        public UINotificationsController(
+            StoreRepository storeRepo,
             UserManager<ApplicationUser> userManager,
-            NotificationManager notificationManager,
-            EventAggregator eventAggregator)
+            NotificationManager notificationManager)
         {
-            _env = env;
-            _notificationSender = notificationSender;
+            _storeRepo = storeRepo;
             _userManager = userManager;
             _notificationManager = notificationManager;
-            _eventAggregator = eventAggregator;
         }
 
         [HttpGet]
-        public IActionResult GetNotificationDropdownUI(string returnUrl)
+        public async Task<IActionResult> Index(NotificationIndexViewModel model = null)
         {
-            return ViewComponent("Notifications", new { appearance = "Dropdown", returnUrl });
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> SubscribeUpdates(CancellationToken cancellationToken)
-        {
-            if (!HttpContext.WebSockets.IsWebSocketRequest)
-            {
-                return BadRequest();
-            }
-
-            var websocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-            var userId = _userManager.GetUserId(User);
-            var websocketHelper = new WebSocketHelper(websocket);
-            IEventAggregatorSubscription subscription = null;
-            try
-            {
-                subscription = _eventAggregator.SubscribeAsync<UserNotificationsUpdatedEvent>(async evt =>
-                {
-                    if (evt.UserId == userId)
-                    {
-                        await websocketHelper.Send("update");
-                    }
-                });
-
-                await websocketHelper.NextMessageAsync(cancellationToken);
-            }
-            catch (OperationCanceledException)
-            {
-                // ignored
-            }
-            catch (WebSocketException)
-            {
-
-            }
-            finally
-            {
-                subscription?.Dispose();
-                await websocketHelper.DisposeAsync(CancellationToken.None);
-            }
-
-            return new EmptyResult();
-        }
-#if DEBUG
-        [HttpGet]
-        public async Task<IActionResult> GenerateJunk(int x = 100, bool admin = true)
-        {
-            for (int i = 0; i < x; i++)
-            {
-                await _notificationSender.SendNotification(
-                    admin ? (NotificationScope)new AdminScope() : new UserScope(_userManager.GetUserId(User)),
-                    new JunkNotification());
-            }
-
-            return RedirectToAction("Index");
-        }
-#endif
-        [HttpGet]
-        public async Task<IActionResult> Index(int skip = 0, int count = 50, int timezoneOffset = 0)
-        {
+            model ??= new NotificationIndexViewModel { Skip = 0 };
+            var timezoneOffset = model.TimezoneOffset ?? 0;
+            model.Status ??= "Unread";
+            ViewBag.Status = model.Status;
             if (!ValidUserClaim(out var userId))
                 return RedirectToAction("Index", "UIHome");
 
-            var res = await _notificationManager.GetNotifications(new NotificationsQuery()
-            {
-                Skip = skip,
-                Take = count,
-                UserId = userId
-            });
+            var searchTerm = string.IsNullOrEmpty(model.SearchText) ? model.SearchTerm : $"{model.SearchText},{model.SearchTerm}";
+            var fs = new SearchString(searchTerm, timezoneOffset);
+            var storeIds = fs.GetFilterArray("storeid");
+            var stores = await _storeRepo.GetStoresByUserId(userId);
+            model.StoreFilterOptions = stores
+                .Where(store => !store.Archived)
+                .OrderBy(s => s.StoreName)
+                .Select(s => new StoreFilterOption
+                {
+                    Selected = storeIds?.Contains(s.Id) is true,
+                    Text = s.StoreName,
+                    Value = s.Id
+                })
+                .ToList();
 
-            var model = new IndexViewModel() { Skip = skip, Count = count, Items = res.Items, Total = res.Count };
+            model.Search = fs;
+
+            var res = await _notificationManager.GetNotifications(new NotificationsQuery
+            {
+                Skip = model.Skip,
+                Take = model.Count,
+                UserId = userId,
+                SearchText = model.SearchText,
+                Type = fs.GetFilterArray("type"),
+                StoreIds = storeIds,
+                Seen = model.Status == "Unread" ? false : null
+            });
+            model.Items = res.Items;
 
             return View(model);
         }
@@ -126,7 +81,7 @@ namespace BTCPayServer.Controllers
         {
             if (ValidUserClaim(out var userId))
             {
-                await _notificationManager.ToggleSeen(new NotificationsQuery() { Ids = new[] { id }, UserId = userId }, null);
+                await _notificationManager.ToggleSeen(new NotificationsQuery { Ids = [id], UserId = userId }, null);
                 return RedirectToAction(nameof(Index));
             }
 
@@ -139,9 +94,9 @@ namespace BTCPayServer.Controllers
             if (ValidUserClaim(out var userId))
             {
                 var items = await
-                    _notificationManager.ToggleSeen(new NotificationsQuery()
+                    _notificationManager.ToggleSeen(new NotificationsQuery
                     {
-                        Ids = new[] { id },
+                        Ids = [id],
                         UserId = userId
                     }, true);
 
@@ -216,7 +171,7 @@ namespace BTCPayServer.Controllers
             {
                 return NotFound();
             }
-            await _notificationManager.ToggleSeen(new NotificationsQuery() { Seen = false, UserId = userId }, true);
+            await _notificationManager.ToggleSeen(new NotificationsQuery { Seen = false, UserId = userId }, true);
             return LocalRedirect(returnUrl);
         }
 

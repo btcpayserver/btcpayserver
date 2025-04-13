@@ -39,5 +39,7 @@
   "submitting_nfc": "Enviando NFC...",
   "payment_received": "Pagamento recebido",
   "payment_received_body": "Seu pagamento foi recebido e está sendo processado",
-  "payment_received_confirmations": "Assim que o seu pagamento receber {{requiredConfirmations}} confirmações na blockchain {{cryptoCode}}, a sua fatura será liquidada."
+  "payment_received_confirmations": "Assim que o seu pagamento receber {{requiredConfirmations}} confirmações na blockchain {{cryptoCode}}, a sua fatura será liquidada.",
+  "invoice_paidpartial_body": "Uma fatura é válida apenas por {{minutes}} minutos. Esta fatura expirou com pagamento parcial. Por favor, entre em contato conosco para que possamos concluir seu pedido.",
+  "contact_us": "Entre em contato conosco"
 }

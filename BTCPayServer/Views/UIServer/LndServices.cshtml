@@ -1,9 +1,20 @@
 @model LndServicesViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Services, $"LND {Model.ConnectionType}");
+    ViewData.SetActivePage(ServerNavPages.Services, StringLocalizer["LND {0}", Model.ConnectionType]);
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item">
+                <a asp-action="Services" text-translate="true">Services</a>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">@ViewData["Title"]</li>
+        </ol>
+        <h2>@ViewData["Title"]</h2>
+    </nav>
+</div>
+<partial name="_StatusMessage" />
 <p>
     BTCPay exposes LND's @Model.ConnectionType service for outside consumption, you will find connection information here.
 </p>
@@ -34,17 +45,14 @@
     }
 </div>
 
-<h4 class="mt-4 mb-3">QR Code connection</h4>
-<p>
-    You can use this QR Code to connect external software to your LND instance.<br/>
-    This QR Code is only valid for 10 minutes.
-</p>
+<h4 class="mt-4 mb-3" text-translate="true">QR Code connection</h4>
+<p text-translate="true">You can use this QR Code to connect external software to your LND instance. This QR Code is only valid for 10 minutes.</p>
 
 @if (Model.QRCode == null)
 {
     <div class="form-group">
         <form method="post">
-            <button type="submit" class="btn btn-primary">Show QR Code</button>
+            <button type="submit" class="btn btn-primary" text-translate="true">Show QR Code</button>
         </form>
     </div>
 }
@@ -57,7 +65,7 @@ else
     <p>See QR Code information by clicking <a href="#detailsQR" data-bs-toggle="collapse">here</a>.</p>
     <div id="detailsQR" class="collapse">
         <div class="form-group">
-            <label asp-for="QRCode" class="form-label">QR Code data</label>
+            <label asp-for="QRCode" class="form-label" text-translate="true">QR Code data</label>
             <input asp-for="QRCode" class="form-control" readonly />
         </div>
         <p>
@@ -66,7 +74,7 @@ else
     </div>
 }
 
-<h4 class="mt-5 mb-3">More details</h4>
+<h4 class="mt-5 mb-3" text-translate="true">More details</h4>
 <p>Alternatively, you can see the settings by clicking <a href="#details" data-bs-toggle="collapse">here</a>.</p>
 
 <div id="details" class="collapse">
@@ -74,7 +82,7 @@ else
     {
         <div class="form-group">
             <label asp-for="Host" class="form-label"></label>
-            <input asp-for="Host" readonly class="form-control"/>
+            <input asp-for="Host" readonly class="form-control" />
         </div>
         <div class="form-group">
             <label asp-for="SSL" class="form-label"></label>
@@ -85,49 +93,49 @@ else
     {
         <div class="form-group">
             <label asp-for="Uri" class="form-label"></label>
-            <input asp-for="Uri" readonly class="form-control"/>
+            <input asp-for="Uri" readonly class="form-control" />
         </div>
     }
     @if (Model.Macaroon != null)
     {
         <div class="form-group">
             <label asp-for="Macaroon" class="form-label"></label>
-            <input asp-for="Macaroon" readonly class="form-control"/>
+            <input asp-for="Macaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.AdminMacaroon != null)
     {
         <div class="form-group">
             <label asp-for="AdminMacaroon" class="form-label"></label>
-            <input asp-for="AdminMacaroon" readonly class="form-control"/>
+            <input asp-for="AdminMacaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.InvoiceMacaroon != null)
     {
         <div class="form-group">
             <label asp-for="InvoiceMacaroon" class="form-label"></label>
-            <input asp-for="InvoiceMacaroon" readonly class="form-control"/>
+            <input asp-for="InvoiceMacaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.ReadonlyMacaroon != null)
     {
         <div class="form-group">
             <label asp-for="ReadonlyMacaroon" class="form-label"></label>
-            <input asp-for="ReadonlyMacaroon" readonly class="form-control"/>
+            <input asp-for="ReadonlyMacaroon" readonly class="form-control" />
         </div>
     }
     @if (Model.GRPCSSLCipherSuites != null)
     {
         <div class="form-group">
             <label asp-for="GRPCSSLCipherSuites" class="form-label"></label>
-            <input asp-for="GRPCSSLCipherSuites" readonly class="form-control"/>
+            <input asp-for="GRPCSSLCipherSuites" readonly class="form-control" />
         </div>
     }
     @if (Model.CertificateThumbprint != null)
     {
         <div class="form-group">
             <label asp-for="CertificateThumbprint" class="form-label"></label>
-            <input asp-for="CertificateThumbprint" readonly class="form-control"/>
+            <input asp-for="CertificateThumbprint" readonly class="form-control" />
         </div>
     }
 </div>
@@ -135,7 +143,7 @@ else
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 
-    @if(Model.QRCode != null)
+    @if (Model.QRCode != null)
     {
         <script src="~/js/qrcode.js" asp-append-version="true"></script>
         <script>

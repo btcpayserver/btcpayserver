@@ -39,5 +39,7 @@
   "submitting_nfc": "NFC-ის წარდგენა...",
   "payment_received": "გადახდა მიღებულია",
   "payment_received_body": "თქვენი გადახდა მიღებულია და ახლა მუშაობს",
-  "payment_received_confirmations": "როდესაც {{cryptoCode}} ბლოკტამის {{requiredConfirmations}} დამონაწილება მიიღება, თქვენი ინვოისი დადასტურდება."
+  "payment_received_confirmations": "როდესაც {{cryptoCode}} ბლოკტამის {{requiredConfirmations}} დამონაწილება მიიღება, თქვენი ინვოისი დადასტურდება.",
+  "invoice_paidpartial_body": "ინვოისი ვალიდურია მხოლოდ {{minutes}} წუთისათვის. ეს ინვოისი ვადაგასულია ნაწილობრივი გადახდით. გთხოვთ, დაგვიკავშირდეთ, რათა შევძლოთ თქვენი შეკვეთის შესრულება.",
+  "contact_us": "დაგვიკავშირდით"
 }

@@ -10,7 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let config = parseConfig($config.value) || {}
     
     const specialFieldTypeOptions = ['fieldset', 'textarea', 'select', 'mirror']
-    const inputFieldTypeOptions = ['text', 'number', 'password', 'email', 'url', 'tel', 'date', 'hidden']
+    const inputFieldTypeOptions = ['text', 'number', 'password', 'email', 'url', 'tel', 'date', 'datetime-local', 'color', 'checkbox', 'hidden']
     const fieldTypeOptions = inputFieldTypeOptions.concat(specialFieldTypeOptions)
 
     const getFieldComponent = type => `field-type-${specialFieldTypeOptions.includes(type) ? type : 'input'}`
@@ -120,7 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 this.field.options.push({ value: `newOption${index}`, text: `New option ${index}` })
             },
             removeOption(event, index) {
-                console.log(this.field.options, index)
                 this.field.options.splice(index, 1)
             },
             sortOptions (event) {
@@ -153,7 +152,8 @@ document.addEventListener('DOMContentLoaded', () => {
         data () {
             return {
                 config,
-                selectedField: null
+                selectedField: null,
+                editorOffcanvas: null
             }
         },
         computed: {
@@ -193,10 +193,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const index = fields.length + 1
                 const length = fields.push({ type: 'text', name: `newField${index}`, label: `New field ${index}`, fields: [], options: [] })
                 this.selectedField = fields[length - 1]
+                this.showOffcanvas()
             },
             selectField(event, path, index) {
                 const fields = this.getFieldsForPath(path)
                 this.selectedField = fields[index]
+                this.showOffcanvas()
             },
             removeField(event, path, index) {
                 const fields = this.getFieldsForPath(path)
@@ -218,12 +220,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     fields = field.fields
                 }
                 return fields
+            },
+            showOffcanvas() {
+                if (this.editorOffcanvas && window.getComputedStyle(this.$refs.editorOffcanvas).visibility === 'hidden')
+                    this.editorOffcanvas.show();
+            },
+            hideOffcanvas() {
+                if (this.editorOffcanvas)
+                    this.editorOffcanvas.hide();
             }
         },
         mounted () {
             if (!this.config.fields || this.config.fields.length === 0) {
                 this.addField(null,[])
             }
+            this.editorOffcanvas = bootstrap.Offcanvas.getOrCreateInstance(this.$refs.editorOffcanvas);
         }
     })
 })

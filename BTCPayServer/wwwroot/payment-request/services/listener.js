@@ -7,11 +7,14 @@ var hubListener = function () {
         console.error("Connection was closed. Attempting reconnect in 2s");
         setTimeout(connect, 2000);
     });
-    connection.on("PaymentReceived", function (amount, cryptoCode, type) {
-        eventAggregator.$emit("payment-received", amount, cryptoCode, type);
+    connection.on("PaymentReceived", function (amount, currency, prettyPMI, pmi) {
+        eventAggregator.$emit("payment-received", amount, currency, prettyPMI, pmi);
     });
     connection.on("InvoiceCreated", function (invoiceId) {
         eventAggregator.$emit("invoice-created", invoiceId);
+    });
+    connection.on("InvoiceConfirmed", function (invoiceId) {
+        eventAggregator.$emit("invoice-confirmed", invoiceId);
     });
     connection.on("InvoiceError", function (error) {
         eventAggregator.$emit("invoice-error", error);

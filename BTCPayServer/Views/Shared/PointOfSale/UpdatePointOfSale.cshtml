@@ -1,73 +1,101 @@
 @using BTCPayServer.Abstractions.Models
 @using BTCPayServer.Views.Apps
-@using BTCPayServer.Abstractions.Extensions
+@using BTCPayServer.Client
 @using BTCPayServer.Plugins.PointOfSale
 @using BTCPayServer.Forms
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject FormDataService FormDataService
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model BTCPayServer.Plugins.PointOfSale.Models.UpdatePointOfSaleViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Update, "Update Point of Sale", Model.Id);
+    ViewData.SetActivePage(AppsNavPages.Update, StringLocalizer["Update Point of Sale"], Model.Id);
 	Csp.UnsafeEval();
     var checkoutFormOptions = await FormDataService.GetSelect(Model.StoreId, Model.FormId);
+    var posPath = Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id });
 }
 
-<form method="post">
-    <div class="sticky-header-setup"></div>
-    <div class="sticky-header d-sm-flex align-items-center justify-content-between">
-        <h2 class="mb-0">@ViewData["Title"]</h2>
-        <div class="d-flex gap-3 mt-3 mt-sm-0">
-            <button type="submit" class="btn btn-primary order-sm-1" id="SaveSettings">Save</button>
-            <a class="btn btn-secondary" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank">View</a>
+@section PageHeadContent {
+    <link href="~/vendor/highlightjs/default.min.css" rel="stylesheet" asp-append-version="true">
+    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true" />
+}
+
+@section PageFootContent {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
+    <script src="~/pos/admin.js" asp-append-version="true"></script>
+}
+
+<form method="post" permissioned="@Policies.CanModifyStoreSettings">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+        <div>
+            <button id="page-primary" type="submit" class="btn btn-primary order-sm-1">Save</button>
+            <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm" text-translate="true">Invoices</a>
+            @if (Model.Archived)
+            {
+                <button type="submit" class="btn btn-outline-secondary" name="Archived" value="False" text-translate="true">Unarchive</button>
+            }
+            else
+            {
+                <div class="btn-group" role="group" aria-label="View Point of Sale">
+                    <a class="btn btn-secondary" asp-controller="UIPointOfSale" asp-action="ViewPointOfSale" asp-route-appId="@Model.Id" id="ViewApp" target="_blank" text-translate="true">View</a>
+                    <button type="button" class="btn btn-secondary px-3 d-inline-flex align-items-center" data-bs-toggle="modal" data-bs-target="#OpenPosModal">
+                        <vc:icon symbol="qr-code" />
+                    </button>
+                </div>
+            }
         </div>
     </div>
 
     <partial name="_StatusMessage" />
 
     <input type="hidden" asp-for="StoreId" />
-    <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <input type="hidden" asp-for="Archived" />
 
-    <div class="row">
-        <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
-            <div class="row">
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label asp-for="AppName" class="form-label" data-required></label>
-                        <input asp-for="AppName" class="form-control" required />
-                        <span asp-validation-for="AppName" class="text-danger"></span>
-                    </div>
-                </div>
-                <div class="col-sm-6">
-                    <div class="form-group">
-                        <label asp-for="Title" class="form-label" data-required></label>
-                        <input asp-for="Title" class="form-control" required />
-                        <span asp-validation-for="Title" class="text-danger"></span>
-                    </div>
-                </div>
-            </div>
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All" class="@(ViewContext.ModelState.ErrorCount.Equals(1) ? "no-marker" : "")"></div>
+    }
+    <div class="row" style="max-width:540px;">
+        <div class="col-sm-6">
             <div class="form-group">
-                <label asp-for="DefaultView" class="form-label" data-required>Choose Point of Sale Style</label>
-                <div class="btcpay-list-select">
-                    @foreach (var type in Enum.GetValues<PosViewType>())
-                    {
-                        <input type="radio" asp-for="DefaultView" value="@type" id="DefaultView_@type">
-                        <label for="DefaultView_@type" class="btcpay-list-select-item">
-                            <vc:icon symbol="pos-@type.ToString().ToLowerInvariant()" />
-                            @typeof(PosViewType).DisplayName(type.ToString())
-                        </label>
-                    }
-                </div>
-            </div>
-            <div class="form-group mb-0">
-                <label asp-for="Currency" class="form-label"></label>
-                <input asp-for="Currency" class="form-control w-auto" currency-selection />
-                <div class="form-text">Uses the store's default currency (@Model.StoreDefaultCurrency) if empty.</div>
-                <span asp-validation-for="Currency" class="text-danger"></span>
+                <label asp-for="AppName" class="form-label" data-required></label>
+                <input asp-for="AppName" class="form-control" required />
+                <span asp-validation-for="AppName" class="text-danger"></span>
             </div>
         </div>
+        <div class="col-sm-6">
+            <div class="form-group">
+                <label asp-for="Title" class="form-label" data-required></label>
+                <input asp-for="Title" class="form-control" required />
+                <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="DefaultView" class="form-label" data-required text-translate="true">Choose Point of Sale Style</label>
+            <div class="btcpay-list-select">
+                @foreach (var type in Enum.GetValues<PosViewType>())
+                {
+                    <input type="radio" asp-for="DefaultView" value="@type" id="DefaultView_@type">
+                    <label for="DefaultView_@type" class="btcpay-list-select-item">
+                        <vc:icon symbol="pos-@type.ToString().ToLowerInvariant()" />
+                        @typeof(PosViewType).DisplayName(type.ToString())
+                    </label>
+                }
+            </div>
+        </div>
+        <div class="form-group mb-0">
+            <label asp-for="Currency" class="form-label"></label>
+            <input asp-for="Currency" class="form-control w-auto" currency-selection />
+            <div class="form-text">@StringLocalizer["Uses the store's default currency ({0}) if empty.", Model.StoreDefaultCurrency]</div>
+            <span asp-validation-for="Currency" class="text-danger"></span>
+        </div>
     </div>
+
     <div id="description" class="row mt-4">
-        <div class="col-xl-10 col-xxl-constrain">
+        <div class="col-xxl-constrain">
             <div class="form-group mb-0">
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" rows="10" cols="40" class="form-control richtext"></textarea>
@@ -75,12 +103,14 @@
             </div>
         </div>
     </div>
-    <div id="products">
-        <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+    <div id="products" class="row">
+        <div class="col-xxl-constrain">
+            <partial name="TemplateEditor" model="@(nameof(Model.Template), Model.Template, "Products", Model.Currency ?? Model.StoreDefaultCurrency)" />
+        </div>
     </div>
     <div class="row mt-5">
         <div class="col-sm-10 col-md-9 col-xl-7 col-xxl-6">
-            <h3 class="mb-4">Checkout</h3>
+            <h3 class="mb-4" text-translate="true">Checkout</h3>
             <fieldset>
                 <div class="form-group" id="button-price-text">
                     <label asp-for="ButtonText" class="form-label" data-required></label>
@@ -93,11 +123,32 @@
                     <span asp-validation-for="FormId" class="text-danger"></span>
                 </div>
             </fieldset>
+            <fieldset id="keypad-display" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Keypad</legend>
+                <div class="form-group d-flex align-items-center pt-2">
+                    <input asp-for="ShowItems" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowItems" class="form-label mb-0"></label>
+                    <span asp-validation-for="ShowItems" class="text-danger"></span>
+                </div>
+            </fieldset>
+            <fieldset id="cart-display" class="mt-2">
+                <legend class="h5 mb-3 fw-semibold">Cart</legend>
+                <div class="form-group d-flex align-items-center pt-2">
+                    <input asp-for="ShowSearch" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowSearch" class="form-check-label"></label>
+                    <span asp-validation-for="ShowSearch" class="text-danger"></span>
+                </div>
+                <div class="form-group d-flex align-items-center">
+                    <input asp-for="ShowCategories" type="checkbox" class="btcpay-toggle me-3" />
+                    <label asp-for="ShowCategories" class="form-check-label"></label>
+                    <span asp-validation-for="ShowCategories" class="text-danger"></span>
+                </div>
+            </fieldset>
             <fieldset id="tips" class="mt-2">
-                <legend class="h5 mb-3 fw-semibold">Tips</legend>
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Tips</legend>
                 <div class="form-group d-flex align-items-center pt-2">
                     <input asp-for="EnableTips" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomTipsSettings" aria-expanded="@Model.EnableTips" aria-controls="CustomTipsSettings" />
-                    <label asp-for="EnableTips" class="form-label mb-0"></label>
+                    <label asp-for="EnableTips" class="form-check-label"></label>
                     <span asp-validation-for="EnableTips" class="text-danger"></span>
                 </div>
                 <div class="collapse @(Model.EnableTips ? "show" : "")" id="CustomTipsSettings">
@@ -114,21 +165,21 @@
                 </div>
             </fieldset>
             <fieldset id="discounts" class="mt-2">
-                <legend class="h5 mb-3 fw-semibold">Discounts</legend>
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Discounts</legend>
                 <div class="form-group d-flex align-items-center">
                     <input asp-for="ShowDiscount" type="checkbox" class="btcpay-toggle me-3" />
                     <div>
-                        <label asp-for="ShowDiscount" class="form-label mb-0"></label>
-                        <div class="text-muted">Not recommended for customer self-checkout.</div>
+                        <label asp-for="ShowDiscount" class="form-check-label"></label>
+                        <div class="text-muted" text-translate="true">Not recommended for customer self-checkout.</div>
                     </div>
                     <span asp-validation-for="ShowDiscount" class="text-danger"></span>
                 </div>
             </fieldset>
             <fieldset id="custom-payments" class="mt-2">
-                <legend class="h5 mb-3 fw-semibold">Custom Payments</legend>
+                <legend class="h5 mb-3 fw-semibold" text-translate="true">Custom Payments</legend>
                 <div class="form-group mb-4 d-flex align-items-center">
                     <input asp-for="ShowCustomAmount" type="checkbox" class="btcpay-toggle me-3" data-bs-toggle="collapse" data-bs-target="#CustomAmountSettings" aria-expanded="@Model.ShowCustomAmount" aria-controls="CustomAmountSettings"/>
-                    <label asp-for="ShowCustomAmount" class="form-label mb-0"></label>
+                    <label asp-for="ShowCustomAmount" class="form-check-label"></label>
                     <span asp-validation-for="ShowCustomAmount" class="text-danger"></span>
                 </div>
                 <div class="collapse @(Model.ShowCustomAmount ? "show" : "")" id="CustomAmountSettings">
@@ -146,24 +197,53 @@
             <h3 class="mb-2">Additional Options</h3>
             <div class="form-group">
                 <div class="accordion" id="additional">
+
+                    <div class="accordion-item">
+                        <h2 class="accordion-header" id="additional-htmlheader-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-htmlheader" aria-expanded="false" aria-controls="additional-htmlheader">
+                                <span text-translate="true">HTML Headers</span>
+                                <vc:icon symbol="caret-down" />
+                            </button>
+                        </h2>
+                        <div id="additional-htmlheader" class="accordion-collapse collapse" aria-labelledby="additional-htmlheader-header">
+                            <div class="accordion-body">
+                                <div class="form-group">
+                                    <label asp-for="HtmlLang" class="form-label"></label>
+                                    <input asp-for="HtmlLang" class="form-control"/>
+                                    <span asp-validation-for="HtmlLang" class="text-danger"></span>
+                                </div>
+                                <div class="form-group">
+                                    <label asp-for="HtmlMetaTags" class="form-label"></label>
+                                    <textarea asp-for="HtmlMetaTags" rows="5" cols="40" class="form-control"
+                                              placeholder='<meta name="description" content="Your description">
+<meta name="keywords" content="keyword1, keyword2, keyword3">
+<meta name="author" content="John Doe">
+Please insert valid HTML here. Only meta tags accepted.'>
+                                    </textarea>
+                                    <span asp-validation-for="HtmlMetaTags" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-embed-payment-button-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-payment-button" aria-expanded="false" aria-controls="additional-embed-payment-button">
-                                Embed a payment button linking to POS item
+                                <span text-translate="true">Embed a payment button linking to POS item</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
                         <div id="additional-embed-payment-button" class="accordion-collapse collapse" aria-labelledby="additional-embed-payment-button-header">
                             <div class="accordion-body">
-                                <p>You can host point of sale buttons in an external website with the following code.</p>
+                                <p text-translate="true">You can host point of sale buttons in an external website with the following code.</p>
                                 @if (Model.Example1 != null)
                                 {
-                                    <span>For anything with a custom amount</span>
+                                    <span text-translate="true">For anything with a custom amount</span>
                                     <pre class="p-3">@Model.Example1</pre>
                                 }
                                 @if (Model.Example2 != null)
                                 {
-                                    <span>For a specific item of your template</span>
+                                    <span text-translate="true">For a specific item of your template</span>
                                     <pre class="p-3">@Model.Example2</pre>
                                 }
                             </div>
@@ -172,13 +252,13 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-embed-pos-iframe-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-embed-pos-iframe" aria-expanded="false" aria-controls="additional-embed-pos-iframe">
-                                Embed Point of Sale via Iframe
+                                <span text-translate="true">Embed Point of Sale via iframe</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
                         <div id="additional-embed-pos-iframe" class="accordion-collapse collapse" aria-labelledby="additional-embed-pos-iframe-header">
                             <div class="accordion-body">
-                                You can embed this POS via an iframe.
+                                <span text-translate="true">You can embed this POS via an iframe.</span>
                                 @{
                                     var iframe = $"<iframe src='{Url.Action("ViewPointOfSale", "UIPointOfSale", new { appId = Model.Id }, Context.Request.Scheme)}' style='max-width: 100%; border: 0;'></iframe>";
                                 }
@@ -189,7 +269,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-redirect-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-redirect" aria-expanded="false" aria-controls="additional-redirect">
-                                Redirects
+                                <span text-translate="true">Redirects</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -211,7 +291,7 @@
                     <div class="accordion-item">
                         <h2 class="accordion-header" id="additional-notification-header">
                             <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-notification" aria-expanded="false" aria-controls="additional-notification">
-                                Notification URL Callbacks
+                                <span text-translate="true">Notification URL Callbacks</span>
                                 <vc:icon symbol="caret-down" />
                             </button>
                         </h2>
@@ -222,39 +302,14 @@
                                     <input asp-for="NotificationUrl" class="form-control" />
                                     <span asp-validation-for="NotificationUrl" class="text-danger"></span>
                                 </div>
-                                <p>A <code>POST</code> callback will be sent to the specified <code>notificationUrl</code> (for on-chain transactions when there are sufficient confirmations):</p>
+                                <p html-translate="true">A <code>POST</code> callback will be sent to the specified <code>notificationUrl</code> (for on-chain transactions when there are sufficient confirmations):</p>
                                 <pre class="p-3">@Model.ExampleCallback</pre>
-                                <p><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
+                                <p html-translate="true"><strong>Never</strong> trust anything but <code>id</code>, <strong>ignore</strong> the other fields completely, an attacker can spoof those, they are present only for backward compatibility reason:</p>
                                 <ul>
-                                    <li>Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
-                                    <li>Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
-                                    <li>You can then ship your order</li>
+                                    <li html-translate="true">Send a <code>GET</code> request to <code>https://btcpay.example.com/invoices/{invoiceId}</code> with <code>Content-Type: application/json; Authorization: Basic YourLegacyAPIkey"</code>, Legacy API key can be created with Access Tokens in Store settings</li>
+                                    <li html-translate="true">Verify that the <code>orderId</code> is from your backend, that the <code>price</code> is correct and that <code>status</code> is <code>settled</code></li>
+                                    <li text-translate="true">You can then ship your order</li>
                                 </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="accordion-item">
-                        <h2 class="accordion-header" id="additional-custom-css-header">
-                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#additional-custom-css" aria-expanded="false" aria-controls="additional-custom-css">
-                                Custom CSS
-                                <vc:icon symbol="caret-down" />
-                            </button>
-                        </h2>
-                        <div id="additional-custom-css" class="accordion-collapse collapse" aria-labelledby="additional-custom-css-header">
-                            <div class="accordion-body">
-                                <div class="form-group">
-                                    <label asp-for="CustomCSSLink" class="form-label"></label>
-                                    <a href="https://docs.btcpayserver.org/Development/Theme/#2-bootstrap-themes" target="_blank" rel="noreferrer noopener" title="More information...">
-                                        <vc:icon symbol="info" />
-                                    </a>
-                                    <input asp-for="CustomCSSLink" class="form-control" />
-                                    <span asp-validation-for="CustomCSSLink" class="text-danger"></span>
-                                </div>
-                                <div class="form-group">
-                                    <label asp-for="EmbeddedCSS" class="form-label"></label>
-                                    <textarea asp-for="EmbeddedCSS" rows="10" cols="40" class="form-control"></textarea>
-                                    <span asp-validation-for="EmbeddedCSS" class="text-danger"></span>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -264,131 +319,36 @@
     </div>
 </form>
 
-<div class="d-flex gap-3 mt-3">
-    <a class="btn btn-secondary" asp-action="ListInvoices" asp-controller="UIInvoice" asp-route-storeId="@Model.StoreId" asp-route-searchterm="@Model.SearchTerm">Invoices</a>
-  <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The app <strong>@Html.Encode(Model.AppName)</strong> and its settings will be permanently deleted." data-confirm-input="DELETE">Delete this app</a>
+<div class="d-grid d-sm-flex flex-wrap gap-3 mt-3">
+    <form method="post" asp-controller="UIApps" asp-action="ToggleArchive" asp-route-appId="@Model.Id">
+        <button type="submit" class="w-100 btn btn-outline-secondary" id="btn-archive-toggle" permission="@Policies.CanModifyStoreSettings">
+            @if (Model.Archived)
+            {
+                <span class="text-nowrap" text-translate="true">Unarchive this app</span>
+            }
+            else
+            {
+                <span class="text-nowrap" data-bs-toggle="tooltip" title="@StringLocalizer["Archive this app so that it does not appear in the apps list by default"]" text-translate="true">Archive this app</span>
+            }
+        </button>
+    </form>
+    <a id="DeleteApp" class="btn btn-outline-danger" asp-controller="UIApps" asp-action="DeleteApp" asp-route-appId="@Model.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["The app <strong>{0}</strong> and its settings will be permanently deleted.", Html.Encode(Model.AppName)]" data-confirm-input="@StringLocalizer["DELETE"]" permission="@Policies.CanModifyStoreSettings" text-translate="true">Delete this app</a>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Delete app", "This app will be removed from this store.", "Delete"))" />
+<partial name="_Confirm" model="@(new ConfirmModel(StringLocalizer["Delete app"], StringLocalizer["This app will be removed from this store."], StringLocalizer["Delete"]))" permission="@Policies.CanModifyStoreSettings" />
 
-@section PageHeadContent {
-    <link href="~/vendor/highlightjs/default.min.css" rel="stylesheet" asp-append-version="true">
-    <link href="~/vendor/summernote/summernote-bs5.css" rel="stylesheet" asp-append-version="true" />
-    <link href="~/main/template-editor.css" rel="stylesheet" asp-append-version="true" />
-}
-
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-    <script id="template-product-item" type="text/template">
-        <div class="col-sm-4 col-md-3 mb-3">
-            <div class="card">
-                {image}
-                <div class="card-body">
-                    <h6 class="card-title">{title}</h6>
-                    <a href="#" class="js-product-edit btn btn-primary" data-bs-toggle="modal" data-bs-target="#product-modal">Edit</a>
-                    <a href="#" class="js-product-remove btn btn-danger"><i class="fa fa-trash"></i></a>
-                </div>
+<div class="modal fade" id="OpenPosModal" tabindex="-1" aria-labelledby="ConfirmTitle" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" text-translate="true">Scan the QR code to open the Point of Sale</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
+                    <vc:icon symbol="close"/>
+                </button>
+            </div>
+            <div class="modal-body pt-0">
+                <component type="typeof(BTCPayServer.Blazor.PosLoginCode)" render-mode="ServerPrerendered" param-Users="@Model.StoreUsers" param-PosPath="@posPath" />
             </div>
         </div>
-    </script>
-    <script id="template-product-content" type="text/template">
-        <div class="mb-3">
-            <input class="js-product-id" type="hidden" name="id" value="{id}">
-            <input class="js-product-index" type="hidden" name="index" value="{index}">
-            <div class="form-group row">
-                <div class="col-sm-6">
-                    <label class="form-label" data-required>Title</label>
-                    <input type="text" class="js-product-title form-control mb-2" value="{title}" autofocus required />
-                </div>
-                <div class="col-sm-3">
-                    <label class="form-label" data-required>Price</label>
-                    <input class="js-product-price form-control mb-2"
-                           inputmode="decimal"
-                           pattern="\d*"
-                           type="number"
-                           value="{price}"
-                           required />
-                </div>
-                <div class="col-sm-3">
-                    <label class="form-label">Custom price</label>
-                    <select class="js-product-custom form-select">
-                        {custom}
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Image</label>
-                <input type="text" class="js-product-image form-control mb-2" value="{image}" />
-            </div>
-            <div class="form-group">
-                <label class="form-label">Description</label>
-                <textarea rows="3" cols="40" class="js-product-description form-control mb-2">{description}</textarea>
-            </div>
-            <div class="form-group">
-                <label class="form-label">Inventory (leave blank to not use inventory feature)</label>
-                <input type="number" inputmode="numeric" step="1" class="js-product-inventory form-control mb-2" value="{inventory}" />
-            </div>
-            <div class="form-group d-flex align-items-center">
-                <input type="checkbox" class="btcpay-toggle me-2" value="{disabled}" />
-                <label class="form-label mb-0">Disabled</label>
-            </div>
-        </div>
-    </script>
-    <script>
-        const description = document.getElementById('description');
-        const products = document.getElementById('products');
-        const tips = document.getElementById('tips');
-        const discounts = document.getElementById('discounts');
-        const buttonPriceText = document.getElementById('button-price-text');
-        const customPayments = document.getElementById('custom-payments');
-        
-        function hide(el) {
-            el.setAttribute('hidden', true);
-        }
-        function show(el) {
-            el.removeAttribute('hidden');
-        }
-        function updateFormForDefaultView(type) {
-            switch (type) {
-                case 'Static':
-                case 'Print':
-                    hide(tips);
-                    hide(discounts);
-                    hide(buttonPriceText);
-                    show(description);
-                    show(products);
-                    show(customPayments);
-                    break;
-                case 'Cart':
-                    show(tips);
-                    show(products);
-                    show(discounts);
-                    show(description);
-                    show(buttonPriceText);
-                    hide(customPayments);
-                    break;
-                case 'Light':
-                    show(tips);
-                    show(discounts);
-                    hide(products);
-                    hide(description);
-                    hide(buttonPriceText);
-                    hide(customPayments);
-                    break;
-            }
-        }
-
-        document.addEventListener('DOMContentLoaded', () => {
-            const defaultView = document.querySelector('input[name="DefaultView"]:checked'); 
-            if (defaultView) {
-                updateFormForDefaultView(defaultView.value);
-            }
-        });
-        
-        delegate('change', 'input[name="DefaultView"]', e => {
-            updateFormForDefaultView(e.target.value);
-        });
-    </script>
-    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-    <script src="~/vendor/summernote/summernote-bs5.js" asp-append-version="true"></script>
-}
+    </div>
+</div>

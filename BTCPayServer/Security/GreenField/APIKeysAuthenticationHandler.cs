@@ -7,6 +7,7 @@ using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.Extensions.Logging;
@@ -27,8 +28,7 @@ namespace BTCPayServer.Security.Greenfield
             IOptionsMonitor<GreenfieldAuthenticationOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            ISystemClock clock,
-            UserManager<ApplicationUser> userManager) : base(options, logger, encoder, clock)
+            UserManager<ApplicationUser> userManager) : base(options, logger, encoder)
         {
             _apiKeyRepository = apiKeyRepository;
             _identityOptions = identityOptions;
@@ -45,7 +45,7 @@ namespace BTCPayServer.Security.Greenfield
             // the login page.
             // But this isn't what we want when we call the API programmatically, instead we want an error 401 with a json error message.
             // This hack modify a request's header to trick the CookieAuthenticationHandler to not do a redirection.
-            if (!Request.Headers.Accept.Any(s => s.StartsWith("text/html", StringComparison.OrdinalIgnoreCase)))
+            if (!Request.Headers.Accept.Any(s => s is string && s.StartsWith("text/html", StringComparison.OrdinalIgnoreCase)))
                 Request.Headers.XRequestedWith = new Microsoft.Extensions.Primitives.StringValues("XMLHttpRequest");
             return base.HandleChallengeAsync(properties);
         }
@@ -59,14 +59,12 @@ namespace BTCPayServer.Security.Greenfield
                 return AuthenticateResult.NoResult();
 
             var key = await _apiKeyRepository.GetKey(apiKey, true);
-
-            if (key == null || await _userManager.IsLockedOutAsync(key.User))
+            if (!UserService.TryCanLogin(key?.User, out var error))
             {
-                return AuthenticateResult.Fail("ApiKey authentication failed");
+                return AuthenticateResult.Fail($"ApiKey authentication failed: {error}");
             }
-            List<Claim> claims = new List<Claim>();
-            claims.Add(new Claim(_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, key.UserId));
 
+            var claims = new List<Claim> { new (_identityOptions.CurrentValue.ClaimsIdentity.UserIdClaimType, key.UserId) };
             claims.AddRange((await _userManager.GetRolesAsync(key.User)).Select(s => new Claim(_identityOptions.CurrentValue.ClaimsIdentity.RoleClaimType, s)));
             claims.AddRange(Permission.ToPermissions(key.GetBlob()?.Permissions ?? Array.Empty<string>()).Select(permission =>
                 new Claim(GreenfieldConstants.ClaimTypes.Permission, permission.ToString())));

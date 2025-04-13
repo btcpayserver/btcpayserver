@@ -1,10 +1,8 @@
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.Extensions
-@using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Client
+@using BTCPayServer.Components.MainLogo
 @using BTCPayServer.Services
+@using BTCPayServer.Views.Server
+@using BTCPayServer.Views.Stores
 @inject BTCPayServerEnvironment Env
-@inject IFileService FileService
 @model BTCPayServer.Components.StoreSelector.StoreSelectorViewModel
 @functions {
     @* ReSharper disable once CSharpWarnings::CS1998 *@
@@ -19,9 +17,9 @@
             <small class="badge bg-warning rounded-pill ms-1 ms-sm-0" title="@type">@displayType</small>
         }
     }
-    private static string StoreName(string title)
+    private string StoreName(string title)
     {
-        return string.IsNullOrEmpty(title) ? "Unnamed Store" : title;
+        return string.IsNullOrEmpty(title) ? StringLocalizer["Unnamed Store"] : title;
     }
 	#pragma warning restore 1998
 }
@@ -31,41 +29,45 @@
 }
 else
 {
-    <a asp-controller="UIStores" asp-action="Dashboard" permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
-    <a asp-controller="UIInvoice" asp-action="ListInvoices" not-permission="@Policies.CanModifyStoreSettings" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
+    <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@Model.CurrentStoreId" id="StoreSelectorHome" class="navbar-brand py-2">@{await LogoContent();}</a>
 }
-@if (Model.Options.Any())
+@if (Model.Options.Any() || Model.ArchivedCount > 0)
 {
     <div id="StoreSelector">
         <div id="StoreSelectorDropdown" class="dropdown only-for-js">
             <button id="StoreSelectorToggle" class="btn btn-secondary dropdown-toggle rounded-pill px-3 @(Model.CurrentStoreId == null ? "empty-state" : "")" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoFileId))
+                @if (!string.IsNullOrEmpty(Model.CurrentStoreLogoUrl))
                 {
-                    <img class="logo" src="@(await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.CurrentStoreLogoFileId))" alt="@Model.CurrentDisplayName" />
+                    <img class="logo" src="@Model.CurrentStoreLogoUrl" alt="@Model.CurrentDisplayName" />
                 }
                 else
                 {
-                    <vc:icon symbol="store"/>
+                    <vc:icon symbol="nav-store"/>
                 }
-                <span>@(Model.CurrentStoreId == null ? "Select Store" : Model.CurrentDisplayName)</span>
+                <span>@(Model.CurrentStoreId == null ? StringLocalizer["Select Store"] : Model.CurrentDisplayName)</span>
                 <vc:icon symbol="caret-down"/>
             </button>
             <ul id="StoreSelectorMenu" class="dropdown-menu" aria-labelledby="StoreSelectorToggle">
                 @foreach (var option in Model.Options)
                 {
                     <li>
-                        @if (option.IsOwner)
-                        {
-                            <a asp-controller="UIStores" asp-action="Dashboard" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
-                        }
-                        else
-                        {
-                            <a asp-controller="UIInvoice" asp-action="ListInvoices" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
-                        }
+                        <a asp-controller="UIStores" asp-action="Index" asp-route-storeId="@option.Value" class="dropdown-item@(option.Selected && ViewData.ActivePageClass(ServerNavPages.Stores) != "active" ? " active" : "")" id="StoreSelectorMenuItem-@option.Value">@StoreName(option.Text)</a>
                     </li>
                 }
-                <li><hr class="dropdown-divider"></li>
-                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item" id="StoreSelectorCreate">Create Store</a></li>
+                @if (Model.Options.Any())
+                {
+                    <li><hr class="dropdown-divider"></li>
+                }
+                <li><a asp-controller="UIUserStores" asp-action="CreateStore" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Create)" id="StoreSelectorCreate" text-translate="true">Create Store</a></li>
+                @if (Model.ArchivedCount > 0)
+                {
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a asp-controller="UIUserStores" asp-action="ListStores" asp-route-archived="true" class="dropdown-item @ViewData.ActivePageClass(StoreNavPages.Index)" id="StoreSelectorArchived">@(Model.ArchivedCount == 1 ? StringLocalizer["{0} Archived Store", Model.ArchivedCount] : StringLocalizer["{0} Archived Stores", Model.ArchivedCount])</a></li>
+                }
+                @*
+                <li permission="@Policies.CanModifyServerSettings"><hr class="dropdown-divider"></li>
+                <li permission="@Policies.CanModifyServerSettings"><a asp-controller="UIServer" asp-action="ListStores" class="dropdown-item @ViewData.ActivePageClass(ServerNavPages.Stores)" id="StoreSelectorAdminStores" text-translate="true">Admin Store Overview</a></li>
+                *@
             </ul>
         </div>
     </div>

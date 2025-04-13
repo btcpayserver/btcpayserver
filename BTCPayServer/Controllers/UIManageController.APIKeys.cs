@@ -58,10 +58,10 @@ namespace BTCPayServer.Controllers
                 return NotFound();
             }
             await _apiKeyRepository.Remove(id, _userManager.GetUserId(User));
-            TempData.SetStatusMessageModel(new StatusMessageModel()
+            TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = "API Key removed"
+                Message = StringLocalizer["API Key removed"].Value
             });
             return RedirectToAction("APIKeys");
         }
@@ -71,10 +71,10 @@ namespace BTCPayServer.Controllers
         {
             if (!_btcPayServerEnvironment.IsSecure(HttpContext))
             {
-                TempData.SetStatusMessageModel(new StatusMessageModel()
+                TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Cannot generate api keys while not on https or tor"
+                    Message = StringLocalizer["Cannot generate API keys while not using HTTPS or Tor"].Value
                 });
                 return RedirectToAction("APIKeys");
             }
@@ -91,7 +91,7 @@ namespace BTCPayServer.Controllers
                 TempData.SetStatusMessageModel(new StatusMessageModel
                 {
                     Severity = StatusMessageModel.StatusSeverity.Error,
-                    Message = "Cannot generate API keys while not on https or using Tor"
+                    Message = StringLocalizer["Cannot generate API keys while not using HTTPS or Tor"].Value
                 });
                 return RedirectToAction("APIKeys");
             }
@@ -199,7 +199,7 @@ namespace BTCPayServer.Controllers
                     TempData.SetStatusMessageModel(new StatusMessageModel
                     {
                         Severity = StatusMessageModel.StatusSeverity.Success,
-                        Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
+                        Html = StringLocalizer["API key generated!"].Value + $" <code class='alert-link'>{key.Id}</code>"
                     });
 
                     return RedirectToAction("APIKeys", new { key = key.Id });
@@ -242,7 +242,7 @@ namespace BTCPayServer.Controllers
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Html = $"API key generated! <code class='alert-link'>{key.Id}</code>"
+                Html = StringLocalizer["API key generated!"].Value + $" <code class='alert-link'>{key.Id}</code>"
             });
             return RedirectToAction("APIKeys");
         }
@@ -513,20 +513,12 @@ namespace BTCPayServer.Controllers
                     {Policies.CanDeleteUser, ("Delete user", "Allows deleting the user to whom it is assigned. Admin users can delete any user without this permission.")},
                     {Policies.CanModifyStoreSettings, ("Modify your stores", "Allows managing invoices on all your stores and modify their settings.")},
                     {$"{Policies.CanModifyStoreSettings}:", ("Manage selected stores", "Allows managing invoices on the selected stores and modify their settings.")},
-                    {Policies.CanViewCustodianAccounts, ("View exchange accounts linked to your stores", "Allows seeing exchange accounts linked to your stores.")},
-                    {$"{Policies.CanViewCustodianAccounts}:", ("View exchange accounts linked to selected stores", "Allows seeing exchange accounts linked to the selected stores.")},
-                    {Policies.CanManageCustodianAccounts, ("Manage exchange accounts linked to your stores", "Allows modifying exchange accounts linked to your stores.")},
-                    {$"{Policies.CanManageCustodianAccounts}:", ("Manage exchange accounts linked to selected stores", "Allows modifying exchange accounts linked to selected stores.")},
-                    {Policies.CanDepositToCustodianAccounts, ("Deposit funds to exchange accounts linked to your stores", "Allows depositing funds to your exchange accounts.")},
-                    {$"{Policies.CanDepositToCustodianAccounts}:", ("Deposit funds to exchange accounts linked to selected stores", "Allows depositing funds to selected store's exchange accounts.")},
-                    {Policies.CanWithdrawFromCustodianAccounts, ("Withdraw funds from exchange accounts to your store", "Allows withdrawing funds from your exchange accounts to your store.")},
-                    {$"{Policies.CanWithdrawFromCustodianAccounts}:", ("Withdraw funds from selected store's exchange accounts", "Allows withdrawing funds from your selected store's exchange accounts.")},
-                    {Policies.CanTradeCustodianAccount, ("Trade funds on your store's exchange accounts", "Allows trading funds on your store's exchange accounts.")},
-                    {$"{Policies.CanTradeCustodianAccount}:", ("Trade funds on selected store's exchange accounts", "Allows trading funds on selected store's exchange accounts.")},
-                    {Policies.CanModifyStoreWebhooks, ("Modify stores webhooks", "Allows modifying the webhooks of all your stores.")},
-                    {$"{Policies.CanModifyStoreWebhooks}:", ("Modify selected stores' webhooks", "Allows modifying the webhooks of the selected stores.")},
+                    {Policies.CanModifyWebhooks, ("Modify stores webhooks", "Allows modifying the webhooks of all your stores.")},
+                    {$"{Policies.CanModifyWebhooks}:", ("Modify selected stores' webhooks", "Allows modifying the webhooks of the selected stores.")},
                     {Policies.CanViewStoreSettings, ("View your stores", "Allows viewing stores settings.")},
                     {$"{Policies.CanViewStoreSettings}:", ("View your stores", "Allows viewing the selected stores' settings.")},
+                    {Policies.CanViewReports, ("View your reports", "Allows viewing reports.")},
+                    {$"{Policies.CanViewReports}:", ("View your selected stores' reports", "Allows viewing the selected stores' reports.")},
                     {Policies.CanModifyServerSettings, ("Manage your server", "Grants total control on the server settings of your server.")},
                     {Policies.CanViewProfile, ("View your profile", "Allows viewing your user profile.")},
                     {Policies.CanModifyProfile, ("Manage your profile", "Allows viewing and modifying your user profile.")},
@@ -542,10 +534,18 @@ namespace BTCPayServer.Controllers
                     {$"{Policies.CanModifyPaymentRequests}:", ("Manage selected stores' payment requests", "Allows viewing, modifying, deleting and creating new payment requests on the selected stores.")},
                     {Policies.CanViewPaymentRequests, ("View your payment requests", "Allows viewing payment requests.")},
                     {$"{Policies.CanViewPaymentRequests}:", ("View your payment requests", "Allows viewing the selected stores' payment requests.")},
+                    {Policies.CanViewPullPayments, ("View your pull payments", "Allows viewing pull payments on all your stores.")},
+                    {$"{Policies.CanViewPullPayments}:", ("View selected stores' pull payments", "Allows viewing pull payments on the selected stores.")},
                     {Policies.CanManagePullPayments, ("Manage your pull payments", "Allows viewing, modifying, deleting and creating pull payments on all your stores.")},
                     {$"{Policies.CanManagePullPayments}:", ("Manage selected stores' pull payments", "Allows viewing, modifying, deleting and creating pull payments on the selected stores.")},
+                    {Policies.CanArchivePullPayments, ("Archive your pull payments", "Allows deleting pull payments on all your stores.")},
+                    {$"{Policies.CanArchivePullPayments}:", ("Archive selected stores' pull payments", "Allows deleting pull payments on the selected stores.")},
                     {Policies.CanCreatePullPayments, ("Create pull payments", "Allows creating pull payments on all your stores.")},
                     {$"{Policies.CanCreatePullPayments}:", ("Create pull payments in selected stores", "Allows creating pull payments on the selected stores.")},
+                    {Policies.CanManagePayouts, ("Manage payouts", "Allows managing payouts on all your stores.")},
+                    {$"{Policies.CanManagePayouts}:", ("Manage payouts in selected stores", "Allows managing payouts on the selected stores.")},
+                    {Policies.CanViewPayouts, ("View payouts", "Allows viewing payouts on all your stores.")},
+                    {$"{Policies.CanViewPayouts}:", ("View payouts in selected stores", "Allows viewing payouts on the selected stores.")},
                     {Policies.CanCreateNonApprovedPullPayments, ("Create non-approved pull payments", "Allows creating pull payments without automatic approval on all your stores.")},
                     {$"{Policies.CanCreateNonApprovedPullPayments}:", ("Create non-approved pull payments in selected stores", "Allows viewing, modifying, deleting and creating pull payments without automatic approval on the selected stores.")},
                     {Policies.CanUseInternalLightningNode, ("Use the internal lightning node", "Allows using the internal BTCPay Server lightning node to create BOLT11 invoices, connect to other nodes, open new channels and pay BOLT11 invoices.")},

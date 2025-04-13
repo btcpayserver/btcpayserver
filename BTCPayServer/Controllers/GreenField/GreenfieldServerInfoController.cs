@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client.Models;
@@ -35,7 +34,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public ActionResult ServerInfo()
         {
             var supportedPaymentMethods = _paymentMethodHandlerDictionary
-                .SelectMany(handler => handler.GetSupportedPaymentMethods().Select(id => id.ToString()))
+                .Select(handler => handler.PaymentMethodId.ToString())
                 .Distinct();
 
             ServerInfoData model = new ServerInfoData2

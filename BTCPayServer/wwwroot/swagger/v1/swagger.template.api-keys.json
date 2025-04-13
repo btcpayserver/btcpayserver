@@ -14,7 +14,9 @@
                         "in": "path",
                         "required": true,
                         "description": "The API Key to revoke",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -27,7 +29,9 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "unrestricted" ],
+                        "API_Key": [
+                            "unrestricted"
+                        ],
                         "Basic": []
                     }
                 ]
@@ -43,18 +47,16 @@
                 "description": "Revoke the API key of a target user so that it cannot be used anymore",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The target user's id or email",
-                        "schema": { "type": "string" }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     },
                     {
                         "name": "apikey",
                         "in": "path",
                         "required": true,
                         "description": "The API Key to revoke",
-                        "schema": { "type": "string" }
+                        "schema": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -67,7 +69,9 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "unrestricted" ],
+                        "API_Key": [
+                            "unrestricted"
+                        ],
                         "Basic": []
                     }
                 ]
@@ -105,7 +109,9 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "btcpay.server.canmanageusers" ],
+                        "API_Key": [
+                            "btcpay.server.canmanageusers"
+                        ],
                         "Basic": []
                     }
                 ]
@@ -214,7 +220,9 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "unrestricted" ],
+                        "API_Key": [
+                            "unrestricted"
+                        ],
                         "Basic": []
                     }
                 ]
@@ -230,11 +238,7 @@
                 "description": "Create a new API Key for a user",
                 "parameters": [
                     {
-                        "name": "idOrEmail",
-                        "in": "path",
-                        "required": true,
-                        "description": "The target user's id or email",
-                        "schema": { "type": "string" }
+                        "$ref": "#/components/parameters/UserIdOrEmail"
                     }
                 ],
                 "responses": {
@@ -297,7 +301,9 @@
                 },
                 "security": [
                     {
-                        "API_Key": [ "btcpay.server.canmanageusers" ],
+                        "API_Key": [
+                            "btcpay.server.canmanageusers"
+                        ],
                         "Basic": []
                     }
                 ]
@@ -312,7 +318,7 @@
                 "properties": {
                     "apiKey": {
                         "type": "string",
-                        "description":  "The API Key to use for API Key Authentication",
+                        "description": "The API Key to use for API Key Authentication",
                         "nullable": false
                     },
                     "label": {
@@ -327,7 +333,10 @@
                         "items": {
                             "type": "string"
                         },
-                        "example": [ "btcpay.server.canmanageusers", "btcpay.server.canmanageusers:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP" ]
+                        "example": [
+                            "btcpay.server.canmanageusers",
+                            "btcpay.server.canmanageusers:2KxSpc9V5zDWfUbvgYiZuAfka4wUhGF96F75Ao8y4zHP"
+                        ]
                     }
                 }
             }

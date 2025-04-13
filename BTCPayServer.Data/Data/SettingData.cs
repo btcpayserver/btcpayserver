@@ -11,12 +11,9 @@ namespace BTCPayServer.Data
 
         public static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<SettingData>()
-                    .Property(o => o.Value)
-                    .HasColumnType("JSONB");
-            }
+            builder.Entity<SettingData>()
+                .Property(o => o.Value)
+                .HasColumnType("JSONB");
         }
     }
 }

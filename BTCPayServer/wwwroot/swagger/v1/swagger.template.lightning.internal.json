@@ -8,14 +8,7 @@
                 "summary": "Get node information",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "View information about the lightning node",
@@ -56,14 +49,7 @@
                 "summary": "Get node balance",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "View balance of the lightning node",
@@ -96,6 +82,47 @@
                 ]
             }
         },
+        "/api/v1/server/lightning/{cryptoCode}/histogram": {
+            "get": {
+                "tags": [
+                    "Lightning (Internal Node)"
+                ],
+                "summary": "Get node balance histogram",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    }
+                ],
+                "description": "View balance histogram of the lightning node",
+                "operationId": "InternalLightningNodeApi_GetHistogram",
+                "responses": {
+                    "200": {
+                        "description": "Lightning node balance histogram for off-chain funds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HistogramData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.server.canuseinternallightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/server/lightning/{cryptoCode}/connect": {
             "post": {
                 "tags": [
@@ -104,14 +131,7 @@
                 "summary": "Connect to lightning node",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "Connect to another lightning node.",
@@ -175,14 +195,7 @@
                 "summary": "Get channels",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "View information about the current channels of the lightning node",
@@ -221,14 +234,7 @@
                 "summary": "Open channel",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "Open a channel with another lightning node. You should connect to that node first.",
@@ -289,14 +295,7 @@
                 "summary": "Get deposit address",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "Get an on-chain deposit address for the lightning node ",
@@ -339,14 +338,7 @@
                 "summary": "Get payment",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
                         "name": "paymentHash",
@@ -397,14 +389,7 @@
                 "summary": "Get invoice",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
                         "name": "id",
@@ -455,14 +440,7 @@
                 "summary": "Pay Lightning Invoice",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "Pay a lightning invoice. In case the payment response times out, the status will be reported as pending and the final status can be resolved using the [Get payment](#operation/InternalLightningNodeApi_GetPayment) endpoint. The default wait time for payment responses is 30 seconds — it might take longer if multiple routes are tried or a hold invoice is getting paid.",
@@ -544,14 +522,7 @@
                 "summary": "Get invoices",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
                         "name": "pendingOnly",
@@ -632,14 +603,7 @@
                 "summary": "Create lightning invoice",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     }
                 ],
                 "description": "Create a lightning invoice.",
@@ -700,14 +664,7 @@
                 "summary": "Get payments",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
                         "name": "includePending",

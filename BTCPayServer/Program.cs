@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using BTCPayServer.Configuration;
 using BTCPayServer.Hosting;
 using BTCPayServer.Logging;
@@ -19,7 +20,7 @@ namespace BTCPayServer
 {
     class Program
     {
-        static void Main(string[] args)
+        static async Task Main(string[] args)
         {
             if (args.Length > 0 && args[0] == "run")
                 args = args.Skip(1).ToArray(); // Hack to make dotnet watch work
@@ -27,11 +28,11 @@ namespace BTCPayServer
             ServicePointManager.DefaultConnectionLimit = 100;
             IWebHost host = null;
             var processor = new ConsoleLoggerProcessor();
-            CustomConsoleLogProvider loggerProvider = new CustomConsoleLogProvider(processor);
+            var loggerProvider = new CustomConsoleLogProvider(processor);
             using var loggerFactory = new LoggerFactory();
             loggerFactory.AddProvider(loggerProvider);
             var logger = loggerFactory.CreateLogger("Configuration");
-            Logs logs = new Logs();
+            var logs = new Logs();
             logs.Configure(loggerFactory);
             IConfiguration conf = null;
             try
@@ -43,9 +44,6 @@ namespace BTCPayServer
                 confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif
                 conf = confBuilder.Build();
-                if (conf == null)
-                    return;
-
                 var builder = new WebHostBuilder()
                     .UseKestrel()
                     .UseConfiguration(conf)
@@ -54,6 +52,9 @@ namespace BTCPayServer
                         l.AddFilter("Microsoft", LogLevel.Error);
                         if (!conf.GetOrDefault<bool>("verbose", false))
                             l.AddFilter("Events", LogLevel.Warning);
+                        // Uncomment this to see EF queries
+                        //l.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Trace);
+                        l.AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information);
                         l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                         l.AddFilter("Microsoft.AspNetCore.Antiforgery.Internal", LogLevel.Critical);
                         l.AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error);
@@ -74,14 +75,14 @@ namespace BTCPayServer
                     builder.UseContentRoot(Directory.GetCurrentDirectory());
                 }
                 host = builder.Build();
-                host.StartWithTasksAsync().GetAwaiter().GetResult();
+                await host.StartWithTasksAsync();
                 var urls = host.ServerFeatures.Get<IServerAddressesFeature>().Addresses;
                 foreach (var url in urls)
                 {
                     // Some tools such as dotnet watch parse this exact log to open the browser
                     logger.LogInformation("Now listening on: " + url);
                 }
-                host.WaitForShutdown();
+                await host.WaitForShutdownAsync();
             }
             catch (ConfigException ex)
             {
@@ -90,7 +91,7 @@ namespace BTCPayServer
             }
             catch (Exception e) when (PluginManager.IsExceptionByPlugin(e, out var pluginName))
             {
-                logs.Configuration.LogError(e, $"Disabling plugin {pluginName} as it crashed on startup");
+                logs.Configuration.LogError(e, $"Plugin crash during startup detected, disabling {pluginName}...");
                 var pluginDir = new DataDirectories().Configure(conf).PluginDir;
                 PluginManager.DisablePlugin(pluginDir, pluginName);
             }
@@ -99,9 +100,8 @@ namespace BTCPayServer
                 processor.Dispose();
                 if (host == null)
                     logs.Configuration.LogError("Configuration error");
-                if (host != null)
-                    host.Dispose();
-                Serilog.Log.CloseAndFlush();
+                host?.Dispose();
+                await Serilog.Log.CloseAndFlushAsync();
                 loggerProvider.Dispose();
             }
         }

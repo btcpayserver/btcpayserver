@@ -11,13 +11,9 @@ public class HtmlInputFormProvider : FormComponentProviderBase
     {
         foreach (var t in new[] {
             "text",
-            "radio",
             "checkbox",
             "password",
-            "file",
             "hidden",
-            "button",
-            "submit",
             "color",
             "date",
             "datetime-local",
@@ -25,13 +21,9 @@ public class HtmlInputFormProvider : FormComponentProviderBase
             "week",
             "time",
             "email",
-            "image",
             "number",
-            "range",
-            "search",
             "url",
-            "tel",
-            "reset"})
+            "tel"})
             typeToComponentProvider.Add(t, this);
     }
     public override string View => "Forms/InputElement";

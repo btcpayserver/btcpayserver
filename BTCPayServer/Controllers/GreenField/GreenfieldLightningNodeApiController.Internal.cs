@@ -1,14 +1,12 @@
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Configuration;
-using BTCPayServer.HostedServices;
 using BTCPayServer.Lightning;
-using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -22,19 +20,21 @@ namespace BTCPayServer.Controllers.Greenfield
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldInternalLightningNodeApiController : GreenfieldLightningNodeApiController
     {
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly LightningClientFactoryService _lightningClientFactory;
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
+        private readonly PaymentMethodHandlerDictionary _handlers;
 
         public GreenfieldInternalLightningNodeApiController(
-            BTCPayNetworkProvider btcPayNetworkProvider, PoliciesSettings policiesSettings, LightningClientFactoryService lightningClientFactory,
+            PoliciesSettings policiesSettings, LightningClientFactoryService lightningClientFactory,
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            IAuthorizationService authorizationService) : base(
-            btcPayNetworkProvider, policiesSettings, authorizationService)
+            IAuthorizationService authorizationService,
+            PaymentMethodHandlerDictionary handlers,
+            LightningHistogramService lnHistogramService
+            ) : base(policiesSettings, authorizationService, handlers, lnHistogramService)
         {
-            _btcPayNetworkProvider = btcPayNetworkProvider;
             _lightningClientFactory = lightningClientFactory;
             _lightningNetworkOptions = lightningNetworkOptions;
+            _handlers = handlers;
         }
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
@@ -51,6 +51,14 @@ namespace BTCPayServer.Controllers.Greenfield
         public override Task<IActionResult> GetBalance(string cryptoCode, CancellationToken cancellationToken = default)
         {
             return base.GetBalance(cryptoCode, cancellationToken);
+        }
+
+        [Authorize(Policy = Policies.CanUseInternalLightningNode,
+            AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/server/lightning/{cryptoCode}/histogram")]
+        public override Task<IActionResult> GetHistogram(string cryptoCode, [FromQuery] HistogramType? type = null, CancellationToken cancellationToken = default)
+        {
+            return base.GetHistogram(cryptoCode, type, cancellationToken);
         }
 
         [Authorize(Policy = Policies.CanUseInternalLightningNode,
@@ -135,7 +143,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         protected override async Task<ILightningClient> GetLightningClient(string cryptoCode, bool doingAdminThings)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network = GetNetwork(cryptoCode);
             if (network is null)
                 throw ErrorCryptoCodeNotFound();
             if (!_lightningNetworkOptions.Value.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode,
@@ -147,7 +155,8 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 throw ErrorShouldBeAdminForInternalNode();
             }
-            return _lightningClientFactory.Create(internalLightningNode, network);
+
+            return internalLightningNode;
         }
     }
 }

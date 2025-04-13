@@ -1,54 +1,44 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security.Claims;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
-using BTCPayServer.Components.Notifications;
 using BTCPayServer.Data;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Memory;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications
 {
     public class NotificationManager
     {
         private readonly ApplicationDbContextFactory _factory;
-        private readonly UserManager<ApplicationUser> _userManager;
         private readonly IMemoryCache _memoryCache;
         private readonly EventAggregator _eventAggregator;
         private readonly Dictionary<string, INotificationHandler> _handlersByNotificationType;
 
-        public NotificationManager(ApplicationDbContextFactory factory, UserManager<ApplicationUser> userManager,
+        public NotificationManager(ApplicationDbContextFactory factory,
             IMemoryCache memoryCache, IEnumerable<INotificationHandler> handlers, EventAggregator eventAggregator)
         {
             _factory = factory;
-            _userManager = userManager;
             _memoryCache = memoryCache;
             _eventAggregator = eventAggregator;
             _handlersByNotificationType = handlers.ToDictionary(h => h.NotificationType);
         }
 
-        private const int _cacheExpiryMs = 5000;
-
-        public async Task<NotificationsViewModel> GetSummaryNotifications(ClaimsPrincipal user)
+        public async Task<(List<NotificationViewModel> Items, int? Count)> GetSummaryNotifications(string userId, bool cachedOnly)
         {
-            var userId = _userManager.GetUserId(user);
             var cacheKey = GetNotificationsCacheId(userId);
-
+            if (cachedOnly)
+                return _memoryCache.Get<(List<NotificationViewModel> Items, int? Count)>(cacheKey);
             return await _memoryCache.GetOrCreateAsync(cacheKey, async entry =>
             {
-                var resp = await GetNotifications(new NotificationsQuery
+                var res = await GetNotifications(new NotificationsQuery
                 {
                     Seen = false,
                     Skip = 0,
                     Take = 5,
                     UserId = userId
                 });
-                entry.SetAbsoluteExpiration(TimeSpan.FromMilliseconds(_cacheExpiryMs));
-                var res = new NotificationsViewModel { Last5 = resp.Items, UnseenCount = resp.Count.Value };
                 entry.Value = res;
                 return res;
             });
@@ -67,19 +57,40 @@ namespace BTCPayServer.Services.Notifications
         {
             return $"notifications-{userId}";
         }
-
+        public const int MaxUnseen = 100;
         public async Task<(List<NotificationViewModel> Items, int? Count)> GetNotifications(NotificationsQuery query)
         {
             await using var dbContext = _factory.CreateContext();
 
             var queryables = GetNotificationsQueryable(dbContext, query);
             var items = (await queryables.withPaging.ToListAsync()).Select(ToViewModel).Where(model => model != null).ToList();
-
+            items = FilterNotifications(items, query);
             int? count = null;
             if (query.Seen is false)
             {
                 // Unseen notifications aren't likely to be too huge, so count should be fast
                 count = await queryables.withoutPaging.CountAsync();
+                if (count >= MaxUnseen)
+                {
+                    // If we have too much unseen notifications, we don't want to show the exact count
+                    // because it would be too long to display, so we just show 99+
+                    // Then cleanup a bit the database by removing the oldest notifications, as it would be expensive to fetch every time
+                    if (count >= MaxUnseen + (MaxUnseen / 2))
+                    {
+                        nextBatch:
+                        var seenToRemove = await queryables.withoutPaging.OrderByDescending(data => data.Created).Skip(MaxUnseen).Take(1000).ToListAsync();
+                        if (seenToRemove.Count > 0)
+                        {
+                            foreach (var seen in seenToRemove)
+                            {
+                                seen.Seen = true;
+                            }
+                            await dbContext.SaveChangesAsync();
+                            goto nextBatch;
+                        }
+                    }
+                    count = MaxUnseen;
+                }
             }
             return (Items: items, Count: count);
         }
@@ -117,6 +128,34 @@ namespace BTCPayServer.Services.Notifications
             }
 
             return (queryable, queryable2);
+        }
+
+        private List<NotificationViewModel> FilterNotifications(List<NotificationViewModel> notifications, NotificationsQuery query)
+        {
+            if (!string.IsNullOrEmpty(query.SearchText))
+            {
+                notifications = notifications.Where(data => data.Body.Contains(query.SearchText)).ToList();
+            }
+            if (query.Type?.Length > 0)
+            {
+                if (query.Type?.Length > 0)
+                {
+                    if (query.Type.Contains("userupdate"))
+                    {
+                        notifications = notifications.Where(n => n.Type.Equals("inviteaccepted", StringComparison.OrdinalIgnoreCase) ||
+                                                                 n.Type.Equals("userapproval", StringComparison.OrdinalIgnoreCase)).ToList();
+                    }
+                    else
+                    {
+                        notifications = notifications.Where(n => query.Type.Contains(n.Type, StringComparer.OrdinalIgnoreCase)).ToList();
+                    }
+                }
+            }
+            if (query.StoreIds?.Length > 0)
+            {
+                notifications = notifications.Where(n => !string.IsNullOrEmpty(n.StoreId) && query.StoreIds.Contains(n.StoreId, StringComparer.OrdinalIgnoreCase)).ToList();
+            }
+            return notifications;
         }
 
         public async Task<List<NotificationViewModel>> ToggleSeen(NotificationsQuery notificationsQuery, bool? setSeen)
@@ -180,5 +219,8 @@ namespace BTCPayServer.Services.Notifications
         public int? Skip { get; set; }
         public int? Take { get; set; }
         public bool? Seen { get; set; }
+        public string SearchText { get; set; }
+        public string[] Type { get; set; }
+        public string[] StoreIds { get; set; }
     }
 }

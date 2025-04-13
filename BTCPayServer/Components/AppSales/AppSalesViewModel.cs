@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using BTCPayServer.Services.Apps;
+using BTCPayServer.Client.Models;
 
 namespace BTCPayServer.Components.AppSales;
 
@@ -12,6 +12,6 @@ public class AppSalesViewModel
     public string AppUrl { get; set; }
     public string DataUrl { get; set; }
     public long SalesCount { get; set; }
-    public IEnumerable<SalesStatsItem> Series { get; set; }
+    public IEnumerable<AppSalesStatsItem> Series { get; set; }
     public bool InitialRendering { get; set; }
 }

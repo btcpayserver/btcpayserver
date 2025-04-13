@@ -22,15 +22,23 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         [Display(Name = "Display Title")]
         public string Title { get; set; }
         [MaxLength(5)]
+        [Display(Name = "Currency")]
         public string Currency { get; set; }
+        [Display(Name = "Template")]
         public string Template { get; set; }
 
         [Display(Name = "Point of Sale Style")]
         public PosViewType DefaultView { get; set; }
+        [Display(Name = "Display item selection for keypad")]
+        public bool ShowItems { get; set; }
         [Display(Name = "User can input custom amount")]
         public bool ShowCustomAmount { get; set; }
         [Display(Name = "User can input discount in %")]
         public bool ShowDiscount { get; set; }
+        [Display(Name = "Display the search bar")]
+        public bool ShowSearch { get; set; }
+        [Display(Name = "Display the category list")]
+        public bool ShowCategories { get; set; }
         [Display(Name = "Enable tips")]
         public bool EnableTips { get; set; }
         public string Example1 { get; internal set; }
@@ -61,11 +69,8 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         [Display(Name = "Tip percentage amounts (comma separated)")]
         public string CustomTipPercentages { get; set; }
 
-        [MaxLength(500)]
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-
         public string Id { get; set; }
+        public Dictionary<string, string> StoreUsers { get; set; }
 
         [Display(Name = "Redirect invoice to redirect url automatically after paid")]
         public string RedirectAutomatically { get; set; } = string.Empty;
@@ -74,30 +79,24 @@ namespace BTCPayServer.Plugins.PointOfSale.Models
         public string SearchTerm { get; set; }
 
         public SelectList RedirectAutomaticallySelectList =>
-            new SelectList(new List<SelectListItem>()
+            new(new List<SelectListItem>
             {
-                new SelectListItem()
-                {
-                    Text = "Yes",
-                    Value = "true"
-                },
-                new SelectListItem()
-                {
-                    Text = "No",
-                    Value = "false"
-                },
-                new SelectListItem()
-                {
-                    Text = "Use Store Settings",
-                    Value = ""
-                }
+                new() { Text = "Yes", Value = "true" },
+                new() { Text = "No", Value = "false" },
+                new() { Text = "Use Store Settings", Value = "" }
             }, nameof(SelectListItem.Value), nameof(SelectListItem.Text), RedirectAutomatically);
 
-        [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
+        [Display(Name = "HTML Lang")]
+        public string HtmlLang { get; set; }
+
+        [Display(Name = "HTML Meta Tags")]
+        public string HtmlMetaTags{ get; set; }
+
         public string Description { get; set; }
 
         [Display(Name = "Request customer data on checkout")]
         public string FormId { get; set; }
+
+        public bool Archived { get; set; }
     }
 }

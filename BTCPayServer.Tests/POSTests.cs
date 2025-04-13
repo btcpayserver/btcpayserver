@@ -1,4 +1,7 @@
+using System;
 using System.Threading.Tasks;
+using BTCPayServer.Client;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Hosting;
@@ -11,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Xunit;
 using Xunit.Abstractions;
 using static BTCPayServer.Tests.UnitTest1;
+using PosViewType = BTCPayServer.Plugins.PointOfSale.PosViewType;
 
 namespace BTCPayServer.Tests
 {
@@ -73,9 +77,8 @@ fruit tea:
         Assert.Null( parsedDefault[0].BuyButtonText);
         Assert.Equal( "~/img/pos-sample/green-tea.jpg" ,parsedDefault[0].Image);
         Assert.Equal( 1 ,parsedDefault[0].Price);
-        Assert.Equal( ViewPointOfSaleViewModel.ItemPriceType.Fixed ,parsedDefault[0].PriceType);
+        Assert.Equal( AppItemPriceType.Fixed ,parsedDefault[0].PriceType);
         Assert.Null( parsedDefault[0].AdditionalData);
-        Assert.Null( parsedDefault[0].PaymentMethods);
         
         
         Assert.Equal( "Herbal Tea" ,parsedDefault[4].Title);
@@ -84,9 +87,56 @@ fruit tea:
         Assert.Null( parsedDefault[4].BuyButtonText);
         Assert.Equal( "~/img/pos-sample/herbal-tea.jpg" ,parsedDefault[4].Image);
         Assert.Equal( 1.8m ,parsedDefault[4].Price);
-        Assert.Equal( ViewPointOfSaleViewModel.ItemPriceType.Minimum ,parsedDefault[4].PriceType);
+        Assert.Equal( AppItemPriceType.Minimum ,parsedDefault[4].PriceType);
         Assert.Null( parsedDefault[4].AdditionalData);
-        Assert.Null( parsedDefault[4].PaymentMethods);
+        }
+
+        [Fact]
+        [Trait("Fast", "Fast")]
+        public void CanParseAppTemplate()
+        {
+            var template = @"[
+              {
+                ""description"": ""Lovely, fresh and tender, Meng Ding Gan Lu ('sweet dew') is grown in the lush Meng Ding Mountains of the southwestern province of Sichuan where it has been cultivated for over a thousand years."",
+                ""id"": ""green-tea"",
+                ""image"": ""~/img/pos-sample/green-tea.jpg"",
+                ""priceType"": ""Fixed"",
+                ""price"": ""1"",
+                ""title"": ""Green Tea"",
+                ""disabled"": false
+              },
+              {
+                ""description"": ""Tian Jian Tian Jian means 'heavenly tippy tea' in Chinese, and it describes the finest grade of dark tea. Our Tian Jian dark tea is from Hunan province which is famous for making some of the best dark teas available."",
+                ""id"": ""black-tea"",
+                ""image"": ""~/img/pos-sample/black-tea.jpg"",
+                ""priceType"": ""Fixed"",
+                ""price"": ""1"",
+                ""title"": ""Black Tea"",
+                ""disabled"": false
+              }
+            ]";
+
+            var items = AppService.Parse(template);
+            Assert.Equal(2, items.Length);
+            Assert.Equal("green-tea", items[0].Id);
+            Assert.Equal("black-tea", items[1].Id);
+
+            // Fails gracefully for missing ID
+            var missingId = template.Replace(@"""id"": ""green-tea"",", "");
+            items = AppService.Parse(missingId);
+            Assert.Single(items);
+            Assert.Equal("black-tea", items[0].Id);
+            
+            // Throws for missing ID
+            Assert.Throws<ArgumentException>(() => AppService.Parse(missingId, true, true));
+
+            // Fails gracefully for duplicate IDs
+            var duplicateId = template.Replace(@"""id"": ""green-tea"",", @"""id"": ""black-tea"",");
+            items = AppService.Parse(duplicateId);
+            Assert.Empty(items);
+            
+            // Throws for duplicate IDs
+            Assert.Throws<ArgumentException>(() => AppService.Parse(duplicateId, true, true));
         }
         
         [Fact(Timeout = LongRunningTestTimeout)]
@@ -123,12 +173,14 @@ donation:
   price: 1.02
   custom: true
 ";
+            vmpos.Currency = "EUR";
             vmpos.Template = AppService.SerializeTemplate(MigrationStartupTask.ParsePOSYML(vmpos.Template));
             Assert.IsType<RedirectToActionResult>(pos.UpdatePointOfSale(app.Id, vmpos).Result);
             await pos.UpdatePointOfSale(app.Id).AssertViewModelAsync<UpdatePointOfSaleViewModel>();
             var publicApps = user.GetController<UIPointOfSaleController>();
             var vmview = await publicApps.ViewPointOfSale(app.Id, PosViewType.Cart).AssertViewModelAsync<ViewPointOfSaleViewModel>();
 
+            Assert.Equal("EUR", vmview.CurrencyCode);
             // apple shouldn't be available since we it's set to "disabled: true" above
             Assert.Equal(2, vmview.Items.Length);
             Assert.Equal("orange", vmview.Items[0].Title);
@@ -139,6 +191,41 @@ donation:
             // apple is not found
             Assert.IsType<NotFoundResult>(publicApps
                 .ViewPointOfSale(app.Id, PosViewType.Cart, 0, choiceKey: "apple").Result);
+            
+            // List
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            app = appList.Apps[0];
+            apps = user.GetController<UIAppsController>();
+            appData = new AppData { Id = app.Id, StoreDataId = app.StoreId, Name = app.AppName, AppType = appType, Settings = "{\"currency\":\"EUR\"}" };
+            apps.HttpContext.SetAppData(appData);
+            pos.HttpContext.SetAppData(appData);
+            Assert.Single(appList.Apps);
+            Assert.Equal("test", app.AppName);
+            Assert.True(app.Role.ToPermissionSet(appList.Apps[0].StoreId).Contains(Policies.CanModifyStoreSettings, app.StoreId));
+            Assert.Equal(user.StoreId, app.StoreId);
+            Assert.False(app.Archived);
+            // Archive
+            redirect = Assert.IsType<RedirectResult>(apps.ToggleArchive(app.Id).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            Assert.Empty(appList.Apps);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId, archived: true).Result).Model);
+            app = appList.Apps[0];
+            Assert.True(app.Archived);
+            Assert.IsType<NotFoundResult>(await publicApps.ViewPointOfSale(app.Id, PosViewType.Static));
+            // Unarchive
+            redirect = Assert.IsType<RedirectResult>(apps.ToggleArchive(app.Id).Result);
+            Assert.EndsWith("/settings/pos", redirect.Url);
+            appList = Assert.IsType<ListAppsViewModel>(Assert.IsType<ViewResult>(apps.ListApps(user.StoreId).Result).Model);
+            app = appList.Apps[0];
+            Assert.False(app.Archived);
+            Assert.IsType<ViewResult>(await publicApps.ViewPointOfSale(app.Id, PosViewType.Static));
+            // Delete
+            Assert.IsType<ViewResult>(apps.DeleteApp(app.Id));
+            var redirectToAction = Assert.IsType<RedirectToActionResult>(apps.DeleteAppPost(app.Id).Result);
+            Assert.Equal(nameof(UIStoresController.Dashboard), redirectToAction.ActionName);
+            appList = await apps.ListApps(user.StoreId).AssertViewModelAsync<ListAppsViewModel>();
+            Assert.Empty(appList.Apps);
         }
     }
 }

@@ -1,13 +1,16 @@
 using System;
 using System.Linq;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Stores;
 using NBitcoin;
+using static BTCPayServer.Client.Models.InvoicePaymentMethodDataModel;
 
 namespace BTCPayServer.Services
 {
@@ -16,7 +19,8 @@ namespace BTCPayServer.Services
         private readonly InvoiceRepository _invoiceRepository;
         private readonly EventAggregator _eventAggregator;
         private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
-        private readonly PaymentMethodHandlerDictionary _paymentMethodHandlerDictionary;
+        private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly StoreRepository _storeRepository;
         private readonly WalletRepository _walletRepository;
 
         public InvoiceActivator(
@@ -24,59 +28,50 @@ namespace BTCPayServer.Services
             EventAggregator eventAggregator,
             BTCPayNetworkProvider btcPayNetworkProvider,
             PaymentMethodHandlerDictionary paymentMethodHandlerDictionary,
+            StoreRepository storeRepository,
             WalletRepository walletRepository)
         {
             _invoiceRepository = invoiceRepository;
             _eventAggregator = eventAggregator;
             _btcPayNetworkProvider = btcPayNetworkProvider;
-            _paymentMethodHandlerDictionary = paymentMethodHandlerDictionary;
+            _handlers = paymentMethodHandlerDictionary;
+            _storeRepository = storeRepository;
             _walletRepository = walletRepository;
         }
-        public async Task<bool> ActivateInvoicePaymentMethod(PaymentMethodId paymentMethodId, InvoiceEntity invoice, StoreData store)
+        public async Task<bool> ActivateInvoicePaymentMethod(string invoiceId, PaymentMethodId paymentMethodId, bool forceNew = false)
         {
-            if (invoice.GetInvoiceState().Status != InvoiceStatusLegacy.New)
+            var invoice = await _invoiceRepository.GetInvoice(invoiceId);
+            if (invoice?.GetInvoiceState().Status is not InvoiceStatus.New)
+                return false;
+            var store = await _storeRepository.FindStore(invoice.StoreId);
+            if (store is null)
                 return false;
             bool success = false;
-            var eligibleMethodToActivate = invoice.GetPaymentMethod(paymentMethodId);
-            if (!eligibleMethodToActivate.GetPaymentMethodDetails().Activated)
+            var paymentPrompt = invoice.GetPaymentPrompt(paymentMethodId);
+            var wasAlreadyActivated = paymentPrompt.Activated;
+            if (!paymentPrompt.Activated || forceNew)
             {
-                var payHandler = _paymentMethodHandlerDictionary[paymentMethodId];
-                var supportPayMethod = invoice.GetSupportedPaymentMethod()
-                    .Single(method => method.PaymentId == paymentMethodId);
-                var paymentMethod = invoice.GetPaymentMethod(paymentMethodId);
-                var network = _btcPayNetworkProvider.GetNetwork(paymentMethodId.CryptoCode);
-                var prepare = payHandler.PreparePayment(supportPayMethod, store, network);
+                if (!_handlers.TryGetValue(paymentMethodId, out var handler))
+                    return false;
                 InvoiceLogs logs = new InvoiceLogs();
+                var paymentContext = new PaymentMethodContext(store, store.GetStoreBlob(), store.GetPaymentMethodConfig(paymentMethodId), handler, invoice, logs);
+                if (!paymentPrompt.Activated)
+                    paymentContext.Logs.Write("Activating", InvoiceEventData.EventSeverity.Info);
                 try
                 {
-                    var pmis = invoice.GetPaymentMethods().Select(method => method.GetId()).ToHashSet();
-                    logs.Write($"{paymentMethodId}: Activating", InvoiceEventData.EventSeverity.Info);
-                    var newDetails = await
-                        payHandler.CreatePaymentMethodDetails(logs, supportPayMethod, paymentMethod, store, network,
-                            prepare, pmis);
-                    eligibleMethodToActivate.SetPaymentMethodDetails(newDetails);
-                    await _invoiceRepository.UpdateInvoicePaymentMethod(invoice.Id, eligibleMethodToActivate);
-
-                    if (newDetails is BitcoinLikeOnChainPaymentMethod bp)
+                    await paymentContext.BeforeFetchingRates();
+                    await paymentContext.CreatePaymentPrompt();
+                    if (paymentContext.Status == PaymentMethodContext.ContextStatus.Created)
                     {
-                        var walletId = new WalletId(store.Id, paymentMethodId.CryptoCode);
-                        if (bp.GetDepositAddress(((BTCPayNetwork)_btcPayNetworkProvider.GetNetwork(paymentMethodId.CryptoCode)).NBitcoinNetwork) is BitcoinAddress address)
-                        {
-                            await _walletRepository.EnsureWalletObjectLink(
-                            new WalletObjectId(
-                                walletId,
-                                WalletObjectData.Types.Address,
-                                address.ToString()),
-                            new WalletObjectId(
-                                walletId,
-                                WalletObjectData.Types.Invoice,
-                                invoice.Id));
-                        }
-                    }
+                        await _invoiceRepository.NewPaymentPrompt(invoice.Id, paymentContext);
+                        await paymentContext.ActivatingPaymentPrompt();
 
-                    _eventAggregator.Publish(new InvoicePaymentMethodActivated(paymentMethodId, invoice));
-                    _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
-                    success = true;
+                        _eventAggregator.Publish(new InvoicePaymentMethodActivated(paymentMethodId, invoice));
+                        _eventAggregator.Publish(new InvoiceNeedUpdateEvent(invoice.Id));
+                        if (wasAlreadyActivated)
+                            _eventAggregator.Publish(new InvoiceNewPaymentDetailsEvent(invoice.Id, handler.ParsePaymentPromptDetails(paymentPrompt.Details), paymentMethodId));
+                        success = true;
+                    }
                 }
                 catch (PaymentMethodUnavailableException ex)
                 {
@@ -87,7 +82,7 @@ namespace BTCPayServer.Services
                     logs.Write($"{paymentMethodId}: Unexpected exception ({ex})", InvoiceEventData.EventSeverity.Error);
                 }
 
-                await _invoiceRepository.AddInvoiceLogs(invoice.Id, logs);
+                _ = _invoiceRepository.AddInvoiceLogs(invoice.Id, logs);
             }
             return success;
         }

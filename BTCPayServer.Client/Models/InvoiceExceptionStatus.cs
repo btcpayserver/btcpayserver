@@ -1,12 +1,11 @@
-namespace BTCPayServer.Client.Models
+namespace BTCPayServer.Client.Models;
+public enum InvoiceExceptionStatus
 {
-    public enum InvoiceExceptionStatus
-    {
-        None,
-        PaidLate,
-        PaidPartial,
-        Marked,
-        Invalid,
-        PaidOver
-    }
+    None,
+    PaidLate,
+    PaidPartial,
+    Marked,
+    PaidOver
 }
+
+

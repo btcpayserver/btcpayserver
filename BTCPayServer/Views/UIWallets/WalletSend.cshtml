@@ -1,32 +1,21 @@
-@inject BTCPayServer.Security.ContentSecurityPolicies csp
 @using Microsoft.AspNetCore.Mvc.ModelBinding
 @using BTCPayServer.Controllers
 @using BTCPayServer.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Components.LabelManager
 @using BTCPayServer.Components.UIExtensionPoint
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @model WalletSendModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
-	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.Send, $"Send {Model.CryptoCode}", walletId);
-	csp.Add("worker-src", "blob:");
+	ViewData.SetActivePage(WalletsNavPages.Send, StringLocalizer["Send {0}", Model.CryptoCode], walletId);
+	Csp.Add("worker-src", "blob:");
 	Csp.UnsafeEval();
 }
 
 @section Navbar {
-    @if (backUrl != null)
-    {
-		<a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
-            <vc:icon symbol="back" />
-        </a>
-    }
-	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
-        <vc:icon symbol="close" />
-    </a>
+	<partial name="_BackAndReturn" model="Model" />
 }
 
 @section PageHeadContent
@@ -37,6 +26,9 @@
         .btn-group > .crypto-fee-link:last-of-type {
             border-top-right-radius: .2rem  !important;
             border-bottom-right-radius: .2rem !important;
+        }
+        .buttons .btn {
+            flex: 1 0 45%;
         }
     </style>
     <link href="~/vendor/tom-select/tom-select.bootstrap5.min.css" asp-append-version="true" rel="stylesheet">
@@ -50,7 +42,6 @@
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
     <script src="~/js/wallet/wallet-camera-scanner.js" asp-append-version="true"></script>
     <script src="~/js/wallet/WalletSend.js" asp-append-version="true"></script>
-
 }
 
 <partial name="CameraScanner"/>
@@ -59,7 +50,7 @@
     <h1>@ViewData["Title"]</h1>
 </header>
 
-<form method="post" asp-action="WalletSend" asp-route-walletId="@walletId" class="my-5">
+<form method="post" asp-action="WalletSend" asp-route-walletId="@walletId" class="my-5" id="SendForm">
     <input type="hidden" asp-for="InputSelection" />
     <input type="hidden" asp-for="FiatDivisibility" />
     <input type="hidden" asp-for="CryptoDivisibility" />
@@ -85,141 +76,103 @@
             }
         </ul>
     }
-
-    @if (Model.Outputs.Count == 1)
-    {
-        <div class="form-group">
-            <div class="d-flex align-items-center justify-content-between">
-                <label asp-for="Outputs[0].DestinationAddress" class="form-label"></label>
-                <button type="submit" name="command" value="add-output" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2">
-                    <span class="fa fa-plus"></span> Add another destination
-                </button>
-            </div>
-            <input asp-for="Outputs[0].DestinationAddress" class="form-control font-monospace" autofocus autocomplete="off" />
-            <span asp-validation-for="Outputs[0].DestinationAddress" class="text-danger"></span>
-        </div>
-        <div class="form-group">
-            <div class="d-flex align-items-center justify-content-between">
-                <label asp-for="Outputs[0].Amount" class="form-label"></label>
-                <button type="submit" name="command" value="toggle-input-selection" class="d-inline-block ms-2 btn text-primary btn-link p-0 mb-2" id="toggleInputSelection"><span class="fa fa-@(Model.InputSelection ? "eye-slash" : "eye") "></span> @(Model.InputSelection ? "Hide" : "Show") coin selection</button>
-            </div>
-            <div class="input-group">
-                <input asp-for="Outputs[0].Amount" type="number" inputmode="decimal" step="any" min="0" asp-format="{0}" class="form-control output-amount hide-number-spin" />
-                <div class="input-group-text fiat-value" style="display:none;">
-                    <span class="input-group-text p-0 border-0">=</span>
-                    <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 border-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
-                    <span class="input-group-text p-0 border-0">@Model.Fiat</span>
-                </div>
-            </div>
-            <span asp-validation-for="Outputs[0].Amount" class="text-danger"></span>
-            <div class="form-text crypto-info">
-                Your available balance is
-                <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
-                @if (Model.ImmatureBalance > 0)
-                {
-                    <span><br><span class="text-warning">⚠</span> @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
-                }
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="form-label">Labels</label>
-            <select asp-for="Outputs[0].Labels" class="d-none">
-                @foreach (var t in Model.Outputs[0].Labels)
-                {
-                    <option value="@t" selected></option>
-                }
-            </select>
-            <vc:label-manager
-                selected-labels="Model.Outputs[0].Labels"
-                exclude-types="true"
-                select-element="Outputs_0__Labels"
-                wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Outputs[0].DestinationAddress)"
-                auto-update="false" />
-        </div>
-    }
-    else
-    {
-        <div class="list-group list-group-flush">
-            @for (var index = 0; index < Model.Outputs.Count; index++)
-            {
-                <input type="hidden" asp-for="Outputs[index].PayoutId" />
-                <div class="list-group-item d-block px-0 pt-0 pb-3 mb-3">
-                    <div class="form-group">
-                        <div class="d-flex align-items-center justify-content-between">
-                            <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
+    <div class="list-group list-group-flush">
+        @for (var index = 0; index < Model.Outputs.Count; index++)
+        {
+            <input type="hidden" asp-for="Outputs[index].PayoutId" />
+            <div class="list-group-item d-block px-0 pt-0 pb-3 mb-3">
+                <div class="form-group">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <label asp-for="Outputs[index].DestinationAddress" class="form-label"></label>
+                        @if (Model.Outputs.Count > 1)
+                        {
                             <button type="submit" name="command" value="@($"remove-output:{index}")" class="d-inline-block ms-2 btn text-danger btn-link p-0 mb-2">
-                                <span class="fa fa-times"></span> Remove Destination
+                                <vc:icon symbol="cross" />
+                                <span text-translate="true">Remove Destination</span>
                             </button>
-                        </div>
-                        <input asp-for="Outputs[index].DestinationAddress" class="form-control" autocomplete="off"/>
-                        <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
+                        }
                     </div>
-                    <div class="form-group">
-                        <label asp-for="Outputs[index].Amount" class="form-label"></label>
-                        <div class="input-group">
-                            <input asp-for="Outputs[index].Amount" type="number" min="0" step="any" asp-format="{0}" class="form-control output-amount hide-number-spin" />
-                            <div class="input-group-text fiat-value" style="display:none;">
-                                <span class="input-group-text p-0 border-0">=</span>
-                                <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 border-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
-                                <span class="input-group-text p-0 border-0">@Model.Fiat</span>
-                            </div>
-                        </div>
-                        <div class="form-text crypto-info">
-                            Your available balance is
-                            <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
-                            @if (Model.ImmatureBalance > 0)
-                            {
-                                <span><br>Note: @Model.ImmatureBalance @Model.CryptoCode are still immature and require additional confirmations.</span>
-                            }
-                        </div>
-                        <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
+                    <div class="input-group">
+                        <input asp-for="Outputs[index].DestinationAddress" class="form-control font-monospace flex-grow-1" autocomplete="off" autofocus="@(index == Model.Outputs.Count - 1 ? "autofocus" : null)"/>
+                        <button type="button" id="scanqrcode" class="btn btn-secondary px-3 only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan with camera"]" data-index="@index">
+                            <vc:icon symbol="scan-qr" />
+                        </button>
                     </div>
-                    <div class="form-check">
-                        <input type="checkbox" asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-input subtract-fees" />
-                        <label asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-label"></label>
-                        <span asp-validation-for="Outputs[index].SubtractFeesFromOutput" class="text-danger"></span>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Labels</label>
-                        <select asp-for="Outputs[index].Labels" class="d-none">
-                            @foreach (var t in Model.Outputs[index].Labels)
-                            {
-                                <option value="@t" selected></option>
-                            }
-                        </select>
-                        <vc:label-manager
-                            selected-labels="Model.Outputs[index].Labels"
-                            exclude-types="true"
-                            select-element="Outputs_@(index)__Labels"
-                            wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Outputs[index].DestinationAddress)"
-                            auto-update="false" />
-                    </div>
+                    <span asp-validation-for="Outputs[index].DestinationAddress" class="text-danger"></span>
                 </div>
-            }
-        </div>
-        <div class="d-grid gap-3 d-md-block mt-n2">
-            <button type="submit" name="command" value="add-output" class="btn btn-secondary me-md-1"><span class="fa fa-plus"></span> Add another destination</button>
-            <button type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary" id="toggleInputSelection"><span class="fa fa-@(Model.InputSelection ? "eye-slash" : "eye") "></span> @(Model.InputSelection ? "Hide" : "Show") coin selection</button>
-        </div>
-    }
+                <div class="form-group">
+                    <label class="form-label" text-translate="true">Labels</label>
+                    <select asp-for="Outputs[index].Labels" class="d-none">
+                        @foreach (var t in Model.Outputs[index].Labels)
+                        {
+                            <option value="@t" selected></option>
+                        }
+                    </select>
+                    <vc:label-manager
+                        selected-labels="Model.Outputs[index].Labels"
+                        exclude-types="true"
+                        select-element="Outputs_@(index)__Labels"
+                        wallet-object-id="new WalletObjectId(WalletId.Parse(walletId), WalletObjectData.Types.Address, Model.Outputs[index].DestinationAddress)"
+                        auto-update="false" />
+                </div>
+                <div class="form-group">
+                    <label asp-for="Outputs[index].Amount" class="form-label"></label>
+                    <div class="input-group">
+                        <input asp-for="Outputs[index].Amount" type="number" min="0" step="any" asp-format="{0}" class="form-control output-amount hide-number-spin" />
+                        <div class="input-group-text fiat-value" style="display:none;">
+                            <span class="input-group-text p-0 border-0">=</span>
+                            <input type="number" inputmode="decimal" class="input-group-text fiat-value-edit-input py-0 border-0 hide-number-spin" min="0" step="any" style="max-width:100px" />
+                            <span class="input-group-text p-0 border-0">@Model.Fiat</span>
+                        </div>
+                    </div>
+                    <div class="form-text crypto-info">
+                        <span text-translate="true">Your available balance is</span>
+                        <button type="button" class="crypto-balance-link btn btn-link p-0 align-baseline">@Model.CurrentBalance</button> <span>@Model.CryptoCode</span>.
+                        @if (Model.ImmatureBalance > 0)
+                        {
+                            <span><br>@StringLocalizer["Note: {0} are still immature and require additional confirmations.", $"{Model.ImmatureBalance} {Model.CryptoCode}"]</span>
+                        }
+                    </div>
+                    <span asp-validation-for="Outputs[index].Amount" class="text-danger"></span>
+                </div>
+                <div class="form-check mb-0">
+                    <input type="checkbox" asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-input subtract-fees" />
+                    <label asp-for="Outputs[index].SubtractFeesFromOutput" class="form-check-label"></label>
+                    <span asp-validation-for="Outputs[index].SubtractFeesFromOutput" class="text-danger"></span>
+                </div>
+            </div>
+        }
+    </div>
+
+    <div class="d-grid d-sm-flex flex-wrap gap-3 mb-3 buttons">
+        <button type="submit" name="command" value="add-output" class="btn btn-secondary" text-translate="true">Add destination</button>
+        <button type="submit" name="command" value="toggle-input-selection" class="btn btn-secondary" id="toggleInputSelection">@(Model.InputSelection ? StringLocalizer["Hide coin selection"] : StringLocalizer["Show coin selection"])</button>
+        <a asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl" class="btn btn-secondary" id="PSBT" text-translate="true">Use PSBT</a>
+        <button type="button" id="bip21parse" class="btn btn-secondary" text-translate="true">Paste BIP21</button>
+    </div>
 
     @if (Model.InputSelection)
     {
-        <partial name="CoinSelection" />
+        <div class="my-5">
+            <partial name="CoinSelection" />
+        </div>
     }
 
-    <div class="form-group my-4">
-        <label asp-for="FeeSatoshiPerByte" class="form-label"></label>
-        <input asp-for="FeeSatoshiPerByte" type="number" inputmode="numeric" min="0" step="any" class="form-control" style="max-width:14ch;" />
-        <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
-        <span id="FeeRate-Error" class="text-danger"></span>
+    <div class="d-flex flex-wrap gap-3 my-4">
+        <div>
+            <label asp-for="FeeSatoshiPerByte" class="form-label">
+                <span text-translate="true">Fee rate</span>
+                <span class="text-secondary">(sat/vB)</span>
+            </label>
+            <input asp-for="FeeSatoshiPerByte" type="number" inputmode="numeric" min="0" step="any" class="form-control" style="max-width:14ch;" />
+            <span asp-validation-for="FeeSatoshiPerByte" class="text-danger"></span>
+            <span id="FeeRate-Error" class="text-danger"></span>
+        </div>
         @if (Model.RecommendedSatoshiPerByte.Any())
         {
-            <div class="text-start mt-4 d-flex align-items-sm-center flex-column flex-sm-row">
-                <span class="text-secondary me-3">
-                    Confirm in the next
-                </span>
-                <div class="btn-group btn-group-toggle feerate-options mt-2 mt-sm-0" role="group" data-bs-toggle="buttons">
+            <div>
+                <div class="form-label text-secondary" text-translate="true">Confirm in the next …</div>
+                <div class="btn-group btn-group-toggle feerate-options" role="group" data-bs-toggle="buttons">
                     @for (var index = 0; index < Model.RecommendedSatoshiPerByte.Count; index++)
                     {
                         var feeRateOption = Model.RecommendedSatoshiPerByte[index];
@@ -233,71 +186,48 @@
             </div>
         }
     </div>
-    @if (Model.Outputs.Count == 1)
-    {
-        <div class="form-group">
-            <div class="form-check">
-                <input type="checkbox" asp-for="Outputs[0].SubtractFeesFromOutput" class="form-check-input subtract-fees" />
-                <label asp-for="Outputs[0].SubtractFeesFromOutput" class="form-check-label"></label>
-                <span asp-validation-for="Outputs[0].SubtractFeesFromOutput" class="text-danger"></span>
-            </div>
-        </div>
-    }
 
     <div class="my-4">
         <button class="d-inline-flex align-items-center btn btn-link text-primary fw-semibold p-0" type="button" id="AdvancedSettingsButton" data-bs-toggle="collapse" data-bs-target="#AdvancedSettings" aria-expanded="false" aria-controls="AdvancedSettings">
             <vc:icon symbol="caret-down"/>
-            <span class="ms-1">Advanced settings</span>
+            <span class="ms-1" text-translate="true">Advanced settings</span>
         </button>
         <div id="AdvancedSettings" class="collapse">
-            <div class="pt-3 pb-1">
-                <div class="form-group">
-                    <div class="form-check">
-                        <input asp-for="NoChange" class="form-check-input" />
-                        <label asp-for="NoChange" class="form-check-label"></label>
-                        <a href="https://docs.btcpayserver.org/Wallet/#dont-create-utxo-change" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                    </div>
-                </div>                        
-                <div class="form-group">
-                    <div class="form-check">
-                        <input asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-input"/>
-                        <label asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-label"></label>
-                    </div>
-                </div>    
-                @if (Model.SupportRBF)
-                {
-                    <div class="form-group">
-                        <label asp-for="AllowFeeBump" class="form-label"></label>
-                        <a href="https://docs.btcpayserver.org/Wallet/#rbf-replace-by-fee" target="_blank" rel="noreferrer noopener">
-                            <vc:icon symbol="info" />
-                        </a>
-                        <select asp-for="AllowFeeBump" class="form-select w-auto">
-                            <option value="Maybe">Randomize for higher privacy</option>
-                            <option value="Yes">Yes</option>
-                            <option value="No">No</option>
-                        </select>
-                    </div>
-                }
+            <div class="pt-3">
+                <div class="d-flex mb-3">
+                    <input asp-for="NoChange" class="btcpay-toggle me-3" />
+                    <label asp-for="NoChange" class="form-check-label me-1"></label>
+                    <a href="https://docs.btcpayserver.org/Wallet/#dont-create-utxo-change" target="_blank" rel="noreferrer noopener">
+                        <vc:icon symbol="info" />
+                    </a>
+                </div>
+                <div class="d-flex mb-3">
+                    <input asp-for="AlwaysIncludeNonWitnessUTXO" class="btcpay-toggle me-3"/>
+                    <label asp-for="AlwaysIncludeNonWitnessUTXO" class="form-check-label"></label>
+                </div>
+                
                 @if (!string.IsNullOrEmpty(Model.PayJoinBIP21))
                 {
-                    <div class="form-group">
+                    <div class="d-flex mb-3">
+                        <input asp-for="PayJoinBIP21" class="btcpay-toggle me-3" />
                         <label asp-for="PayJoinBIP21" class="form-label"></label>
-                        <input asp-for="PayJoinBIP21" class="form-control" />
-                        <span asp-validation-for="PayJoinBIP21" class="text-danger"></span>
                     </div>
                 }
             </div>
         </div>
     </div>
-    <div class="form-group d-grid d-sm-flex flex-wrap gap-3 mt-2">
-        <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary">Sign transaction</button>
-        <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary">Schedule transaction</button>
-        <a class="btn btn-secondary" asp-controller="UIWallets" asp-action="WalletPSBT" asp-route-walletId="@walletId" asp-route-returnUrl="@Model.ReturnUrl" id="PSBT">PSBT</a>
-        <button type="button" id="bip21parse" class="btn btn-secondary" title="Paste BIP21/Address"><i class="fa fa-paste"></i></button>
-        <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="Scan BIP21/Address with camera"><i class="fa fa-camera"></i></button>
+    <div class="d-grid d-sm-flex flex-wrap gap-3 buttons">
+        @Html.HiddenFor(a=>a.IsMultiSigOnServer)
+        @if (Model.IsMultiSigOnServer)
+        {
+            <button type="submit" id="CreatePendingTransaction" name="command" value="createpending" class="btn btn-primary">Create pending transaction</button>
+        }
+        else
+        {
+            <button type="submit" id="SignTransaction" name="command" value="sign" class="btn btn-primary" text-translate="true">Sign transaction</button>
+            <button type="submit" id="ScheduleTransaction" name="command" value="schedule" class="btn btn-secondary" text-translate="true">Schedule transaction</button>
+        }
     </div>
 
-<vc:ui-extension-point location="onchain-wallet-send" model="@Model"/>
+    <vc:ui-extension-point location="onchain-wallet-send" model="@Model"/>
 </form>

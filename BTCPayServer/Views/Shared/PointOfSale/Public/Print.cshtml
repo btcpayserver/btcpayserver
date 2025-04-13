@@ -1,19 +1,25 @@
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Client.Models
+@using BTCPayServer.Components.QRCode
+@using BTCPayServer.Payments
 @using BTCPayServer.Payments.Lightning
-@using BTCPayServer.Plugins.PointOfSale.Models
 @using BTCPayServer.Services
+@using BTCPayServer.Services.Invoices
 @using BTCPayServer.Services.Stores
 @using LNURL
-@inject BTCPayNetworkProvider BTCPayNetworkProvider
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @inject StoreRepository StoreRepository
-@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
+@inject PaymentMethodHandlerDictionary Handlers
 @inject DisplayFormatter DisplayFormatter
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
-    var store = await StoreRepository.FindStore(Model.StoreId);
-    Layout = "PointOfSale/Public/_Layout";
-    Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
-    var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
-    var supported = store.GetSupportedPaymentMethods(BTCPayNetworkProvider).OfType<LNURLPaySupportedPaymentMethod>().OrderBy(method => method.CryptoCode == cryptoCode).FirstOrDefault();
-    if (supported != null && !store.GetEnabledPaymentIds(BTCPayNetworkProvider).Contains(supported.PaymentId))
+	var store = await StoreRepository.FindStore(Model.StoreId);
+	Layout = "PointOfSale/Public/_Layout";
+	Context.Request.Query.TryGetValue("cryptocode", out var cryptoCodeValues);
+	var cryptoCode = cryptoCodeValues.FirstOrDefault() ?? "BTC";
+	var pmi = PaymentTypes.LNURL.GetPaymentMethodId(cryptoCode);
+	var supported = store.GetPaymentMethodConfig<LNURLPaymentMethodConfig>(pmi, Handlers);
+	if (supported is not null && !store.GetEnabledPaymentIds().Contains(pmi))
     {
         supported = null;
     }
@@ -35,16 +41,16 @@ else
 {
     <div class="alert alert-info alert-dismissible d-flex align-items-center justify-content-center sticky-top mb-0 rounded-0 d-print-none fade show" role="alert">
         <button type="button" class="btn btn-info me-4 border border-light" onclick="window.print()">
-            <i class="fa fa-print"></i>&nbsp;Print
+            <vc:icon symbol="pos-print" />&nbsp;Print
         </button>
         This view is intended for printing only —
         
         <a asp-route-viewType="static" class="alert-link">Regular version</a>
     </div>
 }
-<div id="PosPrint" class="public-page-wrap container-xl">
+<div id="PosPrint" class="public-page-wrap">
     <partial name="_StatusMessage" />
-    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
+    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
     @if (!string.IsNullOrEmpty(Model.Description))
     {
         <div class="lead text-center">@Safe.Raw(Model.Description)</div>
@@ -54,16 +60,15 @@ else
         {
             if (Model.ShowCustomAmount)
             {
-                Model.Items = Model.Items.Concat(new[]
-                {
-                    new ViewPointOfSaleViewModel.Item()
+                Model.Items = Model.Items.Concat([
+                    new AppItem
                     {
                         Description = "Create invoice to pay custom amount",
                         Title = "Custom amount",
                         BuyButtonText = Model.CustomButtonText,
-                        PriceType = ViewPointOfSaleViewModel.ItemPriceType.Topup
+                        PriceType = AppItemPriceType.Topup
                     }
-                }).ToArray();
+                ]).ToArray();
             }
         }
 
@@ -72,21 +77,22 @@ else
             {
                 var item = Model.Items[x];
                 var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
+                if (item.PriceType == AppItemPriceType.Fixed && item.Price == 0) continue;
                 <div class="d-flex flex-wrap">
-                    <div class="card px-0" data-id="@x">
-                        <div class="card-body p-3 d-flex flex-column gap-2">
+                    <div class="tile card w-100" data-id="@x">
+                        <div class="card-body pt-0 d-flex flex-column gap-2">
                             <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                             <div class="d-flex gap-2 align-items-center">
                                 <span class="fw-semibold">
                                     @switch (item.PriceType)
                                     {
-                                        case ViewPointOfSaleViewModel.ItemPriceType.Topup:
+                                        case AppItemPriceType.Topup:
                                             <span>Any amount</span>
                                             break;
-                                        case ViewPointOfSaleViewModel.ItemPriceType.Minimum:
+                                        case AppItemPriceType.Minimum:
                                             <span>@formatted minimum</span>
                                             break;
-                                        case ViewPointOfSaleViewModel.ItemPriceType.Fixed:
+                                        case AppItemPriceType.Fixed:
                                             @formatted
                                             break;
                                         default:
@@ -96,7 +102,14 @@ else
                                 @if (item.Inventory.HasValue)
                                 {
                                     <span class="badge text-bg-light">
-                                        @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                        @if (item.Inventory > 0)
+                                        {
+                                            <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                        }
+                                        else
+                                        {
+                                            <span text-translate="true">Sold out</span>
+                                        }
                                     </span>
                                 }
                             </div>
@@ -111,7 +124,7 @@ else
                             {
                                 var lnurlEndpoint = new Uri(Url.Action("GetLNURLForApp", "UILNURL", new
                                 {
-                                    cryptoCode = supported.CryptoCode,
+									cryptoCode = cryptoCode,
                                     appid = Model.AppId,
                                     ItemCode = item.Id
                                 }, Context.Request.Scheme, Context.Request.Host.ToString()));
@@ -128,7 +141,7 @@ else
     </main>
     <footer class="store-footer d-print-none">
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-            Powered by <partial name="_StoreFooterLogo" />
+            <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
         </a>
     </footer>
 </div>

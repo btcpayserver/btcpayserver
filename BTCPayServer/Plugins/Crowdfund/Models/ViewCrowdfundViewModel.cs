@@ -1,10 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using BTCPayServer.Models.AppViewModels;
-using BTCPayServer.Payments;
-using BTCPayServer.Plugins.PointOfSale.Models;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Rates;
 
 namespace BTCPayServer.Plugins.Crowdfund.Models
@@ -16,13 +14,10 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string AppId { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
+        public string HtmlLang { get; set; }
+        public string HtmlMetaTags{ get; set; }
         public string MainImageUrl { get; set; }
-        public string CssFileId { get; set; }
-        public string LogoFileId { get; set; }
         public string StoreName { get; set; }
-        public string BrandColor { get; set; }
-        public string EmbeddedCSS { get; set; }
-        public string CustomCSSLink { get; set; }
         public DateTime? StartDate { get; set; }
         public DateTime? EndDate { get; set; }
 
@@ -32,7 +27,8 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
 
         public CrowdfundInfo Info { get; set; }
         public string Tagline { get; set; }
-        public ViewPointOfSaleViewModel.Item[] Perks { get; set; }
+        public StoreBrandingViewModel StoreBranding { get; set; }
+        public AppItem[] Perks { get; set; }
         public bool SimpleDisplay { get; set; }
         public bool DisqusEnabled { get; set; }
         public bool SoundsEnabled { get; set; }
@@ -42,25 +38,29 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public string[] Sounds { get; set; }
         public int ResetEveryAmount { get; set; }
         public bool NeverReset { get; set; }
-
+        public string FormUrl { get; set; }
         public Dictionary<string, int> PerkCount { get; set; }
 
         public CurrencyData CurrencyData { get; set; }
 
         public class CrowdfundInfo
         {
+            public class PaymentStat
+            {
+                public string Label { get; set; }
+                public decimal Percent { get; set; }
+                public bool IsLightning { get; set; }
+            }
             public int TotalContributors { get; set; }
             public decimal CurrentPendingAmount { get; set; }
             public decimal CurrentAmount { get; set; }
             public decimal? ProgressPercentage { get; set; }
             public decimal? PendingProgressPercentage { get; set; }
             public DateTime LastUpdated { get; set; }
-            public Dictionary<string, decimal> PaymentStats { get; set; }
-            public Dictionary<string, decimal> PendingPaymentStats { get; set; }
+            public Dictionary<string, PaymentStat> PaymentStats { get; set; }
             public DateTime? LastResetDate { get; set; }
             public DateTime? NextResetDate { get; set; }
         }
-
 
 
         public bool Started => !StartDate.HasValue || DateTime.UtcNow > StartDate;
@@ -70,7 +70,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         public bool DisplayPerksValue { get; set; }
         public bool Enabled { get; set; }
         public string ResetEvery { get; set; }
-        public Dictionary<string, CurrencyData> CurrencyDataPayments { get; set; }
         public Dictionary<string, decimal> PerkValue { get; set; }
     }
 

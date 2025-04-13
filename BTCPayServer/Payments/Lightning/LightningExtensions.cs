@@ -7,8 +7,11 @@ namespace BTCPayServer.Payments.Lightning
     public static class LightningExtensions
     {
 
-
-        public static ILightningClient CreateLightningClient(this LightningSupportedPaymentMethod supportedPaymentMethod, BTCPayNetwork network, LightningNetworkOptions options, LightningClientFactoryService lightningClientFactory)
+        public static bool IsConfigured(this LightningPaymentMethodConfig supportedPaymentMethod, BTCPayNetwork network, LightningNetworkOptions options)
+        {
+            return supportedPaymentMethod.GetExternalLightningUrl() is not null || (supportedPaymentMethod.IsInternalNode && options.InternalLightningByCryptoCode.ContainsKey(network.CryptoCode));
+        }
+        public static ILightningClient CreateLightningClient(this LightningPaymentMethodConfig supportedPaymentMethod, BTCPayNetwork network, LightningNetworkOptions options, LightningClientFactoryService lightningClientFactory)
         {
             var external = supportedPaymentMethod.GetExternalLightningUrl();
             if (external != null)
@@ -17,9 +20,9 @@ namespace BTCPayServer.Payments.Lightning
             }
             else
             {
-                if (!options.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode, out var connectionString))
+                if (!supportedPaymentMethod.IsInternalNode || !options.InternalLightningByCryptoCode.TryGetValue(network.CryptoCode, out var connectionString))
                     throw new PaymentMethodUnavailableException("No internal node configured");
-                return lightningClientFactory.Create(connectionString, network);
+                return connectionString;
             }
         }
     }

@@ -2,22 +2,13 @@
 @model WalletPSBTCombineViewModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-    var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
     Layout = "_LayoutWizard";
-    ViewData.SetActivePage(WalletsNavPages.PSBT, "Combine PSBT", walletId);
+    ViewData.SetActivePage(WalletsNavPages.PSBT, StringLocalizer["Combine PSBT"], walletId);
 }
 
 @section Navbar {
-    @if (backUrl != null)
-    {
-		<a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
-            <vc:icon symbol="back" />
-        </a>
-    }
-	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
-        <vc:icon symbol="close" />
-    </a>
+	<partial name="_BackAndReturn" model="Model" />
 }
 
 <header class="text-center">
@@ -37,5 +28,5 @@
         <label asp-for="UploadedPSBTFile" class="form-label"></label>
         <input type="file" class="form-control" asp-for="UploadedPSBTFile">
     </div>
-    <button id="Submit" type="submit" class="btn btn-primary">Combine</button>
+    <button id="Submit" type="submit" class="btn btn-primary" text-translate="true">Combine</button>
 </form>

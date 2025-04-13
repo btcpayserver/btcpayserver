@@ -3,23 +3,14 @@
 @model WalletPSBTViewModel
 @{
 	var walletId = Context.GetRouteValue("walletId").ToString();
-	var cancelUrl = Model.ReturnUrl ?? Url.Action(nameof(UIWalletsController.WalletTransactions), new { walletId });
-	var backUrl = Model.BackUrl != null ? $"{Model.BackUrl}?returnUrl={Model.ReturnUrl}" : null;
+	Model.ReturnUrl ??= Url.WalletTransactions(walletId);
 	Layout = "_LayoutWizard";
-	ViewData.SetActivePage(WalletsNavPages.PSBT, "Decode PSBT", walletId);
+	ViewData.SetActivePage(WalletsNavPages.PSBT, StringLocalizer["Decode PSBT"], walletId);
 	Csp.UnsafeEval();
 }
 
 @section Navbar {
-    @if (backUrl != null)
-    {
-		<a href="@Url.EnsureLocal(backUrl, Context.Request)" id="GoBack">
-            <vc:icon symbol="back" />
-        </a>
-    }
-	<a href="@Url.EnsureLocal(cancelUrl, Context.Request)" id="CancelWizard" class="cancel">
-        <vc:icon symbol="close" />
-    </a>
+	<partial name="_BackAndReturn" model="Model" />
 }
 
 @section PageHeadContent {
@@ -30,6 +21,7 @@
     <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
     <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/bbqr/bbqr.iife.js" asp-append-version="true"></script>
     <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
 
     <script>
@@ -39,9 +31,12 @@
                 const buffer = new window.URlib.Buffer.from(psbtHex, "hex");
                 const cryptoPSBT = new window.URlib.CryptoPSBT(buffer);
                 const encoder = cryptoPSBT.toUREncoder();
+                const bbqrSplitResult = BBQr.splitQRs(buffer, 'P', { maxVersion: 10});
+                
                 const modes = {
                     ur: { title: "UR", fragments: encoder.encodeWhole() },
-                    static: { title: "Static", fragments: [psbtHex] }
+                    static: { title: "Static", fragments: [psbtHex] },
+                    bbqr: { title: "BBQr", fragments: bbqrSplitResult.parts}
                 };
                 initQRShow({ title: "Scan the PSBT", modes });
             }
@@ -66,14 +61,14 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3 mx-md-5">You can decode a PSBT by either pasting its content, uploading the file or scanning the wallet QR code.</p>
+    <p class="lead text-secondary mt-3 mx-md-5" text-translate="true">You can decode a PSBT by either pasting its content, uploading the file or scanning the wallet QR code.</p>
 </header>
 
 <div class="my-5">
     @if (Model.Errors != null && Model.Errors.Count != 0)
     {
         <div class="alert alert-danger alert-dismissible" role="alert">
-            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                 <vc:icon symbol="close" />
             </button>
             @foreach (var error in Model.Errors)
@@ -97,8 +92,8 @@
             <input asp-for="UploadedPSBTFile" type="file" class="form-control">
         </div>
         <div class="d-flex">
-            <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode">Decode PSBT</button>
-            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal">Scan wallet QR with camera</button>
+            <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode" text-translate="true">Decode PSBT</button>
+            <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal" text-translate="true">Scan wallet QR with camera</button>
         </div>
     </form>
 </div>

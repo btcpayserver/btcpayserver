@@ -1,21 +1,15 @@
 using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
-using Amazon.Runtime;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.HostedServices;
-using BTCPayServer.Security;
+using BTCPayServer.HostedServices.Webhooks;
 using BTCPayServer.Services.Stores;
-using Google.Apis.Auth.OAuth2;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json.Linq;
 
@@ -23,7 +17,7 @@ namespace BTCPayServer.Controllers.Greenfield
 {
     [ApiController]
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Greenfield,
-               Policy = Policies.CanModifyStoreWebhooks)]
+               Policy = Policies.CanModifyWebhooks)]
     [EnableCors(CorsPolicies.All)]
     public class GreenfieldStoreWebhooksController : ControllerBase
     {
@@ -77,7 +71,7 @@ namespace BTCPayServer.Controllers.Greenfield
 
         private void ValidateWebhookRequest(StoreWebhookBaseData create)
         {
-            if (!Uri.TryCreate(create?.Url, UriKind.Absolute, out var uri))
+            if (!Uri.TryCreate(create?.Url, UriKind.Absolute, out _))
                 ModelState.AddModelError(nameof(Url), "Invalid Url");
         }
 

@@ -39,5 +39,7 @@
   "submitting_nfc": "Oddaja NFC ...",
   "payment_received": "Plačilo prejeto",
   "payment_received_body": "Vaše plačilo je bilo sprejeto in se sedaj obdeluje.",
-  "payment_received_confirmations": "Ko bo vaše plačilo prejelo {{requiredConfirmations}} potrditev na verigi blokov {{cryptoCode}}, bo vaša faktura poravnana."
+  "payment_received_confirmations": "Ko bo vaše plačilo prejelo {{requiredConfirmations}} potrditev na verigi blokov {{cryptoCode}}, bo vaša faktura poravnana.",
+  "invoice_paidpartial_body": "Račun je veljaven le {{minutes}} minut. Ta račun je potekel z delnim plačilom. Prosimo, da nas kontaktirate, da lahko izpolnimo vaše naročilo.",
+  "contact_us": "Kontaktirajte nas"
 }

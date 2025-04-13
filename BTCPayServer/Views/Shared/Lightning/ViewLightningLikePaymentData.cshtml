@@ -3,25 +3,45 @@
 @using BTCPayServer.Services
 @using BTCPayServer.Components.TruncateCenter
 @using BTCPayServer.Lightning
+@using BTCPayServer.Services.Invoices
 @inject DisplayFormatter DisplayFormatter
-@model IEnumerable<BTCPayServer.Services.Invoices.PaymentEntity>
+@inject PaymentMethodHandlerDictionary handlers
+@inject PrettyNameProvider prettyName
+@model InvoiceDetailsModel
 
 @{
-    var payments = Model
-        .Where(entity => entity.GetPaymentMethodId()?.PaymentType == LightningPaymentType.Instance || 
-                         entity.GetPaymentMethodId()?.PaymentType == LNURLPayPaymentType.Instance)
-        .Select(payment => payment.GetCryptoPaymentData() is LightningLikePaymentData offChainPaymentData
-            ? new OffChainPaymentViewModel
-            {
-                Crypto = payment.Network.CryptoCode,
-                BOLT11 = offChainPaymentData.BOLT11,
-                Type = payment.GetCryptoPaymentData().GetPaymentType(),
-                PaymentProof = offChainPaymentData.Preimage?.ToString(),
-                Amount = DisplayFormatter.Currency(offChainPaymentData.Amount.ToDecimal(LightMoneyUnit.BTC), payment.Network.CryptoCode)
-            }
-            : null)
-        .Where(model => model != null)
-        .ToList();
+	string providedComment = null;
+	string consumedLightningAddress = null;
+	var payments = Model
+		.Payments
+		.Select(payment =>
+			{
+
+				if (handlers.TryGet(payment.PaymentMethodId) is not ILightningPaymentHandler handler)
+					return null;
+				var offChainPaymentData = handler.ParsePaymentDetails(payment.Details);
+
+				if (handler.ParsePaymentPromptDetails(Model.Entity.GetPaymentPrompt(payment.PaymentMethodId)?.Details) is LNURLPayPaymentMethodDetails lnurlPrompt)
+				{
+					if (lnurlPrompt.ConsumedLightningAddress is string consumed)
+					{
+						consumedLightningAddress = consumed;
+					}
+					if (lnurlPrompt.ProvidedComment is string comment)
+					{
+						providedComment = comment;
+					}
+				}
+				return new OffChainPaymentViewModel
+				{
+					Type = prettyName.PrettyName(payment.PaymentMethodId),
+					BOLT11 = offChainPaymentData.BOLT11,
+					PaymentProof = offChainPaymentData.Preimage?.ToString(),
+					Amount = DisplayFormatter.Currency(payment.Value, handler.Network.CryptoCode, divisibility: payment.Divisibility)
+				};
+			})
+		.Where(model => model != null)
+		.ToList();
 }
 
 @if (payments.Any())
@@ -30,21 +50,19 @@
         <h5>Off-Chain Payments</h5>
         <div class="invoice-payments table-responsive mt-0">
             <table class="table table-hover mb-0">
-                <thead class="thead-inverse">
+                <thead>
                     <tr>
-                        <th class="w-75px">Crypto</th>
-                        <th class="w-100px">Type</th>
+						<th class="w-175px">Type</th>
                         <th class="w-175px">Destination</th>
                         <th class="text-nowrap">Payment Proof</th>
-                        <th class="w-150px text-end">Amount</th>
+                        <th class="w-150px text-end">Paid</th>
                     </tr>
                 </thead>
                 <tbody>
                     @foreach (var payment in payments)
                     {
                         <tr>
-                            <td>@payment.Crypto</td>
-                            <td>@payment.Type.ToPrettyString()</td>
+							<td>@payment.Type</td>
                             <td>
                                 <vc:truncate-center text="@payment.BOLT11" classes="truncate-center-id" />
                             </td>
@@ -52,12 +70,25 @@
                                 <vc:truncate-center text="@payment.PaymentProof" classes="truncate-center-id" />
                             </td>
                             <td class="payment-value text-end text-nowrap">
-                                <span data-sensitive>@payment.Amount</span>
+                                <span data-sensitive class="text-success">@payment.Amount</span>
                             </td>
                         </tr>
                     }
                 </tbody>
             </table>
+			@if (!string.IsNullOrEmpty(providedComment))
+			{
+				<div class="p-2">
+					<b>LNURL Comment</b>: @providedComment
+				</div>
+			}
+			@if (!string.IsNullOrEmpty(consumedLightningAddress))
+			{
+				<div class="p-2">
+					<b>Lightning address used</b>: @consumedLightningAddress
+				</div>
+			}
+
         </div>
     </section>
 }

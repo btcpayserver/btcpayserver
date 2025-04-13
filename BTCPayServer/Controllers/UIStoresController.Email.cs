@@ -2,205 +2,121 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Globalization;
+using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Abstractions.Models;
-using BTCPayServer.Client.Models;
+using BTCPayServer.Client;
 using BTCPayServer.Data;
-using BTCPayServer.Models.ServerViewModels;
+using BTCPayServer.Models;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using MimeKit;
 
-namespace BTCPayServer.Controllers
+namespace BTCPayServer.Controllers;
+
+public partial class UIStoresController
 {
-    public partial class UIStoresController
+    [HttpGet("{storeId}/email-settings")]
+    public async Task<IActionResult> StoreEmailSettings(string storeId)
     {
-        [HttpGet("{storeId}/emails")]
-        public IActionResult StoreEmails(string storeId)
+        var store = HttpContext.GetStoreData();
+        if (store == null)
+            return NotFound();
+
+        var settings = await GetCustomSettings(store.Id);
+
+        return View(new EmailsViewModel(settings.Custom ?? new())
         {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
+            IsFallbackSetup = settings.Fallback is not null,
+            IsCustomSMTP = settings.Custom is not null || settings.Fallback is null
+        });
+    }
 
-            var blob = store.GetStoreBlob();
-            var data = blob.EmailSettings;
-            if (data?.IsComplete() is not true)
-            {
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Warning,
-                    Html = $"You need to configure email settings before this feature works. <a class='alert-link' href='{Url.Action("StoreEmailSettings", new { storeId })}'>Configure now</a>."
-                });
-            }
+    record AllEmailSettings(EmailSettings Custom, EmailSettings Fallback);
+    private async Task<AllEmailSettings> GetCustomSettings(string storeId)
+    {
+        var sender = await _emailSenderFactory.GetEmailSender(storeId) as StoreEmailSender;
+        if (sender is null)
+            return new(null, null);
+        var fallback = sender.FallbackSender is { } fb ? await fb.GetEmailSettings() : null;
+        if (fallback?.IsComplete() is not true)
+            fallback = null;
+        return new(await sender.GetCustomSettings(), fallback);
+    }
 
-            var vm = new StoreEmailRuleViewModel { Rules = blob.EmailRules ?? new List<StoreEmailRule>() };
-            return View(vm);
-        }
-
-        [HttpPost("{storeId}/emails")]
-        public async Task<IActionResult> StoreEmails(string storeId, StoreEmailRuleViewModel vm, string command)
+    [HttpPost("{storeId}/email-settings")]
+    [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command)
+    {
+        var store = HttpContext.GetStoreData();
+        if (store == null)
+            return NotFound();
+        var settings = await GetCustomSettings(store.Id);
+        model.IsFallbackSetup = settings.Fallback is not null;
+        if (!model.IsFallbackSetup)
+            model.IsCustomSMTP = true;
+        if (model.IsCustomSMTP)
         {
-            vm.Rules ??= new List<StoreEmailRule>();
-            int index = 0;
-            var indSep = command.IndexOf(":", StringComparison.InvariantCultureIgnoreCase);
-            if (indSep > 0)
+            model.Settings.Validate("Settings.", ModelState);
+            if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
             {
-                var item = command[(indSep + 1)..];
-                index = int.Parse(item, CultureInfo.InvariantCulture);
-            }
-
-            if (command.StartsWith("remove", StringComparison.InvariantCultureIgnoreCase))
-            {
-                vm.Rules.RemoveAt(index);
-            }
-            else if (command == "add")
-            {
-                vm.Rules.Add(new StoreEmailRule());
-
-                return View(vm);
+                ModelState.AddModelError("Settings.From", StringLocalizer["Invalid email"]);
             }
             if (!ModelState.IsValid)
-            {
-                return View(vm);
-            }
-
-            var store = HttpContext.GetStoreData();
-
-            if (store == null)
-                return NotFound();
-            var blob = store.GetStoreBlob();
-
-            if (command.StartsWith("test", StringComparison.InvariantCultureIgnoreCase))
-            {
-                var rule = vm.Rules[index];
-                try
-                {
-                    var emailSettings = blob.EmailSettings;
-                    using var client = await emailSettings.CreateSmtpClient();
-                    var message = emailSettings.CreateMailMessage(MailboxAddress.Parse(rule.To), "(test) " + rule.Subject, rule.Body, true);
-                    await client.SendAsync(message);
-                    await client.DisconnectAsync(true);
-                    TempData[WellKnownTempData.SuccessMessage] = $"Rule email saved and sent to {rule.To}. Please verify you received it.";
-
-                    blob.EmailRules = vm.Rules;
-                    store.SetStoreBlob(blob);
-                    await _Repo.UpdateStore(store);
-                }
-                catch (Exception ex)
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
-                }
-            }
-            else
-            {
-                // UPDATE
-                blob.EmailRules = vm.Rules;
-                store.SetStoreBlob(blob);
-                await _Repo.UpdateStore(store);
-                TempData.SetStatusMessageModel(new StatusMessageModel
-                {
-                    Severity = StatusMessageModel.StatusSeverity.Success,
-                    Message = "Store email rules saved"
-                });
-            }
-            return RedirectToAction("StoreEmails", new { storeId });
-        }
-
-        public class StoreEmailRuleViewModel
-        {
-            public List<StoreEmailRule> Rules { get; set; }
-        }
-
-        public class StoreEmailRule
-        {
-            [Required]
-            public WebhookEventType Trigger { get; set; }
-            
-            public bool CustomerEmail { get; set; }
-            
-            [Required]
-            [MailboxAddress]
-            public string To { get; set; }
-            
-            [Required]
-            public string Subject { get; set; }
-            
-            [Required]
-            public string Body { get; set; }
-        }
-
-        [HttpGet("{storeId}/email-settings")]
-        public IActionResult StoreEmailSettings()
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-            var data = store.GetStoreBlob().EmailSettings ?? new EmailSettings();
-            return View(new EmailsViewModel(data));
-        }
-
-        [HttpPost("{storeId}/email-settings")]
-        public async Task<IActionResult> StoreEmailSettings(string storeId, EmailsViewModel model, string command)
-        {
-            var store = HttpContext.GetStoreData();
-            if (store == null)
-                return NotFound();
-
-            if (command == "Test")
-            {
-                try
-                {
-                    if (model.PasswordSet)
-                    {
-                        model.Settings.Password = store.GetStoreBlob().EmailSettings.Password;
-                    }
-                    model.Settings.Validate("Settings.", ModelState);
-                    if (string.IsNullOrEmpty(model.TestEmail))
-                        ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
-                    if (!ModelState.IsValid)
-                        return View(model);
-                    using var client = await model.Settings.CreateSmtpClient();
-                    var message = model.Settings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), "BTCPay test", "BTCPay test", false);
-                    await client.SendAsync(message);
-                    await client.DisconnectAsync(true);
-                    TempData[WellKnownTempData.SuccessMessage] = $"Email sent to {model.TestEmail}. Please verify you received it.";
-                }
-                catch (Exception ex)
-                {
-                    TempData[WellKnownTempData.ErrorMessage] = "Error: " + ex.Message;
-                }
                 return View(model);
-            }
-            if (command == "ResetPassword")
-            {
-                var storeBlob = store.GetStoreBlob();
-                storeBlob.EmailSettings.Password = null;
-                store.SetStoreBlob(storeBlob);
-                await _Repo.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = "Email server password reset";
-                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
-            }
-            else // if (command == "Save")
-            {
-                if (model.Settings.From is not null && !MailboxAddressValidator.IsMailboxAddress(model.Settings.From))
-                {
-                    ModelState.AddModelError("Settings.From", "Invalid email");
-                    return View(model);
-                }
-                var storeBlob = store.GetStoreBlob();
-                if (new EmailsViewModel(storeBlob.EmailSettings).PasswordSet && storeBlob.EmailSettings != null)
-                {
-                    model.Settings.Password = storeBlob.EmailSettings.Password;
-                }
-                storeBlob.EmailSettings = model.Settings;
-                store.SetStoreBlob(storeBlob);
-                await _Repo.UpdateStore(store);
-                TempData[WellKnownTempData.SuccessMessage] = "Email settings modified";
-                return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
-            }
         }
+
+        var storeBlob = store.GetStoreBlob();
+        var currentSettings = store.GetStoreBlob().EmailSettings;
+        if (model is { IsCustomSMTP: true, Settings: { Password: null } })
+            model.Settings.Password = currentSettings?.Password;
+
+        if (command == "Test")
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(model.TestEmail))
+                    ModelState.AddModelError(nameof(model.TestEmail), new RequiredAttribute().FormatErrorMessage(nameof(model.TestEmail)));
+                if (!ModelState.IsValid)
+                    return View(model);
+                var clientSettings = (model.IsCustomSMTP ? model.Settings : settings.Fallback) ?? new();
+                using var client = await clientSettings.CreateSmtpClient();
+                var message = clientSettings.CreateMailMessage(MailboxAddress.Parse(model.TestEmail), $"{store.StoreName}: Email test", StringLocalizer["You received it, the BTCPay Server SMTP settings work."], false);
+                await client.SendAsync(message);
+                await client.DisconnectAsync(true);
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email sent to {0}. Please verify you received it.", model.TestEmail].Value;
+            }
+            catch (Exception ex)
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Error: {0}", ex.Message].Value;
+            }
+            return View(model);
+        }
+        else if (command == "ResetPassword")
+        {
+            if (storeBlob.EmailSettings is not null)
+                storeBlob.EmailSettings.Password = null;
+            store.SetStoreBlob(storeBlob);
+            await _storeRepo.UpdateStore(store);
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email server password reset"].Value;
+        }
+        else if (!model.IsCustomSMTP && currentSettings is not null)
+        {
+            storeBlob.EmailSettings = null;
+            store.SetStoreBlob(storeBlob);
+            await _storeRepo.UpdateStore(store);
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["You are now using server's email settings"].Value;
+        }
+        else if (model.IsCustomSMTP)
+        {
+            storeBlob.EmailSettings = model.Settings;
+            store.SetStoreBlob(storeBlob);
+            await _storeRepo.UpdateStore(store);
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings modified"].Value;
+        }
+        return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
     }
 }

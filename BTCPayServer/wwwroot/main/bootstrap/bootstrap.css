@@ -1,6 +1,6 @@
 /*!
-   * Bootstrap  v5.3.0 (https://getbootstrap.com/)
-   * Copyright 2011-2023 The Bootstrap Authors
+   * Bootstrap  v5.3.3 (https://getbootstrap.com/)
+   * Copyright 2011-2024 The Bootstrap Authors
    * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
    */
 :root,
@@ -13,7 +13,6 @@
   --btcpay-body-font-size: 0.875rem;
   --btcpay-body-font-weight: var(--btcpay-font-weight-normal);
   --btcpay-body-line-height: 1.6;
-  --btcpay-body-color: var(--btcpay-body-text);
   --btcpay-secondary-bg: var(--btcpay-neutral-200);
   --btcpay-secondary-bg-rgb: 233, 236, 239;
   --btcpay-tertiary-color: rgba(var(--btcpay-dark-rgb), 0.5);
@@ -26,6 +25,7 @@
   --btcpay-body-link-accent-rgb: 10, 88, 202;
   --btcpay-link-hover-decoration: none;
   --btcpay-code-color: var(--btcpay-code-text);
+  --btcpay-highlight-color: var(--btcpay-dark);
   --btcpay-highlight-bg: #fff3cd;
   --btcpay-border-width: 1px;
   --btcpay-border-style: solid;
@@ -66,7 +66,7 @@ body {
   font-size: var(--btcpay-body-font-size);
   font-weight: var(--btcpay-body-font-weight);
   line-height: var(--btcpay-body-line-height);
-  color: var(--btcpay-body-color);
+  color: var(--btcpay-body-text);
   text-align: var(--btcpay-body-text-align);
   background-color: var(--btcpay-body-bg);
   -webkit-text-size-adjust: 100%;
@@ -199,6 +199,7 @@ small, .small {
 
 mark, .mark {
   padding: 0.1875em;
+  color: var(--btcpay-highlight-color);
   background-color: var(--btcpay-highlight-bg);
 }
 
@@ -425,8 +426,8 @@ legend + * {
 }
 
 [type="search"] {
-  outline-offset: -2px;
   -webkit-appearance: textfield;
+  outline-offset: -2px;
 }
 
 /* rtl:raw:
@@ -1761,7 +1762,7 @@ progress {
   --btcpay-table-bg-type: initial;
   --btcpay-table-color-state: initial;
   --btcpay-table-bg-state: initial;
-  --btcpay-table-color: var(--btcpay-body-color);
+  --btcpay-table-color: var(--btcpay-body-text);
   --btcpay-table-bg: transparent;
   --btcpay-table-border-color: var(--btcpay-border-color);
   --btcpay-table-accent-bg: transparent;
@@ -1844,7 +1845,7 @@ progress {
 .table-primary {
   --btcpay-table-color: var(--btcpay-primary-dim-text);
   --btcpay-table-bg: var(--btcpay-primary-dim-bg);
-  --btcpay-table-border-color: #bacbe6;
+  --btcpay-table-border-color: var(--btcpay-primary-dim-border);
   --btcpay-table-striped-bg: var(--btcpay-primary-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-primary-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-primary-dim-bg-active);
@@ -1858,7 +1859,7 @@ progress {
 .table-secondary {
   --btcpay-table-color: var(--btcpay-secondary-dim-text);
   --btcpay-table-bg: var(--btcpay-secondary-dim-bg);
-  --btcpay-table-border-color: #cbccce;
+  --btcpay-table-border-color: var(--btcpay-secondary-dim-border);
   --btcpay-table-striped-bg: var(--btcpay-secondary-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-secondary-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-secondary-dim-bg-active);
@@ -1872,7 +1873,7 @@ progress {
 .table-success {
   --btcpay-table-color: var(--btcpay-success-dim-text);
   --btcpay-table-bg: var(--btcpay-success-dim-bg);
-  --btcpay-table-border-color: #bcd0c7;
+  --btcpay-table-border-color: var(--btcpay-success-dim-border);
   --btcpay-table-striped-bg: var(--btcpay-success-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-success-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-success-dim-bg-active);
@@ -1886,7 +1887,7 @@ progress {
 .table-info {
   --btcpay-table-color: var(--btcpay-info-dim-text);
   --btcpay-table-bg: var(--btcpay-info-dim-bg);
-  --btcpay-table-border-color: #badce3;
+  --btcpay-table-border-color: var(--btcpay-info-dim-border);
   --btcpay-table-striped-bg: var(--btcpay-info-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-info-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-info-dim-bg-active);
@@ -1900,7 +1901,7 @@ progress {
 .table-warning {
   --btcpay-table-color: var(--btcpay-warning-dim-text);
   --btcpay-table-bg: var(--btcpay-warning-dim-bg);
-  --btcpay-table-border-color: #e6dbb9;
+  --btcpay-table-border-color: var(--btcpay-warning-dim-border);
   --btcpay-table-striped-bg: var(--btcpay-warning-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-warning-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-warning-dim-bg-active);
@@ -1914,7 +1915,7 @@ progress {
 .table-danger {
   --btcpay-table-color: var(--btcpay-danger-dim-text);
   --btcpay-table-bg: var(--btcpay-danger-dim-bg);
-  --btcpay-table-border-color: #dfc2c4;
+  --btcpay-table-border-color: var(--btcpay-danger-dim-border);
   --btcpay-table-striped-bg: var(--btcpay-danger-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-danger-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-danger-dim-bg-active);
@@ -1928,7 +1929,7 @@ progress {
 .table-light {
   --btcpay-table-color: var(--btcpay-light-dim-text);
   --btcpay-table-bg: var(--btcpay-light-dim-bg);
-  --btcpay-table-border-color: #dfe0e1;
+  --btcpay-table-border-color: var(--btcpay-light-border-hover);
   --btcpay-table-striped-bg: var(--btcpay-light-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-light-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-light-dim-bg-active);
@@ -1942,7 +1943,7 @@ progress {
 .table-dark {
   --btcpay-table-color: var(--btcpay-dark-dim-text);
   --btcpay-table-bg: var(--btcpay-dark-dim-bg);
-  --btcpay-table-border-color: var(--btcpay-dark-border-hover);
+  --btcpay-table-border-color: var(--btcpay-dark-dim-border);
   --btcpay-table-striped-bg: var(--btcpay-dark-dim-bg-striped);
   --btcpay-table-striped-color: var(--btcpay-dark-dim-text-striped);
   --btcpay-table-active-bg: var(--btcpay-dark-dim-bg-active);
@@ -2033,12 +2034,12 @@ progress {
   font-weight: var(--btcpay-font-weight-normal);
   line-height: 1.6;
   color: var(--btcpay-form-text);
-  background-color: var(--btcpay-form-bg);
-  background-clip: padding-box;
-  border: var(--btcpay-border-width) solid var(--btcpay-form-border);
   -webkit-appearance: none;
      -moz-appearance: none;
           appearance: none;
+  background-color: var(--btcpay-form-bg);
+  background-clip: padding-box;
+  border: var(--btcpay-border-width) solid var(--btcpay-form-border);
   border-radius: var(--btcpay-border-radius);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
@@ -2133,7 +2134,7 @@ progress {
   padding: 0.5rem 0;
   margin-bottom: 0;
   line-height: 1.6;
-  color: var(--btcpay-body-color);
+  color: var(--btcpay-body-text);
   background-color: transparent;
   border: solid transparent;
   border-width: var(--btcpay-border-width) 0;
@@ -2239,6 +2240,9 @@ textarea.form-control-lg {
   font-weight: var(--btcpay-font-weight-normal);
   line-height: 1.6;
   color: var(--btcpay-form-text);
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   background-color: var(--btcpay-form-bg);
   background-image: var(--btcpay-form-select-bg-img), var(--btcpay-form-select-bg-icon, none);
   background-repeat: no-repeat;
@@ -2247,9 +2251,6 @@ textarea.form-control-lg {
   border: var(--btcpay-border-width) solid var(--btcpay-form-border);
   border-radius: var(--btcpay-border-radius);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
 }
 
 .form-select:focus {
@@ -2315,19 +2316,20 @@ textarea.form-control-lg {
 
 .form-check-input {
   --btcpay-form-check-bg: transparent;
+  flex-shrink: 0;
   width: 1.25em;
   height: 1.25em;
   margin-top: 0.175em;
   vertical-align: top;
+  -webkit-appearance: none;
+     -moz-appearance: none;
+          appearance: none;
   background-color: var(--btcpay-form-check-bg);
   background-image: var(--btcpay-form-check-bg-image);
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain;
   border: 2px solid var(--btcpay-form-border-check);
-  -webkit-appearance: none;
-     -moz-appearance: none;
-          appearance: none;
   -webkit-print-color-adjust: exact;
      color-adjust: exact;
           print-color-adjust: exact;
@@ -2435,10 +2437,10 @@ textarea.form-control-lg {
   width: 100%;
   height: calc(1rem + 4px);
   padding: 0;
-  background-color: transparent;
   -webkit-appearance: none;
      -moz-appearance: none;
           appearance: none;
+  background-color: transparent;
 }
 
 .form-range:focus {
@@ -2461,13 +2463,13 @@ textarea.form-control-lg {
   width: 1rem;
   height: 1rem;
   margin-top: -0.25rem;
+  -webkit-appearance: none;
+          appearance: none;
   background-color: var(--btcpay-primary);
   border: 0;
   border-radius: 1rem;
   -webkit-transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  -webkit-appearance: none;
-          appearance: none;
 }
 
 .form-range::-webkit-slider-thumb:active {
@@ -2487,13 +2489,13 @@ textarea.form-control-lg {
 .form-range::-moz-range-thumb {
   width: 1rem;
   height: 1rem;
+  -moz-appearance: none;
+       appearance: none;
   background-color: var(--btcpay-primary);
   border: 0;
   border-radius: 1rem;
   -moz-transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   transition: background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
-  -moz-appearance: none;
-       appearance: none;
 }
 
 .form-range::-moz-range-thumb:active {
@@ -2633,11 +2635,13 @@ textarea.form-control-lg {
   border-width: var(--btcpay-border-width) 0;
 }
 
-.form-floating > :disabled ~ label {
+.form-floating > :disabled ~ label,
+.form-floating > .form-control:disabled ~ label {
   color: var(--btcpay-secondary);
 }
 
-.form-floating > :disabled ~ label::after {
+.form-floating > :disabled ~ label::after,
+.form-floating > .form-control:disabled ~ label::after {
   background-color: var(--btcpay-form-bg-disabled);
 }
 
@@ -2684,7 +2688,7 @@ textarea.form-control-lg {
   text-align: center;
   white-space: nowrap;
   background-color: var(--btcpay-form-bg-addon);
-  border: var(--btcpay-border-width) solid var(--btcpay-form-border);
+  border: var(--btcpay-border-width) solid var(--btcpay-form-bg-addon);
   border-radius: var(--btcpay-border-radius);
 }
 
@@ -2938,7 +2942,7 @@ textarea.form-control-lg {
   --btcpay-btn-font-size: 0.875rem;
   --btcpay-btn-font-weight: var(--btcpay-font-weight-semibold);
   --btcpay-btn-line-height: 1.6;
-  --btcpay-btn-color: var(--btcpay-body-color);
+  --btcpay-btn-color: var(--btcpay-body-text);
   --btcpay-btn-bg: transparent;
   --btcpay-btn-border-width: var(--btcpay-border-width);
   --btcpay-btn-border-color: transparent;
@@ -3001,6 +3005,10 @@ textarea.form-control-lg {
 
 .btn-check:checked + .btn:focus-visible,
 :not(.btn-check) + .btn:active:focus-visible, .btn:first-child:active:focus-visible, .btn.active:focus-visible, .btn.show:focus-visible {
+  box-shadow: var(--btcpay-btn-focus-box-shadow);
+}
+
+.btn-check:checked:focus-visible + .btn {
   box-shadow: var(--btcpay-btn-focus-box-shadow);
 }
 
@@ -3394,7 +3402,7 @@ fieldset:disabled .btn {
   --btcpay-dropdown-inner-border-radius: calc(var(--btcpay-border-radius) - var(--btcpay-border-width));
   --btcpay-dropdown-divider-bg: var(--btcpay-body-border-medium);
   --btcpay-dropdown-divider-margin-y: 0.5rem;
-  --btcpay-dropdown-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
+  --btcpay-dropdown-box-shadow: var(--btcpay-box-shadow);
   --btcpay-dropdown-link-color: var(--btcpay-body-text);
   --btcpay-dropdown-link-hover-color: var(--btcpay-body-text);
   --btcpay-dropdown-link-hover-bg: var(--btcpay-body-bg-hover);
@@ -3838,7 +3846,7 @@ fieldset:disabled .btn {
   box-shadow: 0 0 0 0.25rem rgba(var(--btcpay-primary-rgb), 0.25);
 }
 
-.nav-link.disabled {
+.nav-link.disabled, .nav-link:disabled {
   color: var(--btcpay-nav-link-disabled-color);
   pointer-events: none;
   cursor: default;
@@ -3867,12 +3875,6 @@ fieldset:disabled .btn {
   border-color: var(--btcpay-nav-tabs-link-hover-border-color);
 }
 
-.nav-tabs .nav-link.disabled, .nav-tabs .nav-link:disabled {
-  color: var(--btcpay-nav-link-disabled-color);
-  background-color: transparent;
-  border-color: transparent;
-}
-
 .nav-tabs .nav-link.active,
 .nav-tabs .nav-item.show .nav-link {
   color: var(--btcpay-nav-tabs-link-active-color);
@@ -3894,12 +3896,6 @@ fieldset:disabled .btn {
 
 .nav-pills .nav-link {
   border-radius: var(--btcpay-nav-pills-border-radius);
-}
-
-.nav-pills .nav-link:disabled {
-  color: var(--btcpay-nav-link-disabled-color);
-  background-color: transparent;
-  border-color: transparent;
 }
 
 .nav-pills .nav-link.active,
@@ -4417,7 +4413,7 @@ fieldset:disabled .btn {
   flex-direction: column;
   min-width: 0;
   height: var(--btcpay-card-height);
-  color: var(--btcpay-body-color);
+  color: var(--btcpay-body-text);
   word-wrap: break-word;
   background-color: var(--btcpay-card-bg);
   background-clip: border-box;
@@ -4589,7 +4585,7 @@ fieldset:disabled .btn {
 }
 
 .accordion {
-  --btcpay-accordion-color: var(--btcpay-body-color);
+  --btcpay-accordion-color: var(--btcpay-body-text);
   --btcpay-accordion-bg: transparent;
   --btcpay-accordion-transition: color 0.15s ease-in-out, background-color 0.15s ease-in-out, border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-radius 0.15s ease;
   --btcpay-accordion-border-color: transparent;
@@ -4605,7 +4601,6 @@ fieldset:disabled .btn {
   --btcpay-accordion-btn-icon-transform: rotate(-180deg);
   --btcpay-accordion-btn-icon-transition: transform 0.2s ease-in-out;
   --btcpay-accordion-btn-active-icon: none;
-  --btcpay-accordion-btn-focus-border-color: transparent;
   --btcpay-accordion-btn-focus-box-shadow: none;
   --btcpay-accordion-body-padding-x: 0;
   --btcpay-accordion-body-padding-y: 1rem;
@@ -4658,7 +4653,6 @@ fieldset:disabled .btn {
 
 .accordion-button:focus {
   z-index: 3;
-  border-color: var(--btcpay-accordion-btn-focus-border-color);
   outline: 0;
   box-shadow: var(--btcpay-accordion-btn-focus-box-shadow);
 }
@@ -4678,7 +4672,7 @@ fieldset:disabled .btn {
   border-top-right-radius: var(--btcpay-accordion-border-radius);
 }
 
-.accordion-item:first-of-type .accordion-button {
+.accordion-item:first-of-type > .accordion-header .accordion-button {
   border-top-left-radius: var(--btcpay-accordion-inner-border-radius);
   border-top-right-radius: var(--btcpay-accordion-inner-border-radius);
 }
@@ -4692,12 +4686,12 @@ fieldset:disabled .btn {
   border-bottom-left-radius: var(--btcpay-accordion-border-radius);
 }
 
-.accordion-item:last-of-type .accordion-button.collapsed {
+.accordion-item:last-of-type > .accordion-header .accordion-button.collapsed {
   border-bottom-right-radius: var(--btcpay-accordion-inner-border-radius);
   border-bottom-left-radius: var(--btcpay-accordion-inner-border-radius);
 }
 
-.accordion-item:last-of-type .accordion-collapse {
+.accordion-item:last-of-type > .accordion-collapse {
   border-bottom-right-radius: var(--btcpay-accordion-border-radius);
   border-bottom-left-radius: var(--btcpay-accordion-border-radius);
 }
@@ -4706,37 +4700,37 @@ fieldset:disabled .btn {
   padding: var(--btcpay-accordion-body-padding-y) var(--btcpay-accordion-body-padding-x);
 }
 
-.accordion-flush .accordion-collapse {
-  border-width: 0;
-}
-
-.accordion-flush .accordion-item {
+.accordion-flush > .accordion-item {
   border-right: 0;
   border-left: 0;
   border-radius: 0;
 }
 
-.accordion-flush .accordion-item:first-child {
+.accordion-flush > .accordion-item:first-child {
   border-top: 0;
 }
 
-.accordion-flush .accordion-item:last-child {
+.accordion-flush > .accordion-item:last-child {
   border-bottom: 0;
 }
 
-.accordion-flush .accordion-item .accordion-button, .accordion-flush .accordion-item .accordion-button.collapsed {
+.accordion-flush > .accordion-item > .accordion-header .accordion-button, .accordion-flush > .accordion-item > .accordion-header .accordion-button.collapsed {
+  border-radius: 0;
+}
+
+.accordion-flush > .accordion-item > .accordion-collapse {
   border-radius: 0;
 }
 
 .breadcrumb {
   --btcpay-breadcrumb-padding-x: 0;
   --btcpay-breadcrumb-padding-y: 0;
-  --btcpay-breadcrumb-margin-bottom: 1rem;
+  --btcpay-breadcrumb-margin-bottom: var(--btcpay-space-m);
   --btcpay-breadcrumb-bg: ;
   --btcpay-breadcrumb-border-radius: ;
-  --btcpay-breadcrumb-divider-color: var(--btcpay-secondary);
+  --btcpay-breadcrumb-divider-color: var(--btcpay-body-text);
   --btcpay-breadcrumb-item-padding-x: 0.5rem;
-  --btcpay-breadcrumb-item-active-color: var(--btcpay-secondary);
+  --btcpay-breadcrumb-item-active-color: var(--btcpay-body-text);
   display: flex;
   flex-wrap: wrap;
   padding: var(--btcpay-breadcrumb-padding-y) var(--btcpay-breadcrumb-padding-x);
@@ -4755,7 +4749,7 @@ fieldset:disabled .btn {
   float: left;
   padding-right: var(--btcpay-breadcrumb-item-padding-x);
   color: var(--btcpay-breadcrumb-divider-color);
-  content: var(--btcpay-breadcrumb-divider, "/") /* rtl: var(--btcpay-breadcrumb-divider, "/") */;
+  content: var(--btcpay-breadcrumb-divider, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3e%3cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%238F979E'/%3e%3c/svg%3e")) /* rtl: var(--btcpay-breadcrumb-divider, url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8'%3e%3cpath d='M2.5 0L1 1.5 3.5 4 1 6.5 2.5 8l4-4-4-4z' fill='%238F979E'/%3e%3c/svg%3e")) */;
 }
 
 .breadcrumb-item.active {
@@ -5525,7 +5519,7 @@ fieldset:disabled .btn {
   --btcpay-modal-border-color: var(--btcpay-border-color);
   --btcpay-modal-border-width: var(--btcpay-border-width);
   --btcpay-modal-border-radius: var(--btcpay-border-radius-lg);
-  --btcpay-modal-box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  --btcpay-modal-box-shadow: var(--btcpay-box-shadow-sm);
   --btcpay-modal-inner-border-radius: calc(var(--btcpay-border-radius-lg) - (var(--btcpay-border-width)));
   --btcpay-modal-header-padding-x: 1rem;
   --btcpay-modal-header-padding-y: 1rem;
@@ -5627,7 +5621,6 @@ fieldset:disabled .btn {
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  justify-content: space-between;
   padding: var(--btcpay-modal-header-padding);
   border-bottom: var(--btcpay-modal-header-border-width) solid var(--btcpay-modal-header-border-color);
   border-top-left-radius: var(--btcpay-modal-inner-border-radius);
@@ -5670,7 +5663,7 @@ fieldset:disabled .btn {
 @media (min-width: 576px) {
   .modal {
     --btcpay-modal-margin: 1.75rem;
-    --btcpay-modal-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
+    --btcpay-modal-box-shadow: var(--btcpay-box-shadow);
   }
   .modal-dialog {
     max-width: var(--btcpay-modal-width);
@@ -5940,7 +5933,7 @@ fieldset:disabled .btn {
   --btcpay-popover-border-color: var(--btcpay-body-border-medium);
   --btcpay-popover-border-radius: var(--btcpay-border-radius-lg);
   --btcpay-popover-inner-border-radius: calc(var(--btcpay-border-radius-lg) - var(--btcpay-border-width));
-  --btcpay-popover-box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
+  --btcpay-popover-box-shadow: var(--btcpay-box-shadow);
   --btcpay-popover-header-padding-x: 1rem;
   --btcpay-popover-header-padding-y: 0.5rem;
   --btcpay-popover-header-font-size: 0.875rem;
@@ -5948,7 +5941,7 @@ fieldset:disabled .btn {
   --btcpay-popover-header-bg: var(--btcpay-bg-tile);
   --btcpay-popover-body-padding-x: 1rem;
   --btcpay-popover-body-padding-y: 1rem;
-  --btcpay-popover-body-color: var(--btcpay-body-color);
+  --btcpay-popover-body-color: var(--btcpay-body-text);
   --btcpay-popover-arrow-width: 1rem;
   --btcpay-popover-arrow-height: 0.5rem;
   --btcpay-popover-arrow-border: var(--btcpay-popover-border-color);
@@ -6216,20 +6209,12 @@ fieldset:disabled .btn {
   background-size: 100% 100%;
 }
 
-/* rtl:options: {
-  "autoRename": true,
-  "stringMap":[ {
-    "name"    : "prev-next",
-    "search"  : "prev",
-    "replace" : "next"
-  } ]
-} */
 .carousel-control-prev-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e") /*rtl:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e")*/;
 }
 
 .carousel-control-next-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e");
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M4.646 1.646a.5.5 0 0 1 .708 0l6 6a.5.5 0 0 1 0 .708l-6 6a.5.5 0 0 1-.708-.708L10.293 8 4.646 2.354a.5.5 0 0 1 0-.708z'/%3e%3c/svg%3e") /*rtl:url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='%23fff'%3e%3cpath d='M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z'/%3e%3c/svg%3e")*/;
 }
 
 .carousel-indicators {
@@ -6357,7 +6342,7 @@ fieldset:disabled .btn {
   --btcpay-offcanvas-height: auto;
   --btcpay-offcanvas-padding-x: 0;
   --btcpay-offcanvas-padding-y: 0.5rem;
-  --btcpay-offcanvas-color: var(--btcpay-body-color);
+  --btcpay-offcanvas-color: var(--btcpay-body-text);
   --btcpay-offcanvas-bg: var(--btcpay-bg-tile);
   --btcpay-offcanvas-border-width: var(--btcpay-border-width);
   --btcpay-offcanvas-border-color: var(--btcpay-border-color);
@@ -6805,15 +6790,12 @@ fieldset:disabled .btn {
 .offcanvas-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   padding: var(--btcpay-offcanvas-padding-y) var(--btcpay-offcanvas-padding-x);
 }
 
 .offcanvas-header .btn-close {
   padding: calc(var(--btcpay-offcanvas-padding-y) * .5) calc(var(--btcpay-offcanvas-padding-x) * .5);
-  margin-top: calc(-.5 * var(--btcpay-offcanvas-padding-y));
-  margin-right: calc(-.5 * var(--btcpay-offcanvas-padding-x));
-  margin-bottom: calc(-.5 * var(--btcpay-offcanvas-padding-y));
+  margin: calc(-.5 * var(--btcpay-offcanvas-padding-y)) calc(-.5 * var(--btcpay-offcanvas-padding-x)) calc(-.5 * var(--btcpay-offcanvas-padding-y)) auto;
 }
 
 .offcanvas-title {
@@ -7250,7 +7232,7 @@ fieldset:disabled .btn {
 .vr {
   display: inline-block;
   align-self: stretch;
-  width: 1px;
+  width: var(--btcpay-border-width);
   min-height: 1em;
   background-color: currentcolor;
   opacity: 0.25;
@@ -7430,15 +7412,15 @@ fieldset:disabled .btn {
 }
 
 .shadow {
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: var(--btcpay-box-shadow) !important;
 }
 
 .shadow-sm {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: var(--btcpay-box-shadow-sm) !important;
 }
 
 .shadow-lg {
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+  box-shadow: var(--btcpay-box-shadow-lg) !important;
 }
 
 .shadow-none {
@@ -12116,13 +12098,7 @@ fieldset:disabled .btn {
   }
 }
 
-.form-select,
-.form-control {
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.05);
-}
-
 .form-check-input {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
 }
 
@@ -12169,6 +12145,7 @@ fieldset:disabled .btn {
 
 *::-webkit-scrollbar {
   width: var(--btcpay-scrollbar-width);
+  height: var(--btcpay-scrollbar-width);
 }
 
 *::-webkit-scrollbar-track {
@@ -12262,9 +12239,21 @@ ul:not([class]) li {
   color: var(--btcpay-body-text-muted) !important;
 }
 
+.text-warning {
+  color: rgba(var(--btcpay-body-text-warning-rgb), var(--btcpay-text-opacity)) !important;
+}
+
 /* Modals */
 .modal-content {
   box-shadow: 0 20px 20px rgba(0, 0, 0, 0.15);
+}
+
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
 }
 
 /* Accordion */
@@ -12276,15 +12265,23 @@ ul:not([class]) li {
   content: none;
 }
 
-.accordion-button svg.icon {
-  flex-shrink: 0;
-  width: 24px;
-  height: 24px;
+.accordion-button .icon {
+  --icon-size: 1.5rem;
+  margin-top: -.0575em;
+  margin-bottom: -.0575em;
   margin-left: auto;
-  transition: transform 0.2s ease-in-out;
+  transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
 }
 
-.accordion-button:not(.collapsed) svg.icon {
+.accordion-button span {
+    color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1));
+}
+
+.accordion-button:hover span {
+    --btcpay-body-link-rgb: var(--btcpay-body-link-accent-rgb);
+}
+
+.accordion-button:not(.collapsed) .icon {
   transform: rotate(-180deg);
 }
 
@@ -12317,7 +12314,50 @@ ul:not([class]) li {
   padding: 1rem;
 }
 
+/* Badges */
+.badge-translucent {
+  --btcpay-bg-opacity: .25;
+}
+.badge-translucent.text-bg-primary {
+  --btcpay-primary-text: var(--btcpay-primary);
+}
+.badge-translucent.text-bg-secondary {
+  --btcpay-secondary-text: var(--btcpay-neutral-light-900);
+  --btcpay-secondary-rgb: 248, 249, 250;
+}
+.badge-translucent.text-bg-success {
+  --btcpay-success-text: var(--btcpay-success);
+}
+.badge-translucent.text-bg-info {
+  --btcpay-info-text: var(--btcpay-info);
+}
+.badge-translucent.text-bg-warning {
+  --btcpay-warning-text: var(--btcpay-yellow-600);
+}
+.badge-translucent.text-bg-danger {
+  --btcpay-danger-text: var(--btcpay-danger);
+}
+.badge-translucent.text-bg-light {
+  --btcpay-light-text: var(--btcpay-neutral-800);
+  --btcpay-bg-opacity: .75;
+}
+.badge-translucent.text-bg-dark {
+  --btcpay-dark-text: var(--btcpay-white);
+}
+
+/* Icons */
+.icon {
+    display: inline-block;
+    width: var(--icon-size, 1rem);
+    height: var(--icon-size, 1rem);
+    flex-shrink: 0 !important;
+}
+
 /* Button */
+.btn .icon {
+  --icon-size: 1.25em;
+}
+
 .btn-outline-secondary {
   --btcpay-btn-color: var(--btcpay-secondary-text);
 }
@@ -12329,12 +12369,6 @@ ul:not([class]) li {
 
 .btn-outline-secondary:active {
   --btcpay-btn-color: var(--btcpay-secondary-text-active);
-}
-
-.btn .icon {
-  --btn-icon-size: 1.25em;
-  height: var(--btn-icon-size);
-  width: var(--btn-icon-size);
 }
 
 .btn.rounded-circle {
@@ -12360,8 +12394,8 @@ ul:not([class]) li {
   position: relative;
   top: -0.4rem;
   display: inline-block;
-  width: 1rem;
-  height: 1rem;
+  width: var(--icon-size, 1rem);
+  height: var(--icon-size, 1rem);
 }
 
 .dropdown-toggle-split {
@@ -12816,7 +12850,7 @@ input[type='number'].hide-number-spin {
   cursor: pointer;
 }
 
-.btcpay-toggle:hover {
+.btcpay-toggle:not(:disabled):hover {
   background: var(--btcpay-toggle-bg-hover);
 }
 
@@ -12831,8 +12865,8 @@ input.btcpay-toggle:checked,
   background: var(--btcpay-toggle-bg-active);
 }
 
-input.btcpay-toggle:checked:hover,
-.btcpay-toggle.btcpay-toggle--active:hover {
+input.btcpay-toggle:not(:disabled):checked:hover,
+.btcpay-toggle.btcpay-toggle--active:not(:disabled):hover {
   background: var(--btcpay-toggle-bg-active-hover);
 }
 

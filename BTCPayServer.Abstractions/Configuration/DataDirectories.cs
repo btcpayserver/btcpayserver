@@ -9,6 +9,7 @@ namespace BTCPayServer.Configuration
         public string TempStorageDir { get; set; }
         public string StorageDir { get; set; }
         public string TempDir { get; set; }
+        public string LangsDir { get; set; }
 
         public string ToDatadirFullPath(string path)
         {

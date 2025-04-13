@@ -266,6 +266,7 @@ paket-files/
 # JetBrains Rider
 .idea/
 *.sln.iml
+.run
 
 # CodeRush
 .cr/
@@ -299,3 +300,5 @@ Plugins/packed
 
 BTCPayServer/wwwroot/swagger/v1/openapi.json
 BTCPayServer/appsettings.dev.json
+BTCPayServer.Tests/monero_wallet
+/BTCPayServer.Tests/NewBlocks.bat

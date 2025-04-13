@@ -1,20 +1,25 @@
-﻿@model CreateAppViewModel
+@model CreateAppViewModel
 @{
-    ViewData.SetActivePage(AppsNavPages.Create, $"Create a new {Model.AppType ?? "app"}", Model.AppType);
+    ViewData.SetActivePage(AppsNavPages.Create, StringLocalizer["Create a new {0}", Model.AppType]);
 }
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
 }
 
-<partial name="_StatusMessage" />
+<form asp-action="CreateApp" asp-route-appType="@Model.AppType">
+    <div class="sticky-header">
+        <h2>@ViewData["Title"]</h2>
+		<input id="page-primary" type="submit" value="Create" class="btn btn-primary" />
+    </div>
+    <partial name="_StatusMessage" />
 
-<h2 class="mt-1 mb-4">@ViewData["Title"]</h2>
-
-<div class="row">
-    <div class="col-xl-8 col-xxl-constrain">
-        <form asp-action="CreateApp" asp-route-appType="@Model.AppType">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+    <div class="row">
+        <div class="col-xl-8 col-xxl-constrain">
+            @if (!ViewContext.ModelState.IsValid)
+            {
+                <div asp-validation-summary="ModelOnly"></div>
+            }
             @if (string.IsNullOrEmpty(Model.AppType))
             {
                 <div class="form-group">
@@ -27,9 +32,6 @@
                 <input asp-for="AppName" class="form-control" required />
                 <span asp-validation-for="AppName" class="text-danger"></span>
             </div>
-            <div class="form-group mt-4">
-                <input type="submit" value="Create" class="btn btn-primary" id="Create" />
-            </div>
-        </form>
+        </div>
     </div>
-</div>
+</form>

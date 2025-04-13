@@ -1,53 +1,49 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Threading.Tasks;
-using BTCPayServer.Client.JsonConverters;
-using BTCPayServer.Data;
+using BTCPayServer.Client.Models;
+using BTCPayServer.Services.Invoices;
 using Dapper;
+using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Services.Wallets;
 
-public enum WalletHistogramType
-{
-    Week,
-    Month,
-    Year
-}
-
 public class WalletHistogramService
 {
-    private readonly BTCPayNetworkProvider _networkProvider;
+    private readonly PaymentMethodHandlerDictionary _handlers;
     private readonly NBXplorerConnectionFactory _connectionFactory;
 
     public WalletHistogramService(
-        BTCPayNetworkProvider networkProvider,
+        PaymentMethodHandlerDictionary handlers,
         NBXplorerConnectionFactory connectionFactory)
     {
-        _networkProvider = networkProvider;
+        _handlers = handlers;
         _connectionFactory = connectionFactory;
     }
 
-    public async Task<WalletHistogramData> GetHistogram(StoreData store, WalletId walletId, WalletHistogramType type)
+    public async Task<HistogramData> GetHistogram(StoreData store, WalletId walletId, HistogramType type)
     {
         // https://github.com/dgarage/NBXplorer/blob/master/docs/Postgres-Schema.md
         if (_connectionFactory.Available)
         {
-            var derivationSettings = store.GetDerivationSchemeSettings(_networkProvider, walletId.CryptoCode);
+            var derivationSettings = store.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
             if (derivationSettings != null)
             {
-                var wallet_id = derivationSettings.GetNBXWalletId();
+                var network = _handlers.GetBitcoinHandler(walletId.CryptoCode);
+                var wallet_id = derivationSettings.GetNBXWalletId(network.Network.NBitcoinNetwork);
                 await using var conn = await _connectionFactory.OpenConnection();
 
                 var code = walletId.CryptoCode;
                 var to = DateTimeOffset.UtcNow;
-                var labelCount = 6;
-                (var days, var pointCount) = type switch
+                var (days, pointCount) = type switch
                 {
-                    WalletHistogramType.Week => (7, 30),
-                    WalletHistogramType.Month => (30, 30),
-                    WalletHistogramType.Year => (365, 30),
-                    _ => throw new ArgumentException($"WalletHistogramType {type} does not exist.")
+                    HistogramType.Day => (1, 30),
+                    HistogramType.Week => (7, 30),
+                    HistogramType.Month => (30, 30),
+                    HistogramType.YTD => (DateTimeOffset.Now.DayOfYear - 1, 30),
+                    HistogramType.Year => (365, 30),
+                    HistogramType.TwoYears => (730, 30),
+                    _ => throw new ArgumentException($"HistogramType {type} does not exist.")
                 };
                 var from = to - TimeSpan.FromDays(days);
                 var interval = TimeSpan.FromTicks((to - from).Ticks / pointCount);
@@ -58,18 +54,15 @@ public class WalletHistogramService
                     new { code, wallet_id, from, to, interval });
                 var data = rows.AsList();
                 var series = new List<decimal>(pointCount);
-                var labels = new List<string>(labelCount);
-                var labelEvery = pointCount / labelCount;
+                var labels = new List<DateTimeOffset>(pointCount);
                 for (int i = 0; i < data.Count; i++)
                 {
                     var r = data[i];
                     series.Add((decimal)r.balance);
-                    labels.Add((i % labelEvery == 0)
-                        ? ((DateTime)r.date).ToString("MMM dd", CultureInfo.InvariantCulture)
-                        : null);
+                    labels.Add((DateTimeOffset)r.date);
                 }
                 series[^1] = balance;
-                return new WalletHistogramData
+                return new HistogramData
                 {
                     Series = series,
                     Labels = labels,
@@ -81,12 +74,4 @@ public class WalletHistogramService
 
         return null;
     }
-}
-
-public class WalletHistogramData
-{
-    public WalletHistogramType Type { get; set; }
-    public List<decimal> Series { get; set; }
-    public List<string> Labels { get; set; }
-    public decimal Balance { get; set; }
 }

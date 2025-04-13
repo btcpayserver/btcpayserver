@@ -3,7 +3,9 @@
 }
 
 #PosCart .public-page-wrap {
-    padding: 0 0 var(--btcpay-space-l);
+    --wrap-max-width: 1320px;
+    
+    padding-top: 0;
 }
 
 #PosCart .offcanvas-backdrop {
@@ -11,41 +13,79 @@
     transition-duration: var(--btcpay-transition-duration-fast);
 }
 
+/* Horizontal scroll indicators */
+#Categories.scrollable:before,
+#Categories.scrollable:after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: var(--btcpay-space-m);
+}
+
+#Categories.scrollable:before {
+    background-image: linear-gradient(to right, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+    left: calc(var(--scroll-indicator-spacing) * -1);
+}
+
+#Categories.scrollable:after {
+    background-image: linear-gradient(to left, var(--btcpay-body-bg), rgba(var(--btcpay-body-bg-rgb), 0));
+    right: calc(var(--scroll-indicator-spacing) * -1);
+}
+
+#RecentTransactionsToggle,
 .cart-toggle-btn {
     --button-width: 40px;
     --button-height: 40px;
     --button-padding: 7px;
-    --icon-size: 1rem;
     position: absolute;
     top: calc(50% - var(--button-height) / 2);
-    right: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: var(--button-width);
     height: var(--button-height);
     padding: var(--button-padding);
+    color: var(--btcpay-header-link);
     background: transparent;
     border: none;
     cursor: pointer;
     outline: none;
 }
 
-header .cart-toggle-btn {
-    --icon-size: 32px;
+#RecentTransactionsToggle {
+    left: -.5rem;
+}
+#RecentTransactionsToggle.btn .icon {
+    --icon-size: 1.5rem;
+}
+@media screen and (max-width: 400px) {
+    header {
+        padding-left: .5rem;
+        padding-right: .5rem;
+    }
+    #RecentTransactionsToggle {
+        left: -.125rem;
+    }
 }
 
+header .cart-toggle-btn {
+    --icon-size: 2rem;
+    right: 0;
+}
+
+#RecentTransactionsToggle .icon,
 .cart-toggle-btn .icon-pos-cart {
     width: var(--icon-size);
     height: var(--icon-size);
-    color: var(--btcpay-header-link);
 }
 
-.cart-toggle-btn:disabled svg {
+.cart-toggle-btn:disabled {
     color: var(--btcpay-body-text-muted);
 }
 
-.cart-toggle-btn:not(:disabled):hover svg {
+#RecentTransactionsToggle:hover,
+.cart-toggle-btn:not(:disabled):hover {
     color: var(--btcpay-header-link-accent);
 }
 
@@ -66,56 +106,11 @@ header .cart-toggle-btn {
     background-color: var(--btcpay-bg-tile);
 }
 
-#cart .quantity .btn {
-    width: 2rem;
-    height: 2rem;
-}
-#cart .quantity .btn .icon{
-    --btn-icon-size: .75rem;
-}
-
 #CartBadge {
     position: absolute;
     top: 0;
     right: 0;
     min-width: 1.75em;
-}
-
-.card-img-top {
-    max-height: 210px;
-    object-fit: scale-down;
-}
-
-.posItem {
-    position: relative;
-}
-.posItem.posItem--inStock {
-    cursor: pointer;
-}
-.posItem-added {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--btcpay-success);
-    color: var(--btcpay-success-text);
-    position: absolute;
-    top: 0;
-    right: 0;
-    left: 0;
-    bottom: 0;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--btcpay-transition-duration-default) ease-in-out;
-}
-.posItem-added .icon {
-    width: 2rem;
-    height: 2rem;
-}
-.posItem--added {
-    pointer-events: none;
-}
-.posItem--added .posItem-added {
-    opacity: .8;
 }
 
 @media (max-width: 991px) {
@@ -126,9 +121,6 @@ header .cart-toggle-btn {
     }
     #cart.show {
         transform: none;
-    }
-    #CartClose {
-        color: var(--btcpay-body-text);
     }
 }
 @media (min-width: 992px) {

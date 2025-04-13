@@ -1,14 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Data
 {
-    public class WalletObjectData
+    public class WalletObjectData : IEqualityComparer<WalletObjectData>
     {
         public class Types
         {
@@ -21,6 +20,8 @@ namespace BTCPayServer.Data
             }
             public const string Label = "label";
             public const string Tx = "tx";
+            public const string CPFP = "CPFP";
+            public const string RBF = "RBF";
             public const string Payjoin = "payjoin";
             public const string Invoice = "invoice";
             public const string PaymentRequest = "payment-request";
@@ -35,24 +36,27 @@ namespace BTCPayServer.Data
         public string Type { get; set; }
         public string Id { get; set; }
         public string Data { get; set; }
-
+#nullable enable
+        public JObject? GetData() => Data is null ? null : JObject.Parse(Data);
+#nullable restore
         public List<WalletObjectLinkData> Bs { get; set; }
         public List<WalletObjectLinkData> As { get; set; }
-
-        public IEnumerable<(string type, string id, string linkdata, string objectdata)> GetLinks()
+#nullable enable
+        public IEnumerable<(string type, string id, JObject? linkdata, JObject? objectdata)> GetLinks()
         {
+            static JObject? AsJObj(string? data) => data is null ? null : JObject.Parse(data);
             if (Bs is not null)
                 foreach (var c in Bs)
                 {
-                    yield return (c.BType, c.BId, c.Data, c.B?.Data);
+                    yield return (c.BType, c.BId, AsJObj(c.Data), AsJObj(c.B?.Data));
                 }
             if (As is not null)
                 foreach (var c in As)
                 {
-                    yield return (c.AType, c.AId, c.Data, c.A?.Data);
+                    yield return (c.AType, c.AId, AsJObj(c.Data), AsJObj(c.A?.Data));
                 }
         }
-
+#nullable restore
         public IEnumerable<WalletObjectData> GetNeighbours()
         {
             if (Bs != null)
@@ -85,12 +89,29 @@ namespace BTCPayServer.Data
                 o.Id
             });
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<WalletObjectData>()
-                                .Property(o => o.Data)
-                                .HasColumnType("JSONB");
-            }
+            builder.Entity<WalletObjectData>()
+                .Property(o => o.Data)
+                .HasColumnType("JSONB");
+        }
+
+        public bool Equals(WalletObjectData x, WalletObjectData y)
+        {
+            if (ReferenceEquals(x, y)) return true;
+            if (ReferenceEquals(x, null)) return false;
+            if (ReferenceEquals(y, null)) return false;
+            if (x.GetType() != y.GetType()) return false;
+            return string.Equals(x.WalletId, y.WalletId, StringComparison.InvariantCultureIgnoreCase) &&
+                   string.Equals(x.Type, y.Type, StringComparison.InvariantCultureIgnoreCase) &&
+                   string.Equals(x.Id, y.Id, StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public int GetHashCode(WalletObjectData obj)
+        {
+            HashCode hashCode = new HashCode();
+            hashCode.Add(obj.WalletId, StringComparer.InvariantCultureIgnoreCase);
+            hashCode.Add(obj.Type, StringComparer.InvariantCultureIgnoreCase);
+            hashCode.Add(obj.Id, StringComparer.InvariantCultureIgnoreCase);
+            return hashCode.ToHashCode();
         }
     }
 }

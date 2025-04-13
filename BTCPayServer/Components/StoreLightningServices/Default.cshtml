@@ -2,16 +2,17 @@
 
 @if (Model.Services != null && Model.Services.Any())
 {
-    <div id="StoreLightningServices-@Model.Store.Id" class="widget store-lightning-services">
+    <div id="StoreLightningServices-@Model.StoreId" class="widget store-lightning-services">
         <header class="mb-4">
-            <h6>Lightning Services</h6>
+            <h6 text-translate="true">Lightning Services</h6>
             <a
                 asp-controller="UIPublicLightningNodeInfo"
                 asp-action="ShowLightningNodeInfo"app-top-items
                 asp-route-cryptoCode="@Model.CryptoCode"
-                asp-route-storeId="@Model.Store.Id"
+                asp-route-storeId="@Model.StoreId"
                 target="_blank"
-                id="PublicNodeInfo">
+                id="PublicNodeInfo"
+                text-translate="true">
                 Node Info
             </a>
         </header>

@@ -2,22 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Configuration;
-using BTCPayServer.Lightning.CLightning;
 using BTCPayServer.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.FileSystemGlobbing;
 using Microsoft.Extensions.Options;
-using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -27,10 +19,8 @@ namespace BTCPayServer.Plugins
     {
         private readonly IOptions<DataDirectories> _dataDirectories;
         private readonly PoliciesSettings _policiesSettings;
-        private readonly ISettingsRepository _settingsRepository;
         private readonly PluginBuilderClient _pluginBuilderClient;
         public PluginService(
-            ISettingsRepository settingsRepository,
             IEnumerable<IBTCPayServerPlugin> btcPayServerPlugins,
             PluginBuilderClient pluginBuilderClient,
             IOptions<DataDirectories> dataDirectories,
@@ -39,7 +29,6 @@ namespace BTCPayServer.Plugins
         {
             LoadedPlugins = btcPayServerPlugins;
             _pluginBuilderClient = pluginBuilderClient;
-            _settingsRepository = settingsRepository;
             _dataDirectories = dataDirectories;
             _policiesSettings = policiesSettings;
             Env = env;
@@ -47,10 +36,21 @@ namespace BTCPayServer.Plugins
 
         public IEnumerable<IBTCPayServerPlugin> LoadedPlugins { get; }
         public BTCPayServerEnvironment Env { get; }
-
-        public async Task<AvailablePlugin[]> GetRemotePlugins()
+        
+        public Version GetVersionOfPendingInstall(string plugin)
         {
-            var versions = await _pluginBuilderClient.GetPublishedVersions(null, _policiesSettings.PluginPreReleases);
+            var dirName = Path.Combine(_dataDirectories.Value.PluginDir, plugin);
+            var manifestFileName = dirName + ".json";
+            if (!File.Exists(manifestFileName)) return null;
+            var pluginManifest =  JObject.Parse(File.ReadAllText(manifestFileName)).ToObject<AvailablePlugin>();
+            return pluginManifest.Version;
+        }
+
+        public async Task<AvailablePlugin[]> GetRemotePlugins(string searchPluginName)
+        {
+            string btcpayVersion = Env.Version.TrimStart('v').Split('+')[0];
+            var versions = await _pluginBuilderClient.GetPublishedVersions(
+                btcpayVersion, _policiesSettings.PluginPreReleases, searchPluginName);
             return versions.Select(v =>
             {
                 var p = v.ManifestInfo.ToObject<AvailablePlugin>();
@@ -66,14 +66,20 @@ namespace BTCPayServer.Plugins
                 return p;
             }).ToArray();
         }
+
         public async Task DownloadRemotePlugin(string pluginIdentifier, string version)
         {
             var dest = _dataDirectories.Value.PluginDir;
             var filedest = Path.Join(dest, pluginIdentifier + ".btcpay");
+            var filemanifestdest = Path.Join(dest, pluginIdentifier + ".json");
+            var pluginSelector = $"[{Uri.EscapeDataString(pluginIdentifier)}]";
+            version = Uri.EscapeDataString(version);
             Directory.CreateDirectory(Path.GetDirectoryName(filedest));
-            var url = $"api/v1/plugins/[{Uri.EscapeDataString(pluginIdentifier)}]/versions/{Uri.EscapeDataString(version)}/download";
+            var url = $"api/v1/plugins/{pluginSelector}/versions/{version}/download";
+            var manifest = (await _pluginBuilderClient.GetPlugin(pluginSelector, version))?.ManifestInfo?.ToObject<AvailablePlugin>();
+            await File.WriteAllTextAsync(filemanifestdest, JsonConvert.SerializeObject(manifest, Formatting.Indented));
             using var resp2 = await _pluginBuilderClient.HttpClient.GetAsync(url);
-            using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
+            await using var fs = new FileStream(filedest, FileMode.Create, FileAccess.ReadWrite);
             await resp2.Content.CopyToAsync(fs);
             await fs.FlushAsync();
         }
@@ -84,6 +90,7 @@ namespace BTCPayServer.Plugins
             UninstallPlugin(plugin);
             PluginManager.QueueCommands(dest, ("install", plugin));
         }
+
         public void UpdatePlugin(string plugin)
         {
             var dest = _dataDirectories.Value.PluginDir;
@@ -105,6 +112,7 @@ namespace BTCPayServer.Plugins
         public void UninstallPlugin(string plugin)
         {
             var dest = _dataDirectories.Value.PluginDir;
+            PluginManager.CancelCommands(dest, plugin);
             PluginManager.QueueCommands(dest, ("delete", plugin));
         }
 
@@ -122,8 +130,7 @@ namespace BTCPayServer.Plugins
             public string Author { get; set; }
             public string AuthorLink { get; set; }
 
-            public void Execute(IApplicationBuilder applicationBuilder,
-                IServiceProvider applicationBuilderApplicationServices)
+            public void Execute(IApplicationBuilder applicationBuilder, IServiceProvider applicationBuilderApplicationServices)
             {
             }
 
@@ -153,9 +160,9 @@ namespace BTCPayServer.Plugins
             PluginManager.CancelCommands(_dataDirectories.Value.PluginDir, plugin);
         }
 
-        public string[] GetDisabledPlugins()
+        public Dictionary<string, Version> GetDisabledPlugins()
         {
-            return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir).ToArray();
+            return PluginManager.GetDisabledPlugins(_dataDirectories.Value.PluginDir);
         }
     }
 }

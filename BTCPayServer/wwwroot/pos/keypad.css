@@ -1,6 +1,49 @@
-.public-page-wrap {
-    max-width: 560px;
+#PosKeypad {
+    --wrap-max-width: 500px;
     overflow: hidden;
+    position: relative;
+}
+#PosKeypad .alert {
+    margin-top: var(--btcpay-space-xl);
+}
+button[data-bs-toggle] {
+    position: absolute;
+    z-index: 1;
+    top: 1.5rem;
+    height: 3.25em !important;
+    width: 3.25em !important;
+    color: var(--btcpay-header-link);
+}
+button[data-bs-toggle] .icon {
+    --icon-size: 1.75em;
+}
+#ItemsListToggle {
+    right: var(--btcpay-space-m);
+}
+#RecentTransactionsToggle {
+    left: var(--btcpay-space-m);
+}
+
+@media (max-width: 359px) {
+    #RecentTransactions .list-group .badge-container {
+        flex-grow: 1;
+    }
+}
+
+#PosItems {
+    --image-size: 3rem;
+}
+
+#PosItems .img img {
+    width: var(--image-size);
+    height: var(--image-size);
+}
+
+#PosItems .img img {
+    max-width: var(--image-size);
+    max-height: var(--image-size);
+    object-fit: scale-down;
+    border-radius: var(--btcpay-border-radius);
 }
 
 /* modes */
@@ -14,22 +57,21 @@
     grid-template-columns: repeat(3, 1fr);
 }
 .keypad .btn {
+    --icon-size: 1.75rem;
+
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0;
     position: relative;
     border-radius: 0;
-    font-weight: var(--btcpay-font-weight-semibold);
-    font-size: 24px;
+    border-color: transparent !important;
+    font-weight: var(--btcpay-font-weight-bold);
+    font-size: var(--icon-size);
     min-height: 3.5rem;
     height: 8vh;
     max-height: 6rem;
     color: var(--btcpay-body-text);
-}
-.keypad .btn[data-key="del"] svg {
-    --btn-icon-size: 2.25rem;
-    transform: rotate(180deg);
 }
 .btcpay-pills label,
 .btn-secondary.rounded-pill {
@@ -57,15 +99,6 @@
     z-index: 1;
 }
 
-.actions {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.actions .btn {
-    flex:  1 1 50%;
-}
-
 #Calculation {
     min-height: 1.5rem;
 }
@@ -76,9 +109,9 @@
     }
 }
 @media (max-width: 575px) {
-    .public-page-wrap {
-        padding-right: 0;
-        padding-left: 0;
+    #PosKeypad {
+        --wrap-padding-horizontal: 0;
+        overflow: hidden;
     }
     .keypad {
         margin-left: -1px;
@@ -90,7 +123,6 @@
 }
 /* fix sticky hover effect on mobile browsers */
 @media (hover: none) {
-    .keypad .btn-secondary:hover,
     .actions .btn-secondary:hover {
         border-color: var(--btcpay-secondary-border-active) !important;
     }

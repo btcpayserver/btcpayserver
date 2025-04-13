@@ -1,40 +1,56 @@
 ﻿@model RescanWalletModel
 @{
     var walletId = Context.GetRouteValue("walletId").ToString();
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(WalletsNavPages.Settings, "Rescan Wallet", walletId);
+    ViewData.SetActivePage(WalletsNavPages.Settings, StringLocalizer["Rescan Wallet"], walletId);
 }
 
 <h3 class="mb-3">@ViewData["Title"]</h3>
-
 @if (!Model.Ok)
 {
     <div class="row">
         <div class="col-lg-8">
-            <p>This feature is disabled</p>
+            <p text-translate="true">This feature is disabled</p>
             @if (Model.IsFullySync)
             {
-                <p><span class="text-success fa fa-check-circle"></span> <span>The full node is synched</span></p>
+                <p>
+                    <vc:icon symbol="checkmark" css-class="text-success" />
+                    <span text-translate="true">The full node is synched</span>
+                </p>
             }
             else
             {
-                <p><span class="text-danger fa fa-times-circle"></span> <span>The full node is not synched</span></p>
+                <p>
+                    <vc:icon symbol="cross" css-class="text-danger" />
+                    <span text-translate="true">The full node is not synched</span>
+                </p>
             }
             @if (Model.IsServerAdmin)
             {
-                <p><span class="text-success fa fa-check-circle"></span> <span>You are server administrator</span></p>
+                <p>
+                    <vc:icon symbol="checkmark" css-class="text-success" />
+                    <span text-translate="true">You are server administrator</span>
+                </p>
             }
             else
             {
-                <p><span class="text-danger fa fa-times-circle"></span> <span>You are not server administrator</span></p>
+                <p>
+                    <vc:icon symbol="cross" css-class="text-danger" />
+                    <span text-translate="true">You are not server administrator</span>
+                </p>
             }
             @if (Model.IsSupportedByCurrency)
             {
-                <p><span class="text-success fa fa-check-circle"></span> <span>This full node support rescan of the UTXO set</span></p>
+                <p>
+                    <vc:icon symbol="checkmark" css-class="text-success" />
+                    <span text-translate="true">This full node support rescan of the UTXO set</span>
+                </p>
             }
             else
             {
-                <p><span class="text-danger fa fa-times-circle"></span> <span>This full node does not support rescan of the UTXO set</span></p>
+                <p>
+                    <vc:icon symbol="cross" css-class="text-danger" />
+                    <span text-translate="true">This full node does not support rescan of the UTXO set</span>
+                </p>
             }
         </div>
     </div>
@@ -45,28 +61,25 @@ else if (!Model.Progress.HasValue)
         @if (Model.PreviousError != null)
         {
             <div class="alert alert-danger alert-dismissible" role="alert">
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
-                <span>The previous scan stopped with an error: @Model.PreviousError</span>
+                <span text-translate="true">The previous scan stopped with an error:</span> @Model.PreviousError
             </div>
         }
         else if (Model.LastSuccess != null)
         {
             <div class="alert alert-success alert-dismissible" role="alert">
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
                     <vc:icon symbol="close" />
                 </button>
-                <span>The previous scan completed and found <b>@Model.LastSuccess.Found</b> UTXOs in <b>@Model.TimeOfScan</b> (The total UTXO set size is @Model.LastSuccess.TotalSizeOfUTXOSet.Value)</span>
+                <span>@ViewLocalizer["The previous scan completed and found <b>{0}</b> UTXOs in <b>{1}</b> (The total UTXO set size is {2})", Model.LastSuccess.Found, Model.TimeOfScan, Model.LastSuccess.TotalSizeOfUTXOSet.Value]</span>
             </div>
         }
         <div class="col-lg-8">
-            <p>
-                Scanning the UTXO set allow you to restore the balance of your wallet, but not all the transaction history.
-                This operation will scan the HD Path <b>0/*</b>, <b>1/*</b> and <b>*</b> from a starting index, until no UTXO are found in a whole gap limit.
-            </p>
-            <p>The batch size make sure the scan do not consume too much RAM at once by rescanning several time with smaller subset of addresses.</p>
-            <p>If you do not understand the above, go with the defaults and start scanning.</p>
+            <p html-translate="true">Scanning the UTXO set allow you to restore the balance of your wallet, but not all the transaction history. This operation will scan the HD Path <b>0/*</b>, <b>1/*</b> and <b>*</b> from a starting index, until no UTXO are found in a whole gap limit.</p>
+            <p text-translate="true">The batch size make sure the scan do not consume too much RAM at once by rescanning several time with smaller subset of addresses.</p>
+            <p text-translate="true">If you do not understand the above, go with the defaults and start scanning.</p>
         </div>
     </div>
 
@@ -85,7 +98,7 @@ else if (!Model.Progress.HasValue)
                     <label asp-for="BatchSize" class="form-label"></label>
                     <input asp-for="BatchSize" class="form-control" type="number" step="1000" style="max-width:14ch;" />
                 </div>
-                <button type="submit" class="btn btn-primary mt-2">Start scan</button>
+                <button type="submit" class="btn btn-primary mt-2" text-translate="true">Start scan</button>
             </form>
         </div>
     </div>

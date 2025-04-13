@@ -24,7 +24,7 @@ async function login(makeAssertionOptions) {
 }
 
 /**
- * Sends the credential to the the FIDO2 server for assertion
+ * Sends the credential to the FIDO2 server for assertion
  * @param {any} assertedCredential
  */
 async function verifyAssertionWithServer(assertedCredential) {
@@ -40,7 +40,7 @@ async function verifyAssertionWithServer(assertedCredential) {
         extensions: assertedCredential.getClientExtensionResults(),
         response: {
             authenticatorData: coerceToBase64Url(authData),
-            clientDataJson: coerceToBase64Url(clientDataJSON),
+            clientDataJSON: coerceToBase64Url(clientDataJSON),
             signature: coerceToBase64Url(sig)
         }
     };

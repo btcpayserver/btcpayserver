@@ -8,6 +8,14 @@ namespace BTCPayServer.Abstractions.Extensions;
 
 public static class SetStatusMessageModelExtensions
 {
+    public static void SetStatusSuccess(this ITempDataDictionary tempData, string statusMessage)
+    {
+        tempData.SetStatusMessageModel(new StatusMessageModel
+        {
+            Severity = StatusMessageModel.StatusSeverity.Success,
+            Message = statusMessage
+        });
+    }
     public static void SetStatusMessageModel(this ITempDataDictionary tempData, StatusMessageModel statusMessage)
     {
         if (statusMessage == null)
@@ -26,19 +34,14 @@ public static class SetStatusMessageModelExtensions
         tempData.TryGetValue("StatusMessageModel", out var model);
         if (successMessage != null || errorMessage != null)
         {
-            var parsedModel = new StatusMessageModel();
-            parsedModel.Message = (string)successMessage ?? (string)errorMessage;
-            if (successMessage != null)
+            var parsedModel = new StatusMessageModel
             {
-                parsedModel.Severity = StatusMessageModel.StatusSeverity.Success;
-            }
-            else
-            {
-                parsedModel.Severity = StatusMessageModel.StatusSeverity.Error;
-            }
+                Message = (string)successMessage ?? (string)errorMessage,
+                Severity = successMessage != null ? StatusMessageModel.StatusSeverity.Success : StatusMessageModel.StatusSeverity.Error
+            };
             return parsedModel;
         }
-        else if (model != null && model is string str)
+        if (model is string str)
         {
             return JObject.Parse(str).ToObject<StatusMessageModel>();
         }

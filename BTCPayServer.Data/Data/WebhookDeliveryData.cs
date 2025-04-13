@@ -27,12 +27,9 @@ namespace BTCPayServer.Data
                 .WithMany(a => a.Deliveries).OnDelete(DeleteBehavior.Cascade);
             builder.Entity<WebhookDeliveryData>().HasIndex(o => o.WebhookId);
             builder.Entity<WebhookDeliveryData>().HasIndex(o => o.Timestamp);
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<WebhookDeliveryData>()
-                    .Property(o => o.Blob)
-                    .HasColumnType("JSONB");
-            }
+            builder.Entity<WebhookDeliveryData>()
+                .Property(o => o.Blob)
+                .HasColumnType("JSONB");
         }
     }
 }

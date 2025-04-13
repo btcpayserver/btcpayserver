@@ -1,84 +1,100 @@
 @using BTCPayServer.Abstractions.Models
+@using BTCPayServer.Client
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model TokensViewModel
 @{
-    Layout = "../Shared/_NavLayout.cshtml";
-    ViewData.SetActivePage(StoreNavPages.Tokens, "Access Tokens", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.Tokens, StringLocalizer["Access Tokens"], Context.GetStoreData().Id);
 }
 
 @if (Model.StoreNotConfigured)
 {
     <div class="alert alert-warning alert-dismissible mb-5" role="alert">
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
             <vc:icon symbol="close" />
         </button>
-        Warning: No wallet has been linked to your BTCPay Store.<br/>
+        <span text-translate="true">Warning: No wallet has been linked to your BTCPay Server Store.</span><br/>
         See <a href="https://docs.btcpayserver.org/WalletSetup/" target="_blank" class="alert-link" rel="noreferrer noopener">this link</a> for more information on how to connect your store and wallet.
     </div>
 }
+<div class="sticky-header">
+    <h2 class="my-1">
+        <span text-translate="true">Greenfield API Keys</span>
+        <a href="/docs" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+            <vc:icon symbol="info"/>
+        </a>
+    </h2>
+</div>
 
+<partial name="_StatusMessage" />
 <div class="row">
     <div class="col-xxl-constrain col-xl-8">
-        <div class="d-flex align-items-center justify-content-between mb-3">
+        <p>
+            <span text-translate="true">To generate Greenfield API keys, please</span>
+            <a asp-controller="UIManage" asp-action="APIKeys" text-translate="true">click here</a>.
+        </p>
+        
+        <div class="d-flex align-items-center justify-content-between mt-5 mb-3">
             <h3 class="mb-0">@ViewData["Title"]</h3>
-            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")">
-                <span class="fa fa-plus"></span>
+            <a id="CreateNewToken" asp-action="CreateToken" class="btn btn-primary" role="button" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings" text-translate="true">
                 Create Token
             </a>
         </div>
-
-        <p>Authorize a public key to access Bitpay compatible Invoice API.
-            <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="More information...">
-                <vc:icon symbol="info"/>
+        <p>
+            <span text-translate="true">Authorize a public key to access Bitpay compatible Invoice API.</span>
+            <a href="https://support.bitpay.com/hc/en-us/articles/115003001183-How-do-I-pair-my-client-and-create-a-token-" target="_blank" rel="noreferrer noopener" title="@StringLocalizer["More information..."]">
+                <vc:icon symbol="info" />
             </a>
         </p>
 
         @if (Model.Tokens.Any())
         {
-            <table class="table table-hover table-responsive-md">
-                <thead>
-                <tr>
-                    <th>Label</th>
-                    <th class="text-end">Actions</th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach (var token in Model.Tokens)
-                {
+            <div class="table-responsive-md">
+                <table class="table table-hover">
+                    <thead>
+                    <tr>
+                        <th text-translate="true">Label</th>
+                        <th class="text-end" permission="@Policies.CanModifyStoreSettings" text-translate="true">Actions</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    @foreach (var token in Model.Tokens)
+                    {
                     <tr>
                         <td>@token.Label</td>
-                        <td class="text-end">
-                            <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id">See information</a> - 
-                            <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@Html.Encode(token.Label)</strong> will be revoked." data-confirm-input="REVOKE">Revoke</a>
+                        <td class="text-end" permission="@Policies.CanModifyStoreSettings">
+                            <a asp-action="ShowToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" text-translate="true">See information</a> -
+                            <a asp-action="RevokeToken" asp-route-storeId="@Context.GetRouteValue("storeId")" asp-route-tokenId="@token.Id" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="The access token with the label <strong>@Html.Encode(token.Label)</strong> will be revoked." data-confirm-input="REVOKE" text-translate="true">Revoke</a>
                         </td>
                     </tr>
-                }
-                </tbody>
-            </table>
+                    }
+                    </tbody>
+                </table>
+            </div>
         }
         else
         {
-            <p class="text-secondary mt-3">
+            <p class="text-secondary mt-3" text-translate="true">
                 No access tokens yet.
             </p>
         }
 
-        <h3 class="mt-5 mb-3">Legacy API Keys</h3>
-        <p>Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
+        <h3 class="mt-5 mb-3" text-translate="true">Legacy API Keys</h3>
+        <p text-translate="true">Alternatively, you can use the invoice API by including the following HTTP Header in your requests:</p>
         <p><code>Authorization: Basic @Model.EncodedApiKey</code></p>
 
-        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")">
+        <form method="post" asp-action="GenerateAPIKey" asp-route-storeId="@Context.GetRouteValue("storeId")" permission="@Policies.CanModifyStoreSettings">
             <div class="form-group">
                 <label asp-for="ApiKey" class="form-label"></label>
                 <div class="d-flex">
                     <input asp-for="ApiKey" readonly class="form-control"/>
                     @if (string.IsNullOrEmpty(Model.ApiKey))
                     {
-                        <button class="btn btn-primary ms-3" type="submit">Generate</button>
+                        <button class="btn btn-primary ms-3" type="submit" text-translate="true">Generate</button>
                     }
                     else
                     {
-                        <button class="btn btn-danger ms-3" type="submit" name="command" value="revoke">Revoke</button>
-                        <button class="btn btn-primary ms-3" type="submit">Regenerate</button>
+                        <button class="btn btn-danger ms-3" type="submit" name="command" value="revoke" text-translate="true">Revoke</button>
+                        <button class="btn btn-primary ms-3" type="submit" text-translate="true">Regenerate</button>
                     }
                 </div>
             </div>
@@ -86,4 +102,4 @@
     </div>
 </div>
 
-<partial name="_Confirm" model="@(new ConfirmModel("Revoke access token", "The access token will be revoked. Do you wish to continue?", "Revoke"))" />
+<partial name="_Confirm" model="@(new ConfirmModel("Revoke access token", "The access token will be revoked. Do you wish to continue?", "Revoke"))" permission="@Policies.CanModifyStoreSettings" />

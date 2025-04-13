@@ -1,23 +1,23 @@
-@using BTCPayServer.Plugins.PointOfSale.Models
+@using BTCPayServer.Client.Models
 @using BTCPayServer.Services
 @using Microsoft.AspNetCore.Mvc.TagHelpers
-@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @inject DisplayFormatter DisplayFormatter
+@model BTCPayServer.Plugins.PointOfSale.Models.ViewPointOfSaleViewModel
 @{
     Layout = "PointOfSale/Public/_Layout";
 }
 @functions {
-    private string GetItemPriceFormatted(ViewPointOfSaleViewModel.Item item)
+    private string GetItemPriceFormatted(AppItem item)
     {
-        if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup) return "any amount";
+        if (item.PriceType == AppItemPriceType.Topup) return "any amount";
         if (item.Price == 0) return "free";
         var formatted = DisplayFormatter.Currency(item.Price ?? 0, Model.CurrencyCode, DisplayFormatter.CurrencyFormat.Symbol);
-        return item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
+        return item.PriceType == AppItemPriceType.Minimum ? $"{formatted} minimum" : formatted;
     }
 }
 
-<div id="PosStatic" class="public-page-wrap container-xl">
-    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.LogoFileId)" />
+<div id="PosStatic" class="public-page-wrap">
+    <partial name="_StoreHeader" model="(string.IsNullOrEmpty(Model.Title) ? Model.StoreName : Model.Title, Model.StoreBranding)" />
     <main>
         <partial name="_StatusMessage" />
         @if (!string.IsNullOrEmpty(Model.Description))
@@ -31,20 +31,20 @@
                 var formatted = GetItemPriceFormatted(item);
                 var inStock = item.Inventory is null or > 0;
                 var buttonText = string.IsNullOrEmpty(item.BuyButtonText)
-                    ? item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
+                    ? item.PriceType == AppItemPriceType.Topup ? Model.CustomButtonText : Model.ButtonText
                     : item.BuyButtonText;
                 buttonText = buttonText.Replace("{0}", formatted).Replace("{Price}", formatted);
 
-                <div class="col">
-                    <div class="card h-100 px-0" data-id="@x">
+                <div class="col posItem posItem--displayed@(x == 0 ? " posItem--first" : null)@(x == Model.Items.Length - 1 && !Model.ShowCustomAmount ? " posItem--last" : null)">
+                    <div class="tile card" data-id="@x">
                         @if (!string.IsNullOrWhiteSpace(item.Image))
                         {
                             <img class="card-img-top" src="@item.Image" alt="@Safe.Raw(item.Title)" asp-append-version="true">
                         }
-                        <div class="card-body p-3 d-flex flex-column gap-2">
+                        <div class="card-body d-flex flex-column gap-2 mb-auto">
                             <h5 class="card-title m-0">@Safe.Raw(item.Title)</h5>
                             <div class="d-flex gap-2 align-items-center">
-                                @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Topup || item.Price == 0)
+                                @if (item.PriceType == AppItemPriceType.Topup || item.Price == 0)
                                 {
                                     <span class="fw-semibold badge text-bg-info">@Safe.Raw(char.ToUpper(formatted[0]) + formatted[1..])</span>
                                 }
@@ -55,7 +55,14 @@
                                 @if (item.Inventory.HasValue)
                                 {
                                     <span class="badge text-bg-warning">
-                                        @(item.Inventory > 0 ? $"{item.Inventory} left" : "Sold out")
+                                        @if (item.Inventory > 0)
+                                        {
+                                            <span>@ViewLocalizer["{0} left", item.Inventory.ToString()]</span>
+                                        }
+                                        else
+                                        {
+                                            <span text-translate="true">Sold out</span>
+                                        }
                                     </span>
                                 }
                             </div>
@@ -64,17 +71,16 @@
                                 <p class="card-text">@Safe.Raw(item.Description)</p>
                             }
                         </div>
-                        <div class="card-footer bg-transparent border-0 pt-0 pb-3">
+                        <div class="card-footer">
                             @if (inStock)
                             {
                                 <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
-                                    <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                     <input type="hidden" name="choiceKey" value="@item.Id" />
-                                    @if (item.PriceType == ViewPointOfSaleViewModel.ItemPriceType.Minimum)
+                                    @if (item.PriceType == AppItemPriceType.Minimum)
                                     {
                                         <div class="input-group mb-2">
                                             <span class="input-group-text">@Model.CurrencySymbol</span>
-                                            <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="Amount" value="@item.Price" required>
+                                            <input class="form-control" type="number" min="@(item.Price ?? 0)" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" value="@item.Price" required>
                                         </div>
                                     }
                                     <button class="btn btn-primary w-100" type="submit">@Safe.Raw(buttonText)</button>
@@ -86,18 +92,17 @@
             }
             @if (Model.ShowCustomAmount)
             {
-                <div class="col">
+                <div class="col posItem posItem--displayed posItem--last@(Model.Items.Length == 0 ? " posItem--first" : null)">
                     <div class="card h-100 px-0">
-                        <div class="card-body p-3 d-flex flex-column gap-2">
-                            <h5 class="card-title">Custom Amount</h5>
-                            <p class="card-text">Create invoice to pay custom amount</p>
+                        <div class="card-body p-3 d-flex flex-column gap-2 mb-auto">
+                            <h5 class="card-title" text-translate="true">Custom Amount</h5>
+                            <p class="card-text" text-translate="true">Create invoice to pay custom amount</p>
                         </div>
                         <div class="card-footer bg-transparent border-0 pb-3">
                             <form method="post" asp-action="ViewPointOfSale" asp-route-appId="@Model.AppId" asp-antiforgery="false" autocomplete="off">
-                                <input type="hidden" name="requiresRefundEmail" value="@Model.RequiresRefundEmail.ToString()" />
                                 <div class="input-group mb-2">
                                     <span class="input-group-text">@Model.CurrencySymbol</span>
-                                    <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="Amount" required>
+                                    <input class="form-control" type="number" min="0" step="@Model.Step" name="amount" placeholder="@StringLocalizer["Amount"]" required>
                                 </div>
                                 <button class="btn btn-primary w-100" type="submit">@Safe.Raw(Model.CustomButtonText ?? Model.ButtonText)</button>
                             </form>
@@ -109,7 +114,7 @@
     </main>
     <footer class="store-footer">
         <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-            Powered by <partial name="_StoreFooterLogo" />
+            <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
         </a>
     </footer>
 </div>

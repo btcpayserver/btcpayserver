@@ -8,23 +8,10 @@
                 "summary": "Get node information",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the lightning node",
@@ -65,23 +52,10 @@
                 "summary": "Get node balance",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View balance of the lightning node",
@@ -114,6 +88,50 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/lightning/{cryptoCode}/histogram": {
+            "get": {
+                "tags": [
+                    "Lightning (Store)"
+                ],
+                "summary": "Get node balance histogram",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/CryptoCode"
+                    },
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "description": "View balance histogram of the lightning node",
+                "operationId": "StoreLightningNodeApi_GetHistogram",
+                "responses": {
+                    "200": {
+                        "description": "Lightning node balance histogram for off-chain funds",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/HistogramData"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "Unable to access the lightning node"
+                    },
+                    "404": {
+                        "description": "The lightning node configuration was not found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canuselightningnode"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/lightning/{cryptoCode}/connect": {
             "post": {
                 "tags": [
@@ -122,23 +140,10 @@
                 "summary": "Connect to lightning node",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Connect to another lightning node.",
@@ -202,23 +207,10 @@
                 "summary": "Get channels",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the current channels of the lightning node",
@@ -257,23 +249,10 @@
                 "summary": "Open channel",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Open a channel with another lightning node. You should connect to that node first.",
@@ -348,13 +327,7 @@
                         "example": "BTC"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Get an on-chain deposit address for the lightning node ",
@@ -387,7 +360,6 @@
                 ]
             }
         },
-
         "/api/v1/stores/{storeId}/lightning/{cryptoCode}/payments/{paymentHash}": {
             "get": {
                 "tags": [
@@ -396,23 +368,10 @@
                 "summary": "Get payment",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "paymentHash",
@@ -454,7 +413,6 @@
                 ]
             }
         },
-
         "/api/v1/stores/{storeId}/lightning/{cryptoCode}/invoices/{id}": {
             "get": {
                 "tags": [
@@ -463,23 +421,10 @@
                 "summary": "Get invoice",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "id",
@@ -529,23 +474,10 @@
                 "summary": "Pay Lightning Invoice",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Pay a lightning invoice. In case the payment response times out, the status will be reported as pending and the final status can be resolved using the [Get payment](#operation/StoreLightningNodeApi_GetPayment) endpoint. The default wait time for payment responses is 30 seconds — it might take longer if multiple routes are tried or a hold invoice is getting paid.",
@@ -626,23 +558,10 @@
                 "summary": "Get invoices",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "pendingOnly",
@@ -723,23 +642,10 @@
                 "summary": "Create lightning invoice",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Create a lightning invoice.",
@@ -800,23 +706,10 @@
                 "summary": "Get payments",
                 "parameters": [
                     {
-                        "name": "cryptoCode",
-                        "in": "path",
-                        "required": true,
-                        "description": "The cryptoCode of the lightning-node to query",
-                        "schema": {
-                            "type": "string"
-                        },
-                        "example": "BTC"
+                        "$ref": "#/components/parameters/CryptoCode"
                     },
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store id with the lightning-node configuration to query",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     },
                     {
                         "name": "includePending",

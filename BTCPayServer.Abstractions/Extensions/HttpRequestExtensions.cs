@@ -36,6 +36,17 @@ public static class HttpRequestExtensions
             request.Path.ToUriComponent());
     }
 
+    public static string GetCurrentUrlWithQueryString(this HttpRequest request)
+    {
+        return string.Concat(
+            request.Scheme,
+            "://",
+            request.Host.ToUriComponent(),
+            request.PathBase.ToUriComponent(),
+            request.Path.ToUriComponent(),
+            request.QueryString.ToUriComponent());
+    }
+
     public static string GetCurrentPath(this HttpRequest request)
     {
         return string.Concat(
@@ -95,8 +106,8 @@ public static class HttpRequestExtensions
 
     /// <summary>
     /// Will return an absolute URL. 
-    /// If `relativeOrAsbolute` is absolute, returns it.
-    /// If `relativeOrAsbolute` is relative, send absolute url based on the HOST of this request (without PathBase)
+    /// If `relativeOrAbsolute` is absolute, returns it.
+    /// If `relativeOrAbsolute` is relative, send absolute url based on the HOST of this request (without PathBase)
     /// </summary>
     /// <param name="request"></param>
     /// <param name="relativeOrAbsolte"></param>

@@ -1,0 +1,39 @@
+@using BTCPayServer.Client
+@model BTCPayServer.Models.StoreViewModels.ListStoresViewModel
+@{
+    ViewData.SetActivePage(StoreNavPages.Index, Model.Archived ? StringLocalizer["Archived Stores"] : StringLocalizer["Stores"]);
+}
+
+<h2 class="mb-2 mb-lg-3">@ViewData["Title"]</h2>
+<partial name="_StatusMessage" />
+@if (Model.Stores.Any())
+{
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th text-translate="true">Store Name</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var store in Model.Stores)
+            {
+                <tr>
+                    <td>
+                        <a asp-action="Index" asp-controller="UIStores" asp-route-storeId="@store.StoreId" id="Store-@store.StoreId">@store.StoreName</a>
+                        @if (store.Archived)
+                        {
+                            <span class="badge bg-info ms-2" text-translate="true">archived</span>
+                        }
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+else
+{
+    <p class="text-secondary mt-3">
+        <span text-translate="true">There are no stores yet.</span>
+        <span permission="@Policies.CanModifyStoreSettingsUnscoped"><a asp-action="CreateStore" text-translate="true">Create a store</a>.</span>
+    </p>
+}

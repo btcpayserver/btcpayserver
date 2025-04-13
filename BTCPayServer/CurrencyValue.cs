@@ -21,10 +21,6 @@ namespace BTCPayServer
                 return false;
 
             var currency = match.Groups[match.Groups.Count - 1].Value.ToUpperInvariant();
-            var currencyData = CurrencyNameTable.Instance.GetCurrencyData(currency, false);
-            if (currencyData == null)
-                return false;
-            v = Math.Round(v, currencyData.Divisibility);
             value = new CurrencyValue()
             {
                 Value = v,
@@ -40,5 +36,11 @@ namespace BTCPayServer
         {
             return Value.ToString(CultureInfo.InvariantCulture) + " " + Currency;
         }
+
+        public CurrencyValue Round(int divisibility) => new()
+        {
+            Value = Math.Round(Value, divisibility),
+            Currency = Currency
+        };
     }
 }

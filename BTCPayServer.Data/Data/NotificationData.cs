@@ -2,7 +2,6 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Storage;
 
 namespace BTCPayServer.Data
 {
@@ -23,19 +22,15 @@ namespace BTCPayServer.Data
         public byte[] Blob { get; set; }
         public string Blob2 { get; set; }
 
-
         internal static void OnModelCreating(ModelBuilder builder, DatabaseFacade databaseFacade)
         {
             builder.Entity<NotificationData>()
                 .HasOne(o => o.ApplicationUser)
                 .WithMany(n => n.Notifications)
                 .HasForeignKey(k => k.ApplicationUserId).OnDelete(DeleteBehavior.Cascade);
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<NotificationData>()
-                    .Property(o => o.Blob2)
-                    .HasColumnType("JSONB");
-            }
+            builder.Entity<NotificationData>()
+                .Property(o => o.Blob2)
+                .HasColumnType("JSONB");
         }
     }
 }

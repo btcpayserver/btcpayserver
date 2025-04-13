@@ -33,6 +33,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "content": {
@@ -84,6 +87,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "content": {
@@ -132,6 +138,9 @@
                             }
                         }
                     },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
+                    },
                     "default": {
                         "description": "Unexpected error",
                         "content": {
@@ -149,13 +158,7 @@
         "/i/{invoiceId}": {
             "parameters": [
                 {
-                    "name": "invoiceId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The invoice id",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/InvoiceId"
                 },
                 {
                     "name": "lang",
@@ -182,6 +185,9 @@
                                 "example": "The HTML checkout page of the invoice"
                             }
                         }
+                    },
+                    "404": {
+                        "description": "The invoice could not be found"
                     }
                 },
                 "security": []

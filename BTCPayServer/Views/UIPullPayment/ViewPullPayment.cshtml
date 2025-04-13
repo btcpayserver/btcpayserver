@@ -1,38 +1,35 @@
 @using BTCPayServer.Client
 @using BTCPayServer.Services
-@using Microsoft.AspNetCore.Mvc.TagHelpers
-@using BTCPayServer.Abstractions.TagHelpers
 @inject BTCPayServer.Security.ContentSecurityPolicies Csp
 @inject BTCPayServerEnvironment Env
 @inject DisplayFormatter DisplayFormatter
 @model BTCPayServer.Models.ViewPullPaymentModel
 @{
-    ViewData["Title"] = Model.Title;
+	ViewData["Title"] = Model.Title;
+    ViewData["StoreBranding"] = Model.StoreBranding;
 	Csp.UnsafeEval();
-    Layout = null;
-    string StatusTextClass(string status)
-    {
-        switch (status)
-        {
-            case "Completed":
-            case "In Progress":
-                return "bg-success";
-            case "Cancelled":
-                return "bg-danger";
-            default:
-                return "bg-warning";
-        }
-    }
+	Layout = null;
+	string StatusTextClass(string status)
+	{
+		switch (status)
+		{
+			case "Completed":
+			case "In Progress":
+				return "bg-success";
+			case "Cancelled":
+				return "bg-danger";
+			default:
+				return "bg-warning";
+		}
+	}
+	ViewData.SetBlazorAllowed(false);
 }
 <!DOCTYPE html>
-<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "")>
+<html lang="en" @(Env.IsDeveloping ? " data-devenv" : "") id="PullPayment-@Model.Id">
 <head>
-    <partial name="LayoutHead" />
-    <partial name="LayoutHeadStoreBranding" model="@(Model.BrandColor, Model.CssFileId, Model.CustomCSSLink, Model.EmbeddedCSS)" />
-    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true"  rel="stylesheet" />
-    <style>
-        .no-marker > ul { list-style-type: none; }
-    </style>
+    <partial name="LayoutHead"/>
+    <link href="~/vendor/bootstrap-vue/bootstrap-vue.min.css" asp-append-version="true" rel="stylesheet"/>
+    <link href="~/vendor/vue-qrcode-reader/vue-qrcode-reader.css" rel="stylesheet" asp-append-version="true"/>
 </head>
 <body class="min-vh-100">
     <div id="app" class="d-flex flex-column min-vh-100 pb-l">
@@ -46,38 +43,43 @@
                                 <div class="input-group">
                                     @if (Model.LnurlEndpoint is not null)
                                     {
-                                        <button type="button" class="input-group-prepend btn btn-outline-secondary" id="lnurlwithdraw-button" data-bs-toggle="modal" data-bs-target="#scan-qr-modal">
-                                            <span class="fa fa-qrcode  fa-2x" title="LNURL-Withdraw"></span>
+                                        <button type="button" class="btn btn-secondary only-for-js" id="lnurlwithdraw-button" title="@StringLocalizer["LNURL-Withdraw"]">
+                                            <vc:icon symbol="qr-code" />
                                         </button>
                                     }
-                                    <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="Enter destination to claim funds" required style="font-size:.9rem;height:42px;">
-                                    @if (Model.PaymentMethods.Length == 1)
+                                    <input class="form-control form-control-lg font-monospace" asp-for="Destination" placeholder="@StringLocalizer["Enter destination to claim funds"]" required style="font-size:.9rem;height:42px;">
+                                    @if (Model.BitcoinOnly)
+									{
+										<span class="input-group-text">BTC</span>
+									}
+									else if (Model.PayoutMethodIds.Length == 1)
                                     {
-                                        <input type="hidden" asp-for="SelectedPaymentMethod">
-                                        <span class="input-group-text">@Model.PaymentMethods.First().ToPrettyString()</span>
+                                        <input type="hidden" asp-for="SelectedPayoutMethod">
+                                        <span class="input-group-text">@Model.PayoutMethodIds.First().ToString()</span>
                                     }
                                     else
                                     {
-                                        <select class="form-select w-auto" asp-for="SelectedPaymentMethod" asp-items="Model.PaymentMethods.Select(id => new SelectListItem(id.ToPrettyString(), id.ToString()))"></select>
+                                        <select class="form-select w-auto" asp-for="SelectedPayoutMethod" asp-items="Model.PayoutMethodIds.Select(id => new SelectListItem(id.ToString(), id.ToString()))"></select>
                                     }
+                                    <button type="button" class="btn btn-secondary only-for-js" data-bs-toggle="modal" data-bs-target="#scanModal" title="@StringLocalizer["Scan destination with camera"]" id="scandestination-button">
+                                        <vc:icon symbol="scan-qr"/>
+                                    </button>
                                 </div>
                             </div>
-
                             <div class="col-12 mb-3 col-sm-6 mb-sm-0 col-lg-3">
                                 <div class="input-group">
-                                    <input type="number" inputmode="decimal" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="Amount" required>
+                                    <input type="number" inputmode="decimal" class="form-control form-control-lg text-end hide-number-spin" asp-for="ClaimedAmount" max="@Model.AmountDue" min="@Model.MinimumClaim" step="any" placeholder="@StringLocalizer["Amount"]" required>
                                     <span class="input-group-text px-3">@Model.Currency.ToUpper()</span>
                                 </div>
                             </div>
                             <div class="col-12 col-sm-6 col-lg-3">
-                                <button class="btn btn-lg btn-primary w-100 text-nowrap" type="submit">Claim Funds</button>
+                                <button class="btn btn-lg btn-primary w-100 text-nowrap" type="submit" text-translate="true">Claim Funds</button>
                             </div>
                         </div>
                     </form>
                 </div>
             </nav>
         }
-
         <main class="flex-grow-1 py-4">
             <div class="container">
                 <partial name="_StatusMessage" model="@(new ViewDataDictionary(ViewData){ { "Margin", "mb-4" } })" />
@@ -93,25 +95,29 @@
                             {
                                 <h2 class="h4 mb-3">@Model.Title</h2>
                             }
-                            <div class="d-flex align-items-center">
-                                <span class="text-muted text-nowrap">Start Date</span>
-                                &nbsp;
-                                <span class="text-nowrap">@Model.StartDate.ToString("g")</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-muted text-nowrap" text-translate="true">Start Date</span>
+                                <span class="text-nowrap">@Model.StartDate.ToBrowserDate()</span>
                             </div>
-                            <div class="d-flex align-items-center">
-                                <span class="text-muted text-nowrap">Last Updated</span>
-                                &nbsp;
-                                <span class="text-nowrap">@Model.LastRefreshed.ToString("g")</span>
-                                <button type="button" class="btn btn-link fw-semibold d-none d-lg-inline-block d-print-none border-0 p-0 ms-4 only-for-js" id="copyLink">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="text-muted text-nowrap" text-translate="true">Last Updated</span>
+                                <span class="text-nowrap">@Model.LastRefreshed.ToBrowserDate()</span>
+                            </div>
+                            <div class="d-flex align-items-center only-for-js gap-3 my-3">
+                                <button type="button" class="btn btn-link fw-semibold d-print-none p-0" id="copyLink" text-translate="true">
                                     Copy Link
                                 </button>
+                                <button type="button" class="btn btn-link fw-semibold d-print-none p-0" page-qr>
+                                    <vc:icon symbol="qr-code" />
+                                    <span text-translate="true">Show QR</span>
+                                </button>
                             </div>
-                            @if (!string.IsNullOrEmpty(Model.ResetIn))
+                            @if (!string.IsNullOrEmpty(Model.EndsIn))
                             {
                                 <p>
-                                    <span class="text-muted text-nowrap">Reset in</span>
+                                    <span class="text-muted text-nowrap" text-translate="true">Ends in</span>
                                     &nbsp;
-                                    <span class="text-nowrap">@Model.ResetIn</span>
+                                    <span class="text-nowrap">@Model.EndsIn</span>
                                 </p>
                             }
                             @if (!string.IsNullOrEmpty(Model.Description))
@@ -122,22 +128,22 @@
                     </div>
                     <div class="col col-12 col-lg-6 mb-4">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-                            <h2 class="h4 mb-3">Payment Details</h2>
+                            <h2 class="h4 mb-3" text-translate="true">Payment Details</h2>
                             <dl class="mb-0 mt-md-4">
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5">
                                     <dt class="h4 fw-semibold text-nowrap text-primary text-print-default order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountDue, Model.Currency)</dt>
-                                    <dd class="order-1 order-sm-2 mb-1">Available claim</dd>
+                                    <dd class="order-1 order-sm-2 mb-1" text-translate="true">Available claim</dd>
                                 </div>
                                 <div class="progress bg-light d-none d-sm-flex mb-sm-4 d-print-none" style="height:5px">
                                     <div class="progress-bar bg-primary" role="progressbar" style="width:@((Model.AmountCollected / Model.Amount) * 100)%"></div>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-4 me-5 d-sm-inline-flex mb-sm-0">
                                     <dt class="h4 fw-semibold text-nowrap order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.AmountCollected, Model.Currency)</dt>
-                                    <dd class="order-1 order-sm-2 mb-1">Already claimed</dd>
+                                    <dd class="order-1 order-sm-2 mb-1" text-translate="true">Already claimed</dd>
                                 </div>
                                 <div class="d-flex d-print-inline-block flex-column mb-0 d-sm-inline-flex float-sm-end">
                                     <dt class="h4 text-sm-end fw-semibold text-nowrap order-2 order-sm-1 mb-1">@DisplayFormatter.Currency(Model.Amount, Model.Currency)</dt>
-                                    <dd class="text-sm-end order-1 order-sm-2 mb-1">Claim limit</dd>
+                                    <dd class="text-sm-end order-1 order-sm-2 mb-1" text-translate="true">Claim limit</dd>
                                 </div>
                             </dl>
                         </div>
@@ -146,47 +152,47 @@
                 <div class="row">
                     <div class="col">
                         <div class="bg-tile h-100 m-0 p-3 p-sm-5 rounded">
-                            <h2 class="h4 mb-0">Claims</h2>
+                            <h2 class="h4 mb-0" text-translate="true">Claims</h2>
                             @if (Model.Payouts.Any())
                             {
                                 <div class="table-responsive">
                                     <table class="table my-0">
                                         <thead>
-                                        <tr class="table-borderless">
-                                            <th class="fw-normal text-secondary" scope="col">Destination</th>
-                                            <th class="fw-normal text-secondary" scope="col">Method</th>
-                                            <th class="fw-normal text-secondary text-end text-nowrap">Amount requested</th>
-                                            <th class="fw-normal text-secondary text-end">Status</th>
-                                        </tr>
+                                            <tr class="table-borderless">
+                                                <th class="fw-normal text-secondary" scope="col" text-translate="true">Destination</th>
+                                                <th class="fw-normal text-secondary" scope="col" text-translate="true">Method</th>
+                                                <th class="fw-normal text-secondary text-end text-nowrap" text-translate="true">Amount requested</th>
+                                                <th class="fw-normal text-secondary text-end" text-translate="true">Status</th>
+                                            </tr>
                                         </thead>
                                         <tbody>
-                                        @foreach (var invoice in Model.Payouts)
-                                        {
-                                            <tr>
-                                                <td class="text-break">
-                                                    @invoice.Destination
-                                                </td>
-                                                <td class="text-nowrap">@invoice.PaymentMethod.ToPrettyString()</td>
-                                                <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
-                                                <td class="text-end text-nowrap">
-                                                    @if (!string.IsNullOrEmpty(invoice.Link))
-                                                    {
-                                                        <a class="transaction-link text-white badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-white badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
-                                                    }
-                                                </td>
-                                            </tr>
-                                        }
+                                            @foreach (var invoice in Model.Payouts)
+                                            {
+                                                <tr>
+                                                    <td class="text-break">
+                                                        @invoice.Destination
+                                                    </td>
+                                                    <td class="text-nowrap">@invoice.PaymentMethod.ToString()</td>
+                                                    <td class="text-end text-nowrap">@invoice.AmountFormatted</td>
+                                                    <td class="text-end text-nowrap">
+                                                        @if (!string.IsNullOrEmpty(invoice.Link))
+                                                        {
+                                                            <a class="transaction-link text-white badge @StatusTextClass(invoice.Status.ToString())" href="@invoice.Link" rel="noreferrer noopener">@invoice.Status.GetStateString()</a>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span class="text-white badge @StatusTextClass(invoice.Status.ToString())">@invoice.Status.GetStateString()</span>
+                                                        }
+                                                    </td>
+                                                </tr>
+                                            }
                                         </tbody>
                                     </table>
                                 </div>
                             }
                             else
                             {
-                                <p class="text-muted mt-3 mb-0">No claim made yet.</p>
+                                <p class="text-muted mt-3 mb-0" text-translate="true">No claim made yet.</p>
                             }
                         </div>
                     </div>
@@ -195,43 +201,83 @@
         </main>
         <footer class="store-footer">
             <p permission="@Policies.CanViewStoreSettings">
-                <a asp-action="EditPullPayment" asp-controller="UIPullPayment" asp-route-storeId="@Model.StoreId" asp-route-pullPaymentId="@Model.Id">
+                <a asp-action="EditPullPayment" asp-controller="UIPullPayment" asp-route-storeId="@Model.StoreId" asp-route-pullPaymentId="@Model.Id" text-translate="true">
                     Edit pull payment
                 </a>
             </p>
+			@if (Model.LnurlEndpoint is not null)
+			{
+				<p id="BoltcardActions">
+					<a id="SetupBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="configure-boltcard" text-translate="true">
+						Setup Boltcard
+					</a>
+					<span>&nbsp;|&nbsp;</span>
+					<a id="ResetBoltcard" asp-action="SetupBoltcard" asp-controller="UIPullPayment" asp-route-pullPaymentId="@Model.Id" asp-route-command="reset-boltcard" text-translate="true">
+						Reset Boltcard
+					</a>
+				</p>
+			}
             <a class="store-powered-by" href="https://btcpayserver.org" target="_blank" rel="noreferrer noopener">
-                Powered by <partial name="_StoreFooterLogo" />
+                <span text-translate="true">Powered by</span> <partial name="_StoreFooterLogo" />
             </a>
         </footer>
     </div>
+    <partial name="ShowQR" />
+    <partial name="CameraScanner" />
     <partial name="LayoutFoot" />
-  @if (Model.LnurlEndpoint is not null)
-  {
-      var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
-      var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
-      var note = "You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.";
-      if (!Model.AutoApprove)
-      {
-          note += "<br/><span class='fw-bold'>Please note that this pull payment does not automatically send out funds, and so will process payment after LNURL-withdraw flow is completed.</span>";
-      }
-      <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
-      <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
-      <partial name="ShowQR"/>
-      <script>
+    <script src="~/vendor/vuejs/vue.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode/vue-qrcode.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/vue-qrcode-reader/VueQrcodeReader.umd.min.js" asp-append-version="true"></script>
+    <script src="~/vendor/ur-registry/urlib.min.js" asp-append-version="true"></script>
+    <script>
         document.addEventListener("DOMContentLoaded", () => {
-            const modes = {
-                uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
-                bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
-            };
-            initQRShow({ title: "LNURL Withdraw", note: @Safe.Json(note), modes })
-    });
-    </script>
-  }
-<script>
-        document.addEventListener("DOMContentLoaded", () => {
-            document.getElementById("copyLink").addEventListener("click", window.copyUrlToClipboard);
+			var isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+			if (isMobile) {
+				document.getElementById("SetupBoltcard").setAttribute('target', '_blank');
+				document.getElementById("SetupBoltcard").setAttribute('href', @Safe.Json(Model.SetupDeepLink));
+				document.getElementById("ResetBoltcard").setAttribute('target', '_blank');
+				document.getElementById("ResetBoltcard").setAttribute('href', @Safe.Json(Model.ResetDeepLink));
+			}
+
+            window.qrApp = initQRShow({});
+            delegate('click', 'button[page-qr]', event => {
+                qrApp.title = "Pull Payment QR";
+                qrApp.note = "Scan this QR code to open this page on your mobile device.";
+                qrApp.showData(window.location.href);
+            });
+
+            delegate('click', '#copyLink', window.copyUrlToClipboard);
+
+            initCameraScanningApp("Scan address/ payment link", data => {
+                document.getElementById("Destination").value = data;
+            }, "scanModal");
         });
-</script>
-<vc:ui-extension-point location="pullpayment-foot"  model="@Model"></vc:ui-extension-point>
+    </script>
+    @if (Model.LnurlEndpoint is not null)
+    {
+        var lnurlUri = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", false).ToString();
+        var lnurlBech32 = LNURL.LNURL.EncodeUri(Model.LnurlEndpoint, "withdrawRequest", true).ToString();
+        var note = "<p>You can scan or open this link with a <a href='https://github.com/fiatjaf/lnurl-rfc#lnurl-documents' target='_blank' rel='noreferrer noopener'>LNURL-Withdraw</a> enabled wallet.</p>";
+        if (!Model.AutoApprove)
+        {
+            note += "<p class='fw-semibold'>Please note that this pull payment does not automatically send out funds, but will process the payment after the LNURL-withdraw flow is completed.</p>";
+        }
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                const modes = {
+                    uri: { title: "URI", fragments: [@Safe.Json(lnurlUri)], showData: true, href: @Safe.Json(lnurlUri) },
+                    bech32: { title: "Bech32", fragments: [@Safe.Json(lnurlBech32)], showData: true, href: @Safe.Json(lnurlBech32) }
+                };
+                delegate('click', '#lnurlwithdraw-button', () => {
+                    qrApp.title = "LNURL Withdraw";
+                    qrApp.modes = modes;
+                    qrApp.mode = "bech32";
+                    qrApp.note = @Safe.Json(note);
+                    qrApp.show();
+                });
+            });
+        </script>
+    }
+    <vc:ui-extension-point location="pullpayment-foot" model="@Model"></vc:ui-extension-point>
 </body>
 </html>

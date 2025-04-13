@@ -44,9 +44,8 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
-
-        [DisplayName("POS Data")]
-        public string PosData
+        [DisplayName("Metadata")]
+        public string Metadata
         {
             get; set;
         }
@@ -83,13 +82,5 @@ namespace BTCPayServer.Models.InvoicingModels
         {
             get; set;
         }
-
-        [DisplayName("Require Refund Email")]
-        public RequiresRefundEmail RequiresRefundEmail
-        {
-            get; set;
-        }
-
-        public CheckoutType CheckoutType { get; set; }
     }
 }

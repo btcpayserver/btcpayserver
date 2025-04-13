@@ -7,14 +7,14 @@ using System.Security.Claims;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Abstractions.Custodians;
+using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Configuration;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Hosting;
 using BTCPayServer.Rating;
 using BTCPayServer.Services;
-using BTCPayServer.Services.Custodian.Client.MockCustodian;
 using BTCPayServer.Services.Invoices;
+using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Services.Stores;
 using BTCPayServer.Tests.Logging;
@@ -26,23 +26,16 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer;
-using AuthenticationSchemes = BTCPayServer.Abstractions.Constants.AuthenticationSchemes;
 
 namespace BTCPayServer.Tests
 {
-    public enum TestDatabases
-    {
-        Postgres,
-        MySQL,
-    }
-
     public class BTCPayServerTester : IDisposable
     {
-        private readonly string _Directory;
-
+        internal readonly string _Directory;
         public ILoggerProvider LoggerProvider { get; }
 
         ILog TestLogs;
@@ -66,10 +59,10 @@ namespace BTCPayServer.Tests
             get;
             set;
         }
-
-        public string MySQL
+        public Uri ServerUriWithIP
         {
-            get; set;
+            get;
+            set;
         }
 
         public string Postgres
@@ -87,9 +80,11 @@ namespace BTCPayServer.Tests
             get; set;
         }
 
-        public TestDatabases TestDatabase
+        public async Task RestartStartupTask<T>()
         {
-            get; set;
+            var startupTask = GetService<IServiceProvider>().GetServices<Abstractions.Contracts.IStartupTask>()
+                .Single(task => task is T);
+            await startupTask.ExecuteAsync();
         }
 
         public bool MockRates { get; set; } = true;
@@ -155,9 +150,7 @@ namespace BTCPayServer.Tests
             if (!string.IsNullOrEmpty(SSHConnection))
                 config.AppendLine($"sshconnection={SSHConnection}");
 
-            if (TestDatabase == TestDatabases.MySQL && !String.IsNullOrEmpty(MySQL))
-                config.AppendLine($"mysql=" + MySQL);
-            else if (!String.IsNullOrEmpty(Postgres))
+            if (!String.IsNullOrEmpty(Postgres))
                 config.AppendLine($"postgres=" + Postgres);
 
             if (!string.IsNullOrEmpty(ExplorerPostgres))
@@ -166,10 +159,13 @@ namespace BTCPayServer.Tests
             await File.WriteAllTextAsync(confPath, config.ToString());
 
             ServerUri = new Uri("http://" + HostName + ":" + Port + "/");
+            ServerUriWithIP = new Uri("http://127.0.0.1:" + Port + "/");
             HttpClient = new HttpClient();
             HttpClient.BaseAddress = ServerUri;
             Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
             var confBuilder = new DefaultConfiguration() { Logger = LoggerProvider.CreateLogger("Console") }.CreateConfigurationBuilder(new[] { "--datadir", _Directory, "--conf", confPath, "--disable-registration", DisableRegistration ? "true" : "false" });
+            // This make sure that tests work outside of this assembly (ie, test project it a plugin)
+            confBuilder.SetBasePath(TestUtils.TestDirectory);
 #if DEBUG
             confBuilder.AddJsonFile("appsettings.dev.json", true, false);
 #endif
@@ -185,7 +181,7 @@ namespace BTCPayServer.Tests
                             l.AddFilter("System.Net.Http.HttpClient", LogLevel.Critical);
                             l.SetMinimumLevel(LogLevel.Information)
                             .AddFilter("Microsoft", LogLevel.Error)
-                            .AddFilter("Hangfire", LogLevel.Error)
+                            .AddFilter("Microsoft.EntityFrameworkCore.Migrations", LogLevel.Information)
                             .AddFilter("Fido2NetLib.DistributedCacheMetadataService", LogLevel.Error)
                             .AddProvider(LoggerProvider);
                         });
@@ -193,7 +189,6 @@ namespace BTCPayServer.Tests
                     .ConfigureServices(services =>
                     {
                         services.TryAddSingleton<IFeeProviderFactory>(new BTCPayServer.Services.Fees.FixedFeeProvider(new FeeRate(100L, 1)));
-                        services.AddSingleton<ICustodian, MockCustodian>();
                     })
                     .UseKestrel()
                     .UseStartup<Startup>()
@@ -232,23 +227,22 @@ namespace BTCPayServer.Tests
                 ndax.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("BTC_CAD"), new BidAsk(6000m)));
                 rateProvider.Providers.Add("ndax", ndax);
 
-                var bittrex = new MockRateProvider();
-                bittrex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));
-                rateProvider.Providers.Add("bittrex", bittrex);
-
-
                 var bitfinex = new MockRateProvider();
                 bitfinex.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("UST_BTC"), new BidAsk(0.000136m)));
                 rateProvider.Providers.Add("bitfinex", bitfinex);
 
                 var bitpay = new MockRateProvider();
                 bitpay.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETB_BTC"), new BidAsk(0.1m)));
+                bitpay.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("DOGE_BTC"), new BidAsk(0.004m)));
                 rateProvider.Providers.Add("bitpay", bitpay);
                 var kraken = new MockRateProvider();
                 kraken.ExchangeRates.Add(new PairRate(CurrencyPair.Parse("ETH_BTC"), new BidAsk(0.1m)));
                 rateProvider.Providers.Add("kraken", kraken);
             }
 
+            // reset test server policies
+            var settings = GetService<SettingsRepository>();
+            await settings.UpdateSetting(new PoliciesSettings { LockSubscription = false, RequiresUserApproval = false });
 
             TestLogs.LogInformation("Waiting site is operational...");
             await WaitSiteIsOperational();
@@ -275,7 +269,7 @@ namespace BTCPayServer.Tests
 
         private string FindBTCPayServerDirectory()
         {
-            var solutionDirectory = TestUtils.TryGetSolutionDirectoryInfo(Directory.GetCurrentDirectory());
+            var solutionDirectory = TestUtils.TryGetSolutionDirectoryInfo();
             return Path.Combine(solutionDirectory.FullName, "BTCPayServer");
         }
 

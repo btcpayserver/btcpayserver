@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Data.Common;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Wallets;
 using Dapper;
@@ -13,6 +13,7 @@ using NBitcoin;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Npgsql;
+using Org.BouncyCastle.Utilities;
 
 namespace BTCPayServer.Services
 {
@@ -54,7 +55,6 @@ namespace BTCPayServer.Services
         public string? Type { get; set; }
         public string[]? Ids { get; set; }
         public bool IncludeNeighbours { get; set; } = true;
-        public bool UseInefficientPath { get; set; }
 
         public static IEnumerable<ObjectTypeId> Get(ReceivedCoin coin)
         {
@@ -95,151 +95,118 @@ namespace BTCPayServer.Services
             // pg_stat_statements output, making it impossible to analyze the performance impact of this query.
             // On top of this, the entity version is doing 2 left join to satisfy the Include queries, resulting in n*m row returned for each transaction.
             // n being the number of children, m the number of parents.
-            if (ctx.Database.IsNpgsql() && !queryObject.UseInefficientPath)
+            var connection = ctx.Database.GetDbConnection();
+            if (connection.State != System.Data.ConnectionState.Open)
+                await connection.OpenAsync();
+
+            string walletIdFilter = queryObject.WalletId is not null ? " AND wos.\"WalletId\"=@walletId" : "";
+            string typeFilter = queryObject.Type is not null ? " AND wos.\"Type\"=@type" : "";
+            var cmd = connection.CreateCommand();
+            var selectWalletObjects =
+                queryObject.TypesIds is not null ?
+                $"SELECT wos.* FROM unnest(@ids, @types) t(i,t) JOIN \"WalletObjects\" wos ON true{walletIdFilter} AND wos.\"Type\"=t AND wos.\"Id\"=i" :
+                queryObject.Ids is null ?
+                $"SELECT wos.* FROM \"WalletObjects\" wos WHERE true{walletIdFilter}{typeFilter} " :
+                queryObject.Ids.Length == 1 ?
+                $"SELECT wos.* FROM \"WalletObjects\" wos WHERE true{walletIdFilter} AND wos.\"Type\"=@type AND wos.\"Id\"=@id" :
+                $"SELECT wos.* FROM unnest(@ids) t JOIN \"WalletObjects\" wos ON true{walletIdFilter} AND wos.\"Type\"=@type AND wos.\"Id\"=t";
+
+            var includeNeighbourSelect = queryObject.IncludeNeighbours ? ", wos2.\"Data\" AS \"Data2\"" : "";
+            var includeNeighbourJoin = queryObject.IncludeNeighbours ? "LEFT JOIN \"WalletObjects\" wos2 ON wos.\"WalletId\"=wos2.\"WalletId\" AND wol.\"Type2\"=wos2.\"Type\" AND wol.\"Id2\"=wos2.\"Id\"" : "";
+            var query =
+                $"SELECT wos.\"WalletId\", wos.\"Id\", wos.\"Type\", wos.\"Data\", wol.\"LinkData\", wol.\"Type2\", wol.\"Id2\"{includeNeighbourSelect} FROM ({selectWalletObjects}) wos " +
+                $"LEFT JOIN LATERAL ( " +
+                "SELECT \"AType\" AS \"Type2\", \"AId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"BType\"=wos.\"Type\" AND \"BId\"=wos.\"Id\" " +
+                "UNION " +
+                "SELECT \"BType\" AS \"Type2\", \"BId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"AType\"=wos.\"Type\" AND \"AId\"=wos.\"Id\"" +
+                $" ) wol ON true " + includeNeighbourJoin;
+            cmd.CommandText = query;
+            if (queryObject.WalletId is not null)
             {
-                var connection = ctx.Database.GetDbConnection();
-                if (connection.State != System.Data.ConnectionState.Open)
-                    await connection.OpenAsync();
-
-                string walletIdFilter = queryObject.WalletId is not null ? " AND wos.\"WalletId\"=@walletId" : "";
-                string typeFilter = queryObject.Type is not null ? " AND wos.\"Type\"=@type" : "";
-                var cmd = connection.CreateCommand();
-                var selectWalletObjects =
-                    queryObject.TypesIds is not null ?
-                    $"SELECT wos.* FROM unnest(@ids, @types) t(i,t) JOIN \"WalletObjects\" wos ON true{walletIdFilter} AND wos.\"Type\"=t AND wos.\"Id\"=i" :
-                    queryObject.Ids is null ?
-                    $"SELECT wos.* FROM \"WalletObjects\" wos WHERE true{walletIdFilter}{typeFilter} " :
-                    queryObject.Ids.Length == 1 ?
-                    $"SELECT wos.* FROM \"WalletObjects\" wos WHERE true{walletIdFilter} AND wos.\"Type\"=@type AND wos.\"Id\"=@id" :
-                    $"SELECT wos.* FROM unnest(@ids) t JOIN \"WalletObjects\" wos ON true{walletIdFilter} AND wos.\"Type\"=@type AND wos.\"Id\"=t";
-
-                var includeNeighbourSelect = queryObject.IncludeNeighbours ? ", wos2.\"Data\" AS \"Data2\"" : "";
-                var includeNeighbourJoin = queryObject.IncludeNeighbours ? "LEFT JOIN \"WalletObjects\" wos2 ON wos.\"WalletId\"=wos2.\"WalletId\" AND wol.\"Type2\"=wos2.\"Type\" AND wol.\"Id2\"=wos2.\"Id\"" : "";
-                var query =
-                    $"SELECT wos.\"WalletId\", wos.\"Id\", wos.\"Type\", wos.\"Data\", wol.\"LinkData\", wol.\"Type2\", wol.\"Id2\"{includeNeighbourSelect} FROM ({selectWalletObjects}) wos " +
-                    $"LEFT JOIN LATERAL ( " +
-                    "SELECT \"AType\" AS \"Type2\", \"AId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"BType\"=wos.\"Type\" AND \"BId\"=wos.\"Id\" " +
-                    "UNION " +
-                    "SELECT \"BType\" AS \"Type2\", \"BId\" AS \"Id2\", \"Data\" AS \"LinkData\" FROM \"WalletObjectLinks\" WHERE \"WalletId\"=wos.\"WalletId\" AND \"AType\"=wos.\"Type\" AND \"AId\"=wos.\"Id\"" +
-                    $" ) wol ON true " + includeNeighbourJoin;
-                cmd.CommandText = query;
-                if (queryObject.WalletId is not null)
-                {
-                    var walletIdParam = cmd.CreateParameter();
-                    walletIdParam.ParameterName = "walletId";
-                    walletIdParam.Value = queryObject.WalletId.ToString();
-                    walletIdParam.DbType = System.Data.DbType.String;
-                    cmd.Parameters.Add(walletIdParam);
-                }
-
-                if (queryObject.Type != null)
-                {
-                    var typeParam = cmd.CreateParameter();
-                    typeParam.ParameterName = "type";
-                    typeParam.Value = queryObject.Type;
-                    typeParam.DbType = System.Data.DbType.String;
-                    cmd.Parameters.Add(typeParam);
-                }
-
-                if (queryObject.TypesIds != null)
-                {
-                    var typesParam = cmd.CreateParameter();
-                    typesParam.ParameterName = "types";
-                    typesParam.Value = queryObject.TypesIds.Select(t => t.Type).ToList();
-                    typesParam.DbType = System.Data.DbType.Object;
-                    cmd.Parameters.Add(typesParam);
-                    var idParam = cmd.CreateParameter();
-                    idParam.ParameterName = "ids";
-                    idParam.Value = queryObject.TypesIds.Select(t => t.Id).ToList();
-                    idParam.DbType = System.Data.DbType.Object;
-                    cmd.Parameters.Add(idParam);
-                }
-
-                if (queryObject.Ids != null)
-                {
-                    if (queryObject.Ids.Length == 1)
-                    {
-                        var txIdParam = cmd.CreateParameter();
-                        txIdParam.ParameterName = "id";
-                        txIdParam.Value = queryObject.Ids[0];
-                        txIdParam.DbType = System.Data.DbType.String;
-                        cmd.Parameters.Add(txIdParam);
-                    }
-                    else
-                    {
-                        var txIdsParam = cmd.CreateParameter();
-                        txIdsParam.ParameterName = "ids";
-                        txIdsParam.Value = queryObject.Ids.ToList();
-                        txIdsParam.DbType = System.Data.DbType.Object;
-                        cmd.Parameters.Add(txIdsParam);
-                    }
-                }
-                await using var reader = await cmd.ExecuteReaderAsync();
-                var wosById = new Dictionary<WalletObjectId, WalletObjectData>();
-                while (await reader.ReadAsync())
-                {
-                    WalletObjectData wo = new WalletObjectData();
-                    wo.WalletId = (string)reader["WalletId"];
-                    wo.Type = (string)reader["Type"];
-                    wo.Id = (string)reader["Id"];
-                    var id = new WalletObjectId(WalletId.Parse(wo.WalletId), wo.Type, wo.Id);
-                    wo.Data = reader["Data"] is DBNull ? null : (string)reader["Data"];
-                    if (wosById.TryGetValue(id, out var wo2))
-                        wo = wo2;
-                    else
-                    {
-                        wosById.Add(id, wo);
-                        wo.Bs = new List<WalletObjectLinkData>();
-                    }
-                    if (reader["Type2"] is not DBNull)
-                    {
-                        var l = new WalletObjectLinkData()
-                        {
-                            BType = (string)reader["Type2"],
-                            BId = (string)reader["Id2"],
-                            Data = reader["LinkData"] is DBNull ? null : (string)reader["LinkData"]
-                        };
-                        wo.Bs.Add(l);
-                        l.B = new WalletObjectData()
-                        {
-                            Type = l.BType,
-                            Id = l.BId,
-                            Data = (!queryObject.IncludeNeighbours || reader["Data2"] is DBNull) ? null : (string)reader["Data2"]
-                        };
-                    }
-                }
-                return wosById;
+                var walletIdParam = cmd.CreateParameter();
+                walletIdParam.ParameterName = "walletId";
+                walletIdParam.Value = queryObject.WalletId.ToString();
+                walletIdParam.DbType = System.Data.DbType.String;
+                cmd.Parameters.Add(walletIdParam);
             }
-            else // Unefficient path
+
+            if (queryObject.Type != null)
             {
-                IQueryable<WalletObjectData> q;
-                if (queryObject.TypesIds is not null)
+                var typeParam = cmd.CreateParameter();
+                typeParam.ParameterName = "type";
+                typeParam.Value = queryObject.Type;
+                typeParam.DbType = System.Data.DbType.String;
+                cmd.Parameters.Add(typeParam);
+            }
+
+            if (queryObject.TypesIds != null)
+            {
+                var typesParam = cmd.CreateParameter();
+                typesParam.ParameterName = "types";
+                typesParam.Value = queryObject.TypesIds.Select(t => t.Type).ToList();
+                typesParam.DbType = System.Data.DbType.Object;
+                cmd.Parameters.Add(typesParam);
+                var idParam = cmd.CreateParameter();
+                idParam.ParameterName = "ids";
+                idParam.Value = queryObject.TypesIds.Select(t => t.Id).ToList();
+                idParam.DbType = System.Data.DbType.Object;
+                cmd.Parameters.Add(idParam);
+            }
+
+            if (queryObject.Ids != null)
+            {
+                if (queryObject.Ids.Length == 1)
                 {
-                    // Note this is problematic if the type contains '##', but I don't see how to do it properly with entity framework
-                    var idTypes = queryObject.TypesIds.Select(o => $"{o.Type}##{o.Id}").ToArray();
-                    q = ctx.WalletObjects
-                        .Where(w => (queryObject.WalletId == null || w.WalletId == queryObject.WalletId.ToString()) && idTypes.Contains(w.Type + "##" + w.Id));
+                    var txIdParam = cmd.CreateParameter();
+                    txIdParam.ParameterName = "id";
+                    txIdParam.Value = queryObject.Ids[0];
+                    txIdParam.DbType = System.Data.DbType.String;
+                    cmd.Parameters.Add(txIdParam);
                 }
                 else
                 {
-                    q = ctx.WalletObjects
-                        .Where(w => (queryObject.WalletId == null || w.WalletId == queryObject.WalletId.ToString()) && (queryObject.Type == null || w.Type == queryObject.Type) && (queryObject.Ids == null || queryObject.Ids.Contains(w.Id)));
+                    var txIdsParam = cmd.CreateParameter();
+                    txIdsParam.ParameterName = "ids";
+                    txIdsParam.Value = queryObject.Ids.ToList();
+                    txIdsParam.DbType = System.Data.DbType.Object;
+                    cmd.Parameters.Add(txIdsParam);
                 }
-                if (queryObject.IncludeNeighbours)
-                {
-                    q = q.Include(o => o.Bs).ThenInclude(o => o.B)
-                        .Include(o => o.As).ThenInclude(o => o.A);
-                }
-                q = q.AsNoTracking();
-
-                var wosById = new Dictionary<WalletObjectId, WalletObjectData>();
-                foreach (var row in await q.ToListAsync())
-                {
-                    var id = new WalletObjectId(WalletId.Parse(row.WalletId), row.Type, row.Id);
-                    wosById.TryAdd(id, row);
-                }
-                return wosById;
             }
+            await using var reader = await cmd.ExecuteReaderAsync();
+            var wosById = new Dictionary<WalletObjectId, WalletObjectData>();
+            while (await reader.ReadAsync())
+            {
+                WalletObjectData wo = new WalletObjectData();
+                wo.WalletId = (string)reader["WalletId"];
+                wo.Type = (string)reader["Type"];
+                wo.Id = (string)reader["Id"];
+                var id = new WalletObjectId(WalletId.Parse(wo.WalletId), wo.Type, wo.Id);
+                wo.Data = reader["Data"] is DBNull ? null : (string)reader["Data"];
+                if (wosById.TryGetValue(id, out var wo2))
+                    wo = wo2;
+                else
+                {
+                    wosById.Add(id, wo);
+                    wo.Bs = new List<WalletObjectLinkData>();
+                }
+                if (reader["Type2"] is not DBNull)
+                {
+                    var l = new WalletObjectLinkData()
+                    {
+                        BType = (string)reader["Type2"],
+                        BId = (string)reader["Id2"],
+                        Data = reader["LinkData"] is DBNull ? null : (string)reader["LinkData"]
+                    };
+                    wo.Bs.Add(l);
+                    l.B = new WalletObjectData()
+                    {
+                        Type = l.BType,
+                        Id = l.BId,
+                        Data = (!queryObject.IncludeNeighbours || reader["Data2"] is DBNull) ? null : (string)reader["Data2"]
+                    };
+                }
+            }
+            return wosById;
         }
 #nullable restore
 
@@ -292,16 +259,15 @@ namespace BTCPayServer.Services
                     Comment = data?["comment"]?.Value<string>()
                 };
                 result.Add(obj.Id, info);
-                foreach (var neighbour in obj.GetNeighbours())
+                foreach (var link in obj.GetLinks())
                 {
-                    var neighbourData = neighbour.Data is null ? null : JObject.Parse(neighbour.Data);
-                    if (neighbour.Type == WalletObjectData.Types.Label)
+                    if (link.type == WalletObjectData.Types.Label)
                     {
-                        info.LabelColors.TryAdd(neighbour.Id, neighbourData?["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(neighbour.Id));
+                        info.LabelColors.TryAdd(link.id, link.objectdata?["color"]?.Value<string>() ?? ColorPalette.Default.DeterministicColor(link.id));
                     }
                     else
                     {
-                        info.Attachments.Add(new Attachment(neighbour.Type, neighbour.Id, neighbourData));
+                        info.Attachments.Add(new Attachment(link.type, link.id, link.objectdata, link.linkdata));
                     }
                 }
             }
@@ -365,14 +331,32 @@ namespace BTCPayServer.Services
 
         public async Task EnsureWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)
         {
-            SortWalletObjectLinks(ref a, ref b);
+            await EnsureWalletObjectLink(NewWalletObjectLinkData(a, b, data));
+        }  
+        public async Task EnsureWalletObjectLink(WalletObjectLinkData l)
+        {
             await using var ctx = _ContextFactory.CreateContext();
-            await UpdateWalletObjectLink(a, b, data, ctx, true);
+            await UpdateWalletObjectLink(l, ctx, true);
+        }
+        private IEnumerable<WalletObjectData> ExtractObjectsFromLinks(IEnumerable<WalletObjectLinkData> links)
+        {
+            return links.SelectMany(data => new[]
+            {
+                new WalletObjectData() {WalletId = data.WalletId, Type = data.AType, Id = data.AId},
+                new WalletObjectData() {WalletId = data.WalletId, Type = data.BType, Id = data.BId}
+            }).Distinct();
+
+        }
+        private async Task EnsureWalletObjectLinks(ApplicationDbContext ctx, DbConnection connection, IEnumerable<WalletObjectLinkData> links)
+        {
+            await connection.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) ON CONFLICT DO NOTHING", links);
         }
 
-        private static async Task UpdateWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data, ApplicationDbContext ctx, bool doNothingIfExists)
+        public static WalletObjectLinkData NewWalletObjectLinkData(WalletObjectId a, WalletObjectId b,
+            JObject? data = null)
         {
-            var l = new WalletObjectLinkData()
+            SortWalletObjectLinks(ref a, ref b);
+            return  new WalletObjectLinkData()
             {
                 WalletId = a.WalletId.ToString(),
                 AType = a.Type,
@@ -381,34 +365,19 @@ namespace BTCPayServer.Services
                 BId = b.Id,
                 Data = data?.ToString(Formatting.None)
             };
-            if (!ctx.Database.IsNpgsql())
+        }
+
+        private static async Task UpdateWalletObjectLink(WalletObjectLinkData l, ApplicationDbContext ctx, bool doNothingIfExists)
+        {
+            var connection = ctx.Database.GetDbConnection();
+            var conflict = doNothingIfExists ? "ON CONFLICT DO NOTHING" : "ON CONFLICT ON CONSTRAINT \"PK_WalletObjectLinks\" DO UPDATE SET \"Data\"=EXCLUDED.\"Data\"";
+            try
             {
-                var e = ctx.WalletObjectLinks.Add(l);
-                try
-                {
-                    await ctx.SaveChangesAsync();
-                }
-                catch (DbUpdateException) // already exists
-                {
-                    if (!doNothingIfExists)
-                    {
-                        e.State = EntityState.Modified;
-                        await ctx.SaveChangesAsync();
-                    }
-                }
+                await connection.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) " + conflict, l);
             }
-            else
+            catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
             {
-                var connection = ctx.Database.GetDbConnection();
-                var conflict = doNothingIfExists ? "ON CONFLICT DO NOTHING" : "ON CONFLICT ON CONSTRAINT \"PK_WalletObjectLinks\" DO UPDATE SET \"Data\"=EXCLUDED.\"Data\"";
-                try
-                {
-                    await connection.ExecuteAsync("INSERT INTO \"WalletObjectLinks\" VALUES (@WalletId, @AType, @AId, @BType, @BId, @Data::JSONB) " + conflict, l);
-                }
-                catch (PostgresException ex) when (ex.SqlState == PostgresErrorCodes.ForeignKeyViolation)
-                {
-                    throw new DbUpdateException();
-                }
+                throw new DbUpdateException();
             }
         }
 
@@ -424,7 +393,7 @@ namespace BTCPayServer.Services
             }
         }
 
-        private void SortWalletObjectLinks(ref WalletObjectId a, ref WalletObjectId b)
+        private static void SortWalletObjectLinks(ref WalletObjectId a, ref WalletObjectId b)
         {
             if (a.WalletId != b.WalletId)
                 throw new ArgumentException("It shouldn't be possible to set a link between different wallets");
@@ -433,13 +402,11 @@ namespace BTCPayServer.Services
             a = ab[0];
             b = ab[1];
         }
+
         public async Task SetWalletObjectLink(WalletObjectId a, WalletObjectId b, JObject? data = null)
         {
-            SortWalletObjectLinks(ref a, ref b);
-
-
             await using var ctx = _ContextFactory.CreateContext();
-            await UpdateWalletObjectLink(a, b, data, ctx, false);
+            await UpdateWalletObjectLink(NewWalletObjectLinkData(a, b, data), ctx, false);
         }
 
         public static int MaxCommentSize = 200;
@@ -454,7 +421,18 @@ namespace BTCPayServer.Services
         }
 
 
-        static WalletObjectData NewWalletObjectData(WalletObjectId id, JObject? data = null)
+        public static (WalletObjectData ObjectData, WalletObjectId Id) CreateLabel(WalletObjectId obj)
+            => CreateLabel(obj.WalletId, obj.Type);
+        public static (WalletObjectData ObjectData, WalletObjectId Id) CreateLabel(WalletId walletId, string txt)
+        {
+            var id = new WalletObjectId(walletId, WalletObjectData.Types.Label, txt);
+            return (WalletRepository.NewWalletObjectData(id,
+            new JObject
+            {
+                ["color"] = ColorPalette.Default.DeterministicColor(txt)
+            }), id);
+        }
+        public static WalletObjectData NewWalletObjectData(WalletObjectId id, JObject? data = null)
         {
             return new WalletObjectData()
             {
@@ -487,16 +465,16 @@ namespace BTCPayServer.Services
         public async Task AddWalletObjectLabels(WalletObjectId id, params string[] labels)
         {
             ArgumentNullException.ThrowIfNull(id);
-            await EnsureWalletObject(id);
+            var objs = new List<WalletObjectData>();
+            var links = new List<WalletObjectLinkData>();
+            objs.Add(NewWalletObjectData(id));
             foreach (var l in labels.Select(l => l.Trim().Truncate(MaxLabelSize)))
             {
-                var labelObjId = new WalletObjectId(id.WalletId, WalletObjectData.Types.Label, l);
-                await EnsureWalletObject(labelObjId, new JObject()
-                {
-                    ["color"] = ColorPalette.Default.DeterministicColor(l)
-                });
-                await EnsureWalletObjectLink(labelObjId, id);
+                var label = CreateLabel(id.WalletId, l);
+                objs.Add(label.ObjectData);
+                links.Add(NewWalletObjectLinkData(label.Id, id));
             }
+            await EnsureCreated(objs, links);
         }
         public Task AddWalletTransactionAttachment(WalletId walletId, uint256 txId, Attachment attachment)
         {
@@ -509,27 +487,37 @@ namespace BTCPayServer.Services
             return AddWalletTransactionAttachment(walletId, txId.ToString(), attachments, WalletObjectData.Types.Tx);
         }
 
+        public async Task AddWalletTransactionAttachments((WalletId walletId, string txId,
+            IEnumerable<Attachment> attachments, string type)[] reqs)
+        {
+            
+            List<WalletObjectData> objs = new();
+            List<WalletObjectLinkData> links = new();
+            foreach ((WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type) req in reqs)
+            {
+                var txObjId = new WalletObjectId(req.walletId, req.type, req.txId);
+                objs.Add(NewWalletObjectData(txObjId));
+                foreach (var attachment in req.attachments)
+                {
+                    var label = CreateLabel(req.walletId, attachment.Type);
+                    objs.Add(label.ObjectData);
+                    links.Add(NewWalletObjectLinkData(label.Id, txObjId));
+                    if (attachment.Data is not null || attachment.Id.Length != 0)
+                    {
+                        var data = new WalletObjectId(req.walletId, attachment.Type, attachment.Id);
+                        objs.Add(NewWalletObjectData(data, attachment.Data));
+                        links.Add(NewWalletObjectLinkData(data, txObjId));
+                    }
+                }
+            }
+            await EnsureCreated(objs, links);
+        }
+
         public async Task AddWalletTransactionAttachment(WalletId walletId, string txId, IEnumerable<Attachment> attachments, string type)
         {
             ArgumentNullException.ThrowIfNull(walletId);
             ArgumentNullException.ThrowIfNull(txId);
-            var txObjId = new WalletObjectId(walletId, type, txId.ToString());
-            await EnsureWalletObject(txObjId);
-            foreach (var attachment in attachments)
-            {
-                var labelObjId = new WalletObjectId(walletId, WalletObjectData.Types.Label, attachment.Type);
-                await EnsureWalletObject(labelObjId, new JObject()
-                {
-                    ["color"] = ColorPalette.Default.DeterministicColor(attachment.Type)
-                });
-                await EnsureWalletObjectLink(labelObjId, txObjId);
-                if (attachment.Data is not null || attachment.Id.Length != 0)
-                {
-                    var data = new WalletObjectId(walletId, attachment.Type, attachment.Id);
-                    await EnsureWalletObject(data, attachment.Data);
-                    await EnsureWalletObjectLink(data, txObjId);
-                }
-            }
+            await AddWalletTransactionAttachments(new[] {(walletId, txId, attachments, type)});
         }
 
         public async Task<bool> RemoveWalletObjectLink(WalletObjectId a, WalletObjectId b)
@@ -563,30 +551,26 @@ namespace BTCPayServer.Services
                 await RemoveWalletObjectLink(labelObjId, id);
             }
         }
+        
+        public async Task<bool> RemoveWalletLabels(WalletId id, params string[] labels)
+        {
+            ArgumentNullException.ThrowIfNull(id);
+            var count = 0;
+            foreach (var l in labels.Select(l => l.Trim()))
+            {
+                var labelObjId = new WalletObjectId(id, WalletObjectData.Types.Label, l);
+                count += await RemoveWalletObjects(labelObjId) ? 1 : 0;
+            }
+            return count > 0;
+        }
 
         public async Task SetWalletObject(WalletObjectId id, JObject? data)
         {
             ArgumentNullException.ThrowIfNull(id);
             await using var ctx = _ContextFactory.CreateContext();
             var wo = NewWalletObjectData(id, data);
-            if (!ctx.Database.IsNpgsql())
-            {
-                ctx.WalletObjects.Add(wo);
-                try
-                {
-                    await ctx.SaveChangesAsync();
-                }
-                catch (DbUpdateException) // already exists
-                {
-                    ctx.Entry(wo).State = EntityState.Modified;
-                    await ctx.SaveChangesAsync();
-                }
-            }
-            else
-            {
-                var connection = ctx.Database.GetDbConnection();
-                await connection.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT ON CONSTRAINT \"PK_WalletObjects\" DO UPDATE SET \"Data\"=EXCLUDED.\"Data\"", wo);
-            }
+            var connection = ctx.Database.GetDbConnection();
+            await connection.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT ON CONSTRAINT \"PK_WalletObjects\" DO UPDATE SET \"Data\"=EXCLUDED.\"Data\"", wo);
         }
 
         public async Task EnsureWalletObject(WalletObjectId id, JObject? data = null)
@@ -594,22 +578,34 @@ namespace BTCPayServer.Services
             ArgumentNullException.ThrowIfNull(id);
             var wo = NewWalletObjectData(id, data);
             await using var ctx = _ContextFactory.CreateContext();
-            if (!ctx.Database.IsNpgsql())
-            {
-                ctx.WalletObjects.Add(wo);
-                try
-                {
-                    await ctx.SaveChangesAsync();
-                }
-                catch (DbUpdateException) // already exists
-                {
-                }
-            }
-            else
-            {
-                var connection = ctx.Database.GetDbConnection();
-                await connection.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", wo);
-            }
+            await EnsureWalletObject(wo, ctx);
+        }
+
+        private async Task EnsureWalletObject(WalletObjectData wo, ApplicationDbContext ctx)
+        {
+            ArgumentNullException.ThrowIfNull(wo);
+            var connection = ctx.Database.GetDbConnection();
+            await connection.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", wo);
+        }
+        private async Task EnsureWalletObjects(ApplicationDbContext ctx,DbConnection connection, IEnumerable<WalletObjectData> data)
+        {
+            var walletObjectDatas = data as WalletObjectData[] ?? data.ToArray();
+            if(!walletObjectDatas.Any())
+                return;
+            var conn = ctx.Database.GetDbConnection();
+            await conn.ExecuteAsync("INSERT INTO \"WalletObjects\" VALUES (@WalletId, @Type, @Id, @Data::JSONB) ON CONFLICT DO NOTHING", walletObjectDatas);
+        }
+
+        public async Task EnsureCreated(List<WalletObjectData>? walletObjects,
+            List<WalletObjectLinkData>? walletObjectLinks)
+        {
+            walletObjects ??= new List<WalletObjectData>();
+            walletObjectLinks ??= new List<WalletObjectLinkData>();
+            var objs = walletObjects.Concat(ExtractObjectsFromLinks(walletObjectLinks).Except(walletObjects)).ToArray();
+            await using var ctx = _ContextFactory.CreateContext();
+            var connection = ctx.Database.GetDbConnection();
+            await EnsureWalletObjects(ctx,connection, objs);
+            await EnsureWalletObjectLinks(ctx,connection, walletObjectLinks);
         }
 #nullable restore
     }

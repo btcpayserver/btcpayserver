@@ -5,7 +5,7 @@ using NBitcoin;
 
 namespace BTCPayServer.Models.WalletViewModels
 {
-    public class WalletPSBTReadyViewModel
+    public class WalletPSBTReadyViewModel : IHasBackAndReturnUrl
     {
         public SigningContextModel SigningContext { get; set; } = new SigningContextModel();
         public string SigningKey { get; set; }
@@ -15,7 +15,7 @@ namespace BTCPayServer.Models.WalletViewModels
         {
             public bool Positive { get; set; }
             public string Destination { get; set; }
-            public string Balance { get; set; }
+            public StringAmounts Balance { get; set; }
             public IEnumerable<TransactionTagModel> Labels { get; set; } = new List<TransactionTagModel>();
         }
 
@@ -24,11 +24,17 @@ namespace BTCPayServer.Models.WalletViewModels
             public int Index { get; set; }
             public string Error { get; set; }
             public bool Positive { get; set; }
-            public string BalanceChange { get; set; }
+            public StringAmounts BalanceChange { get; set; }
             public IEnumerable<TransactionTagModel> Labels { get; set; } = new List<TransactionTagModel>();
         }
+        public class AmountViewModel
+        {
+            public bool Positive { get; set; }
+            public StringAmounts BalanceChange { get; set; }
+        }
+        public AmountViewModel ReplacementBalanceChange { get; set; }
         public bool HasErrors => Inputs.Count == 0 || Inputs.Any(i => !string.IsNullOrEmpty(i.Error));
-        public string BalanceChange { get; set; }
+        public StringAmounts BalanceChange { get; set; }
         public bool CanCalculateBalance { get; set; }
         public bool Positive { get; set; }
         public List<DestinationViewModel> Destinations { get; set; } = new List<DestinationViewModel>();
@@ -44,5 +50,7 @@ namespace BTCPayServer.Models.WalletViewModels
                 Inputs[(int)err.InputIndex].Error = err.Message;
             }
         }
+
+        public record StringAmounts(string CryptoAmount, string FiatAmount);
     }
 }

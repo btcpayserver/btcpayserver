@@ -35,10 +35,10 @@ namespace BTCPayServer.Plugins.Shopify
         }
 
         private HttpRequestMessage CreateRequest(string shopName, HttpMethod method, string action,
-            string relativeUrl = null)
+            string relativeUrl = null, string apiVersion = "2020-07")
         {
             var url =
-                $"https://{(shopName.Contains('.', StringComparison.InvariantCulture) ? shopName : $"{shopName}.myshopify.com")}/{relativeUrl ?? ("admin/api/2020-07/" + action)}";
+                $"https://{(shopName.Contains('.', StringComparison.InvariantCulture) ? shopName : $"{shopName}.myshopify.com")}/{relativeUrl ?? ($"admin/api/{apiVersion}/" + action)}";
             var req = new HttpRequestMessage(method, url);
             return req;
         }
@@ -73,7 +73,7 @@ namespace BTCPayServer.Plugins.Shopify
         public async Task RemoveWebhook(string id)
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Delete, $"webhooks/{id}.json");
-            var strResp = await SendRequest(req);
+            await SendRequest(req);
         }
 
         public async Task<string[]> CheckScopes()
@@ -110,6 +110,15 @@ namespace BTCPayServer.Plugins.Shopify
         {
             var req = CreateRequest(_credentials.ShopName, HttpMethod.Get,
                 $"orders/{orderId}.json?fields=id,order_number,total_price,total_outstanding,currency,presentment_currency,transactions,financial_status");
+
+            var strResp = await SendRequest(req);
+
+            return JObject.Parse(strResp)["order"].ToObject<ShopifyOrder>();
+        }
+        public async Task<ShopifyOrder> CancelOrder(string orderId)
+        {
+            var req = CreateRequest(_credentials.ShopName, HttpMethod.Post,
+                $"orders/{orderId}/cancel.json?restock=true", null, "2024-04");
 
             var strResp = await SendRequest(req);
 

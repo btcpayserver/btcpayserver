@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Linq;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
@@ -7,10 +6,9 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Payments;
 using BTCPayServer.PayoutProcessors;
 using BTCPayServer.PayoutProcessors.OnChain;
-using BTCPayServer.Services.Invoices;
+using BTCPayServer.Payouts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -39,14 +37,14 @@ namespace BTCPayServer.Controllers.Greenfield
         public async Task<IActionResult> GetStoreOnChainAutomatedPayoutProcessors(
             string storeId, string? paymentMethod)
         {
-            paymentMethod = !string.IsNullOrEmpty(paymentMethod) ? PaymentMethodId.Parse(paymentMethod).ToString() : null;
+            var paymentMethodId = !string.IsNullOrEmpty(paymentMethod) ? PayoutMethodId.Parse(paymentMethod) : null;
             var configured =
                 await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
-                        PaymentMethods = paymentMethod is null ? null : new[] { paymentMethod }
+                        PayoutMethods = paymentMethodId is null ? null : new[] { paymentMethodId }
                     });
 
             return Ok(configured.Select(ToModel).ToArray());
@@ -58,7 +56,7 @@ namespace BTCPayServer.Controllers.Greenfield
             return new OnChainAutomatedPayoutSettings()
             {
                 FeeBlockTarget = blob.FeeTargetBlock,
-                PaymentMethod = data.PaymentMethod,
+                PayoutMethodId = data.PayoutMethodId,
                 IntervalSeconds = blob.Interval,
                 Threshold = blob.Threshold,
                 ProcessNewPayoutsInstantly = blob.ProcessNewPayoutsInstantly
@@ -86,20 +84,20 @@ namespace BTCPayServer.Controllers.Greenfield
                 ModelState.AddModelError(nameof(request.FeeBlockTarget), "The feeBlockTarget should be between 1 and 1000");
             if (!ModelState.IsValid)
                 return this.CreateValidationError(ModelState);
-            paymentMethod = PaymentMethodId.Parse(paymentMethod).ToString();
+            var payoutMethodId = PayoutMethodId.Parse(paymentMethod);
             var activeProcessor =
                 (await _payoutProcessorService.GetProcessors(
                     new PayoutProcessorService.PayoutProcessorQuery()
                     {
                         Stores = new[] { storeId },
                         Processors = new[] { OnChainAutomatedPayoutSenderFactory.ProcessorName },
-                        PaymentMethods = new[] { paymentMethod }
+                        PayoutMethods = new[] { payoutMethodId }
                     }))
                 .FirstOrDefault();
             activeProcessor ??= new PayoutProcessorData();
             activeProcessor.HasTypedBlob<OnChainAutomatedPayoutBlob>().SetBlob(FromModel(request));
             activeProcessor.StoreId = storeId;
-            activeProcessor.PaymentMethod = paymentMethod;
+            activeProcessor.PayoutMethodId = payoutMethodId.ToString();
             activeProcessor.Processor = OnChainAutomatedPayoutSenderFactory.ProcessorName;
             var tcs = new TaskCompletionSource();
             _eventAggregator.Publish(new PayoutProcessorUpdated()

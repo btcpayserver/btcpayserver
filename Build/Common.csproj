@@ -1,34 +1,15 @@
 <Project>
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFramework>net8.0</TargetFramework>
     <TargetFramework Condition="'$(TargetFrameworkOverride)' != ''">$(TargetFrameworkOverride)</TargetFramework>
-    <NoWarn>NU1701,CA1816,CA1308,CA1810,CA2208,CA1303,CA2000,CA2016,CA1835,CA2249,CA9998,CA1704</NoWarn>
-    <LangVersion>10.0</LangVersion>
+	<NoWarn>$(NoWarn),NU1701,CA1816,CA1308,CA1810,CA2208,CA1303,CA2000,CA2016,CA1835,CA2249,CA9998,CA1704;CS8981</NoWarn>
+    <LangVersion>12.0</LangVersion>
     <EnableNETAnalyzers>True</EnableNETAnalyzers>
     <AnalysisLevel>6.0</AnalysisLevel>
   </PropertyGroup>
 
   <PropertyGroup>
-    <Configurations>Debug;Release;Altcoins-Release;Altcoins-Debug</Configurations>
+    <Configurations>Debug;Release</Configurations>
     <Platforms>AnyCPU</Platforms>
-  </PropertyGroup>
-
-  <!-- Default similar to Debug/Release -->
-  <PropertyGroup Condition=" '$(Configuration)' == 'Altcoins-Release' ">
-    <Optimize Condition=" '$(Optimize)' == '' ">true</Optimize>
-    <Altcoins>true</Altcoins>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(Configuration)' == 'Altcoins-Debug'">
-    <DefineConstants>$(DefineConstants);DEBUG</DefineConstants>
-    <Altcoins>true</Altcoins>
-  </PropertyGroup>
-  <!-- -->
-
-  <PropertyGroup Condition="( '$(Configuration)' == 'Debug' Or '$(Configuration)' == 'Altcoins-Debug') And '$(RazorCompileOnBuild)' != 'true' And '$(DotNetWatchBuild)' != 'true' And '$(DesignTimeBuild)' != 'true'">
-    <RazorCompileOnBuild>false</RazorCompileOnBuild>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Altcoins)' == 'true'">
-    <DefineConstants>$(DefineConstants);ALTCOINS</DefineConstants>
   </PropertyGroup>
 </Project>

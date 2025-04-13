@@ -21,6 +21,7 @@ namespace BTCPayServer.Models.AppViewModels
             public DateTimeOffset Created { get; set; }
             public AppData App { get; set; }
             public StoreRepository.StoreRole Role { get; set; }
+            public bool Archived { get; set; }
         }
 
         public ListAppViewModel[] Apps { get; set; }

@@ -3,19 +3,21 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Controllers;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
+using BTCPayServer.Services;
 using BTCPayServer.Services.PaymentRequests;
+using Google.Apis.Storage.v1.Data;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.SignalR;
 using Microsoft.Extensions.Logging;
-using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 
 namespace BTCPayServer.PaymentRequest
 {
@@ -23,6 +25,7 @@ namespace BTCPayServer.PaymentRequest
     {
         private readonly UIPaymentRequestController _PaymentRequestController;
         public const string InvoiceCreated = "InvoiceCreated";
+        public const string InvoiceConfirmed = "InvoiceConfirmed";
         public const string PaymentReceived = "PaymentReceived";
         public const string InfoUpdated = "InfoUpdated";
         public const string InvoiceError = "InvoiceError";
@@ -79,7 +82,7 @@ namespace BTCPayServer.PaymentRequest
                 await _PaymentRequestController.CancelUnpaidPendingInvoice(prId, false);
             switch (result)
             {
-                case OkObjectResult okObjectResult:
+                case OkObjectResult:
                     await Clients.Group(prId).SendCoreAsync(InvoiceCancelled, System.Array.Empty<object>());
                     break;
 
@@ -104,105 +107,107 @@ namespace BTCPayServer.PaymentRequest
     {
         private readonly IHubContext<PaymentRequestHub> _HubContext;
         private readonly PaymentRequestRepository _PaymentRequestRepository;
+        private readonly PrettyNameProvider _prettyNameProvider;
         private readonly PaymentRequestService _PaymentRequestService;
-
+        private readonly DelayedTaskScheduler _delayedTaskScheduler;
 
         public PaymentRequestStreamer(EventAggregator eventAggregator,
             IHubContext<PaymentRequestHub> hubContext,
             PaymentRequestRepository paymentRequestRepository,
+            PrettyNameProvider prettyNameProvider,
             PaymentRequestService paymentRequestService,
+            DelayedTaskScheduler delayedTaskScheduler,
             Logs logs) : base(eventAggregator, logs)
         {
             _HubContext = hubContext;
             _PaymentRequestRepository = paymentRequestRepository;
+            _prettyNameProvider = prettyNameProvider;
             _PaymentRequestService = paymentRequestService;
+            _delayedTaskScheduler = delayedTaskScheduler;
         }
 
         public override async Task StartAsync(CancellationToken cancellationToken)
         {
+            this.PushEvent(new Starting());
             await base.StartAsync(cancellationToken);
-            _CheckingPendingPayments = CheckingPendingPayments(cancellationToken)
-                .ContinueWith(_ => _CheckingPendingPayments = null, TaskScheduler.Default);
         }
 
-        private async Task CheckingPendingPayments(CancellationToken cancellationToken)
+        internal void CheckExpirable()
         {
-            Logs.PayServer.LogInformation("Starting payment request expiration watcher");
-            var items = await _PaymentRequestRepository.FindPaymentRequests(new PaymentRequestQuery()
-            {
-                Status = new[] { Client.Models.PaymentRequestData.PaymentRequestStatus.Pending }
-            }, cancellationToken);
-            Logs.PayServer.LogInformation($"{items.Length} pending payment requests being checked since last run");
-            await Task.WhenAll(items.Select(i => _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(i))
-                .ToArray());
+            this.PushEvent(new Starting());
         }
 
-        Task _CheckingPendingPayments;
-
-        public override async Task StopAsync(CancellationToken cancellationToken)
-        {
-            await base.StopAsync(cancellationToken);
-            await (_CheckingPendingPayments ?? Task.CompletedTask);
-        }
+        record Starting;
 
         protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
-            Subscribe<PaymentRequestUpdated>();
+            Subscribe<PaymentRequestEvent>();
         }
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            if (evt is InvoiceEvent invoiceEvent)
+            if (evt is Starting)
+            {
+                foreach (var req in await _PaymentRequestRepository.GetExpirablePaymentRequests(cancellationToken))
+                {
+                    UpdateOnExpire(req);
+                }
+            }
+            else if (evt is InvoiceEvent invoiceEvent)
             {
                 foreach (var paymentId in PaymentRequestRepository.GetPaymentIdsFromInternalTags(invoiceEvent.Invoice))
                 {
-                    if (invoiceEvent.Name == InvoiceEvent.ReceivedPayment || invoiceEvent.Name == InvoiceEvent.MarkedCompleted || invoiceEvent.Name == InvoiceEvent.MarkedInvalid)
+                    if (invoiceEvent.Name is InvoiceEvent.ReceivedPayment or InvoiceEvent.MarkedCompleted or InvoiceEvent.MarkedInvalid)
                     {
                         await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
-                        var data = invoiceEvent.Payment?.GetCryptoPaymentData();
-                        if (data != null)
+                        if (invoiceEvent.Payment != null)
                         {
                             await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.PaymentReceived,
                                 new object[]
                                 {
-                                    data.GetValue(),
+                                    invoiceEvent.Payment.Value,
                                     invoiceEvent.Payment.Currency,
-                                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType?.ToString()
+                                    _prettyNameProvider.PrettyName(invoiceEvent.Payment.PaymentMethodId),
+                                    invoiceEvent.Payment.PaymentMethodId.ToString()
                                 }, cancellationToken);
                         }
+                    }
+                    else if (invoiceEvent.Name is InvoiceEvent.Completed or InvoiceEvent.Confirmed)
+                    {
+                        await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentId);
+                        await _HubContext.Clients.Group(paymentId).SendCoreAsync(PaymentRequestHub.InvoiceConfirmed,
+                            new object[]
+                            {
+                                invoiceEvent.InvoiceId
+                            }, cancellationToken);
                     }
 
                     await InfoUpdated(paymentId);
                 }
             }
-            else if (evt is PaymentRequestUpdated updated)
+            else if (evt is PaymentRequestEvent updated)
             {
-                await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(updated.PaymentRequestId);
-                await InfoUpdated(updated.PaymentRequestId);
+                await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(updated.Data.Id);
+                await InfoUpdated(updated.Data.Id);
 
-                var expiry = updated.Data.GetBlob().ExpiryDate;
-                if (updated.Data.Status ==
-                    PaymentRequestData.PaymentRequestStatus.Pending &&
-                    expiry.HasValue)
-                {
-                    QueueExpiryTask(
-                        updated.PaymentRequestId,
-                        expiry.Value.UtcDateTime,
-                        cancellationToken);
-                }
+                UpdateOnExpire(updated.Data);
             }
         }
 
-        private void QueueExpiryTask(string paymentRequestId, DateTime expiry, CancellationToken cancellationToken)
+        private void UpdateOnExpire(Data.PaymentRequestData data)
         {
-            Task.Run(async () =>
+            if (data is 
+                {
+                    Expirable: true,
+                    Expiry: { } e
+                })
             {
-                var delay = expiry - DateTime.UtcNow;
-                if (delay > TimeSpan.Zero)
-                    await Task.Delay(delay, cancellationToken);
-                await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(paymentRequestId);
-            }, cancellationToken);
+                _delayedTaskScheduler.Schedule($"PAYREQ_{data.Id}", e, async () =>
+                {
+                    await _PaymentRequestService.UpdatePaymentRequestStateIfNeeded(data.Id);
+                });
+            }
         }
 
         private async Task InfoUpdated(string paymentRequestId)

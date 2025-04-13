@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using BTCPayServer.Abstractions.Form;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Forms;
 
@@ -15,6 +16,11 @@ public class HtmlFieldsetFormProvider : IFormComponentProvider
     public string GetValue(Form form, Field field)
     {
         return null;
+    }
+
+    public void SetValue(Field field, JToken value)
+    {
+        //ignored
     }
 
     public void Validate(Form form, Field field)

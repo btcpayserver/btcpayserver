@@ -1,11 +1,20 @@
+using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using BTCPayServer.Hosting;
+using BTCPayServer.Logging;
+using BTCPayServer.Plugins;
+using BTCPayServer.Plugins.Bitcoin;
 using CommandLine;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Configuration.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using NBitcoin;
+using NBXplorer;
 
 namespace BTCPayServer.Configuration
 {
@@ -13,7 +22,7 @@ namespace BTCPayServer.Configuration
     {
         protected override CommandLineApplication CreateCommandLineApplicationCore()
         {
-            var provider = new BTCPayNetworkProvider(ChainName.Mainnet);
+            var provider = CreateBTCPayNetworkProvider(ChainName.Mainnet);
             var chains = string.Join(",", provider.GetAll().Select(n => n.CryptoCode.ToLowerInvariant()).ToArray());
             CommandLineApplication app = new CommandLineApplication(true)
             {
@@ -27,9 +36,7 @@ namespace BTCPayServer.Configuration
             app.Option("--signet | -signet", $"Use signet (deprecated, use --network instead)", CommandOptionType.BoolValue);
             app.Option("--chains | -c", $"Chains to support as a comma separated (default: btc; available: {chains})", CommandOptionType.SingleValue);
             app.Option("--postgres", $"Connection string to a PostgreSQL database", CommandOptionType.SingleValue);
-            app.Option("--mysql", $"DEPRECATED: Connection string to a MySQL database", CommandOptionType.SingleValue);
             app.Option("--nocsp", $"Disable CSP (default false)", CommandOptionType.BoolValue);
-            app.Option("--sqlitefile", $"DEPRECATED: File name to an SQLite database file inside the data directory", CommandOptionType.SingleValue);
             app.Option("--deprecated", $"Allow deprecated settings (default:false)", CommandOptionType.BoolValue);
             app.Option("--externalservices", $"Links added to external services inside Server Settings / Services under the format service1:path2;service2:path2.(default: empty)", CommandOptionType.SingleValue);
             app.Option("--rootpath", "The root path in the URL to access BTCPay (default: /)", CommandOptionType.SingleValue);
@@ -130,11 +137,9 @@ namespace BTCPayServer.Configuration
             builder.AppendLine();
             builder.AppendLine("### Database ###");
             builder.AppendLine("#postgres=User ID=root;Password=myPassword;Host=localhost;Port=5432;Database=myDataBase;");
-            builder.AppendLine("#mysql=User ID=root;Password=myPassword;Host=localhost;Port=3306;Database=myDataBase;");
-            builder.AppendLine("#sqlitefile=sqlite.db");
             builder.AppendLine();
             builder.AppendLine("### NBXplorer settings ###");
-            foreach (var n in new BTCPayNetworkProvider(networkType).GetAll().OfType<BTCPayNetwork>())
+            foreach (var n in CreateBTCPayNetworkProvider(networkType).GetAll().OfType<BTCPayNetwork>())
             {
                 builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.url={n.NBXplorerNetwork.DefaultSettings.DefaultUrl}");
                 builder.AppendLine(CultureInfo.InvariantCulture, $"#{n.CryptoCode}.explorer.cookiefile={n.NBXplorerNetwork.DefaultSettings.DefaultCookieFile}");
@@ -148,8 +153,27 @@ namespace BTCPayServer.Configuration
             return builder.ToString();
         }
 
+        private BTCPayNetworkProvider CreateBTCPayNetworkProvider(ChainName networkType)
+        {
+            var collection = new ServiceCollection();
+            var conf = new ConfigurationBuilder().AddInMemoryCollection(new[]
+            {
+                new KeyValuePair<string, string>("network", networkType.ToString())
+            }).Build();
+            var services = new PluginServiceCollection(collection, Startup.CreateBootstrap(conf));
+            var p1 = new BitcoinPlugin();
+            p1.Execute(services);
 
+            var p2 = new Plugins.Altcoins.AltcoinsPlugin();
+            p2.Execute(services);
 
+            services.AddSingleton(services.BootstrapServices.GetRequiredService<SelectedChains>());
+            services.AddSingleton(services.BootstrapServices.GetRequiredService<NBXplorerNetworkProvider>());
+            services.AddSingleton(services.BootstrapServices.GetRequiredService<Logs>());
+            services.AddSingleton(services.BootstrapServices.GetRequiredService<IConfiguration>());
+            services.AddSingleton<BTCPayNetworkProvider>();
+            return services.BuildServiceProvider().GetRequiredService<BTCPayNetworkProvider>();
+        }
         protected override IPEndPoint GetDefaultEndpoint(IConfiguration conf)
         {
             return new IPEndPoint(IPAddress.Parse("127.0.0.1"), BTCPayDefaultSettings.GetDefaultSettings(GetNetworkType(conf)).DefaultPort);

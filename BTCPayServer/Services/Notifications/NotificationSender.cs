@@ -6,7 +6,6 @@ using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Data;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Notifications
 {
@@ -31,7 +30,7 @@ namespace BTCPayServer.Services.Notifications
             _notificationManager = notificationManager;
         }
 
-        public async Task SendNotification(NotificationScope scope, BaseNotification notification)
+        public async Task SendNotification(INotificationScope scope, BaseNotification notification)
         {
             ArgumentNullException.ThrowIfNull(scope);
             ArgumentNullException.ThrowIfNull(notification);
@@ -59,7 +58,12 @@ namespace BTCPayServer.Services.Notifications
             }
         }
 
-        private async Task<string[]> GetUsers(NotificationScope scope, string notificationIdentifier)
+        public BaseNotification GetBaseNotification(NotificationData notificationData)
+        {
+            return notificationData.HasTypedBlob<BaseNotification>().GetBlob();
+        }
+
+        private async Task<string[]> GetUsers(INotificationScope scope, string notificationIdentifier)
         {
             await using var ctx = _contextFactory.CreateContext();
 
@@ -79,9 +83,10 @@ namespace BTCPayServer.Services.Notifications
                         break;
                     }
                 case StoreScope s:
+                    var roles = s.Roles?.Select(role => role.Id);
                     query = ctx.UserStore
                         .Include(store => store.ApplicationUser)
-                        .Where(u => u.StoreDataId == s.StoreId)
+                        .Where(u => u.StoreDataId == s.StoreId && (roles == null || roles.Contains(u.StoreRoleId)))
                         .Select(u => u.ApplicationUser);
                     break;
                 case UserScope userScope:

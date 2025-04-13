@@ -6,8 +6,11 @@ using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Lightning;
+using BTCPayServer.Payments;
+using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Security;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
@@ -26,16 +29,21 @@ namespace BTCPayServer.Controllers.Greenfield
 
     public abstract class GreenfieldLightningNodeApiController : Controller
     {
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
         private readonly PoliciesSettings _policiesSettings;
         private readonly IAuthorizationService _authorizationService;
-        protected GreenfieldLightningNodeApiController(BTCPayNetworkProvider btcPayNetworkProvider,
+        private readonly PaymentMethodHandlerDictionary _handlers;
+        private readonly LightningHistogramService _lnHistogramService;
+
+        protected GreenfieldLightningNodeApiController(
             PoliciesSettings policiesSettings,
-            IAuthorizationService authorizationService)
+            IAuthorizationService authorizationService,
+            PaymentMethodHandlerDictionary handlers,
+            LightningHistogramService lnHistogramService)
         {
-            _btcPayNetworkProvider = btcPayNetworkProvider;
             _policiesSettings = policiesSettings;
             _authorizationService = authorizationService;
+            _handlers = handlers;
+            _lnHistogramService = lnHistogramService;
         }
 
         public virtual async Task<IActionResult> GetInfo(string cryptoCode, CancellationToken cancellationToken = default)
@@ -79,6 +87,22 @@ namespace BTCPayServer.Controllers.Greenfield
                         Closing = balance.OffchainBalance.Closing,
                     }
                     : null
+            });
+        }
+        
+        public virtual async Task<IActionResult> GetHistogram(string cryptoCode, HistogramType? type = null, CancellationToken cancellationToken = default)
+        {
+            Enum.TryParse<HistogramType>(type.ToString(), true, out var histType);
+            var lightningClient = await GetLightningClient(cryptoCode, true);
+            var data = await _lnHistogramService.GetHistogram(lightningClient, histType, cancellationToken);
+            if (data == null) return this.CreateAPIError(404, "histogram-not-found", "The lightning histogram was not found.");
+
+            return Ok(new HistogramData
+            {
+                Type = data.Type,
+                Balance = data.Balance,
+                Series = data.Series,
+                Labels = data.Labels
             });
         }
 
@@ -207,7 +231,7 @@ namespace BTCPayServer.Controllers.Greenfield
         public virtual async Task<IActionResult> PayInvoice(string cryptoCode, PayLightningInvoiceRequest lightningInvoice, CancellationToken cancellationToken = default)
         {
             var lightningClient = await GetLightningClient(cryptoCode, true);
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+            var network =  GetNetwork(cryptoCode);
             BOLT11PaymentRequest bolt11 = null;
 
             if (string.IsNullOrEmpty(lightningInvoice.BOLT11) ||
@@ -336,7 +360,11 @@ namespace BTCPayServer.Controllers.Greenfield
                 return this.CreateAPIError("generic-error", ex.Message);
             }
         }
-
+        protected BTCPayNetwork GetNetwork(string cryptoCode)
+            => _handlers.TryGetValue(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), out var h) 
+                    && h is IHasNetwork { Network: var network }
+                ? network
+                : null;
         protected JsonHttpException ErrorLightningNodeNotConfiguredForStore()
         {
             return new JsonHttpException(this.CreateAPIError(404, "lightning-not-configured", "The lightning node is not set up"));

@@ -24,16 +24,15 @@ namespace BTCPayServer.Controllers.Greenfield
             _storeRepository = storeRepository;
         }
 
-        [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/roles")]
         public async Task<IActionResult> GetStoreRoles(string storeId)
         {
             var store = HttpContext.GetStoreData();
             return store == null
                 ? StoreNotFound()
-                : Ok(FromModel(await _storeRepository.GetStoreRoles(storeId, false, false)));
+                : Ok(FromModel(await _storeRepository.GetStoreRoles(storeId, false)));
         }
-
 
         private List<RoleData> FromModel(StoreRepository.StoreRole[] data)
         {

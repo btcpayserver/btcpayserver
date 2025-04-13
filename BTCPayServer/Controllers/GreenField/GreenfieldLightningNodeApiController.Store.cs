@@ -1,8 +1,6 @@
-using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
@@ -12,6 +10,7 @@ using BTCPayServer.Lightning;
 using BTCPayServer.Payments;
 using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services;
+using BTCPayServer.Services.Invoices;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
@@ -27,18 +26,18 @@ namespace BTCPayServer.Controllers.Greenfield
     {
         private readonly IOptions<LightningNetworkOptions> _lightningNetworkOptions;
         private readonly LightningClientFactoryService _lightningClientFactory;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
 
         public GreenfieldStoreLightningNodeApiController(
             IOptions<LightningNetworkOptions> lightningNetworkOptions,
-            LightningClientFactoryService lightningClientFactory, BTCPayNetworkProvider btcPayNetworkProvider,
+            LightningClientFactoryService lightningClientFactory, PaymentMethodHandlerDictionary handlers,
             PoliciesSettings policiesSettings,
-            IAuthorizationService authorizationService) : base(
-            btcPayNetworkProvider, policiesSettings, authorizationService)
+            IAuthorizationService authorizationService,
+            LightningHistogramService lnHistogramService) : base(policiesSettings, authorizationService, handlers, lnHistogramService)
         {
             _lightningNetworkOptions = lightningNetworkOptions;
             _lightningClientFactory = lightningClientFactory;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _handlers = handlers;
         }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
@@ -56,6 +55,13 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return base.GetBalance(cryptoCode, cancellationToken);
         }
+        
+        [Authorize(Policy = Policies.CanUseLightningNodeInStore, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+        [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/histogram")]
+        public override Task<IActionResult> GetHistogram(string cryptoCode, [FromQuery] HistogramType? type = null, CancellationToken cancellationToken = default)
+        {
+            return base.GetHistogram(cryptoCode, type, cancellationToken);
+        }
 
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
@@ -64,6 +70,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return base.ConnectToNode(cryptoCode, request, cancellationToken);
         }
+
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpGet("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels")]
@@ -71,6 +78,7 @@ namespace BTCPayServer.Controllers.Greenfield
         {
             return base.GetChannels(cryptoCode, cancellationToken);
         }
+
         [Authorize(Policy = Policies.CanUseLightningNodeInStore,
             AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
         [HttpPost("~/api/v1/stores/{storeId}/lightning/{cryptoCode}/channels")]
@@ -138,25 +146,23 @@ namespace BTCPayServer.Controllers.Greenfield
         protected override Task<ILightningClient> GetLightningClient(string cryptoCode,
             bool doingAdminThings)
         {
-            var network = _btcPayNetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
-            if (network == null)
+            if (!_handlers.TryGetValue(PaymentTypes.LN.GetPaymentMethodId(cryptoCode), out var o) ||
+                o is not LightningLikePaymentHandler handler)
             {
                 throw ErrorCryptoCodeNotFound();
             }
-
+            var network = handler.Network;
             var store = HttpContext.GetStoreData();
             if (store == null)
             {
                 throw new JsonHttpException(StoreNotFound());
             }
 
-            var id = new PaymentMethodId(cryptoCode, PaymentTypes.LightningLike);
-            var existing = store.GetSupportedPaymentMethods(_btcPayNetworkProvider)
-                .OfType<LightningSupportedPaymentMethod>()
-                .FirstOrDefault(d => d.PaymentId == id);
+            var id = PaymentTypes.LN.GetPaymentMethodId(cryptoCode);
+            var existing = store.GetPaymentMethodConfig<LightningPaymentMethodConfig>(id, _handlers);
             if (existing == null)
                 throw ErrorLightningNodeNotConfiguredForStore();
-            if (existing.GetExternalLightningUrl() is LightningConnectionString connectionString)
+            if (existing.GetExternalLightningUrl() is {} connectionString)
             {
                 return Task.FromResult(_lightningClientFactory.Create(connectionString, network));
             }
@@ -168,7 +174,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 {
                     throw ErrorShouldBeAdminForInternalNode();
                 }
-                return Task.FromResult(_lightningClientFactory.Create(internalLightningNode, network));
+                return Task.FromResult(internalLightningNode);
             }
             throw ErrorLightningNodeNotConfiguredForStore();
         }

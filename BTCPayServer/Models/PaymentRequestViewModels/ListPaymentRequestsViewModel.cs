@@ -5,6 +5,7 @@ using System.Linq;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Payments;
+using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Rates;
 using BTCPayServer.Validation;
@@ -42,13 +43,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             var blob = data.GetBlob();
             FormId = blob.FormId;
             Title = blob.Title;
-            Amount = blob.Amount;
-            Currency = blob.Currency;
+            Amount = data.Amount;
+            Currency = data.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
+            ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
-            CustomCSSLink = blob.CustomCSSLink;
-            EmbeddedCSS = blob.EmbeddedCSS;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             FormResponse = blob.FormResponse is null
                 ? null
@@ -72,7 +71,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [Display(Name = "Expiration Date")]
         public DateTime? ExpiryDate { get; set; }
-        [Required] public string Title { get; set; }
+        
+        [Required]
+        public string Title { get; set; }
+        
+        [Display(Name = "Memo")]
         public string Description { get; set; }
 
         [Display(Name = "Store")]
@@ -80,18 +83,13 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         [MailboxAddress]
         public string Email { get; set; }
-
-        [MaxLength(500)]
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-
-        [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
-        [Display(Name = "Allow payee to create invoices in their own denomination")]
+        
+        [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
 
         public Dictionary<string, object> FormResponse { get; set; }
         public bool AmountAndCurrencyEditable { get; set; } = true;
+        public bool? HasEmailRules { get; set; }
     }
 
     public class ViewPaymentRequestViewModel
@@ -103,33 +101,32 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             var blob = data.GetBlob();
             Archived = data.Archived;
             Title = blob.Title;
-            Amount = blob.Amount;
-            Currency = blob.Currency;
+            Amount = data.Amount;
+            Currency = data.Currency;
             Description = blob.Description;
-            ExpiryDate = blob.ExpiryDate?.UtcDateTime;
+            ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
-            EmbeddedCSS = blob.EmbeddedCSS;
-            CustomCSSLink = blob.CustomCSSLink;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
-            if (!string.IsNullOrEmpty(EmbeddedCSS))
-                EmbeddedCSS = $"<style>{EmbeddedCSS}</style>";
             switch (data.Status)
             {
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Pending:
+                case Client.Models.PaymentRequestStatus.Pending:
                     Status = "Pending";
                     IsPending = true;
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Completed:
+                case Client.Models.PaymentRequestStatus.Processing:
+                    Status = "Processing";
+                    break;
+                case Client.Models.PaymentRequestStatus.Completed:
                     Status = "Settled";
                     break;
-                case Client.Models.PaymentRequestData.PaymentRequestStatus.Expired:
+                case Client.Models.PaymentRequestStatus.Expired:
                     Status = "Expired";
                     break;
                 default:
                     throw new ArgumentOutOfRangeException();
             }
         }
-
+        public StoreBrandingViewModel StoreBranding { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }
@@ -144,20 +141,16 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         public DateTime? ExpiryDate { get; set; }
         public string Title { get; set; }
         public string Description { get; set; }
-        public string LogoFileId { get; set; }
-        public string CssFileId { get; set; }
-        public string BrandColor { get; set; }
         public string StoreName { get; set; }
-        public string EmbeddedCSS { get; set; }
-        public string CustomCSSLink { get; set; }
+        public string StoreWebsite { get; set; }
 
 #nullable enable
         public class InvoiceList : List<PaymentRequestInvoice>
         {
             static HashSet<InvoiceState> stateAllowedToDisplay = new HashSet<InvoiceState>
                 {
-                    new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.None),
-                    new InvoiceState(InvoiceStatusLegacy.New, InvoiceExceptionStatus.PaidPartial),
+                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.None),
+                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial),
                 };
             public InvoiceList()
             {
@@ -194,7 +187,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public decimal Amount { get; set; }
             public string AmountFormatted { get; set; }
             public InvoiceState State { get; set; }
-            public InvoiceStatusLegacy Status { get; set; }
             public string StateFormatted { get; set; }
 
             public List<PaymentRequestInvoicePayment> Payments { get; set; }
@@ -203,8 +195,46 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         public class PaymentRequestInvoicePayment
         {
+            public static List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment>
+                GetViewModels(
+                InvoiceEntity invoice,
+                DisplayFormatter displayFormatter,
+                TransactionLinkProviders txLinkProvider,
+                PaymentMethodHandlerDictionary handlers)
+            {
+                return invoice
+                .GetPayments(true)
+                .Select(paymentEntity =>
+                {
+                    var paymentMethodId = paymentEntity.PaymentMethodId;
+                    if (paymentMethodId is null)
+                    {
+                        return null;
+                    }
+                    string txId = paymentEntity.Id;
+
+                    string link = paymentMethodId is null ? null : txLinkProvider.GetTransactionLink(paymentMethodId, txId);
+
+                    return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                    {
+                        Amount = paymentEntity.PaidAmount.Gross,
+                        Paid = paymentEntity.InvoicePaidAmount.Net,
+                        ReceivedDate = paymentEntity.ReceivedTime.DateTime,
+                        AmountFormatted = displayFormatter.Currency(paymentEntity.PaidAmount.Gross, paymentEntity.PaidAmount.Currency),
+                        PaidFormatted = displayFormatter.Currency(paymentEntity.InvoicePaidAmount.Net, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        RateFormatted = displayFormatter.Currency(paymentEntity.Rate, invoice.Currency, DisplayFormatter.CurrencyFormat.Symbol),
+                        PaymentMethod = paymentMethodId.ToString(),
+                        Link = link,
+                        Id = txId,
+                        Destination = paymentEntity.Destination
+                    };
+                })
+                .Where(payment => payment != null)
+                .ToList();
+            }
             public string PaymentMethod { get; set; }
             public decimal Amount { get; set; }
+            public string AmountFormatted { get; set; }
             public string RateFormatted { get; set; }
             public decimal Paid { get; set; }
             public string PaidFormatted { get; set; }
@@ -213,7 +243,6 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             public string Id { get; set; }
             public string Destination { get; set; }
             public string PaymentProof { get; set; }
-            public PaymentType PaymentType { get; set; }
         }
     }
 }

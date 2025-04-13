@@ -1,17 +1,17 @@
 @model CheatPermissionsViewModel
 
 @{
-	ViewData["Title"] = "Permissions";
+	ViewData["Title"] = ViewLocalizer["Permissions"];
 	Layout = "_LayoutSignedOut";
 }
 
 @if (Model.StoreId is not null)
 {
-	<h1>Store: @Model.StoreId</h1>
+	<h1>@ViewLocalizer["Store: {0}", Model.StoreId]</h1>
 }
 else
 {
-	<h1>No scope</h1>
+	<h1 text-translate="true">No scope</h1>
 }
 
 <ul>

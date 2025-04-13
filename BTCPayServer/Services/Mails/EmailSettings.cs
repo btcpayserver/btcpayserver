@@ -6,16 +6,62 @@ using BTCPayServer.Validation;
 using MailKit.Net.Smtp;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
 using MimeKit;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Services.Mails
 {
-    public class EmailSettings : EmailSettingsData
+    /// <summary>
+    /// Email Settings gets saved to database, and is used by both the server and store settings
+    /// </summary>
+    public class EmailSettings
     {
+        public string Server { get; set; }
+        public int? Port { get; set; }
+        public string Login { get; set; }
+        public string Password { get; set; }
+        public string From { get; set; }
+        public bool DisableCertificateCheck { get; set; }
+        [JsonIgnore]
+        public bool EnabledCertificateCheck
+        {
+            get => !DisableCertificateCheck;
+            set { DisableCertificateCheck = !value; }
+        }
+        
+        // Conversion functions for mapping to and from the client EmailSettingsData model
+#nullable enable
+        public static EmailSettings FromData(EmailSettingsData data, string? existingPassword)
+            => new()
+            {
+                Server = data.Server,
+                Port = data.Port,
+                Login = data.Login,
+                // If login was provided but password was not, use the existing password from database
+                Password = !string.IsNullOrEmpty(data.Login) && string.IsNullOrEmpty(data.Password) ? 
+                    existingPassword : data.Password,
+                From = data.From,
+                DisableCertificateCheck = data.DisableCertificateCheck
+            };
+        
+        public T ToData<T>() where T : EmailSettingsData, new()
+            => new T()
+            {
+                Server = Server,
+                Port = Port,
+                Login = Login,
+                PasswordSet = !string.IsNullOrEmpty(Password),
+                From = From,
+                DisableCertificateCheck = DisableCertificateCheck
+            };
+#nullable restore
+        
+        
+        // 
         public bool IsComplete()
         {
             return MailboxAddressValidator.IsMailboxAddress(From)
                 && !string.IsNullOrWhiteSpace(Server)
-                && Port is int;
+                && Port != null;
         }
 
         public void Validate(string prefixKey, ModelStateDictionary modelState)

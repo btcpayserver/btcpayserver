@@ -2,28 +2,27 @@ using System;
 using System.Text.Encodings.Web;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Constants;
+using BTCPayServer.Abstractions.Contracts;
+using BTCPayServer.Abstractions.Extensions;
 using BTCPayServer.Client;
 using BTCPayServer.Data;
+using BTCPayServer.Events;
 using BTCPayServer.Fido2;
-using BTCPayServer.Models;
 using BTCPayServer.Models.ManageViewModels;
 using BTCPayServer.Security.Greenfield;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
-using BTCPayServer.Services.Wallets;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.Localization;
 using Microsoft.Extensions.Logging;
-using MimeKit;
 
 namespace BTCPayServer.Controllers
 {
-
     [Authorize(AuthenticationSchemes = AuthenticationSchemes.Cookie, Policy = Policies.CanViewProfile)]
     [Route("account/{action:lowercase=Index}")]
     public partial class UIManageController : Controller
@@ -37,11 +36,14 @@ namespace BTCPayServer.Controllers
         private readonly APIKeyRepository _apiKeyRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly Fido2Service _fido2Service;
-        private readonly LinkGenerator _linkGenerator;
-        private readonly UserLoginCodeService _userLoginCodeService;
+        private readonly CallbackGenerator _callbackGenerator;
         private readonly IHtmlHelper Html;
         private readonly UserService _userService;
+        private readonly UriResolver _uriResolver;
+        private readonly IFileService _fileService;
+        private readonly EventAggregator _eventAggregator;
         readonly StoreRepository _StoreRepository;
+        public IStringLocalizer StringLocalizer { get; }
 
         public UIManageController(
           UserManager<ApplicationUser> userManager,
@@ -54,11 +56,13 @@ namespace BTCPayServer.Controllers
           APIKeyRepository apiKeyRepository,
           IAuthorizationService authorizationService,
           Fido2Service fido2Service,
-          LinkGenerator linkGenerator,
+          CallbackGenerator callbackGenerator,
           UserService userService,
-          UserLoginCodeService userLoginCodeService,
-          IHtmlHelper htmlHelper
-          )
+          UriResolver uriResolver,
+          IFileService fileService,
+          IStringLocalizer stringLocalizer,
+          IHtmlHelper htmlHelper,
+          EventAggregator eventAggregator)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -69,11 +73,14 @@ namespace BTCPayServer.Controllers
             _apiKeyRepository = apiKeyRepository;
             _authorizationService = authorizationService;
             _fido2Service = fido2Service;
-            _linkGenerator = linkGenerator;
-            _userLoginCodeService = userLoginCodeService;
+            _callbackGenerator = callbackGenerator;
             Html = htmlHelper;
+            _eventAggregator = eventAggregator;
             _userService = userService;
+            _uriResolver = uriResolver;
+            _fileService = fileService;
             _StoreRepository = storeRepository;
+            StringLocalizer = stringLocalizer;
         }
 
         [HttpGet]
@@ -84,12 +91,14 @@ namespace BTCPayServer.Controllers
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
-
+            var blob = user.GetBlob() ?? new();
             var model = new IndexViewModel
             {
-                Username = user.UserName,
                 Email = user.Email,
-                IsEmailConfirmed = user.EmailConfirmed
+                Name = blob.Name,
+                ImageUrl = string.IsNullOrEmpty(blob.ImageUrl) ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), UnresolvedUri.Create(blob.ImageUrl)),
+                EmailConfirmed = user.EmailConfirmed,
+                RequiresEmailConfirmation = user.RequiresEmailConfirmation
             };
             return View(model);
         }
@@ -105,7 +114,7 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var blob = user.GetBlob();
+            var blob = user.GetBlob() ?? new();
             blob.ShowInvoiceStatusChangeHint = false;
             user.SetBlob(blob);
             await _userManager.UpdateAsync(user);
@@ -114,25 +123,21 @@ namespace BTCPayServer.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Index(IndexViewModel model)
+        public async Task<IActionResult> Index(IndexViewModel model, [FromForm] bool RemoveImageFile = false)
         {
-            if (!ModelState.IsValid)
-            {
-                return View(model);
-            }
-
             var user = await _userManager.GetUserAsync(User);
             if (user == null)
             {
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
+            bool needUpdate = false;
             var email = user.Email;
             if (model.Email != email)
             {
                 if (!(await _userManager.FindByEmailAsync(model.Email) is null))
                 {
-                    TempData[WellKnownTempData.ErrorMessage] = "The email address is already in use with an other account.";
+                    TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["The email address is already in use with an other account."].Value;
                     return RedirectToAction(nameof(Index));
                 }
                 var setUserResult = await _userManager.SetUserNameAsync(user, model.Email);
@@ -145,8 +150,57 @@ namespace BTCPayServer.Controllers
                 {
                     throw new ApplicationException($"Unexpected error occurred setting email for user with ID '{user.Id}'.");
                 }
+                needUpdate = true;
             }
-            TempData[WellKnownTempData.SuccessMessage] = "Your profile has been updated";
+
+            var blob = user.GetBlob() ?? new();
+            if (blob.Name != model.Name)
+            {
+                blob.Name = model.Name;
+                needUpdate = true;
+            }
+
+            if (model.ImageFile != null)
+            {
+                var imageUpload = await _fileService.UploadImage(model.ImageFile, user.Id);
+                if (!imageUpload.Success)
+                    ModelState.AddModelError(nameof(model.ImageFile), imageUpload.Response);
+                else
+                {
+                    try
+                    {
+                        var storedFile = imageUpload.StoredFile!;
+                        var fileIdUri = new UnresolvedUri.FileIdUri(storedFile.Id);
+                        blob.ImageUrl = fileIdUri.ToString();
+                        needUpdate = true;
+                    }
+                    catch (Exception e)
+                    {
+                        ModelState.AddModelError(nameof(model.ImageFile), $"Could not save image: {e.Message}");
+                    }
+                }
+            }
+            else if (RemoveImageFile && !string.IsNullOrEmpty(blob.ImageUrl))
+            {
+                blob.ImageUrl = null;
+                needUpdate = true;
+            }
+            user.SetBlob(blob);
+            if (!ModelState.IsValid)
+            {
+                return View(model);
+            }
+
+            if (needUpdate && await _userManager.UpdateAsync(user) is { Succeeded: true })
+            {
+                _eventAggregator.Publish(new UserEvent.Updated(user));
+                TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your profile has been updated"].Value;
+            }
+            else
+            {
+                TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Error updating profile"].Value;
+            }
+            
             return RedirectToAction(nameof(Index));
         }
 
@@ -165,10 +219,9 @@ namespace BTCPayServer.Controllers
                 throw new ApplicationException($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
             }
 
-            var code = await _userManager.GenerateEmailConfirmationTokenAsync(user);
-            var callbackUrl = _linkGenerator.EmailConfirmationLink(user.Id, code, Request.Scheme, Request.Host, Request.PathBase);
+            var callbackUrl = await _callbackGenerator.ForEmailConfirmation(user, Request);
             (await _EmailSenderFactory.GetEmailSender()).SendEmailConfirmation(user.GetMailboxAddress(), callbackUrl);
-            TempData[WellKnownTempData.SuccessMessage] = "Verification email sent. Please check your email.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Verification email sent. Please check your email."].Value;
             return RedirectToAction(nameof(Index));
         }
 
@@ -214,8 +267,8 @@ namespace BTCPayServer.Controllers
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
-            _logger.LogInformation("User changed their password successfully.");
-            TempData[WellKnownTempData.SuccessMessage] = "Your password has been changed.";
+            _logger.LogInformation("User changed their password successfully");
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your password has been changed."].Value;
 
             return RedirectToAction(nameof(ChangePassword));
         }
@@ -263,12 +316,12 @@ namespace BTCPayServer.Controllers
             }
 
             await _signInManager.SignInAsync(user, isPersistent: false);
-            TempData[WellKnownTempData.SuccessMessage] = "Your password has been set.";
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Your password has been set."].Value;
 
             return RedirectToAction(nameof(SetPassword));
         }
 
-        [HttpPost()]
+        [HttpPost]
         public async Task<IActionResult> DeleteUserPost()
         {
             var user = await _userManager.GetUserAsync(User);
@@ -278,11 +331,11 @@ namespace BTCPayServer.Controllers
             }
 
             await _userService.DeleteUserAndAssociatedData(user);
-            TempData[WellKnownTempData.SuccessMessage] = "Account successfully deleted.";
+            _eventAggregator.Publish(new UserEvent.Deleted(user));
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Account successfully deleted."].Value;
             await _signInManager.SignOutAsync();
             return RedirectToAction(nameof(UIAccountController.Login), "UIAccount");
         }
-
 
         #region Helpers
 

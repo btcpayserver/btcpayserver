@@ -16,7 +16,8 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 active: true,
                 loading: false,
                 timeoutState: "",
-                customAmount: null
+                customAmount: null,
+                detailsShown: {}
             }
         },
         computed: {
@@ -95,25 +96,29 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                 }
             },
             statusClass: function (state) {
-                var [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
+                const [, status,, exceptionStatus] = state.match(/(\w*)\s?(\((\w*)\))?/) || [];
                 switch (status) {
-                    case "Settled":
-                    case "Processing":
-                        return "success";
                     case "Expired":
                         switch (exceptionStatus) {
                             case "paidLate":
                             case "paidPartial":
                             case "paidOver":
-                                return "warning";
+                                return "unusual";
                             default:
-                                return "danger";
+                                return "expired";
                         }
-                    case "Invalid":
-                        return "danger";
                     default:
-                        return "warning";
+                        return status.toLowerCase();
                 }
+            },
+            showDetails(invoiceId) {
+                return this.detailsShown[invoiceId] === true;
+            },
+            toggleDetails(invoiceId) {
+                if (this.detailsShown[invoiceId])
+                    Vue.delete(this.detailsShown, invoiceId);
+                else
+                    Vue.set(this.detailsShown, invoiceId, true);
             }
         },
         mounted: function () {
@@ -156,15 +161,14 @@ document.addEventListener("DOMContentLoaded",function (ev) {
                     icon: "exclamation-triangle"
                 });
             });
-            eventAggregator.$on("payment-received", function (amount, cryptoCode, type) {
-                var onChain = type.toLowerCase() === "btclike";
+            eventAggregator.$on("payment-received", function (amount, currency, prettyPMI, pmi) {
+                var onChain = pmi.endsWith('-CHAIN');
                 var amountFormatted = parseFloat(amount).noExponents();
                 var icon = onChain ? "plus" : "bolt";
-                var title = "New payment of " + amountFormatted + " " + cryptoCode + " " + (onChain ? "On Chain" : "LN");
+                var title = "New payment of " + amountFormatted + " " + currency + " " + prettyPMI;
                 Vue.toasted.success(title, Object.assign({}, toastOptions), { icon });
             });
             eventAggregator.$on("info-updated", function (model) {
-                console.warn("UPDATED", self.srvModel, arguments);
                 self.srvModel = model;
             });
             eventAggregator.$on("connection-pending", function () {

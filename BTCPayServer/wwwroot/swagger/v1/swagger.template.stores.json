@@ -101,13 +101,7 @@
                 "summary": "Get store",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the specified store",
@@ -146,13 +140,7 @@
                 "summary": "Update store",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to update",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "Update the specified store",
@@ -215,13 +203,7 @@
                 "description": "Removes the specified store. If there is another user with access, only your access will be removed.",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to remove",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "responses": {
@@ -255,6 +237,90 @@
                 ]
             }
         },
+        "/api/v1/stores/{storeId}/logo": {
+            "post": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Uploads a logo for the store",
+                "description": "Uploads a logo for the store",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "description": "The logo",
+                                        "format": "binary"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "operationId": "Stores_UploadStoreLogo",
+                "responses": {
+                    "200": {
+                        "description": "Uploads a logo for the store",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ApplicationUserData"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The store could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Stores"
+                ],
+                "summary": "Deletes the store logo",
+                "description": "Delete the store's logo",
+                "operationId": "Stores_DeleteStoreLogo",
+                "parameters": [
+                    {
+                        "$ref": "#/components/parameters/StoreId"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Store logo deleted successfully"
+                    },
+                    "404": {
+                        "description": "The store could not be found"
+                    }
+                },
+                "security": [
+                    {
+                        "API_Key": [
+                            "btcpay.store.canmodifystoresettings"
+                        ],
+                        "Basic": []
+                    }
+                ]
+            }
+        },
         "/api/v1/stores/{storeId}/roles": {
             "get": {
                 "tags": [
@@ -263,13 +329,7 @@
                 "summary": "Get store's roles",
                 "parameters": [
                     {
-                        "name": "storeId",
-                        "in": "path",
-                        "required": true,
-                        "description": "The store to fetch",
-                        "schema": {
-                            "type": "string"
-                        }
+                        "$ref": "#/components/parameters/StoreId"
                     }
                 ],
                 "description": "View information about the specified store's roles",
@@ -327,10 +387,7 @@
                             "type": "string"
                         },
                         "example": [
-                            "btcpay.store.canmodifystoresettings",
-                            "btcpay.store.cantradecustodianaccount",
-                            "btcpay.store.canwithdrawfromcustodianaccount",
-                            "btcpay.store.candeposittocustodianaccount"
+                            "btcpay.store.canmodifystoresettings"
                         ]
                     },
                     "isServerRole": {
@@ -366,9 +423,13 @@
             "PaymentMethodCriteriaData": {
                 "type": "object",
                 "properties": {
-                    "paymentMethod": {
+                    "paymentMethodId": {
                         "type": "string",
-                        "description": "The payment method (e.g., \"BTC\" or \"BTC_LightningLike\")",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/PaymentMethodId"
+                            }
+                        ],
                         "nullable": false
                     },
                     "currencyCode": {
@@ -411,6 +472,35 @@
                         "description": "The support URI of the store, can contain the placeholders `{OrderId}` and `{InvoiceId}`. Can be any valid URI, such as a website, email, and nostr.",
                         "format": "uri"
                     },
+                    "logoUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Absolute URL to a logo file or a reference to an uploaded file id with `fileid:ID`",
+                        "format": "uri"
+                    },
+                    "cssUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Absolute URL to CSS file to customize the public/customer-facing pages of the store. (Invoice, Payment Request, Pull Payment, etc.) or a reference to an uploaded file id with `fileid:ID`",
+                        "format": "uri"
+                    },
+                    "paymentSoundUrl": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "Absolute URL to a sound file or a reference to an uploaded file id with `fileid:ID`",
+                        "format": "uri"
+                    },
+                    "brandColor": {
+                        "type": "string",
+                        "description": "The brand color of the store in HEX format",
+                        "nullable": true,
+                        "example": "#F7931A"
+                    },
+                    "applyBrandColorToBackend": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "Apply the brand color to the store's backend as well"
+                    },
                     "defaultCurrency": {
                         "type": "string",
                         "description": "The default currency of the store",
@@ -422,21 +512,44 @@
                         "minimum": 60,
                         "maximum": 2073600,
                         "description": "The time after which an invoice is considered expired if not paid. The value will be rounded down to a minute.",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
+                    },
+                    "refundBOLT11Expiration": {
+                        "default": 30,
+                        "minimum": 0,
+                        "maximum": 3650,
+                        "description": "The minimum expiry of BOLT11 invoices accepted for refunds by default. (in days)",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanDays"
+                            }
+                        ]
                     },
                     "displayExpirationTimer": {
                         "default": 300,
                         "minimum": 60,
                         "maximum": 2073600,
                         "description": "The time left that will trigger the countdown timer on the checkout page to be shown. The value will be rounded down to a minute.",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     },
                     "monitoringExpiration": {
                         "default": 3600,
                         "minimum": 600,
                         "maximum": 2073600,
                         "description": "The time after which an invoice which has been paid but not confirmed will be considered invalid. The value will be rounded down to a minute.",
-                        "allOf": [ { "$ref": "#/components/schemas/TimeSpanSeconds" } ]
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanSeconds"
+                            }
+                        ]
                     },
                     "speedPolicy": {
                         "$ref": "#/components/schemas/SpeedPolicy"
@@ -454,23 +567,25 @@
                         "default": 0.0,
                         "description": "Consider an invoice fully paid, even if the payment is missing 'x' % of the full amount."
                     },
+                    "archived": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the store does not appear in the stores list by default."
+                    },
                     "anyoneCanCreateInvoice": {
                         "type": "boolean",
                         "default": false,
                         "description": "If true, then no authentication is needed to create invoices on this store."
                     },
-                    "requiresRefundEmail": {
-                        "type": "boolean",
-                        "default": false,
-                        "description": "If true, the checkout page will ask to enter an email address before accessing payment information."
-                    },
-                    "checkoutType": {
-                        "$ref": "#/components/schemas/CheckoutType"
-                    },
                     "receipt": {
+                        "type": "object",
                         "nullable": true,
-                        "$ref": "#/components/schemas/ReceiptOptions",
-                        "description": "Additional settings to customize the public receipt"
+                        "description": "Additional settings to customize the public receipt",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/ReceiptOptions"
+                            }
+                        ]
                     },
                     "lightningAmountInSatoshi": {
                         "type": "boolean",
@@ -507,16 +622,6 @@
                         "default": "en",
                         "description": "The default language to use in the checkout page. (The different translations available are listed [here](https://github.com/btcpayserver/btcpayserver/tree/master/BTCPayServer/wwwroot/locales)"
                     },
-                    "customLogo": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "URL to a logo to include in the checkout page."
-                    },
-                    "customCSS": {
-                        "type": "string",
-                        "nullable": true,
-                        "description": "URL to a CSS stylesheet to include in the checkout page"
-                    },
                     "htmlTitle": {
                         "type": "string",
                         "nullable": true,
@@ -530,18 +635,41 @@
                         "default": false,
                         "description": "If true, payjoin will be proposed in the checkout page if possible. ([More information](https://docs.btcpayserver.org/Payjoin/))"
                     },
+                    "autoDetectLanguage": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, the language on the checkout page will adapt to the language defined by the user's browser settings"
+                    },
+                    "showPayInWalletButton": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, the \"Pay in wallet\" button will be shown on the checkout page (Checkout V2)"
+                    },
+                    "showStoreHeader": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, the store header will be shown on the checkout page (Checkout V2)"
+                    },
+                    "celebratePayment": {
+                        "type": "boolean",
+                        "default": true,
+                        "description": "If true, payments on the checkout page will be celebrated with confetti (Checkout V2)"
+                    },
+                    "playSoundOnPayment": {
+                        "type": "boolean",
+                        "default": false,
+                        "description": "If true, sounds on the checkout page will be enabled (Checkout V2)"
+                    },
                     "lazyPaymentMethods": {
                         "type": "boolean",
                         "default": false,
                         "description": "If true, payment methods are enabled individually upon user interaction in the invoice"
                     },
                     "defaultPaymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The default payment method to load when displaying an invoice. It can be in the format of `BTC_LightningNetwork` to specify Lightning to be the default or `BTC_OnChain`/ `BTC` for on-chain to be the default. "
+                        "$ref": "#/components/schemas/PaymentMethodId"
                     },
                     "paymentMethodCriteria": {
-                        "type": "array",
+                        "type": "object",
                         "nullable": true,
                         "items": {
                             "$ref": "#/components/schemas/PaymentMethodCriteriaData"

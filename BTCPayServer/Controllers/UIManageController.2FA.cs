@@ -50,7 +50,7 @@ namespace BTCPayServer.Controllers
                     $"Unexpected error occurred disabling 2FA for user with ID '{user.Id}'.");
             }
 
-            _logger.LogInformation("User with ID {UserId} has disabled 2fa.", user.Id);
+            _logger.LogInformation("User {Email} has disabled 2fa", user.Email);
             return RedirectToAction(nameof(TwoFactorAuthentication));
         }
 
@@ -100,7 +100,7 @@ namespace BTCPayServer.Controllers
             }
 
             await _userManager.SetTwoFactorEnabledAsync(user, true);
-            _logger.LogInformation("User with ID {UserId} has enabled 2FA with an authenticator app.", user.Id);
+            _logger.LogInformation("User {Email} has enabled 2FA with an authenticator app", user.Email);
             var recoveryCodes = await _userManager.GenerateNewTwoFactorRecoveryCodesAsync(user, 10);
             TempData[RecoveryCodesKey] = recoveryCodes.ToArray();
 
@@ -117,7 +117,7 @@ namespace BTCPayServer.Controllers
 
             await _userManager.SetTwoFactorEnabledAsync(user, false);
             await _userManager.ResetAuthenticatorKeyAsync(user);
-            _logger.LogInformation("User with id '{UserId}' has reset their authentication app key.", user.Id);
+            _logger.LogInformation("User {Email} has reset their authentication app key", user.Email);
 
             return RedirectToAction(nameof(EnableAuthenticator));
         }

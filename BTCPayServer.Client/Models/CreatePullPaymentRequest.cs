@@ -12,8 +12,6 @@ namespace BTCPayServer.Client.Models
         [JsonProperty(ItemConverterType = typeof(NumericStringJsonConverter))]
         public decimal Amount { get; set; }
         public string Currency { get; set; }
-        [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
-        public TimeSpan? Period { get; set; }
         [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
         [JsonProperty("BOLT11Expiration")]
         public TimeSpan? BOLT11Expiration { get; set; }
@@ -21,7 +19,7 @@ namespace BTCPayServer.Client.Models
         public DateTimeOffset? ExpiresAt { get; set; }
         [JsonConverter(typeof(NBitcoin.JsonConverters.DateTimeToUnixTimeConverter))]
         public DateTimeOffset? StartsAt { get; set; }
-        public string[] PaymentMethods { get; set; }
+        public string[] PayoutMethods { get; set; }
         public bool AutoApproveClaims { get; set; }
     }
 }

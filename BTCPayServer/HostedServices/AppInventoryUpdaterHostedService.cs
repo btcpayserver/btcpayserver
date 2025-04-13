@@ -1,12 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
-using BTCPayServer.Plugins.Crowdfund;
-using BTCPayServer.Plugins.PointOfSale;
 using BTCPayServer.Services.Apps;
 
 namespace BTCPayServer.HostedServices
@@ -19,7 +17,6 @@ namespace BTCPayServer.HostedServices
         protected override void SubscribeToEvents()
         {
             Subscribe<InvoiceEvent>();
-            Subscribe<UpdateAppInventory>();
         }
 
         public AppInventoryUpdaterHostedService(EventAggregator eventAggregator, AppService appService, Logs logs) : base(eventAggregator, logs)
@@ -30,116 +27,45 @@ namespace BTCPayServer.HostedServices
 
         protected override async Task ProcessEvent(object evt, CancellationToken cancellationToken)
         {
-            if (evt is UpdateAppInventory updateAppInventory)
+            if (evt is InvoiceEvent invoiceEvent)
             {
-                //get all apps that were tagged that have manageable inventory that has an item that matches the item code in the invoice
-                var apps = (await _appService.GetApps(updateAppInventory.AppId)).Select(data =>
-                    {
-                        switch (data.AppType)
-                        {
-                            case PointOfSaleAppType.AppType:
-                                var possettings = data.GetSettings<PointOfSaleSettings>();
-                                return (Data: data, Settings: (object)possettings,
-                                    Items: AppService.Parse(possettings.Template));
-                            case CrowdfundAppType.AppType:
-                                var cfsettings = data.GetSettings<CrowdfundSettings>();
-                                return (Data: data, Settings: (object)cfsettings,
-                                    Items: AppService.Parse(cfsettings.PerksTemplate));
-                            default:
-                                return (null, null, null);
-                        }
-                    }).Where(tuple => tuple.Data != null && tuple.Items.Any(item =>
-                                          item.Inventory.HasValue &&
-                                          updateAppInventory.Items.ContainsKey(item.Id)));
-                foreach (var valueTuple in apps)
-                {
-                    foreach (var item1 in valueTuple.Items.Where(item =>
-                        updateAppInventory.Items.ContainsKey(item.Id)))
-                    {
-                        if (updateAppInventory.Deduct)
-                        {
-                            item1.Inventory -= updateAppInventory.Items[item1.Id];
-                        }
-                        else
-                        {
-                            item1.Inventory += updateAppInventory.Items[item1.Id];
-                        }
-                    }
-
-                    switch (valueTuple.Data.AppType)
-                    {
-                        case PointOfSaleAppType.AppType:
-                            ((PointOfSaleSettings)valueTuple.Settings).Template =
-                                AppService.SerializeTemplate(valueTuple.Items);
-                            break;
-                        case CrowdfundAppType.AppType:
-                            ((CrowdfundSettings)valueTuple.Settings).PerksTemplate =
-                                AppService.SerializeTemplate(valueTuple.Items);
-                            break;
-                        default:
-                            throw new InvalidOperationException();
-                    }
-
-                    valueTuple.Data.SetSettings(valueTuple.Settings);
-                    await _appService.UpdateOrCreateApp(valueTuple.Data);
-                }
-
-
-            }
-            else if (evt is InvoiceEvent invoiceEvent)
-            {
-                Dictionary<string, int> cartItems = null;
-                bool deduct;
+                List<AppCartItem> cartItems = null;
+                int deduct;
                 switch (invoiceEvent.Name)
                 {
                     case InvoiceEvent.Expired:
-
                     case InvoiceEvent.MarkedInvalid:
-                        deduct = false;
+                        deduct = 1;
                         break;
                     case InvoiceEvent.Created:
-                        deduct = true;
+                        deduct = -1;
                         break;
                     default:
                         return;
                 }
 
-                if ((!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode) ||
-                     AppService.TryParsePosCartItems(invoiceEvent.Invoice.Metadata.PosData, out cartItems)))
+                if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode) ||
+                    AppService.TryParsePosCartItems(invoiceEvent.Invoice.Metadata.PosData, out cartItems))
                 {
                     var appIds = AppService.GetAppInternalTags(invoiceEvent.Invoice);
 
-                    if (!appIds.Any())
-                    {
-                        return;
-                    }
-
-                    var items = cartItems ?? new Dictionary<string, int>();
+                    var items = cartItems?.ToList() ?? new List<AppCartItem>();
                     if (!string.IsNullOrEmpty(invoiceEvent.Invoice.Metadata.ItemCode))
                     {
-                        items.TryAdd(invoiceEvent.Invoice.Metadata.ItemCode, 1);
+                        items.Add(new AppCartItem
+                        {
+                            Id = invoiceEvent.Invoice.Metadata.ItemCode,
+                            Count = 1,
+                            Price = invoiceEvent.Invoice.Price
+                        });
                     }
 
-                    _eventAggregator.Publish(new UpdateAppInventory()
+                    var changes = items.Select(i => new AppService.InventoryChange(i.Id, i.Count * deduct)).ToArray();
+                    foreach (var appId in appIds)
                     {
-                        Deduct = deduct,
-                        Items = items,
-                        AppId = appIds
-                    });
-
+                        await _appService.UpdateInventory(appId, changes);
+                    }
                 }
-            }
-        }
-
-        public class UpdateAppInventory
-        {
-            public string[] AppId { get; set; }
-            public Dictionary<string, int> Items { get; set; }
-            public bool Deduct { get; set; }
-
-            public override string ToString()
-            {
-                return string.Empty;
             }
         }
     }

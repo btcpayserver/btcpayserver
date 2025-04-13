@@ -39,5 +39,7 @@
   "submitting_nfc": "ثبت NFC ...",
   "payment_received": "پرداخت دریافت شد",
   "payment_received_body": "پرداخت شما دریافت شده و در حال پردازش است",
-  "payment_received_confirmations": "با دریافت {{requiredConfirmations}} تأییدیه بر روی بلاکچین {{cryptoCode}}، فاکتور شما پرداخت خواهد شد."
+  "payment_received_confirmations": "با دریافت {{requiredConfirmations}} تأییدیه بر روی بلاکچین {{cryptoCode}}، فاکتور شما پرداخت خواهد شد.",
+  "invoice_paidpartial_body": "یک فاکتور تنها برای {{minutes}} دقیقه معتبر است.\n\nبخشی از این فاکتور پرداخت شده و منقضی شده است. لطفا با ما تماس بگیرید تا بتوانیم سفارش شما را تکمیل کنیم.",
+  "contact_us": "ارتباط با ما"
 }

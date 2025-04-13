@@ -1,3 +1,4 @@
+#nullable enable
 using BTCPayServer.Payments;
 
 namespace BTCPayServer.Events
@@ -5,20 +6,18 @@ namespace BTCPayServer.Events
     public class InvoiceNewPaymentDetailsEvent
     {
 
-        public InvoiceNewPaymentDetailsEvent(string invoiceId, IPaymentMethodDetails details, PaymentMethodId paymentMethodId)
+        public InvoiceNewPaymentDetailsEvent(string invoiceId, object? details, PaymentMethodId paymentMethodId)
         {
             InvoiceId = invoiceId;
             Details = details;
             PaymentMethodId = paymentMethodId;
         }
-
-        public string Address { get; set; }
         public string InvoiceId { get; set; }
-        public IPaymentMethodDetails Details { get; }
+        public object? Details { get; }
         public PaymentMethodId PaymentMethodId { get; }
         public override string ToString()
         {
-            return $"{PaymentMethodId.ToPrettyString()}: New payment details {Details.GetPaymentDestination()} for invoice {InvoiceId}";
+            return $"{PaymentMethodId.ToString()}: New payment details {Details?.GetType().Name} for invoice {InvoiceId}";
         }
     }
 }

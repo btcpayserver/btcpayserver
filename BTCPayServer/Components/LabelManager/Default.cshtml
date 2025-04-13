@@ -3,7 +3,7 @@
 @model BTCPayServer.Components.LabelManager.LabelViewModel
 @{
     var elementId = "a" + Encoders.Base58.EncodeData(RandomUtils.GetBytes(16));
-    var fetchUrl = Url.Action("GetLabels", "UIWallets", new {
+    var fetchUrl = Url.Action("LabelsJson", "UIWallets", new {
         walletId = Model.WalletObjectId.WalletId,
         excludeTypes = Safe.Json(Model.ExcludeTypes)
     });
@@ -11,7 +11,7 @@
         walletId = Model.WalletObjectId.WalletId
     }): string.Empty;
 }
-<input id="@elementId" placeholder="Select labels" autocomplete="off" value="@string.Join(",", Model.SelectedLabels)"
+<input id="@elementId" placeholder=@StringLocalizer["Select labels"] autocomplete="off" value="@string.Join(",", Model.SelectedLabels)"
        class="only-for-js form-control label-manager ts-wrapper @(Model.DisplayInline ? "ts-inline" : "")"
        data-fetch-url="@fetchUrl"
        data-update-url="@updateUrl"

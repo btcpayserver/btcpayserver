@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -9,7 +9,7 @@ namespace BTCPayServer.Services.Rates;
 
 public class FreeCurrencyRatesRateProvider : IRateProvider
 {
-    public RateSourceInfo RateSourceInfo => new("free-currency-rates", "Free Currency Rates", "https://cdn.jsdelivr.net/gh/fawazahmed0/currency-api@1/latest/currencies/btc.min.json");
+    public RateSourceInfo RateSourceInfo => new("free-currency-rates", "Free Currency Rates", "https://currency-api.pages.dev/v1/currencies/btc.min.json");
     private readonly HttpClient _httpClient;
     public FreeCurrencyRatesRateProvider(HttpClient httpClient)
     {
@@ -18,7 +18,7 @@ public class FreeCurrencyRatesRateProvider : IRateProvider
 
     public async Task<PairRate[]> GetRatesAsync(CancellationToken cancellationToken)
     {
-        var response = await _httpClient.GetAsync(RateSourceInfo.Url, cancellationToken);
+        using var response = await _httpClient.GetAsync(RateSourceInfo.Url, cancellationToken);
         response.EnsureSuccessStatusCode();
         var jobj = await response.Content.ReadAsAsync<JObject>(cancellationToken);
         var results = (JObject) jobj["btc"] ;

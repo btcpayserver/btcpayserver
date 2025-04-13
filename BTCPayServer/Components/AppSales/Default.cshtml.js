@@ -1,27 +1,34 @@
 if (!window.appSales) {
-    window.appSales =
-    {
-        dataLoaded: function (model) {
-            const id = "AppSales-" + model.id;
+    window.appSales = {
+        dataLoaded (model) {
+            const id = `AppSales-${model.id}`;
             const appId = model.id;
             const period = model.period;
-            const baseUrl = model.url;
+            const baseUrl = model.dataUrl;
             const data = model;
 
             const render = (data, period) => {
+                document.querySelector(`#${id} .sales-count`).innerText = data.salesCount;
+                
                 const series = data.series.map(s => s.salesCount);
-                const labels = data.series.map((s, i) => period === model.period ? s.label : (i % 5 === 0 ? s.label : ''));
+                const labels = data.series.map((s, i) => period === 'Month' ? (i % 5 === 0 ? s.label : '') : s.label);
                 const min = Math.min(...series);
                 const max = Math.max(...series);
                 const low = min === max ? 0 : Math.max(min - ((max - min) / 5), 0);
-
-                document.querySelectorAll(`#${id} .sales-count`).innerText = data.salesCount;
-
+                const tooltip = Chartist.plugins.tooltip2({
+                    template: '<div class="chartist-tooltip-inner">Sales: {{value}}</div>',
+                    offset: {
+                        x: 0,
+                        y: -8
+                    }
+                });
                 new Chartist.Bar(`#${id} .ct-chart`, {
                     labels,
                     series: [series]
                 }, {
                     low,
+                    axisY: { onlyInteger: true },
+                    plugins: [tooltip]
                 });
             };
 
@@ -35,11 +42,19 @@ if (!window.appSales) {
                     render(data, period);
                 }
             };
+            
+            function addEventListeners() {
+                delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
+                    const type = e.target.value;
+                    await update(type);
+                });
+            }
 
-            delegate('change', `#${id} [name="AppSalesPeriod-${appId}"]`, async e => {
-                const type = e.target.value;
-                await update(type);
-            });
+            if (document.readyState === "loading") {
+                window.addEventListener("DOMContentLoaded", addEventListeners);
+            } else {
+                addEventListeners();
+            }
         }
     };
 }

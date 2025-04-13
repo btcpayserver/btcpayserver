@@ -1,5 +1,4 @@
 #nullable enable
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
@@ -23,14 +22,14 @@ namespace BTCPayServer.Controllers.GreenField
     public class GreenfieldStoreRatesController : ControllerBase
     {
         private readonly RateFetcher _rateProviderFactory;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly DefaultRulesCollection _defaultRules;
 
         public GreenfieldStoreRatesController(
             RateFetcher rateProviderFactory,
-            BTCPayNetworkProvider btcPayNetworkProvider)
+            DefaultRulesCollection defaultRules)
         {
             _rateProviderFactory = rateProviderFactory;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _defaultRules = defaultRules;
         }
 
         [HttpGet("")]
@@ -61,10 +60,10 @@ namespace BTCPayServer.Controllers.GreenField
             }
 
 
-            var rules = blob.GetRateRules(_btcPayNetworkProvider);
+            var rules = blob.GetRateRules(_defaultRules);
 
 
-            var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, CancellationToken.None);
+            var rateTasks = _rateProviderFactory.FetchRates(parsedCurrencyPairs, rules, new StoreIdRateContext(data.Id), CancellationToken.None);
             await Task.WhenAll(rateTasks.Values);
             var result = new List<StoreRateResult>();
             foreach (var rateTask in rateTasks)

@@ -14,7 +14,6 @@ services:
     environment:
       TESTS_BTCRPCCONNECTION: server=http://bitcoind:43782;ceiwHEbqWI83:DwubwWsoo3
       TESTS_BTCNBXPLORERURL: http://nbxplorer:32838/
-      TESTS_DB: "Postgres"
       TESTS_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=btcpayserver
       TESTS_EXPLORER_POSTGRES: User ID=postgres;Include Error Detail=true;Host=postgres;Port=5432;Database=nbxplorer
       TESTS_HOSTNAME: tests
@@ -22,7 +21,7 @@ services:
       TESTS_AzureBlobStorageConnectionString: ${TESTS_AzureBlobStorageConnectionString:-none}
       TEST_MERCHANTLIGHTNINGD: "type=clightning;server=unix://etc/merchant_lightningd_datadir/lightning-rpc"
       TEST_CUSTOMERLIGHTNINGD: "type=clightning;server=unix://etc/customer_lightningd_datadir/lightning-rpc"
-      TEST_MERCHANTLND: "http://lnd:lnd@merchant_lnd:8080/"
+      TEST_MERCHANTLND: "http://merchant_lnd:8080/"
       TESTS_INCONTAINER: "true"
       TESTS_SSHCONNECTION: "root@sshd:22"
       TESTS_SSHPASSWORD: ""
@@ -70,7 +69,7 @@ services:
         - "sshd_datadir:/root/.ssh"
 
   devlnd:
-    image: btcpayserver/bitcoin:25.0
+    image: btcpayserver/bitcoin:28.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -86,7 +85,7 @@ services:
       - merchant_lnd
 
   selenium:
-    image: selenium/standalone-chrome:101.0
+    image: selenium/standalone-chrome:125.0
     extra_hosts:
       - "tests:172.23.0.18"
     expose:
@@ -96,7 +95,7 @@ services:
       custom:
 
   nbxplorer:
-    image: nicolasdorier/nbxplorer:2.3.63
+    image: nicolasdorier/nbxplorer:2.5.22
     restart: unless-stopped
     ports:
       - "32838:32838"
@@ -121,7 +120,7 @@ services:
 
   bitcoind:
     restart: unless-stopped
-    image: btcpayserver/bitcoin:25.0
+    image: btcpayserver/bitcoin:28.1
     environment:
       BITCOIN_NETWORK: regtest
       BITCOIN_WALLETDIR: "/data/wallets"
@@ -149,7 +148,7 @@ services:
       - "bitcoin_datadir:/data"
 
   customer_lightningd:
-    image: btcpayserver/lightning:v23.05-dev
+    image: btcpayserver/lightning:v25.02
     stop_signal: SIGKILL
     restart: unless-stopped
     environment:
@@ -157,6 +156,7 @@ services:
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=customer_lightningd:9735
@@ -166,6 +166,7 @@ services:
         dev-bitcoind-poll=1
     ports:
       - "30992:9835" # api port
+      - "30892:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -176,13 +177,15 @@ services:
       - bitcoind
 
   merchant_lightningd:
-    image: btcpayserver/lightning:v23.05-dev
+    image: btcpayserver/lightning:v25.02
     stop_signal: SIGKILL
+    restart: unless-stopped
     environment:
       EXPOSE_TCP: "true"
       LIGHTNINGD_CHAIN: "btc"
       LIGHTNINGD_NETWORK: "regtest"
       LIGHTNINGD_OPT: |
+        developer
         bitcoin-datadir=/etc/bitcoin
         bitcoin-rpcconnect=bitcoind
         announce-addr=merchant_lightningd:9735
@@ -192,6 +195,7 @@ services:
         dev-bitcoind-poll=1
     ports:
       - "30993:9835" # api port
+      - "30893:9735" # server port
     expose:
       - "9735" # server port
       - "9835" # api port
@@ -202,7 +206,7 @@ services:
       - bitcoind
 
   postgres:
-    image:  postgres:13.4
+    image:  postgres:13.13
     environment:
         POSTGRES_HOST_AUTH_METHOD: trust
     ports:
@@ -211,7 +215,7 @@ services:
       - "5432"
 
   merchant_lnd:
-    image: btcpayserver/lnd:v0.16.4-beta
+    image: btcpayserver/lnd:v0.18.5-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -237,6 +241,7 @@ services:
     ports:
       - "35531:8080"
       - "53280:10009"
+      - "30894:9735"
     expose:
       - "8080"
       - "9735"
@@ -248,7 +253,7 @@ services:
       - bitcoind
 
   customer_lnd:
-    image: btcpayserver/lnd:v0.16.4-beta
+    image: btcpayserver/lnd:v0.18.5-beta
     restart: unless-stopped
     environment:
       LND_CHAIN: "btc"
@@ -273,6 +278,7 @@ services:
         no-rest-tls=1
     ports:
       - "35532:8080"
+      - "30895:9735"
     expose:
       - "8080"
       - "9735"

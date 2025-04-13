@@ -1,187 +1,156 @@
 using System;
-using System.Collections.Generic;
-using System.Data.Common;
 using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
-using BTCPayServer.Lightning;
-using BTCPayServer.Lightning.LND;
 using BTCPayServer.Payments;
-using BTCPayServer.Rating;
+using BTCPayServer.Payments.Bitcoin;
+using BTCPayServer.Payments.Lightning;
 using BTCPayServer.Services.Invoices;
-using BTCPayServer.Services.Rates;
 using Dapper;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Internal;
-using NBitcoin;
-using NBitpayClient;
-using Newtonsoft.Json.Linq;
-using static BTCPayServer.HostedServices.PullPaymentHostedService.PayoutApproval;
+using static BTCPayServer.Client.Models.InvoicePaymentMethodDataModel;
 
 namespace BTCPayServer.Services.Reporting;
 
 public class PaymentsReportProvider : ReportProvider
 {
+    private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+    private readonly PaymentMethodHandlerDictionary _handlers;
 
-    public PaymentsReportProvider(ApplicationDbContextFactory dbContextFactory, CurrencyNameTable currencyNameTable)
+    public PaymentsReportProvider(
+        ApplicationDbContextFactory dbContextFactory,
+        DisplayFormatter displayFormatter,
+        InvoiceRepository invoiceRepository,
+        BTCPayNetworkProvider btcPayNetworkProvider,
+        PaymentMethodHandlerDictionary handlers)
     {
+        _btcPayNetworkProvider = btcPayNetworkProvider;
+        _handlers = handlers;
         DbContextFactory = dbContextFactory;
-        CurrencyNameTable = currencyNameTable;
+        DisplayFormatter = displayFormatter;
+        InvoiceRepository = invoiceRepository;
     }
     public override string Name => "Payments";
-    public ApplicationDbContextFactory DbContextFactory { get; }
-    public CurrencyNameTable CurrencyNameTable { get; }
+    private ApplicationDbContextFactory DbContextFactory { get; }
+    private DisplayFormatter DisplayFormatter { get; }
+    public InvoiceRepository InvoiceRepository { get; }
 
     ViewDefinition CreateViewDefinition()
     {
-        return 
-            new()
+        return new()
+        {
+            Fields =
             {
-                Fields =
+                new ("Date", "datetime"),
+                new ("InvoiceId", "invoice_id"),
+                new ("OrderId", "string"),
+                new ("Category", "string"),
+                new ("PaymentMethodId", "string"),
+                new ("Confirmed", "boolean"),
+                new ("Address", "string"),
+                new ("PaymentCurrency", "string"),
+                new ("PaymentAmount", "amount"),
+                new ("PaymentMethodFee", "decimal"),
+                new ("LightningAddress", "string"),
+                new ("InvoiceCurrency", "string"),
+                new ("InvoiceCurrencyAmount", "amount"),
+                new ("Rate", "amount")
+            },
+            Charts = 
+            {
+                new ()
                 {
-                        new ("Date", "datetime"),
-                        new ("InvoiceId", "invoice_id"),
-                        new ("OrderId", "string"),
-                        new ("PaymentType", "string"),
-                        new ("PaymentId", "string"),
-                        new ("Confirmed", "boolean"),
-                        new ("Address", "string"),
-                        new ("Crypto", "string"),
-                        new ("CryptoAmount", "decimal"),
-                        new ("NetworkFee", "decimal"),
-                        new ("LightningAddress", "string"),
-                        new ("Currency", "string"),
-                        new ("CurrencyAmount", "decimal"),
-                        new ("Rate", "decimal")
+                    Name = "Aggregated by payment's currency",
+                    Groups = { "PaymentCurrency", "PaymentMethodId" },
+                    Totals = { "PaymentCurrency" },
+                    HasGrandTotal = false,
+                    Aggregates = { "PaymentAmount" }
                 },
-                Charts = 
+                new ()
                 {
-                    new ()
-                    {
-                        Name = "Aggregated crypto amount",
-                        Groups = { "Crypto", "PaymentType" },
-                        Totals = { "Crypto" },
-                        HasGrandTotal = false,
-                        Aggregates = { "CryptoAmount" }
-                    },
-                    new ()
-                    {
-                        Name = "Aggregated currency amount",
-                        Groups = { "Currency" },
-                        Totals = { "Currency" },
-                        HasGrandTotal = false,
-                        Aggregates = { "CurrencyAmount" }
-                    },
-                    new ()
-                    {
-                        Name = "Group by Lightning Address (Currency amount)",
-                        Filters = { "typeof this.LightningAddress === 'string' && this.Crypto == \"BTC\"" },
-                        Groups = { "LightningAddress", "Currency" },
-                        Aggregates = { "CurrencyAmount" },
-                        HasGrandTotal = true
-                    },
-                    new ()
-                    {
-                        Name = "Group by Lightning Address (Crypto amount)",
-                        Filters = { "typeof this.LightningAddress === 'string' && this.Crypto == \"BTC\"" },
-                        Groups = { "LightningAddress" },
-                        Aggregates = { "CryptoAmount" },
-                        HasGrandTotal = true
-                    }
+                    Name = "Aggregated by invoice's currency",
+                    Groups = { "InvoiceCurrency" },
+                    Totals = { "InvoiceCurrency" },
+                    HasGrandTotal = false,
+                    Aggregates = { "InvoiceCurrencyAmount" }
+                },
+                new ()
+                {
+                    Name = "Group by Lightning Address",
+                    Filters = { "typeof this.LightningAddress === 'string' && this.PaymentCurrency == \"BTC\"" },
+                    Groups = { "LightningAddress", "InvoiceCurrency" },
+                    Aggregates = { "InvoiceCurrencyAmount" },
+                    HasGrandTotal = true
+                },
+                new ()
+                {
+                    Name = "Group by Lightning Address (Crypto)",
+                    Filters = { "typeof this.LightningAddress === 'string' && this.PaymentCurrency == \"BTC\"" },
+                    Groups = { "LightningAddress", "PaymentCurrency" },
+                    Aggregates = { "PaymentAmount" },
+                    HasGrandTotal = true
                 }
+            }
         };
     }
-
 
     public override async Task Query(QueryContext queryContext, CancellationToken cancellation)
     {
         queryContext.ViewDefinition = CreateViewDefinition();
         await using var ctx = DbContextFactory.CreateContext();
         var conn = ctx.Database.GetDbConnection();
-        string[] fields = new[]
+        var invoices = await InvoiceRepository.GetInvoices(new InvoiceQuery()
         {
-                $"i.\"Created\" created",
-                "i.\"Id\" invoice_id",
-                "i.\"OrderId\" order_id",
-                "p.\"Id\" payment_id",
-                "p.\"Type\" payment_type",
-                "i.\"Blob2\" invoice_blob",
-                "p.\"Blob2\" payment_blob",
-            };
-        string select = "SELECT " + String.Join(", ", fields) + " ";
-        string body =
-            "FROM \"Payments\" p " +
-            "JOIN \"Invoices\" i ON i.\"Id\" = p.\"InvoiceDataId\" " +
-            $"WHERE p.\"Accounted\" IS TRUE AND i.\"Created\" >= @from AND i.\"Created\" < @to AND i.\"StoreDataId\"=@storeId " +
-            "ORDER BY i.\"Created\"";
-        var command = new CommandDefinition(
-            commandText: select + body,
-            parameters: new
-            {
-                storeId = queryContext.StoreId,
-                from = queryContext.From,
-                to = queryContext.To
-            },
-            cancellationToken: cancellation);
-        var rows = await conn.QueryAsync(command);
-        foreach (var r in rows)
+            StoreId = [queryContext.StoreId],
+            StartDate = queryContext.From,
+            EndDate = queryContext.To,
+            OrderByDesc = false,
+        }, cancellation);
+        
+        foreach (var invoice in invoices)
         {
-            var values = queryContext.CreateData();
-            values.Add((DateTime)r.created);
-            values.Add((string)r.invoice_id);
-            values.Add((string)r.order_id);
-            if (PaymentMethodId.TryParse((string)r.payment_type, out var paymentType))
+            foreach (var payment in invoice.GetPayments(true))
             {
-                if (paymentType.PaymentType == PaymentTypes.LightningLike || paymentType.PaymentType == PaymentTypes.LNURLPay)
+                var values = queryContext.CreateData();
+                values.Add(invoice.InvoiceTime);
+                values.Add(invoice.Id);
+                values.Add(invoice.Metadata.OrderId);
+                var paymentMethodId = payment.PaymentMethodId;
+                _handlers.TryGetValue(paymentMethodId, out var handler);
+                if (handler is ILightningPaymentHandler)
+                {
                     values.Add("Lightning");
-                else if (paymentType.PaymentType == PaymentTypes.BTCLike)
+                }
+                else if (handler is BitcoinLikePaymentHandler)
                     values.Add("On-Chain");
                 else
-                    values.Add(paymentType.ToStringNormalized());
-            }
-            else
-                continue;
-            values.Add((string)r.payment_id);
-            var invoiceBlob = JObject.Parse((string)r.invoice_blob);
-            var paymentBlob = JObject.Parse((string)r.payment_blob);
+                    values.Add(paymentMethodId.ToString());
+                values.Add(paymentMethodId.ToString());
 
+                values.Add(payment.Status is PaymentStatus.Settled);
+                values.Add(payment.Destination);
+                values.Add(payment.Currency);
+                values.Add(new FormattedAmount(payment.Value, payment.Divisibility).ToJObject());
+                values.Add(payment.PaymentMethodFee);
 
-            var data = JObject.Parse(paymentBlob.SelectToken("$.cryptoPaymentData")?.Value<string>()!);
-            var conf = data.SelectToken("$.confirmationCount")?.Value<int>();
-            values.Add(conf is int o ? o > 0 :
-                       paymentType.PaymentType != PaymentTypes.BTCLike ? true : null);
-            values.Add(data.SelectToken("$.address")?.Value<string>());
-            values.Add(paymentType.CryptoCode);
+                var prompt = invoice.GetPaymentPrompt(PaymentTypes.LNURL.GetPaymentMethodId("BTC"));
+                var consumerdLightningAddress = prompt is null || handler is not LNURLPayPaymentHandler lnurlHandler ? null : lnurlHandler.ParsePaymentPromptDetails(prompt.Details).ConsumedLightningAddress;
+                values.Add(consumerdLightningAddress);
+                values.Add(invoice.Currency);
+                if (invoice.TryGetRate(payment.Currency, out var rate))
+                {
+                    values.Add(DisplayFormatter.ToFormattedAmount(rate * payment.Value, invoice.Currency)); // Currency amount
+                    values.Add(DisplayFormatter.ToFormattedAmount(rate, invoice.Currency));
+                }
+                else
+                {
+                    values.Add(null);
+                    values.Add(null);
+                }
 
-            decimal cryptoAmount;
-            if (data.SelectToken("$.amount")?.Value<long>() is long v)
-            {
-                cryptoAmount = LightMoney.MilliSatoshis(v).ToDecimal(LightMoneyUnit.BTC);
+                queryContext.Data.Add(values);
             }
-            else if (data.SelectToken("$.value")?.Value<long>() is long amount)
-            {
-                cryptoAmount = Money.Satoshis(amount).ToDecimal(MoneyUnit.BTC);
-            }
-            else
-            {
-                continue;
-            }
-            values.Add(cryptoAmount);
-            values.Add(paymentBlob.SelectToken("$.networkFee", false)?.Value<decimal>());
-            values.Add(invoiceBlob.SelectToken("$.cryptoData.BTC_LNURLPAY.paymentMethod.ConsumedLightningAddress", false)?.Value<string>());
-            var currency = invoiceBlob.SelectToken("$.currency")?.Value<string>();
-            values.Add(currency);
-
-            values.Add(null); // Currency amount
-            var rate = invoiceBlob.SelectToken($"$.cryptoData.{paymentType}.rate")?.Value<decimal>();
-            values.Add(rate);
-            if (rate is not null)
-            {
-                values[^2] = (rate.Value * cryptoAmount).RoundToSignificant(CurrencyNameTable.GetCurrencyData(currency ?? "USD", true).Divisibility);
-            }
-
-            queryContext.Data.Add(values);
         }
     }
 }

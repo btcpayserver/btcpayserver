@@ -27,12 +27,10 @@
     }
     <form method="post" asp-action="AuthorizeAPIKey" class="cancel">
         <button name="command" type="submit" value="Cancel" id="cancel">
-            <vc:icon symbol="close"/>
+            <vc:icon symbol="cross"/>
         </button>
     </form>
 }
-
-<partial name="_StatusMessage" />
 
 <form method="post" asp-action="AuthorizeAPIKey">
     <input type="hidden" asp-for="RedirectUrl" value="@Model.RedirectUrl"/>
@@ -45,27 +43,30 @@
         <h1>@ViewData["Title"]</h1>
         <p class="lead text-secondary mt-3">@(displayName ?? "An application") is requesting access to your BTCPay Server account.</p>
     </header>
-    <div asp-validation-summary="All" class="text-danger"></div>
-    
+    @if (!ViewContext.ModelState.IsValid)
+    {
+        <div asp-validation-summary="All"></div>
+    }
+
     @if (Model.NeedsStorePermission && store == null)
     {
         @if (!Model.Stores.Any())
         {
-            <div class="alert alert-warning mb-4">
+            <div class="alert alert-warning mb-4" text-translate="true">
                 You currently have no stores configured.
             </div>
-            <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel">Cancel</button>
+            <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel" text-translate="true">Cancel</button>
         }
         else
         {
             <div class="form-group">
-                <label asp-for="StoreId" class="form-label">Select the store to grant permission for</label>
+                <label asp-for="StoreId" class="form-label" text-translate="true">Select the store to grant permission for</label>
                 <select asp-for="StoreId" class="form-select" asp-items="@(new SelectList(Model.Stores, nameof(StoreData.Id), nameof(StoreData.StoreName)))" required></select>
                 <span asp-validation-for="StoreId" class="text-danger"></span>
             </div>
             <div class="d-flex gap-3">
-                <button class="btn btn-primary" name="command" id="continue" type="submit" value="SelectStores">Continue</button>
-                <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel">Cancel</button>
+                <button class="btn btn-primary" name="command" id="continue" type="submit" value="SelectStores" text-translate="true">Continue</button>
+                <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel" text-translate="true">Cancel</button>
             </div>
         }
     }
@@ -76,7 +77,7 @@
         @if (Model.RedirectUrl != null)
         {
             <p class="alert alert-info mb-4">
-                If authorized, the generated API key will be provided to <strong>@Model.RedirectUrl.AbsoluteUri</strong>
+                <span text-translate="true">If authorized, the generated API key will be provided to</span> <strong>@Model.RedirectUrl.AbsoluteUri</strong>
             </p>
         }
         
@@ -86,20 +87,17 @@
             <span asp-validation-for="Label" class="text-danger"></span>
         </div>
         
-        <h2 class="h5 fw-semibold mt-4">Permissions</h2>
+        <h2 class="h5 fw-semibold mt-4" text-translate="true">Permissions</h2>
         @if (!groupedPermissions.Any())
         {
-            <p>
-                There are no associated permissions to the API key being requested by the application.
-                The application cannot do anything with your BTCPay Server account other than validating your account exists.
-            </p>
+            <p text-translate="true">There are no associated permissions to the API key being requested by the application. The application cannot do anything with your BTCPay Server account other than validating your account exists.</p>
         }
         else
         {
             if (Model.NeedsStorePermission)
             {
                 <p class="mb-2">
-                    Store-based permissions will be applied for
+                    <span text-translate="true">Store-based permissions will be applied for</span>
                     <strong>@store.StoreName</strong>
                 </p>
             }
@@ -132,7 +130,7 @@
                             <span asp-validation-for="PermissionValues[i].Value" class="text-danger"></span>
                             @if (Model.PermissionValues[i].Forbidden)
                             {
-                                <div class="text-danger">This permission is not available for your account.</div>
+                                <div class="text-danger" text-translate="true">This permission is not available for your account.</div>
                             }
                         </div>
                     </div>
@@ -140,8 +138,8 @@
             </div>
         }
         <div class="d-flex gap-3">
-            <button class="btn btn-primary" name="command" id="consent-yes" type="submit" value="Authorize">Authorize app</button>
-            <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel">Cancel</button>
+            <button class="btn btn-primary" name="command" id="consent-yes" type="submit" value="Authorize" text-translate="true">Authorize app</button>
+            <button class="btn btn-secondary" name="command" id="consent-no" type="submit" value="Cancel" text-translate="true">Cancel</button>
         </div>
     }
 </form>

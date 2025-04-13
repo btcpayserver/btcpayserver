@@ -101,7 +101,7 @@ window.BTCPayShopifyIntegrationModule = function () {
             }
             return;
         }
-        if (["complete", "confirmed", "paid"].indexOf(currentInvoiceData.status.toLowerCase()) >= 0) {
+        if (["settled", "processing"].indexOf(currentInvoiceData.status.toLowerCase()) >= 0) {
             setOrderAsPaid();
         } else if (["invalid", "expired"].indexOf(currentInvoiceData.status.toLowerCase()) >= 0) {
             fail();
@@ -160,9 +160,11 @@ window.BTCPayShopifyIntegrationModule = function () {
     }
     showPaymentInstructions();
     window.onPayButtonClicked = onPayButtonClicked.bind(this);
-    getOrCheckInvoice(true).then(function (d) {
-        injectPaymentButtonHtml();
-        handleInvoiceData(d, {backgroundCheck: true})
+    getOrCheckInvoice(false).then(function (d) {
+        if (d) {
+            injectPaymentButtonHtml();
+            handleInvoiceData(d, { backgroundCheck: true })
+        }
     });
 
 };

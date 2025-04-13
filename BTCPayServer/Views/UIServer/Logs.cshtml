@@ -1,15 +1,21 @@
-﻿@model BTCPayServer.Models.ServerViewModels.LogsViewModel
+@model BTCPayServer.Models.ServerViewModels.LogsViewModel
 @{
-    ViewData.SetActivePage(ServerNavPages.Logs, "Logs");
+    ViewData.SetActivePage(ServerNavPages.Logs, StringLocalizer["Logs"]);
 }
 
-<h3 class="mb-4">@ViewData["Title"]</h3>
+<div class="sticky-header">
+	<h2 class="my-1">@ViewData["Title"]</h2>
+</div>
+<partial name="_StatusMessage" />
 
 <ul class="list-unstyled">
     @foreach (var file in Model.LogFiles)
     {
         <li>
-            <a asp-action="LogsView" asp-route-file="@file.Name">@file.Name</a>
+            <a asp-action="LogsView" asp-route-file="@file.Name" asp-route-offset="@Model.LogFileOffset">@file.Name</a>
+            <a asp-action="LogsView" asp-route-file="@file.Name" asp-route-offset="@Model.LogFileOffset" asp-route-download="true" class="mx-2">
+                <vc:icon symbol="actions-download" />
+            </a>
         </li>
     }
 </ul>
@@ -20,9 +26,9 @@
             <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset - 5)">&laquo;</a>
         </li>
         <li class="page-item disabled">
-            <span class="page-link">Showing @Model.LogFileOffset - (@(Model.LogFileOffset+Model.LogFiles.Count)) of @Model.LogFileCount</span>
+            <span class="page-link">@StringLocalizer["Showing {0} of {1}", Model.LogFileOffset - (Model.LogFileOffset + Model.LogFiles.Count), Model.LogFileCount]</span>
         </li>
-        <li class="page-item @((Model.LogFileOffset + Model.LogFiles.Count) < Model.LogFileCount ? null : "disabled")">
+        <li class="page-item @(Model.LogFileOffset + Model.LogFiles.Count < Model.LogFileCount ? null : "disabled")">
             <a class="page-link" asp-action="LogsView" asp-route-offset="@(Model.LogFileOffset + Model.LogFiles.Count)">&raquo;</a>
         </li>
     </ul>

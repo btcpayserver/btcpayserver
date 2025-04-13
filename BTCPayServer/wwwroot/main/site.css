@@ -1,6 +1,6 @@
 /* Variables */
 :root {
-    --chart-main-rgb: 68, 164, 49;
+    --chart-main-rgb: var(--btcpay-primary-rgb);
     --chart-series-a-rgb: var(--chart-main-rgb);
     --chart-series-b-rgb: 245, 0, 0;
     --chart-series-c-rgb: 0, 109, 242;
@@ -27,6 +27,39 @@
     visibility: hidden;
 }
 
+/* Iframe context */
+[data-context="btcpayapp"] #Checkout #StoreLink,
+[data-context="btcpayapp"] #Checkout .store-footer {
+    display: none;
+}
+
+/* Form validation messages should match alert styles */
+.validation-summary-errors {
+    padding: .75rem 1rem;
+    margin-bottom: 1.5rem;
+    color: var(--btcpay-danger-text);
+    background-color: var(--btcpay-danger);
+    border: var(--btcpay-border-width) solid var(--btcpay-danger-border);
+    border-radius: var(--btcpay-border-radius);
+}
+
+.alert > :last-child,
+.validation-summary-errors > :last-child {
+    margin-bottom: 0;
+}
+
+.no-marker > ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.profile-picture {
+    height: var(--profile-picture-size, 2.1rem);
+    width: var(--profile-picture-size, 2.1rem);
+    border-radius: 50%;
+    object-fit: cover;
+}
+
 /* General and site-wide Bootstrap modifications */
 p {
     margin-bottom: 1.5rem;
@@ -50,12 +83,18 @@ hr.primary {
 }
 
 .input-group-clear .icon {
-    --btn-icon-size: .65rem;
+    --icon-size: .65rem;
 }
 
 .note-editable {
     color: var(--btcpay-form-text);
     background-color: var(--btcpay-form-bg);
+}
+
+:disabled .note-editable {
+    border-color: var(--btcpay-form-border-disabled);
+    background-color: var(--btcpay-form-bg-disabled);
+    pointer-events: none;
 }
 
 @media (min-width: 768px) {
@@ -76,7 +115,7 @@ hr.primary {
 
 @media (min-width: 1400px) {
     .col-xxl-constrain {
-        max-width: 800px;
+        max-width: 984px;
     }
 }
 
@@ -85,68 +124,76 @@ a.unobtrusive-link {
     text-decoration: inherit;
 }
 
-.btn.btn-link:focus {
-    box-shadow: none;
-}
-
-[aria-expanded] > svg.icon-caret-down {
-    flex-shrink: 0;
-    width: 24px;
-    height: 24px;
+[aria-expanded] > .icon-caret-down {
+    --icon-size: 1.5rem;
     margin-left: auto;
     transition: transform 0.2s ease-in-out;
 }
 
-[aria-expanded="true"] > svg.icon-caret-down {
+[aria-expanded="true"] > .icon-caret-down {
     transform: rotate(-180deg);
 }
 
+/* Time format button */
+.switch-time-format {
+    line-height: 1;
+}
+
+/* Icon and text, used for warnings of additional info text. Adjust spacing and color via utility classes. */
+.info-note {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--btcpay-space-s);
+}
+
+.info-note .icon {
+    position: relative;
+    top: var(--btcpay-space-xs);
+}
+
 /* Badges */
-.badge-pending,
-.badge-new {
+.badge-new,
+.badge-pending {
     background: #d4edda;
     color: #000;
 }
-
 .badge-expired {
     background: #eee;
     color: #000;
 }
-
 .badge-invalid {
-    background: #c94a47;
-    color: #fff;
+    background: var(--btcpay-danger);
+    color: var(--btcpay-danger-text);
 }
-
+.badge-unusual,
 .badge-processing {
-    background: #f1c332;
-    color: #000;
+    background: var(--btcpay-warning);
+    color: var(--btcpay-warning-text);
 }
-
 .badge-settled {
-    background: #329f80;
-    color: #fff;
+    background: var(--btcpay-success);
+    color: var(--btcpay-success-text);
 }
 
 /* Info icons in main headline */
-svg.icon.icon-info {
+.icon.icon-info {
     position: relative;
     top: -.05em;
     color: var(--btcpay-neutral-500);
 }
 
-svg.icon.icon-info:hover {
+.icon.icon-info:hover {
     color: var(--btcpay-primary);
 }
 
-h2 svg.icon.icon-info {
+h2 .icon.icon-info {
     width: 1.2rem;
     height: 1.2rem;
     top: -.0125em;
 }
 
-#descriptor p {
-    max-width: 40em;
+#mainContent section p {
+    max-width: 46em;
 }
 
 /* Invoices */
@@ -157,11 +204,7 @@ h2 svg.icon.icon-info {
     cursor: pointer;
     padding: 0;
 }
-@media (min-width: 1400px) {
-    #MassAction {
-        margin-top: -4rem;
-    }
-}
+
 /* Prevent layout from breaking on hyperlinks with very long URLs as the visible text */
 .invoice-details a {
     word-break: break-word;
@@ -226,7 +269,8 @@ h2 svg.icon.icon-info {
 
 /* Print */
 @media print {
-    section {
+    section,
+    .tile {
         page-break-inside: avoid;
     }
     .table-responsive {
@@ -252,27 +296,22 @@ h2 svg.icon.icon-info {
     a {
         text-decoration: none !important;
     }
+    .buttons,
     .toasted-container {
         display: none !important;
     }
     .truncate-center a,
     .truncate-center button,
     .truncate-center-truncated {
-        display: none;
+        display: none !important;
     }
     .card {
         page-break-inside: avoid;
     }
-    #markStatusDropdownMenuButton {
-        border: 0;
-        background: transparent;
-        padding: 0 !important;
-        color: inherit;
-        font-weight:  var(--btcpay-font-weight-normal);
-        font-size: var(--btcpay-body-font-size);
-    }
-    #markStatusDropdownMenuButton::after {
-        content: none;
+    .actions-col,
+    .sticky-header > div:last-child,
+    .sticky-header > .btn:last-child {
+        display: none;
     }
 }
 
@@ -287,14 +326,7 @@ h2 svg.icon.icon-info {
 }
 
 /* Icons */
-svg.icon {
-    display: inline-block;
-    width: 1rem;
-    height: 1rem;
-    flex-shrink: 0 !important;
-}
-
-svg.icon-note {
+.icon-note {
   color: var(--btcpay-neutral-500);
 }
 
@@ -452,7 +484,7 @@ svg.icon-note {
     font-weight: var(--btcpay-font-weight-bold);
 }
 
-.widget .table {
+.widget *:not([class*='table-responsive']) > .table {
     margin-left: -.5rem;
     margin-right: -.5rem;
     width: calc(100% + 1rem);
@@ -633,14 +665,18 @@ label.btcpay-list-select-item:hover {
     border-color: var(--btcpay-form-border-hover);
     background-color: var(--btcpay-form-bg-hover);
 }
+:disabled label.btcpay-list-select-item {
+    border-color: var(--btcpay-form-border-disabled);
+    background-color: var(--btcpay-form-bg-disabled);
+    pointer-events: none;
+}
 @media (max-width: 575px) {
     .btcpay-list-select-item {
         flex-basis: 100%;
     }
 }
 .btcpay-list-select-item .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    --icon-size: 1.5rem;
     margin: 0 var(--btcpay-space-s);
 }
 input:checked + label.btcpay-list-select-item {
@@ -656,28 +692,58 @@ input:checked + label.btcpay-list-select-item {
 }
 
 /* Public pages */
-.public-page-wrap {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
-    margin: 0 auto;
-    padding: var(--btcpay-space-l) var(--btcpay-space-m);
-}
-
-/* gradually try to set better but less supported values and units */
-.min-vh-100,
-.public-page-wrap {
-    min-height: -webkit-fill-available !important;
-    min-height: 100dvh !important;
-}
-
-@media (max-width: 400px) {
+@media screen {
     .public-page-wrap {
-        padding-left: 0;
-        padding-right: 0;
+        --wrap-max-width: none;
+        --wrap-padding-vertical: var(--btcpay-space-l);
+        --wrap-padding-horizontal: var(--btcpay-space-m);
+        
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        max-width: var(--wrap-max-width);
+        margin: 0 auto;
+        padding: var(--wrap-padding-vertical) var(--wrap-padding-horizontal);
+    }
+    
+    /* gradually try to set better but less supported values and units */
+    .min-vh-100,
+    .public-page-wrap {
+        min-height: -webkit-fill-available !important;
+        min-height: 100dvh !important;
+    }
+    .tile {
+        --tile-padding: 1.5rem;
+        --tile-border-radius: var(--btcpay-border-radius-l);
+
+        padding: var(--tile-padding);
+        background: var(--btcpay-bg-tile);
+        border-radius: var(--tile-border-radius);
+        box-shadow: var(--btcpay-box-shadow-lg);
+    }
+    .tile .buttons {
+        display: flex;
+        flex-direction: column;
+        gap: var(--btcpay-space-m);
+    }
+    .tile > :last-child {
+        margin-bottom: 0;
     }
 }
 
+@media screen and (max-width: 400px) {
+    .public-page-wrap {
+        --wrap-padding-horizontal: 0;
+    }
+    .tile {
+        --tile-padding: 1rem;
+        --tile-border-radius: none;
+        margin-left: calc(var(--wrap-padding-horizontal) * -1);
+        margin-right: calc(var(--wrap-padding-horizontal) * -1);
+    }
+}
+
+/* Store Header */
 .store-header {
     display: flex;
     flex-direction: column;
@@ -688,10 +754,9 @@ input:checked + label.btcpay-list-select-item {
 .store-logo {
     --logo-size: 3rem;
     --logo-bg: transparent;
-    --logo-radius: 50%;
+    --logo-radius: 0;
 
-    width: var(--logo-size);
-    height: var(--logo-size);
+    max-height: var(--logo-size);
     background: var(--logo-bg);
     border-radius: var(--logo-radius);
 }
@@ -723,6 +788,7 @@ a.store-powered-by svg {
     height: 2rem;
     width: 4rem;
 }
+.store-footer a:hover,
 a.store-powered-by:hover {
     color: var(--btcpay-body-text-hover);
 }
@@ -805,7 +871,7 @@ a.store-powered-by:hover .logo-brand-dark {
 }
 
 .ts-wrapper.form-control:not(.ts-inline) .ts-control {
-    padding: .5rem !important;
+    padding: .5rem 1rem !important;
     border-radius: var(--btcpay-border-radius) !important;
 }
 
@@ -814,12 +880,16 @@ a.store-powered-by:hover .logo-brand-dark {
     box-shadow: 0 0 0 1px var(--btcpay-form-border-focus) inset;
 }
 
+.ts-wrapper.form-control,
+.ts-wrapper.form-control .ts-control {
+    min-height: auto !important;
+}
+
 .ts-wrapper.form-control.ts-inline,
 .ts-wrapper.form-control.ts-inline .ts-control {
     padding: 0 !important;
     border: none !important;
     box-shadow: none !important;
-    min-height: auto !important;
     background: transparent !important;
 }
 
@@ -878,6 +948,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     margin: 0;
     padding: 1px var(--btcpay-space-s);
     text-align: left;
+    word-break: break-word;
 }
 
 .transaction-label a {
@@ -899,14 +970,14 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 }
 
 .transaction-label:focus a,
-.transaction-label:focus .transaction-label-info svg.icon,
-.transaction-label:focus .transaction-label-action svg.icon,
+.transaction-label:focus .transaction-label-info .icon,
+.transaction-label:focus .transaction-label-action .icon,
 .transaction-label:hover a,
-.transaction-label:hover .transaction-label-info svg.icon,
-.transaction-label:hover .transaction-label-action svg.icon,
+.transaction-label:hover .transaction-label-info .icon,
+.transaction-label:hover .transaction-label-action .icon,
 .transaction-label.active a,
-.transaction-label.active .transaction-label-info svg.icon,
-.transaction-label.active .transaction-label-action svg.icon {
+.transaction-label.active .transaction-label-info .icon,
+.transaction-label.active .transaction-label-action .icon {
     color: var(--label-fg);
 }
 
@@ -922,7 +993,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     flex: 0 0 var(--button-size);
 }
 
-.transaction-label svg.icon {
+.transaction-label .icon {
     display: block;
     position: static;
     width: 100%;
@@ -937,7 +1008,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     padding: 0;
 }
 
-.transaction-label-action svg.icon {
+.transaction-label-action .icon {
     transform: scale(1.725);
 }
 
@@ -966,6 +1037,11 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     text-overflow: ellipsis;
 }
 
+.truncate-center-end,
+.truncate-center-start {
+    white-space: nowrap;
+}
+
 .truncate-center-id {
     font-family: var(--btcpay-font-monospace);
     font-size: .875em;
@@ -988,7 +1064,7 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
 }
 
 .truncate-center button.btn .icon {
-    --btn-icon-size: 1em;
+    --icon-size: 1em;
 }
 
 .truncate-center--elastic .truncate-center-truncated {
@@ -1003,8 +1079,8 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     padding-right: 3px;
 }
 
-.truncate-center.form-control-plaintext button.btn .icon {
-    --btn-icon-size: 1.25em;
+.truncate-center.form-control-plaintext .icon {
+    --icon-size: 1.25em;
 }
 
 @media screen {
@@ -1016,19 +1092,38 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     }
     
     .truncate-center-text {
-        display: none;
+        color: transparent;
+        position: absolute;
+        pointer-events: none;
     }
 }
 
 /* Copy */
-[data-clipboard],
-[data-clipboard] input[readonly] {
+.clipboard-button, .clipboard-button input[readonly] {
     cursor: copy;
 }
-[data-clipboard-hover] {
+
+.clipboard-button.btn-link, .clipboard-button.btn-link input[readonly] {
+    color: var(--btcpay-body-text-muted);
+}
+
+.clipboard-button:hover {
+    color: rgba(var(--btcpay-body-link-rgb), var(--btcpay-link-opacity, 1)) !important;
+}
+
+.clipboard-button[data-clipboard-confirming] {
+    color: var(--btcpay-success) !important;
+}
+
+.clipboard-button[data-clipboard-confirming]::before {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M13.7808 4.21934C13.9213 4.35997 14.0002 4.55059 14.0002 4.74934C14.0002 4.94809 13.9213 5.13871 13.7808 5.27934L6.53082 12.5293C6.3902 12.6698 6.19957 12.7487 6.00082 12.7487C5.80207 12.7487 5.61145 12.6698 5.47082 12.5293L2.22082 9.27934C2.08834 9.13717 2.01622 8.94912 2.01965 8.75482C2.02308 8.56052 2.10179 8.37513 2.2392 8.23772C2.37661 8.10031 2.562 8.02159 2.7563 8.01816C2.9506 8.01474 3.13865 8.08686 3.28082 8.21934L6.00082 10.9393L12.7208 4.21934C12.8614 4.07889 13.0521 4 13.2508 4C13.4496 4 13.6402 4.07889 13.7808 4.21934Z' fill='%2351B13E'/%3E%3C/svg%3E ");
+}
+
+.clipboard-button-hover {
     position: relative;
 }
-[data-clipboard-hover]::before {
+
+.clipboard-button-hover::before {
     content: '';
     position: absolute;
     top: .45rem;
@@ -1043,24 +1138,125 @@ input.ts-wrapper.form-control:not(.ts-hidden-accessible,.ts-inline) {
     background-repeat: no-repeat;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M13.3333 6H7.33333C6.59695 6 6 6.59695 6 7.33333V13.3333C6 14.0697 6.59695 14.6667 7.33333 14.6667H13.3333C14.0697 14.6667 14.6667 14.0697 14.6667 13.3333V7.33333C14.6667 6.59695 14.0697 6 13.3333 6Z' stroke='%236E7681' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3.33203 10.0007H2.66536C2.31174 10.0007 1.9726 9.86018 1.72256 9.61013C1.47251 9.36008 1.33203 9.02094 1.33203 8.66732V2.66732C1.33203 2.3137 1.47251 1.97456 1.72256 1.72451C1.9726 1.47446 2.31174 1.33398 2.66536 1.33398H8.66536C9.01899 1.33398 9.35813 1.47446 9.60817 1.72451C9.85822 1.97456 9.9987 2.3137 9.9987 2.66732V3.33398' stroke='%236E7681' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
 }
-[data-clipboard-hover="start"]::before {
+
+.clipboard-button-hover[data-clipboard-hover="start"]::before {
     left: auto;
     right: calc(100% + var(--btcpay-space-s));
 }
-[data-clipboard-hover][data-clipboard-confirming]::before {
+
+.clipboard-button-hover[data-clipboard-confirming]::before {
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 16 16' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M13.7808 4.21934C13.9213 4.35997 14.0002 4.55059 14.0002 4.74934C14.0002 4.94809 13.9213 5.13871 13.7808 5.27934L6.53082 12.5293C6.3902 12.6698 6.19957 12.7487 6.00082 12.7487C5.80207 12.7487 5.61145 12.6698 5.47082 12.5293L2.22082 9.27934C2.08834 9.13717 2.01622 8.94912 2.01965 8.75482C2.02308 8.56052 2.10179 8.37513 2.2392 8.23772C2.37661 8.10031 2.562 8.02159 2.7563 8.01816C2.9506 8.01474 3.13865 8.08686 3.28082 8.21934L6.00082 10.9393L12.7208 4.21934C12.8614 4.07889 13.0521 4 13.2508 4C13.4496 4 13.6402 4.07889 13.7808 4.21934Z' fill='%2351B13E'/%3E%3C/svg%3E ");
 }
-[data-clipboard-hover]:hover::before {
+
+.clipboard-button-hover:hover::before {
     opacity: 1;
 }
-.btn[data-clipboard],
-.btn[data-clipboard-target] {
-    color: var(--btcpay-body-text-muted);
+
+.btn .icon-scan-qr {
+    --icon-size: 1.1875rem;
 }
-.btn[data-clipboard]:hover,
-.btn[data-clipboard-target]:hover {
-    color: var(--btcpay-body-link-accent);
+.btn .icon-qr-code {
+    --icon-size: 1.5rem;
 }
-.btn[data-clipboard-confirming] {
-    color: var(--btcpay-success) !important;
+.blazor-status .btn-close .icon {
+    --icon-size: .75rem;
+}
+.btn.btn-lg .icon {
+    --icon-size: 1.75rem;
+}
+
+/* Tables */
+.date-col {
+    min-width: 8rem;
+}
+.amount-col {
+    text-align: right;
+    white-space: nowrap;
+}
+.actions-col {
+    text-align: right;
+}
+
+/* Mass Actions */
+.mass-action-head,
+.mass-action-actions {
+    position: -webkit-sticky;
+    position: sticky;
+    top: var(--sticky-header-height);
+    z-index: 10;
+    background-color: var(--btcpay-body-bg);
+}
+.mass-action thead th::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-bottom: 1px solid;
+    border-color: inherit;
+    pointer-events: none;
+}
+.mass-action > .mass-action-actions,
+.mass-action[data-selected] > .mass-action-head {
+    display: none;
+}
+.mass-action[data-selected] > .mass-action-actions {
+    display: table-header-group;
+    border-top-width: 0;
+}
+.mass-action > .mass-action-actions button {
+    display: inline-flex;
+    align-items: center;
+    height: 1.4rem;
+    padding: 0;
+    font-weight: var(--btcpay-font-weight-semibold);
+}
+.mass-action > .mass-action-actions button .icon {
+    margin-right: var(--btcpay-space-xs);
+}
+.mass-action .mass-action-select-col {
+    width: 2rem;
+}
+
+/*
+ Responsive table adjustments: Reset sticky header height,
+ because it doesn't work in containers with overflow auto.
+*/
+.table-responsive {
+    --sticky-header-height: 0;
+}
+.sticky-header + .table-responsive,
+main .sticky-header + [class*='table-responsive'] {
+    margin-top: 0 !important;
+}
+
+@media (max-width: 575.98px) {
+    .table-responsive-sm {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .table-responsive-md {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 991.98px) {
+    .table-responsive-lg {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 1199.98px) {
+    .table-responsive-xl {
+        --sticky-header-height: 0;
+    }
+}
+
+@media (max-width: 1399.98px) {
+    .table-responsive-xxl {
+        --sticky-header-height: 0;
+    }
 }

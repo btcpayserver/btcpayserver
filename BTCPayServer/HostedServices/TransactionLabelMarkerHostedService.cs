@@ -1,11 +1,9 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Logging;
@@ -13,25 +11,24 @@ using BTCPayServer.Payments;
 using BTCPayServer.Payments.Bitcoin;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Apps;
-using BTCPayServer.Services.Labels;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.PaymentRequests;
+using Microsoft.Extensions.Logging;
 using NBitcoin;
 using NBXplorer.DerivationStrategy;
-using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.HostedServices
 {
     public class TransactionLabelMarkerHostedService : EventHostedServiceBase
     {
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly WalletRepository _walletRepository;
 
-        public BTCPayNetworkProvider NetworkProvider { get; }
-
-        public TransactionLabelMarkerHostedService(BTCPayNetworkProvider networkProvider, EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
+        public TransactionLabelMarkerHostedService(PaymentMethodHandlerDictionary handlers, EventAggregator eventAggregator, WalletRepository walletRepository, Logs logs) :
             base(eventAggregator, logs)
         {
-            NetworkProvider = networkProvider;
+            _handlers = handlers;
             _walletRepository = walletRepository;
         }
 
@@ -49,62 +46,139 @@ namespace BTCPayServer.HostedServices
                 // If we find, then we create a link between them and the tx object.
                 case NewOnChainTransactionEvent transactionEvent:
                     {
-                        var network = NetworkProvider.GetNetwork<BTCPayNetwork>(transactionEvent.CryptoCode);
+                        var handler = _handlers.TryGetBitcoinHandler(transactionEvent.PaymentMethodId);
                         var derivation = transactionEvent.NewTransactionEvent.DerivationStrategy;
-                        if (network is null || derivation is null)
+                        if (handler is null || derivation is null)
                             break;
                         var txHash = transactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
 
                         // find all wallet objects that fit this transaction
                         // that means see if there are any utxo objects that match in/outs and scripts/addresses that match outs
-                        var matchedObjects = transactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
-                            .Select<TxIn, ObjectTypeId>(txIn => new ObjectTypeId(WalletObjectData.Types.Utxo, txIn.PrevOut.ToString()))
-                            .Concat(transactionEvent.NewTransactionEvent.Outputs.SelectMany<NBXplorer.Models.MatchedOutput, ObjectTypeId>(txOut =>
 
-                                new[]{
-                            new ObjectTypeId(WalletObjectData.Types.Address, GetAddress(derivation, txOut, network).ToString()),
-                            new ObjectTypeId(WalletObjectData.Types.Utxo, new OutPoint(transactionEvent.NewTransactionEvent.TransactionData.TransactionHash, (uint)txOut.Index).ToString())
+                        var matchedObjects = new List<ObjectTypeId>();
+                        // Check if inputs match some UTXOs
+                        foreach (var txIn in transactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs)
+                        {
+                            matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Utxo, txIn.PrevOut.ToString()));
+                        }
 
-                                })).Distinct().ToArray();
+                        // Check if outputs match some UTXOs
+                        var walletOutputsByIndex = transactionEvent.NewTransactionEvent.Outputs.ToDictionary(o => (uint)o.Index);
+                        foreach (var txOut in transactionEvent.NewTransactionEvent.TransactionData.Transaction.Outputs.AsIndexedOutputs())
+                        {
+                            BitcoinAddress? address = null;
+                            // Technically, walletTxOut.Address can be calculated.
+                            // However in liquid for example, this returns the blinded address
+                            // rather than the unblinded one.
+                            if (walletOutputsByIndex.TryGetValue(txOut.N, out var walletTxOut))
+                                address = walletTxOut.Address;
+                            address ??= txOut.TxOut.ScriptPubKey.GetDestinationAddress(handler.Network.NBitcoinNetwork);
+                            if (address is not null)
+                                matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Address, address.ToString()));
+                            matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Utxo, new OutPoint(transactionEvent.NewTransactionEvent.TransactionData.TransactionHash, txOut.N).ToString()));
+                        }
 
-                        var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects });
-
+                        matchedObjects.Add(new ObjectTypeId(WalletObjectData.Types.Tx, transactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString()));
+                        var objs = await _walletRepository.GetWalletObjects(new GetWalletObjectsQuery() { TypesIds = matchedObjects.Distinct().ToArray() });
+                        var links = new List<WalletObjectLinkData>();
+                        var newObjs = new List<WalletObjectData>();
                         foreach (var walletObjectDatas in objs.GroupBy(data => data.Key.WalletId))
                         {
-                            var txWalletObject = new WalletObjectId(walletObjectDatas.Key,
-                                WalletObjectData.Types.Tx, txHash);
-                            await _walletRepository.EnsureWalletObject(txWalletObject);
+                            var wid = walletObjectDatas.Key;
+                            var txWalletObject = new WalletObjectId(wid, WalletObjectData.Types.Tx, txHash);
+
+                            // if we are replacing a transaction, we add the same links to the new transaction
+                            // Note that unlike CPFP, RBF tag may be applied to transactions that may not be fee bumps
+                            {
+                                if (transactionEvent.NewTransactionEvent.Replacing is not null)
+                                {
+
+                                    foreach (var replaced in transactionEvent.NewTransactionEvent.Replacing)
+                                    {
+                                        var replacedwoId = new WalletObjectId(wid,
+                                              WalletObjectData.Types.Tx, replaced.ToString());
+                                        var replacedo = await _walletRepository.GetWalletObject(replacedwoId);
+                                        var replacedLinks = replacedo?.GetLinks().Where(t => t.type != WalletObjectData.Types.Tx) ?? [];
+                                        if (replacedLinks.Count() != 0)
+                                        {
+                                            var rbf = new WalletObjectId(wid, WalletObjectData.Types.RBF, "");
+                                            var label = WalletRepository.CreateLabel(rbf);
+                                            newObjs.Add(label.ObjectData);
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, label.Id));
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, rbf, new JObject()
+                                            {
+                                                ["txs"] = JArray.FromObject(new[] { replaced.ToString() })
+                                            }));
+                                        }
+                                        foreach (var link in replacedLinks)
+                                        {
+                                            links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(walletObjectDatas.Key, link.type, link.id), txWalletObject, link.linkdata));
+                                        }
+                                    }
+                                }
+                            }
+
                             foreach (var walletObjectData in walletObjectDatas)
                             {
-                                await _walletRepository.EnsureWalletObjectLink(txWalletObject, walletObjectData.Key);
-                                //if the object is an address, we also link the labels to the tx
-                                if (walletObjectData.Value.Type == WalletObjectData.Types.Address)
+                                // if we detect it's a CPFP, we add a CPFP label
                                 {
-                                    var neighbours = walletObjectData.Value.GetNeighbours().ToArray();
-                                    var labels = neighbours
-                                        .Where(data => data.Type == WalletObjectData.Types.Label).Select(data =>
-                                            new WalletObjectId(walletObjectDatas.Key, data.Type, data.Id));
-                                    foreach (var label in labels)
+                                    // Only for non confirmed transaction where all inputs and outputs belong to the wallet and issued by us
+                                    if (
+                                        walletObjectData.Value.Type is WalletObjectData.Types.Tx &&
+                                        walletObjectData.Value.GetData()?["bumpFeeMethod"] is JValue { Value: "CPFP" } &&
+                                        transactionEvent.NewTransactionEvent is { BlockId: null, TransactionData: { Transaction: { } tx } } txEvt &&
+                                        txEvt.Inputs.Count == tx.Inputs.Count &&
+                                        txEvt.Outputs.Count == tx.Outputs.Count)
                                     {
-                                        await _walletRepository.EnsureWalletObjectLink(label, txWalletObject);
-                                        var attachments = neighbours.Where(data => data.Type == label.Id);
-                                        foreach (var attachment in attachments)
+                                        var cpfp = new WalletObjectId(wid, WalletObjectData.Types.CPFP, "");
+                                        var label = WalletRepository.CreateLabel(cpfp);
+                                        newObjs.Add(label.ObjectData);
+                                        links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, label.Id));
+                                        links.Add(WalletRepository.NewWalletObjectLinkData(txWalletObject, cpfp, new JObject()
                                         {
-                                            await _walletRepository.EnsureWalletObjectLink(new WalletObjectId(walletObjectDatas.Key, attachment.Type, attachment.Id), txWalletObject);
+                                            ["outpoints"] = JArray.FromObject(txEvt.Inputs.Select(i => $"{i.TransactionId}-{i.Index}"))
+                                        }));
+                                    }
+                                }
+
+
+                                // if we the tx is matching some known address and utxo, we link them to this tx
+                                {
+                                    if (walletObjectData.Value.Type is WalletObjectData.Types.Utxo or WalletObjectData.Types.Address)
+                                    links.Add(
+                                        WalletRepository.NewWalletObjectLinkData(txWalletObject, walletObjectData.Key));
+                                }
+                                // if the object is an address, we also link its labels (the ones added in the wallet receive page)
+                                {
+                                    if (walletObjectData.Value.Type == WalletObjectData.Types.Address)
+                                    {
+                                        var neighbours = walletObjectData.Value.GetNeighbours().ToArray();
+                                        var labels = neighbours
+                                            .Where(data => data.Type == WalletObjectData.Types.Label).Select(data =>
+                                                new WalletObjectId(wid, data.Type, data.Id));
+                                        foreach (var label in labels)
+                                        {
+											links.Add(WalletRepository.NewWalletObjectLinkData(label, txWalletObject));
+                                            var attachments = neighbours.Where(data => data.Type == label.Id);
+                                            foreach (var attachment in attachments)
+                                            {
+                                                links.Add(WalletRepository.NewWalletObjectLinkData(new WalletObjectId(wid, attachment.Type, attachment.Id), txWalletObject));
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
 
+                        await _walletRepository.EnsureCreated(newObjs, links);
+
                         break;
                     }
                 case InvoiceEvent { Name: InvoiceEvent.ReceivedPayment } invoiceEvent when
-                    invoiceEvent.Payment.GetPaymentMethodId()?.PaymentType == BitcoinPaymentType.Instance &&
-                    invoiceEvent.Payment.GetCryptoPaymentData() is BitcoinLikePaymentData bitcoinLikePaymentData:
+                    _handlers.TryGetValue(invoiceEvent.Payment.PaymentMethodId, out var h) && h is BitcoinLikePaymentHandler handler:
                     {
                         var walletId = new WalletId(invoiceEvent.Invoice.StoreId, invoiceEvent.Payment.Currency);
-                        var transactionId = bitcoinLikePaymentData.Outpoint.Hash;
+                        var transactionId = handler.ParsePaymentDetails(invoiceEvent.Payment.Details).Outpoint.Hash;
                         var labels = new List<Attachment>
                     {
                         Attachment.Invoice(invoiceEvent.Invoice.Id)
@@ -116,12 +190,6 @@ namespace BTCPayServer.HostedServices
                         break;
                     }
             }
-        }
-
-        private BitcoinAddress GetAddress(DerivationStrategyBase derivationStrategy, NBXplorer.Models.MatchedOutput txOut, BTCPayNetwork network)
-        {
-            // Old version of NBX doesn't give address in the event, so we need to guess
-            return (txOut.Address ?? network.NBXplorerNetwork.CreateAddress(derivationStrategy, txOut.KeyPath, txOut.ScriptPubKey));
         }
     }
 }

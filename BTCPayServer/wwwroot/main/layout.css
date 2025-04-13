@@ -9,6 +9,9 @@
     --mobile-header-height: 4rem;
     --desktop-header-height: 8rem;
     --sidebar-width: 280px;
+    --sticky-header-height: 0; /* gets dynamically set via JavaScript */
+
+    scroll-padding-top: calc(var(--sticky-header-height) + var(--btcpay-space-m));
 }
 
 /* Main Menu */
@@ -50,7 +53,7 @@
     padding-top: var(--btcpay-space-m);
 }
 
-#mainNav .nav-item svg.icon {
+#mainNav .nav-item .icon {
     width: var(--icon-size);
     height: var(--icon-size);
     margin-right: var(--btcpay-space-xs);
@@ -91,14 +94,14 @@
     white-space: nowrap;
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link:hover {
     color: var(--btcpay-header-link-accent);
 }
 
-#mainNav .navbar-nav > li.nav-item .nav-link.active,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:focus,
-#mainNav .navbar-nav > li.nav-item .nav-link.active:hover {
+#mainNav .navbar-nav > li.nav-item a.nav-link.active,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:focus,
+#mainNav .navbar-nav > li.nav-item a.nav-link.active:hover {
     color: var(--btcpay-header-link-active);
 }
 
@@ -181,19 +184,16 @@
 
 #StoreSelectorToggle .logo,
 #StoreSelectorToggle .icon {
-    width: 1.5rem;
-    height: 1.5rem;
+    --icon-size: 1.5rem;
+    max-width: var(--icon-size);
+    max-height: var(--icon-size);
     /* Fixes seemingly delayed icon animation */
     -webkit-transition-duration: 0.05s, var(--btcpay-transition-duration-fast);
 }
 
 #StoreSelectorToggle .logo,
-#StoreSelectorToggle .icon.icon-store {
+#StoreSelectorToggle .icon.icon-nav-store {
     margin-right: var(--btcpay-space-s);
-}
-
-#StoreSelectorToggle .logo {
-    border-radius: 50%;
 }
 
 #StoreSelectorToggle .icon.icon-caret-down {
@@ -216,8 +216,10 @@
 
 #StoreSelectorMenu {
     min-width: 100%;
-    max-height: calc(100vh - var(--header-height));
-    overflow-y: scroll;
+    overflow-y: auto;
+    /* gradually try to set better but less supported values and units */
+    max-height: calc(100vh - var(--header-height) - var(--btcpay-space-xxl));
+    max-height: calc(100dvh - var(--header-height));
 }
 
 /* Logo */
@@ -255,41 +257,37 @@
 }
 
 /* Theme Switch */
-#mainNav .btcpay-theme-switch {
-    width: 100%;
+.btcpay-theme-switch {
+    
+    display: inline-flex;
+    align-items: center;
     justify-content: space-between;
 }
 
-#mainNav .btcpay-theme-switch svg {
-    order: 1;
-    margin: 0 !important;
+.btcpay-theme-switch-label {
+    font-weight: var(--btcpay-font-weight-semibold);
 }
 
-#mainNav .btcpay-theme-switch span {
-    order: 0;
-    margin: 0;
-}
-
-.btcpay-theme-switch {
+.btcpay-theme-switch-themes {
     display: inline-flex;
+    gap: var(--btcpay-space-m);
     align-items: center;
+}
+
+.btcpay-theme-switch-themes button {
+    --icon-size: 1.25rem !important;
     background: none;
-    cursor: pointer;
+    padding: 0;
     border: 0;
+    color: var(--btcpay-body-text-muted);
 }
 
-.btcpay-theme-switch svg {
-    height: 1rem;
-    width: 1rem;
+.btcpay-theme-switch-themes button:hover {
+    color: var(--btcpay-body-link);
 }
 
-.btcpay-theme-switch svg ~ span {
-    margin-left: var(--btcpay-space-xs);
-}
-
-.btcpay-theme-switch path {
-    stroke-width: .5px;
-    fill: currentColor;
+.btcpay-theme-switch-themes button svg {
+    margin: 0 !important;
 }
 
 .btcpay-theme-switch:hover .btcpay-theme-switch-light,
@@ -297,32 +295,10 @@
     fill: currentColor;
 }
 
-.btcpay-theme-switch-dark {
-    stroke: currentColor;
-}
-
-:root[data-btcpay-theme="dark"] .btcpay-theme-switch-dark {
-    display: none;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-btcpay-theme="dark"]) .btcpay-theme-switch-dark {
-        display: inline-block;
-    }
-}
-
-.btcpay-theme-switch-light {
-    display: none;
-}
-
-:root[data-btcpay-theme="dark"] .btcpay-theme-switch-light {
-    display: inline-block;
-}
-
-@media (prefers-color-scheme: dark) {
-    :root:not([data-btcpay-theme="light"]) .btcpay-theme-switch-light {
-        display: inline-block;
-    }
+:root:not([data-btcpay-theme]) .btcpay-theme-switch [data-theme="system"],
+:root[data-btcpay-theme="light"] .btcpay-theme-switch [data-theme="light"],
+:root[data-btcpay-theme="dark"] .btcpay-theme-switch [data-theme="dark"] {
+    color: var(--btcpay-body-link);
 }
 
 /* Notifications */
@@ -337,13 +313,12 @@
     min-width: 1.75em;
 }
 
-#NotificationsHandle svg {
-    width: 1.25rem;
-    height: 1.25rem;
+#NotificationsHandle .icon {
+    --icon-size: 1.625rem;
     color: var(--btcpay-header-link);
 }
 
-#NotificationsHandle:hover svg {
+#NotificationsHandle:hover .icon {
     color: var(--btcpay-header-link-accent);
 }
 
@@ -358,9 +333,8 @@
     border: 1px solid var(--btcpay-body-border-medium);
 }
 
-#NotificationsList svg {
-    width: 1.5rem;
-    height: 1.5rem;
+#NotificationsList .icon {
+    --icon-size: 1.5rem;
 }
 
 /* Section Navigation / Subnav */
@@ -401,6 +375,11 @@
     position: sticky;
     top: 0;
     z-index: 1021;
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+    align-items: center;
+    justify-content: space-between;
     background: var(--btcpay-body-bg);
     margin-top: calc(var(--content-padding-top) * -1);
     /* pull it out of the content padding and adjust its inner padding to make up for that space */
@@ -409,8 +388,18 @@
     padding: var(--content-padding-top) var(--content-padding-horizontal) var(--btcpay-space-l);
 }
 
-.sticky-header #SectionNav {
-    margin-bottom: calc(var(--btcpay-space-l) * -1);
+.sticky-header h2 {
+    margin-bottom: 0;
+}
+
+.sticky-header > div {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--btcpay-space-m);
+}
+
+.sticky-header > nav + :last-child {
+    align-self: flex-start;
 }
 
 /* Footer */
@@ -442,6 +431,22 @@
 
 .btcpay-footer [data-clipboard-hover]::before {
     top: .125rem;
+}
+
+#StatusUpdates {
+    position: fixed;
+    top: var(--content-padding-top);
+    right: var(--content-padding-horizontal);
+}
+#StatusUpdates .blazor-status {
+    width: 16rem;
+    border-color: var(--btcpay-border-color);
+}
+#StatusUpdates .blazor-status__title {
+    color: var(--btcpay-body-text);
+}
+#StatusUpdates .blazor-status__body {
+    padding-left: 2.45rem;
 }
 
 @media (max-width: 991px) {
@@ -483,7 +488,6 @@
         transition: transform var(--btcpay-transition-duration-fast) ease-in-out;
         /* Fixes https://github.com/btcpayserver/btcpayserver/issues/3807 */
         height: calc(100vh - var(--mobile-header-height)); /* This line is a fallback for browsers which don't support "fill-available" */
-        height: -moz-available;
         height: -webkit-fill-available;
         height: fill-available;
         /* Since we can't do "calc(fill-available - var(--mobile-header-height));" I'm using "padding-bottom" instead */
@@ -668,7 +672,11 @@
 
     #mainContent > section .w-100-fixed {
         /* constrains the content to respect the maximum width and enable responsive tables */
-        width: calc(100vw - var(--sidebar-width) - var(--content-padding-horizontal) * 2);
+        width: calc(100vw - var(--sidebar-width) - var(--btcpay-scrollbar-width) - var(--content-padding-horizontal) * 2);
+    }
+
+    #mainContent > section > h2 {
+        margin-top: var(--btcpay-space-xs);
     }
 
     #SectionNav .nav {
@@ -689,6 +697,12 @@
 @media (min-width: 992px) and (max-height: 799px) {
     :root {
         --content-padding-top: 1.25rem;
+    }
+}
+
+@media (min-width: 992px) and (min-height: 800px) {
+    #StatusUpdates {
+        top: 1.25rem;
     }
 }
 

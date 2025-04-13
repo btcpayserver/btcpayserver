@@ -1,27 +1,43 @@
 @model (InvoiceDetailsModel Invoice, bool ShowAddress)
 @{
     var invoice = Model.Invoice;
-    var grouped = invoice.Payments
-        .GroupBy(payment => payment.GetPaymentMethodId()?.PaymentType)
-        .Where(entities => entities.Key != null);
 }
 
+@if (invoice.Overpaid)
+{
+    var usedPaymentMethods = invoice.CryptoPayments.Count(p => p.Paid != null);
+    <p class="info-note text-warning">
+        <vc:icon symbol="warning"/>
+        <span text-translate="true">This invoice got overpaid.</span>
+        @if (usedPaymentMethods > 1)
+        {
+            <span text-translate="true">Each payment method shows the total excess amount.</span>
+        }
+    </p>
+}
 <div class="invoice-payments table-responsive mt-0">
     <table class="table table-hover mb-0">
-        <thead class="thead-inverse">
+        <thead>
             <tr>
-                <th class="text-nowrap w-175px">Payment method</th>
+                <th class="text-nowrap w-175px" text-translate="true">Payment method</th>
                 @if (Model.ShowAddress)
                 {
-                    <th>Destination</th>
+                    <th text-translate="true">Destination</th>
                 }
-                <th class="w-150px text-end">Rate</th>
-                <th class="w-150px text-end">Paid</th>
-                <th class="w-150px text-end">Due</th>
-                @if (invoice.Overpaid)
+                @if (invoice.HasRates)
                 {
-                    <th class="w-150px text-end">Overpaid</th>
+                    <th class="w-150px text-end" text-translate="true">Rate</th>
                 }
+                <th class="w-150px text-end" text-translate="true">Total due</th>
+                @if (invoice.StillDue)
+                {
+                    <th class="w-150px text-end" text-translate="true">Still due</th>
+                }
+                else if (invoice.Overpaid)
+                {
+                    <th class="w-150px text-end" text-translate="true">Overpaid</th>
+                }
+                <th class="w-150px text-end" text-translate="true">Paid</th>
             </tr>
         </thead>
         <tbody>
@@ -35,25 +51,44 @@
                             <vc:truncate-center text="@payment.Address" classes="truncate-center-id" />
                         </td>
                     }
-                    <td class="text-nowrap text-end"><span data-sensitive>@payment.Rate</span></td>
-                    <td class="text-nowrap text-end"><span data-sensitive>@payment.Paid</span></td>
-                    <td class="text-nowrap text-end"><span data-sensitive>@payment.Due</span></td>
-                    @if (invoice.Overpaid)
+                    @if (invoice.HasRates)
                     {
-                        <td class="text-nowrap text-end"><span data-sensitive>@payment.Overpaid</span></td>
+                        <td class="text-nowrap text-end">
+                            <span data-sensitive>@payment.Rate</span>
+                        </td>
                     }
+                    <td class="text-nowrap text-end">
+                        <span data-sensitive>@payment.TotalDue</span>
+                    </td>
+                    @if (invoice.StillDue)
+                    {
+                        <td class="text-nowrap text-end">
+                            @if (payment.Due != null)
+                            {
+                                <span data-sensitive>@payment.Due</span>
+                            }
+                        </td>
+                    }
+                    else if (invoice.Overpaid)
+                    {
+                        <td class="text-nowrap text-end">
+                            @if (payment.Overpaid != null)
+                            {
+                                <span data-sensitive class="text-warning">@payment.Overpaid</span>
+                            }
+                        </td>
+                    }
+                    <td class="text-nowrap text-end">
+                        @if (payment.Paid != null)
+                        {
+                            <span data-sensitive class="text-success">@payment.Paid</span>
+                        }
+                    </td>
                 </tr>
-                var details = payment.PaymentMethodRaw.GetPaymentMethodDetails();
-                var name = details.GetAdditionalDataPartialName();
-                if (!string.IsNullOrEmpty(name))
-                {
-                    <partial name="@name" model="@details" />
-                }
+				<vc:ui-extension-point location="invoice-payments-list" />
             }
         </tbody>
     </table>
 </div>
-@foreach (var paymentGroup in grouped)
-{
-    <partial name="@paymentGroup.Key.InvoiceViewPaymentPartialName" model="@paymentGroup.ToList()" />
-}
+
+<vc:ui-extension-point location="store-invoices-payments" model="@invoice" />

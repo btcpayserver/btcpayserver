@@ -13,14 +13,20 @@ namespace BTCPayServer
         {
             return Regex.Match(color, Pattern).Success;
         }
-        public string TextColor(string bgColor)
+
+        public Color TextColor(Color bg)
         {
             int nThreshold = 105;
-            var bg = ColorTranslator.FromHtml(bgColor);
-            int bgDelta = Convert.ToInt32((bg.R * 0.299) + (bg.G * 0.587) + (bg.B * 0.114));
-            Color color = (255 - bgDelta < nThreshold) ? Color.Black : Color.White;
+            int bgDelta = Convert.ToInt32(bg.R * 0.299 + bg.G * 0.587 + bg.B * 0.114);
+            return 255 - bgDelta < nThreshold ? Color.Black : Color.White;
+        }
+
+        public string TextColor(string bg)
+        {
+            var color = TextColor(FromHtml(bg));
             return ColorTranslator.ToHtml(color).ToLowerInvariant();
         }
+
         // Borrowed from https://github.com/ManageIQ/guides/blob/master/labels.md
         public static readonly ColorPalette Default = new ColorPalette(new string[] {
             "#fbca04",
@@ -31,6 +37,7 @@ namespace BTCPayServer
             "#cdcdcd",
             "#cc317c",
         });
+
         private ColorPalette(string[] labels)
         {
             Labels = labels;
@@ -96,6 +103,16 @@ namespace BTCPayServer
         public string AdjustBrightness(string html, float correctionFactor)
         {
             var color = AdjustBrightness(ColorTranslator.FromHtml(html), correctionFactor);
+            return ColorTranslator.ToHtml(color);
+        }
+
+        public Color FromHtml(string html)
+        {
+            return ColorTranslator.FromHtml(html);
+        }
+
+        public string ToHtml(Color color)
+        {
             return ColorTranslator.ToHtml(color);
         }
     }

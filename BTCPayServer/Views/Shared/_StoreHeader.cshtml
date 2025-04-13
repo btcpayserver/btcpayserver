@@ -1,16 +1,9 @@
-@inject IFileService FileService
-@using BTCPayServer.Abstractions.Contracts
-@using BTCPayServer.Abstractions.Extensions
-@model (string Title, string LogoFileId)
-@{
-    var logoUrl = !string.IsNullOrEmpty(Model.LogoFileId)
-        ? await FileService.GetFileUrl(Context.Request.GetAbsoluteRootUri(), Model.LogoFileId)
-        : null;
-}
+@model (string Title, StoreBrandingViewModel StoreBranding)
+
 <header class="store-header" v-pre>
-    @if (!string.IsNullOrEmpty(logoUrl))
+    @if (!string.IsNullOrEmpty(Model.StoreBranding.LogoUrl))
     {
-        <img src="@logoUrl" alt="@Model.Title" class="store-logo"/>
+        <img src="@Model.StoreBranding.LogoUrl" alt="@Model.Title" class="store-logo"/>
     }
     <h1 class="store-name">@Model.Title</h1>
 </header>

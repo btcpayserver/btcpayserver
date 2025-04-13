@@ -16,6 +16,12 @@ namespace BTCPayServer.Client.Models
 
         public string Website { get; set; }
 
+        public string BrandColor { get; set; }
+        public bool ApplyBrandColorToBackend { get; set; }
+        public string LogoUrl { get; set; }
+        public string CssUrl { get; set; }
+        public string PaymentSoundUrl { get; set; }
+
         public string SupportUrl { get; set; }
 
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
@@ -25,6 +31,10 @@ namespace BTCPayServer.Client.Models
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public TimeSpan DisplayExpirationTimer { get; set; } = TimeSpan.FromMinutes(5);
+
+        [JsonConverter(typeof(TimeSpanJsonConverter.Days))]
+        [JsonProperty("refundBOLT11Expiration", NullValueHandling = NullValueHandling.Ignore)]
+        public TimeSpan RefundBOLT11Expiration { get; set; } = TimeSpan.FromDays(30);
 
         [JsonConverter(typeof(TimeSpanJsonConverter.Seconds))]
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
@@ -36,14 +46,15 @@ namespace BTCPayServer.Client.Models
         public double PaymentTolerance { get; set; } = 0;
         public bool AnyoneCanCreateInvoice { get; set; }
         public string DefaultCurrency { get; set; }
-        public bool RequiresRefundEmail { get; set; }
-        [JsonConverter(typeof(StringEnumConverter))]
-        public CheckoutType CheckoutType { get; set; }
+
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
         public bool LazyPaymentMethods { get; set; }
         public bool RedirectAutomatically { get; set; }
+
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool Archived { get; set; }
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public bool ShowRecommendedFee { get; set; } = true;
@@ -54,10 +65,6 @@ namespace BTCPayServer.Client.Models
 
         [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
         public string DefaultLang { get; set; } = "en";
-
-        public string CustomLogo { get; set; }
-
-        public string CustomCSS { get; set; }
 
         public string HtmlTitle { get; set; }
 
@@ -70,17 +77,22 @@ namespace BTCPayServer.Client.Models
 
         public bool PayJoinEnabled { get; set; }
 
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? AutoDetectLanguage { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ShowPayInWalletButton { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? ShowStoreHeader { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? CelebratePayment { get; set; }
+        [JsonProperty(NullValueHandling = NullValueHandling.Ignore)]
+        public bool? PlaySoundOnPayment { get; set; }
+
         public InvoiceData.ReceiptOptions Receipt { get; set; }
 
 
         [JsonExtensionData]
         public IDictionary<string, JToken> AdditionalData { get; set; }
-    }
-
-    public enum CheckoutType
-    {
-        V1,
-        V2
     }
 
     public enum NetworkFeeMode

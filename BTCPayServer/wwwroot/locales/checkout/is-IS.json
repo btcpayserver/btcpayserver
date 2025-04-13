@@ -39,5 +39,7 @@
   "submitting_nfc": "Sendi NFC …",
   "payment_received": "Greiðsla móttekin",
   "payment_received_body": "Greiðslan þín hefur verið móttekin og er nú í vinnslu",
-  "payment_received_confirmations": "Þegar greiðslan þín hefur fengið {{requiredConfirmations}} staðfestingar á {{cryptoCode}} blokkkeðjunni, mun reikningurinn þinn verða afhentur."
+  "payment_received_confirmations": "Þegar greiðslan þín hefur fengið {{requiredConfirmations}} staðfestingar á {{cryptoCode}} blokkkeðjunni, mun reikningurinn þinn verða afhentur.",
+  "invoice_paidpartial_body": "Reikningurinn gildir aðeins í {{minutes}} mínútur. Þessi reikningur rann út með hluta greiðslu. Hafðu samband við okkur svo við getum framkvæmt pöntunina þína.",
+  "contact_us": "Hafðu samband við okkur"
 }

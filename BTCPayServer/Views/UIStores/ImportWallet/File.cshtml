@@ -1,7 +1,7 @@
 @model WalletSetupViewModel
 @{
     Layout = "_LayoutWalletSetup";
-    ViewData.SetActivePage(StoreNavPages.OnchainSettings, "Import your wallet file", Context.GetStoreData().Id);
+    ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Import your wallet file"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
 }
 
 @section Navbar {
@@ -12,7 +12,7 @@
 
 <header class="text-center">
     <h1>@ViewData["Title"]</h1>
-    <p class="lead text-secondary mt-3">Upload the file exported from your wallet.</p>
+    <p class="lead text-secondary mt-3" text-translate="true">Upload the file exported from your wallet.</p>
 </header>
 
 <form method="post" enctype="multipart/form-data" class="my-5">
@@ -22,14 +22,14 @@
         <span asp-validation-for="WalletFile" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Continue</button>
+    <button type="submit" class="btn btn-primary" text-translate="true">Continue</button>
 </form>
 
 <table class="table table-hover">
     <thead>
     <tr>
-        <th>Wallet</th>
-        <th>Instructions</th>
+        <th text-translate="true">Wallet</th>
+        <th text-translate="true">Instructions</th>
     </tr>
     </thead>
     <tbody>
@@ -43,8 +43,12 @@
     </tr>
     <tr>
         <td>Electrum</td>
-        <td>File ❯ Save backup (not encrypted with a password)</td>
+        <td>File ❯ Save backup… <br>Supports Standard wallet, Wallet with two factor authentication. (Please ensure that wallet file is not encoded nor encrypted with a password)</td>
     </tr>
+	<tr>
+		<td>Sparrow</td>
+        <td>File ❯ Export wallet… ❯ Electrum: export file… <br>(Please ensure that wallet file is not encoded nor encrypted with a password)</td>
+	</tr>
     <tr>
         <td>Wasabi</td>
         <td>Tools ❯ Wallet Manager ❯ Open Wallets Folder</td>
@@ -55,7 +59,11 @@
     </tr>
      <tr>
         <td>Passport</td>
-        <td>Wallet ❯ Pair Wallet ❯ BTCPay ❯ microSD ❯ Save wallet file</td>
+        <td>Wallet ❯ Connect Wallet ❯ BTCPay ❯ microSD ❯ Save wallet file</td>
+    </tr>   
+     <tr>
+        <td>Nunchuk</td>
+        <td>... ❯ Export wallet configuration</td>
     </tr>    
     </tbody>
 </table>

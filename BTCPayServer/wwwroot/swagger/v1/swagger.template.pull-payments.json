@@ -1,15 +1,122 @@
 {
     "paths": {
-        "/api/v1/stores/{storeId}/pull-payments": {
+        "/api/v1/pull-payments/{pullPaymentId}/boltcards": {
             "parameters": [
                 {
-                    "name": "storeId",
+                    "name": "pullPaymentId",
                     "in": "path",
                     "required": true,
-                    "description": "The store ID",
+                    "description": "The ID of the pull payment",
                     "schema": {
                         "type": "string"
                     }
+                }
+            ],
+            "post": {
+                "operationId": "PullPayments_LinkBoltcard",
+                "summary": "Link a boltcard to a pull payment",
+                "description": "Linking a boltcard to a pull payment will allow you to pay via NFC with it, the money will be sent from the pull payment. The boltcard keys are generated using [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md).",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "UID"
+                                ],
+                                "type": "object",
+                                "properties": {
+                                    "UID": {
+                                        "type": "string",
+                                        "example": "46ab87ff36a3b7",
+                                        "description": "The `UID` of the NTag424",
+                                        "nullable": false
+                                    },
+                                    "onExisting": {
+                                        "type": "string",
+                                        "x-enumNames": [
+                                            "KeepVersion",
+                                            "UpdateVersion"
+                                        ],
+                                        "enum": [
+                                            "KeepVersion",
+                                            "UpdateVersion"
+                                        ],
+                                        "default": "UpdateVersion",
+                                        "description": "What to do if the boltcard is already linked.\n * `KeepVersion` will return the keys (K0-K4) that are already registered.\n * `UpdateVersion` will increment the version of the key, and thus return different keys (K0-K4). (See [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md))"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The boltcard has been linked to the pull payment.",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "LNURLW": {
+                                            "type": "string",
+                                            "description": "The lnurl withdraw of the server",
+                                            "example": "lnurlw://example.com/boltcard"
+                                        },
+                                        "version": {
+                                            "type": "number",
+                                            "description": "The version of the registration (See [Deterministic Boltcard Key Generation](https://github.com/boltcard/boltcard/blob/main/docs/DETERMINISTIC.md))"
+                                        },
+                                        "K0": {
+                                            "type": "string",
+                                            "description": "The public key K0 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K1": {
+                                            "type": "string",
+                                            "description": "The public key K1 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K2": {
+                                            "type": "string",
+                                            "description": "The public key K2 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K3": {
+                                            "type": "string",
+                                            "description": "The public key K3 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        },
+                                        "K4": {
+                                            "type": "string",
+                                            "description": "The public key K4 of the boltcard",
+                                            "example": "02a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e0f1a2b"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "The pull payment has not been found. Wellknown error code is: `pullpayment-not-found`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ProblemDetails"
+                                }
+                            }
+                        }
+                    }
+                },
+                "tags": [
+                    "Pull payments (Public)"
+                ],
+                "security": []
+            }
+        },
+        "/api/v1/stores/{storeId}/pull-payments": {
+            "parameters": [
+                {
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "get": {
@@ -38,6 +145,9 @@
                                 }
                             }
                         }
+                    },
+                    "403": {
+                        "description": "If you are authenticated but forbidden to get the data"
                     }
                 },
                 "tags": [
@@ -83,13 +193,6 @@
                                         "example": "BTC",
                                         "description": "The currency of the amount."
                                     },
-                                    "period": {
-                                        "type": "integer",
-                                        "format": "decimal",
-                                        "example": 604800,
-                                        "nullable": true,
-                                        "description": "The length of each period in seconds."
-                                    },
                                     "BOLT11Expiration": {
                                         "type": "string",
                                         "example": 30,
@@ -118,13 +221,14 @@
                                         "nullable": true,
                                         "description": "When this pull payment expires. Never expires if null or unspecified."
                                     },
-                                    "paymentMethods": {
+                                    "payoutMethods": {
                                         "type": "array",
-                                        "description": "The list of supported payment methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint",
+                                        "description": "The list of supported payout methods supported by this pull payment. Available options can be queried from the `StorePaymentMethods_GetStorePaymentMethods` endpoint. If `null`, all available payout methods will be supported.",
                                         "items": {
                                             "type": "string",
                                             "example": "BTC"
-                                        }
+                                        },
+                                        "nullable": true
                                     }
                                 }
                             }
@@ -207,13 +311,7 @@
         "/api/v1/stores/{storeId}/pull-payments/{pullPaymentId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "pullPaymentId",
@@ -243,7 +341,7 @@
                 "security": [
                     {
                         "API_Key": [
-                            "btcpay.store.canmanagepullpayments"
+                            "btcpay.store.canarchivepullpayments"
                         ],
                         "Basic": []
                     }
@@ -445,17 +543,11 @@
         "/api/v1/stores/{storeId}/payouts": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 }
             ],
             "post": {
-                "summary": "Create Payout ",
+                "summary": "Create Payout",
                 "description": "Create a new payout",
                 "operationId": "Payouts_CreatePayoutThroughStore",
                 "requestBody": {
@@ -558,13 +650,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",
@@ -707,13 +793,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}/mark-paid": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",
@@ -773,13 +853,7 @@
         "/api/v1/stores/{storeId}/payouts/{payoutId}/mark": {
             "parameters": [
                 {
-                    "name": "storeId",
-                    "in": "path",
-                    "required": true,
-                    "description": "The ID of the store",
-                    "schema": {
-                        "type": "string"
-                    }
+                    "$ref": "#/components/parameters/StoreId"
                 },
                 {
                     "name": "payoutId",
@@ -882,10 +956,8 @@
                         "example": "10399.18",
                         "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
                     },
-                    "paymentMethod": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "The payment method of the payout"
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     }
                 }
             },
@@ -988,28 +1060,32 @@
                         "example": "1BvBMSEYstWetqTFn5Au4m4GFg7xJaNVN2",
                         "description": "The destination of the payout (can be an address or a BIP21 url)"
                     },
-                    "amount": {
+                    "originalCurrency": {
+                        "type": "string",
+                        "example": "USD",
+                        "description": "The currency before being converted into the payout's currency"
+                    },
+                    "originalAmount": {
                         "type": "string",
                         "format": "decimal",
+                        "nullable": false,
                         "example": "10399.18",
-                        "description": "The amount of the payout in the currency of the pull payment (eg. USD)."
+                        "description": "The amount in originalCurrency before being converted into the payout's currency"
                     },
-                    "paymentMethod": {
+                    "payoutCurrency": {
                         "type": "string",
                         "example": "BTC",
-                        "description": "The payment method of the payout (e.g., \"BTC\" or \"BTC_LightningLike\""
+                        "description": "The currency of the payout after conversion."
                     },
-                    "cryptoCode": {
-                        "type": "string",
-                        "example": "BTC",
-                        "description": "Crypto code of the payment method of the payout (e.g., \"BTC\" or \"LTC\")"
-                    },
-                    "paymentMethodAmount": {
+                    "payoutAmount": {
                         "type": "string",
                         "format": "decimal",
                         "nullable": true,
                         "example": "1.12300000",
-                        "description": "The amount of the payout in the currency of the payment method (eg. BTC). This is only available from the `AwaitingPayment` state."
+                        "description": "The amount in payoutCurrency after conversion. (This property is set after the payout has been Approved)"
+                    },
+                    "payoutMethodId": {
+                        "$ref": "#/components/schemas/PayoutMethodId"
                     },
                     "state": {
                         "$ref": "#/components/schemas/PayoutState"
@@ -1070,12 +1146,6 @@
                         "format": "decimal",
                         "example": "1.12000000",
                         "description": "The amount in the currency of this pull payment as a decimal string"
-                    },
-                    "period": {
-                        "type": "integer",
-                        "example": 604800,
-                        "nullable": true,
-                        "description": "The length of each period in seconds"
                     },
                     "BOLT11Expiration": {
                         "type": "string",

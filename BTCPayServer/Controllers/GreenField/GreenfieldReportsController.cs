@@ -1,26 +1,19 @@
 #nullable enable
-using BTCPayServer.Lightning;
-using BTCPayServer.Models.StoreViewModels;
-using BTCPayServer.Services.Invoices;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore.Internal;
-using NBitcoin;
 using Newtonsoft.Json.Linq;
 using BTCPayServer.Data;
-using Microsoft.EntityFrameworkCore;
-using Dapper;
 using Microsoft.AspNetCore.Authorization;
-using BTCPayServer.Abstractions.Constants;
-using BTCPayServer.Client;
 using BTCPayServer.Abstractions.Extensions;
+using BTCPayServer.Client;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Services;
 using System.Linq;
 using System.Threading;
+using BTCPayServer.Abstractions.Constants;
 
 namespace BTCPayServer.Controllers.GreenField;
 
@@ -39,8 +32,7 @@ public class GreenfieldReportsController : Controller
     public ApplicationDbContextFactory DBContextFactory { get; }
     public ReportService ReportService { get; }
 
-
-    [Authorize(Policy = Policies.CanViewStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
+    [Authorize(Policy = Policies.CanViewReports, AuthenticationSchemes = AuthenticationSchemes.Greenfield)]
     [HttpPost("~/api/v1/stores/{storeId}/reports")]
     [NonAction] // Disabling this endpoint as we still need to figure out the request/response model
     public async Task<IActionResult> StoreReports(string storeId, [FromBody] StoreReportRequest? vm = null, CancellationToken cancellationToken = default)
@@ -60,7 +52,7 @@ public class GreenfieldReportsController : Controller
 
             var ctx = new Services.Reporting.QueryContext(storeId, from, to);
             await report.Query(ctx, cancellationToken);
-            var result = new StoreReportResponse()
+            var result = new StoreReportResponse
             {
                 Fields = ctx.ViewDefinition?.Fields ?? new List<StoreReportResponse.Field>(),
                 Charts = ctx.ViewDefinition?.Charts ?? new List<ChartDefinition>(),
@@ -70,11 +62,9 @@ public class GreenfieldReportsController : Controller
             };
             return Json(result);
         }
-        else
-        {
-            ModelState.AddModelError(nameof(vm.ViewName), "View doesn't exist");
-            return this.CreateValidationError(ModelState);
-        }
+        
+        ModelState.AddModelError(nameof(vm.ViewName), "View doesn't exist");
+        return this.CreateValidationError(ModelState);
     }
 }
 

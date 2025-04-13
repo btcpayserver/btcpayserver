@@ -10,9 +10,8 @@ using BTCPayServer.Controllers;
 using BTCPayServer.JsonConverters;
 using BTCPayServer.Payments;
 using BTCPayServer.Rating;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Mails;
-using BTCPayServer.Services.Rates;
-using Microsoft.AspNetCore.Http;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -33,17 +32,11 @@ namespace BTCPayServer.Data
             RecommendedFeeBlockTarget = 1;
             PaymentMethodCriteria = new List<PaymentMethodCriteria>();
             ReceiptOptions = InvoiceDataBase.ReceiptOptions.CreateDefault();
-            CheckoutType = CheckoutType.V2;
         }
 
         [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
         public NetworkFeeMode NetworkFeeMode { get; set; }
 
-        [JsonConverter(typeof(Newtonsoft.Json.Converters.StringEnumConverter))]
-        [DefaultValue(CheckoutType.V1)]
-        [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public CheckoutType CheckoutType { get; set; }
-        public bool RequiresRefundEmail { get; set; }
         public bool LightningAmountInSatoshi { get; set; }
         public bool LightningPrivateRouteHints { get; set; }
         public bool OnChainWithLnInvoiceFallback { get; set; }
@@ -109,11 +102,21 @@ namespace BTCPayServer.Data
 
         public decimal Spread { get; set; } = 0.0m;
 
+        /// <summary>
+        /// This may be null. Use <see cref="GetPreferredExchange(DefaultRulesCollection)"/> instead if you want to return a valid exchange
+        /// </summary>
         public string PreferredExchange { get; set; }
+        /// <summary>
+        /// Use the preferred exchange of the store, or the recommended exchange from the default currency
+        /// </summary>
+        /// <param name="defaultRules"></param>
+        /// <returns></returns>
+        public string GetPreferredExchange(DefaultRulesCollection defaultRules)
+        {
+            return string.IsNullOrEmpty(PreferredExchange) ? defaultRules.GetRecommendedExchange(DefaultCurrency) : PreferredExchange;
+        }
 
         public List<PaymentMethodCriteria> PaymentMethodCriteria { get; set; }
-        public string CustomCSS { get; set; }
-        public string CustomLogo { get; set; }
         public string HtmlTitle { get; set; }
 
         public bool AutoDetectLanguage { get; set; }
@@ -144,18 +147,18 @@ namespace BTCPayServer.Data
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
         public double PaymentTolerance { get; set; }
 
-        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider)
+        public BTCPayServer.Rating.RateRules GetRateRules(DefaultRulesCollection defaultRules)
         {
-            return GetRateRules(networkProvider, out _);
+            return GetRateRules(defaultRules, out _);
         }
-        public BTCPayServer.Rating.RateRules GetRateRules(BTCPayNetworkProvider networkProvider, out bool preferredSource)
+        public BTCPayServer.Rating.RateRules GetRateRules(DefaultRulesCollection defaultRules, out bool preferredSource)
         {
             if (!RateScripting ||
                 string.IsNullOrEmpty(RateScript) ||
                 !BTCPayServer.Rating.RateRules.TryParse(RateScript, out var rules))
             {
                 preferredSource = true;
-                return GetDefaultRateRules(networkProvider);
+                return GetDefaultRateRules(defaultRules);
             }
             else
             {
@@ -165,47 +168,12 @@ namespace BTCPayServer.Data
             }
         }
 
-        public RateRules GetDefaultRateRules(BTCPayNetworkProvider networkProvider)
+        public RateRules GetDefaultRateRules(DefaultRulesCollection defaultRules)
         {
-            StringBuilder builder = new StringBuilder();
-            foreach (var network in networkProvider.GetAll())
-            {
-                if (network.DefaultRateRules.Length != 0)
-                {
-                    builder.AppendLine(CultureInfo.InvariantCulture, $"// Default rate rules for {network.CryptoCode}");
-                    foreach (var line in network.DefaultRateRules)
-                    {
-                        builder.AppendLine(line);
-                    }
-                    builder.AppendLine($"////////");
-                    builder.AppendLine();
-                }
-            }
-
-            var preferredExchange = string.IsNullOrEmpty(PreferredExchange) ? GetRecommendedExchange() : PreferredExchange;
-            builder.AppendLine(CultureInfo.InvariantCulture, $"X_X = {preferredExchange}(X_X);");
-
-            BTCPayServer.Rating.RateRules.TryParse(builder.ToString(), out var rules);
+            var rules = defaultRules.WithPreferredExchange(PreferredExchange);
             rules.Spread = Spread;
             return rules;
         }
-
-        public static JObject RecommendedExchanges = new()
-        {
-            { "EUR", "kraken" },
-            { "USD", "kraken" },
-            { "GBP", "kraken" },
-            { "CHF", "kraken" },
-            { "GTQ", "bitpay" },
-            { "COP", "yadio" },
-            { "JPY", "bitbank" },
-            { "TRY", "btcturk" },
-            { "UGX", "exchangeratehost"},
-            { "RSD", "bitpay"}
-        };
-
-        public string GetRecommendedExchange() =>
-            RecommendedExchanges.Property(DefaultCurrency)?.Value.ToString() ?? "coingecko";
 
         [Obsolete("Use GetExcludedPaymentMethods instead")]
         public string[] ExcludedPaymentMethods { get; set; }
@@ -223,8 +191,12 @@ namespace BTCPayServer.Data
 
         public List<UIStoresController.StoreEmailRule> EmailRules { get; set; }
         public string BrandColor { get; set; }
-        public string LogoFileId { get; set; }
-        public string CssFileId { get; set; }
+        public bool ApplyBrandColorToBackend { get; set; }
+        
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri LogoUrl { get; set; }
+        [JsonConverter(typeof(UnresolvedUriJsonConverter))]
+        public UnresolvedUri CssUrl { get; set; }
 
         [DefaultValue(true)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -240,9 +212,10 @@ namespace BTCPayServer.Data
         
         [DefaultValue(false)]
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Populate)]
-        public bool PlaySoundOnPayment { get; set; } = false;
+        public bool PlaySoundOnPayment { get; set; }
 
-        public string SoundFileId { get; set; }
+		[JsonConverter(typeof(UnresolvedUriJsonConverter))]
+		public UnresolvedUri PaymentSoundUrl { get; set; }
 
         public IPaymentFilter GetExcludedPaymentMethods()
         {
@@ -271,30 +244,6 @@ namespace BTCPayServer.Data
                 methods.Remove(paymentMethodId.ToString());
             ExcludedPaymentMethods = methods.ToArray();
 #pragma warning restore CS0618 // Type or member is obsolete
-        }
-
-        // Replace absolute URL with relative to avoid this issue: https://github.com/btcpayserver/btcpayserver/discussions/4195
-        public void NormalizeToRelativeLinks(HttpRequest request)
-        {
-            var schemeAndHost = $"{request.Scheme}://{request.Host.ToString()}/";
-            this.CustomLogo = EnsureRelativeLinks(this.CustomLogo, schemeAndHost);
-            this.CustomCSS = EnsureRelativeLinks(this.CustomCSS, schemeAndHost);
-        }
-
-        /// <summary>
-        /// Make a link relative if possible
-        /// </summary>
-        /// <param name="value">Example: https://mystore.com/toto.png</param>
-        /// <param name="schemeAndHost">Example: https://mystore.com/</param>
-        /// <returns>/toto.png</returns>
-        private string EnsureRelativeLinks(string value, string schemeAndHost)
-        {
-            if (value is null)
-                return null;
-            value = value.Trim();
-            if (value.StartsWith(schemeAndHost, StringComparison.OrdinalIgnoreCase))
-                return value.Substring(schemeAndHost.Length - 1);
-            return value;
         }
     }
     public class PaymentMethodCriteria

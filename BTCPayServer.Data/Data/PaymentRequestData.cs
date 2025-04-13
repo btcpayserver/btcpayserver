@@ -1,19 +1,27 @@
 using System;
+using System.ComponentModel.DataAnnotations.Schema;
+using BTCPayServer.Client.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 
 namespace BTCPayServer.Data
 {
-    public class PaymentRequestData : IHasBlobUntyped
+    public partial class PaymentRequestData : IHasBlobUntyped
     {
         public string Id { get; set; }
         public DateTimeOffset Created { get; set; }
+        public DateTimeOffset? Expiry { get; set; }
         public string StoreDataId { get; set; }
         public bool Archived { get; set; }
+        public string Currency { get; set; }
+        public decimal Amount { get; set; }
 
         public StoreData StoreData { get; set; }
 
-        public Client.Models.PaymentRequestData.PaymentRequestStatus Status { get; set; }
+        public Client.Models.PaymentRequestStatus Status { get; set; }
+
+        [NotMapped]
+        public bool Expirable => Status is PaymentRequestStatus.Pending or PaymentRequestStatus.Processing && Expiry is not null;
 
         [Obsolete("Use Blob2 instead")]
         public byte[] Blob { get; set; }
@@ -32,12 +40,12 @@ namespace BTCPayServer.Data
             builder.Entity<PaymentRequestData>()
                 .HasIndex(o => o.Status);
 
-            if (databaseFacade.IsNpgsql())
-            {
-                builder.Entity<PaymentRequestData>()
-                    .Property(o => o.Blob2)
-                    .HasColumnType("JSONB");
-            }
+            builder.Entity<PaymentRequestData>()
+                .Property(o => o.Blob2)
+                .HasColumnType("JSONB");
+            builder.Entity<PaymentRequestData>()
+                .Property(p => p.Status)
+                .HasConversion<string>();
         }
     }
 }

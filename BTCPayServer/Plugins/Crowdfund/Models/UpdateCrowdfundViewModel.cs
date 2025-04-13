@@ -4,6 +4,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using BTCPayServer.Services.Apps;
 using BTCPayServer.Validation;
+using Microsoft.AspNetCore.Http;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Plugins.Crowdfund.Models
 {
@@ -26,11 +28,22 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
 
         public string Tagline { get; set; }
 
+
+        public string Language { get; set; }
+
+        [Display(Name = "HTML Meta Tags")]
+        public string HtmlMetaTags{ get; set; }
+
+
         [Required]
         public string Description { get; set; }
 
         [Display(Name = "Featured Image URL")]
         public string MainImageUrl { get; set; }
+
+        [Display(Name = "Featured Image URL")]
+        [JsonIgnore]
+        public IFormFile MainImageFile { get; set; }
 
         [Display(Name = "Callback Notification URL")]
         [Uri]
@@ -86,13 +99,6 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
         [Display(Name = "Contribution Perks Template")]
         public string PerksTemplate { get; set; }
 
-        [MaxLength(500)]
-        [Display(Name = "Custom CSS URL")]
-        public string CustomCSSLink { get; set; }
-
-        [Display(Name = "Custom CSS Code")]
-        public string EmbeddedCSS { get; set; }
-
         [Display(Name = "Count all invoices created on the store as part of the goal")]
         public bool UseAllStoreInvoices { get; set; }
 
@@ -116,5 +122,11 @@ namespace BTCPayServer.Plugins.Crowdfund.Models
 
         // NOTE: Improve validation if needed
         public bool ModelWithMinimumData => Description != null && Title != null && TargetCurrency != null;
+
+
+        [Display(Name = "Request contributor data on checkout")]
+        public string FormId { get; set; }
+
+        public bool Archived { get; set; }
     }
 }

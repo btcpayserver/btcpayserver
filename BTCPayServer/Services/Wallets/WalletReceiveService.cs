@@ -6,6 +6,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
+using BTCPayServer.Payments;
+using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.Extensions.Hosting;
 using NBitcoin;
@@ -22,7 +24,7 @@ namespace BTCPayServer.Services.Wallets
         private readonly EventAggregator _eventAggregator;
         private readonly ExplorerClientProvider _explorerClientProvider;
         private readonly BTCPayWalletProvider _btcPayWalletProvider;
-        private readonly BTCPayNetworkProvider _btcPayNetworkProvider;
+        private readonly PaymentMethodHandlerDictionary _handlers;
         private readonly StoreRepository _storeRepository;
         private readonly WalletRepository _walletRepository;
 
@@ -30,13 +32,13 @@ namespace BTCPayServer.Services.Wallets
             new ConcurrentDictionary<WalletId, KeyPathInformation>();
 
         public WalletReceiveService(EventAggregator eventAggregator, ExplorerClientProvider explorerClientProvider,
-            BTCPayWalletProvider btcPayWalletProvider, BTCPayNetworkProvider btcPayNetworkProvider,
+            BTCPayWalletProvider btcPayWalletProvider, PaymentMethodHandlerDictionary handlers,
             StoreRepository storeRepository, WalletRepository walletRepository)
         {
             _eventAggregator = eventAggregator;
             _explorerClientProvider = explorerClientProvider;
             _btcPayWalletProvider = btcPayWalletProvider;
-            _btcPayNetworkProvider = btcPayNetworkProvider;
+            _handlers = handlers;
             _storeRepository = storeRepository;
             _walletRepository = walletRepository;
         }
@@ -70,7 +72,7 @@ namespace BTCPayServer.Services.Wallets
 
             var wallet = _btcPayWalletProvider.GetWallet(walletId.CryptoCode);
             var store = await _storeRepository.FindStore(walletId.StoreId);
-            var derivationScheme = store?.GetDerivationSchemeSettings(_btcPayNetworkProvider, walletId.CryptoCode);
+            var derivationScheme = store?.GetDerivationSchemeSettings(_handlers, walletId.CryptoCode);
             if (wallet is null || derivationScheme is null)
             {
                 return null;
@@ -101,11 +103,11 @@ namespace BTCPayServer.Services.Wallets
             _walletReceiveState.AddOrReplace(walletId, information);
         }
 
-        public IEnumerable<KeyValuePair<WalletId, KeyPathInformation>> GetByDerivation(string cryptoCode,
+        public IEnumerable<KeyValuePair<WalletId, KeyPathInformation>> GetByDerivation(PaymentMethodId paymentMethodId,
             DerivationStrategyBase derivationStrategyBase)
         {
             return _walletReceiveState.Where(pair =>
-                pair.Key.CryptoCode.Equals(cryptoCode, StringComparison.InvariantCulture) &&
+                pair.Key.PaymentMethodId == paymentMethodId &&
                 pair.Value.DerivationStrategy == derivationStrategyBase);
         }
 
@@ -116,7 +118,7 @@ namespace BTCPayServer.Services.Wallets
 
             _leases.Add(_eventAggregator.Subscribe<NewOnChainTransactionEvent>(evt =>
             {
-                var matching = GetByDerivation(evt.CryptoCode, evt.NewTransactionEvent.DerivationStrategy).Where(pair =>
+                var matching = GetByDerivation(evt.PaymentMethodId, evt.NewTransactionEvent.DerivationStrategy).Where(pair =>
                     evt.NewTransactionEvent.Outputs.Any(output => output.ScriptPubKey == pair.Value.ScriptPubKey));
 
                 foreach (var keyValuePair in matching)

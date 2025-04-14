@@ -35,7 +35,15 @@ public class PaymentRequestWebhookDeliveryRequest : WebhookSender.WebhookDeliver
         return Task.FromResult(req)!;
     }
 
+
+    public override bool SupportsCustomerEmail()
+    {
+        return true;
+    }
+
+
     private string Interpolate(string str, Data.PaymentRequestData data)
+
     {
         var id = data.Id;
         string trimmedId = $"{id.Substring(0, 7)}...{id.Substring(id.Length - 7)}";

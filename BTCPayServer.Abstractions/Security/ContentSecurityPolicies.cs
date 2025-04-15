@@ -100,6 +100,7 @@ namespace BTCPayServer.Security
             var sha = GetSha256(script);
             Add("script-src", $"'sha256-{sha}'");
         }
+
         static string GetSha256(string script)
         {
             return Convert.ToBase64String(Hashes.SHA256(Encoding.UTF8.GetBytes(script.Replace("\r\n", "\n", StringComparison.Ordinal))));

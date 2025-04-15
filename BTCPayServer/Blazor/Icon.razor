@@ -3,13 +3,15 @@
 @inject IFileVersionProvider FileVersionProvider
 @inject BTCPayServerOptions BTCPayServerOptions
 
-<svg role="img" class="icon icon-@Symbol">
+<svg role="img" class="icon icon-@Symbol @(string.IsNullOrWhiteSpace(Class) ? "" : Class)">
 	<use href="@GetPathTo(Symbol)"></use>
 </svg>
 @code {
     [Parameter, EditorRequired]
     public string Symbol { get; set; }
 
+    [Parameter]
+    public string Class { get; set; }
     private string GetPathTo(string symbol)
 	{
 		var versioned = FileVersionProvider.AddFileVersionToPath(default, "img/icon-sprite.svg");

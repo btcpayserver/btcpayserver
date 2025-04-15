@@ -1,7 +1,12 @@
+@using BTCPayServer.Security
+@using BTCPayServer.TagHelpers
+@using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WalletSetupViewModel
+
 @{
     Layout = "_LayoutWalletSetup";
     ViewData.SetActivePage(StoreNavPages.OnchainSettings, StringLocalizer["Connect your hardware wallet"], $"{Context.GetStoreData().Id}-{Model.CryptoCode}");
+    this.ViewData.SetBlazorAllowed(true);
 }
 
 @section Navbar {
@@ -20,33 +25,9 @@
     <div asp-validation-summary="All"></div>
 }
 
-<partial name="LocalhostBrowserSupport" />
-
 <div class="row mt-5 mb-4">
     <div class="col-md-8 mx-auto">
-        <div id="vault-status" class="mb-4"></div>
-        <div id="vault-xpub" class="mt-4" style="display:none;">
-            <div class="form-group">
-                <label for="addressType" class="form-label" text-translate="true">Address type</label>
-                <select id="addressType" name="addressType" class="form-select w-auto">
-                    <option value="segwit" text-translate="true">Segwit (Recommended, cheapest fee)</option>
-                    <option value="segwitWrapped" text-translate="true">Segwit wrapped (Compatible with old wallets)</option>
-                    <option value="legacy" text-translate="true">Legacy (Not recommended)</option>
-                    @if (ViewData["CanUseTaproot"] is true)
-                    {
-                        <option value="taproot" text-translate="true">Taproot (ONLY FOR DEVELOPMENT)</option>
-                    }
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="accountNumber" class="form-label" text-translate="true">Account</label>
-                <input id="accountNumber" class="form-control" name="accountNumber" type="number" value="0" min="0" step="1" style="max-width:12ch;" />
-            </div>
-        </div>
-        <div>
-            <button type="submit" id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
-            <button type="button" id="vault-retry" class="btn btn-secondary" style="display:none;" text-translate="true">Retry</button>
-        </div>
+        <component type="typeof(BTCPayServer.Blazor.VaultBridgeUI)" param-CryptoCode="@Context.GetRouteValue("cryptoCode")" render-mode="Server"/>
     </div>
 </div>
 
@@ -79,33 +60,19 @@
 
 @section PageFootContent {
     <partial name="_ValidationScriptsPartial" />
-    <partial name="VaultElements" />
 
-    <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
-
+    <script src="~/js/vaultbridge2.js" asp-append-version="true"></script>
     <script>
-        window.addEventListener("load", async () => {
-            const wsPath = "@Url.Action("VaultBridgeConnection", "UIVault", new {cryptoCode = Model.CryptoCode})";
-            const wsProto = location.protocol.replace(/^http/, "ws");
-            const vaultUI = new vaultui.VaultBridgeUI(`${wsProto}//${location.host}${wsPath}`);
-
-            document.getElementById("vault-status").innerHTML = document.getElementById("VaultConnection").innerHTML;
-
-            window.addEventListener("beforeunload", () => {
-                vaultUI.closeBridge();
-            });
-
-            while (!await vaultUI.askForDevice() || !await vaultUI.askForXPubs()) {};
-
-            const { xpub: { strategy, fingerprint, accountKey, keyPath } } = vaultUI;
-
-            document.getElementById("DerivationScheme").value = strategy;
-            document.getElementById("RootFingerprint").value = fingerprint;
-            document.getElementById("AccountKey").value = accountKey;
-            document.getElementById("KeyPath").value = keyPath;
-            document.getElementById("walletInfo").style = null;
-        });
+        vault.setXPub = function (xpub)
+        {
+            $("#DerivationScheme").val(xpub.strategy);
+            $("#RootFingerprint").val(xpub.fingerprint);
+            $("#AccountKey").val(xpub.accountKey);
+            $("#Source").val("Vault");
+            $("#DerivationSchemeFormat").val("BTCPay");
+            $("#KeyPath").val(xpub.keyPath);
+            $("#walletInfo").show();
+        }
     </script>
 }
 

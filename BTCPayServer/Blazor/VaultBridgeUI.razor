@@ -1,0 +1,576 @@
+@using System.Globalization
+@using System.Threading
+@using BTCPayServer.Hwi
+@using BTCPayServer.Security
+@using Microsoft.AspNetCore.Mvc.Localization
+@using Microsoft.Extensions.Localization
+@using NBXplorer.DerivationStrategy
+@using NBXplorer.Models
+@using NBitcoin
+@inject IStringLocalizer StringLocalizer
+@inject ViewLocalizer ViewLocalizer
+@inject IJSRuntime JSRuntime
+@inject BTCPayNetworkProvider NetworkProviders
+@implements IDisposable
+
+@foreach (var e in this.Elements)
+{
+    if (e is VaultElement.PinInput)
+    {
+        <div id="pin-input" class="mt-4">
+            <div class="row">
+                <div class="col">
+                    <div class="input-group mb-2">
+                        <input id="pin-display" @bind="PinElement.Display" type="text" class="form-control" readonly>
+                        <div id="pin-display-delete" class="input-group-text cursor-pointer">
+                            <vc:icon symbol="actions-remove" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="pin-button" id="pin-7" @onclick="() => PinElement.Click(7)"></div>
+                </div>
+                <div class="col">
+                    <div class="pin-button" id="pin-8" @onclick="() => PinElement.Click(8)"></div>
+                </div>
+                <div class="col">
+                    <div class="pin-button" id="pin-9" @onclick="() => PinElement.Click(9)"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="pin-button" id="pin-4" @onclick="() => PinElement.Click(4)"></div>
+                </div>
+                <div class="col">
+                    <div class="pin-button" id="pin-5" @onclick="() => PinElement.Click(5)"></div>
+                </div>
+                <div class="col">
+                    <div class="pin-button" id="pin-6" @onclick="() => PinElement.Click(6)"></div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col">
+                    <div class="pin-button" id="pin-1" @onclick="() => PinElement.Click(1)"></div>
+                </div>
+                <div class="col">
+                    <div class="pin-button" id="pin-2" @onclick="() => PinElement.Click(2)"></div>
+                </div>
+                <div class="col">
+                    <div class="pin-button" id="pin-3" @onclick="() => PinElement.Click(3)"></div>
+                </div>
+            </div>
+        </div>
+        <button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirmPinClick">@StringLocalizer["Confirm"]</button>
+    }
+    else if (e is VaultElement.Passphrase)
+    {
+        <div id="passphrase-input" class="mt-4">
+            <div class="form-group">
+                <label for="Password" class="form-label">@StringLocalizer["Passphrase (Leave empty if there isn't any passphrase)"]</label>
+                <div class="input-group">
+                    <input id="Password" @bind="PasswordElement.Password" type="password" class="form-control">
+                    <button type="button" class="btn btn-secondary px-3 only-for-js" title="@StringLocalizer["Toggle passphrase visibility"]"
+                            data-toggle-password="#Password">
+                        <Icon Symbol="actions-show"></Icon>
+                    </button>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="PasswordConfirmation" class="form-label">@StringLocalizer["Passphrase confirmation"]</label>
+                <div class="input-group">
+                    <input id="PasswordConfirmation" @bind="PasswordElement.PasswordConfirmation" type="password" class="form-control">
+                    <button type="button" class="btn btn-secondary px-3 only-for-js" title="@StringLocalizer["Toggle passphrase visibility"]"
+                            data-toggle-password="#PasswordConfirmation">
+                        <Icon Symbol="actions-show"></Icon>
+                    </button>
+                </div>
+                @if (PasswordElement.Error != "")
+                {
+                    <span class="text-danger">@PasswordElement.Error</span>
+                }
+            </div>
+            <button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirmPasswordClick">@StringLocalizer["Confirm"]</button>
+        </div>
+    }
+    else if (e is VaultElement.Feedback f)
+    {
+        <div class="vault-feedback mb-2 d-flex align-items-center">
+            <Icon Class=@($"vault-feedback-icon icon me-2 {f.GetClass()}") Symbol="@f.GetSymbol()"></Icon>
+            <span class="vault-feedback-content flex-grow">
+				@if (f.Html is not null)
+                {
+                    @((MarkupString)f.Html)
+                }
+                else if (f.Text is not null)
+                {
+                    @f.Text
+                }
+            </span>
+        </div>
+    }
+    else if (e is VaultElement.Warning w)
+    {
+        <div id="walletAlert" class="alert alert-warning alert-dismissible my-4" role="alert">
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@StringLocalizer["Close"]">
+                <Icon Symbol="close"></Icon>
+            </button>
+            <span id="alertMessage">
+                @((MarkupString)w.Html)
+            </span>
+        </div>
+    }
+    else if (e is VaultElement.XPubSelect x)
+    {
+        <div id="vault-xpub" class="mt-4">
+            <div class="form-group">
+                <label for="addressType" class="form-label">@StringLocalizer["Address type"]</label>
+                <select id="addressType" @bind="XPubSelectElement.AddressType" name="addressType" class="form-select w-auto">
+                    @if (x.CanUseSegwit)
+                    {
+                        <option value="segwit">@StringLocalizer["Segwit (Recommended, cheapest fee)"]</option>
+                        <option value="segwitWrapped">@StringLocalizer["Segwit wrapped (Compatible with old wallets)"]</option>
+                    }
+                    <option value="legacy">@StringLocalizer["Legacy (Not recommended)"]</option>
+                    @if (x.CanUseTaproot)
+                    {
+                        <option value="taproot" text-translate="true">@StringLocalizer["Taproot"]</option>
+                    }
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="accountNumber" class="form-label" text-translate="true">Account</label>
+                <input id="accountNumber" @bind="XPubSelectElement.AccountNumber" class="form-control" name="accountNumber" type="number" min="0" step="1"
+                       style="max-width:12ch;" />
+            </div>
+        </div>
+        <button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirmXPubClick">@StringLocalizer["Confirm"]</button>
+    }
+    else if (e is VaultElement.Retry)
+    {
+        <button id="vault-retry" class="btn btn-secondary mt-4" type="button" @onclick="OnRetryClick">@StringLocalizer["Retry"]</button>
+    }
+}
+
+@code {
+
+    public class VaultElement
+    {
+        public class PinInput : VaultElement
+        {
+            public int Value => int.TryParse(input, CultureInfo.InvariantCulture, out var v) ? v : 0;
+            public string input;
+            public string Display { get; set; } = "";
+
+            public void Click(int i)
+            {
+                input += i;
+                Display += "*";
+            }
+        }
+
+        public class Passphrase : VaultElement
+        {
+            public string PasswordConfirmation { get; set; } = "";
+            public string Password { get; set; } = "";
+            public string Error { get; set; } = "";
+        }
+
+        public class Retry : VaultElement
+        {
+        }
+
+        public class XPubSelect : VaultElement
+        {
+            public XPubSelect(Network network)
+            {
+                CanUseTaproot = network.Consensus.SupportTaproot;
+                CanUseSegwit = network.Consensus.SupportSegwit;
+                AddressType = CanUseSegwit ? "segwit" : "legacy";
+            }
+
+            public KeyPath ToKeyPath()
+                => ToScriptPubKeyType() switch
+                {
+                    ScriptPubKeyType.TaprootBIP86 => new KeyPath("86'"),
+                    ScriptPubKeyType.Segwit => new KeyPath("84'"),
+                    ScriptPubKeyType.SegwitP2SH => new KeyPath("49'"),
+                    _ => new KeyPath("44'"),
+                };
+
+            public ScriptPubKeyType ToScriptPubKeyType()
+                => AddressType switch
+                {
+                    "segwit" => ScriptPubKeyType.Segwit,
+                    "segwitWrapped" => ScriptPubKeyType.SegwitP2SH,
+                    "taproot" => ScriptPubKeyType.TaprootBIP86,
+                    _ => ScriptPubKeyType.Legacy
+                };
+
+            public string AddressType { get; set; }
+            public int AccountNumber { get; set; }
+            public bool CanUseTaproot { get; }
+            public bool CanUseSegwit { get; }
+        }
+
+        public class Warning : VaultElement
+        {
+            public Warning(LocalizedHtmlString str)
+            {
+                Html = str.Value;
+            }
+
+            public string Html { get; set; }
+        }
+
+        public class Feedback : VaultElement
+        {
+            public Feedback()
+            {
+            }
+
+            public Feedback(LocalizedString str, StateValue state)
+            {
+                this.State = state;
+                this.Text = str.Value;
+            }
+
+            public Feedback(LocalizedHtmlString str, StateValue state)
+            {
+                this.State = state;
+                this.Html = str.Value;
+            }
+
+            public enum StateValue
+            {
+                Loading,
+                Success,
+                Failed
+            }
+
+            public StateValue State { get; set; }
+
+            public string GetClass()
+                => State switch
+                {
+                    StateValue.Loading => "icon-dots feedback-icon-loading",
+                    StateValue.Success => "icon-checkmark feedback-icon-success",
+                    StateValue.Failed => "icon-cross feedback-icon-failed",
+                    _ => ""
+                };
+
+            public string GetSymbol()
+                => State switch
+                {
+                    StateValue.Loading => "dots",
+                    StateValue.Success => "checkmark",
+                    StateValue.Failed => "cross",
+                    _ => ""
+                };
+
+            public string Html { get; set; }
+            public string Text { get; set; }
+        }
+    }
+
+    [Parameter] public String CryptoCode { get; set; }
+    public List<VaultElement> Elements { get; set; } = new List<VaultElement>();
+
+    public void ShowRetry()
+    {
+        if (!Elements.OfType<VaultElement.Retry>().Any())
+        {
+            Elements.Add(new VaultElement.Retry());
+            this.StateHasChanged();
+        }
+    }
+
+    public async Task ConnectToVault()
+    {
+        try
+        {
+            this.Elements.Clear();
+            AddElement(new VaultElement.Feedback(StringLocalizer["Checking BTCPay Server Vault is running..."], VaultElement.Feedback.StateValue.Loading));
+            var client = new VaultClient2(this.JSRuntime);
+            var res = await client.AskPermission(CancellationToken);
+            var feedback = (status: res.HttpCode, browser: res.Browser) switch
+            {
+                (200, _) => new VaultElement.Feedback(StringLocalizer["Access to vault granted by owner."], VaultElement.Feedback.StateValue.Success),
+                (401, _) => new VaultElement.Feedback(StringLocalizer["The user declined access to the vault."], VaultElement.Feedback.StateValue.Failed),
+                (_, "safari") => new VaultElement.Feedback(ViewLocalizer["Safari doesn't support BTCPay Server Vault. Please use a different browser. (<a class=\"alert-link\" href=\"https://bugs.webkit.org/show_bug.cgi?id=171934\" target=\"_blank\" rel=\"noreferrer noopener\">More information</a>)"], VaultElement.Feedback.StateValue.Failed),
+                _ => new VaultElement.Feedback(ViewLocalizer["BTCPay Server Vault does not seem to be running, you can download it on <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">Github</a>."], VaultElement.Feedback.StateValue.Failed),
+            };
+            this.ReplaceElement(feedback);
+
+            if (res.HttpCode != 200)
+            {
+                if (res.HttpCode == 0 && res.Browser == "brave")
+                    AddWarning(ViewLocalizer["Brave supports BTCPay Server Vault, but you need to disable Brave Shields. (<a class=\"alert-link\" href=\"https://www.updateland.com/how-to-turn-off-brave-shields/\" target=\"_blank\" rel=\"noreferrer noopener\">More information</a>)"]);
+                ShowRetry();
+                return;
+            }
+
+            var network = NetworkProviders.GetNetwork<BTCPayNetwork>(CryptoCode);
+            var hwi = new Hwi.HwiClient(network.NBitcoinNetwork)
+            {
+                Transport = new VaultHWITransport2(client),
+                IgnoreInvalidNetwork = network.NBitcoinNetwork.ChainName != ChainName.Mainnet
+            };
+            this.AddElement(new VaultElement.Feedback(StringLocalizer["Fetching device..."], VaultElement.Feedback.StateValue.Loading));
+            var version = await hwi.GetVersionAsync(CancellationToken);
+            if (version.Major < 2)
+            {
+                ReplaceElement(new VaultElement.Feedback(ViewLocalizer["Your BTCPay Server Vault version is outdated. Please <a target=\"_blank\" href=\"https://github.com/btcpayserver/BTCPayServer.Vault/releases/latest\">download</a> the latest version."], VaultElement.Feedback.StateValue.Failed));
+            }
+
+
+            var entries = (await hwi.EnumerateEntriesAsync(CancellationToken)).ToList();
+            var deviceEntry = entries.FirstOrDefault();
+
+            if (deviceEntry is null)
+            {
+                this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["No device connected."], VaultElement.Feedback.StateValue.Failed));
+                ShowRetry();
+                return;
+            }
+
+            if (deviceEntry.Model is null)
+            {
+                this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Unsupported hardware wallet, try to update BTCPay Server Vault"], VaultElement.Feedback.StateValue.Failed));
+                ShowRetry();
+                return;
+            }
+
+            this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Device found: {0}", deviceEntry.Model], VaultElement.Feedback.StateValue.Success));
+
+            var device = new HwiDeviceClient(hwi, deviceEntry.DeviceSelector, deviceEntry.Model, deviceEntry.Fingerprint);
+            HDFingerprint? fingerprint = deviceEntry.Fingerprint;
+            bool dirtyDevice = false;
+            if (deviceEntry is { Code: HwiErrorCode.DeviceNotReady })
+            {
+                // It seems that this 'if (IsTrezorT(deviceEntry))' can be removed.
+                // I have not managed to trigger this anymore with latest 2.8.9
+                // the passphrase is getting asked during EnumerateEntriesAsync 
+                if (IsTrezorT(deviceEntry))
+                {
+                    this.AddElement(new VaultElement.Feedback(StringLocalizer["Please, enter the passphrase on the device."], VaultElement.Feedback.StateValue.Loading));
+                    // The make the trezor T ask for password
+                    await device.GetXPubAsync(new KeyPath("44'"), CancellationToken);
+                    dirtyDevice = true;
+                }
+                else if (deviceEntry.NeedsPinSent is true)
+                {
+                    await device.PromptPinAsync(CancellationToken);
+                    var pin = await GetPin();
+                    if (!await device.SendPinAsync(pin, CancellationToken))
+                    {
+                        this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Incorrect pin code."], VaultElement.Feedback.StateValue.Failed));
+                        ShowRetry();
+                        return;
+                    }
+
+                    this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Pin code verified."], VaultElement.Feedback.StateValue.Success));
+                    dirtyDevice = true;
+                }
+                else if (deviceEntry.NeedsPassphraseSent is true)
+                {
+                    device.Password = await GetPassword();
+                }
+            }
+            else if (deviceEntry is { Code: HwiErrorCode.DeviceNotInitialized })
+            {
+                this.AddElement(new VaultElement.Feedback(StringLocalizer["The device has not been initialized."], VaultElement.Feedback.StateValue.Failed));
+                ShowRetry();
+                return;
+            }
+
+            // For Trezor One, we always ask for the password.
+            // If the user doesn't have any, he can just leave empty.
+            if (IsTrezorOne(deviceEntry) && device.Password is null)
+            {
+                device.Password = await GetPassword();
+                if (!string.IsNullOrEmpty(device.Password))
+                {
+                    device = new HwiDeviceClient(hwi, DeviceSelectors.FromDeviceType("trezor", deviceEntry.Path), deviceEntry.Model, null)
+                    {
+                        Password = device.Password
+                    };
+                }
+            }
+
+            if (!string.IsNullOrEmpty(device.Password))
+                fingerprint = null;
+
+            if (dirtyDevice)
+            {
+                entries = (await hwi.EnumerateEntriesAsync(CancellationToken)).ToList();
+                deviceEntry = entries.FirstOrDefault();
+                device = new HwiDeviceClient(hwi, deviceEntry.DeviceSelector, deviceEntry.Model, deviceEntry.Fingerprint) { Password = device.Password };
+                fingerprint = deviceEntry.Fingerprint;
+            }
+
+            if (fingerprint is null)
+            {
+                this.AddElement(new VaultElement.Feedback(StringLocalizer["Fetching wallet's fingerprint."], VaultElement.Feedback.StateValue.Loading));
+                fingerprint = (await device.GetXPubAsync(new KeyPath("44'"), CancellationToken)).ExtPubKey.ParentFingerprint;
+                device = new HwiDeviceClient(hwi, DeviceSelectors.FromFingerprint(fingerprint.Value), deviceEntry.Model, fingerprint) { Password = device.Password };
+                this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Wallet's fingerprint fetched."], VaultElement.Feedback.StateValue.Success));
+            }
+
+            var xpubInfo = await GetXPubSelect(network.NBitcoinNetwork);
+            this.AddElement(new VaultElement.Feedback(StringLocalizer["Fetching public keys..."], VaultElement.Feedback.StateValue.Loading));
+            KeyPath keyPath = xpubInfo.ToKeyPath().Derive(network.CoinType).Derive(xpubInfo.AccountNumber, true);
+            BitcoinExtPubKey xpub = await device.GetXPubAsync(keyPath, CancellationToken);
+
+            var factory = network.NBXplorerNetwork.DerivationStrategyFactory;
+            var strategy = factory.CreateDirectDerivationStrategy(xpub, new DerivationStrategyOptions()
+            {
+                ScriptPubKeyType = xpubInfo.ToScriptPubKeyType()
+            });
+            this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Public keys successfully fetched."], VaultElement.Feedback.StateValue.Success));
+            await client.SetXPub(new()
+            {
+                Strategy = strategy.ToString(),
+                AccountKey = xpub.ToString(),
+                KeyPath = keyPath.ToString(),
+                Fingerprint = fingerprint.ToString(),
+            }, CancellationToken);
+        }
+        catch (Exception e)
+        {
+            if (Elements is [.., VaultElement.Feedback lastFeedback])
+                lastFeedback.State = VaultElement.Feedback.StateValue.Failed;  
+            this.AddElement(new VaultElement.Feedback(StringLocalizer["An unexpected error happened. ({0})", e.Message], VaultElement.Feedback.StateValue.Failed));
+            throw;
+        }
+    }
+
+    private static bool IsTrezorT(HwiEnumerateEntry deviceEntry)
+    {
+        return deviceEntry.Model.Contains("Trezor_T", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTrezorOne(HwiEnumerateEntry deviceEntry)
+    {
+        return deviceEntry.Model.Contains("trezor_1", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private TaskCompletionSource<string> _GetPassword;
+
+    private Task<string> GetPassword()
+    {
+        AddElement(new VaultElement.Feedback(StringLocalizer["Enter the passphrase."], VaultElement.Feedback.StateValue.Loading));
+        PasswordElement = new VaultElement.Passphrase();
+        AddElement(PasswordElement);
+        var cts = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _GetPassword = cts;
+        return cts.Task;
+    }
+
+    public VaultElement.Passphrase PasswordElement { get; set; }
+
+    private Task<int> GetPin()
+    {
+        AddElement(new VaultElement.Feedback(StringLocalizer["Enter the pin."], VaultElement.Feedback.StateValue.Loading));
+        PinElement = new VaultElement.PinInput();
+        AddElement(PinElement);
+        var cts = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _GetPin = cts;
+        return cts.Task;
+    }
+
+    private TaskCompletionSource<int> _GetPin;
+    public VaultElement.PinInput PinElement;
+
+    private void OnConfirmPinClick()
+    {
+        var el = PinElement;
+        this.Elements.Remove(el);
+        this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Verifying pin..."], VaultElement.Feedback.StateValue.Loading));
+        PinElement = null;
+        _GetPin?.TrySetResult(el.Value);
+        _GetPin = null;
+    }
+
+    Task<VaultElement.XPubSelect> GetXPubSelect(Network network)
+    {
+        AddElement(new VaultElement.Feedback(StringLocalizer["Select your address type and account"], VaultElement.Feedback.StateValue.Loading));
+        XPubSelectElement = new VaultElement.XPubSelect(network);
+        AddElement(XPubSelectElement);
+        var cts = new TaskCompletionSource<VaultElement.XPubSelect>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _GetXPubInfo = cts;
+        return cts.Task;
+    }
+
+    VaultElement.XPubSelect XPubSelectElement;
+    TaskCompletionSource<VaultElement.XPubSelect> _GetXPubInfo;
+
+    private void OnConfirmXPubClick()
+    {
+        var el = XPubSelectElement;
+        this.Elements.Remove(el);
+        this.Elements.RemoveAt(this.Elements.Count - 1);
+        this.StateHasChanged();
+        XPubSelectElement = null;
+        _GetXPubInfo?.TrySetResult(el);
+        _GetXPubInfo = null;
+    }
+
+    private void OnConfirmPasswordClick()
+    {
+        if (PasswordElement.Password != PasswordElement.PasswordConfirmation)
+        {
+            PasswordElement.Error = StringLocalizer["Invalid password confirmation."].Value;
+            return;
+        }
+
+        var el = this.PasswordElement;
+        this.Elements.Remove(el);
+        this.ReplaceElement(new VaultElement.Feedback(StringLocalizer["Password entered..."], VaultElement.Feedback.StateValue.Success));
+        PasswordElement = null;
+        _GetPassword?.TrySetResult(el.Password);
+        _GetPassword = null;
+    }
+
+    private void AddWarning(LocalizedHtmlString str)
+    {
+        Elements.Insert(0, new VaultElement.Warning(str));
+        this.StateHasChanged();
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ConnectToVault();
+    }
+
+    private async Task OnRetryClick()
+    {
+        Elements.Clear();
+        await ConnectToVault();
+    }
+
+    private void ReplaceElement(VaultElement element)
+    {
+        Elements[^1] = element;
+        this.StateHasChanged();
+    }
+
+    private void AddElement(VaultElement el)
+    {
+        Elements.Add(el);
+        this.StateHasChanged();
+    }
+
+    CancellationTokenSource _Cts = new CancellationTokenSource();
+
+    CancellationToken CancellationToken => _Cts.Token;
+
+    public void Dispose()
+    {
+        _Cts.Cancel();
+        _GetXPubInfo?.TrySetCanceled();
+        _GetPin?.TrySetCanceled();
+    }
+
+}

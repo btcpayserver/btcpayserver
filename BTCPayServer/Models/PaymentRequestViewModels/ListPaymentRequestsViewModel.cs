@@ -48,6 +48,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Description = blob.Description;
             ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
+            ReferenceId = data.ReferenceId;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             FormResponse = blob.FormResponse is null
                 ? null
@@ -84,6 +85,9 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
         [MailboxAddress]
         public string Email { get; set; }
         
+        [Display(Name = "Reference Id")]
+        public string ReferenceId { get; set; }
+
         [Display(Name = "Allow payee to create invoices with custom amounts")]
         public bool AllowCustomPaymentAmounts { get; set; }
 
@@ -106,6 +110,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             Description = blob.Description;
             ExpiryDate = data.Expiry?.UtcDateTime;
             Email = blob.Email;
+            ReferenceId = data.ReferenceId;
             AllowCustomPaymentAmounts = blob.AllowCustomPaymentAmounts;
             switch (data.Status)
             {
@@ -127,6 +132,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
             }
         }
         public StoreBrandingViewModel StoreBranding { get; set; }
+        public string ReferenceId { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
         public string Email { get; set; }
         public string Status { get; set; }
@@ -147,11 +153,11 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 #nullable enable
         public class InvoiceList : List<PaymentRequestInvoice>
         {
-            static HashSet<InvoiceState> stateAllowedToDisplay = new HashSet<InvoiceState>
-                {
-                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.None),
-                    new InvoiceState(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial),
-                };
+            private static HashSet<InvoiceState> stateAllowedToDisplay =
+            [
+                new(InvoiceStatus.New, InvoiceExceptionStatus.None),
+                new(InvoiceStatus.New, InvoiceExceptionStatus.PaidPartial)
+            ];
             public InvoiceList()
             {
 
@@ -195,7 +201,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
         public class PaymentRequestInvoicePayment
         {
-            public static List<ViewPaymentRequestViewModel.PaymentRequestInvoicePayment>
+            public static List<PaymentRequestInvoicePayment>
                 GetViewModels(
                 InvoiceEntity invoice,
                 DisplayFormatter displayFormatter,
@@ -215,7 +221,7 @@ namespace BTCPayServer.Models.PaymentRequestViewModels
 
                     string link = paymentMethodId is null ? null : txLinkProvider.GetTransactionLink(paymentMethodId, txId);
 
-                    return new ViewPaymentRequestViewModel.PaymentRequestInvoicePayment
+                    return new PaymentRequestInvoicePayment
                     {
                         Amount = paymentEntity.PaidAmount.Gross,
                         Paid = paymentEntity.InvoicePaidAmount.Net,

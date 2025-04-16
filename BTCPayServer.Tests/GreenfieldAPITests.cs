@@ -2048,7 +2048,7 @@ namespace BTCPayServer.Tests
                     new() { Title = "A", Currency = "helloinvalid", Amount = 1 });
             });
             var newPaymentRequest = await client.CreatePaymentRequest(user.StoreId,
-                new() { Title = "A", Currency = "USD", Amount = 1 });
+                new() { Title = "A", Currency = "USD", Amount = 1, ReferenceId = "1234"});
 
             //list payment request
             var paymentRequests = await viewOnly.GetPaymentRequests(user.StoreId);
@@ -2061,10 +2061,12 @@ namespace BTCPayServer.Tests
             var paymentRequest = await viewOnly.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
             Assert.Equal(newPaymentRequest.Title, paymentRequest.Title);
             Assert.Equal(newPaymentRequest.StoreId, user.StoreId);
+            Assert.Equal(newPaymentRequest.ReferenceId, paymentRequest.ReferenceId);
 
             //update payment request
             var updateRequest = paymentRequest;
             updateRequest.Title = "B";
+            updateRequest.ReferenceId = "EmperorNicolasGeneralRockstar";
             await AssertHttpError(403, async () =>
             {
                 await viewOnly.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
@@ -2072,6 +2074,7 @@ namespace BTCPayServer.Tests
             await client.UpdatePaymentRequest(user.StoreId, paymentRequest.Id, updateRequest);
             paymentRequest = await client.GetPaymentRequest(user.StoreId, newPaymentRequest.Id);
             Assert.Equal(updateRequest.Title, paymentRequest.Title);
+            Assert.Equal(updateRequest.ReferenceId, paymentRequest.ReferenceId);
 
             //archive payment request
             await AssertHttpError(403, async () =>

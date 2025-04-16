@@ -2,10 +2,12 @@ using System;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Stores;
 using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Services.PaymentRequests
 {
@@ -15,6 +17,7 @@ namespace BTCPayServer.Services.PaymentRequests
         public const string Updated = nameof(Updated);
         public const string Archived = nameof(Archived);
         public const string StatusChanged = nameof(StatusChanged);
+        public const string Completed = nameof(Completed);
         public PaymentRequestData Data { get; set; }
         public string Type { get; set; }
     }
@@ -99,9 +102,7 @@ namespace BTCPayServer.Services.PaymentRequests
         {
             await using var context = _ContextFactory.CreateContext();
             var paymentRequestData = await context.FindAsync<PaymentRequestData>(paymentRequestId);
-            if (paymentRequestData == null)
-                return;
-            if( paymentRequestData.Status ==  status)
+            if (paymentRequestData == null || paymentRequestData.Status == status)
                 return;
             paymentRequestData.Status = status;
             
@@ -112,6 +113,15 @@ namespace BTCPayServer.Services.PaymentRequests
                 Data = paymentRequestData,
                 Type = PaymentRequestEvent.StatusChanged
             });
+
+            if (status == PaymentRequestStatus.Completed)
+            {
+                _eventAggregator.Publish(new PaymentRequestEvent()
+                {
+                    Data = paymentRequestData,
+                    Type = PaymentRequestEvent.Completed
+                });
+            }
         }
         public async Task<PaymentRequestData[]> GetExpirablePaymentRequests(CancellationToken cancellationToken = default)
         {
@@ -126,48 +136,43 @@ namespace BTCPayServer.Services.PaymentRequests
         }
         public async Task<PaymentRequestData[]> FindPaymentRequests(PaymentRequestQuery query, CancellationToken cancellationToken = default)
         {
-            using var context = _ContextFactory.CreateContext();
-            var queryable = context.PaymentRequests.Include(data => data.StoreData).AsQueryable();
+            await using var context = _ContextFactory.CreateContext();
+            IQueryable<PaymentRequestData> queryable = context.PaymentRequests.AsQueryable();
+
+            if (!string.IsNullOrEmpty(query.StoreId))
+                queryable = queryable.Where(data => data.StoreDataId == query.StoreId);
+
+            if (!string.IsNullOrEmpty(query.SearchText))
+            {
+                if (string.IsNullOrEmpty(query.StoreId))
+                    throw new InvalidOperationException("PaymentRequestQuery.StoreId should be specified");
+                // We are repeating the StoreId on purpose here, so Postgres can use the index
+                queryable = context.PaymentRequests.Where(p => (p.StoreDataId == query.StoreId && p.ReferenceId == query.SearchText) || p.Id == query.SearchText);
+            }
+
+            queryable = queryable.Include(data => data.StoreData);
 
             if (!query.IncludeArchived)
-            {
                 queryable = queryable.Where(data => !data.Archived);
-            }
-            if (!string.IsNullOrEmpty(query.StoreId))
-            {
-                queryable = queryable.Where(data =>
-                   data.StoreDataId == query.StoreId);
-            }
 
             if (query.Status != null && query.Status.Any())
-            {
-                queryable = queryable.Where(data =>
-                    query.Status.Contains(data.Status));
-            }
+                queryable = queryable.Where(data => query.Status.Contains(data.Status));
 
             if (query.Ids != null && query.Ids.Any())
-            {
-                queryable = queryable.Where(data =>
-                    query.Ids.Contains(data.Id));
-            }
+                queryable = queryable.Where(data => query.Ids.Contains(data.Id));
 
             if (!string.IsNullOrEmpty(query.UserId))
-            {
-                queryable = queryable.Where(i =>
-                    i.StoreData != null && i.StoreData.UserStores.Any(u => u.ApplicationUserId == query.UserId));
-            }
+                queryable = queryable.Where(data =>
+                    data.StoreData.UserStores.Any(u => u.ApplicationUserId == query.UserId));
 
             queryable = queryable.OrderByDescending(u => u.Created);
 
             if (query.Skip.HasValue)
-            {
                 queryable = queryable.Skip(query.Skip.Value);
-            }
 
             if (query.Count.HasValue)
-            {
                 queryable = queryable.Take(query.Count.Value);
-            }
+
             var items = await queryable.ToArrayAsync(cancellationToken);
             return items;
         }
@@ -221,5 +226,6 @@ namespace BTCPayServer.Services.PaymentRequests
         public int? Skip { get; set; }
         public int? Count { get; set; }
         public string[] Ids { get; set; }
+        public string SearchText { get; set; }
     }
 }

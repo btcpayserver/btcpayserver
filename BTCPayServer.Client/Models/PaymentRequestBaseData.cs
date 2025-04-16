@@ -37,6 +37,10 @@ namespace BTCPayServer.Client.Models
         public string Title { get; set; }
         public string Description { get; set; }
         public string Email { get; set; }
+        /// <summary>
+        /// Linking to invoices outside BTCPay Server using & user defined ids
+        /// </summary>
+        public string ReferenceId { get; set; }
         public bool AllowCustomPaymentAmounts { get; set; }
 
         [JsonConverter(typeof(StringEnumConverter))]

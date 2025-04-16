@@ -21,6 +21,7 @@ using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Configuration;
 using BTCPayServer.Data;
 using BTCPayServer.HostedServices;
+using BTCPayServer.Hwi;
 using BTCPayServer.Lightning;
 using BTCPayServer.Models;
 using BTCPayServer.Models.StoreViewModels;
@@ -34,6 +35,7 @@ using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Reporting;
 using BTCPayServer.Services.Wallets;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +54,39 @@ namespace BTCPayServer
 {
     public static class Extensions
     {
+        public static string GetNiceModelName(this HwiDeviceClient device)
+        => device.Model switch
+        {
+            "trezor_1" => "Trezor Model One",
+            "trezor_t" => "Trezor Model T",
+            "trezor_r" => "Trezor Model R",
+            "coldcard" => "Coldcard",
+            "coldcard_simulator" => "Coldcard (Simulator)",
+            "trezor_safe 3" => "Trezor Safe 3",
+            "trezor_safe 5" => "Trezor Safe 5",
+            "ledger_nano_s" => "Ledger Nano S",
+            "ledger_nano_x" => "Ledger Nano X",
+            "ledger_stax" => "Ledger Stax",
+            "ledger_flex" => "Ledger Flex",
+            "keepkey" => "KeepKey",
+            "digitalbitbox_01" or "digitalbitbox" => "Digital Bitbox",
+            "digitalbitbox_01_simulator" => "Digital Bitbox (Simulator)",
+            "bitbox02_multi" => "BitBox02 Multi",
+            "bitbox02_btconly" => "BitBox02 Bitcoin Only",
+            "ledger_nano_s_plus" => "Ledger Nano S Plus",
+            "jade" => "Jade",
+            _ => device.Model
+        };
+        public static string ProtectString(this IDataProtector protector,string str)
+        {
+            return Convert.ToBase64String(protector.Protect(Encoding.UTF8.GetBytes(str)));
+        }
+        public static string UnprotectString(this IDataProtector protector, string str)
+        {
+            return Encoding.UTF8.GetString(protector.Unprotect(Convert.FromBase64String(str)));
+        }
+        
+        
         /// <summary>
         /// Outputs a serializer which will serialize default and null members.
         /// This is useful for discovering the API.

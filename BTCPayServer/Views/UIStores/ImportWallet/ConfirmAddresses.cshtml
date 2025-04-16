@@ -15,41 +15,6 @@
     <p class="lead text-secondary mt-3" text-translate="true">Please check that your wallet is generating the same addresses as below.</p>
 </header>
 
-@if (!ViewContext.ModelState.IsValid)
-{
-    <div asp-validation-summary="All"></div>
-}
-@if (Model.Method is WalletSetupMethod.Hardware)
-{
-	<partial name="LocalhostBrowserSupport" />
-}
-
-<template id="modal-template">
-    <div class="modal-dialog" role="document">
-        <form class="modal-content" method="post" enctype="multipart/form-data">
-            <div class="modal-header">
-                <h5 class="modal-title" id="addressVerification" text-translate="true">Address verification</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="@StringLocalizer["Close"]">
-                    <vc:icon symbol="close" />
-                </button>
-            </div>
-            <div class="modal-body">
-                <p>
-                    <span text-translate="true">Confirm that you see the following address on the device:</span>
-                    <code id="displayed-address"></code>
-                </p>
-                <div id="vault-status"></div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" text-translate="true">Close</button>
-                <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
-            </div>
-        </form>
-    </div>
-</template>
-
-<div id="btcpayservervault" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="btcpayservervault" aria-hidden="true"></div>
-
 <form method="post" asp-controller="UIStores" asp-action="UpdateWallet" asp-route-storeId="@Model.StoreId" asp-route-cryptoCode="@Model.CryptoCode">
     <input asp-for="Config" type="hidden"/>
     <input asp-for="Confirmation" type="hidden"/>
@@ -63,10 +28,6 @@
             <tr>
                 <th text-translate="true">Key path</th>
                 <th text-translate="true">Address</th>
-                @if (Model.Source == "Vault")
-                {
-                    <th></th>
-                }
             </tr>
             </thead>
             <tbody>
@@ -75,13 +36,6 @@
                 <tr>
                     <td>@sample.KeyPath</td>
                     <td><code>@sample.Address</code></td>
-                    @if (Model.Source == "Vault")
-                    {
-                        <td class="text-end">
-                            @* Using single quotes for the data attributes on purpose *@
-                            <a href="#" data-address='@Safe.Json(sample.Address)' data-rooted-key-path='@Safe.Json(sample.RootedKeyPath.ToString())' text-translate="true">Show on device</a>
-                        </td>
-                    }
                 </tr>
             }
             </tbody>
@@ -93,54 +47,4 @@
     </div>
 </form>
 
-@section PageFootContent {
-    <partial name="_ValidationScriptsPartial" />
-    <partial name="VaultElements" />
-
-    <script src="~/js/vaultbridge.js" defer asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.ui.js" defer asp-append-version="true"></script>
-
-    <script>
-        window.addEventListener("load", async () => {
-            const wsPath = "@Url.Action("VaultBridgeConnection", "UIVault", new {cryptoCode = Model.CryptoCode})";
-            const wsProto = location.protocol.replace(/^http/, "ws");
-
-            const statusHTML = document.getElementById("VaultConnection").innerHTML;
-            const modalHTML = document.getElementById("modal-template").innerHTML;
-            const $modal = document.getElementById("btcpayservervault");
-
-            document.querySelectorAll("[data-address]").forEach(link => {
-                link.addEventListener("click", async event => {
-                    event.preventDefault();
-                    const $link = event.currentTarget;
-                    const address = JSON.parse($link.dataset.address);
-                    const rootedKeyPath = JSON.parse($link.dataset.rootedKeyPath);
-
-                    $modal.innerHTML = modalHTML;
-
-                    const $address = document.getElementById("displayed-address");
-                    const $status = document.getElementById("vault-status");
-
-                    $status.innerHTML = statusHTML;
-                    $address.innerText = address;
-
-                    const vaultUI = new vaultui.VaultBridgeUI(`${wsProto}//${location.host}${wsPath}`);
-
-                    const $$modal = $($modal)
-                    $$modal.modal();
-                    $$modal.on('hidden.bs.modal', () => {
-                        vaultUI.closeBridge();
-                    });
-
-                    $$modal.modal("show");
-
-                    while (!await vaultUI.askForDevice()) {}
-                    await vaultUI.askForDisplayAddress(rootedKeyPath);
-
-                    $$modal.modal("hide");
-                });
-            });
-        });
-    </script>
-}
 

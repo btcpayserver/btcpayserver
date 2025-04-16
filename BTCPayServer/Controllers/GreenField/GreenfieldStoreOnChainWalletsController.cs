@@ -582,9 +582,13 @@ namespace BTCPayServer.Controllers.Greenfield
 
             var signingKey = ExtKey.Parse(signingKeyStr, network.NBitcoinNetwork);
 
-            var signingKeySettings = derivationScheme.GetSigningAccountKeySettings();
-            signingKeySettings.RootFingerprint ??= signingKey.GetPublicKey().GetHDFingerPrint();
-            RootedKeyPath rootedKeyPath = signingKeySettings.GetRootedKeyPath();
+            var signingKeySettings = derivationScheme.GetSigningAccountKeySettings(signingKey);
+            RootedKeyPath? rootedKeyPath = signingKeySettings?.GetRootedKeyPath();
+            if (rootedKeyPath is null || signingKeySettings is null)
+            {
+                return this.CreateAPIError(503, "not-available",
+                    "The private key saved for this wallet doesn't match the derivation scheme");
+            }
             psbt.PSBT.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
             var accountKey = signingKey.Derive(rootedKeyPath.KeyPath);
 

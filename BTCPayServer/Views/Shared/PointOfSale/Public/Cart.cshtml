@@ -210,7 +210,7 @@
                                             inputmode="decimal"
                                             min="0"
                                             step="@Model.Step" />
-                                        <span>@(Model.CurrencyInfo.CurrencySymbol ?? Model.CurrencyCode)</span>
+                                        <span>@(Model.CurrencySymbol ?? Model.CurrencyCode)</span>
                                     </div>
                                     <button
                                         v-for="percentage in customTipPercentages"

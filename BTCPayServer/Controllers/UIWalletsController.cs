@@ -1324,7 +1324,7 @@ namespace BTCPayServer.Controllers
                 vm.Outputs.Last().Labels = vm.Outputs.Last().Labels.Concat(addressLabels.Select(tuple => tuple.Label)).ToArray();
             }
         }
-
+        
         private IActionResult ViewVault(WalletId walletId, WalletPSBTViewModel vm)
         {
             return View(nameof(WalletSendVault),
@@ -1332,8 +1332,6 @@ namespace BTCPayServer.Controllers
                 {
                     SigningContext = vm.SigningContext,
                     WalletId = walletId.ToString(),
-                    WebsocketPath = Url.Action(nameof(UIVaultController.VaultBridgeConnection), "UIVault",
-                        new { walletId = walletId.ToString() }),
                     ReturnUrl = vm.ReturnUrl,
                     BackUrl = vm.BackUrl
                 });

@@ -147,7 +147,7 @@
                     <tr>
                         @if (stateActions.Any())
                         {
-                            <th class="only-for-js mass-action-select-col" permission="@Policies.CanModifyStoreSettings">
+                            <th class="only-for-js mass-action-select-col" permission="@Policies.CanManagePayouts">
                                 <input type="checkbox" class="form-check-input mass-action-select-all" data-payout-state="@Model.PayoutState.ToString()" />
                             </th>
                         }
@@ -170,7 +170,7 @@
                 </thead>
                 @if (stateActions.Any())
                 {
-                    <thead class="mass-action-actions" permission="@Policies.CanModifyStoreSettings">
+                    <thead class="mass-action-actions" permission="@Policies.CanManagePayouts">
                     <tr>
                         <th class="mass-action-select-col only-for-js">
                             <input type="checkbox" class="form-check-input mass-action-select-all" />
@@ -199,7 +199,7 @@
                         <tr class="payout mass-action-row">
                             @if (stateActions.Any())
                             {
-                                <td class="only-for-js mass-action-select-col align-middle" permission="@Policies.CanModifyStoreSettings">
+                                <td class="only-for-js mass-action-select-col align-middle" permission="@Policies.CanManagePayouts">
                                     <input type="checkbox" class="selection-item-@Model.PayoutState.ToString() form-check-input mass-action-select" asp-for="Payouts[i].Selected" />
                                     <input type="hidden" asp-for="Payouts[i].PayoutId" />
                                 </td>

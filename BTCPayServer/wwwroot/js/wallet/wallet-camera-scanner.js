@@ -1,7 +1,7 @@
 window.addEventListener("load", () => {
     let $input = null;
     initCameraScanningApp("Scan address or payment link", data => {
-        if (data.includes('?') || $input == null) {
+        if (data.includes(':') || $input == null) {
             document.getElementById("BIP21").value = data;
             document.getElementById("SendForm").submit();
         } else {

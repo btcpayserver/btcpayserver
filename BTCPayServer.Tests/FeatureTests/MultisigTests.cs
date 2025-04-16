@@ -123,14 +123,23 @@ public class MultisigTests : UnitTestBase
         s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys(amount);
         s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
         
-        // now clicking on View to sign transaction
+        // validating the state of UI
+        Assert.Equal("0", s.Driver.FindElement(By.Id("Sigs_0__Collected")).Text);
+        Assert.Equal("2/3", s.Driver.FindElement(By.Id("Sigs_0__Scheme")).Text);
+        
+        // now proceeding to click on sign button and sign transactions
         SignPendingTransactionWithKey(s, address, derivationScheme, resp1);
+        Assert.Equal("1", s.Driver.FindElement(By.Id("Sigs_0__Collected")).Text);
+        
         SignPendingTransactionWithKey(s, address, derivationScheme, resp2);
+        Assert.Equal("2", s.Driver.FindElement(By.Id("Sigs_0__Collected")).Text);
 
-        // Broadcasting transaction and ensuring there is no longer broadcast button
+        // we should now have enough signatures to broadcast transaction
         s.Driver.WaitForElement(By.XPath("//a[text()='Broadcast']")).Click();
         s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
         Assert.Contains("Transaction broadcasted successfully", s.FindAlertMessage().Text);
+        
+        // now that we broadcast transaction, there shouldn't be broadcast button
         s.Driver.AssertElementNotFound(By.XPath("//a[text()='Broadcast']"));
         
         // Abort pending transaction flow

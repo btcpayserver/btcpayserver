@@ -1356,7 +1356,7 @@ namespace BTCPayServer.Controllers
             if (vm.SigningContext.PendingTransactionId is not null)
             {
                 var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
-                var pendingTransaction = await _pendingTransactionService.CollectSignature(walletId.CryptoCode, psbt, false, CancellationToken.None);
+                var pendingTransaction = await _pendingTransactionService.CollectSignature(psbt, CancellationToken.None);
 
                 if (pendingTransaction != null)
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });

@@ -37,12 +37,6 @@ namespace BTCPayServer
                 _Networks.Add(network.CryptoCode.ToUpperInvariant(), network);
             }
 
-            foreach (var chain in selectedChains.ExplicitlySelected)
-            {
-                if (GetNetwork<BTCPayNetworkBase>(chain) == null)
-                    throw new ConfigException($"Invalid chains \"{chain}\"");
-            }
-
             logs.Configuration.LogInformation("Supported chains: {Chains}", string.Join(',', _Networks.Select(n => n.Key).ToArray()));
         }
 

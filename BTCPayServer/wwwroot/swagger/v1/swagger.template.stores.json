@@ -518,6 +518,17 @@
                             }
                         ]
                     },
+                    "refundBOLT11Expiration": {
+                        "default": 30,
+                        "minimum": 0,
+                        "maximum": 3650,
+                        "description": "The minimum expiry of BOLT11 invoices accepted for refunds by default. (in days)",
+                        "allOf": [
+                            {
+                                "$ref": "#/components/schemas/TimeSpanDays"
+                            }
+                        ]
+                    },
                     "displayExpirationTimer": {
                         "default": 300,
                         "minimum": 60,

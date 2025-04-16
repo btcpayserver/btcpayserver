@@ -30,7 +30,7 @@ namespace BTCPayServer.Client.Models
         }
 
         [JsonProperty(Order = 2)] public string PaymentRequestId { get; set; }
-        [JsonProperty(Order = 3)] [JsonConverter(typeof(StringEnumConverter))]public PaymentRequestData.PaymentRequestStatus Status { get; set; }
+        [JsonProperty(Order = 3)] [JsonConverter(typeof(StringEnumConverter))]public PaymentRequestStatus Status { get; set; }
     }
     
     public abstract class StoreWebhookEvent : WebhookEvent

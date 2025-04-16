@@ -3936,6 +3936,14 @@ retry:
             Assert.Equal(3, options.Count);
             Assert.DoesNotContain(options, element => element.Text.Equals("store role", StringComparison.InvariantCultureIgnoreCase));
             
+            s.Driver.FindElement(By.Id("Email")).SendKeys(s.AsTestAccount().Email);
+            s.Driver.FindElement(By.Id("Role")).SendKeys("owner");
+            s.Driver.FindElement(By.Id("AddUser")).Click();
+            Assert.Contains("The user already has the role Owner.", s.Driver.FindElement(By.CssSelector(".validation-summary-errors")).Text);
+            s.Driver.FindElement(By.Id("Role")).SendKeys("manager");
+            s.Driver.FindElement(By.Id("AddUser")).Click();
+            Assert.Contains("The user is the last owner. Their role cannot be changed.", s.Driver.FindElement(By.CssSelector(".validation-summary-errors")).Text);
+            
             s.GoToStore(StoreNavPages.Roles);
             s.ClickPagePrimary();
             s.Driver.FindElement(By.Id("Role")).SendKeys("Malice");
@@ -4188,7 +4196,7 @@ retry:
             Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, employee);
             // no change, no alert message
             s.Driver.FindElement(By.Id("EditContinue")).Click();
-            s.Driver.ElementDoesNotExist(By.CssSelector("#mainContent .alert"));
+            Assert.Contains("The user already has the role Manager.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
             
             // Should not change last owner
             userRows = s.Driver.FindElements(By.CssSelector("#StoreUsersList tr"));
@@ -4203,7 +4211,7 @@ retry:
             Assert.Equal(s.Driver.WaitForElement(By.Id("EditUserEmail")).Text, owner);
             new SelectElement(s.Driver.FindElement(By.Id("EditUserRole"))).SelectByValue("Employee");
             s.Driver.FindElement(By.Id("EditContinue")).Click();
-            Assert.Contains($"User {owner} is the last owner. Their role cannot be changed.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
+            Assert.Contains("The user is the last owner. Their role cannot be changed.", s.FindAlertMessage(StatusMessageModel.StatusSeverity.Error).Text);
         }
 
         private static void CanBrowseContent(SeleniumTester s)

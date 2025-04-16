@@ -3,6 +3,9 @@
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @using BTCPayServer.Components
 @using BTCPayServer.Client
+@using BTCPayServer.Services
+@using BTCPayServer.TagHelpers
+@inject CallbackGenerator CallbackGenerator
 @model BTCPayServer.Models.PaymentRequestViewModels.ListPaymentRequestsViewModel
 @{
     Layout = "_Layout";
@@ -54,7 +57,7 @@
     <input type="hidden" asp-for="Count" />
     <input type="hidden" asp-for="TimezoneOffset" />
     <input asp-for="SearchTerm" type="hidden" value="@Model.Search.WithoutSearchText()"/>
-    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search…"]" />
+    <input asp-for="SearchText" class="form-control" placeholder="@StringLocalizer["Search by Id..."]" />
     <div class="dropdown">
         <button id="StatusOptionsToggle" class="btn btn-secondary dropdown-toggle dropdown-toggle-custom-caret" type="button" data-bs-toggle="dropdown" aria-expanded="false">
             @if (statusFilterCount > 0)
@@ -91,6 +94,7 @@
                             </button>
                         </div>
                     </th>
+                    <th text-translate="true">Reference Id</th>
                     <th text-translate="true">Status</th>
                     <th class="amount-col" text-translate="true">Amount</th>
                     <th></th>
@@ -107,6 +111,9 @@
                             @(item.ExpiryDate?.ToBrowserDate() ?? new HtmlString("<span class=\"text-muted\">No Expiry</span>"))
                         </td>
                         <td>
+                            @item.ReferenceId
+                        </td>
+                        <td>
                             <span class="badge badge-@item.Status.ToLower() status-badge">@item.Status</span>
                         </td>
                         <td class="text-end">
@@ -115,6 +122,11 @@
                         <td class="text-end">
                             <div class="d-inline-flex align-items-center gap-3">
                                 <a asp-action="ViewPaymentRequest" asp-route-payReqId="@item.Id" id="PaymentRequest-@item.Id" target="_blank" text-translate="true">View</a>
+                                <button type="button" class="btn btn-link p-0 clipboard-button" 
+                                        data-clipboard="@CallbackGenerator.PaymentRequestByIdLink(item.Id, this.Context.Request)"
+                                        title="Copy Link">
+                                    <vc:icon symbol="actions-copy" />
+                                </button>
                                 <div class="dropdown">
                                     <button class="btn btn-link dropdown-toggle p-0 dropdown-toggle-no-caret text-body" type="button" data-bs-toggle="dropdown" aria-expanded="false" id="ToggleActions-@item.Id">
                                         <vc:icon symbol="dots" />   

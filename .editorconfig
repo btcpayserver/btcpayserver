@@ -12,6 +12,8 @@ indent_style = space
 indent_size = 4
 charset = utf-8
 space_before_self_closing = true
+ij_html_space_inside_empty_tag = true
+max_line_length = 160
 
 [*.json]
 indent_size = 2

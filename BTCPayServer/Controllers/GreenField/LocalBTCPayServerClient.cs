@@ -28,7 +28,6 @@ using InvoiceData = BTCPayServer.Client.Models.InvoiceData;
 using Language = BTCPayServer.Client.Models.Language;
 using LightningAddressData = BTCPayServer.Client.Models.LightningAddressData;
 using NotificationData = BTCPayServer.Client.Models.NotificationData;
-using PaymentRequestData = BTCPayServer.Client.Models.PaymentRequestData;
 using PayoutData = BTCPayServer.Client.Models.PayoutData;
 using PayoutProcessorData = BTCPayServer.Client.Models.PayoutProcessorData;
 using PullPaymentData = BTCPayServer.Client.Models.PullPaymentData;
@@ -596,16 +595,16 @@ namespace BTCPayServer.Controllers.Greenfield
             return Task.FromResult(GetFromActionResult<ApiHealthData>(GetController<GreenfieldHealthController>().GetHealth()));
         }
 
-        public override async Task<IEnumerable<PaymentRequestData>> GetPaymentRequests(string storeId,
+        public override async Task<IEnumerable<PaymentRequestBaseData>> GetPaymentRequests(string storeId,
             bool includeArchived = false, CancellationToken token = default)
         {
             return GetFromActionResult(await GetController<GreenfieldPaymentRequestsController>().GetPaymentRequests(storeId, includeArchived));
         }
 
-        public override async Task<PaymentRequestData> GetPaymentRequest(string storeId, string paymentRequestId,
+        public override async Task<PaymentRequestBaseData> GetPaymentRequest(string storeId, string paymentRequestId,
             CancellationToken token = default)
         {
-            return GetFromActionResult<PaymentRequestData>(
+            return GetFromActionResult<PaymentRequestBaseData>(
                 await GetController<GreenfieldPaymentRequestsController>().GetPaymentRequest(storeId, paymentRequestId));
         }
 
@@ -621,19 +620,19 @@ namespace BTCPayServer.Controllers.Greenfield
                 await GetController<GreenfieldPaymentRequestsController>().PayPaymentRequest(storeId, paymentRequestId, request, token));
         }
 
-        public override async Task<PaymentRequestData> CreatePaymentRequest(string storeId,
-            CreatePaymentRequestRequest request, CancellationToken token = default)
+        public override async Task<PaymentRequestBaseData> CreatePaymentRequest(string storeId,
+            PaymentRequestBaseData request, CancellationToken token = default)
         {
-            return GetFromActionResult<PaymentRequestData>(
-                await GetController<GreenfieldPaymentRequestsController>().CreatePaymentRequest(storeId, request));
+            return GetFromActionResult<PaymentRequestBaseData>(
+                await GetController<GreenfieldPaymentRequestsController>().CreateOrUpdatePaymentRequest(storeId, request));
         }
 
-        public override async Task<PaymentRequestData> UpdatePaymentRequest(string storeId, string paymentRequestId,
-            UpdatePaymentRequestRequest request,
+        public override async Task<PaymentRequestBaseData> UpdatePaymentRequest(string storeId, string paymentRequestId,
+            PaymentRequestBaseData request,
             CancellationToken token = default)
         {
-            return GetFromActionResult<PaymentRequestData>(
-                await GetController<GreenfieldPaymentRequestsController>().UpdatePaymentRequest(storeId, paymentRequestId, request));
+            return GetFromActionResult<PaymentRequestBaseData>(
+                await GetController<GreenfieldPaymentRequestsController>().CreateOrUpdatePaymentRequest(storeId, request, paymentRequestId));
         }
 
         public override async Task<ApiKeyData> GetCurrentAPIKeyInfo(CancellationToken token = default)

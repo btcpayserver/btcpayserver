@@ -49,12 +49,12 @@ namespace BTCPayServer.Services
         public async Task<string> ForInvitation(ApplicationUser user, HttpRequest request)
         {
             var code = await UserManager.GenerateInvitationTokenAsync<ApplicationUser>(user.Id) ?? throw Bug();
-            return ForInvitation(user, code, request);
+            return ForInvitation(user.Id, code, request);
         }
-        public string ForInvitation(ApplicationUser user, string code, HttpRequest request)
+        public string ForInvitation(string userId, string code, HttpRequest request)
         {
             return LinkGenerator.GetUriByAction(nameof(UIAccountController.AcceptInvite), "UIAccount",
-                new { userId = user.Id, code }, request.Scheme, request.Host, request.PathBase) ?? throw Bug();
+                new { userId, code }, request.Scheme, request.Host, request.PathBase) ?? throw Bug();
         }
         public async Task<string> ForPasswordReset(ApplicationUser user, HttpRequest request)
         {
@@ -80,5 +80,41 @@ namespace BTCPayServer.Services
         }
 
         private Exception Bug([CallerMemberName] string? name = null) => new InvalidOperationException($"Error generating link for {name} (Report this bug to BTCPay Server github repository)");
+
+        public string WalletTransactionsLink(WalletId walletId, HttpRequest request)
+        {
+            return LinkGenerator.GetUriByAction(
+                action: nameof(UIWalletsController.WalletTransactions),
+                controller: "UIWallets",
+                values: new { walletId = walletId.ToString() },
+                scheme: request.Scheme,
+                host: request.Host,
+                pathBase: request.PathBase
+            ) ?? throw Bug();
+        }
+
+        public string PaymentRequestByIdLink(string payReqId, HttpRequest request)
+        {
+            return LinkGenerator.GetUriByAction(
+                action: nameof(UIPaymentRequestController.ViewPaymentRequest),
+                controller: "UIPaymentRequest",
+                values: new { payReqId },
+                scheme: request.Scheme,
+                host: request.Host,
+                pathBase: request.PathBase
+            ) ?? throw Bug();
+        }
+
+        public string PaymentRequestListLink(string storeId, HttpRequest request)
+        {
+            return LinkGenerator.GetUriByAction(
+                action: nameof(UIPaymentRequestController.GetPaymentRequests),
+                controller: "UIPaymentRequest",
+                values: new { storeId },
+                scheme: request.Scheme,
+                host: request.Host,
+                pathBase: request.PathBase
+            ) ?? throw Bug();
+        }
     }
 }

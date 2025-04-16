@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Amazon.Runtime.Internal;
 using BTCPayServer.Abstractions.Constants;
 using BTCPayServer.Abstractions.Contracts;
 using BTCPayServer.Abstractions.Extensions;
@@ -18,6 +19,7 @@ using Microsoft.AspNetCore.Cors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 using StoreData = BTCPayServer.Data.StoreData;
 
 namespace BTCPayServer.Controllers.Greenfield
@@ -174,6 +176,7 @@ namespace BTCPayServer.Controllers.Greenfield
                 Website = data.StoreWebsite,
                 Archived = data.Archived,
                 BrandColor = storeBlob.BrandColor,
+                RefundBOLT11Expiration = storeBlob.RefundBOLT11Expiration,
                 ApplyBrandColorToBackend = storeBlob.ApplyBrandColorToBackend,
                 CssUrl = storeBlob.CssUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.CssUrl),
                 LogoUrl = storeBlob.LogoUrl == null ? null : await _uriResolver.Resolve(Request.GetAbsoluteRootUri(), storeBlob.LogoUrl),
@@ -258,6 +261,7 @@ namespace BTCPayServer.Controllers.Greenfield
             blob.ApplyBrandColorToBackend = restModel.ApplyBrandColorToBackend;
             blob.LogoUrl = restModel.LogoUrl is null ? null : UnresolvedUri.Create(restModel.LogoUrl);
             blob.CssUrl = restModel.CssUrl is null ? null : UnresolvedUri.Create(restModel.CssUrl);
+            blob.RefundBOLT11Expiration = restModel.RefundBOLT11Expiration;
             blob.PaymentSoundUrl = restModel.PaymentSoundUrl is null ? null : UnresolvedUri.Create(restModel.PaymentSoundUrl);
             if (restModel.AutoDetectLanguage.HasValue)
                 blob.AutoDetectLanguage = restModel.AutoDetectLanguage.Value;
@@ -295,6 +299,9 @@ namespace BTCPayServer.Controllers.Greenfield
             {
                 ModelState.AddModelError(nameof(request.Name), "DefaultPaymentMethod is invalid");
             }
+            if (request.RefundBOLT11Expiration < TimeSpan.FromDays(0) ||
+                request.RefundBOLT11Expiration > TimeSpan.FromDays(365 * 10))
+                ModelState.AddModelError(nameof(request.RefundBOLT11Expiration), "refundBOLT11Expiration should be between 0 and 36500");
 
             if (string.IsNullOrEmpty(request.Name))
                 ModelState.AddModelError(nameof(request.Name), "Name is missing");

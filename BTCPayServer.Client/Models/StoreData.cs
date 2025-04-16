@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace BTCPayServer.Client.Models
 {
@@ -10,32 +12,12 @@ namespace BTCPayServer.Client.Models
         public string Id { get; set; }
     }
 
-    public class StoreUserData
+    public class StoreUserData : ApplicationUserData
     {
-        /// <summary>
-        /// the id of the user
-        /// </summary>
-        public string UserId { get; set; }
-
         /// <summary>
         /// the store role of the user
         /// </summary>
-        public string Role { get; set; }
-
-        /// <summary>
-        /// the email AND username of the user
-        /// </summary>
-        public string Email { get; set; }
-        
-        /// <summary>
-        /// the name of the user
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
-        /// the image url of the user
-        /// </summary>
-        public string ImageUrl { get; set; }
+        public string StoreRole { get; set; }
     }
 
     public class RoleData

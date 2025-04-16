@@ -142,6 +142,7 @@ namespace BTCPayServer.Data
                     "LightningLike" or "LightningNetwork" => $"{cryptoCode}-LN",
                     "LNURLPAY" => $"{cryptoCode}-LNURL",
                     "EthereumLike" => $"{cryptoCode}-LEGACY",
+                    "CHAIN" or "LNURL" or "LN" => paymentMethodId,
                     _ => throw new NotSupportedException("Unknown payment type " + paymentType)
                 };
             }
@@ -159,6 +160,7 @@ namespace BTCPayServer.Data
                     "BTCLike" or "MoneroLike" or "ZcashLike" => $"{cryptoCode}-CHAIN",
                     "LightningLike" or "LightningNetwork" => $"{cryptoCode}-LN",
                     "LNURLPAY" => $"{cryptoCode}-LNURL",
+                    "EthereumLike" => $"{cryptoCode}-LEGACY",
                     _ => paymentMethodId
                 };
             }

@@ -9,11 +9,15 @@ using BTCPayServer.Client;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.Models.StoreViewModels;
+using BTCPayServer.Security;
 using BTCPayServer.Services;
 using BTCPayServer.Services.Mails;
 using BTCPayServer.Services.Stores;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Localization;
+using NicolasDorier.RateLimits;
+using static BTCPayServer.Services.Stores.StoreRepository;
 
 namespace BTCPayServer.Controllers;
 
@@ -27,8 +31,15 @@ public partial class UIStoresController
         return View(vm);
     }
 
+    enum StoreUsersAction
+    {
+        Added,
+        Updated,
+        Invited
+    }
     [HttpPost("{storeId}/users")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
+    [RateLimitsFilter(ZoneLimits.Register, Scope = RateLimitsScope.RemoteAddress)]
     public async Task<IActionResult> StoreUsers(string storeId, StoreUsersViewModel vm)
     {
         await FillUsers(vm);
@@ -37,66 +48,95 @@ public partial class UIStoresController
             return View(vm);
         }
 
-        var roles = await _storeRepo.GetStoreRoles(CurrentStore.Id);
-        if (roles.All(role => role.Id != vm.Role))
+        var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
+        if (roleId is null)
         {
             ModelState.AddModelError(nameof(vm.Role), StringLocalizer["Invalid role"]);
             return View(vm);
         }
-            
+
+        StoreUsersAction action;
+        string? inviteInfo = null;
         var user = await _userManager.FindByEmailAsync(vm.Email);
-        var isExistingUser = user is not null;
-        var isExistingStoreUser = isExistingUser && await _storeRepo.GetStoreUser(storeId, user!.Id) is not null;
-        var successInfo = string.Empty;
-        if (user == null)
+        if (user is null)
         {
-            user = new ApplicationUser
+            action = StoreUsersAction.Invited;
+            if (!_policiesSettings.LockSubscription || await IsAdmin())
             {
-                UserName = vm.Email,
-                Email = vm.Email,
-                RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
-                RequiresApproval = _policiesSettings.RequiresUserApproval,
-                Created = DateTimeOffset.UtcNow
-            };
+                user = new ApplicationUser
+                {
+                    UserName = vm.Email,
+                    Email = vm.Email,
+                    RequiresEmailConfirmation = _policiesSettings.RequiresConfirmedEmail,
+                    RequiresApproval = _policiesSettings.RequiresUserApproval,
+                    Created = DateTimeOffset.UtcNow
+                };
+                var currentUser = await _userManager.GetUserAsync(HttpContext.User);
 
-            var currentUser = await _userManager.GetUserAsync(HttpContext.User);
-            if (currentUser is not null &&
-                (await _userManager.CreateAsync(user)) is { Succeeded: true } result)
-            {
-				var invitationEmail = await _emailSenderFactory.IsComplete();
-				var evt = await UserEvent.Invited.Create(user, currentUser, _callbackGenerator, Request, invitationEmail);
-                _eventAggregator.Publish(evt);
-
-                var info = invitationEmail
-					? "An invitation email has been sent.<br/>You may alternatively"
-                    : "An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to";
-                successInfo = $"{info} share this link with them: <a class='alert-link' href='{evt.InvitationLink}'>{evt.InvitationLink}</a>";
-            }
-            else
-            {
-                ModelState.AddModelError(nameof(vm.Email), "User could not be invited");
-                return View(vm);
+                if (currentUser is not null &&
+                    (await _userManager.CreateAsync(user)) is { Succeeded: true } result)
+                {
+                    var invitationEmail = await _emailSenderFactory.IsComplete();
+                    var evt = await UserEvent.Invited.Create(user!, currentUser, _callbackGenerator, Request, invitationEmail);
+                    _eventAggregator.Publish(evt);
+                    inviteInfo = invitationEmail
+                        ? StringLocalizer["An invitation email has been sent.<br/>You may alternatively share this link with them: <a class='alert-link' href='{0}'>{0}</a>", evt.InvitationLink]
+                        : StringLocalizer["An invitation email has not been sent, because the server does not have an email server configured.<br/> You need to share this link with them: <a class='alert-link' href='{0}'>{0}</a>", evt.InvitationLink];
+                    user = await _userManager.FindByEmailAsync(vm.Email);
+                }
             }
         }
+        else
+        {
+            action = (await _storeRepo.GetStoreUser(storeId, user.Id)) is not null
+                 ? StoreUsersAction.Updated
+                 : StoreUsersAction.Added;
+        }
 
-        var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
-        var action = isExistingUser
-            ? isExistingStoreUser ? "updated" : "added"
-            : "invited";
-        if (await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId))
+        if (user is null)
+        {
+            ModelState.AddModelError(nameof(vm.Email), StringLocalizer["User not found"]);
+            return View(vm);
+        }
+
+        var res = await _storeRepo.AddOrUpdateStoreUser(CurrentStore.Id, user.Id, roleId);
+        if (res is AddOrUpdateStoreUserResult.Success)
         {
             TempData.SetStatusMessageModel(new StatusMessageModel
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
                 AllowDismiss = false,
-                Html = $"User {action} successfully." + (string.IsNullOrEmpty(successInfo) ? "" : $" {successInfo}")
+                Message = action switch
+                {
+                    StoreUsersAction.Added => StringLocalizer["The user has been added successfully."].Value,
+                    StoreUsersAction.Updated => StringLocalizer["The user has been updated successfully."].Value,
+                    StoreUsersAction.Invited => null,
+                    _ => throw new ArgumentOutOfRangeException(action.ToString())
+                },
+                Html = action switch
+                {
+                    StoreUsersAction.Invited => inviteInfo,
+                    _ => null
+                }
             });
             return RedirectToAction(nameof(StoreUsers));
         }
-
-        ModelState.AddModelError(nameof(vm.Email), $"The user could not be {action}");
-        return View(vm);
+        else
+        {
+            ModelState.AddModelError(nameof(vm.Email),
+                action switch
+                {
+                    StoreUsersAction.Updated => StringLocalizer["The user could not be updated: {0}", res.ToString()],
+                    StoreUsersAction.Added => StringLocalizer["The user could not be added: {0}", res.ToString()],
+                    StoreUsersAction.Invited => StringLocalizer["The user could not be invited: {0}", res.ToString()],
+                    _ => throw new ArgumentOutOfRangeException(action.ToString())
+                });
+            return View(vm);
+        }
     }
+
+    private async Task<bool> IsAdmin()
+    => (await _authorizationService.AuthorizeAsync(User, null, new PolicyRequirement(Policies.CanCreateUser))).Succeeded;
 
     [HttpPost("{storeId}/users/{userId}")]
     [Authorize(Policy = Policies.CanModifyStoreSettings, AuthenticationSchemes = AuthenticationSchemes.Cookie)]
@@ -105,12 +145,16 @@ public partial class UIStoresController
         var roleId = await _storeRepo.ResolveStoreRoleId(storeId, vm.Role);
         var storeUsers = await _storeRepo.GetStoreUsers(storeId);
         var user = storeUsers.First(user => user.Id == userId);
-        var isOwner = user.StoreRole.Id == StoreRoleId.Owner.Id;
-        var isLastOwner = isOwner && storeUsers.Count(u => u.StoreRole.Id == StoreRoleId.Owner.Id) == 1;
-        if (isLastOwner && roleId != StoreRoleId.Owner)
-            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["User {0} is the last owner. Their role cannot be changed.", user.Email].Value;
-        else if (await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId))
+
+        var res = await _storeRepo.AddOrUpdateStoreUser(storeId, userId, roleId);
+        if (res is AddOrUpdateStoreUserResult.Success)
+        {
             TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["The role of {0} has been changed to {1}.", user.Email, vm.Role].Value;
+        }
+        else
+        {
+            TempData[WellKnownTempData.ErrorMessage] = StringLocalizer["Changing the role of user {0} failed: {1}", user.Email, res.ToString()].Value;
+        }
         return RedirectToAction(nameof(StoreUsers), new { storeId, userId });
     }
 

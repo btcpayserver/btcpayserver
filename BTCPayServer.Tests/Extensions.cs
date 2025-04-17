@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using BTCPayServer.Services.Wallets;
 using BTCPayServer.Tests.Logging;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Playwright;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -56,6 +57,29 @@ namespace BTCPayServer.Tests
             }
             Assert.DoesNotContain("errors", driver.Url);
             Assert.DoesNotContain("Error", driver.Title, StringComparison.OrdinalIgnoreCase);
+        }
+
+
+        public static async Task AssertNoErrorAsync(this IPage page)
+        {
+            var pageSource = await page.ContentAsync();
+            if (pageSource.Contains("alert-danger"))
+            {
+                var dangerAlerts = page.Locator(".alert-danger");
+                int count = await dangerAlerts.CountAsync();
+                for (int i = 0; i < count; i++)
+                {
+                    var alert = dangerAlerts.Nth(i);
+                    if (await alert.IsVisibleAsync())
+                    {
+                        var alertText = await alert.InnerTextAsync();
+                        Assert.Fail($"No alert should be displayed, but found this on {page.Url}: {alertText}");
+                    }
+                }
+            }
+            Assert.DoesNotContain("errors", page.Url);
+            var title = await page.TitleAsync();
+            Assert.DoesNotContain("Error", title, StringComparison.OrdinalIgnoreCase);
         }
 
         public static T AssertViewModel<T>(this IActionResult result)

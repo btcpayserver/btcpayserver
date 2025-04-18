@@ -17,15 +17,6 @@ namespace BTCPayServer.Blazor;
 
 public partial class VaultBridgeUI
 {
-    public class NFCParameters
-    {
-        public bool NewCard { get; set; }
-        public string PullPaymentId { get; set; }
-        public string BoltcardUrl { get; set; }
-    }
-
-    [Parameter] public NFCParameters NFC { get; set; }
-
     record CardOrigin
     {
         public record Blank() : CardOrigin;
@@ -39,116 +30,124 @@ public partial class VaultBridgeUI
         public record ThisIssuerReset(BoltcardRegistration Registration) : ThisIssuer(Registration);
     }
 
-    private async Task<CardOrigin> GetCardOrigin(string pullPaymentId, Ntag424 ntag, IssuerKey issuerKey, CancellationToken cancellationToken)
+    
+
+    public class NFCController : VaultController
     {
-        CardOrigin cardOrigin;
-        Uri uri = await ntag.TryReadNDefURI(cancellationToken);
-        if (uri is null)
+        protected override string VaultUri => "http://127.0.0.1:65092/nfc-bridge/v1";
+        public bool NewCard { get; set; }
+        public string PullPaymentId { get; set; }
+        public string BoltcardUrl { get; set; }
+        protected override async Task Run(VaultBridgeUI ui, VaultClient vaultClient, CancellationToken cancellationToken)
         {
-            cardOrigin = new CardOrigin.Blank();
-        }
-        else
-        {
-            var piccData = issuerKey.TryDecrypt(uri);
-            if (piccData is null)
+            try
             {
-                cardOrigin = new CardOrigin.OtherIssuer();
-            }
-            else
-            {
-                var dbContextFactory = ServiceProvider.GetRequiredService<ApplicationDbContextFactory>();
-                var res = await dbContextFactory.GetBoltcardRegistration(issuerKey, piccData.Uid);
-                if (res != null && res.PullPaymentId is null)
-                    cardOrigin = new CardOrigin.ThisIssuerReset(res);
-                else if (res?.PullPaymentId != pullPaymentId)
-                    cardOrigin = new CardOrigin.OtherIssuer();
+                ui.ShowFeedback(StateValue.Loading, ui.StringLocalizer["Waiting for NFC to be presented..."]);
+                var transport = new APDUVaultTransport(vaultClient);
+                var ntag = new Ntag424(transport);
+
+                await transport.WaitForCard(cancellationToken);
+                ui.ShowFeedback(StateValue.Success, ui.StringLocalizer["NFC detected."]);
+
+                var settingsRepository = ui.ServiceProvider.GetRequiredService<SettingsRepository>();
+                var env = ui.ServiceProvider.GetRequiredService<BTCPayServerEnvironment>();
+                var issuerKey = await settingsRepository.GetIssuerKey(env);
+                var dbContextFactory = ui.ServiceProvider.GetRequiredService<ApplicationDbContextFactory>();
+                CardOrigin cardOrigin = await GetCardOrigin(dbContextFactory, PullPaymentId, ntag, issuerKey, cancellationToken);
+
+                if (cardOrigin is CardOrigin.OtherIssuer)
+                {
+                    ui.ShowFeedback(StateValue.Failed, ui.StringLocalizer["This card is already configured for another issuer"]);
+                    ui.ShowRetry();
+                    return;
+                }
+
+                if (NewCard)
+                {
+                    ui.ShowFeedback(StateValue.Loading, ui.StringLocalizer["Configuring Boltcard..."]);
+                    if (cardOrigin is CardOrigin.Blank || cardOrigin is CardOrigin.ThisIssuerReset)
+                    {
+                        await ntag.AuthenticateEV2First(0, AESKey.Default, cancellationToken);
+                        var uid = await ntag.GetCardUID(cancellationToken);
+                        try
+                        {
+                            var version = await dbContextFactory.LinkBoltcardToPullPayment(PullPaymentId, issuerKey, uid);
+                            var cardKey = issuerKey.CreatePullPaymentCardKey(uid, version, PullPaymentId);
+                            await ntag.SetupBoltcard(BoltcardUrl, BoltcardKeys.Default, cardKey.DeriveBoltcardKeys(issuerKey));
+                        }
+                        catch
+                        {
+                            await dbContextFactory.SetBoltcardResetState(issuerKey, uid);
+                            throw;
+                        }
+
+                        ui.ShowFeedback(StateValue.Success, ui.StringLocalizer["The card is now configured"]);
+                    }
+                    else if (cardOrigin is CardOrigin.ThisIssuer)
+                    {
+                        ui.ShowFeedback(StateValue.Success, ui.StringLocalizer["This card is already properly configured"]);
+                    }
+                }
                 else
-                    cardOrigin = new CardOrigin.ThisIssuerConfigured(res.PullPaymentId, res);
+                {
+                    ui.ShowFeedback(StateValue.Loading, ui.StringLocalizer["Resetting Boltcard..."]);
+                    if (cardOrigin is CardOrigin.Blank)
+                    {
+                        ui.ShowFeedback(StateValue.Success, ui.StringLocalizer["This card is already in a factory state"]);
+                    }
+                    else if (cardOrigin is CardOrigin.ThisIssuer thisIssuer)
+                    {
+                        var cardKey = issuerKey.CreatePullPaymentCardKey(thisIssuer.Registration.UId, thisIssuer.Registration.Version, PullPaymentId);
+                        await ntag.ResetCard(issuerKey, cardKey);
+                        await dbContextFactory.SetBoltcardResetState(issuerKey, thisIssuer.Registration.UId);
+                        ui.ShowFeedback(StateValue.Success, ui.StringLocalizer["Card reset succeed"]);
+                    }
+                }
+
+                ui.ShowFeedback(StateValue.Loading, ui.StringLocalizer["Please remove the NFC from the card reader"]);
+                await transport.WaitForRemoved(cancellationToken);
+                ui.ShowFeedback(StateValue.Success, ui.StringLocalizer["Thank you!"]);
             }
-        }
-
-        return cardOrigin;
-    }
-
-    public async Task ConnectToNFC(VaultClient client)
-    {
-        try
-        {
-            this.ShowFeedback(StateValue.Loading, StringLocalizer["Waiting for NFC to be presented..."]);
-            var transport = new APDUVaultTransport(client);
-            var ntag = new Ntag424(transport);
-
-            await transport.WaitForCard(CancellationToken);
-            this.ShowFeedback(StateValue.Success, StringLocalizer["NFC detected."]);
-
-            var settingsRepository = ServiceProvider.GetRequiredService<SettingsRepository>();
-            var env = ServiceProvider.GetRequiredService<BTCPayServerEnvironment>();
-            var issuerKey = await settingsRepository.GetIssuerKey(env);
-            var dbContextFactory = ServiceProvider.GetRequiredService<ApplicationDbContextFactory>();
-            CardOrigin cardOrigin = await GetCardOrigin(NFC.PullPaymentId, ntag, issuerKey, CancellationToken);
-
-            if (cardOrigin is CardOrigin.OtherIssuer)
+            catch (UnexpectedResponseException e)
             {
-                this.ShowFeedback(StateValue.Failed, StringLocalizer["This card is already configured for another issuer"]);
-                ShowRetry();
+                ui.ShowFeedback(StateValue.Failed, ui.StringLocalizer["An unexpected error happened: {0}", e.Message]);
+                ui.ShowRetry();
                 return;
             }
 
-            if (NFC.NewCard)
+            // Give them time to read the message
+            await Task.Delay(1000, cancellationToken);
+            await ui.JSRuntime.InvokeVoidAsync("vault.done", cancellationToken);
+        }
+        
+        private async Task<CardOrigin> GetCardOrigin(ApplicationDbContextFactory dbContextFactory, string pullPaymentId, Ntag424 ntag, IssuerKey issuerKey, CancellationToken cancellationToken)
+        {
+            CardOrigin cardOrigin;
+            Uri uri = await ntag.TryReadNDefURI(cancellationToken);
+            if (uri is null)
             {
-                this.ShowFeedback(StateValue.Loading, StringLocalizer["Configuring Boltcard..."]);
-                if (cardOrigin is CardOrigin.Blank || cardOrigin is CardOrigin.ThisIssuerReset)
-                {
-                    await ntag.AuthenticateEV2First(0, AESKey.Default, CancellationToken);
-                    var uid = await ntag.GetCardUID(CancellationToken);
-                    try
-                    {
-                        var version = await dbContextFactory.LinkBoltcardToPullPayment(NFC.PullPaymentId, issuerKey, uid);
-                        var cardKey = issuerKey.CreatePullPaymentCardKey(uid, version, NFC.PullPaymentId);
-                        await ntag.SetupBoltcard(NFC.BoltcardUrl, BoltcardKeys.Default, cardKey.DeriveBoltcardKeys(issuerKey));
-                    }
-                    catch
-                    {
-                        await dbContextFactory.SetBoltcardResetState(issuerKey, uid);
-                        throw;
-                    }
-
-                    this.ShowFeedback(StateValue.Success, StringLocalizer["The card is now configured"]);
-                }
-                else if (cardOrigin is CardOrigin.ThisIssuer)
-                {
-                    this.ShowFeedback(StateValue.Success, StringLocalizer["This card is already properly configured"]);
-                }
+                cardOrigin = new CardOrigin.Blank();
             }
             else
             {
-                this.ShowFeedback(StateValue.Loading, StringLocalizer["Resetting Boltcard..."]);
-                if (cardOrigin is CardOrigin.Blank)
+                var piccData = issuerKey.TryDecrypt(uri);
+                if (piccData is null)
                 {
-                    this.ShowFeedback(StateValue.Success, StringLocalizer["This card is already in a factory state"]);
+                    cardOrigin = new CardOrigin.OtherIssuer();
                 }
-                else if (cardOrigin is CardOrigin.ThisIssuer thisIssuer)
+                else
                 {
-                    var cardKey = issuerKey.CreatePullPaymentCardKey(thisIssuer.Registration.UId, thisIssuer.Registration.Version, NFC.PullPaymentId);
-                    await ntag.ResetCard(issuerKey, cardKey);
-                    await dbContextFactory.SetBoltcardResetState(issuerKey, thisIssuer.Registration.UId);
-                    this.ShowFeedback(StateValue.Success, StringLocalizer["Card reset succeed"]);
+                    var res = await dbContextFactory.GetBoltcardRegistration(issuerKey, piccData.Uid);
+                    if (res != null && res.PullPaymentId is null)
+                        cardOrigin = new CardOrigin.ThisIssuerReset(res);
+                    else if (res?.PullPaymentId != pullPaymentId)
+                        cardOrigin = new CardOrigin.OtherIssuer();
+                    else
+                        cardOrigin = new CardOrigin.ThisIssuerConfigured(res.PullPaymentId, res);
                 }
             }
 
-            this.ShowFeedback(StateValue.Loading, StringLocalizer["Please remove the NFC from the card reader"]);
-            await transport.WaitForRemoved(CancellationToken);
-            this.ShowFeedback(StateValue.Success, StringLocalizer["Thank you!"]);
+            return cardOrigin;
         }
-        catch (UnexpectedResponseException e)
-        {
-            this.ShowFeedback(StateValue.Failed, StringLocalizer["An unexpected error happened: {0}", e.Message]);
-            this.ShowRetry();
-            return;
-        }
-
-        // Give them time to read the message
-        await Task.Delay(1000, CancellationToken);
-        await this.JSRuntime.InvokeVoidAsync("vault.done", CancellationToken);
     }
 }

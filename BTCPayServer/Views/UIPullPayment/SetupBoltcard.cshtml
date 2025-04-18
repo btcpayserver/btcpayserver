@@ -31,13 +31,12 @@
 <div class="row mt-5 mb-4">
     <div class="col-md-8 mx-auto">
         <component type="typeof(BTCPayServer.Blazor.VaultBridgeUI)"
-                   param-Mode="@VaultClient.VaultMode.NFC"
-                   param-NFC="@(new VaultBridgeUI.NFCParameters()
-                              {
-                                  NewCard = Model.NewCard,
-                                  BoltcardUrl = Model.BoltcardUrl,
-                                  PullPaymentId = Model.PullPaymentId
-                              })"
+                   param-Controller="@(new VaultBridgeUI.NFCController()
+                                     {
+                                         NewCard = Model.NewCard,
+                                         BoltcardUrl = Model.BoltcardUrl,
+                                         PullPaymentId = Model.PullPaymentId
+                                     })"
                    render-mode="Server"/>
     </div>
 </div>

@@ -9,35 +9,22 @@ using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer;
 
-public class VaultClient(IJSRuntime js, VaultClient.VaultMode mode)
+public class VaultClient(IJSRuntime js, string serviceUri)
 {
     public class VaultNotConnectedException() : Exception("Vault not connected");
 
     public class VaultException(string message) : Exception(message);
 
-    public enum VaultMode
-    {
-        HWI,
-        NFC
-    }
-
-    public string ServiceUri { get; set; } = mode switch
-    {
-        VaultMode.HWI => "http://127.0.0.1:65092/hwi-bridge/v1",
-        VaultMode.NFC => "http://127.0.0.1:65092/nfc-bridge/v1",
-        _ => throw new NotSupportedException()
-    };
-
     public async Task<VaultPermissionResult> AskPermission(CancellationToken cancellationToken)
     {
-        return await js.InvokeAsync<VaultPermissionResult>("vault.askVaultPermission", cancellationToken, ServiceUri);    
+        return await js.InvokeAsync<VaultPermissionResult>("vault.askVaultPermission", cancellationToken, serviceUri);    
     }
     public async Task<JToken?> SendVaultRequest(string? path, JObject? body, CancellationToken cancellationToken)
     {
         var isAbsolute = path is not null && Uri.IsWellFormedUriString(path, UriKind.Absolute);
         var query = new JsonObject()
         {
-            ["uri"] = isAbsolute ? path : ServiceUri + path
+            ["uri"] = isAbsolute ? path : serviceUri + path
         };
         if (body is not null)
             query["body"] = JsonObject.Parse(body.ToString());

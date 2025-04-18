@@ -23,8 +23,12 @@
 <div class="row mt-5 mb-4">
     <div class="col-md-8 mx-auto">
         <component type="typeof(BTCPayServer.Blazor.VaultBridgeUI)"
-                   param-DeviceAction="@(new VaultBridgeUI.SignDeviceAction(){ StoreId = WalletId.Parse(walletId).StoreId, PSBT = Model.SigningContext.PSBT })"
-                   param-CryptoCode="@(WalletId.Parse(walletId).CryptoCode)"
+                   param-Controller="@(new VaultBridgeUI.SignHWIController()
+                                      {
+                                          StoreId = WalletId.Parse(walletId).StoreId,
+                                          CryptoCode = WalletId.Parse(walletId).CryptoCode,
+                                          PSBT = Model.SigningContext.PSBT
+                                      })"
                    render-mode="Server"/>
     </div>
 </div>

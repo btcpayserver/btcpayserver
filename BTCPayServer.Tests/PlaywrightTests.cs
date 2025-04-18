@@ -2,14 +2,11 @@ using System;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Views.Server;
 using BTCPayServer.Views.Stores;
 using Microsoft.Playwright;
-using OpenQA.Selenium.Support.UI;
-using OpenQA.Selenium;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -24,25 +21,24 @@ namespace BTCPayServer.Tests
             TestDir = Path.Combine(Directory.GetCurrentDirectory(), "PlaywrightTests");
         }
 
-
         [Fact]
-        public async Task CanNavigateServerSettings()
+        public async Task CanNavigateServerSettingss()
         {
-            ServerTester = CreateServerTester(TestDir, newDb: true);
-            await ServerTester.StartAsync();
-            ServerUri = ServerTester.PayTester.ServerUri;
-
-            await InitializeBTCPayServer();
-            await GoToHome();
-            await GoToServer();
-            await Page.AssertNoErrorAsync();
-            await ClickOnAllSectionLinks();
-            await GoToServer(ServerNavPages.Services);
+            using var s = CreatePlaywrightTester();
+            await s.StartAsync();
+            await s.RegisterNewUser(true);
+            await s.GoToHome();
+            await s.GoToServer();
+            await s.Page.AssertNoError();
+            await s.ClickOnAllSectionLinks();
+            await s.GoToServer(ServerNavPages.Services);
             TestLogs.LogInformation("Let's check if we can access the logs");
-            await Page.GetByRole(AriaRole.Link, new() { Name = "Logs" }).ClickAsync();
-            await Page.Locator("a:has-text('.log')").First.ClickAsync();
-            Assert.Contains("Starting listening NBXplorer", await Page.ContentAsync());
+            await s.Page.GetByRole(AriaRole.Link, new() { Name = "Logs" }).ClickAsync();
+            await s.Page.Locator("a:has-text('.log')").First.ClickAsync();
+            Assert.Contains("Starting listening NBXplorer", await s.Page.ContentAsync());
+            await s.Page.Context.Browser.CloseAsync();
         }
+
 
         [Fact]
         public async Task CanUseForms()

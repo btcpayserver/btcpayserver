@@ -98,7 +98,7 @@ public class PlaywrightBaseTest : UnitTestBase, IAsyncLifetime
         {
             TestLogs.LogInformation($"Checking no error on {link}");
             await Page.GotoAsync(link);
-            await Page.AssertNoErrorAsync();
+            await Page.AssertNoError();
         }
     }
 

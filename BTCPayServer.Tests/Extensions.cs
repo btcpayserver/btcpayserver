@@ -60,7 +60,7 @@ namespace BTCPayServer.Tests
         }
 
 
-        public static async Task AssertNoErrorAsync(this IPage page)
+        public static async Task AssertNoError(this IPage page)
         {
             var pageSource = await page.ContentAsync();
             if (pageSource.Contains("alert-danger"))

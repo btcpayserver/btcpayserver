@@ -558,8 +558,7 @@ namespace BTCPayServer.Controllers
 
                         if (vm.SigningContext.PendingTransactionId is not null)
                         {
-                            await _pendingTransactionService.Broadcasted(walletId.CryptoCode, walletId.StoreId,
-                                vm.SigningContext.PendingTransactionId);
+                            await _pendingTransactionService.Broadcasted(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId));
                         }
                         
                         if (!string.IsNullOrEmpty(vm.ReturnUrl))

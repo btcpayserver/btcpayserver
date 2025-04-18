@@ -107,7 +107,7 @@
             else if (Model.SigningContext.PendingTransactionId is not null)
             {
                 <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
-                   asp-route-transactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
+                   asp-route-pendingTransactionId="@Model.SigningContext.PendingTransactionId" class="btn btn-danger">Cancel</a>
             }
         </div>
     </form>

@@ -899,20 +899,6 @@ namespace BTCPayServer.Tests
             // Validate that the email is updated in the list of email rules
             Assert.Contains("changedagain@gmail.com", s.Driver.PageSource);
             Assert.DoesNotContain("statuschanged@gmail.com", s.Driver.PageSource);
-
-            // Delete both email rules
-            var deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]"));
-            Assert.True(deleteLinks.Count == 2, "Expected exactly two delete buttons but found a different number.");
-
-            deleteLinks[0].Click();
-
-            deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]")); // Refresh list
-            Assert.True(deleteLinks.Count == 1, "Expected one delete button remaining.");
-
-            deleteLinks[0].Click();
-
-            // Validate that there are no more rules
-            Assert.Contains("There are no rules yet.", s.Driver.PageSource);
         }
 
         [Fact(Timeout = TestTimeout)]

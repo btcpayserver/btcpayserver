@@ -18,12 +18,10 @@
         </ol>
         <h2>@ViewData["Title"]</h2>
     </nav>
-    <form method="post" permission="@Policies.CanModifyStoreSettings">
-        <a id="CreateEmailRule" permission="@Policies.CanModifyStoreSettings" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId" 
-           class="btn btn-primary" role="button">
-            Create Email Rule
-        </a>
-    </form>
+    <a id="CreateEmailRule" permission="@Policies.CanModifyStoreSettings" asp-action="StoreEmailRulesCreate" asp-route-storeId="@storeId" 
+       class="btn btn-primary" role="button">
+        Create Email Rule
+    </a>
 </div>
 
 <partial name="_StatusMessage" />

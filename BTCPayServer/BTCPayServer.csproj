@@ -8,6 +8,15 @@
     <RunAnalyzersDuringLiveAnalysis>False</RunAnalyzersDuringLiveAnalysis>
     <RunAnalyzersDuringBuild>False</RunAnalyzersDuringBuild>
   </PropertyGroup>
+
+  <!-- Generate the code behind of blazor components in  obj\Debug\generated\Microsoft.NET.Sdk.Razor.SourceGenerators\Microsoft.NET.Sdk.Razor.SourceGenerators.RazorSourceGenerator-->
+  <!-- See https://stackoverflow.com/questions/70958616/how-to-see-c-sharp-code-compiled-from-razor-component-with-vs2022-in-project-tar-->
+  <!-- However, this prevent hot reload to work in Rider for some reason, so I just comment it. Uncomment when you want to see the generated code.-->
+   
+<!--   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">-->
+<!--     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>-->
+<!--     <CompilerGeneratedFilesOutputPath>obj</CompilerGeneratedFilesOutputPath>-->
+<!--   </PropertyGroup>-->
    
    <!-- Pre-compiling views should only be done for Release builds without dotnet watch or design time build .-->
    <!-- Runtime compiling is only useful for debugging with hot reload of the views -->
@@ -51,9 +60,10 @@
 
   <ItemGroup>
     <PackageReference Include="BTCPayServer.NTag424" Version="1.0.25" />
+    <PackageReference Include="NBitcoin" Version="8.0.5" />
     <PackageReference Include="YamlDotNet" Version="8.0.0" />
     <PackageReference Include="BIP78.Sender" Version="0.2.4" />
-    <PackageReference Include="BTCPayServer.Hwi" Version="2.0.2" />
+    <PackageReference Include="BTCPayServer.Hwi" Version="2.0.4" />
     <PackageReference Include="BTCPayServer.Lightning.All" Version="1.6.9" />
     <PackageReference Include="CsvHelper" Version="32.0.3" />
     <PackageReference Include="Dapper" Version="2.1.35" />

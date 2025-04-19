@@ -197,7 +197,8 @@ namespace BTCPayServer.Payments.PayJoin
                 psbtFormat = false;
                 if (!Transaction.TryParse(rawBody, network.NBitcoinNetwork, out var tx))
                     return BadRequest(CreatePayjoinError("original-psbt-rejected", "invalid transaction or psbt"));
-                ctx.OriginalTransaction = tx;
+                ctx.OriginalTransaction = tx.Clone();
+                tx.RemoveSignatures();
                 psbt = PSBT.FromTransaction(tx, network.NBitcoinNetwork);
                 psbt = (await explorer.UpdatePSBTAsync(new UpdatePSBTRequest() { PSBT = psbt })).PSBT;
                 for (int i = 0; i < tx.Inputs.Count; i++)
@@ -474,6 +475,7 @@ namespace BTCPayServer.Payments.PayJoin
             }
 
             var accountKey = ExtKey.Parse(extKeyStr, network.NBitcoinNetwork);
+            newTx.RemoveSignatures();
             var newPsbt = PSBT.FromTransaction(newTx, network.NBitcoinNetwork);
             foreach (var selectedUtxo in selectedUTXOs.Select(o => o.Value))
             {

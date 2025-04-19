@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text.RegularExpressions;
 using NBitcoin;
 using NBitcoin.Scripting;
+using NBitcoin.WalletPolicies;
 using NBXplorer.DerivationStrategy;
+using static NBitcoin.WalletPolicies.MiniscriptNode;
 
 namespace BTCPayServer
 {
@@ -22,6 +25,159 @@ namespace BTCPayServer
         }
 
         public (DerivationStrategyBase, RootedKeyPath[]) ParseOutputDescriptor(string str)
+        {
+            ArgumentNullException.ThrowIfNull(str);
+            str = str.Trim();
+            try
+            {
+                return ParseLegacyOutputDescriptor(str);
+            }
+            catch
+            {
+                return ParseMiniscript(str);
+            }
+        }
+
+        private (DerivationStrategyBase, RootedKeyPath[]) ParseMiniscript(string str)
+        {
+            bool ExtractMultisigs(ReadOnlySpan<MiniscriptNode> nodes, [MaybeNullWhen(false)] out BitcoinExtPubKey[] keys, [MaybeNullWhen(false)] out RootedKeyPath[] keyPaths)
+            {
+                keys = new BitcoinExtPubKey[nodes.Length];
+                keyPaths = new RootedKeyPath[nodes.Length];
+                int i = 0;
+                foreach (var n in nodes)
+                {
+                    if (n is MultipathNode { Target: HDKeyNode { Key: BitcoinExtPubKey pk, RootedKeyPath: {} kpath }, DepositIndex: 0, ChangeIndex: 1 })
+                    {
+                        keys[i] = pk;
+                        keyPaths[i] = kpath;
+                        i++;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            var factory = BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory;
+            var script = Miniscript.Parse(str, new MiniscriptParsingSettings(Network)
+            {
+                Dialect = MiniscriptDialect.BIP388,
+                AllowedParameters = ParameterTypeFlags.None
+            });
+
+            return script.RootNode switch
+            {
+                // ---Single sigs---
+                // Taproot
+                TaprootNode
+                {
+                    InternalKeyNode: MultipathNode multi,
+                    ScriptTreeRootNode: null
+                } when ExtractMultisigs([multi], out var pks, out var rpks)
+                => (factory.CreateDirectDerivationStrategy(pks[0], new()
+                {
+                    ScriptPubKeyType = ScriptPubKeyType.TaprootBIP86
+                }), rpks),
+                
+                // P2PKH
+                FragmentSingleParameter
+                {
+                    Descriptor: { Name: "pkh" },
+                    X: MultipathNode multi
+                } when ExtractMultisigs([multi], out var pks, out var rpks)
+                => (factory.CreateDirectDerivationStrategy(pks[0], new()
+                {
+                    ScriptPubKeyType = ScriptPubKeyType.Legacy
+                }), rpks),
+                
+                // P2WPKH
+                FragmentSingleParameter
+                {
+                    Descriptor: { Name: "wpkh" },
+                    X: MultipathNode multi
+                } when ExtractMultisigs([multi], out var pks, out var rpks)
+                => (factory.CreateDirectDerivationStrategy(pks[0], new()
+                {
+                    ScriptPubKeyType = ScriptPubKeyType.Segwit
+                }), rpks),
+                
+                // Wrapped P2WPKH
+                FragmentSingleParameter
+                {
+                    Descriptor: { Name: "sh" },
+                    X: FragmentSingleParameter {
+                        Descriptor: { Name: "wpkh" },
+                        X: MultipathNode multi
+                    }
+                } when ExtractMultisigs([multi], out var pks, out var rpks)
+                => (factory.CreateDirectDerivationStrategy(pks[0], new()
+                {
+                    ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH
+                }), rpks),
+                
+                // ---Multi sigs---
+                // Multsig SH
+                FragmentSingleParameter
+                {
+                    Descriptor: { Name: "sh" },
+                    X: FragmentUnboundedParameters {
+                        Descriptor: { Name: "multi" or "sortedmulti" } desc
+                    } multiNode
+                } when
+                    multiNode.Parameters.ToArray() is 
+                        [ Value.CountValue { Count: var cnt }, .. { } multis]
+                    && ExtractMultisigs(multis, out var pks, out var rpks)
+                => (factory.CreateMultiSigDerivationStrategy(pks, cnt, new()
+                {
+                    ScriptPubKeyType = ScriptPubKeyType.Legacy,
+                    KeepOrder = desc.Name == "multi" 
+                }), rpks),
+                
+                // P2WSH
+                FragmentSingleParameter
+                {
+                    Descriptor: { Name: "wsh" },
+                    X: FragmentUnboundedParameters {
+                        Descriptor: { Name: "multi" or "sortedmulti" } desc
+                    } multiNode
+                } when
+                multiNode.Parameters.ToArray() is 
+                    [ Value.CountValue { Count: var cnt }, .. { } multis]
+                && ExtractMultisigs(multis, out var pks, out var rpks)
+                => (factory.CreateMultiSigDerivationStrategy(pks, cnt, new()
+                {
+                    ScriptPubKeyType = ScriptPubKeyType.Segwit,
+                    KeepOrder = desc.Name == "multi" 
+                }), rpks),
+                
+                // Wrapped P2WSH
+                FragmentSingleParameter
+                {
+                    Descriptor: { Name: "sh" },
+                    X: FragmentSingleParameter
+                    {
+                        Descriptor: { Name: "wsh" },
+                        X: FragmentUnboundedParameters {
+                            Descriptor: { Name: "multi" or "sortedmulti" } desc
+                        } multiNode
+                    }
+                } when
+                multiNode.Parameters.ToArray() is 
+                    [ Value.CountValue { Count: var cnt }, .. { } multis]
+                && ExtractMultisigs(multis, out var pks, out var rpks)
+                
+                => (factory.CreateMultiSigDerivationStrategy(pks, cnt, new()
+                {
+                    ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH,
+                    KeepOrder = desc.Name == "multi" 
+                }), rpks),
+                _ => throw new FormatException("Not supporting this script policy (BIP388) yet.")
+            };
+        }
+
+        private (DerivationStrategyBase, RootedKeyPath[]) ParseLegacyOutputDescriptor(string str)
         {
             (DerivationStrategyBase, RootedKeyPath[]) ExtractFromPkProvider(PubKeyProvider pubKeyProvider,
                 string suffix = "")
@@ -52,11 +208,11 @@ namespace BTCPayServer
                         $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}"),
                     xpubs.SelectMany(tuple => tuple.Item2).ToArray());
             }
-
+            
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
+            
             //nbitcoin output descriptor does not support taproot, so let's check if it is a taproot descriptor and fake until it is supported
-
             var outputDescriptor = OutputDescriptor.Parse(str, Network);
             switch (outputDescriptor)
             {
@@ -97,6 +253,7 @@ namespace BTCPayServer
                     throw new ArgumentOutOfRangeException(nameof(outputDescriptor));
             }
         }
+
         public DerivationStrategyBase Parse(string str)
         {
             ArgumentNullException.ThrowIfNull(str);

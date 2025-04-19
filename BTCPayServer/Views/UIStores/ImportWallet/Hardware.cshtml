@@ -1,6 +1,6 @@
 @using BTCPayServer.Abstractions.TagHelpers
 @using BTCPayServer.Blazor
-@using BTCPayServer.Controllers
+@using BTCPayServer.Blazor.VaultBridge
 @using BTCPayServer.TagHelpers
 @using Microsoft.AspNetCore.Mvc.TagHelpers
 @model WalletSetupViewModel
@@ -24,8 +24,8 @@
 
 <div class="row mt-5 mb-4">
     <div class="col-md-8 mx-auto">
-        <component type="typeof(BTCPayServer.Blazor.VaultBridgeUI)"
-                   param-Controller=@(new VaultBridgeUI.GetXPubController()
+        <component type="typeof(VaultBridgeUI)"
+                   param-Controller=@(new GetXPubController()
                                       {
                                           CryptoCode = Context.GetRouteValue("cryptoCode")?.ToString(),
                                       })

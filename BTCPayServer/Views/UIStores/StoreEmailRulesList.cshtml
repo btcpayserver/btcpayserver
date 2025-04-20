@@ -53,7 +53,7 @@
                     <td class="actions-col" permission="@Policies.CanModifyStoreSettings">
                         <div class="d-inline-flex align-items-center gap-3">
                             <a asp-action="StoreEmailRulesEdit" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index">Edit</a>
-                            <a asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@StringLocalizer["This action will remove the rule with the trigger {0}.", Html.Encode(rule.value.Trigger)]" data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
+                            <a asp-action="StoreEmailRulesDelete" asp-route-storeId="@storeId" asp-route-ruleIndex="@rule.index" data-bs-toggle="modal" data-bs-target="#ConfirmModal" data-description="@ViewLocalizer["This action will remove the rule with the trigger <b>{0}</b>.", Html.Encode(rule.value.Trigger)]" data-confirm-input="@StringLocalizer["REMOVE"]" text-translate="true">Remove</a>
                         </div>
                     </td>
                 </tr>

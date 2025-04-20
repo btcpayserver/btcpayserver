@@ -866,6 +866,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
 
             // Ensure that the rule is created
+            s.FindAlertMessage();
             Assert.DoesNotContain("There are no rules yet.", s.Driver.PageSource);
             Assert.Contains("invoicecreated@gmail.com", s.Driver.PageSource);
             Assert.Contains("Invoice {Invoice.Id} created", s.Driver.PageSource);
@@ -881,6 +882,7 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
 
             // Validate the second rule is added
+            s.FindAlertMessage();
             Assert.Contains("statuschanged@gmail.com", s.Driver.PageSource);
             Assert.Contains("Status changed!", s.Driver.PageSource);
 
@@ -897,20 +899,27 @@ namespace BTCPayServer.Tests
             s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
 
             // Validate that the email is updated in the list of email rules
+            s.FindAlertMessage();
             Assert.Contains("changedagain@gmail.com", s.Driver.PageSource);
             Assert.DoesNotContain("statuschanged@gmail.com", s.Driver.PageSource);
 
             // Delete both email rules
-            var deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]"));
+            var deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Remove')]"));
             Assert.True(deleteLinks.Count == 2, "Expected exactly two delete buttons but found a different number.");
 
             deleteLinks[0].Click();
+            s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("REMOVE");
+            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
 
-            deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Delete')]")); // Refresh list
+            s.FindAlertMessage();
+            deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Remove')]")); // Refresh list
             Assert.True(deleteLinks.Count == 1, "Expected one delete button remaining.");
 
             deleteLinks[0].Click();
+            s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("REMOVE");
+            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
 
+            s.FindAlertMessage();
             // Validate that there are no more rules
             Assert.Contains("There are no rules yet.", s.Driver.PageSource);
         }

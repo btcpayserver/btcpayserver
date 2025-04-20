@@ -72,6 +72,7 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _storeRepo.UpdateStore(store);
 
+            this.TempData.SetStatusSuccess(StringLocalizer["Email rule successfully created"]);
             return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
         }
 
@@ -111,6 +112,7 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _storeRepo.UpdateStore(store);
 
+            this.TempData.SetStatusSuccess(StringLocalizer["Email rule successfully updated"]);
             return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
         }
 
@@ -128,6 +130,7 @@ namespace BTCPayServer.Controllers
             store.SetStoreBlob(blob);
             await _storeRepo.UpdateStore(store);
 
+            this.TempData.SetStatusSuccess(StringLocalizer["Email rule successfully deleted"]);
             return RedirectToAction(nameof(StoreEmailRulesList), new { storeId });
         }
 

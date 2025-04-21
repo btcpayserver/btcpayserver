@@ -264,8 +264,6 @@ public class GetXPubController : HWIController
         var firstDepositPath = new KeyPath(0, 0);
         var firstDepositAddr =
             network.NBXplorerNetwork.CreateAddress(strategy, firstDepositPath, strategy.GetDerivation(firstDepositPath).ScriptPubKey);
-        ui.ShowFeedback(FeedbackType.Loading,
-            ui.ViewLocalizer["Please verify that the address displayed on your device is <b>{0}</b>...", firstDepositAddr.ToString()]);
         
         var verif = new VerifyAddress(ui)
         {

@@ -1,0 +1,69 @@
+﻿@inherits VaultElement
+@implements IDisposable
+
+<div id="passphrase-input" class="mt-4">
+    <div class="form-group">
+        <label for="Password" class="form-label">@ui.StringLocalizer["Passphrase (Leave empty if there isn't any passphrase)"]</label>
+        <div class="input-group">
+            <input id="Password" @bind="Password" type="password" class="form-control">
+            <button type="button" class="btn btn-secondary px-3 only-for-js" title="@ui.StringLocalizer["Toggle passphrase visibility"]"
+                    data-toggle-password="#Password">
+                <Icon Symbol="actions-show"></Icon>
+            </button>
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="PasswordConfirmation" class="form-label">@ui.StringLocalizer["Passphrase confirmation"]</label>
+        <div class="input-group">
+            <input id="PasswordConfirmation" @bind="PasswordConfirmation" type="password" class="form-control">
+            <button type="button" class="btn btn-secondary px-3 only-for-js" title="@ui.StringLocalizer["Toggle passphrase visibility"]"
+                    data-toggle-password="#PasswordConfirmation">
+                <Icon Symbol="actions-show"></Icon>
+            </button>
+        </div>
+        @if (Error != "")
+        {
+            <span class="text-danger">@Error</span>
+        }
+    </div>
+    <button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirmPasswordClick">@ui.StringLocalizer["Confirm"]</button>
+</div>
+
+@code {
+    private readonly VaultBridgeUI ui;
+
+    public Passphrase(VaultBridgeUI ui)
+    {
+        this.ui = ui;
+    }
+    string PasswordConfirmation { get; set; } = "";
+    string Password { get; set; } = "";
+    string Error { get; set; } = "";
+
+    private TaskCompletionSource<string> _cts;
+    public Task<string> GetPassword()
+    {
+        ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Enter the passphrase."]);
+        ui.AddElement(this);
+        _cts = new TaskCompletionSource<string>(TaskCreationOptions.RunContinuationsAsynchronously);
+        return _cts.Task;
+    }
+
+    public void OnConfirmPasswordClick()
+    {
+        if (Password != PasswordConfirmation)
+        {
+            Error = ui.StringLocalizer["Invalid password confirmation."].Value;
+            ui.StateHasChanged();
+            return;
+        }
+
+        ui.Elements.Remove(this);
+        ui.ShowFeedback(FeedbackType.Success, ui.StringLocalizer["Password entered..."]);
+
+        _cts?.TrySetResult(Password);
+        _cts = null;
+    }
+
+    public void Dispose() => _cts?.TrySetCanceled();
+}

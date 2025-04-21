@@ -1019,7 +1019,7 @@ namespace BTCPayServer.Controllers
                 leases.Add(_EventAggregator.SubscribeAsync<Events.InvoiceEvent>(async o => await NotifySocket(webSocket, o.Invoice.Id, invoiceId)));
                 while (true)
                 {
-                    var message = await webSocket.ReceiveAndPingAsync(DummyBuffer);
+                    var message = await webSocket.ReceiveAndPingAsync(DummyBuffer, cancellationToken);
                     if (message.MessageType == WebSocketMessageType.Close)
                         break;
                 }

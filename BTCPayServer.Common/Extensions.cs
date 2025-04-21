@@ -16,6 +16,8 @@ namespace BTCPayServer
 
         public static ScriptPubKeyType ScriptPubKeyType(this DerivationStrategyBase derivationStrategyBase)
         {
+            if (derivationStrategyBase is TaprootDerivationStrategy)
+                return NBitcoin.ScriptPubKeyType.TaprootBIP86;
             if (IsSegwitCore(derivationStrategyBase))
             {
                 return NBitcoin.ScriptPubKeyType.Segwit;

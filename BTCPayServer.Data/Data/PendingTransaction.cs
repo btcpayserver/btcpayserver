@@ -8,6 +8,7 @@ namespace BTCPayServer.Data;
 
 public class PendingTransaction: IHasBlob<PendingTransactionBlob>
     {
+        public string Id { get; set; }
         public string TransactionId { get; set; }
         public string CryptoCode { get; set; }
         public string StoreId { get; set; }
@@ -30,7 +31,9 @@ public class PendingTransaction: IHasBlob<PendingTransactionBlob>
                 .HasForeignKey(i => i.StoreId)
                 .OnDelete(DeleteBehavior.Cascade);
 
-            builder.Entity<PendingTransaction>().HasKey(transaction => new {transaction.CryptoCode, transaction.TransactionId});
+            builder.Entity<PendingTransaction>().HasKey(t => t.Id);
+            builder.Entity<PendingTransaction>().HasIndex(t => new { t.StoreId });
+            builder.Entity<PendingTransaction>().HasIndex(t => new { t.TransactionId });
 
             builder.Entity<PendingTransaction>()
                 .Property(o => o.Blob2)

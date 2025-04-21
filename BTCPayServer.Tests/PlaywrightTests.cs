@@ -18,6 +18,7 @@ using Xunit.Abstractions;
 
 namespace BTCPayServer.Tests
 {
+    [Trait("Playwright", "Playwright")]
     public class PlaywrightTests : UnitTestBase
     {
         public PlaywrightTests(ITestOutputHelper helper) : base(helper)
@@ -25,7 +26,7 @@ namespace BTCPayServer.Tests
         }
 
         [Fact]
-        public async Task CanNavigateServerSettingss()
+        public async Task CanNavigateServerSettings()
         {
             using var s = CreatePlaywrightTester();
             await s.StartAsync();

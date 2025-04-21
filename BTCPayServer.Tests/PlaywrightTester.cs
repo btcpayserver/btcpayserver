@@ -51,12 +51,6 @@ namespace BTCPayServer.Tests
                 {
                     Headless = true, // true to run in CI
                     SlowMo = 50, // Add slight delay between actions to improve stability
-                    Args = new[]
-                    {
-                        "--disable-dev-shm-usage",
-                        "--no-sandbox",
-                        "--disable-gpu",
-                    }
                 });
                 var containerIp = File.ReadAllText("/etc/hosts")
                     .Split('\n', StringSplitOptions.RemoveEmptyEntries).Last()

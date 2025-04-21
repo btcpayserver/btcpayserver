@@ -16,6 +16,14 @@ jobs:
       - run:
           command: |
             cd .circleci && ./run-tests.sh "Selenium=Selenium"
+  playwright_tests:
+    machine:
+      image: ubuntu-2004:2024.11.1
+    steps:
+      - checkout
+      - run:
+          command: |
+            cd .circleci && ./run-tests.sh "Playwright=Playwright"
   integration_tests:
     machine:
       image: ubuntu-2004:2024.11.1
@@ -53,6 +61,7 @@ workflows:
     jobs:
       - fast_tests
       - selenium_tests
+      - playwright_tests 
       - integration_tests
   publish:
     jobs:

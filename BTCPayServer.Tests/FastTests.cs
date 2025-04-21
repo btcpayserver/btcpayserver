@@ -36,6 +36,7 @@ using Microsoft.Extensions.Options;
 using NBitcoin;
 using NBitcoin.RPC;
 using NBitcoin.Scripting.Parser;
+using NBitcoin.WalletPolicies;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
 using Newtonsoft.Json;
@@ -893,6 +894,39 @@ namespace BTCPayServer.Tests
             Assert.Equal(4, tor.Services.Length);
         }
 
+        [Theory]
+        [InlineData("bcrt1q9zf7xapkmujeee9mfua9a7n6lkehrsv2h0z3nm", "wpkh([aaaaaaaa/84h/1h/0h]tpubDC6aWgsG4Tgiqu9vkK8Hoehc4Zu7oSmQ5G38ZhRJPSr1TabHocNeZ3DqqxnjLD6Zs16kwmEYCsBvGN3xE25BTmZ8ByxEdF2L9b2swdSxm1L/<0;1>/*)")]
+        [InlineData("mxfapt6u6tZ41UbFxNaEhq8QkKqYm6tvy3", "pkh([aaaaaaaa/44h/1h/0h]tpubDDV486pBqkML6Ywhznz8DS3VS95h3q4A2pUMCc6yy739QpKMg3gA8EXGrjraDBDxrhLsezepjCEfBtak5wngDH4vMh6aXKV8hPN7JsMtdEf/<0;1>/*)")]
+        [InlineData("2MsMb9CdVZwESkctbQfD5s8v3CszzbSxgUy", "sh(wpkh([aaaaaaaa/49h/1h/0h]tpubDDJa9q5audQLxtPyhrgapyByEHHSWQxKrADKA8dX8xNqAV5zrnnCVyHP9aNxojxi27Beus36V8D4Lqd6dZEDonxVMofgDK92zNLfeKhC54J/<0;1>/*))")]
+        [InlineData("bcrt1p7cwzrrg5te7r6tpham2qu7vws2x6vlswn9404raasc6aptuv3n2ss3zlrs","tr([aaaaaaaa/86h/1h/0h]tpubDCw9VEKFjxDk4MCLbPeYpsVP5aEP4sCgj1wbexMv38Y67YzczDHgjxBz2rqJDGwiNx8FH8uXyEUwYBruqJBBHW2Lrn4LPAZ3kj1qDkXuV2m/<0;1>/*)")]
+        [InlineData("2NAd39MvEYKqxfdZzEeW1PX3mYoL66kshWy","sh(sortedmulti(2,[aaaaaaaa/45h]tpubD9DcTBTiabXsjPBnVBKvNadiuhmw7rR56FqePc1kRgwQTiETnHBvgFbWtce3yTgsbRQ2ST1hA5eDoy3V4FwRvHFyEWiQxGaYFxRDDH4eBKb/<0;1>/*,[aaaaaaaa/45h]tpubD8HUcsDEkpLdQEHDDmA8fkLeb6yWXEyTCyzdpLbbEjLQhiiBHSfeYFDDmoEe5Nf9f6YY4LRdUwhkmwSBsSpn1PN7191pcDzP2APhrGXMVg6/<0;1>/*))")]
+        [InlineData("2MygJNZseGwenG6ASz2nbBAXrMR8gfUbu7h","sh(wsh(sortedmulti(2,[aaaaaaaa/45h]tpubD9DcTBTiabXsjPBnVBKvNadiuhmw7rR56FqePc1kRgwQTiETnHBvgFbWtce3yTgsbRQ2ST1hA5eDoy3V4FwRvHFyEWiQxGaYFxRDDH4eBKb/<0;1>/*,[aaaaaaaa/45h]tpubD8HUcsDEkpLdQEHDDmA8fkLeb6yWXEyTCyzdpLbbEjLQhiiBHSfeYFDDmoEe5Nf9f6YY4LRdUwhkmwSBsSpn1PN7191pcDzP2APhrGXMVg6/<0;1>/*))")]
+        [InlineData("2MygJNZseGwenG6ASz2nbBAXrMR8gfUbu7h","sh(wsh(sortedmulti(2,[aaaaaaaa/45h]tpubD8HUcsDEkpLdQEHDDmA8fkLeb6yWXEyTCyzdpLbbEjLQhiiBHSfeYFDDmoEe5Nf9f6YY4LRdUwhkmwSBsSpn1PN7191pcDzP2APhrGXMVg6/<0;1>/*,[aaaaaaaa/45h]tpubD9DcTBTiabXsjPBnVBKvNadiuhmw7rR56FqePc1kRgwQTiETnHBvgFbWtce3yTgsbRQ2ST1hA5eDoy3V4FwRvHFyEWiQxGaYFxRDDH4eBKb/<0;1>/*))")]
+        [InlineData("2MygJNZseGwenG6ASz2nbBAXrMR8gfUbu7h","sh(wsh(multi(2,[aaaaaaaa/45h]tpubD9DcTBTiabXsjPBnVBKvNadiuhmw7rR56FqePc1kRgwQTiETnHBvgFbWtce3yTgsbRQ2ST1hA5eDoy3V4FwRvHFyEWiQxGaYFxRDDH4eBKb/<0;1>/*,[aaaaaaaa/45h]tpubD8HUcsDEkpLdQEHDDmA8fkLeb6yWXEyTCyzdpLbbEjLQhiiBHSfeYFDDmoEe5Nf9f6YY4LRdUwhkmwSBsSpn1PN7191pcDzP2APhrGXMVg6/<0;1>/*))")]
+        [InlineData("2NEw4G7BMVJhcUXs79vpJcahYzpN8kwgE2N","sh(wsh(multi(2,[aaaaaaaa/45h]tpubD8HUcsDEkpLdQEHDDmA8fkLeb6yWXEyTCyzdpLbbEjLQhiiBHSfeYFDDmoEe5Nf9f6YY4LRdUwhkmwSBsSpn1PN7191pcDzP2APhrGXMVg6/<0;1>/*,[aaaaaaaa/45h]tpubD9DcTBTiabXsjPBnVBKvNadiuhmw7rR56FqePc1kRgwQTiETnHBvgFbWtce3yTgsbRQ2ST1hA5eDoy3V4FwRvHFyEWiQxGaYFxRDDH4eBKb/<0;1>/*))")]
+        [InlineData("bcrt1qy9tspfhktwm22cp54qv2pxqqwtney2w494xc4mapw3akhjtqx85sfkp6dh","wsh(sortedmulti(2,[aaaaaaaa/45h]tpubD9DcTBTiabXsjPBnVBKvNadiuhmw7rR56FqePc1kRgwQTiETnHBvgFbWtce3yTgsbRQ2ST1hA5eDoy3V4FwRvHFyEWiQxGaYFxRDDH4eBKb/<0;1>/*,[aaaaaaaa/45h]tpubD8HUcsDEkpLdQEHDDmA8fkLeb6yWXEyTCyzdpLbbEjLQhiiBHSfeYFDDmoEe5Nf9f6YY4LRdUwhkmwSBsSpn1PN7191pcDzP2APhrGXMVg6/<0;1>/*))")]
+        public void CanParseDerivationSchemesBIP388(string expectedAddress, string policy)
+        {
+            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
+            var parser = new DerivationSchemeParser(networkProvider.BTC);
+            var scheme = parser.ParseOutputDescriptor(policy);
+            var script = Miniscript.Parse(policy, new MiniscriptParsingSettings(networkProvider.BTC.NBitcoinNetwork)
+            {
+                Dialect = MiniscriptDialect.BIP388,
+                AllowedParameters = ParameterTypeFlags.None
+            });
+
+            for (int i = 0; i < 5; i++)
+            {
+                var expectedScripts = script.Derive(AddressIntent.Deposit, i).Miniscript.ToScripts();
+                var actual = scheme.Item1.GetDerivation(new KeyPath(0, (uint)i));
+                Assert.Equal(expectedScripts.ScriptPubKey, actual.ScriptPubKey);
+                Assert.Equal(expectedScripts.RedeemScript, actual.Redeem);
+                if (i == 0)
+                    Assert.Equal(expectedAddress, expectedScripts.ScriptPubKey.GetDestinationAddress(networkProvider.BTC.NBitcoinNetwork)!.ToString());
+            }
+        }
+
         [Fact]
         public void CanParseDerivationSchemes()
         {
@@ -938,9 +972,9 @@ namespace BTCPayServer.Tests
             Assert.True(((DirectDerivationStrategy)strategyBase).Segwit);
 
             // Failure cases
-            Assert.Throws<FormatException>(() => { parser.Parse("xpubZ661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw"); });
-            Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("invalid"); }); // invalid in general
-            Assert.Throws<ParsingException>(() => { parser.ParseOutputDescriptor("wpkh([8b60afd1/49h/0h/0h]xpub661MyMwAFXkMnyoBjyHndD3QwRbcGVBsTGeNZN6QGVHcfz4MPzBUxjSevweNFQx7SqmMHLdSA4FteGsRrEriu4pnVZMZWnruFFAYZATtcDw/0/*)#9x4vkw48"); }); // invalid checksum
+            Assert.ThrowsAny<FormatException>(() => { parser.Parse("xpubZ661MyMwAqRbcGVBsTGeNZN6QGVHmMHLdSA4FteGsRrEriu4pnVZMZWnruFFFXkMnyoBjyHndD3Qwcfz4MPzBUxjSevweNFQx7SAYZATtcDw"); });
+            Assert.ThrowsAny<FormatException>(() => { parser.ParseOutputDescriptor("invalid"); }); // invalid in general
+            Assert.ThrowsAny<FormatException>(() => { parser.ParseOutputDescriptor("wpkh([8b60afd1/49h/0h/0h]xpub661MyMwAFXkMnyoBjyHndD3QwRbcGVBsTGeNZN6QGVHcfz4MPzBUxjSevweNFQx7SqmMHLdSA4FteGsRrEriu4pnVZMZWnruFFAYZATtcDw/0/*)#9x4vkw48"); }); // invalid checksum
         }
         public static WalletFileParsers GetParsers()
         {
@@ -2126,15 +2160,15 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
 
 
             //we don't support every descriptor, only the ones which represent an HD wallet with stndard derivation paths
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("wpkh(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(wpkh(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(multi(2,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe))"));
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(sortedmulti(2,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01))"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("pk(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("pkh(02c6047f9441ed7d6d3045406e95c07cd85c778e4b8cef3ca7abac09b95c709ee5)"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("wpkh(02f9308a019258c31049344f85f89d5229b531c845836f99b08601f113bce036f9)"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(wpkh(03fff97bd5755eeea420453a14355235d382f6472f8568a18b2f057a1460297556))"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("combo(0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798)"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(wsh(pkh(02e493dbf1c10d80f3581e4904930b1404cc6c13900ee0758474fa94abe8c4cd13)))"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("multi(1,022f8bde4d1a07209355b4a7250a5c5128e88b84bddc619ab7cba8d569b240efe4,025cbdf0646e5db4eaa398f365f2ea7a0e3d419b7e0330e39ce92bddedcac4f9bc)"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(multi(2,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe))"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("sh(sortedmulti(2,03acd484e2f0c7f65309ad178a9f559abde09796974c57e714c35f110dfc27ccbe,022f01e5e15cca351daff3843fb70f3c2f0a1bdd05e5af888a67784ef3e10a2a01))"));
 
             //let's see what we actually support now
 
@@ -2150,7 +2184,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
                 "pkh([d34db33f]xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/0/*)");
             Assert.Equal("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[legacy]", parsedDescriptor.Item1.ToString());
             //a master fingerprint must always be present if youre providing rooted path
-            Assert.Throws<ParsingException>(() => mainnetParser.ParseOutputDescriptor("pkh([44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("pkh([44'/0'/0']xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)"));
 
 
             parsedDescriptor = mainnetParser.ParseOutputDescriptor(
@@ -2158,7 +2192,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL-[legacy]", parsedDescriptor.Item1.ToString());
 
             //but a different deriv path from standard (0/*) is not supported
-            Assert.Throws<FormatException>(() => mainnetParser.ParseOutputDescriptor("pkh(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)"));
+            Assert.ThrowsAny<FormatException>(() => mainnetParser.ParseOutputDescriptor("pkh(xpub6ERApfZwUNrhLCkDtcHTcxd75RbzS1ed54G1LkBUHQVHQKqhMkhgbmJbZRkrgZw4koxb5JaHWkY4ALHY2grBGRjaDMzQLcgJvLJuZZvRcEL/1/*)"));
 
             //p2sh-segwit hd wallet
             parsedDescriptor = mainnetParser.ParseOutputDescriptor(

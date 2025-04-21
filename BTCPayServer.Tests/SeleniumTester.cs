@@ -138,26 +138,37 @@ retry:
         }
         public IWebElement FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
         {
-            var className = string.Join(", ", severity.Select(statusSeverity => $".alert-{StatusMessageModel.ToString(statusSeverity)}"));
-            IWebElement el;
+            int retry = 0;
+            retry:
             try
             {
-                var elements = Driver.FindElements(By.CssSelector(className));
-                el = elements.FirstOrDefault(e => e.Displayed);
-                if (el is null)
-                    el = elements.FirstOrDefault();
-                if (el is null)
+                var className = string.Join(", ", severity.Select(statusSeverity => $".alert-{StatusMessageModel.ToString(statusSeverity)}"));
+                IWebElement el;
+                try
+                {
+                    var elements = Driver.FindElements(By.CssSelector(className));
+                    el = elements.FirstOrDefault(e => e.Displayed);
+                    if (el is null)
+                        el = elements.FirstOrDefault();
+                    if (el is null)
+                        el = Driver.WaitForElement(By.CssSelector(className));
+                }
+                catch (NoSuchElementException)
+                {
                     el = Driver.WaitForElement(By.CssSelector(className));
+                }
+                if (el is null)
+                    throw new NoSuchElementException($"Unable to find {className}");
+                if (!el.Displayed)
+                    throw new ElementNotVisibleException($"{className} is present, but not displayed: {el.GetAttribute("id")} - Text: {el.Text}");
+                return el;
             }
-            catch (NoSuchElementException)
+            // Selenium sometimes sucks...
+            catch (StaleElementReferenceException) when (retry < 5)
             {
-                el = Driver.WaitForElement(By.CssSelector(className));
+                retry++;
+                goto retry;
             }
-            if (el is null)
-                throw new NoSuchElementException($"Unable to find {className}");
-            if (!el.Displayed)
-                throw new ElementNotVisibleException($"{className} is present, but not displayed: {el.GetAttribute("id")} - Text: {el.Text}");
-            return el;
         }
 
         public string Link(string relativeLink)

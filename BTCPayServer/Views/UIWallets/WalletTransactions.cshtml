@@ -191,10 +191,10 @@
                     <td><span id="Sigs_@(index)__Scheme">@ptblob?.SignaturesNeeded/@ptblob?.SignaturesTotal</span></td>
                     <td>
                         <a asp-action="ViewPendingTransaction" asp-route-walletId="@walletId" 
-                           asp-route-transactionId="@pendingTransaction.TransactionId">@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
+                           asp-route-pendingTransactionId="@pendingTransaction.Id">@(pendingTransaction.State == PendingTransactionState.Signed ? "Broadcast" : "View")</a>
                         -
                         <a asp-action="CancelPendingTransaction" asp-route-walletId="@walletId" 
-                           asp-route-transactionId="@pendingTransaction.TransactionId">Abort</a>
+                           asp-route-pendingTransactionId="@pendingTransaction.Id">Abort</a>
                     </td>
                 </tr>
             }

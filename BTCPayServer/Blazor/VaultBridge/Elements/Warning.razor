@@ -1,0 +1,23 @@
+﻿@using Microsoft.AspNetCore.Mvc.Localization
+@inherits VaultElement
+
+<div id="walletAlert" class="alert alert-warning alert-dismissible my-4" role="alert">
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="@ui.StringLocalizer["Close"]">
+        <Icon Symbol="close"></Icon>
+    </button>
+    <span id="alertMessage">
+                @((MarkupString)Html)
+            </span>
+</div>
+
+@code {
+    private readonly VaultBridgeUI ui;
+
+    public Warning(VaultBridgeUI ui, LocalizedHtmlString str)
+    {
+        this.ui = ui;
+        Html = str.Value;
+    }
+
+    public string Html { get; set; }
+}

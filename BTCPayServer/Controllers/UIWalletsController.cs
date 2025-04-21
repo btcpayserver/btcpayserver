@@ -145,39 +145,38 @@ namespace BTCPayServer.Controllers
             _displayFormatter = displayFormatter;
         }
 
-        [HttpGet("{walletId}/pending/{transactionId}/cancel")]
+        [HttpGet("{walletId}/pending/{pendingTransactionId}/cancel")]
         public IActionResult CancelPendingTransaction(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
-            string transactionId)
+            string pendingTransactionId)
         {
             return View("Confirm", new ConfirmModel("Abort Pending Transaction",
                 "Proceeding with this action will invalidate Pending Transaction and all accepted signatures.",
                 "Confirm Abort"));
         }
-        [HttpPost("{walletId}/pending/{transactionId}/cancel")]
+        [HttpPost("{walletId}/pending/{pendingTransactionId}/cancel")]
         public async Task<IActionResult> CancelPendingTransactionConfirmed(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
-            string transactionId)
+            string pendingTransactionId)
         {
-            await _pendingTransactionService.CancelPendingTransaction(walletId.CryptoCode, walletId.StoreId, transactionId);
+            await _pendingTransactionService.CancelPendingTransaction(GetPendingTxId(walletId, pendingTransactionId));
             TempData.SetStatusMessageModel(new StatusMessageModel()
             {
                 Severity = StatusMessageModel.StatusSeverity.Success,
-                Message = $"Aborted Pending Transaction {transactionId}"
+                Message = $"Aborted Pending Transaction {pendingTransactionId}"
             });
             return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
         }
 
 
-        [HttpGet("{walletId}/pending/{transactionId}")]
+        [HttpGet("{walletId}/pending/{pendingTransactionId}")]
         public async Task<IActionResult> ViewPendingTransaction(
             [ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
-            string transactionId)
+            string pendingTransactionId)
         {
             var network = NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode);
             var pendingTransaction =
-                await _pendingTransactionService.GetPendingTransaction(walletId.CryptoCode, walletId.StoreId,
-                    transactionId);
+                await _pendingTransactionService.GetPendingTransaction(GetPendingTxId(walletId, pendingTransactionId));
             if (pendingTransaction is null)
                 return NotFound();
             var blob = pendingTransaction.GetBlob();
@@ -197,7 +196,7 @@ namespace BTCPayServer.Controllers
                 CryptoCode = network.CryptoCode,
                 SigningContext = new SigningContextModel(currentPsbt)
                 {
-                    PendingTransactionId = transactionId,
+                    PendingTransactionId = pendingTransactionId,
                     PSBT = currentPsbt.ToBase64(),
                 },
             };
@@ -205,6 +204,10 @@ namespace BTCPayServer.Controllers
             await vm.GetPSBT(network.NBitcoinNetwork, ModelState);
             return View("WalletPSBTDecoded", vm);
         }
+
+        private PendingTransactionService.PendingTransactionFullId GetPendingTxId(WalletId walletId, string pendingTransactionId)
+        => new (walletId.CryptoCode, walletId.StoreId, pendingTransactionId);
+        
 
         [Route("{walletId}/transactions/bump")]
         [Route("{walletId}/transactions/{transactionId}/bump")]
@@ -1324,7 +1327,7 @@ namespace BTCPayServer.Controllers
                 vm.Outputs.Last().Labels = vm.Outputs.Last().Labels.Concat(addressLabels.Select(tuple => tuple.Label)).ToArray();
             }
         }
-
+        
         private IActionResult ViewVault(WalletId walletId, WalletPSBTViewModel vm)
         {
             return View(nameof(WalletSendVault),
@@ -1332,8 +1335,6 @@ namespace BTCPayServer.Controllers
                 {
                     SigningContext = vm.SigningContext,
                     WalletId = walletId.ToString(),
-                    WebsocketPath = Url.Action(nameof(UIVaultController.VaultBridgeConnection), "UIVault",
-                        new { walletId = walletId.ToString() }),
                     ReturnUrl = vm.ReturnUrl,
                     BackUrl = vm.BackUrl
                 });
@@ -1356,7 +1357,7 @@ namespace BTCPayServer.Controllers
             if (vm.SigningContext.PendingTransactionId is not null)
             {
                 var psbt = PSBT.Parse(vm.SigningContext.PSBT, NetworkProvider.GetNetwork<BTCPayNetwork>(walletId.CryptoCode).NBitcoinNetwork);
-                var pendingTransaction = await _pendingTransactionService.CollectSignature(psbt, CancellationToken.None);
+                var pendingTransaction = await _pendingTransactionService.CollectSignature(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId), psbt, CancellationToken.None);
 
                 if (pendingTransaction != null)
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
@@ -1475,29 +1476,26 @@ namespace BTCPayServer.Controllers
             var settings = GetDerivationSchemeSettings(walletId);
             if (settings is null)
                 return NotFound();
-            var signingKeySettings = settings.GetSigningAccountKeySettings();
-            if (signingKeySettings.RootFingerprint is null)
-                signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
-
-            RootedKeyPath rootedKeyPath = signingKeySettings.GetRootedKeyPath();
-            if (rootedKeyPath == null)
+            var signingKeySettings = settings.GetSigningAccountKeySettings(extKey);
+            if (signingKeySettings is null)
+            {
+                // Let's try best effort if RootFingerprint isn't configured, but AccountKeyPath is
+                signingKeySettings = settings.AccountKeySettings
+                                            .Where(a => a.RootFingerprint is null && a.AccountKeyPath is not null)
+                                            .FirstOrDefault();
+                if (signingKeySettings is not null)
+                    signingKeySettings.RootFingerprint = extKey.GetPublicKey().GetHDFingerPrint();
+            }
+            RootedKeyPath? rootedKeyPath = signingKeySettings?.GetRootedKeyPath();
+            if (rootedKeyPath is null || signingKeySettings is null)
             {
                 ModelState.AddModelError(nameof(viewModel.SeedOrKey),
                     "The master fingerprint and/or account key path of your seed are not set in the wallet settings.");
                 return View(nameof(SignWithSeed), viewModel);
             }
             // The user gave the root key, let's try to rebase the PSBT, and derive the account private key
-            if (rootedKeyPath.MasterFingerprint == extKey.GetPublicKey().GetHDFingerPrint())
-            {
-                psbt.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
-                signingKey = extKey.Derive(rootedKeyPath.KeyPath);
-            }
-            else
-            {
-                ModelState.AddModelError(nameof(viewModel.SeedOrKey),
-                    "The master fingerprint does not match the one set in your wallet settings. Probable causes are: wrong seed, wrong passphrase or wrong fingerprint in your wallet settings.");
-                return View(nameof(SignWithSeed), viewModel);
-            }
+            psbt.RebaseKeyPaths(signingKeySettings.AccountKey, rootedKeyPath);
+            signingKey = extKey.Derive(rootedKeyPath.KeyPath);
 
             psbt.Settings.SigningOptions = new SigningOptions()
             {

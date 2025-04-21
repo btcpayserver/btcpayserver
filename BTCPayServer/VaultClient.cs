@@ -1,128 +1,56 @@
-#nullable enable
+﻿#nullable  enable
 using System;
-using System.Net.WebSockets;
-using System.Runtime.CompilerServices;
+using System.Linq;
+using System.Text.Json.Nodes;
 using System.Threading;
 using System.Threading.Tasks;
-using Amazon.S3.Model.Internal.MarshallTransformations;
+using Microsoft.JSInterop;
 using Newtonsoft.Json.Linq;
 
-namespace BTCPayServer
+namespace BTCPayServer;
+
+public class VaultClient(IJSRuntime js, string serviceUri)
 {
-    public enum VaultMessageType
+    public class VaultNotConnectedException() : Exception("Vault not connected");
+
+    public class VaultException(string message) : Exception(message);
+
+    public async Task<VaultPermissionResult> AskPermission(CancellationToken cancellationToken)
     {
-        Ok,
-        Error,
-        Processing
+        return await js.InvokeAsync<VaultPermissionResult>("vault.askVaultPermission", cancellationToken, serviceUri);    
     }
-    public enum VaultServices
+    public async Task<JToken?> SendVaultRequest(string? path, JObject? body, CancellationToken cancellationToken)
     {
-        HWI,
-        NFC
+        var isAbsolute = path is not null && Uri.IsWellFormedUriString(path, UriKind.Absolute);
+        var query = new JsonObject()
+        {
+            ["uri"] = isAbsolute ? path : serviceUri + path
+        };
+        if (body is not null)
+            query["body"] = JsonObject.Parse(body.ToString());
+        var resp = await js.InvokeAsync<SendRequestResponse>("vault.sendRequest", cancellationToken, query);
+        if (resp.HttpCode is not { } p)
+            throw new VaultNotConnectedException();
+        if (p != 200)
+            throw new VaultException($"Unexpected response code from vault {p}");
+        return (resp.Body)?.ToJsonString() is { } str ? JToken.Parse(str) : null;
     }
 
-    public class VaultNotConnectedException : VaultException
+    public class SendRequestResponse
     {
-        public VaultNotConnectedException() : base("BTCPay Vault isn't connected")
-        {
-
-        }
+        public int? HttpCode { get; set; }
+        public JsonNode? Body { get; set; }
     }
-    public class VaultException : Exception
+    public class HwiResponse
     {
-        public VaultException(string message) : base(message)
-        {
-
-        }
+        public int HttpCode { get; set; }
+        public string? Error { get; set; }
+        public JsonNode? Body { get; set; }
     }
-    public class VaultClient
-    {
-        public VaultClient(WebSocket websocket)
-        {
-            Websocket = new WebSocketHelper(websocket);
-        }
+}
 
-        public WebSocketHelper Websocket { get; }
-
-        public async Task<string> GetNextCommand(CancellationToken cancellationToken)
-        {
-            return await Websocket.NextMessageAsync(cancellationToken);
-        }
-
-        public async Task SendMessage(JObject mess, CancellationToken cancellationToken)
-        {
-            await Websocket.Send(mess.ToString(), cancellationToken);
-        }
-
-        public Task Show(VaultMessageType type, string message, CancellationToken cancellationToken)
-        {
-            return Show(type, message, null, cancellationToken);
-        }
-        public async Task Show(VaultMessageType type, string message, string? debug, CancellationToken cancellationToken)
-        {
-
-            await SendMessage(new JObject()
-            {
-                ["command"] = "showMessage",
-                ["message"] = message,
-                ["type"] = type.ToString(),
-                ["debug"] = debug
-            }, cancellationToken);
-        }
-
-        string? _ServiceUri;
-        public async Task<bool?> AskPermission(VaultServices service, CancellationToken cancellationToken)
-        {
-            var uri = service switch
-            {
-                VaultServices.HWI => "http://127.0.0.1:65092/hwi-bridge/v1",
-                VaultServices.NFC => "http://127.0.0.1:65092/nfc-bridge/v1",
-                _ => throw new NotSupportedException()
-            };
-
-            await this.SendMessage(new JObject()
-            {
-                ["command"] = "sendRequest",
-                ["uri"] = uri + "/request-permission"
-            }, cancellationToken);
-            var result = await GetNextMessage(cancellationToken);
-            if (result["httpCode"] is { } p)
-            {
-                var ok = p.Value<int>() == 200;
-                if (ok)
-                    _ServiceUri = uri;
-                return ok;
-            }
-            return null;
-        }
-
-        public async Task<JToken?> SendVaultRequest(string? path, JObject? body, CancellationToken cancellationToken)
-        {
-            var isAbsolute = path is not null && Uri.IsWellFormedUriString(path, UriKind.Absolute);
-            var query = new JObject()
-            {
-                ["command"] = "sendRequest",
-                ["uri"] = isAbsolute ? path : _ServiceUri + path
-            };
-            if (body is not null)
-                query["body"] = body;
-            await this.SendMessage(query, cancellationToken);
-            var resp = await GetNextMessage(cancellationToken);
-            if (resp["httpCode"] is not { } p)
-                throw new VaultNotConnectedException();
-            if (p.Value<int>() != 200)
-                throw new VaultException($"Unexpected response code from vault {p.Value<int>()}");
-            return resp["body"] as JToken;
-        }
-
-        public async Task<JObject> GetNextMessage(CancellationToken cancellationToken)
-        {
-            return JObject.Parse(await this.Websocket.NextMessageAsync(cancellationToken));
-        }
-
-        public Task SendSimpleMessage(string command, CancellationToken cancellationToken)
-        {
-            return SendMessage(new JObject() { ["command"] = command }, cancellationToken);
-        }
-    }
+public class VaultPermissionResult
+{
+    public int HttpCode { get; set; }
+    public string? Browser { get; set; }
 }

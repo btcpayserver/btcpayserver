@@ -1,0 +1,104 @@
+﻿@using System.Globalization
+@inherits VaultElement
+@implements IDisposable
+
+<div id="pin-input" class="mt-4">
+    <div class="row">
+        <div class="col">
+            <div class="input-group mb-2">
+                <input id="pin-display" @bind="Display" type="text" class="form-control" readonly>
+                <div id="pin-display-delete" class="input-group-text cursor-pointer"
+                     @onclick="DeleteAll">
+                    <Icon Symbol="actions-remove"></Icon>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="pin-button" id="pin-7" @onclick="() => Click(7)"></div>
+        </div>
+        <div class="col">
+            <div class="pin-button" id="pin-8" @onclick="() => Click(8)"></div>
+        </div>
+        <div class="col">
+            <div class="pin-button" id="pin-9" @onclick="() => Click(9)"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="pin-button" id="pin-4" @onclick="() => Click(4)"></div>
+        </div>
+        <div class="col">
+            <div class="pin-button" id="pin-5" @onclick="() => Click(5)"></div>
+        </div>
+        <div class="col">
+            <div class="pin-button" id="pin-6" @onclick="() => Click(6)"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <div class="pin-button" id="pin-1" @onclick="() => Click(1)"></div>
+        </div>
+        <div class="col">
+            <div class="pin-button" id="pin-2" @onclick="() => Click(2)"></div>
+        </div>
+        <div class="col">
+            <div class="pin-button" id="pin-3" @onclick="() => Click(3)"></div>
+        </div>
+    </div>
+</div>
+<button id="vault-confirm" class="btn btn-primary mt-4" type="button" @onclick="OnConfirmPinClick">@ui.StringLocalizer["Confirm"]</button>
+
+@code {
+    private readonly VaultBridgeUI ui;
+
+    public PinInput(VaultBridgeUI ui)
+    {
+        this.ui = ui;
+    }
+
+    public int Value => int.TryParse(input, CultureInfo.InvariantCulture, out var v) ? v : 0;
+    public string input = "";
+    public string Display = "";
+
+    public Task<int> GetPin()
+    {
+        ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Enter the pin."]);
+        ui.AddElement(this);
+        _cts = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
+        return _cts.Task;
+    }
+
+    public void Click(int i)
+    {
+        if (input.Length > 10)
+            return;
+        input += i;
+        UpdateDisplay();
+    }
+
+    private void UpdateDisplay()
+    {
+        Display = new string('*', input.Length);
+        ui.StateHasChanged();
+    }
+
+    public void DeleteAll()
+    {
+        input = "";
+        UpdateDisplay();
+    }
+
+    private TaskCompletionSource<int> _cts;
+
+    public void OnConfirmPinClick()
+    {
+        ui.Elements.Remove(this);
+        ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Verifying pin..."]);
+        _cts?.TrySetResult(this.Value);
+        _cts = null;
+    }
+
+    public void Dispose() => _cts?.TrySetCanceled();
+}

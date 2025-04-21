@@ -310,7 +310,7 @@ public partial class UIStoresController
             derivationSchemeSettings.IsHotWallet = method == WalletSetupMethod.HotWallet;
         }
 
-        var accountSettings = derivationSchemeSettings.GetSigningAccountKeySettings();
+        var accountSettings = derivationSchemeSettings.AccountKeySettings[0];
         accountSettings.AccountKeyPath = response.AccountKeyPath.KeyPath;
         accountSettings.RootFingerprint = response.AccountKeyPath.MasterFingerprint;
         derivationSchemeSettings.AccountOriginal = response.DerivationScheme.ToString();

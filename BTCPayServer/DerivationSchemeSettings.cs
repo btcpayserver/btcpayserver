@@ -78,16 +78,26 @@ namespace BTCPayServer
         [JsonProperty(DefaultValueHandling = DefaultValueHandling.Ignore)]
         public BitcoinExtPubKey ExplicitAccountKey { get; set; }
 
+#nullable enable
         public AccountKeySettings GetSigningAccountKeySettings()
         {
             return (AccountKeySettings ?? []).Single(a => a.AccountKey == SigningKey);
         }
 
-        public AccountKeySettings GetSigningAccountKeySettingsOrDefault()
+        public AccountKeySettings? GetSigningAccountKeySettings(IHDKey rootKey)
+        => GetSigningAccountKeySettings(rootKey.GetPublicKey().GetHDFingerPrint());
+
+        public AccountKeySettings? GetSigningAccountKeySettings(HDFingerprint rootFingerprint)
+        {
+            return (AccountKeySettings ?? []).Where(a => a.RootFingerprint == rootFingerprint).FirstOrDefault();
+        }
+
+
+        public AccountKeySettings? GetSigningAccountKeySettingsOrDefault()
         {
             return (AccountKeySettings ?? []).SingleOrDefault(a => a.AccountKey == SigningKey);
         }
-
+#nullable restore
         public AccountKeySettings[] AccountKeySettings { get; set; }
 
         public IEnumerable<NBXplorer.Models.PSBTRebaseKeyRules> GetPSBTRebaseKeyRules()

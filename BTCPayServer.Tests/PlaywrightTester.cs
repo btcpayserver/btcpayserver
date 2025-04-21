@@ -61,7 +61,7 @@ namespace BTCPayServer.Tests
             {
                 Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
                 {
-                    Headless = true,
+                    Headless = false,
                     SlowMo = 50,
                 });
             }

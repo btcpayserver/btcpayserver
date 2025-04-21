@@ -362,6 +362,87 @@ namespace BTCPayServer.Tests
         }
 
         [Fact(Timeout = TestTimeout)]
+        public async Task CanSetupEmailRules()
+        {
+            using var s = CreateSeleniumTester();
+            await s.StartAsync();
+            s.RegisterNewUser(true);
+            s.CreateNewStore();
+
+            // Store Email Rules
+            s.GoToStore(StoreNavPages.Emails);
+            s.Driver.FindElement(By.Id("ConfigureEmailRules")).Click();
+            Assert.Contains("There are no rules yet.", s.Driver.PageSource);
+            Assert.Contains("You need to configure email settings before this feature works", s.Driver.PageSource);
+
+            // invoice created rule
+            s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
+            var select = new SelectElement(s.Driver.FindElement(By.Id("Trigger")));
+            select.SelectByValue("InvoiceCreated");
+            s.Driver.FindElement(By.Id("To")).SendKeys("invoicecreated@gmail.com");
+            s.Driver.FindElement(By.Id("CustomerEmail")).Click();
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+
+            // Ensure that the rule is created
+            s.FindAlertMessage();
+            Assert.DoesNotContain("There are no rules yet.", s.Driver.PageSource);
+            Assert.Contains("invoicecreated@gmail.com", s.Driver.PageSource);
+            Assert.Contains("Invoice {Invoice.Id} created", s.Driver.PageSource);
+            Assert.Contains("Yes", s.Driver.PageSource);
+
+            // payment request status changed rule
+            s.Driver.FindElement(By.Id("CreateEmailRule")).Click();
+            select = new SelectElement(s.Driver.FindElement(By.Id("Trigger")));
+            select.SelectByValue("PaymentRequestStatusChanged");
+            s.Driver.FindElement(By.Id("To")).SendKeys("statuschanged@gmail.com");
+            s.Driver.FindElement(By.Id("Subject")).SendKeys("Status changed!");
+            s.Driver.FindElement(By.ClassName("note-editable")).SendKeys("Your Payment Request Status is Changed");
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+
+            // Validate the second rule is added
+            s.FindAlertMessage();
+            Assert.Contains("statuschanged@gmail.com", s.Driver.PageSource);
+            Assert.Contains("Status changed!", s.Driver.PageSource);
+
+            // Select the second rule’s edit button
+            var editButtons = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Edit')]"));
+            Assert.True(editButtons.Count >= 2, "Expected at least two edit buttons but found fewer.");
+
+            editButtons[1].Click(); // Clicks the second Edit button
+
+            // Modify the second rule from statuschanged@gmail.com to changedagain@gmail.com
+            var toField = s.Driver.FindElement(By.Id("To"));
+            toField.Clear();
+            toField.SendKeys("changedagain@gmail.com");
+            s.Driver.FindElement(By.Id("SaveEmailRules")).Click();
+
+            // Validate that the email is updated in the list of email rules
+            s.FindAlertMessage();
+            Assert.Contains("changedagain@gmail.com", s.Driver.PageSource);
+            Assert.DoesNotContain("statuschanged@gmail.com", s.Driver.PageSource);
+
+            // Delete both email rules
+            var deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Remove')]"));
+            Assert.True(deleteLinks.Count == 2, "Expected exactly two delete buttons but found a different number.");
+
+            deleteLinks[0].Click();
+            s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("REMOVE");
+            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+
+            s.FindAlertMessage();
+            deleteLinks = s.Driver.FindElements(By.XPath("//a[contains(text(), 'Remove')]")); // Refresh list
+            Assert.True(deleteLinks.Count == 1, "Expected one delete button remaining.");
+
+            deleteLinks[0].Click();
+            s.Driver.WaitForElement(By.Id("ConfirmInput")).SendKeys("REMOVE");
+            s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+
+            s.FindAlertMessage();
+            // Validate that there are no more rules
+            Assert.Contains("There are no rules yet.", s.Driver.PageSource);
+        }
+
+        [Fact(Timeout = TestTimeout)]
         public async Task CanUseDynamicDns()
         {
             using var s = CreateSeleniumTester();

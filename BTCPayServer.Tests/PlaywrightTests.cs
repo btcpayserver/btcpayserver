@@ -1,7 +1,6 @@
 using System;
 using System.Linq;
 using System.Net;
-using System.Threading;
 using System.Threading.Tasks;
 using BTCPayServer.Abstractions.Models;
 using BTCPayServer.Data;
@@ -40,7 +39,6 @@ namespace BTCPayServer.Tests
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Logs" }).ClickAsync();
             await s.Page.Locator("a:has-text('.log')").First.ClickAsync();
             Assert.Contains("Starting listening NBXplorer", await s.Page.ContentAsync());
-            await s.Page.Context.Browser.CloseAsync();
         }
 
 
@@ -390,76 +388,6 @@ namespace BTCPayServer.Tests
 
             await s.GoToStore(StoreNavPages.Emails);
             Assert.True(await s.Page.Locator("#IsCustomSMTP").IsCheckedAsync());
-        }
-
-        [Fact]
-        public async Task CanSetupEmailRules()
-        {
-            using var s = CreatePlaywrightTester();
-            await s.StartAsync();
-            await s.RegisterNewUser(true);
-            await s.CreateNewStore();
-
-            // Store Email Rules
-            await s.GoToStore();
-            await s.GoToStore(StoreNavPages.Emails);
-            await s.Page.Locator("#ConfigureEmailRules").ClickAsync();
-            Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
-
-            // invoice created rule
-            await s.Page.Locator("#CreateEmailRule").ClickAsync();
-            await s.Page.Locator("#Trigger").SelectOptionAsync(new[] { "InvoiceCreated" });
-            await s.Page.Locator("#To").FillAsync("invoicecreated@gmail.com");
-            await s.Page.Locator("#CustomerEmail").ClickAsync();
-            await s.Page.Locator("#SaveEmailRules").ClickAsync();
-
-            // Ensure that the rule is created
-            Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
-            Assert.Contains("invoicecreated@gmail.com", await s.Page.ContentAsync());
-            Assert.Contains("Invoice {Invoice.Id} created", await s.Page.ContentAsync());
-            Assert.Contains("Yes", await s.Page.ContentAsync());
-
-            // payment request status changed rule
-            await s.Page.Locator("#CreateEmailRule").ClickAsync();
-            await s.Page.Locator("#Trigger").SelectOptionAsync(new[] { "PaymentRequestStatusChanged" });
-            await s.Page.Locator("#To").FillAsync("statuschanged@gmail.com");
-            await s.Page.Locator("#Subject").FillAsync("Status changed!");
-            await s.Page.Locator(".note-editable").FillAsync("Your Payment Request Status is Changed");
-            await s.Page.Locator("#SaveEmailRules").ClickAsync();
-
-            // Validate the second rule is added
-            Assert.Contains("statuschanged@gmail.com", await s.Page.ContentAsync());
-            Assert.Contains("Status changed!", await s.Page.ContentAsync());
-
-            // Select the second rule’s edit button
-            var editButtons = await s.Page.Locator("//a[contains(text(), 'Edit')]").AllAsync();
-            Assert.True(editButtons.Count >= 2, "Expected at least two edit buttons but found fewer.");
-
-            await editButtons[1].ClickAsync(); // Clicks the second Edit button
-
-            // Modify the second rule from statuschanged@gmail.com to changedagain@gmail.com
-            var toField = s.Page.Locator("#To");
-            await toField.ClearAsync();
-            await toField.FillAsync("changedagain@gmail.com");
-            await s.Page.Locator("#SaveEmailRules").ClickAsync();
-
-            // Validate that the email is updated in the list of email rules
-            Assert.Contains("changedagain@gmail.com", await s.Page.ContentAsync());
-            Assert.DoesNotContain("statuschanged@gmail.com", await s.Page.ContentAsync());
-
-            // Delete both email rules
-            var deleteLinks = await s.Page.Locator("//a[contains(text(), 'Delete')]").AllAsync();
-            Assert.True(deleteLinks.Count == 2, $"Expected exactly two delete buttons but found a different number: {deleteLinks.Count}");
-
-            await deleteLinks[0].ClickAsync();
-
-            deleteLinks = await s.Page.Locator("//a[contains(text(), 'Delete')]").AllAsync(); // Refresh list
-            Assert.True(deleteLinks.Count == 1, $"Expected one delete button remaining. Found: {deleteLinks.Count}");
-
-            await deleteLinks[0].ClickAsync();
-
-            // Validate that there are no more rules
-            Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
         }
 
         [Fact]

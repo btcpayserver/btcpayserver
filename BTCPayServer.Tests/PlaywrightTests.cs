@@ -449,12 +449,12 @@ namespace BTCPayServer.Tests
 
             // Delete both email rules
             var deleteLinks = await s.Page.Locator("//a[contains(text(), 'Delete')]").AllAsync();
-            Assert.True(deleteLinks.Count == 2, "Expected exactly two delete buttons but found a different number.");
+            Assert.True(deleteLinks.Count == 2, $"Expected exactly two delete buttons but found a different number: {deleteLinks.Count}");
 
             await deleteLinks[0].ClickAsync();
 
             deleteLinks = await s.Page.Locator("//a[contains(text(), 'Delete')]").AllAsync(); // Refresh list
-            Assert.True(deleteLinks.Count == 1, "Expected one delete button remaining.");
+            Assert.True(deleteLinks.Count == 1, $"Expected one delete button remaining. Found: {deleteLinks.Count}");
 
             await deleteLinks[0].ClickAsync();
 

@@ -334,7 +334,7 @@ namespace BTCPayServer.Tests
 
             // Ensure empty server settings
             await s.GoToUrl("/server/emails");
-            if (await s.Page.Locator("ResetPassword").IsVisibleAsync())
+            if (await s.Page.Locator("#ResetPassword").IsVisibleAsync())
             {
                 await s.Page.Locator("#ResetPassword").ClickAsync();
                 var responseAlert = await s.FindAlertMessage();
@@ -369,7 +369,6 @@ namespace BTCPayServer.Tests
 
             await s.GoToStore(StoreNavPages.Emails);
             await s.Page.Locator("#IsCustomSMTP").ClickAsync();
-            Thread.Sleep(250);
             await CanSetupEmailCore(s);
 
             // Store Email Rules

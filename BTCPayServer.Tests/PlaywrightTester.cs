@@ -173,15 +173,9 @@ namespace BTCPayServer.Tests
 
         public async Task MineBlockOnInvoiceCheckout(IPage page)
         {
-retry:
-            try
-            {
-                await page.Locator("#mine-block button").ClickAsync();
-            }
-            catch (PlaywrightException)
-            {
-                goto retry;
-            }
+        retry:
+            try { await page.Locator("#mine-block button").ClickAsync(); }
+            catch (PlaywrightException) { goto retry; }
         }
 
         public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
@@ -408,7 +402,7 @@ retry:
             {
                 await Page.Locator("#page-primary").ClickAsync();
             }
-            catch (NoSuchElementException)
+            catch (PlaywrightException)
             {
                 await Page.Locator("#page-primary").ClickAsync();
             }

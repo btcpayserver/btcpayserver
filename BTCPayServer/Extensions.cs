@@ -141,18 +141,10 @@ namespace BTCPayServer
         {
             if (!electrum)
             {
-                var isOD = Regex.Match(xpub, @"\(.*?\)").Success;
+                var isOD = DerivationSchemeParser.MaybeOD(xpub);
                 try
                 {
-                    var result = derivationSchemeParser.ParseOutputDescriptor(xpub);
-                    derivationSchemeSettings.AccountOriginal = xpub.Trim();
-                    derivationSchemeSettings.AccountDerivation = result.Item1;
-                    derivationSchemeSettings.AccountKeySettings = result.Item2.Select((path, i) => new AccountKeySettings()
-                    {
-                        RootFingerprint = path?.MasterFingerprint,
-                        AccountKeyPath = path?.KeyPath,
-                        AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(derivationSchemeParser.Network)
-                    }).ToArray();
+                    derivationSchemeSettings = derivationSchemeParser.ParseOD(xpub);
                     return true;
                 }
                 catch (Exception)

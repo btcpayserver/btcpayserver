@@ -44,27 +44,11 @@ namespace BTCPayServer.Tests
             var runInBrowser = config["RunSeleniumInBrowser"] == "true";
 
             var playwright = await Playwright.CreateAsync();
-
-            if (Server.PayTester.InContainer)
+            Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
             {
-                Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-                {
-                    Headless = true, // true to run in CI
-                    SlowMo = 50, // Add slight delay between actions to improve stability
-                });
-                var containerIp = File.ReadAllText("/etc/hosts")
-                    .Split('\n', StringSplitOptions.RemoveEmptyEntries).Last()
-                    .Split('\t', StringSplitOptions.RemoveEmptyEntries)[0].Trim();
-                TestLogs.LogInformation($"Playwright (CI): Container's IP {containerIp}");
-            }
-            else
-            {
-                Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
-                {
-                    Headless = false,
-                    SlowMo = 50,
-                });
-            }
+                Headless = Server.PayTester.InContainer,
+                SlowMo = Server.PayTester.InContainer ? 0 : 50, // Add slight delay, nicer during dev
+            });
             var context = await Browser.NewContextAsync();
             Page = await context.NewPageAsync();
             ServerUri = Server.PayTester.ServerUri;
@@ -205,7 +189,7 @@ namespace BTCPayServer.Tests
 
         public async Task GoToUrl(string relativeUrl)
         {
-            await Page.GotoAsync(Link(relativeUrl));
+            await Page.GotoAsync(Link(relativeUrl), new() { WaitUntil  = WaitUntilState.Commit } );
         }
 
         public string Link(string relativeLink)

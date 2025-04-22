@@ -81,7 +81,7 @@ public class MultisigTests : UnitTestBase
         var strategy = UIStoresController.ParseDerivationStrategy(multisigDerivationScheme, network);
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
-        
+        await s.CreateNewStore();
         await s.GoToWalletSettings();
         await s.Page.ClickAsync("#ImportWalletOptionsLink");
         await s.Page.ClickAsync("#ImportXpubLink");
@@ -89,12 +89,6 @@ public class MultisigTests : UnitTestBase
         await s.Page.ClickAsync("#Continue");
         await s.Page.ClickAsync("#Confirm");
         s.TestLogs.LogInformation($"Multisig wallet setup: {multisigDerivationScheme}");
-        
-        // enabling multisig
-        await s.Page.ClickAsync("#IsMultiSigOnServer");
-        await s.Page.ClickAsync("#DefaultIncludeNonWitnessUtxo");
-        await s.Page.ClickAsync("#SaveWalletSettings");
-        await s.FindAlertMessage(partialText: "Wallet settings successfully updated.");
         
         // fetch address from receive page
         await s.Page.ClickAsync("#WalletNav-Receive");

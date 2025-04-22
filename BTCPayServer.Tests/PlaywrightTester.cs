@@ -162,7 +162,7 @@ namespace BTCPayServer.Tests
             catch (PlaywrightException) { goto retry; }
         }
         
-        public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success, string? partialText = null)
+        public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success, string partialText = null)
         {
             var locator = await FindAlertMessage(new[] { severity });
             if (partialText is not null)

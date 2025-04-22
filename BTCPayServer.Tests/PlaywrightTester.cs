@@ -161,10 +161,16 @@ namespace BTCPayServer.Tests
             try { await page.Locator("#mine-block button").ClickAsync(); }
             catch (PlaywrightException) { goto retry; }
         }
-
-        public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success)
+        
+        public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success, string? partialText = null)
         {
-            return await FindAlertMessage(new[] { severity });
+            var locator = await FindAlertMessage(new[] { severity });
+            if (partialText is not null)
+            {
+                var txt = await locator.TextContentAsync();
+                Assert.Contains(partialText, txt);
+            }
+            return locator;
         }
 
         public async Task<ILocator> FindAlertMessage(params StatusMessageModel.StatusSeverity[] severity)
@@ -382,14 +388,7 @@ namespace BTCPayServer.Tests
 
         public async Task ClickPagePrimary()
         {
-            try
-            {
-                await Page.Locator("#page-primary").ClickAsync();
-            }
-            catch (PlaywrightException)
-            {
-                await Page.Locator("#page-primary").ClickAsync();
-            }
+            await Page.Locator("#page-primary").ClickAsync();
         }
 
         public async Task GoToWalletSettings(string cryptoCode = "BTC")

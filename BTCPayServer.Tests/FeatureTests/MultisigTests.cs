@@ -27,14 +27,14 @@ public class MultisigTests : UnitTestBase
     }
 
     [Fact]
-    [Trait("Selenium", "Selenium")]
+    [Trait("Integration", "Integration")]
     public async Task SignTestPSBT()
     {
         var cryptoCode = "BTC";
-        using var s = CreateSeleniumTester();
+        using var s = CreateServerTester();
         await s.StartAsync();
 
-        var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
+        var network = s.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
         var resp1 = generateWalletResp("tprv8ZgxMBicQKsPeGSkDtxjScBmmHP4rfSEPkf1vNmoqt5QjPTco2zPd6UVWkJf2fU8gdKPYRdDMizxtMRqmpVpxsWuqRxVs2d5VsEhwxaK3h7", 
             "57b3f43a/84'/1'/0'", "tpubDCzBHRPRcv7Y3utw1hZVrCar21gsj8vsXcehAG4z3R4NnmdMAASQwYYxGBd2f4q5s5ZFGvQBBFs1jVcGsXYoSTA1YFQPwizjsQLU12ibLyu", network);
         var resp2 = generateWalletResp("tprv8ZgxMBicQKsPeC6Xuw83UJHgjnszEUjwH9E5f5FZ3fHgJHBQApo8CmFCsowcdwbRM119UnTqSzVWUsWGtLsxc8wnZa5L8xmEsvEpiyRj4Js", 
@@ -58,27 +58,13 @@ public class MultisigTests : UnitTestBase
     }
 
     [Fact]
-    [Trait("Selenium", "Selenium")]
+    [Trait("Playwright", "Playwright")]
     public async Task CanEnableAndUseMultisigWallet()
     {
         var cryptoCode = "BTC";
-        using var s = CreateSeleniumTester();
+        using var s = CreatePlaywrightTester();
         await s.StartAsync();
-        // var invoiceRepository = s.Server.PayTester.GetService<InvoiceRepository>();
-        s.RegisterNewUser(true);
-        
-        var storeData = s.CreateNewStore();
-
-        var explorerProvider = s.Server.PayTester.GetService<ExplorerClientProvider>();
-        var client = explorerProvider.GetExplorerClient(cryptoCode);
-        var req = new GenerateWalletRequest { ScriptPubKeyType = ScriptPubKeyType.Segwit, SavePrivateKeys = true };
-        
-        // var resp1 = await client.GenerateWalletAsync(req);
-        // s.TestLogs.LogInformation($"Created hot wallet 1: {resp1.DerivationScheme} | {resp1.AccountKeyPath} | {resp1.MasterHDKey.ToWif()}");
-        // var resp2 = await client.GenerateWalletAsync(req);
-        // s.TestLogs.LogInformation($"Created hot wallet 2: {resp2.DerivationScheme} | {resp2.AccountKeyPath} | {resp2.MasterHDKey.ToWif()}");
-        // var resp3 = await client.GenerateWalletAsync(req);
-        // s.TestLogs.LogInformation($"Created hot wallet 3: {resp3.DerivationScheme} | {resp3.AccountKeyPath} | {resp3.MasterHDKey.ToWif()}");
+        await s.RegisterNewUser(true);
 
         var network = s.Server.NetworkProvider.GetNetwork<BTCPayNetwork>(cryptoCode);
         var resp1 = generateWalletResp("tprv8ZgxMBicQKsPeGSkDtxjScBmmHP4rfSEPkf1vNmoqt5QjPTco2zPd6UVWkJf2fU8gdKPYRdDMizxtMRqmpVpxsWuqRxVs2d5VsEhwxaK3h7", 
@@ -96,95 +82,92 @@ public class MultisigTests : UnitTestBase
         strategy.Source = "ManualDerivationScheme";
         var derivationScheme = strategy.AccountDerivation;
         
-        s.GoToWalletSettings();
-        s.Driver.FindElement(By.Id("ImportWalletOptionsLink")).Click();
-        s.Driver.FindElement(By.Id("ImportXpubLink")).Click();
-        s.Driver.FindElement(By.Id("DerivationScheme")).SendKeys(multisigDerivationScheme);
-        s.Driver.FindElement(By.Id("Continue")).Click();
-        s.Driver.FindElement(By.Id("Confirm")).Click();
+        await s.GoToWalletSettings();
+        await s.Page.ClickAsync("#ImportWalletOptionsLink");
+        await s.Page.ClickAsync("#ImportXpubLink");
+        await s.Page.FillAsync("#DerivationScheme", multisigDerivationScheme);
+        await s.Page.ClickAsync("#Continue");
+        await s.Page.ClickAsync("#Confirm");
         s.TestLogs.LogInformation($"Multisig wallet setup: {multisigDerivationScheme}");
         
         // enabling multisig
-        s.Driver.FindElement(By.Id("IsMultiSigOnServer")).Click();
-        s.Driver.FindElement(By.Id("DefaultIncludeNonWitnessUtxo")).Click();
-        s.Driver.FindElement(By.Id("SaveWalletSettings")).Click();
-        Assert.Contains("Wallet settings successfully updated.", s.FindAlertMessage().Text);
+        await s.Page.ClickAsync("#IsMultiSigOnServer");
+        await s.Page.ClickAsync("#DefaultIncludeNonWitnessUtxo");
+        await s.Page.ClickAsync("#SaveWalletSettings");
+        await s.FindAlertMessage(partialText: "Wallet settings successfully updated.");
         
         // fetch address from receive page
-        s.Driver.FindElement(By.Id("WalletNav-Receive")).Click();
-        var address = s.Driver.FindElement(By.Id("Address")).GetAttribute("data-text");
-        s.Driver.FindElement(By.XPath("//button[@value='fill-wallet']")).Click();
-        s.Driver.FindElement(By.Id("CancelWizard")).Click();
-        
+        await s.Page.ClickAsync("#WalletNav-Receive");
+
+        var addressElement = s.Page.Locator("#Address");
+        await addressElement.ClickAsync();
+        var address = await addressElement.GetAttributeAsync("data-text");
+        Assert.NotNull(address);
+        await s.Page.ClickAsync("//button[@value='fill-wallet']");
+        await s.Page.ClickAsync("#CancelWizard");
+
         // we are creating a pending transaction
-        s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
-        s.Driver.FindElement(By.Id("Outputs_0__DestinationAddress")).SendKeys(address);
+        await s.Page.ClickAsync("#WalletNav-Send");
+        await s.Page.FillAsync("#Outputs_0__DestinationAddress", address);
         var amount = "0.1";
-        s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys(amount);
-        s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
+        await s.Page.FillAsync("#Outputs_0__Amount", amount);
+        await s.Page.ClickAsync("#CreatePendingTransaction");
         
         // validating the state of UI
-        Assert.Equal("0", s.Driver.FindElement(By.Id("Sigs_0__Collected")).Text);
-        Assert.Equal("2/3", s.Driver.FindElement(By.Id("Sigs_0__Scheme")).Text);
+        Assert.Equal("0", await s.Page.TextContentAsync("#Sigs_0__Collected"));
+        Assert.Equal("2/3", await s.Page.TextContentAsync("#Sigs_0__Scheme"));
         
         // now proceeding to click on sign button and sign transactions
-        SignPendingTransactionWithKey(s, address, derivationScheme, resp1);
-        Assert.Equal("1", s.Driver.FindElement(By.Id("Sigs_0__Collected")).Text);
+        await SignPendingTransactionWithKey(s, address, derivationScheme, resp1);
+        Assert.Equal("1", await s.Page.TextContentAsync("#Sigs_0__Collected"));
         
-        SignPendingTransactionWithKey(s, address, derivationScheme, resp2);
-        Assert.Equal("2", s.Driver.FindElement(By.Id("Sigs_0__Collected")).Text);
+        await SignPendingTransactionWithKey(s, address, derivationScheme, resp2);
+        Assert.Equal("2", await s.Page.TextContentAsync("#Sigs_0__Collected"));
 
         // we should now have enough signatures to broadcast transaction
-        s.Driver.WaitForElement(By.XPath("//a[text()='Broadcast']")).Click();
-        s.Driver.FindElement(By.Id("BroadcastTransaction")).Click();
-        Assert.Contains("Transaction broadcasted successfully", s.FindAlertMessage().Text);
+        await s.Page.ClickAsync("//a[text()='Broadcast']");
+        await s.Page.ClickAsync("#BroadcastTransaction");
+        await s.FindAlertMessage(partialText: "Transaction broadcasted successfully");
         
         // now that we broadcast transaction, there shouldn't be broadcast button
-        s.Driver.AssertElementNotFound(By.XPath("//a[text()='Broadcast']"));
+        Assert.False(await s.Page.Locator("//a[text()='Broadcast']").IsVisibleAsync());
         
         // Abort pending transaction flow
-        s.Driver.FindElement(By.Id("WalletNav-Send")).Click();
-        s.Driver.FindElement(By.Id("Outputs_0__DestinationAddress")).SendKeys(address);
-        s.Driver.FindElement(By.Id("Outputs_0__Amount")).SendKeys("0.2");
-        s.Driver.FindElement(By.Id("CreatePendingTransaction")).Click();
-        
-        s.Driver.FindElement(By.XPath("//a[text()='Abort']")).Click();
+        await s.Page.ClickAsync("#WalletNav-Send");
+        await s.Page.FillAsync("#Outputs_0__DestinationAddress", address);
+        await s.Page.FillAsync("#Outputs_0__Amount", "0.2");
+        await s.Page.ClickAsync("#CreatePendingTransaction");
 
-        s.Driver.FindElement(By.Id("ConfirmContinue")).Click();
+        await s.Page.ClickAsync("//a[text()='Abort']");
 
-        Assert.Contains("Aborted Pending Transaction", s.FindAlertMessage().Text);
+        await s.Page.ClickAsync("#ConfirmContinue");
+        await s.FindAlertMessage(partialText: "Aborted Pending Transaction");
         
         s.TestLogs.LogInformation($"Finished MultiSig Flow");
     }
 
-    private void SignPendingTransactionWithKey(SeleniumTester s, string address,
+    private async Task SignPendingTransactionWithKey(PlaywrightTester s, string address,
         DerivationStrategyBase derivationScheme, GenerateWalletResponse signingKey)
     {
         // getting to pending transaction page
-        s.Driver.WaitForElement(By.XPath("//a[text()='View']")).Click();
+        await s.Page.ClickAsync("//a[text()='View']");
+        await s.Page.Locator($"//tr[td[text()='{address}']]").WaitForAsync();
 
-        var transactionRow = s.Driver.FindElement(By.XPath($"//tr[td[text()='{address}']]"));
-        Assert.NotNull(transactionRow);
-
-        var signTransactionButton = s.Driver.FindElement(By.Id("SignTransaction"));
-        Assert.NotNull(signTransactionButton);
+        await s.Page.Locator("#SignTransaction").WaitForAsync();
 
         // fetching PSBT
-        s.Driver.FindElement(By.Id("PSBTOptionsExportHeader")).Click();
-        s.Driver.WaitForElement(By.Id("ShowRawVersion")).Click();
-        var psbt = s.Driver.WaitForElement(By.Id("psbt-base64")).Text;
-        while (string.IsNullOrEmpty(psbt))
-        {
-            psbt = s.Driver.FindElement(By.Id("psbt-base64")).Text;
-        }
+        await s.Page.ClickAsync("#PSBTOptionsExportHeader");
+        await s.Page.ClickAsync("#ShowRawVersion");
 
+        var psbt = await s.Page.Locator("#psbt-base64").TextContentAsync();
+        
         // signing PSBT and entering it to submit
         var signedPsbt = SignWithSeed(psbt, derivationScheme, signingKey);
 
-        s.Driver.FindElement(By.Id("PSBTOptionsImportHeader")).Click();
-        s.Driver.WaitForElement(By.Id("ImportedPSBT")).SendKeys(signedPsbt);
+        await s.Page.ClickAsync("#PSBTOptionsImportHeader");
+        await s.Page.FillAsync("#ImportedPSBT", signedPsbt);
 
-        s.Driver.FindElement(By.Id("Decode")).Click();
+        await s.Page.ClickAsync("#Decode");
     }
 
     private GenerateWalletResponse generateWalletResp(string tpriv, string keypath, string derivation, BTCPayNetwork network)

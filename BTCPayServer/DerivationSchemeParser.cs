@@ -24,10 +24,12 @@ namespace BTCPayServer
             BtcPayNetwork = expectedNetwork;
         }
 
+        [Obsolete("Use ParseOD instead")]
         public (DerivationStrategyBase, RootedKeyPath[]) ParseOutputDescriptor(string str)
         {
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
+            (DerivationStrategyBase, RootedKeyPath[]) result;
             try
             {
                 return ParseLegacyOutputDescriptor(str);
@@ -36,6 +38,41 @@ namespace BTCPayServer
             {
                 return ParseMiniscript(str);
             }
+        }
+
+        public static bool MaybeOD(string xpub) => Regex.Match(xpub, @"\(.*?\)").Success;
+        /// <summary>
+        /// Parse an output descriptor into a <see cref="DerivationSchemeSettings"/>
+        /// </summary>
+        /// <param name="str"></param>
+        /// <returns></returns>
+        public DerivationSchemeSettings ParseOD(string str)
+        {
+            ArgumentNullException.ThrowIfNull(str);
+            str = str.Trim();
+            (DerivationStrategyBase, RootedKeyPath[]) result;
+            try
+            {
+                result = ParseLegacyOutputDescriptor(str);
+            }
+            catch
+            {
+                result = ParseMiniscript(str);
+            }
+            var derivationSchemeSettings = new DerivationSchemeSettings();
+            derivationSchemeSettings.AccountOriginal = str.Trim();
+            derivationSchemeSettings.AccountDerivation = result.Item1;
+            derivationSchemeSettings.AccountKeySettings = result.Item2?.Select((path, i) => new AccountKeySettings()
+            {
+                RootFingerprint = path?.MasterFingerprint,
+                AccountKeyPath = path?.KeyPath,
+                AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(Network)
+            }).ToArray() ?? new AccountKeySettings[result.Item1.GetExtPubKeys().Count()];
+            if (result.Item2?.Length > 1)
+                derivationSchemeSettings.IsMultiSigOnServer = true;
+            var isTaproot = derivationSchemeSettings.AccountDerivation.GetDerivation().ScriptPubKey.IsScriptType(ScriptType.Taproot);
+            derivationSchemeSettings.DefaultIncludeNonWitnessUtxo = !isTaproot;
+            return derivationSchemeSettings;
         }
 
         private (DerivationStrategyBase, RootedKeyPath[]) ParseMiniscript(string str)
@@ -237,7 +274,7 @@ namespace BTCPayServer
                     if (sh.Inner is OutputDescriptor.Multi || sh.Inner is OutputDescriptor.WPKH ||
                         sh.Inner is OutputDescriptor.WSH)
                     {
-                        var ds = ParseOutputDescriptor(sh.Inner.ToString());
+                        var ds = ParseLegacyOutputDescriptor(sh.Inner.ToString());
                         return (Parse(ds.Item1 + suffix), ds.Item2);
                     };
                     throw new FormatException("sh descriptors are only supported with multsig(legacy or p2wsh) and segwit(p2wpkh)");

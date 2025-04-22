@@ -13,6 +13,7 @@ using BTCPayServer.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
+using NBitcoin.DataEncoders;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using WebhookDeliveryData = BTCPayServer.Data.WebhookDeliveryData;
@@ -58,11 +59,12 @@ public class PendingTransactionService(
         else if (evt is NewOnChainTransactionEvent newTransactionEvent)
         {
             await using var ctx = dbContextFactory.CreateContext();
+            var cryptoCode = newTransactionEvent.NewTransactionEvent.CryptoCode;
             var txInputs = newTransactionEvent.NewTransactionEvent.TransactionData.Transaction.Inputs
                 .Select(i => i.PrevOut.ToString()).ToArray();
             var txHash = newTransactionEvent.NewTransactionEvent.TransactionData.TransactionHash.ToString();
             var pendingTransactions = await ctx.PendingTransactions
-                .Where(p => p.TransactionId == txHash || p.OutpointsUsed.Any(o => txInputs.Contains(o)))
+                .Where(p => p.CryptoCode == cryptoCode && (p.TransactionId == txHash || p.OutpointsUsed.Any(o => txInputs.Contains(o))))
                 .ToArrayAsync(cancellationToken: cancellationToken);
             if (!pendingTransactions.Any())
             {
@@ -119,6 +121,7 @@ public class PendingTransactionService(
         await using var ctx = dbContextFactory.CreateContext();
         var pendingTransaction = new PendingTransaction
         {
+            Id = Guid.NewGuid().ToString(),
             CryptoCode = cryptoCode,
             TransactionId = txId.ToString(),
             State = PendingTransactionState.Pending,
@@ -147,13 +150,12 @@ public class PendingTransactionService(
         return pendingTransaction;
     }
 
-    public async Task<PendingTransaction?> CollectSignature(PSBT psbt, CancellationToken cancellationToken)
+    public async Task<PendingTransaction?> CollectSignature(PendingTransactionFullId id, PSBT psbt, CancellationToken cancellationToken)
     {
-        var cryptoCode = psbt.Network.NetworkSet.CryptoCode;
-        var txId = psbt.GetGlobalTransaction().GetHash();
         await using var ctx = dbContextFactory.CreateContext();
-        var pendingTransaction =
-            await ctx.PendingTransactions.FindAsync(new object[] { cryptoCode, txId.ToString() }, cancellationToken);
+        var pendingTransaction = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
+            p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id, cancellationToken);
+        
         if (pendingTransaction?.State is not PendingTransactionState.Pending)
         {
             return null;
@@ -227,12 +229,12 @@ public class PendingTransactionService(
     }
 
 
-
-    public async Task<PendingTransaction?> GetPendingTransaction(string cryptoCode, string storeId, string txId)
+    public record PendingTransactionFullId(string CryptoCode, string StoreId, string Id);
+    public async Task<PendingTransaction?> GetPendingTransaction(PendingTransactionFullId id)
     {
         await using var ctx = dbContextFactory.CreateContext();
         return await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
-            p.CryptoCode == cryptoCode && p.StoreId == storeId && p.TransactionId == txId);
+            p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id);
     }
 
     public async Task<PendingTransaction[]> GetPendingTransactions(string cryptoCode, string storeId)
@@ -244,11 +246,11 @@ public class PendingTransactionService(
             .ToArrayAsync();
     }
 
-    public async Task CancelPendingTransaction(string cryptoCode, string storeId, string transactionId)
+    public async Task CancelPendingTransaction(PendingTransactionFullId id)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var pt = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
-            p.CryptoCode == cryptoCode && p.StoreId == storeId && p.TransactionId == transactionId &&
+            p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id &&
             (p.State == PendingTransactionState.Pending || p.State == PendingTransactionState.Signed));
         if (pt is null) return;
         pt.State = PendingTransactionState.Cancelled;
@@ -260,11 +262,11 @@ public class PendingTransactionService(
         });
     }
 
-    public async Task Broadcasted(string cryptoCode, string storeId, string transactionId)
+    public async Task Broadcasted(PendingTransactionFullId id)
     {
         await using var ctx = dbContextFactory.CreateContext();
         var pt = await ctx.PendingTransactions.FirstOrDefaultAsync(p =>
-            p.CryptoCode == cryptoCode && p.StoreId == storeId && p.TransactionId == transactionId &&
+            p.CryptoCode == id.CryptoCode && p.StoreId == id.StoreId && p.Id == id.Id &&
             (p.State == PendingTransactionState.Pending || p.State == PendingTransactionState.Signed));
         if (pt is null) return;
         pt.State = PendingTransactionState.Broadcast;

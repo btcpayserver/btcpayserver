@@ -35,26 +35,10 @@ public class BSMSWalletFileParser : IWalletFileParser
         descriptor = descriptor.Replace("/**", derivationPath);
         var testAddress = BitcoinAddress.Create(lines[3], network.NBitcoinNetwork);
 
-        var result = network.GetDerivationSchemeParser().ParseOutputDescriptor(descriptor);
-
+        derivationSchemeSettings = network.GetDerivationSchemeParser().ParseOD(descriptor);
+        derivationSchemeSettings.Source = "BSMS";
         var deposit = new NBXplorer.KeyPathTemplates(null).GetKeyPathTemplate(DerivationFeature.Deposit);
-        var line = result.Item1.GetLineFor(deposit).Derive(0);
-
-        if (testAddress.ScriptPubKey != line.ScriptPubKey)
-            return false;
-
-        derivationSchemeSettings = new BTCPayServer.DerivationSchemeSettings()
-        {
-            Source = "BSMS",
-            AccountDerivation = result.Item1,
-            AccountOriginal = descriptor.Trim(),
-            AccountKeySettings = result.Item2.Select((path, i) => new AccountKeySettings()
-            {
-                RootFingerprint = path?.MasterFingerprint,
-                AccountKeyPath = path?.KeyPath,
-                AccountKey = result.Item1.GetExtPubKeys().ElementAt(i).GetWif(network.NBitcoinNetwork)
-            }).ToArray()
-        };
-        return true;
+        var line = derivationSchemeSettings.AccountDerivation.GetLineFor(deposit).Derive(0);
+        return testAddress.ScriptPubKey == line.ScriptPubKey;
     }
 }

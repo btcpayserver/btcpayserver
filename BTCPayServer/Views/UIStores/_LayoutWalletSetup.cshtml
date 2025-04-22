@@ -21,3 +21,8 @@
 @RenderBody()
 
 <vc:ui-extension-point location="onchain-wallet-setup-post-body" model="@Model"/>
+
+@if (User.Identity.IsAuthenticated && ViewData.IsBlazorAllowed())
+{
+    <script src="~/_framework/blazor.server.js" autostart="false" asp-append-version="true"></script>
+}

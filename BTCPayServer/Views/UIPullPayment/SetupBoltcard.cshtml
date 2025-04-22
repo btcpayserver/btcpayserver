@@ -1,7 +1,12 @@
-@using BTCPayServer.Controllers
+@using BTCPayServer.Abstractions.TagHelpers
+@using BTCPayServer.Blazor
+@using BTCPayServer.Blazor.VaultBridge
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using BTCPayServer.TagHelpers
 @model SetupBoltcardViewModel
 @{
     Layout = "_LayoutWizard";
+    this.ViewData.SetBlazorAllowed(true);
 }
 
 @section Navbar {
@@ -11,54 +16,44 @@
 }
 
 <header class="text-center">
-    <h1>@ViewData["Title"]</h1>
+    @if (Model.NewCard)
+    {
+        <h1 text-translate="true">Setup Boltcard</h1>    
+    }
+    else
+    {
+        <h1 text-translate="true">Reset Boltcard</h1>
+    }
+    
     <p class="lead text-secondary mt-3" text-translate="true">Using BTCPay Server Vault (NFC)</p>
 </header>
 
-<partial name="LocalhostBrowserSupport" />
+<div class="row mt-5 mb-4">
+    <div class="col-md-8 mx-auto">
+        <component type="typeof(VaultBridgeUI)"
+                   param-Controller="@(new NFCController()
+                                     {
+                                         NewCard = Model.NewCard,
+                                         BoltcardUrl = Model.BoltcardUrl,
+                                         PullPaymentId = Model.PullPaymentId
+                                     })"
+                   render-mode="Server"/>
+    </div>
+</div>
 
 <div id="body" class="my-4">
 	<form id="broadcastForm" method="post" style="display:none;">
-        <input type="hidden" asp-for="WebsocketPath" />
-        <input type="hidden" asp-for="ReturnUrl" />
     </form>
-    <div id="vaultPlaceholder"></div>
-    <button id="vault-retry" class="btn btn-primary" style="display:none;" type="button" text-translate="true">Retry</button>
-    <button id="vault-confirm" class="btn btn-primary" style="display:none;"></button>
 </div>
 
-<partial name="VaultElements" />
 
 @section PageFootContent
 {
-    <script src="~/js/vaultbridge.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
-    <script src="~/js/vaultbridge.ui.js" type="text/javascript" defer="defer" asp-append-version="true"></script>
+    <script src="~/js/vaultbridge.js" asp-append-version="true"></script>
     <script>
-		function delay(ms) {
-			return new Promise(resolve => setTimeout(resolve, ms));
-		}
-        async function askSign() {
-            var websocketPath = $("#WebsocketPath").val();
-            var loc = window.location, ws_uri;
-            if (loc.protocol === "https:") {
-                ws_uri = "wss:";
-            } else {
-                ws_uri = "ws:";
-            }
-            ws_uri += "//" + loc.host;
-            ws_uri += websocketPath;
-            var html = $("#VaultConnection").html();
-            $("#vaultPlaceholder").html(html);
-            var vaultUI = new vaultui.VaultBridgeUI(ws_uri);
-			var command = @Safe.Json(Model.Command);
-			while (!await vaultUI.sendBackendCommand(command)) {
-				await vaultUI.waitRetryPushed();
-            }
-			await delay(2000);
+        vault.done = function ()
+        {
             $("#broadcastForm").submit();
         }
-        document.addEventListener("DOMContentLoaded", function () {
-            askSign();
-        });
     </script>
 }

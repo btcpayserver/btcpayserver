@@ -4,26 +4,21 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using BTCPayServer;
 using BTCPayServer.Client.Models;
 using BTCPayServer.Data;
 using BTCPayServer.Events;
 using BTCPayServer.HostedServices;
 using BTCPayServer.Logging;
 using BTCPayServer.Payments.PayJoin;
-using BTCPayServer.Plugins.Altcoins;
-using BTCPayServer.Services;
 using BTCPayServer.Services.Invoices;
 using BTCPayServer.Services.Wallets;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NBitcoin;
-using NBitcoin.Altcoins;
 using NBitcoin.RPC;
 using NBXplorer;
 using NBXplorer.DerivationStrategy;
 using NBXplorer.Models;
-using Newtonsoft.Json.Linq;
 
 namespace BTCPayServer.Payments.Bitcoin
 {
@@ -259,7 +254,6 @@ namespace BTCPayServer.Payments.Bitcoin
                     .ToArray(), true);
             bool? originalPJBroadcasted = null;
             bool? originalPJBroadcastable = null;
-            bool cjPJBroadcasted = false;
             PayjoinInformation payjoinInformation = null;
             var paymentEntitiesByPrevOut = new Dictionary<OutPoint, PaymentEntity>();
             foreach (var payment in invoice.GetPayments(false).Where(p => p.PaymentMethodId == pmi))
@@ -357,9 +351,10 @@ namespace BTCPayServer.Payments.Bitcoin
             // If the origin tx of a payjoin has been broadcasted, then we know we can
             // reuse our outpoint for another PJ
             if (originalPJBroadcasted is true ||
-                // If the original tx is not broadcastable anymore and nor does the coinjoin
-                // reuse our outpoint for another PJ
-                (originalPJBroadcastable is false && !cjPJBroadcasted))
+                // If the original tx is not broadcastable anymore, we can just unlock the utxos
+                // If the PJ succeeded those outpoints won't be selected anymore.
+                // If the PJ didn't, then those endpoints are reusable.
+                originalPJBroadcastable is false)
             {
                 await _utxoLocker.TryUnlock(payjoinInformation.ContributedOutPoints);
             }

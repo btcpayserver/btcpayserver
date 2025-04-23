@@ -102,13 +102,12 @@ namespace BTCPayServer.Controllers
                 IncludeArchived = fs.GetFilterBool("includearchived") ?? false,
                 SearchText = model.SearchText
             });
-            
+
             model.Search = fs;
             model.SearchText = fs.TextSearch;
-            
+
             model.Items = result.Select(data =>
             {
-                var blob = data.GetBlob();
                 return new ViewPaymentRequestViewModel(data)
                 {
                     AmountFormatted = _displayFormatter.Currency(data.Amount, data.Currency)
@@ -173,7 +172,7 @@ namespace BTCPayServer.Controllers
             {
                 return NoPaymentMethodResult(store.Id);
             }
-            
+
             if (paymentRequest?.Archived is true && viewModel.Archived)
             {
                 ModelState.AddModelError(string.Empty, StringLocalizer["You cannot edit an archived payment request."]);
@@ -192,7 +191,7 @@ namespace BTCPayServer.Controllers
                 viewModel.Amount = data.Amount;
                 viewModel.Currency = data.Currency;
             }
-            
+
             if (!ModelState.IsValid)
             {
                 var storeBlob = store.GetStoreBlob();
@@ -300,10 +299,10 @@ namespace BTCPayServer.Controllers
             }
             viewModel.FormName = formData.Name;
             viewModel.Form = form;
-            
+
             var storeBlob = result.StoreData.GetStoreBlob();
             viewModel.StoreBranding = await StoreBrandingViewModel.CreateAsync(Request, _uriResolver, storeBlob);
-            
+
             return View("Views/UIForms/View", viewModel);
         }
 
@@ -453,7 +452,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> TogglePaymentRequestArchival(string payReqId)
         {
             var store = GetCurrentStore();
-            
+
             var result = await _PaymentRequestRepository.ArchivePaymentRequest(payReqId, true);
             if(result is not null)
             {

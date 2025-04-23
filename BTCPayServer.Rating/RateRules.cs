@@ -246,7 +246,7 @@ namespace BTCPayServer.Rating
                     if (rate == null)
                     {
                         Errors.Add(RateRulesErrors.RateUnavailable);
-                        return RateRules.CreateExpression($"ERR_RATE_UNAVAILABLE({exchangeName}, {pair.ToString()})");
+                        return RateRules.CreateExpression($"ERR_RATE_UNAVAILABLE({exchangeName}, {pair})");
                     }
                     else
                     {

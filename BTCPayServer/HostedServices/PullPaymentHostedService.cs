@@ -983,7 +983,7 @@ namespace BTCPayServer.HostedServices
                 ({ } a, { } b) when amountsComparable && a == b => new ClaimedAmountResult.Success(a),
                 ({ } a, { } b) when amountsComparable && a > b => new ClaimedAmountResult.Error($"The destination's amount ({a} {ppCurrency}) is more than the claimed amount ({b} {ppCurrency})."),
                 ({ } a, { } b) when amountsComparable && a < b => new ClaimedAmountResult.Success(a),
-                ({ } a, { } b) when !amountsComparable => new ClaimedAmountResult.Success(b),
+                (not null, { } b) when !amountsComparable => new ClaimedAmountResult.Success(b),
                 _ => new ClaimedAmountResult.Success(amount)
             };
         }

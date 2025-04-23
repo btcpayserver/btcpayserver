@@ -307,7 +307,6 @@ namespace BTCPayServer.Tests
                 var cashCow = tester.LTCExplorerNode;
                 var invoiceAddress = BitcoinAddress.Create(invoice.CryptoInfo[0].Address, cashCow.Network);
                 var firstPayment = Money.Coins(0.1m);
-                var firstDue = invoice.CryptoInfo[0].Due;
                 cashCow.SendToAddress(invoiceAddress, firstPayment);
                 TestUtils.Eventually(() =>
                 {
@@ -442,7 +441,7 @@ namespace BTCPayServer.Tests
         public async Task CanPayWithTwoCurrencies()
         {
             using var tester = CreateServerTester();
-            
+
             tester.ActivateLTC();
             await tester.StartAsync();
             var user = tester.NewAccount();
@@ -803,8 +802,8 @@ g:
                 Assert.Equal("new", topupInvoice.Status);
             }
         }
-        
-        
+
+
         [Fact]
         [Trait("Integration", "Integration")]
         public async Task CanUsePoSAppJsonEndpoint()
@@ -844,7 +843,7 @@ g:
             var (invoiceId3, error3) = await PosJsonRequest(tester, app.Id, "amount=21");
             Assert.NotNull(invoiceId3);
             Assert.Null(error3);
-            
+
             // Check generated invoice
             var invoices = await user.BitPay.GetInvoicesAsync();
             var invoice = invoices.First();

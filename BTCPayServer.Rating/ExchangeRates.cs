@@ -265,7 +265,7 @@ namespace BTCPayServer.Rating
         {
             if (BidAsk == null)
                 return $"{Exchange}({CurrencyPair})";
-            return $"{Exchange}({CurrencyPair}) == {BidAsk.ToString()}";
+            return $"{Exchange}({CurrencyPair}) == {BidAsk}";
         }
     }
 }

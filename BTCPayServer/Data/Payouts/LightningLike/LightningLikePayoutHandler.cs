@@ -172,7 +172,7 @@ namespace BTCPayServer.Data.Payouts.LightningLike
                 {
                     var lnurl = lnurlPayClaimDestinaton.LNURL.IsValidEmail()
                         ? LNURL.LNURL.ExtractUriFromInternetIdentifier(lnurlPayClaimDestinaton.LNURL)
-                        : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out var lnurlTag);
+                        : LNURL.LNURL.Parse(lnurlPayClaimDestinaton.LNURL, out _);
 
                     using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(30));
                     var rawInfo = await LNURL.LNURL.FetchInformation(lnurl, CreateClient(lnurl), timeout.Token);

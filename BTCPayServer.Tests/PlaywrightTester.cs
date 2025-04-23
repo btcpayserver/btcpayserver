@@ -41,7 +41,6 @@ namespace BTCPayServer.Tests
             var builder = new ConfigurationBuilder();
             builder.AddUserSecrets("AB0AC1DD-9D26-485B-9416-56A33F268117");
             var config = builder.Build();
-            var runInBrowser = config["RunSeleniumInBrowser"] == "true";
 
             var playwright = await Playwright.CreateAsync();
             Browser = await playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions
@@ -161,7 +160,7 @@ namespace BTCPayServer.Tests
             try { await page.Locator("#mine-block button").ClickAsync(); }
             catch (PlaywrightException) { goto retry; }
         }
-        
+
         public async Task<ILocator> FindAlertMessage(StatusMessageModel.StatusSeverity severity = StatusMessageModel.StatusSeverity.Success, string partialText = null)
         {
             var locator = await FindAlertMessage(new[] { severity });

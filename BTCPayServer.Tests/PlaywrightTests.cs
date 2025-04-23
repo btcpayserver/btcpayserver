@@ -18,6 +18,7 @@ using Xunit.Abstractions;
 namespace BTCPayServer.Tests
 {
     [Trait("Playwright", "Playwright")]
+    [Collection(nameof(NonParallelizableCollectionDefinition))]
     public class PlaywrightTests : UnitTestBase
     {
         public PlaywrightTests(ITestOutputHelper helper) : base(helper)
@@ -196,7 +197,6 @@ namespace BTCPayServer.Tests
             await s.Logout();
             await s.GoToRegister();
             await s.RegisterNewUser(true);
-            var admin = s.AsTestAccount();
             await s.GoToHome();
             await s.GoToServer(ServerNavPages.Users);
 
@@ -376,7 +376,7 @@ namespace BTCPayServer.Tests
             Assert.DoesNotContain("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
             await s.Page.Locator("#CreateEmailRule").ClickAsync();
-            var select = s.Page.Locator("#Trigger").SelectOptionAsync(new[] { "InvoicePaymentSettled" });
+            await s.Page.Locator("#Trigger").SelectOptionAsync(new[] { "InvoicePaymentSettled" });
             await s.Page.Locator("#To").FillAsync("test@gmail.com");
             await s.Page.Locator("#CustomerEmail").ClickAsync();
             await s.Page.Locator("#Subject").FillAsync("Thanks!");
@@ -470,7 +470,7 @@ namespace BTCPayServer.Tests
             await s.GoToHome();
             await s.Page.Locator("#mainNav").WaitForAsync();
 
-            //let's test delete user quickly while we're at it 
+            //let's test delete user quickly while we're at it
             await s.GoToProfile();
             await s.Page.Locator("#delete-user").ClickAsync();
             await s.Page.Locator("#ConfirmInput").FillAsync("DELETE");

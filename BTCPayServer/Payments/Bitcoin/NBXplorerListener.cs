@@ -171,8 +171,6 @@ namespace BTCPayServer.Payments.Bitcoin
                                         var invoice = await _InvoiceRepository.GetInvoiceFromAddress(pmi, key);
                                         if (invoice != null)
                                         {
-                                            var address = output.matchedOutput.Address ?? network.NBXplorerNetwork.CreateAddress(evt.DerivationStrategy,
-                                                output.Item1.KeyPath, output.Item1.ScriptPubKey);
                                             var handler = _handlers[pmi];
                                             var details = new BitcoinLikePaymentData(output.outPoint, evt.TransactionData.Transaction.RBF, output.matchedOutput.KeyPath)
                                             {
@@ -192,8 +190,6 @@ namespace BTCPayServer.Payments.Bitcoin
                                                 .GetPayments(false).Any(c => c.Id == paymentData.Id && c.PaymentMethodId == pmi);
                                             if (!alreadyExist)
                                             {
-
-                                                var prompt = invoice.GetPaymentPrompt(pmi);
                                                 var payment = await _paymentService.AddPayment(paymentData, [output.outPoint.Hash.ToString()]);
                                                 if (payment != null)
                                                     await ReceivedPayment(wallet, invoice, payment,
@@ -312,7 +308,6 @@ namespace BTCPayServer.Payments.Bitcoin
                 bool updated = false;
                 if (paymentData.ConfirmationCount != tx.Confirmations)
                 {
-                    var oldStatus = payment.Status;
                     var oldConfCount = paymentData.ConfirmationCount;
                     paymentData.ConfirmationCount = Math.Min(tx.Confirmations, wallet.Network.MaxTrackedConfirmation);
                     if (oldConfCount != paymentData.ConfirmationCount)
@@ -335,7 +330,7 @@ namespace BTCPayServer.Payments.Bitcoin
                                 pj.CoinjoinTransactionHash == tx.TransactionHash)
                             {
                                 // This payment is a coinjoin, so the value of
-                                // the payment output is different from the real value of the payment 
+                                // the payment output is different from the real value of the payment
                                 payment.Value = pj.CoinjoinValue.ToDecimal(MoneyUnit.BTC);
                                 payment.SetDetails(handler, paymentData);
                             }
@@ -420,8 +415,6 @@ namespace BTCPayServer.Payments.Bitcoin
                         continue;
                     var transaction = await wallet.GetTransactionAsync(coin.OutPoint.Hash);
 
-                    var address = network.NBXplorerNetwork.CreateAddress(strategy, coin.KeyPath, coin.ScriptPubKey);
-
                     var paymentData = new Data.PaymentData()
                     {
                         Id = coin.OutPoint.ToString(),
@@ -455,7 +448,7 @@ namespace BTCPayServer.Payments.Bitcoin
             if (invoice == null)
                 return null;
             var prompt = invoice.GetPaymentPrompt(payment.PaymentMethodId);
-            if (!_handlers.TryGetValue(prompt.PaymentMethodId, out var handler))
+            if (!_handlers.TryGetValue(prompt.PaymentMethodId, out _))
                 return null;
             var bitcoinPaymentMethod = (Payments.Bitcoin.BitcoinPaymentPromptDetails)_handlers.ParsePaymentPromptDetails(prompt);
             if (bitcoinPaymentMethod.FeeMode == NetworkFeeMode.MultiplePaymentsOnly &&

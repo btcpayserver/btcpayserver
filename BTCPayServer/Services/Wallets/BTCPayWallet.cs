@@ -193,8 +193,8 @@ namespace BTCPayServer.Services.Wallets
 
         public void InvalidateCache(DerivationStrategyBase strategy)
         {
-            _MemoryCache.Remove("CACHEDCOINS_" + strategy.ToString());
-            _MemoryCache.Remove("CACHEDBALANCE_" + strategy.ToString());
+            _MemoryCache.Remove("CACHEDCOINS_" + strategy);
+            _MemoryCache.Remove("CACHEDBALANCE_" + strategy);
             _FetchingUTXOs.TryRemove(strategy.ToString(), out var unused);
         }
 
@@ -208,7 +208,7 @@ namespace BTCPayServer.Services.Wallets
                 return await completionSource.Task;
             try
             {
-                var utxos = await _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy.ToString(), async entry =>
+                var utxos = await _MemoryCache.GetOrCreateAsync("CACHEDCOINS_" + strategy, async entry =>
                 {
                     var now = DateTimeOffset.UtcNow;
                     UTXOChanges result = null;
@@ -325,7 +325,7 @@ namespace BTCPayServer.Services.Wallets
                     	FROM txs
                     	WHERE code=@code AND raw IS NOT NULL AND mempool IS TRUE AND replaced_by IS NULL AND blk_id IS NULL),
                     tracked_txs AS (
-                    SELECT code, tx_id, 
+                    SELECT code, tx_id,
                             COUNT(*) FILTER (WHERE is_out IS FALSE) input_count,
                             COUNT(*) FILTER (WHERE is_out IS TRUE AND feature = 'Change') change_count
                         FROM nbxv1_tracked_txs
@@ -377,7 +377,7 @@ namespace BTCPayServer.Services.Wallets
                     canCPFP.Add(uint256.Parse(r.tx_id));
                 }
             }
-            
+
             // Then only transactions that doesn't have any descendant (outside itself)
             var entries = await _Client.RPCClient.FetchMempoolEntries(canRBF.Concat(canCPFP).ToHashSet(), cancellationToken);
             foreach (var entry in entries)
@@ -501,7 +501,7 @@ namespace BTCPayServer.Services.Wallets
 
         public Task<GetBalanceResponse> GetBalance(DerivationStrategyBase derivationStrategy, CancellationToken cancellation = default(CancellationToken))
         {
-            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy.ToString(), async (entry) =>
+            return _MemoryCache.GetOrCreateAsync("CACHEDBALANCE_" + derivationStrategy, async (entry) =>
             {
                 var result = await _Client.GetBalanceAsync(derivationStrategy, cancellation);
                 entry.AbsoluteExpiration = DateTimeOffset.UtcNow + CacheSpan;
@@ -514,7 +514,6 @@ namespace BTCPayServer.Services.Wallets
         public record BumpResult(Money NewTxFee, Money BumpTxFee, FeeRate NewTxFeeRate, FeeRate NewEffectiveFeeRate);
         public BumpResult CalculateBumpResult(FeeRate newEffectiveFeeRate)
         {
-            var packageFeeRate = GetEffectiveFeeRate();
             var newTotalFee = GetFeeRoundUp(newEffectiveFeeRate, GetPackageVirtualSize());
             var oldTotalFee = GetPackageFee();
             var bump = newTotalFee - oldTotalFee;

@@ -491,14 +491,16 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#Settings_From").ClearAsync();
             await s.Page.Locator("#Settings_From").FillAsync("Firstname Lastname <email@example.com>");
             await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Email settings saved");
             Assert.Contains("Configured", await s.Page.ContentAsync());
             await s.Page.Locator("#Settings_Login").ClearAsync();
             await s.Page.Locator("#Settings_Login").FillAsync("test_fix@gmail.com");
             await s.ClickPagePrimary();
+            await s.FindAlertMessage(partialText: "Email settings saved");
             Assert.Contains("Configured", await s.Page.ContentAsync());
             Assert.Contains("test_fix", await s.Page.ContentAsync());
             await s.Page.Locator("#ResetPassword").PressAsync("Enter");
-            await s.FindAlertMessage();
+            await s.FindAlertMessage(partialText: "Email server password reset");
             Assert.DoesNotContain("Configured", await s.Page.ContentAsync());
             Assert.Contains("test_fix", await s.Page.ContentAsync());
         }

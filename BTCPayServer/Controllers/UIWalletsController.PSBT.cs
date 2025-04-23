@@ -172,22 +172,16 @@ namespace BTCPayServer.Controllers
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, vm);
+                case "collect" when vm.SigningContext.PendingTransactionId is not null:
+                    return await RedirectToWalletPSBTReady(walletId,
+                        new WalletPSBTReadyViewModel
+                        {
+                            SigningContext = vm.SigningContext, ReturnUrl = vm.ReturnUrl, BackUrl = vm.BackUrl
+                        });
                 case "decode":
                     ModelState.Remove(nameof(vm.PSBT));
                     ModelState.Remove(nameof(vm.FileName));
                     ModelState.Remove(nameof(vm.UploadedPSBTFile));
-                    
-                    // for pending transactions we collect signature from PSBT and redirect if everything is good
-                    if (vm.SigningContext.PendingTransactionId is not null)
-                    {
-                        return await RedirectToWalletPSBTReady(walletId,
-                            new WalletPSBTReadyViewModel
-                            {
-                                SigningContext = vm.SigningContext, ReturnUrl = vm.ReturnUrl, BackUrl = vm.BackUrl
-                            });
-                    }
-
-                    // for regular transactions we decode PSBT and show the details
                     await FetchTransactionDetails(walletId, derivationSchemeSettings, vm, network);
                     return View("WalletPSBTDecoded", vm);
 

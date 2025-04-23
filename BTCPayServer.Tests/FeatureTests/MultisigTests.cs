@@ -161,7 +161,7 @@ public class MultisigTests : UnitTestBase
         await s.Page.ClickAsync("#PSBTOptionsImportHeader");
         await s.Page.FillAsync("#ImportedPSBT", signedPsbt);
 
-        await s.Page.ClickAsync("#Decode");
+        await s.Page.ClickAsync("#Collect");
     }
 
     private GenerateWalletResponse generateWalletResp(string tpriv, string keypath, string derivation, BTCPayNetwork network)

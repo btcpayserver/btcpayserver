@@ -1,7 +1,7 @@
 window.addEventListener("load", () => {
     let outputIndex = null;
     initCameraScanningApp("Scan address or payment link", data => {
-        const bip21 = data.match(/bitcoin:(\w+)(?:\?(.*))?/)
+        const bip21 = data.match(/bitcoin:(\w+)(?:\?(.*))?/i)
         if (bip21 && outputIndex == null) {
             document.getElementById("BIP21").value = data;
             document.getElementById("SendForm").submit();

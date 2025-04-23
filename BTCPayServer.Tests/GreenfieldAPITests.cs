@@ -3324,13 +3324,13 @@ namespace BTCPayServer.Tests
 
             Assert.Equal(firstAddress, (await viewOnlyClient.PreviewProposedStoreOnChainPaymentMethodAddresses(store.Id, "BTC", xpub)).Addresses.First().Address);
             // Testing if the rewrite rule to old API path is working
-            await viewOnlyClient.SendHttpRequest($"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", new JObject() { ["config"] = xpub.ToString() }, HttpMethod.Post);
+            await viewOnlyClient.SendHttpRequest($"api/v1/stores/{store.Id}/payment-methods/onchain/BTC/preview", new JObject() { ["config"] = xpub }, HttpMethod.Post);
 
-            var method = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = JValue.CreateString(xpub.ToString())});
-            var method2 = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = new JObject() { ["derivationScheme"] = xpub.ToString(), ["label"] = "test", ["accountKeyPath"] = "aaaaaaaa/84'/0'/0'" } });
+            var method = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = JValue.CreateString(xpub)});
+            var method2 = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = new JObject() { ["derivationScheme"] = xpub, ["label"] = "test", ["accountKeyPath"] = "aaaaaaaa/84'/0'/0'" } });
             Assert.Equal("aaaaaaaa", method2.Config["accountKeySettings"][0]["rootFingerprint"].ToString());
             Assert.Equal("84'/0'/0'", method2.Config["accountKeySettings"][0]["accountKeyPath"].ToString());
-            var method3 = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = new JObject() { ["derivationScheme"] = xpub.ToString() } });
+            var method3 = await client.UpdateStorePaymentMethod(store.Id, "BTC-CHAIN", new UpdatePaymentMethodRequest() { Enabled = true, Config = new JObject() { ["derivationScheme"] = xpub } });
 
             Assert.Equal(method.ToJson(), method3.ToJson());
 
@@ -4343,7 +4343,7 @@ namespace BTCPayServer.Tests
             Assert.Equal(PayResult.Ok, resp.Result);
 
             var ppService = tester.PayTester.GetService<HostedServices.PullPaymentHostedService>();
-            var serializers = tester.PayTester.GetService<BTCPayNetworkJsonSerializerSettings>();
+            tester.PayTester.GetService<BTCPayNetworkJsonSerializerSettings>();
             var store = tester.PayTester.GetService<StoreRepository>();
             var dbContextFactory = tester.PayTester.GetService<Data.ApplicationDbContextFactory>();
 

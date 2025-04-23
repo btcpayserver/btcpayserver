@@ -45,7 +45,6 @@ namespace BTCPayServer.Payments.Lightning
             {
                 var bolt11 = BOLT11PaymentRequest.Parse(destination, Network.NBitcoinNetwork);
                 var paymentHash = bolt11.PaymentHash?.ToString();
-                var paid = response.Details.TotalAmount.ToDecimal(LightMoneyUnit.BTC);
                 return new PayInvoiceResult(paymentHash)
                 {
                     SuccessMessage = $"Sent payment {paymentHash}"

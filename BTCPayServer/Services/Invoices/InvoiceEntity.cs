@@ -1057,7 +1057,6 @@ namespace BTCPayServer.Services.Invoices
 
         public void UpdateAmounts()
         {
-            var value = Value;
             PaidAmount = new Amounts()
             {
                 Currency = Currency,

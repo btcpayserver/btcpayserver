@@ -45,7 +45,6 @@ namespace BTCPayServer.Services.Rates
 
             var fetchingRates = new Dictionary<CurrencyPair, Task<RateResult>>();
             var fetchingExchanges = new Dictionary<string, Task<QueryRateResult>>();
-            var consolidatedRates = new ExchangeRates();
 
             foreach (var i in pairs.Select(p => (Pair: p, RateRule: rules.GetRuleFor(p))))
             {

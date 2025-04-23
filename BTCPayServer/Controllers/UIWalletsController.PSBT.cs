@@ -9,7 +9,6 @@ using BTCPayServer.Abstractions.Models;
 using BTCPayServer.BIP78.Sender;
 using BTCPayServer.Data;
 using BTCPayServer.ModelBinders;
-using BTCPayServer.Models;
 using BTCPayServer.Models.WalletViewModels;
 using BTCPayServer.Payments.PayJoin.Sender;
 using BTCPayServer.Services;
@@ -31,28 +30,27 @@ namespace BTCPayServer.Controllers
             CreatePSBTRequest psbtRequest = new();
             if (sendModel.InputSelection)
             {
-                psbtRequest.IncludeOnlyOutpoints = sendModel.SelectedInputs?.Select(OutPoint.Parse)?.ToList() ?? new List<OutPoint>();
+                psbtRequest.IncludeOnlyOutpoints = sendModel.SelectedInputs?.Select(OutPoint.Parse).ToList() ?? new List<OutPoint>();
             }
             foreach (var transactionOutput in sendModel.Outputs)
             {
                 var psbtDestination = new CreatePSBTDestination();
                 psbtRequest.Destinations.Add(psbtDestination);
                 psbtDestination.Destination = BitcoinAddress.Create(transactionOutput.DestinationAddress, network.NBitcoinNetwork);
-                psbtDestination.Amount = Money.Coins(transactionOutput.Amount.Value);
+                psbtDestination.Amount = Money.Coins(transactionOutput.Amount ?? 0.0m);
                 psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
             }
             psbtRequest.RBF = network.SupportRBF ? true : null;
             psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO;
 
             psbtRequest.FeePreference = new FeePreference();
-            if (sendModel.FeeSatoshiPerByte is decimal v &&
-                v > decimal.Zero)
+            if (sendModel.FeeSatoshiPerByte is decimal v and > decimal.Zero)
             {
                 psbtRequest.FeePreference.ExplicitFeeRate = new FeeRate(v);
             }
-            if (sendModel.NoChange)
+            if (sendModel.NoChange && psbtRequest.Destinations is [{ Destination: { } firstDest }])
             {
-                psbtRequest.ExplicitChangeAddress = psbtRequest.Destinations.First().Destination;
+                psbtRequest.ExplicitChangeAddress = firstDest;
             }
 
             var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
@@ -87,14 +85,12 @@ namespace BTCPayServer.Controllers
                     return SignWithSeed(walletId, vm.SigningContext, vm.ReturnUrl, vm.BackUrl);
                 case "decode":
                     return await WalletPSBT(walletId, vm, "decode");
-                default:
-                    break;
             }
 
             if (await CanUseHotWallet())
             {
                 var derivationScheme = GetDerivationSchemeSettings(walletId);
-                if (derivationScheme.IsHotWallet)
+                if (derivationScheme?.IsHotWallet is true)
                 {
                     var extKey = await ExplorerClientProvider.GetExplorerClient(walletId.CryptoCode)
                         .GetMetadataAsync<string>(derivationScheme.AccountDerivation,
@@ -168,7 +164,7 @@ namespace BTCPayServer.Controllers
             switch (command)
             {
                 case "createpending":
-                    var pt = await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt);
+                    await _pendingTransactionService.CreatePendingTransaction(walletId.StoreId, walletId.CryptoCode, psbt);
                     return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                 case "sign":
                     return await WalletSign(walletId, vm);
@@ -252,7 +248,7 @@ namespace BTCPayServer.Controllers
             catch { }
             try
             {
-                signingKey = signingKey ?? new BitcoinExtKey(vm.SigningKey, network.NBitcoinNetwork);
+                signingKey ??= new BitcoinExtKey(vm.SigningKey, network.NBitcoinNetwork);
             }
             catch { }
 
@@ -444,11 +440,12 @@ namespace BTCPayServer.Controllers
                     {
                         var proposedPayjoin = await GetPayjoinProposedTX(new BitcoinUrlBuilder(vm.SigningContext.PayJoinBIP21, network.NBitcoinNetwork), psbt,
                             derivationSchemeSettings, network, cancellationToken);
+                        vm.SigningContext ??= new();
                         try
                         {
                             proposedPayjoin.Settings.SigningOptions = new SigningOptions
                             {
-                                EnforceLowR = !(vm.SigningContext?.EnforceLowR is false)
+                                EnforceLowR = vm.SigningContext.EnforceLowR is not false
                             };
                             var extKey = ExtKey.Parse(vm.SigningKey, network.NBitcoinNetwork);
                             proposedPayjoin = proposedPayjoin.SignAll(derivationSchemeSettings.AccountDerivation,
@@ -513,7 +510,7 @@ namespace BTCPayServer.Controllers
                         var transaction = psbt.ExtractTransaction();
                         try
                         {
-                            var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction);
+                            var broadcastResult = await ExplorerClientProvider.GetExplorerClient(network).BroadcastAsync(transaction, cancellationToken);
                             if (!broadcastResult.Success)
                             {
                                 if (!string.IsNullOrEmpty(vm.SigningContext.OriginalPSBT))
@@ -536,7 +533,8 @@ namespace BTCPayServer.Controllers
                             {
                                 var wallet = _walletProvider.GetWallet(network);
                                 var derivationSettings = GetDerivationSchemeSettings(walletId);
-                                wallet.InvalidateCache(derivationSettings.AccountDerivation);
+                                if (derivationSettings is not null)
+                                    wallet.InvalidateCache(derivationSettings.AccountDerivation);
                             }
                         }
                         catch (Exception ex)

@@ -29,7 +29,6 @@ namespace BTCPayServer
         {
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
-            (DerivationStrategyBase, RootedKeyPath[]) result;
             try
             {
                 return ParseLegacyOutputDescriptor(str);
@@ -117,7 +116,7 @@ namespace BTCPayServer
                 {
                     ScriptPubKeyType = ScriptPubKeyType.TaprootBIP86
                 }), rpks),
-                
+
                 // P2PKH
                 FragmentSingleParameter
                 {
@@ -128,7 +127,7 @@ namespace BTCPayServer
                 {
                     ScriptPubKeyType = ScriptPubKeyType.Legacy
                 }), rpks),
-                
+
                 // P2WPKH
                 FragmentSingleParameter
                 {
@@ -139,7 +138,7 @@ namespace BTCPayServer
                 {
                     ScriptPubKeyType = ScriptPubKeyType.Segwit
                 }), rpks),
-                
+
                 // Wrapped P2WPKH
                 FragmentSingleParameter
                 {
@@ -153,7 +152,7 @@ namespace BTCPayServer
                 {
                     ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH
                 }), rpks),
-                
+
                 // ---Multi sigs---
                 // Multsig SH
                 FragmentSingleParameter
@@ -163,15 +162,15 @@ namespace BTCPayServer
                         Descriptor: { Name: "multi" or "sortedmulti" } desc
                     } multiNode
                 } when
-                    multiNode.Parameters.ToArray() is 
+                    multiNode.Parameters.ToArray() is
                         [ Value.CountValue { Count: var cnt }, .. { } multis]
                     && ExtractMultisigs(multis, out var pks, out var rpks)
                 => (factory.CreateMultiSigDerivationStrategy(pks, cnt, new()
                 {
                     ScriptPubKeyType = ScriptPubKeyType.Legacy,
-                    KeepOrder = desc.Name == "multi" 
+                    KeepOrder = desc.Name == "multi"
                 }), rpks),
-                
+
                 // P2WSH
                 FragmentSingleParameter
                 {
@@ -180,15 +179,15 @@ namespace BTCPayServer
                         Descriptor: { Name: "multi" or "sortedmulti" } desc
                     } multiNode
                 } when
-                multiNode.Parameters.ToArray() is 
+                multiNode.Parameters.ToArray() is
                     [ Value.CountValue { Count: var cnt }, .. { } multis]
                 && ExtractMultisigs(multis, out var pks, out var rpks)
                 => (factory.CreateMultiSigDerivationStrategy(pks, cnt, new()
                 {
                     ScriptPubKeyType = ScriptPubKeyType.Segwit,
-                    KeepOrder = desc.Name == "multi" 
+                    KeepOrder = desc.Name == "multi"
                 }), rpks),
-                
+
                 // Wrapped P2WSH
                 FragmentSingleParameter
                 {
@@ -201,14 +200,14 @@ namespace BTCPayServer
                         } multiNode
                     }
                 } when
-                multiNode.Parameters.ToArray() is 
+                multiNode.Parameters.ToArray() is
                     [ Value.CountValue { Count: var cnt }, .. { } multis]
                 && ExtractMultisigs(multis, out var pks, out var rpks)
-                
+
                 => (factory.CreateMultiSigDerivationStrategy(pks, cnt, new()
                 {
                     ScriptPubKeyType = ScriptPubKeyType.SegwitP2SH,
-                    KeepOrder = desc.Name == "multi" 
+                    KeepOrder = desc.Name == "multi"
                 }), rpks),
                 _ => throw new FormatException("Not supporting this script policy (BIP388) yet.")
             };
@@ -245,10 +244,10 @@ namespace BTCPayServer
                         $"{multi.Threshold}-of-{(string.Join('-', xpubs.Select(tuple => tuple.Item1.ToString())))}{(multi.IsSorted ? "" : "-[keeporder]")}"),
                     xpubs.SelectMany(tuple => tuple.Item2).ToArray());
             }
-            
+
             ArgumentNullException.ThrowIfNull(str);
             str = str.Trim();
-            
+
             //nbitcoin output descriptor does not support taproot, so let's check if it is a taproot descriptor and fake until it is supported
             var outputDescriptor = OutputDescriptor.Parse(str, Network);
             switch (outputDescriptor)
@@ -386,7 +385,7 @@ namespace BTCPayServer
             if (type == DerivationType.Legacy)
                 return new DirectDerivationStrategy(extPubKey, false);
             if (type == DerivationType.SegwitP2SH)
-                return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(extPubKey.ToString() + "-[p2sh]");
+                return BtcPayNetwork.NBXplorerNetwork.DerivationStrategyFactory.Parse(extPubKey + "-[p2sh]");
             throw new FormatException();
         }
 

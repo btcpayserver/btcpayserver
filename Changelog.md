@@ -1,5 +1,42 @@
 # Changelog
 
+## 2.1.1
+
+Note: If you installed the XPub Extractor plugin, you will need to update it.
+
+### New features
+
+* Add support for a subset of wallet policy output descriptors (BIP388, BIP389) @NicolasDorier
+* Add support for hardware wallet taproot signing (BIP86) (#6678) @NicolasDorier
+* Enables linking payment requests to external invoices (e.g., QuickBooks, Xero) via a `Reference Id`. (#6642) @rockstardev
+* Allows searching Payment Requests `Reference Id`. (#6642) @rockstardev
+* Introduces a webhook triggered when a Payment Request is fully paid, useful for automating emails or other actions. (#6642) @rockstardev
+
+### Bug fixes
+
+* In the Send dialog, scanning a QR code leaves the 'bitcoin:' prefix in the destination field. (#6693 #6665) @dennisreimann @sapakus
+* In the Send dialog, the camera doesn't stop scanning after reading a QR code. (#6693) @dennisreimann
+* In the Multisig Server setup, choosing the PSBT signing option unexpectedly returns to the transaction list. (#6668 #6690) @NicolasDorier
+* Recreating an aborted TX in MultiSig on Server setup crashes (#6682 #6669) @NicolasDorier
+* Managers could not manage payouts in the UI (#6679) @NicolasDorier
+* Signing with seed with multisig wallet would not always recognize the seed (#6674 #6670) @NicolasDorier
+* Remove potential 'Invalid chains' error at startup. @NicolasDorier
+* Payment requests were uneditable after an invoice is received. (#6664) @NicolasDorier
+* `{PaymentRequest.Amount}` in email template would not be properly replaced by its value. (#6666) @rockstardev
+* In the Multisig Server setup, two simultaneous pending transaction could end up invalidating one another by spending the same UTXO. (#6699) @NicolasDorier
+
+### Improvements
+
+* Allow translation of the UI text in the hardware wallet pairing page (#6678) @NicolasDorier
+* Remove the Confirm Addresses page during hardware wallet import, but force verification on device during the pairing process (#6678) @NicolasDorier
+* After hardware wallet import, set the Label to the name of the model of the wallet. (#6678) @NicolasDorier
+* Attempt to automatically detect if the hardware needs `Default Include NonWitness Utxo`. (#6678) @NicolasDorier
+* When using multisig, include xpubs in the PSBT so wallets like Coldcard works without requiring prior xpub registration. (#6696) @NicolasDorier
+* Do not ask passphrase to Trezor One if passphrase protection isn't enabled on it. (#6678) @NicolasDorier
+* Add a confirmation prompt for the deletion of an Email Rule (#6675 #6662) @wbalbo
+* Adds a convenient button to copy the public URL of a Payment Request. (#6642) @rockstardev
+* Mobile devices now display a numeric keypad for number input on the Point of Sale page. (#6673) @iBobik
+
 ## 2.1.0
 
 Breaking change: If you are using Monero or ZCash, you will need to install [their respective plugins](https://blog.btcpayserver.org./btcpay-server-2-1-0/#pluginizing-zcash-and-monero) after this update.

@@ -27,7 +27,12 @@ namespace BTCPayServer.Controllers
         public async Task<CreatePSBTResponse> CreatePSBT(BTCPayNetwork network, DerivationSchemeSettings derivationSettings, WalletSendModel sendModel, CancellationToken cancellationToken)
         {
             var nbx = ExplorerClientProvider.GetExplorerClient(network);
-            CreatePSBTRequest psbtRequest = new();
+            var psbtRequest = new CreatePSBTRequest()
+            {
+                RBF = network.SupportRBF ? true : null,
+                AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO,
+                IncludeGlobalXPub = derivationSettings.IsMultiSigOnServer,
+            };
             if (sendModel.InputSelection)
             {
                 psbtRequest.IncludeOnlyOutpoints = sendModel.SelectedInputs?.Select(OutPoint.Parse).ToList() ?? new List<OutPoint>();
@@ -40,8 +45,6 @@ namespace BTCPayServer.Controllers
                 psbtDestination.Amount = Money.Coins(transactionOutput.Amount ?? 0.0m);
                 psbtDestination.SubstractFees = transactionOutput.SubtractFeesFromOutput;
             }
-            psbtRequest.RBF = network.SupportRBF ? true : null;
-            psbtRequest.AlwaysIncludeNonWitnessUTXO = sendModel.AlwaysIncludeNonWitnessUTXO;
 
             psbtRequest.FeePreference = new FeePreference();
             if (sendModel.FeeSatoshiPerByte is decimal v and > decimal.Zero)
@@ -56,8 +59,7 @@ namespace BTCPayServer.Controllers
             var psbt = (await nbx.CreatePSBTAsync(derivationSettings.AccountDerivation, psbtRequest, cancellationToken));
             if (psbt == null)
                 throw new NotSupportedException(StringLocalizer["You need to update your version of NBXplorer"]);
-            // Not supported by coldcard, remove when they do support it
-            psbt.PSBT.GlobalXPubs.Clear();
+
             return psbt;
         }
 
@@ -552,12 +554,12 @@ namespace BTCPayServer.Controllers
                         {
                             await _pendingTransactionService.Broadcasted(GetPendingTxId(walletId, vm.SigningContext.PendingTransactionId));
                         }
-                        
+
                         if (!string.IsNullOrEmpty(vm.ReturnUrl))
                         {
                             return LocalRedirect(vm.ReturnUrl);
                         }
-                        
+
                         return RedirectToAction(nameof(WalletTransactions), new { walletId = walletId.ToString() });
                     }
                 case "analyze-psbt":

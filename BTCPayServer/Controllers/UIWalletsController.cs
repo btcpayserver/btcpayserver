@@ -316,6 +316,7 @@ namespace BTCPayServer.Controllers
 				{
 					RBF = true,
 					AlwaysIncludeNonWitnessUTXO = paymentMethod.DefaultIncludeNonWitnessUtxo,
+                    IncludeGlobalXPub = paymentMethod.IsMultiSigOnServer,
 					IncludeOnlyOutpoints = bumpableUTXOs,
 					SpendAllMatchingOutpoints = true,
 					FeePreference = new FeePreference()
@@ -369,6 +370,7 @@ namespace BTCPayServer.Controllers
                 {
                     RBF = true,
                     AlwaysIncludeNonWitnessUTXO = paymentMethod.DefaultIncludeNonWitnessUtxo,
+                    IncludeGlobalXPub = paymentMethod.IsMultiSigOnServer,
                     IncludeOnlyOutpoints = tx.Transaction.Inputs.Select(i => i.PrevOut).ToList(),
                     SpendAllMatchingOutpoints = true,
                     DisableFingerprintRandomization = true,
@@ -1329,6 +1331,7 @@ namespace BTCPayServer.Controllers
         public async Task<IActionResult> WalletSendVault([ModelBinder(typeof(WalletIdModelBinder))] WalletId walletId,
             WalletSendVaultModel model)
         {
+            TempData.SetStatusSuccess(StringLocalizer["Transaction successfully signed"].Value);
             return await RedirectToWalletPSBTReady(walletId, new WalletPSBTReadyViewModel
             {
                 SigningContext = model.SigningContext,

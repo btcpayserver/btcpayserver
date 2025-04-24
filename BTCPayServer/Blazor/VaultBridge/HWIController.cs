@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -19,7 +18,7 @@ namespace BTCPayServer.Blazor.VaultBridge;
 
 public abstract class HWIController : VaultController
 {
-    override protected string VaultUri => "http://127.0.0.1:65092/hwi-bridge/v1";
+    protected override string VaultUri => "http://127.0.0.1:65092/hwi-bridge/v1";
     public string CryptoCode { get; set; }
 
     private static bool IsTrezorT(HwiEnumerateEntry deviceEntry)
@@ -41,7 +40,7 @@ public abstract class HWIController : VaultController
         try
         {
             var network = networkProviders.GetNetwork<BTCPayNetwork>(CryptoCode);
-            var hwi = new Hwi.HwiClient(network.NBitcoinNetwork)
+            var hwi = new HwiClient(network.NBitcoinNetwork)
             {
                 Transport = new VaultHWITransport(vaultClient), IgnoreInvalidNetwork = network.NBitcoinNetwork.ChainName != ChainName.Mainnet
             };
@@ -89,7 +88,7 @@ public abstract class HWIController : VaultController
             {
                 // It seems that this 'if (IsTrezorT(deviceEntry))' can be removed.
                 // I have not managed to trigger this anymore with latest 2.8.9
-                // the passphrase is getting asked during EnumerateEntriesAsync 
+                // the passphrase is getting asked during EnumerateEntriesAsync
                 if (IsTrezorT(deviceEntry))
                 {
                     ui.ShowFeedback(FeedbackType.Loading, ui.StringLocalizer["Please, enter the passphrase on the device."]);
@@ -206,7 +205,6 @@ public class SignHWIController : HWIController
             ui.ShowRetry();
             return;
         }
-
         derivationSettings.RebaseKeyPaths(psbt);
         // otherwise, let the device check if it can sign anything
         var signableInputs = psbt.Inputs
@@ -227,7 +225,7 @@ public class SignHWIController : HWIController
             if (derivationSettings.IsMultiSigOnServer)
             {
                 var alreadySigned = psbt.Inputs.Any(a =>
-                    a.PartialSigs.Any(a => a.Key == actualPubKey));
+                    a.PartialSigs.Any(o => o.Key == actualPubKey));
                 if (alreadySigned)
                 {
                     ui.ShowFeedback(FeedbackType.Failed, ui.StringLocalizer["This device already signed PSBT."]);
@@ -264,7 +262,7 @@ public class GetXPubController : HWIController
         var firstDepositPath = new KeyPath(0, 0);
         var firstDepositAddr =
             network.NBXplorerNetwork.CreateAddress(strategy, firstDepositPath, strategy.GetDerivation(firstDepositPath).ScriptPubKey);
-        
+
         var verif = new VerifyAddress(ui)
         {
             Device = device,

@@ -540,7 +540,7 @@ namespace BTCPayServer.Controllers.Greenfield
                     {
                         SelectedInputs = request.SelectedInputs?.Select(point => point.ToString()),
                         Outputs = outputs,
-                        AlwaysIncludeNonWitnessUTXO = true,
+                        AlwaysIncludeNonWitnessUTXO = derivationScheme.DefaultIncludeNonWitnessUtxo,
                         InputSelection = request.SelectedInputs?.Any() is true,
                         FeeSatoshiPerByte = request.FeeRate?.SatoshiPerByte,
                         NoChange = request.NoChange

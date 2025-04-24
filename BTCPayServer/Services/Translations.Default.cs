@@ -1610,6 +1610,7 @@ namespace BTCPayServer.Services
   "Transaction fee rate:": "",
   "Transaction Id": "",
   "Transaction signed successfully, proceeding to review...": "",
+  "Transaction successfully signed": "",
   "transactions": "",
   "Translations": "",
   "Translations are formatted as JSON; for example, <b>{0}</b> translates <b>{1}</b> to <b>{2}</b>.": "",

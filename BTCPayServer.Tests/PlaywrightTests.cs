@@ -19,12 +19,8 @@ namespace BTCPayServer.Tests
 {
     [Trait("Playwright", "Playwright")]
     [Collection(nameof(NonParallelizableCollectionDefinition))]
-    public class PlaywrightTests : UnitTestBase
+    public class PlaywrightTests(ITestOutputHelper helper) : UnitTestBase(helper)
     {
-        public PlaywrightTests(ITestOutputHelper helper) : base(helper)
-        {
-        }
-
         [Fact]
         public async Task CanNavigateServerSettings()
         {
@@ -51,7 +47,7 @@ namespace BTCPayServer.Tests
             await s.InitializeBTCPayServer();
             // Point Of Sale
             var appName = $"PoS-{Guid.NewGuid().ToString()[..21]}";
-            await s.Page.Locator("#StoreNav-CreatePointOfSale").ClickAsync();
+            await s.Page.ClickAsync("#StoreNav-CreatePointOfSale");
             await s.Page.Locator("#AppName").FillAsync(appName);
             await s.ClickPagePrimary();
             var textContent = await (await s.FindAlertMessage()).TextContentAsync();
@@ -60,11 +56,11 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             textContent = await (await s.FindAlertMessage()).TextContentAsync();
             Assert.Contains("App updated", textContent);
-            await s.Page.Locator("#ViewApp").ClickAsync();
+            await s.Page.ClickAsync("#ViewApp");
             var popOutPage = await s.Page.Context.WaitForPageAsync();
             await popOutPage.Locator("button[type='submit']").First.ClickAsync();
             await popOutPage.Locator("[name='buyerEmail']").FillAsync("aa@aa.com");
-            await popOutPage.Locator("input[type='submit']").ClickAsync();
+            await popOutPage.ClickAsync("input[type='submit']");
             await s.PayInvoiceAsync(popOutPage, true);
             var invoiceId = popOutPage.Url[(popOutPage.Url.LastIndexOf("/", StringComparison.Ordinal) + 1)..];
             await popOutPage.CloseAsync();
@@ -73,7 +69,7 @@ namespace BTCPayServer.Tests
             await s.GoToUrl($"/invoices/{invoiceId}/");
             Assert.Contains("aa@aa.com", await s.Page.ContentAsync());
             // Payment Request
-            await s.Page.Locator("#StoreNav-PaymentRequests").ClickAsync();
+            await s.Page.ClickAsync("#StoreNav-PaymentRequests");
             await s.ClickPagePrimary();
             await s.Page.Locator("#Title").FillAsync("Pay123");
             await s.Page.Locator("#Amount").FillAsync("700");
@@ -81,12 +77,12 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.Page.Locator("a[id^='Edit-']").First.ClickAsync();
             var editUrl = new Uri(s.Page.Url);
-            await s.Page.Locator("#ViewPaymentRequest").ClickAsync();
+            await s.Page.ClickAsync("#ViewPaymentRequest");
             popOutPage = await s.Page.Context.WaitForPageAsync();
-            await popOutPage.Locator("[data-test='form-button']").ClickAsync();
+            await popOutPage.ClickAsync("[data-test='form-button']");
             Assert.Contains("Enter your email", await popOutPage.ContentAsync());
             await popOutPage.Locator("input[name='buyerEmail']").FillAsync("aa@aa.com");
-            await popOutPage.Locator("#page-primary").ClickAsync();
+            await popOutPage.ClickAsync("#page-primary");
             invoiceId = popOutPage.Url.Split('/').Last();
             await popOutPage.CloseAsync();
             await s.Page.Context.Pages.First().BringToFrontAsync();
@@ -102,18 +98,18 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.Page.Locator("[name='Name']").FillAsync("Custom Form 1");
             await s.Page.Locator("#ApplyEmailTemplate").ClickAsync();
-            await s.Page.Locator("#CodeTabButton").ClickAsync();
+            await s.Page.ClickAsync("#CodeTabButton");
             await s.Page.Locator("#CodeTabPane").WaitForAsync();
             var config = await s.Page.Locator("[name='FormConfig']").InputValueAsync();
             Assert.Contains("buyerEmail", config);
             await s.Page.Locator("[name='FormConfig']").ClearAsync();
             await s.Page.Locator("[name='FormConfig']").FillAsync(config.Replace("Enter your email", "CustomFormInputTest"));
             await s.ClickPagePrimary();
-            await s.Page.Locator("#ViewForm").ClickAsync();
+            await s.Page.ClickAsync("#ViewForm");
             var formUrl = s.Page.Url;
             Assert.Contains("CustomFormInputTest", await s.Page.ContentAsync());
             await s.Page.Locator("[name='buyerEmail']").FillAsync("aa@aa.com");
-            await s.Page.Locator("input[type='submit']").ClickAsync();
+            await s.Page.ClickAsync("input[type='submit']");
             await s.PayInvoiceAsync(s.Page, true, 0.001m);
             var result = await s.Server.PayTester.HttpClient.GetAsync(formUrl);
             Assert.Equal(HttpStatusCode.NotFound, result.StatusCode);
@@ -123,18 +119,18 @@ namespace BTCPayServer.Tests
             Assert.Contains("Custom Form 1", await s.Page.ContentAsync());
             await s.Page.GetByRole(AriaRole.Link, new() { Name = "Remove" }).ClickAsync();
             await s.Page.Locator("#ConfirmInput").FillAsync("DELETE");
-            await s.Page.Locator("#ConfirmContinue").ClickAsync();
+            await s.Page.ClickAsync("#ConfirmContinue");
             Assert.DoesNotContain("Custom Form 1", await s.Page.ContentAsync());
             await s.ClickPagePrimary();
             await s.Page.Locator("[name='Name']").FillAsync("Custom Form 2");
-            await s.Page.Locator("#ApplyEmailTemplate").ClickAsync();
-            await s.Page.Locator("#CodeTabButton").ClickAsync();
+            await s.Page.ClickAsync("#ApplyEmailTemplate");
+            await s.Page.ClickAsync("#CodeTabButton");
             await s.Page.Locator("#CodeTabPane").WaitForAsync();
             await s.Page.Locator("input[type='checkbox'][name='Public']").SetCheckedAsync(true);
             await s.Page.Locator("[name='FormConfig']").ClearAsync();
             await s.Page.Locator("[name='FormConfig']").FillAsync(config.Replace("Enter your email", "CustomFormInputTest2"));
             await s.ClickPagePrimary();
-            await s.Page.Locator("#ViewForm").ClickAsync();
+            await s.Page.ClickAsync("#ViewForm");
             formUrl = s.Page.Url;
             result = await s.Server.PayTester.HttpClient.GetAsync(formUrl);
             Assert.NotEqual(HttpStatusCode.NotFound, result.StatusCode);
@@ -148,7 +144,7 @@ namespace BTCPayServer.Tests
             await s.ClickPagePrimary();
             await s.GoToStore(StoreNavPages.Forms);
             Assert.Contains("Custom Form 3", await s.Page.ContentAsync());
-            await s.Page.Locator("#StoreNav-PaymentRequests").ClickAsync();
+            await s.Page.ClickAsync("#StoreNav-PaymentRequests");
             await s.ClickPagePrimary();
             var selectOptions = await s.Page.Locator("#FormId >> option").CountAsync();
             Assert.Equal(4, selectOptions);
@@ -201,18 +197,17 @@ namespace BTCPayServer.Tests
             await s.GoToServer(ServerNavPages.Users);
 
             // Manage user password reset
-            var rows = s.Page.Locator("#UsersList tr.user-overview-row");
             await s.Page.Locator("#SearchTerm").ClearAsync();
             await s.Page.Locator("#SearchTerm").FillAsync(user.RegisterDetails.Email);
             await s.Page.Locator("#SearchTerm").PressAsync("Enter");
-            rows = s.Page.Locator("#UsersList tr.user-overview-row");
+            var rows = s.Page.Locator("#UsersList tr.user-overview-row");
             Assert.Equal(1, await rows.CountAsync());
             Assert.Contains(user.RegisterDetails.Email, await rows.First.TextContentAsync());
             await s.Page.Locator("#UsersList tr.user-overview-row:first-child .reset-password").ClickAsync();
             await s.Page.Locator("#Password").FillAsync("Password@1!");
             await s.Page.Locator("#ConfirmPassword").FillAsync("Password@1!");
             await s.ClickPagePrimary();
-            var passwordSetAlert = await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            var passwordSetAlert = await s.FindAlertMessage();
             Assert.Contains("Password successfully set", await passwordSetAlert.TextContentAsync());
 
             // Manage user status (disable and enable)
@@ -225,7 +220,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(user.RegisterDetails.Email, await rows.First.TextContentAsync());
             await s.Page.Locator("#UsersList tr.user-overview-row:first-child .disable-user").ClickAsync();
             await s.Page.Locator("#ConfirmContinue").ClickAsync();
-            var disabledUserAlert = await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            var disabledUserAlert = await s.FindAlertMessage();
             Assert.Contains("User disabled", await disabledUserAlert.TextContentAsync());
             //Enable user
             await s.Page.Locator("#SearchTerm").ClearAsync();
@@ -236,7 +231,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(user.RegisterDetails.Email, await rows.First.TextContentAsync());
             await s.Page.Locator("#UsersList tr.user-overview-row:first-child .enable-user").ClickAsync();
             await s.Page.Locator("#ConfirmContinue").ClickAsync();
-            var enabledUserAlert = await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            var enabledUserAlert = await s.FindAlertMessage();
             Assert.Contains("User enabled", await enabledUserAlert.TextContentAsync());
 
             // Manage user details (edit)
@@ -249,7 +244,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#UsersList tr.user-overview-row:first-child .user-edit").ClickAsync();
             await s.Page.Locator("#Name").FillAsync("Test User");
             await s.ClickPagePrimary();
-            var editUserAlert = await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            var editUserAlert = await s.FindAlertMessage();
             Assert.Contains("User successfully updated", await editUserAlert.TextContentAsync());
 
             // Manage user deletion
@@ -262,7 +257,7 @@ namespace BTCPayServer.Tests
             Assert.Contains(user.RegisterDetails.Email, await rows.First.TextContentAsync());
             await s.Page.Locator("#UsersList tr.user-overview-row:first-child .delete-user").ClickAsync();
             await s.Page.Locator("#ConfirmContinue").ClickAsync();
-            var userDeletionAlert = await s.FindAlertMessage(StatusMessageModel.StatusSeverity.Success);
+            var userDeletionAlert = await s.FindAlertMessage();
             Assert.Contains("User deleted", await userDeletionAlert.TextContentAsync());
             await s.Page.AssertNoError();
         }
@@ -316,6 +311,7 @@ namespace BTCPayServer.Tests
             Assert.True((await s.Page.ContentAsync()).Contains("404 - Page not found", StringComparison.OrdinalIgnoreCase));
 
             policies = await settings.GetSettingAsync<PoliciesSettings>();
+            Assert.NotNull(policies);
             Assert.True(policies.DisableSSHService);
 
             policies.DisableSSHService = false;
@@ -334,7 +330,7 @@ namespace BTCPayServer.Tests
             await s.GoToUrl("/server/emails");
             if (await s.Page.Locator("#ResetPassword").IsVisibleAsync())
             {
-                await s.Page.Locator("#ResetPassword").ClickAsync();
+                await s.Page.ClickAsync("#ResetPassword");
                 var responseAlert = await s.FindAlertMessage();
                 Assert.Contains("Email server password reset", await responseAlert.TextContentAsync());
             }
@@ -346,14 +342,14 @@ namespace BTCPayServer.Tests
             await s.GoToStore();
             await s.GoToStore(StoreNavPages.Emails);
             Assert.Equal(0, await s.Page.Locator("#IsCustomSMTP").CountAsync());
-            await s.Page.Locator("#ConfigureEmailRules").ClickAsync();
+            await s.Page.ClickAsync("#ConfigureEmailRules");
             Assert.Contains("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
             // Server Emails
             await s.GoToUrl("/server/emails");
             if ((await s.Page.ContentAsync()).Contains("Configured"))
             {
-                await s.Page.Locator("#ResetPassword").ClickAsync();
+                await s.Page.ClickAsync("#ResetPassword");
                 await s.FindAlertMessage();
             }
             await CanSetupEmailCore(s);
@@ -362,26 +358,26 @@ namespace BTCPayServer.Tests
             await s.GoToStore();
             await s.GoToStore(StoreNavPages.Emails);
             Assert.False(await s.Page.Locator("#IsCustomSMTP").IsCheckedAsync());
-            await s.Page.Locator("#ConfigureEmailRules").ClickAsync();
+            await s.Page.ClickAsync("#ConfigureEmailRules");
             Assert.DoesNotContain("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
             await s.GoToStore(StoreNavPages.Emails);
-            await s.Page.Locator("#IsCustomSMTP").ClickAsync();
+            await s.Page.ClickAsync("#IsCustomSMTP");
             await CanSetupEmailCore(s);
 
             // Store Email Rules
-            await s.Page.Locator("#ConfigureEmailRules").ClickAsync();
+            await s.Page.ClickAsync("#ConfigureEmailRules");
             Assert.Contains("There are no rules yet.", await s.Page.ContentAsync());
             Assert.DoesNotContain("id=\"SaveEmailRules\"", await s.Page.ContentAsync());
             Assert.DoesNotContain("You need to configure email settings before this feature works", await s.Page.ContentAsync());
 
-            await s.Page.Locator("#CreateEmailRule").ClickAsync();
+            await s.Page.ClickAsync("#CreateEmailRule");
             await s.Page.Locator("#Trigger").SelectOptionAsync(new[] { "InvoicePaymentSettled" });
             await s.Page.Locator("#To").FillAsync("test@gmail.com");
-            await s.Page.Locator("#CustomerEmail").ClickAsync();
+            await s.Page.ClickAsync("#CustomerEmail");
             await s.Page.Locator("#Subject").FillAsync("Thanks!");
             await s.Page.Locator(".note-editable").FillAsync("Your invoice is settled");
-            await s.Page.Locator("#SaveEmailRules").ClickAsync();
+            await s.Page.ClickAsync("#SaveEmailRules");
             // we now have a rule
             Assert.DoesNotContain("There are no rules yet.", await s.Page.ContentAsync());
             Assert.Contains("test@gmail.com", await s.Page.ContentAsync());
@@ -409,7 +405,7 @@ namespace BTCPayServer.Tests
             //Same User Can Log Back In
             await s.Page.Locator("#Email").FillAsync(email);
             await s.Page.Locator("#Password").FillAsync("123456");
-            await s.Page.Locator("#LoginButton").ClickAsync();
+            await s.Page.ClickAsync("#LoginButton");
 
             // We should be redirected to invoice
             Assert.EndsWith("/account", s.Page.Url);
@@ -451,7 +447,7 @@ namespace BTCPayServer.Tests
             await s.Page.Locator("#Email").FillAsync(usr);
             await s.ClickPagePrimary();
             var url = await s.Page.Locator("#InvitationUrl").GetAttributeAsync("data-text");
-
+            Assert.NotNull(url);
             await s.Logout();
             await s.GoToUrl(new Uri(url).AbsolutePath);
             Assert.Equal("hidden", await s.Page.Locator("#Email").GetAttributeAsync("type"));

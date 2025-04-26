@@ -13,6 +13,7 @@ using BTCPayServer.Views.Wallets;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Playwright;
 using NBitcoin;
+using NBitcoin.RPC;
 using OpenQA.Selenium;
 using Xunit;
 
@@ -253,17 +254,17 @@ namespace BTCPayServer.Tests
             // Replace previous wallet case
             if (await Page.Locator("#ChangeWalletLink").IsVisibleAsync())
             {
-                await Page.Locator("#ActionsDropdownToggle").ClickAsync();
-                await Page.Locator("#ChangeWalletLink").ClickAsync();
+                await Page.ClickAsync("#ActionsDropdownToggle");
+                await Page.ClickAsync("#ChangeWalletLink");
                 await Page.Locator("#ConfirmInput").FillAsync("REPLACE");
-                await Page.Locator("#ConfirmContinue").ClickAsync();
+                await Page.ClickAsync("#ConfirmContinue");
             }
 
             if (isImport)
             {
                 TestLogs.LogInformation("Progressing with existing seed");
-                await Page.Locator("#ImportWalletOptionsLink").ClickAsync();
-                await Page.Locator("#ImportSeedLink").ClickAsync();
+                await Page.ClickAsync("#ImportWalletOptionsLink");
+                await Page.ClickAsync("#ImportSeedLink");
                 await Page.Locator("#ExistingMnemonic").FillAsync(seed);
                 await Page.Locator("#SavePrivateKeys").SetCheckedAsync(isHotWallet);
             }
@@ -271,21 +272,20 @@ namespace BTCPayServer.Tests
             {
                 var option = isHotWallet ? "Hotwallet" : "Watchonly";
                 TestLogs.LogInformation($"Generating new seed ({option})");
-                await Page.Locator("#GenerateWalletLink").ClickAsync();
-                await Page.Locator($"#Generate{option}Link").ClickAsync();
+                await Page.ClickAsync("#GenerateWalletLink");
+                await Page.ClickAsync($"#Generate{option}Link");
             }
 
-            await Page.Locator("#ScriptPubKeyType").ClickAsync();
-            await Page.Locator($"#ScriptPubKeyType option[value={format}]").ClickAsync();
-            await Page.Locator("[data-toggle='collapse'][href='#AdvancedSettings']").ClickAsync();
+            await Page.SelectOptionAsync("#ScriptPubKeyType", new SelectOptionValue { Value = format.ToString() });
+            await Page.ClickAsync("#AdvancedSettingsButton");
             if (importkeys is bool v)
                 await Page.Locator("#ImportKeysToRPC").SetCheckedAsync(v);
-            await Page.Locator("#Continue").ClickAsync();
+            await Page.ClickAsync("#Continue");
 
             if (isImport)
             {
                 // Confirm addresses
-                await Page.Locator("#Confirm").ClickAsync();
+                await Page.ClickAsync("#Confirm");
             }
             else
             {
@@ -297,8 +297,8 @@ namespace BTCPayServer.Tests
                 }
 
                 // Confirm seed backup
-                await Page.Locator("#confirm").ClickAsync();
-                await Page.Locator("#submit").ClickAsync();
+                await Page.ClickAsync("#confirm");
+                await Page.ClickAsync("#submit");
             }
 
             WalletId = new WalletId(StoreId, cryptoCode);
@@ -450,6 +450,32 @@ namespace BTCPayServer.Tests
                 Browser = null;
             });
             Server?.Dispose();
+        }
+
+        public async Task<string> FundStoreWallet(WalletId walletId = null, int coins = 1, decimal denomination = 1m)
+        {
+            walletId ??= WalletId;
+            await GoToWallet(walletId, WalletsNavPages.Receive);
+            var addressStr = await Page.Locator("#Address").GetAttributeAsync("data-text");
+            var address = BitcoinAddress.Create(addressStr, ((BTCPayNetwork)Server.NetworkProvider.GetNetwork(walletId.CryptoCode)).NBitcoinNetwork);
+            for (var i = 0; i < coins; i++)
+            {
+                bool mined = false;
+                retry:
+                try
+                {
+                    await Server.ExplorerNode.SendToAddressAsync(address, Money.Coins(denomination));
+                }
+                catch (RPCException) when (!mined)
+                {
+                    mined = true;
+                    await Server.ExplorerNode.GenerateAsync(1);
+                    goto retry;
+                }
+            }
+            await Page.ReloadAsync();
+            await Page.Locator("#CancelWizard").ClickAsync();
+            return addressStr;
         }
     }
 }

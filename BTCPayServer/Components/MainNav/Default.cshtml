@@ -107,13 +107,13 @@
                                     @if (ViewData.IsCategoryActive(typeof(WalletsNavPages), scheme.WalletId.ToString()) || ViewData.IsPageActive([WalletsNavPages.Settings], scheme.WalletId.ToString()) || ViewData.IsPageActive([StoreNavPages.OnchainSettings], categoryId))
                                     {
                                         @if (!scheme.ReadonlyWallet)
-                                        {  
+                                        {
                                             <li class="nav-item nav-item-sub">
                                                 <a id="WalletNav-Send" class="nav-link @ViewData.ActivePageClass([WalletsNavPages.Send, WalletsNavPages.PSBT], scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletSend" asp-route-walletId="@scheme.WalletId" text-translate="true">Send</a>
                                             </li>
                                         }
 
-                                      
+
                                         <li class="nav-item nav-item-sub">
                                             <a id="WalletNav-Receive" class="nav-link @ViewData.ActivePageClass(WalletsNavPages.Receive, scheme.WalletId.ToString())" asp-area="" asp-controller="UIWallets" asp-action="WalletReceive" asp-route-walletId="@scheme.WalletId" text-translate="true">Receive</a>
                                         </li>
@@ -192,8 +192,8 @@
                                         </a>
                                     </li>
                                     <li class="nav-item" permission="@Policies.CanViewPayouts">
-                                        <a asp-area="" 
-                                           asp-controller="UIStorePullPayments" asp-action="Payouts" 
+                                        <a asp-area=""
+                                           asp-controller="UIStorePullPayments" asp-action="Payouts"
                                            asp-route-pullPaymentId=""
                                            asp-route-storeId="@Model.Store.Id" class="nav-link @ViewData.ActivePageClass(StoreNavPages.Payouts)" id="StoreNav-Payouts">
                                             <vc:icon symbol="nav-payouts"/>
@@ -327,14 +327,14 @@
                 <li class="nav-item nav-item-sub" permission="@Policies.CanModifyServerSettings">
                     <a asp-controller="UIServer" id="SectionNav-@ServerNavPages.Files" class="nav-link @ViewData.ActivePageClass(ServerNavPages.Files)" asp-action="Files" text-translate="true">Files</a>
                 </li>
-                
+
                 <vc:ui-extension-point location="server-nav" model="@Model"/>
             }
             <li class="nav-item dropup">
                 <a class="nav-link @ViewData.ActivePageClass(ManageNavPages.Index)" role="button" data-bs-toggle="dropdown" data-bs-auto-close="outside" aria-expanded="false" id="Nav-Account">
                     <vc:icon symbol="nav-account"/>
                     <span text-translate="true">Account</span>
-                </a>   
+                </a>
                 <ul class="dropdown-menu py-0 w-100" aria-labelledby="Nav-Account">
                     <li class="p-3 border-bottom d-flex align-items-center gap-2">
                         @if (!string.IsNullOrEmpty(Model.UserImageUrl))

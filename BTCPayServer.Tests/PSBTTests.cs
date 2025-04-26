@@ -23,7 +23,7 @@ namespace BTCPayServer.Tests
         [Trait("Playwright", "Playwright")]
         public async Task CanPlayWithPSBT()
         {
-            using var s = CreatePlaywrightTester(newDb: true);
+            await using var s = CreatePlaywrightTester(newDb: true);
             await s.StartAsync();
 
             await s.RegisterNewUser(true);

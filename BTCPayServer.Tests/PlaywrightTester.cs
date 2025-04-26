@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -19,7 +20,7 @@ using Xunit;
 
 namespace BTCPayServer.Tests
 {
-    public class PlaywrightTester : IDisposable
+    public class PlaywrightTester : IAsyncDisposable
     {
         public Uri ServerUri;
         private string CreatedUser;
@@ -256,7 +257,7 @@ namespace BTCPayServer.Tests
             {
                 await Page.ClickAsync("#ActionsDropdownToggle");
                 await Page.ClickAsync("#ChangeWalletLink");
-                await Page.Locator("#ConfirmInput").FillAsync("REPLACE");
+                await Page.FillAsync("#ConfirmInput", "REPLACE");
                 await Page.ClickAsync("#ConfirmContinue");
             }
 
@@ -265,7 +266,7 @@ namespace BTCPayServer.Tests
                 TestLogs.LogInformation("Progressing with existing seed");
                 await Page.ClickAsync("#ImportWalletOptionsLink");
                 await Page.ClickAsync("#ImportSeedLink");
-                await Page.Locator("#ExistingMnemonic").FillAsync(seed);
+                await Page.FillAsync("#ExistingMnemonic", seed);
                 await Page.Locator("#SavePrivateKeys").SetCheckedAsync(isHotWallet);
             }
             else
@@ -330,38 +331,46 @@ namespace BTCPayServer.Tests
         }
         public async Task LogIn(string user, string password = "123456")
         {
-            await Page.Locator("#Email").FillAsync(user);
-            await Page.Locator("#Password").FillAsync(password);
-            await Page.Locator("#LoginButton").ClickAsync();
+            await Page.FillAsync("#Email", user);
+            await Page.FillAsync("#Password", password);
+            await Page.ClickAsync("#LoginButton");
         }
 
         public async Task GoToProfile(ManageNavPages navPages = ManageNavPages.Index)
         {
-            await Page.Locator("#Nav-Account").ClickAsync();
-            await Page.Locator("#Nav-ManageAccount").ClickAsync();
+            await Page.ClickAsync("#Nav-Account");
+            await Page.ClickAsync("#Nav-ManageAccount");
             if (navPages != ManageNavPages.Index)
             {
-                await Page.Locator($"#SectionNav-{navPages.ToString()}").ClickAsync();
+                await Page.ClickAsync($"#SectionNav-{navPages.ToString()}");
             }
         }
 
         public async Task GoToServer(ServerNavPages navPages = ServerNavPages.Policies)
         {
-            await Page.Locator("#Nav-ServerSettings").ClickAsync();
+            await Page.ClickAsync("#Nav-ServerSettings");
             if (navPages != ServerNavPages.Policies)
             {
-                await Page.Locator($"#SectionNav-{navPages}").ClickAsync();
+                await Page.ClickAsync($"#SectionNav-{navPages}");
             }
         }
 
-        public async Task ClickOnAllSectionLinks()
+        public async Task ClickOnAllSectionLinks(string sectionSelector = "#SectionNav")
         {
-            var links = await Page.Locator("#SectionNav .nav-link").EvaluateAllAsync<string[]>("els => els.map(e => e.href)");
-
+            List<string> links = [];
+            foreach (var locator in await Page.Locator($"{sectionSelector} .nav-link").AllAsync())
+            {
+                var link = await locator.GetAttributeAsync("href");
+                if (link is null or "/logout")
+                    continue;
+                Assert.NotNull(link);
+               links.Add(link);
+            }
+            Assert.NotEmpty(links);
             foreach (var link in links)
             {
                 TestLogs.LogInformation($"Checking no error on {link}");
-                await Page.GotoAsync(link);
+                await GoToUrl(link);
                 await Page.AssertNoError();
             }
         }
@@ -429,24 +438,29 @@ namespace BTCPayServer.Tests
         }
 
 
-        public void Dispose()
+
+        public async ValueTask DisposeAsync()
         {
-            static void Try(Action action)
+            static async Task Try(Func<Task> action)
             {
                 try
-                { action(); }
+                { await action(); }
                 catch { }
             }
 
-            Try(() =>
+            await Try(async () =>
             {
-                Page?.CloseAsync().GetAwaiter().GetResult();
+                if (Page is null)
+                    return;
+                await Page.CloseAsync();
                 Page = null;
             });
 
-            Try(() =>
+            await Try(async () =>
             {
-                Browser?.CloseAsync().GetAwaiter().GetResult();
+                if (Browser is null)
+                    return;
+                await Browser.CloseAsync();
                 Browser = null;
             });
             Server?.Dispose();

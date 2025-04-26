@@ -1202,7 +1202,7 @@ namespace BTCPayServer.Controllers
 
             try
             {
-                psbtResponse = await CreatePSBT(network, derivationScheme, vm, cancellation);
+                psbtResponse = await CreatePSBT(walletId.StoreId, network, derivationScheme, vm, cancellation);
             }
             catch (NBXplorerException ex)
             {

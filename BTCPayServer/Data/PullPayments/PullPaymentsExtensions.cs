@@ -15,7 +15,7 @@ namespace BTCPayServer.Data
         }
         public static void SetBlob(this PullPaymentData data, PullPaymentBlob blob)
         {
-            data.Blob = JsonConvert.SerializeObject(blob).ToString();
+            data.Blob = JsonConvert.SerializeObject(blob);
         }
 
         public static bool IsSupported(this PullPaymentData data, PayoutMethodId payoutMethodId)

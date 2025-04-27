@@ -85,8 +85,8 @@ namespace BTCPayServer
         {
             return Encoding.UTF8.GetString(protector.Unprotect(Convert.FromBase64String(str)));
         }
-        
-        
+
+
         /// <summary>
         /// Outputs a serializer which will serialize default and null members.
         /// This is useful for discovering the API.
@@ -554,7 +554,8 @@ namespace BTCPayServer
             {
                 PSBT = psbt,
                 DerivationScheme = derivationSchemeSettings.AccountDerivation,
-                AlwaysIncludeNonWitnessUTXO = true
+                AlwaysIncludeNonWitnessUTXO = true,
+                IncludeGlobalXPub = derivationSchemeSettings.IsMultiSigOnServer
             });
             if (result == null)
                 return null;
@@ -638,7 +639,7 @@ namespace BTCPayServer
             var h = (BitcoinLikePaymentHandler)handlers[pmi];
             return h;
         }
-        public static BTCPayNetwork? TryGetNetwork<TId, THandler>(this HandlersDictionary<TId, THandler> handlers, TId id) 
+        public static BTCPayNetwork? TryGetNetwork<TId, THandler>(this HandlersDictionary<TId, THandler> handlers, TId id)
                                                                            where THandler : IHandler<TId>
                                                                            where TId : notnull
         {

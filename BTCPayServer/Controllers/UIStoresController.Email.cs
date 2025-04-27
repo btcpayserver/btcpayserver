@@ -115,7 +115,7 @@ public partial class UIStoresController
             storeBlob.EmailSettings = model.Settings;
             store.SetStoreBlob(storeBlob);
             await _storeRepo.UpdateStore(store);
-            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings modified"].Value;
+            TempData[WellKnownTempData.SuccessMessage] = StringLocalizer["Email settings saved"].Value;
         }
         return RedirectToAction(nameof(StoreEmailSettings), new { storeId });
     }

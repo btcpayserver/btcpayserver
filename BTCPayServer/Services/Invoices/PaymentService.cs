@@ -51,7 +51,7 @@ namespace BTCPayServer.Services.Invoices
                 invoiceEntity = invoice.GetBlob();
                 var pmi = PaymentMethodId.Parse(paymentData.PaymentMethodId);
                 PaymentPrompt paymentMethod = invoiceEntity.GetPaymentPrompt(pmi);
-                if (paymentMethod is null || !_handlers.TryGetValue(pmi, out var handler))
+                if (paymentMethod is null || !_handlers.TryGetValue(pmi, out _))
                     return null;
                 await context.Payments.AddAsync(paymentData);
 

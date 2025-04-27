@@ -344,7 +344,6 @@ retry:
                 if (invoice == null)
                     return;
                 var invoiceEntity = invoice.GetBlob();
-                var newDetails = prompt.Details;
                 var existing = invoiceEntity.GetPaymentPrompt(prompt.PaymentMethodId);
                 if (existing.Destination != prompt.Destination && prompt.Activated && prompt.Destination is not null)
                 {

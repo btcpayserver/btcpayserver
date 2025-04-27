@@ -128,28 +128,29 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
 			setQrData(qrData) {
 				this.qrData = qrData;
 				this.cameraOff = !!qrData;
-                
+
                 if (this.qrData && this.submitOnScan) {
                     this.submitData();
                 }
 			},
 			retry() {
 				this.cameraOff = true;
-				this.$nextTick(this.reset);
+                this.reset()
+				this.$nextTick(() => {this.cameraOff = false;});
 			},
 			reset() {
-				this.setQrData(null);
+                this.qrData = null;
                 this.successMessage = null;
 				this.errorMessage = null;
                 this.decoder = null;
                 this.bbqrDecoder = null;
 			},
 			close() {
-				if (this.modalId) {
-					const modal = bootstrap.Modal.getInstance(document.getElementById(this.modalId));
-					modal.hide();
-				}
-				this.reset();
+                this.reset();
+                if (this.modalId) {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById(this.modalId));
+                    modal.hide();
+                }
 			},
 			onDecode(content) {
 				if (this.qrData) return;
@@ -163,10 +164,10 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
                         const current = parseInt(content.substr(6, 2), 36);
                         const format = content.substr(2,1);
                         const type = content.substr(3, 1);
-                        
-                        if (!this.bbqrDecoder || 
-                                this.bbqrDecoder.total !== total || 
-                                this.bbqrDecoder.format !== format || 
+
+                        if (!this.bbqrDecoder ||
+                                this.bbqrDecoder.total !== total ||
+                                this.bbqrDecoder.format !== format ||
                                 this.bbqrDecoder.type !== type) {
                             this.bbqrDecoder = {
                                 total,
@@ -177,7 +178,7 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
                             };
                         }
                         this.bbqrDecoder.data[current] = content;
-                        
+
                         const progress = this.bbqrDecoder.data.filter(value => value !== undefined).length / total;
                         this.bbqrDecoder.progress = progress;
                         if (progress >= 1) {
@@ -189,12 +190,12 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
                                       .join('');
                                 }
                                 const result = buf2hex(joinResult.raw);
-                                this.setQrData(result);   
+                                this.setQrData(result);
                                 this.successMessage = `BBQr ${type} decoded`;
                             }catch (error){
                                 this.errorMessage = error.message;
                             }
-                        }                       
+                        }
                     } else if (!isUR) {
                         this.setQrData(content);
                     } else {
@@ -246,11 +247,11 @@ function initCameraScanningApp(title, onDataSubmit, modalId, submitOnScan = fals
                         navigator.mediaDevices.enumerateDevices().then(devices => {
                             for (const device of devices) {
                                 if (device.kind === "videoinput"){
-                                   app.cameras.push( device.deviceId)
+                                   app.cameras.push(device.deviceId)
                                 }
                             }
                         });
-                    }					 
+                    }
 				}).catch(error => {
 					if (error.name === 'StreamApiNotSupportedError') {
 						this.noStreamApiSupport = true;

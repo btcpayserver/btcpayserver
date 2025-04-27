@@ -276,7 +276,7 @@ namespace BTCPayServer.Payments
             StoreBlob = storeBlob;
             InvoiceEntity = invoiceEntity;
             PaymentMethodId = handler.PaymentMethodId;
-            Logs = new PrefixedInvoiceLogs(invoiceLogs, $"{PaymentMethodId.ToString()}: ");
+            Logs = new PrefixedInvoiceLogs(invoiceLogs, $"{PaymentMethodId}: ");
             PaymentMethodConfig = paymentMethodConfig;
             Handler = handler;
             if (invoiceEntity.Currency is null)

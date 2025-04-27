@@ -151,7 +151,7 @@ namespace BTCPayServer.Plugins.Crowdfund
             }
 
             var invoices = await AppService.GetInvoicesForApp(_invoiceRepository, appData, lastResetDate);
-            
+
             var currentPayments = _invoiceRepository.GetContributionsByPaymentMethodId(settings.TargetCurrency, invoices, !settings.EnforceTargetAmount);
 
             var paidInvoices = invoices.Where(e => e.Status is InvoiceStatus.Settled or InvoiceStatus.Processing).ToArray();
@@ -185,7 +185,6 @@ namespace BTCPayServer.Plugins.Crowdfund
             }
 
             var store = appData.StoreData;
-            var storeBlob = store.GetStoreBlob();
             var formUrl = settings.FormId != null
                 ? _linkGenerator.GetPathByAction(nameof(UICrowdfundController.CrowdfundForm), "UICrowdfund",
                     new { appId = appData.Id }, _options.Value.RootPath)

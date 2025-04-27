@@ -689,7 +689,7 @@ retry:
                         {
                             var xpub = (BitcoinExtPubKey)Network.Main.Parse(matched.Value);
                             var xpubTestnet = xpub.ExtPubKey.GetWif(Network.RegTest).ToString();
-                            blob1 = blob1.Replace(xpub.ToString(), xpubTestnet.ToString());
+                            blob1 = blob1.Replace(xpub.ToString(), xpubTestnet);
                             fields[1] = $"\\x{Encoders.Hex.EncodeData(ZipUtils.Zip(blob1))}";
                             localInvoice = string.Join(',', fields);
                         }

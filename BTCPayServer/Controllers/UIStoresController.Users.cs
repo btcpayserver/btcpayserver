@@ -74,7 +74,7 @@ public partial class UIStoresController
                 var currentUser = await _userManager.GetUserAsync(HttpContext.User);
 
                 if (currentUser is not null &&
-                    (await _userManager.CreateAsync(user)) is { Succeeded: true } result)
+                    (await _userManager.CreateAsync(user)) is { Succeeded: true })
                 {
                     var invitationEmail = await _emailSenderFactory.IsComplete();
                     var evt = await UserEvent.Invited.Create(user!, currentUser, _callbackGenerator, Request, invitationEmail);

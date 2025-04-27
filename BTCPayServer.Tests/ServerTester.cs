@@ -136,7 +136,7 @@ namespace BTCPayServer.Tests
                     throw new NotSupportedException();
             }
             else
-                throw new NotSupportedException(connectionType.ToString());
+                throw new NotSupportedException(connectionType);
             return connectionString;
         }
 

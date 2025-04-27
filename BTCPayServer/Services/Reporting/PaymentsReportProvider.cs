@@ -57,7 +57,7 @@ public class PaymentsReportProvider : ReportProvider
                 new ("InvoiceCurrencyAmount", "amount"),
                 new ("Rate", "amount")
             },
-            Charts = 
+            Charts =
             {
                 new ()
                 {
@@ -99,7 +99,6 @@ public class PaymentsReportProvider : ReportProvider
     {
         queryContext.ViewDefinition = CreateViewDefinition();
         await using var ctx = DbContextFactory.CreateContext();
-        var conn = ctx.Database.GetDbConnection();
         var invoices = await InvoiceRepository.GetInvoices(new InvoiceQuery()
         {
             StoreId = [queryContext.StoreId],
@@ -107,7 +106,7 @@ public class PaymentsReportProvider : ReportProvider
             EndDate = queryContext.To,
             OrderByDesc = false,
         }, cancellation);
-        
+
         foreach (var invoice in invoices)
         {
             foreach (var payment in invoice.GetPayments(true))

@@ -7,7 +7,6 @@
     Layout = "_Layout";
     ViewData.SetActivePage(ServerNavPages.Plugins);
     var installed = Model.Installed.ToDictionary(plugin => plugin.Identifier, plugin => plugin.Version);
-    var installedWithoutSystemPlugins = Model.Installed.Where(i => !i.SystemPlugin).ToList();
     var availableAndNotInstalled = new List<PluginService.AvailablePlugin>();
     var availableAndNotInstalledx = Model.Available
         .Where(plugin => !installed.ContainsKey(plugin.Identifier))

@@ -60,7 +60,7 @@ namespace BTCPayServer.Configuration
         {
             NetworkType = DefaultConfiguration.GetNetworkType(conf);
 
-            Logs.Configuration.LogInformation("Network: " + NetworkType.ToString());
+            Logs.Configuration.LogInformation("Network: " + NetworkType);
 
             if (conf.GetOrDefault<string>("POSTGRES", null) == null)
             {

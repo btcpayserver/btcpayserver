@@ -39,7 +39,6 @@ public class DefaultRulesCollection
         defaultRules = defaultRules.OrderBy(o => o.Order).ToList();
         Consolidated = RateRules.Combine(defaultRules.Select(r => r.Rules));
         ConsolidatedWithoutRecommendation = RateRules.Combine(defaultRules.Where(r => r is not DefaultRules.Recommendation).Select(r => r.Rules));
-        var rules = Consolidated.ToString();
 
         foreach (var recommendation in defaultRules.OfType<DefaultRules.Recommendation>())
         {

@@ -539,7 +539,6 @@ namespace BTCPayServer.Tests
         [Fact]
         public void CanCalculateCryptoDue()
         {
-            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
             var entity = new InvoiceEntity() { Currency = "USD" };
 #pragma warning disable CS0618
             entity.Payments = new System.Collections.Generic.List<PaymentEntity>();
@@ -1068,7 +1067,7 @@ namespace BTCPayServer.Tests
             Assert.True(specter.AccountDerivation is DirectDerivationStrategy { Segwit: true });
             Assert.Equal("Specter", specter.Label);
             Assert.Null(error);
-            
+
             // Wasabi
             var wasabiJson = @"{""EncryptedSecret"": ""6PYNUAZZLS1ShkhHhm9ayiNwXPAPLN669fN5mY2WbGm1Hqc88tomqWXabU"",""ChainCode"": ""UoHIB+2mDbZSowo11TfDQbsYK6q1DrZ2H2yqQBxu6m8="",""MasterFingerprint"": ""0f215605"",""ExtPubKey"": ""xpub6DUXFa6fMrFpg7x4nEd8jBU6xDN3vkSXsVUrSbUB2dadbYaPE31czwVdv146JRStGsc2U6TywdKnGoVcP8Rtp2AZQyzXxQb7HrgmR9LrqLA"",""TaprootExtPubKey"": ""xpub6D2thLU5KwUk3axkJu1UT3yKFshCGU7TMuxhPgZMd91VvrcDwHdRwdzLk61cSHtZC6BkaipPgfFwjoDBY4m1WxyznxZLukYgM4dC6iRJVf8"",""SkipSynchronization"": true,""UseTurboSync"": true,""MinGapLimit"": 21,""AccountKeyPath"": ""84'/0'/0'"",""TaprootAccountKeyPath"": ""86'/0'/0'"",""BlockchainState"": {""Network"": ""Main"",""Height"": ""503723"",""TurboSyncHeight"": ""503723""},""PreferPsbtWorkflow"": false,""AutoCoinJoin"": true,""PlebStopThreshold"": ""0.01"",""AnonScoreTarget"": 5,""FeeRateMedianTimeFrameHours"": 0,""IsCoinjoinProfileSelected"": true,""RedCoinIsolation"": false,""ExcludedCoinsFromCoinJoin"": [],""HdPubKeys"": [{""PubKey"": ""03f88b9c3e16e40a5a9eaf8b36b9bcee7bbc93fd9eea640b541efb931ac55f7ff5"",""FullKeyPath"": ""84'/0'/0'/1/0"",""Label"": """",""KeyState"": 0},{""PubKey"": ""03e5241fc28aa556d7cb826b9a9f5ecee85287e7476746126263574a5e27fbf569"",""FullKeyPath"": ""84'/0'/0'/0/0"",""Label"": """",""KeyState"": 0}]}";
             Assert.True(parsers.TryParseWalletFile(wasabiJson, mainnet, out var wasabi, out error));
@@ -1078,7 +1077,7 @@ namespace BTCPayServer.Tests
             Assert.Equal("84'/0'/0'", wasabi.AccountKeySettings[0].AccountKeyPath.ToString());
             Assert.Equal("0f215605", wasabi.AccountKeySettings[0].RootFingerprint.ToString());
             Assert.True(wasabi.AccountDerivation is DirectDerivationStrategy { Segwit: true });
-            
+
             // BSMS BIP129, Nunchuk
             var bsms = @"BSMS 1.0
 wsh(sortedmulti(1,[5c9e228d/48'/0'/0'/2']xpub6EgGHjcvovyN3nK921zAGPfuB41cJXkYRdt3tLGmiMyvbgHpss4X1eRZwShbEBb1znz2e2bCkCED87QZpin3sSYKbmCzQ9Sc7LaV98ngdeX/**,[2b0e251e/48'/0'/0'/2']xpub6DrimHB8KUSkPvmJ8Pk8RE769EdDm2VEoZ8MBz76w9QupP8Py4wexs4Pa3aRB1LUEhc9GyY6ypDWEFFRCgqeDQePcyWQfjtmintrehq3JCL/**))
@@ -1120,7 +1119,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.NotNull(error);
 
 
-            //passport 
+            //passport
             var passportText =
                 "{\"Source\": \"Passport\", \"Descriptor\": \"tr([5c9e228d/86'/0'/0']xpub6EgGHjcvovyN3nK921zAGPfuB41cJXkYRdt3tLGmiMyvbgHpss4X1eRZwShbEBb1znz2e2bCkCED87QZpin3sSYKbmCzQ9Sc7LaV98ngdeX/0/*)\", \"FirmwareVersion\": \"v1.0.0\"}";
             Assert.True(parsers.TryParseWalletFile(passportText, mainnet, out var passport, out error));
@@ -2010,7 +2009,7 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
             Assert.Equal("1 / (0.00000001 * (6000, 6100))", rule2.ToString(true));
             Assert.Equal(1m / 0.000061m, rule2.BidAsk.Bid);
 
-            // testing rounding 
+            // testing rounding
             rule2 = rules.GetRuleFor(CurrencyPair.Parse("SATS_EUR"));
             rule2.ExchangeRates.SetRate("coinbase", CurrencyPair.Parse("BTC_EUR"), new BidAsk(1.23m, 2.34m));
             Assert.True(rule2.Reevaluate());
@@ -2256,9 +2255,6 @@ bc1qfzu57kgu5jthl934f9xrdzzx8mmemx7gn07tf0grnvz504j6kzusu2v0ku
         {
 #pragma warning disable CS0618
             var dummy = new Key().PubKey.GetAddress(ScriptPubKeyType.Legacy, Network.RegTest).ToString();
-            var networkProvider = CreateNetworkProvider(ChainName.Regtest);
-            var networkBTC = networkProvider.GetNetwork("BTC");
-            var networkLTC = networkProvider.GetNetwork("LTC");
             InvoiceEntity invoiceEntity = new InvoiceEntity();
             invoiceEntity.Currency = "USD";
             invoiceEntity.Payments = new System.Collections.Generic.List<PaymentEntity>();

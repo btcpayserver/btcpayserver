@@ -62,7 +62,7 @@ namespace BTCPayServer.Tests.Logging
             if (exception != null)
             {
                 builder.AppendLine();
-                builder.Append(exception.ToString());
+                builder.Append(exception);
             }
             LogInformation(builder.ToString());
         }

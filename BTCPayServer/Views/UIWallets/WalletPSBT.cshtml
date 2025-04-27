@@ -92,7 +92,14 @@
             <input asp-for="UploadedPSBTFile" type="file" class="form-control">
         </div>
         <div class="d-flex">
-            <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode" text-translate="true">Decode PSBT</button>
+            @if (this.Model.SigningContext.PendingTransactionId is not null)
+            {
+                <button type="submit" name="command" value="collect" class="btn btn-primary mt-2" id="Collect" text-translate="true">Collect signatures</button>   
+            }
+            else
+            {
+                <button type="submit" name="command" value="decode" class="btn btn-primary mt-2" id="Decode" text-translate="true">Decode PSBT</button>
+            }
             <button type="button" id="scanqrcode" class="btn btn-secondary only-for-js ms-3 mt-2" data-bs-toggle="modal" data-bs-target="#scanModal" text-translate="true">Scan wallet QR with camera</button>
         </div>
     </form>

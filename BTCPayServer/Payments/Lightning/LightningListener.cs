@@ -102,7 +102,7 @@ retry:
                             var connStr = GetLightningUrl(listenedInvoice.Network.CryptoCode, lnConfig);
                             if (connStr is null)
                                 continue;
-                            var instanceListenerKey = (listenedInvoice.Network.CryptoCode, connStr.ToString());
+                            var instanceListenerKey = (listenedInvoice.Network.CryptoCode, connStr);
                             lock (_InstanceListeners)
                             {
                                 if (!_InstanceListeners.TryGetValue(instanceListenerKey, out var instanceListener))
@@ -351,7 +351,7 @@ retry:
                         await paymentContext.CreatePaymentPrompt();
                         if (paymentContext.Status != PaymentMethodContext.ContextStatus.Created)
                             continue;
-                        var instanceListenerKey = (paymentPrompt.Currency, connStr.ToString());
+                        var instanceListenerKey = (paymentPrompt.Currency, connStr);
                         LightningInstanceListener? instanceListener;
                         lock (_InstanceListeners)
                         {
@@ -374,7 +374,7 @@ retry:
                     }
                     catch (Exception e)
                     {
-                        logs.Write($"Could not update {o.Handler.PaymentMethodId.ToString()}: {e.Message}",
+                        logs.Write($"Could not update {o.Handler.PaymentMethodId}: {e.Message}",
                             InvoiceEventData.EventSeverity.Error);
                     }
                 }

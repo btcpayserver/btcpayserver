@@ -6,7 +6,7 @@ auto_resolve_threads: true
 reviews:
   profile: chill
   request_changes_workflow: false
-  high_level_summary: true
+  high_level_summary: false
   high_level_summary_placeholder: '@coderabbitai summary'
   high_level_summary_in_walkthrough: false
   auto_title_placeholder: '@coderabbitai'
@@ -15,8 +15,8 @@ reviews:
   commit_status: true
   fail_commit_status: false
   collapse_walkthrough: false
-  changed_files_summary: true
-  sequence_diagrams: true
+  changed_files_summary: false
+  sequence_diagrams: false
   assess_linked_issues: true
   related_issues: true
   related_prs: true
